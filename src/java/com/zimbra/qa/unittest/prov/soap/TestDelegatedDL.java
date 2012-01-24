@@ -577,35 +577,6 @@ public class TestDelegatedDL extends SoapTest {
         members = group.getAllMembersSet();
         assertEquals(0, members.size());
     }
-
-    @Test
-    public void distributionListActionAddRemoveAlias() throws Exception {
-        SoapTransport transport = authUser(USER_OWNER);
-        
-        // addAlias
-        DistributionListAction action = new DistributionListAction(Operation.addAlias);
-        DistributionListActionRequest req = new DistributionListActionRequest(
-                DistributionListSelector.fromName(DL_NAME), action);
-        
-        String ALIAS = getAddress("alias");
-        action.setAlias(ALIAS);
-        DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
-        // get the DL by alias
-        Group group = prov.getGroup(Key.DistributionListBy.name, ALIAS);
-        assertEquals(DL_NAME, group.getName());
-        
-        // removeAlias
-        action = new DistributionListAction(Operation.removeAlias);
-        req = new DistributionListActionRequest(
-                DistributionListSelector.fromName(DL_NAME), action);
-        action.setAlias(ALIAS);
-        resp = invokeJaxb(transport, req);
-        
-        // get the DL by alias, should no longer be found
-        group = prov.getGroup(Key.DistributionListBy.name, ALIAS);
-        assertNull(group);
-    }
     
     @Test
     public void distributionListActionAddRemoveOwners() throws Exception {

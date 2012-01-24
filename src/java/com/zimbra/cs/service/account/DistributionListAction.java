@@ -102,12 +102,6 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 case rename:
                     handler = new RenameHandler(eAction, group, prov, acct);
                     break;
-                case addAlias:
-                    handler = new AddAliasHandler(eAction, group, prov, acct);
-                    break;
-                case removeAlias:
-                    handler = new RemoveAliasHandler(eAction, group, prov, acct);
-                    break;
                 case addOwners:
                     handler = new AddOwnersHandler(eAction, group, prov, acct);
                     break;
@@ -235,52 +229,6 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
                             "name", oldName, "newName", newName}));
-        }
-    }
-
-    private static class AddAliasHandler extends DLActionHandler {
-
-        protected AddAliasHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
-        }
-
-        @Override
-        Operation getAction() {
-            return Operation.addAlias;
-        }
-
-        @Override
-        void handle() throws ServiceException {
-            String alias = eAction.getAttribute(AccountConstants.E_ALIAS);
-            prov.addGroupAlias(group, alias);
-
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
-                            "name", group.getName(), "alias", alias}));
-        }
-    }
-
-    private static class RemoveAliasHandler extends DLActionHandler {
-
-        protected RemoveAliasHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
-        }
-
-        @Override
-        Operation getAction() {
-            return Operation.removeAlias;
-        }
-
-        @Override
-        void handle() throws ServiceException {
-            String alias = eAction.getAttribute(AccountConstants.E_ALIAS);
-            prov.removeGroupAlias(group, alias);
-
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
-                            "name", group.getName(), "alias", alias}));
         }
     }
 

@@ -4078,7 +4078,6 @@ Notes:
   <action op="{op}">
       [<a n="...">...</a>+]
       [<newName>{new-DL-name}</newName>]
-      [<alias>...</alias>]
       [<owner type={grantee-type} by="name|id}">{name-or-id}</owner>+]
       [<right right="{right}"> 
            <grantee type={grantee-type} by="name|id}">{name-or-id}</grantee>+
@@ -4100,8 +4099,6 @@ Notes:
        grantRights    grant rights
        revokeRights   revoke rights
        setRights      set rights
-       addAlias       add list alias
-       removeAlias    remove list alias
        addMembers     add list members
        removeMembers  remove list members
        acceptSubsReq  accept subscription/un-subscription request
@@ -4117,7 +4114,6 @@ Notes:
 
   <a>       required if op=modify
   <newName> required if op=rename
-  <alias>   required if op=addAlias or or=removeAlias
   <owner>   required if op=addOwners or op=removeOwners, 
             optional if op=setOwners.  If not present when op=setOwners all current 
             owners will be removed.
