@@ -28,7 +28,6 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
@@ -89,7 +88,6 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (mbox != null) {
             mbox.deleteMailbox();
         }
-        IMPersona.deleteIMPersona(account.getName());
         
         prov.deleteAccount(id);
         

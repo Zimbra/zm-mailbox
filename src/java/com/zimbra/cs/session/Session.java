@@ -23,7 +23,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -43,7 +42,6 @@ public abstract class Session {
 
     private   String    mSessionId;
     protected volatile Mailbox mailbox;
-    private   IMPersona mPersona;
     private   long      mLastAccessed;
     private   long      mCreationTime;
     private   boolean   mCleanedUp;
@@ -122,18 +120,6 @@ public abstract class Session {
         return mSessionType;
     }
 
-    /** Registers this session as an IM listener
-     * @throws ServiceException */
-    public synchronized void registerWithIM(IMPersona persona) throws ServiceException {
-        assert(Thread.holdsLock(persona.getLock()));
-        assert(mPersona == null || mPersona == persona);
-
-        if (mPersona == null && isIMListener() && !isDelegatedSession()) {
-            mPersona = persona;
-            mPersona.addListener(this);
-        }
-    }
-
     /** Registers the session as a listener on the target mailbox and adds
      *  it to the session cache.  When a session is added to the cache, its
      *  session ID is initialized.
@@ -174,17 +160,6 @@ public abstract class Session {
         // locking order is always Mailbox then Session
         Mailbox mbox = mailbox;
         assert(mbox == null || mbox.lock.isLocked() || !Thread.holdsLock(this));
-
-        // Must do this in two steps (first, w/ the Session lock, and then
-        // w/ the Persona lock if we have one) b/c of possible deadlock.
-        IMPersona persona = null;
-        synchronized (this) {
-            persona = mPersona;
-            mPersona = null;
-        }
-        if (persona != null) {
-            persona.removeListener(this);
-        }
 
         if (mbox != null && isMailboxListener()) {
             mbox.removeListener(this);

@@ -37,8 +37,6 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.im.IMRouter;
-import com.zimbra.cs.im.ZimbraIM;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
@@ -239,10 +237,6 @@ public final class Zimbra {
                 IoBuffer.setUseDirectBuffer(useDirectBuffers);
                 ZimbraLog.misc.info("MINA setUseDirectBuffers(" + useDirectBuffers + ")");
 
-                if (app.supports(ZimbraIM.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
-                    ZimbraIM.startup();
-                }
-
                 ServerManager.getInstance().startServers();
             }
 
@@ -320,20 +314,12 @@ public final class Zimbra {
                 ServerManager.getInstance().stopServers();
             }
 
-            if (app.supports(ZimbraIM.class.getName())) {
-                ZimbraIM.shutdown();
-            }
-
             SessionCache.shutdown();
         }
 
         MailboxIndex.shutdown();
 
         if (sIsMailboxd) {
-            if (app.supports(IMRouter.class.getName())) {
-                IMRouter.getInstance().shutdown();
-            }
-
             redoLog.shutdown();
         }
 

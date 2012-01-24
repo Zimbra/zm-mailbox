@@ -93,7 +93,6 @@ import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
-import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DomainBrowseTerm;
@@ -469,7 +468,6 @@ public class Mailbox {
     private final Map <String, Integer> mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
 
     private MailboxMaintenance maintenance;
-    private IMPersona persona;
     private volatile boolean open = false;
     private boolean isGalSyncMailbox = false;
 
@@ -654,18 +652,6 @@ public class Mailbox {
         return acct;
     }
 
-    public IMPersona getPersona() throws ServiceException {
-        lock.lock();
-        try {
-            if (persona == null) {
-                persona = IMPersona.loadPersona(this);
-            }
-            return persona;
-        } finally {
-            lock.release();
-        }
-    }
-
     /** Retuns the ID of the volume this <tt>Mailbox</tt>'s index lives on. */
     public short getIndexVolume() {
         return mData.indexVolumeId;
@@ -774,9 +760,6 @@ public class Mailbox {
     private void purgeListeners() {
         ZimbraLog.mailbox.debug("purging listeners");
 
-        if (persona != null) {
-            persona.purgeListeners(); // do this BEFORE purgeListeners
-        }
         for (Session session : mListeners) {
             SessionCache.clearSession(session);
         }
@@ -1962,14 +1945,6 @@ public class Mailbox {
             beginTransaction("renameMailbox", octxt, redoRecorder);
 
             DbMailbox.renameMailbox(this, newName);
-
-            Account acct = getAccount();
-            boolean imEnabledThisAcct = acct.isFeatureIMEnabled();
-            boolean xmppEnabled = Provisioning.getInstance().getServer(acct).isXMPPEnabled();
-
-            if (persona != null || (xmppEnabled && imEnabledThisAcct)) {
-                getPersona().renamePersona(newName);
-            }
             success = true;
         } finally {
             endTransaction(success);

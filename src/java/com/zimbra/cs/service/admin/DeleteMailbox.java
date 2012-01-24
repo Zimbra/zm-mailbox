@@ -26,7 +26,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
@@ -71,9 +70,6 @@ public class DeleteMailbox extends AdminDocumentHandler {
             checkAccountRight(zsc, account, Admin.R_deleteAccount);   
         }
 
-        if (account != null && Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
-            IMPersona.deleteIMPersona(account.getName());
-        }
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
         int mailboxId = -1;
         if (mbox != null) {

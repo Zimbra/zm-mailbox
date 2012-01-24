@@ -182,7 +182,6 @@
       <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
       <pathelement location="${client.classes.dir}"/>
-      <pathelement location="${im.classes.dir}"/>
       <pathelement location="${build.classes.dir}"/>
       <fileset dir="${server.jars.dir}">
         <include name="**/*.jar"/>
@@ -191,9 +190,6 @@
         <include name="**/*.jar"/>
       </fileset>
       <fileset dir="${common.dir}/jars-test">
-        <include name="**/*.jar"/>
-      </fileset>
-      <fileset dir="${im.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
     </path>
@@ -412,7 +408,6 @@
 
     <target name="compile" depends="build-init">
         <ant dir="${client.dir}" target="jar" inheritAll="false"/>
-        <ant dir="${im.dir}" target="jar" inheritAll="false"/>
         <javac fork="true" memorymaximumsize="512m" destdir="${build.classes.dir}" debug="true"
                classpathref="class.path" target="${javac.target}">
             <src refid="all.java.path"/>
@@ -431,7 +426,6 @@
       <ant dir="${common.dir}" target="clean" inheritAll="false"/>
       <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
       <ant dir="${client.dir}" target="clean" inheritAll="false"/>
-      <ant dir="${im.dir}" target="clean" inheritAll="false"/>
       <delete dir="${build.dir}"/>
     </target>
 
@@ -493,7 +487,6 @@
     <target name="war" depends="jar">
       <war warfile="${warfile}" webxml="${war.web.xml}">
         <fileset dir="WebRoot"/>
-        <lib file="${im.jarfile}"/>
         <lib file="${soap.jarfile}"/>
         <lib file="${client.jarfile}"/>
         <lib file="${jarfile}"/>
@@ -516,7 +509,6 @@
           <include name="zookeeper-*.jar"/>
           <include name="ehcache-*.jar"/>
         </lib>
-        <lib dir="${im.jars.dir}" includes="*.jar"/>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
       </war>
@@ -878,9 +870,6 @@
         <copy todir="${dist.dir}/conf/msgs" overwrite="true">
             <fileset dir="${config.dir}/msgs"/>
         </copy>
-        <copy todir="${dist.dir}/conf/msgs" overwrite="true">
-            <fileset dir="${im.dir}/src/i18n"/>
-        </copy>
         <copy todir="${dist.dir}/conf/attrs" overwrite="true">
             <fileset dir="${build.dir}/attrs"/>
         </copy>
@@ -893,13 +882,9 @@
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="*.jar"/>
         </copy>
-        <copy todir="${dist.dir}/lib/jars" overwrite="true">
-            <fileset dir="${im.jars.dir}" includes="*.jar"/>
-        </copy>
         <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${soap.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${client.jarfile}" overwrite="true"/>
-        <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
         <!-- jetty windows service wrapper -->
