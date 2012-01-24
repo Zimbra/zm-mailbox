@@ -176,6 +176,8 @@ public final class ContactCSV {
 
     /**
      * parse a field. It is assumed the leading '"' is already read. we stop at the first '"' that isn't followed by a '"'.
+     * @param doubleQuotes is true if we're within a quoted string.
+     * @param firstChar is the first character of the field unless its value is -1
      *
      * @return the field, or null if the field was blank ("")
      * @throws IOException IOException from the reader.
@@ -203,7 +205,7 @@ public final class ContactCSV {
                     }
                 }
                 result.append((char) ch);
-            } else if (ch == fieldSeparator && !doubleQuotes) {
+            } else if (!doubleQuotes && isFieldSeparator(ch)) {
                 //reader.reset();
                 return result.toString();
             } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
@@ -267,7 +269,8 @@ public final class ContactCSV {
             }
             if (field.length() > ContactConstants.MAX_FIELD_NAME_LENGTH) {
                 // doesn't look a CSV file
-                throw new ParseException("invalid format");
+                throw new ParseException(String.format("invalid format - header field %d of %d is too long (length=%d)", 
+                        i + 1, fieldNames.size(), field.length()));
             }
         }
     }
