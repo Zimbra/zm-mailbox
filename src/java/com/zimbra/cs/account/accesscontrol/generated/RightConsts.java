@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120123-1236 */
 
 
     /*
@@ -600,6 +600,17 @@ public class RightConsts {
      * server rights for BES admin
      */
     public static final String RT_besAdminServerRights = "besAdminServerRights";
+
+    /**
+     * change account password, restricted by password strength policies
+     */
+    public static final String RT_changeAccountPassword = "changeAccountPassword";
+
+    /**
+     * set calendar resource password, restricted by password strength
+     * policies
+     */
+    public static final String RT_changeCalendarResourcePassword = "changeCalendarResourcePassword";
 
     /**
      * check password strength
@@ -1364,7 +1375,7 @@ public class RightConsts {
     public static final String RT_rolloverRedoLog = "rolloverRedoLog";
 
     /**
-     * set account password
+     * set account password, not restricted by password strength policies
      */
     public static final String RT_setAccountPassword = "setAccountPassword";
 
@@ -1669,7 +1680,8 @@ public class RightConsts {
     public static final String RT_setAdminSavedSearch = "setAdminSavedSearch";
 
     /**
-     * set calendar resource password
+     * set calendar resource password, not restricted by password strength
+     * policies
      */
     public static final String RT_setCalendarResourcePassword = "setCalendarResourcePassword";
 

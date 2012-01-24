@@ -93,6 +93,14 @@ public class ProvTest {
         return genAcctNameLocalPart(null);
     }
     
+    protected String genCalendarResourceNameLocalPart(String suffix) {
+        return "cr-" + genName(suffix);
+    }
+    
+    protected String genCalendarResourceNameLocalPart() {
+        return genCalendarResourceNameLocalPart(null);
+    }
+    
     protected String genDataSourceName(String suffix, Sequencer seq) {
         return "ds-" + genName(suffix, seq);
     }

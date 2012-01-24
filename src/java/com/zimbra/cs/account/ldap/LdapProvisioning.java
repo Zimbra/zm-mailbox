@@ -58,6 +58,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
+import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
 import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
@@ -4595,6 +4596,13 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public SetPasswordResult setPassword(Account acct, String newPassword) 
     throws ServiceException {
+        return setPassword(acct, newPassword, false);
+    }
+    
+    @Override
+    public SetPasswordResult setPassword(Account acct, String newPassword, 
+            boolean enforcePasswordPolicy) 
+    throws ServiceException {
         SetPasswordResult result = new SetPasswordResult();
         String msg = null;
 
@@ -4605,7 +4613,7 @@ public class LdapProvisioning extends LdapProv {
             msg = e.getMessage();
         }
 
-        setPassword(acct, newPassword, false, false);
+        setPassword(acct, newPassword, enforcePasswordPolicy, false);
 
         if (msg != null) {
             msg = L10nUtil.getMessage(L10nUtil.MsgKey.passwordViolation,

@@ -58,13 +58,17 @@ public class SoapTest extends ProvTest {
     }
     
     static SoapTransport authUser(String acctName) throws Exception {
+        return authUser(acctName, PASSWORD);
+    }
+    
+    static SoapTransport authUser(String acctName, String password) throws Exception {
         com.zimbra.soap.type.AccountSelector acct = 
             new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
         
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         transport.setHttpDebugListener(soapDebugListener);
         
-        AuthRequest req = new AuthRequest(acct, PASSWORD);
+        AuthRequest req = new AuthRequest(acct, password);
         AuthResponse resp = invokeJaxb(transport, req);
         transport.setAuthToken(resp.getAuthToken());
         return transport;

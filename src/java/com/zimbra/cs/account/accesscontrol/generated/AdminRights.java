@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120123-1236 */
 
 
     public static AdminRight R_accessGAL;
@@ -133,6 +133,8 @@ public class AdminRights {
     public static AdminRight R_backupAccount;
     public static AdminRight R_besAdminDomainRights;
     public static AdminRight R_besAdminServerRights;
+    public static AdminRight R_changeAccountPassword;
+    public static AdminRight R_changeCalendarResourcePassword;
     public static AdminRight R_checkCalendarResourcePasswordStrength;
     public static AdminRight R_checkDirectoryOnFileSystem;
     public static AdminRight R_checkDomainMXRecord;
@@ -547,6 +549,8 @@ public class AdminRights {
         R_backupAccount                        = rm.getAdminRight(Right.RT_backupAccount);
         R_besAdminDomainRights                 = rm.getAdminRight(Right.RT_besAdminDomainRights);
         R_besAdminServerRights                 = rm.getAdminRight(Right.RT_besAdminServerRights);
+        R_changeAccountPassword                = rm.getAdminRight(Right.RT_changeAccountPassword);
+        R_changeCalendarResourcePassword       = rm.getAdminRight(Right.RT_changeCalendarResourcePassword);
         R_checkCalendarResourcePasswordStrength = rm.getAdminRight(Right.RT_checkCalendarResourcePasswordStrength);
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);
         R_checkDomainMXRecord                  = rm.getAdminRight(Right.RT_checkDomainMXRecord);

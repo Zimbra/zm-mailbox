@@ -923,6 +923,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract SetPasswordResult setPassword(Account acct, String newPassword) throws ServiceException;
+    
+    public SetPasswordResult setPassword(Account acct, String newPassword, boolean enforcePasswordPolicy) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
 
