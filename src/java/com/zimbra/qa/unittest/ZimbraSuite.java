@@ -107,6 +107,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestJaxbProvisioning.class);
         sClasses.add(TestAclPush.class);
         sClasses.add(TestCalDavImportServer.class);
+        sClasses.add(TestContactCSV.class);
     }
 
     /**
