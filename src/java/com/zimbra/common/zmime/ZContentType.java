@@ -2,17 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.zmime;
+
+import com.zimbra.common.util.StringUtil;
 
 public class ZContentType extends ZCompoundHeader {
     private String primaryType, subType;
@@ -102,13 +104,18 @@ public class ZContentType extends ZCompoundHeader {
 
     private void normalizeType() {
         String primary = getPrimaryValue();
+        int cutoff = StringUtil.indexOfAny(primary, "()<>@,;:\\\"[]?=");  // TSPECIALS minus '/'
+        if (cutoff != -1) {
+            primary = primary.substring(0, cutoff);
+        }
         String value = primary == null || primary.isEmpty() ? defaultType : primary.trim().toLowerCase();
 
-        this.primaryType = subType = "";
+        this.primaryType = this.subType = "";
         int slash = value.indexOf('/');
         if (slash != -1) {
             this.primaryType = value.substring(0, slash).trim();
-            this.subType = value.substring(slash + 1).trim();
+            cutoff = value.indexOf('/', slash + 1);  // second '/' not allowed
+            this.subType = value.substring(slash + 1, cutoff == -1 ? value.length() : cutoff).trim();
         }
 
         if (primaryType.isEmpty() || subType.isEmpty()) {
