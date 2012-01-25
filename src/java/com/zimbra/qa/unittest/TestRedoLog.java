@@ -59,8 +59,8 @@ extends TestCase {
      * Verifies that redolog replay successfully copies a message from one mailbox
      * to another and leaves the original blob intact.  See bug 22873.
      */
-    // TODO: Reenable when bug 66460 is fixed.
-    public void disabledTestRestoreMessageToNewAccount()
+
+    public void testTestRestoreMessageToNewAccount()
     throws Exception {
         // Add message to source account.
         long startTime = System.currentTimeMillis();
