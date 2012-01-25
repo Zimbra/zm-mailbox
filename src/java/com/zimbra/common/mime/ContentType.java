@@ -2,17 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
+
+import com.zimbra.common.util.StringUtil;
 
 public class ContentType extends MimeCompoundHeader {
     private String primaryType, subType;
@@ -57,7 +59,8 @@ public class ContentType extends MimeCompoundHeader {
         normalizeType();
     }
 
-    @Override protected ContentType clone() {
+    @Override
+    protected ContentType clone() {
         return new ContentType(this);
     }
 
@@ -66,7 +69,8 @@ public class ContentType extends MimeCompoundHeader {
         return setPrimaryValue(contentType);
     }
 
-    @Override public ContentType setPrimaryValue(String value) {
+    @Override
+    public ContentType setPrimaryValue(String value) {
         super.setPrimaryValue(value);
         normalizeType();
         return this;
@@ -80,7 +84,8 @@ public class ContentType extends MimeCompoundHeader {
         return this;
     }
 
-    @Override public ContentType setParameter(String name, String value) {
+    @Override
+    public ContentType setParameter(String name, String value) {
         super.setParameter(name, value);
         return this;
     }
@@ -99,13 +104,18 @@ public class ContentType extends MimeCompoundHeader {
 
     private void normalizeType() {
         String primary = getPrimaryValue();
+        int cutoff = StringUtil.indexOfAny(primary, "()<>@,;:\\\"[]?=");  // TSPECIALS minus '/'
+        if (cutoff != -1) {
+            primary = primary.substring(0, cutoff);
+        }
         String value = primary == null || primary.isEmpty() ? defaultType : primary.trim().toLowerCase();
 
-        this.primaryType = subType = "";
+        this.primaryType = this.subType = "";
         int slash = value.indexOf('/');
         if (slash != -1) {
             this.primaryType = value.substring(0, slash).trim();
-            this.subType = value.substring(slash + 1).trim();
+            cutoff = value.indexOf('/', slash + 1);  // second '/' not allowed
+            this.subType = value.substring(slash + 1, cutoff == -1 ? value.length() : cutoff).trim();
         }
 
         if (primaryType.isEmpty() || subType.isEmpty()) {
@@ -120,14 +130,16 @@ public class ContentType extends MimeCompoundHeader {
         }
     }
 
-    @Override protected void reserialize() {
+    @Override
+    protected void reserialize() {
         if (content == null) {
             super.setPrimaryValue(getContentType());
             super.reserialize();
         }
     }
 
-    @Override public ContentType cleanup() {
+    @Override
+    public ContentType cleanup() {
         super.setPrimaryValue(getContentType());
         super.cleanup();
         return this;

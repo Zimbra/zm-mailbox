@@ -63,6 +63,18 @@ public class MimeCompoundHeaderTest {
         test(true, "unquoted encoded-words, bad encoded-words in non-2231 values",
                 "text/plain; filename==?us-ascii?q?boo_bah.pdf?=; note=\"   ?==?\"; bloop=\"=?x-unknown?a?text?=\" ",
                 "text/plain", new String[] { "filename", "boo bah.pdf", "note", "   ?==?", "bloop", "=?x-unknown?a?text?=" });
+        test(true, "tspecials in primary value",
+                "audio/x-mpeg-3,name=VM_2012-01-24_11-12-54.mp3",
+                "audio/x-mpeg-3", new String[] {});
+        test(true, "extra slash in primary value",
+                "text/plain/html; foo=bar",
+                "text/plain", new String[] { "foo", "bar" });
+        test(true, "trailing slash in primary value",
+                "text/; foo=bar",
+                "text/plain", new String[] { "foo", "bar" });
+        test(true, "trailing double slash in primary value",
+                "text//; foo=bar",
+                "text/plain", new String[] { "foo", "bar" });
     }
 
     @Test public void testContentDisposition() {

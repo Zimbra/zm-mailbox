@@ -18,11 +18,6 @@
  */
 package com.zimbra.common.util;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.zimbra.common.service.ServiceException;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,6 +32,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
@@ -93,6 +93,20 @@ public class StringUtil {
             }
         }
         return count;
+    }
+
+    /** Returns the first instance in {@code str} of any character in {@code
+     *  values}, or {@code -1} if no characters from {@code values} appear in
+     *   {@code str}. */
+    public static int indexOfAny(String str, String values) {
+        if (!isNullOrEmpty(str) && !isNullOrEmpty(values)) {
+            for (int i = 0, len = str.length(); i < len; i++) {
+                if (values.indexOf(str.charAt(i)) != -1) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
     /**
