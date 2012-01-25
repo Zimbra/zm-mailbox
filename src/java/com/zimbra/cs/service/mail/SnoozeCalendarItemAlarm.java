@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -31,6 +32,7 @@ import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -58,16 +60,17 @@ public class SnoozeCalendarItemAlarm extends DocumentHandler {
                 // trace logging
                 ZimbraLog.calendar.info("<SnoozeCalendarItemAlarm> id=%s,until=%d", iid.toString(), snoozeUntil);
 
-                Mailbox ciMbox;  // mailbox for this calendar item; not necessarily same as requested mailbox
+                Mailbox ciMbox = null;  // mailbox for this calendar item; not necessarily same as requested mailbox
                 String ciAcctId = iid.getAccountId();
                 if (ciAcctId == null || ciAcctId.equals(acctId)) {
                     ciMbox = mbox;
                 } else {
                     // Item ID refers to another mailbox.  (possible with ZDesktop)
-                    // Let's see if it's a mailbox on local server.
-                    ciMbox = MailboxManager.getInstance().getMailboxByAccountId(ciAcctId, false);
+                    // Let's see if the account is a Desktop account.
+                    if (AccountUtil.isZDesktopLocalAccount(zsc.getAuthtokenAccountId()))
+                        ciMbox = MailboxManager.getInstance().getMailboxByAccountId(ciAcctId, false);
                     if (ciMbox == null)
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(ciAcctId);
+                        throw MailServiceException.PERM_DENIED("cannot snooze alarms of a shared calendar");
                 }
                 int calItemId = iid.getId();
                 ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
