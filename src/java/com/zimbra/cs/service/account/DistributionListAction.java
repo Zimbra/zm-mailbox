@@ -43,6 +43,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -236,15 +237,28 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             String newName = eNewName.getText();
             
             /*
-             * must have create right on the target domain (whether the new doamin is
-             * the same or diff from the current domain)
+             * need the create right on the current domain.
+             * 
+             * The create right means being able to create/rename/delete.
              */
-            if (!AccessManager.getInstance().canCreateGroup(authedAcct, newName)) {
+            String oldName = group.getName();
+            if (!AccessManager.getInstance().canCreateGroup(authedAcct, oldName)) {
                 throw ServiceException.PERM_DENIED(
                         "you do not have sufficient rights to rename this distribution list");
             }
-
-            String oldName = group.getName();
+            
+            /*
+             * if domain is different, need the create right on the new domain.
+             */
+            String curDomain = new EmailAddress(oldName).getDomain();
+            String newDomain = new EmailAddress(newName).getDomain();
+            if (!curDomain.equalsIgnoreCase(newDomain)) {
+                if (!AccessManager.getInstance().canCreateGroup(authedAcct, newName)) {
+                    throw ServiceException.PERM_DENIED(
+                            "you do not have sufficient rights to rename this distribution list");
+                }
+            }
+            
             prov.renameGroup(group.getId(), newName);
 
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
