@@ -57,6 +57,7 @@ import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.mail.UploadScanner;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -113,6 +114,14 @@ public class SaveDocument extends WikiDocumentHandler {
             if (attElem != null) {
                 String aid = attElem.getAttribute(MailConstants.A_ID, null);
                 Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
+                // scan upload for viruses
+                StringBuffer info = new StringBuffer();
+                UploadScanner.Result result = UploadScanner.accept(up, info);
+                if (result == UploadScanner.REJECT)
+                    throw MailServiceException.UPLOAD_REJECTED(up.getName(), info.toString());
+                if (result == UploadScanner.ERROR)
+                    throw MailServiceException.SCAN_ERROR(up.getName());
+
                 doc = new Doc(up, explicitName, explicitCtype, description);
             } else if (msgElem != null) {
                 String part = msgElem.getAttribute(MailConstants.A_PART);
