@@ -224,7 +224,7 @@ public class FileCache<K> {
         propDir = new File(cacheDir, "properties");
         FileUtil.ensureDirExists(propDir);
         tmpDir = new File(cacheDir, "tmp");
-        FileUtil.deleteDir(tmpDir);
+        FileUtil.deleteDirContents(tmpDir);
         FileUtil.ensureDirExists(tmpDir);
 
         // Load existing files.
