@@ -19,7 +19,6 @@
 package com.zimbra.cs.store;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -31,6 +30,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Objects;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.zmime.ZSharedFileInputStream;
 
 /**
  * Represents a blob in blob store incoming directory.  An incoming blob
@@ -70,7 +70,7 @@ public class Blob {
     }
 
     public InputStream getInputStream() throws IOException {
-        InputStream in = new FileInputStream(file);
+        InputStream in = new ZSharedFileInputStream(file);
         if (isCompressed()) {
             in = new GZIPInputStream(in);
         }

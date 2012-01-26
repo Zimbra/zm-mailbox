@@ -15,7 +15,6 @@
 package com.zimbra.cs.datasource.imap;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -34,6 +33,7 @@ import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZSharedFileInputStream;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.AppendResult;
@@ -92,7 +92,7 @@ public class ImapAppender {
         return new Data() {
             @Override
             public InputStream getInputStream() throws IOException {
-                return new FileInputStream(file);
+                return new ZSharedFileInputStream(file);
             }
 
             @Override
@@ -220,7 +220,7 @@ public class ImapAppender {
         return uids;
     }
 
-    private boolean matches(MessageInfo mi, MessageData md) throws IOException, MessagingException {
+    private boolean matches(MessageInfo mi, MessageData md) throws MessagingException {
         //bug 64062 Exchange misreports RFC 822 size unless configured with: Set-ImapSettings -EnableExactRFC822Size:$true
         //Message-ID, and optional Subject must match
         Envelope env = md.getEnvelope();

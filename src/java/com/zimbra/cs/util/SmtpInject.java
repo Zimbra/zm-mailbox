@@ -25,7 +25,6 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -42,6 +41,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZSharedFileInputStream;
 
 /**
  * Simple command line SMTP client for testing purposes.
@@ -202,7 +202,7 @@ public class SmtpInject {
 
         try {
             // create a message
-            MimeMessage msg = new ZMimeMessage(session, new SharedFileInputStream(file));
+            MimeMessage msg = new ZMimeMessage(session, new ZSharedFileInputStream(file));
             InternetAddress[] address = { new JavaMailInternetAddress(recipient) };
             msg.setFrom(new JavaMailInternetAddress(sender));
 
@@ -217,9 +217,6 @@ public class SmtpInject {
             if ((ex = mex.getNextException()) != null) {
                 ex.printStackTrace();
             }
-            System.exit(1);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
             System.exit(1);
         }
     }

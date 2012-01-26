@@ -17,9 +17,9 @@ package com.zimbra.cs.util;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -64,6 +64,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZSharedFileInputStream;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -336,11 +337,11 @@ public class SpamExtract {
         BufferStream buffer = new BufferStream(gm.getResponseContentLength(), MAX_BUFFER_SIZE);
         buffer.setSequenced(false);
         MimeMessage mm = null;
-        FileInputStream fis = null;
+        InputStream fis = null;
         try {
             ByteUtil.copy(gm.getResponseBodyAsStream(), true, buffer, false);
             if (buffer.isSpooled()) {
-                fis = new FileInputStream(buffer.getFile());
+                fis = new ZSharedFileInputStream(buffer.getFile());
                 mm = new ZMimeMessage(mJMSession, fis);
             } else {
                 mm = new ZMimeMessage(mJMSession, buffer.getInputStream());
