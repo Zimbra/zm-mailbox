@@ -18,7 +18,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -80,6 +82,15 @@ public class SoapDynamicGroup extends DynamicGroup implements SoapEntry {
             return new String[0];
         } else {
             return membersList.toArray(new String[membersList.size()]);
+        }
+    }
+    
+    @Override
+    public Set<String> getAllMembersSet() throws ServiceException {
+        if (membersList == null) {
+            return Sets.newHashSet();
+        } else {
+            return Sets.newHashSet(membersList);
         }
     }
     

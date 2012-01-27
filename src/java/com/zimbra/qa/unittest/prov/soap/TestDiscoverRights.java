@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.qa.QA.Bug;
@@ -136,6 +137,45 @@ public class TestDiscoverRights extends SoapTest {
                         Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName()),
                         Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName())), 
                 result);
+    }
+    
+    @Test
+    public void granteeAll() throws Exception {
+        Domain testDomain = provUtil.createDomain(genDomainName(domain.getName()));
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), testDomain);
+        
+        String RIGHT_NAME = Right.RT_createDistList;
+        
+        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, testDomain.getName(), 
+                GranteeType.GT_AUTHUSER.getCode(), null, null, null, 
+                RIGHT_NAME, null);
+        
+        SoapTransport transport = authUser(acct.getName());
+        
+        DiscoverRightsRequest req = new DiscoverRightsRequest(
+                Collections.singletonList(RIGHT_NAME));
+        DiscoverRightsResponse resp = invokeJaxb(transport, req);
+        
+        List<DiscoverRightsInfo> rightsInfo = resp.getDiscoveredRights();
+        
+        List<String> result = Lists.newArrayList();
+        for (DiscoverRightsInfo rightInfo : rightsInfo) {
+            List<DiscoverRightsTarget> targets = rightInfo.getTargets();
+            
+            for (DiscoverRightsTarget target : targets) {
+                String id = target.getId();
+                String name = target.getName();
+                
+                result.add(Verify.makeResultStr(id, name));
+            }
+        }
+        
+        Verify.verifyEquals(
+                Lists.newArrayList(Verify.makeResultStr(testDomain.getId(), testDomain.getName())), 
+                result);
+        
+        provUtil.deleteAccount(acct);
+        provUtil.deleteDomain(testDomain);
     }
     
 }

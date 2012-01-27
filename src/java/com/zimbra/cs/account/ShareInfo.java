@@ -177,9 +177,9 @@ public class ShareInfo {
             if (acct != null)
                 granteeName = acct.getName();
         } else if (granteeType == ACL.GRANTEE_GROUP) {
-            DistributionList dl = prov.getDLBasic(Key.DistributionListBy.id, granteeId);
-            if (dl != null)
-                granteeName = dl.getName();
+            Group group = prov.getGroupBasic(Key.DistributionListBy.id, granteeId);
+            if (group != null)
+                granteeName = group.getName();
         } else if (granteeType == ACL.GRANTEE_COS) {
             Cos cos = prov.get(Key.CosBy.id, granteeId);
             if (cos != null)
@@ -205,9 +205,9 @@ public class ShareInfo {
             if (acct != null)
                 granteeDisplay = acct.getDisplayName();
         } else if (granteeType == ACL.GRANTEE_GROUP) {
-            DistributionList dl = prov.getDLBasic(Key.DistributionListBy.id, granteeId);
-            if (dl != null)
-                granteeDisplay = dl.getDisplayName();
+            Group group = prov.getGroupBasic(Key.DistributionListBy.id, granteeId);
+            if (group != null)
+                granteeDisplay = group.getDisplayName();
         } else if (granteeType == ACL.GRANTEE_COS) {
             Cos cos = prov.get(Key.CosBy.id, granteeId);
             if (cos != null)

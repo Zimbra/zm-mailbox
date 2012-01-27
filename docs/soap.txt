@@ -3921,6 +3921,8 @@ Notes:
 
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
+    
+    returns group members sorted ascendingly by email address.
 
 -----------------------------
 

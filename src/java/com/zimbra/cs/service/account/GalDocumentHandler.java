@@ -33,7 +33,8 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
     }
     
     @Override
-    protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
+    protected Element proxyIfNecessary(Element request, Map<String, Object> context) 
+    throws ServiceException {
         try {
             ZimbraSoapContext zsc = getZimbraSoapContext(context);
             
@@ -45,10 +46,11 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
             if (acctId != null) {
                 Account acct = prov.get(AccountBy.id, acctId, zsc.getAuthToken());
                 if (acct != null) {
-                    if (!Provisioning.onLocalServer(acct))
+                    if (!Provisioning.onLocalServer(acct)) {
                         return proxyRequest(request, context, acctId);
-                    else
+                    } else {
                         return null;
+                    }
                 }
             }
             

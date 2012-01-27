@@ -532,7 +532,9 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public synchronized Object getCachedData(String key) {
-        if (mData == null) return null;
+        if (mData == null) {
+            return null;
+        }
         return mData.get(key);
     }
     
@@ -547,6 +549,13 @@ public abstract class Entry implements ToZJSONObject {
      */
     public Object getCachedData(EntryCacheDataKey key) {
         return getCachedData(key.getKeyName());
+    }
+    
+    public synchronized void removeCachedData(EntryCacheDataKey key) {
+        if (mData == null) {
+            return;
+        }
+        mData.remove(key.getKeyName());
     }
     
     protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) 

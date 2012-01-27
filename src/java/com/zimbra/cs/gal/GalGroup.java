@@ -19,10 +19,10 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -223,16 +223,16 @@ public abstract class GalGroup {
     private static boolean canExpandGroup(Provisioning prov, String groupName, Account authedAcct) {
         try {
             // get the dl object for ACL checking
-            DistributionList dl = prov.getDLBasic(Key.DistributionListBy.name, groupName);
+            Group group = prov.getGroupBasic(Key.DistributionListBy.name, groupName);
 
             // the DL might have been deleted since the last GAL sync account sync, throw.
             // or should we just let the request through?
-            if (dl == null) {
-                ZimbraLog.gal.warn("GalGroup - unable to find distribution list " + groupName + " for permission checking");
+            if (group == null) {
+                ZimbraLog.gal.warn("GalGroup - unable to find group " + groupName + " for permission checking");
                 return false;
             }
 
-            if (!AccessManager.getInstance().canDo(authedAcct, dl, User.R_viewDistList, false))
+            if (!AccessManager.getInstance().canDo(authedAcct, group, User.R_viewDistList, false))
                 return false;
 
         } catch (ServiceException e) {

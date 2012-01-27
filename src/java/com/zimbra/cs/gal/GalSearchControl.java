@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.gal;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -35,12 +34,11 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
@@ -732,18 +730,20 @@ public class GalSearchControl {
 
             try {
                 // get the dl object for ACL checking
-                DistributionList dl = prov.getDLBasic(Key.DistributionListBy.id, groupId);
+                Group group = prov.getGroupBasic(Key.DistributionListBy.id, groupId);
 
                 // the DL might have been deleted since the last GAL sync account sync, throw.
                 // or should we just let the request through?
-                if (dl == null) {
-                    ZimbraLog.gal.warn("unable to find distribution list " + groupName + "(" + groupId + ") for permission checking");
+                if (group == null) {
+                    ZimbraLog.gal.warn("unable to find group " + groupName 
+                            + "(" + groupId + ") for permission checking");
                     return false;
                 }
 
-                if (!AccessManager.getInstance().canDo(authedAcct, dl, User.R_viewDistList, false))
+                if (!AccessManager.getInstance().canDo(authedAcct, group, User.R_viewDistList, false)) {
                     return false;
-
+                }
+                
             } catch (ServiceException e) {
                 ZimbraLog.gal.warn("unable to check permission for gal group expansion: " + groupName);
                 return false;

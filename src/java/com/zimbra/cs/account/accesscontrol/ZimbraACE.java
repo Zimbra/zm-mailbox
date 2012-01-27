@@ -19,6 +19,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
@@ -436,7 +437,7 @@ public class ZimbraACE {
                 }
                 break;
             case GT_GROUP:
-                DistributionList group = Provisioning.getInstance().getDLBasic(
+                Group group = Provisioning.getInstance().getGroupBasic(
                         Key.DistributionListBy.id, mGrantee);
                 if (group != null) {
                     return group.getName();

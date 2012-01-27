@@ -190,27 +190,6 @@ public class LdapProvisioning extends LdapProv {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
     };
-    
-    /*
-     private static final String[] BASIC_DL_ATTRS = {
-            Provisioning.A_cn,
-            Provisioning.A_displayName,
-            Provisioning.A_mail,
-            Provisioning.A_objectClass,
-            Provisioning.A_uid,
-            Provisioning.A_zimbraACE,
-            Provisioning.A_zimbraAdminConsoleUIComponents,
-            Provisioning.A_zimbraId,
-            Provisioning.A_zimbraIsACLGroup,
-            Provisioning.A_zimbraIsAdminGroup,
-            Provisioning.A_zimbraMailAlias,
-            Provisioning.A_zimbraPrefReplyToAddress,
-            Provisioning.A_zimbraPrefReplyToDisplay,
-            Provisioning.A_zimbraPrefReplyToEnabled,
-            Provisioning.A_zimbraDistributionListSubscriptionPolicy,
-            Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
-     };
-     */
 
     @Override
     public int getAccountCacheSize() { return sAccountCache.getSize(); }
@@ -5939,7 +5918,8 @@ public class LdapProvisioning extends LdapProv {
         }
 
         PermissionCache.invalidateCache();
-
+        cleanGroupMembersCache(dl);
+        
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, mods.toArray(new String[0]));
         modifyAttrs(dl, modmap, true);
@@ -6030,7 +6010,8 @@ public class LdapProvisioning extends LdapProv {
         }
 
         PermissionCache.invalidateCache();
-
+        cleanGroupMembersCache(dl);
+        
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, mods.toArray(new String[0]));
         modifyAttrs(dl, modmap);
@@ -8018,6 +7999,43 @@ public class LdapProvisioning extends LdapProv {
             return inDistributionList(acct, zimbraId);
         }
     }
+    
+    @Override
+    public String[] getGroupMembers(Group group) throws ServiceException {
+        EntryCacheDataKey cacheKey = EntryCacheDataKey.GROUP_MEMBERS;
+
+        String[] members = (String[])group.getCachedData(cacheKey);
+        if (members != null) {
+            return members;
+        }
+        
+        members = group.getAllMembers();  // should never be null
+        assert(members != null);
+        Arrays.sort(members);
+        
+        // catch it
+        group.setCachedData(cacheKey, members);
+        
+        return members;
+    }
+    
+
+    private void cleanGroupMembersCache(Group group) {
+        /*
+         * Fully loaded DLs(containing members attribute) are not cached 
+         * (those obtained via Provisioning.getGroup().
+         * 
+         * if the modified instance (the instance being passwed in) is not the same 
+         * instance in cache, clean the group members cache on the cached instance
+         */
+        Group cachedInstance = getGroupFromCache(DistributionListBy.id, group.getId());
+        if (cachedInstance != null && group != cachedInstance) {
+            cachedInstance.removeCachedData(EntryCacheDataKey.GROUP_MEMBERS);
+        }
+        
+        // also always clean it on the modified instance
+        group.removeCachedData(EntryCacheDataKey.GROUP_MEMBERS);
+    }
 
     private Group getGroupInternal(Key.DistributionListBy keyType, String key, boolean basicAttrsOnly)
     throws ServiceException {
@@ -8083,6 +8101,7 @@ public class LdapProvisioning extends LdapProv {
         }
         addMailHost(entry, cosOfCreator, false);
     }
+    
 
     /* ==================
      *   Dynamic Groups
@@ -8516,6 +8535,7 @@ public class LdapProvisioning extends LdapProv {
             LdapClient.closeContext(zlc);
         }
         PermissionCache.invalidateCache();
+        cleanGroupMembersCache(group);
     }
 
     private void removeDynamicGroupMembers(LdapDynamicGroup group, String[] members)
@@ -8552,6 +8572,7 @@ public class LdapProvisioning extends LdapProv {
             LdapClient.closeContext(zlc);
         }
         PermissionCache.invalidateCache();
+        cleanGroupMembersCache(group);
     }
 
     private boolean inDynamicGroup(Account acct, String zimbraId) throws ServiceException {

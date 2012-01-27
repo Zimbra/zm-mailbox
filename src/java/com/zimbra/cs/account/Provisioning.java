@@ -1244,6 +1244,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
+    public String[] getGroupMembers(Group group) throws ServiceException {
+        return group.getAllMembers();
+    }
+    
     /**
      * @return set of all the zimbraId's of groups this account belongs to, including 
      *         dynamic groups and direct/nested static distribution lists.

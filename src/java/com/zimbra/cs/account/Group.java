@@ -23,11 +23,10 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -50,14 +49,27 @@ public abstract class Group extends MailTarget implements AliasedEntry {
 
     public abstract Domain getDomain() throws ServiceException;
     
+    /**
+     * Ldap implementation of Group will cost a LDAP search.
+     * Use Provisioning.getGroupMembers() to get cached results.
+     */
     public abstract String[] getAllMembers() throws ServiceException;
     
+    /**
+     * Ldap implementation of Group will cost a LDAP search.
+     * Use Provisioning.getGroupMembers() to get cached results.
+     */
     public abstract Set<String> getAllMembersSet() throws ServiceException;
     
     public abstract String getDisplayName();
     
     abstract DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy();
     abstract DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy();
+    
+    public boolean hideInGal() {
+        String hideInGal = getAttr(Provisioning.A_zimbraHideInGal);
+        return ProvisioningConstants.TRUE.equals(hideInGal);
+    }
     
     public Server getServer() throws ServiceException {
         String serverName = getAttr(Provisioning.A_zimbraMailHost);
