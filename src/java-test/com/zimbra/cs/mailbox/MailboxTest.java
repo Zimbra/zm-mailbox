@@ -32,6 +32,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.store.MockStoreManager;
+import com.zimbra.cs.store.StoreManager;
 
 /**
  * Unit test for {@link Mailbox}.
@@ -268,16 +269,40 @@ public final class MailboxTest {
 
     @Test
     public void deleteMailbox() throws Exception {
+        // first test normal mailbox delete
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
 
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
-
         Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
 
         mbox.deleteMailbox();
-
         Assert.assertEquals("end with no blobs in the store", 0, MockStoreManager.size());
+
+
+        // then test mailbox delete without store delete
+        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
+
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+        Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
+
+        mbox.deleteMailbox(Mailbox.DeleteBlobs.NEVER);
+        Assert.assertEquals("end with 1 blob in the store", 1, MockStoreManager.size());
+        MockStoreManager.purge();
+
+
+        // then do it contingent on whether the store is centralized or local
+        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
+
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+        Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
+
+        mbox.deleteMailbox(Mailbox.DeleteBlobs.UNLESS_CENTRALIZED);
+        int expected = StoreManager.getInstance().supports(StoreManager.StoreFeature.CENTRALIZED) ? 1 : 0;
+        Assert.assertEquals("end with " + expected + " blob(s) in the store", expected, MockStoreManager.size());
+        MockStoreManager.purge();
     }
 }

@@ -63,6 +63,7 @@ public final class MockStoreManager extends StoreManager {
     public boolean supports(StoreFeature feature) {
         switch (feature) {
             case BULK_DELETE:  return false;
+            case CENTRALIZED:  return false;
             default:           return false;
         }
     }

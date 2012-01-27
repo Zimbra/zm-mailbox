@@ -59,6 +59,14 @@ public class HttpStoreManagerTest {
         }
 
         @Override
+        public boolean supports(StoreFeature feature) {
+            switch (feature) {
+                case CENTRALIZED:  return false;
+                default:           return super.supports(feature);
+            }
+        }
+
+        @Override
         protected StagedBlob getStagedBlob(PostMethod post, String postDigest, long postSize, Mailbox mbox)
         throws ServiceException {
             String locator = post.getResponseHeader("Location").getValue();

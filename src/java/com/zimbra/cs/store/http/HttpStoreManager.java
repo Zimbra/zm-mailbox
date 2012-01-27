@@ -106,6 +106,7 @@ public abstract class HttpStoreManager extends StoreManager {
     public boolean supports(StoreFeature feature) {
         switch (feature) {
             case BULK_DELETE:  return false;
+            case CENTRALIZED:  return true;
             default:           return false;
         }
     }

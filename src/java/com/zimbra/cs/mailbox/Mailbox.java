@@ -215,6 +215,7 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.Zimbra;
@@ -1832,19 +1833,23 @@ public class Mailbox {
     }
 
     public void deleteMailbox() throws ServiceException {
-        deleteMailbox(null);
+        deleteMailbox(DeleteBlobs.ALWAYS);
     }
 
-    public void deleteMailbox(OperationContext octxt) throws ServiceException {
+    public enum DeleteBlobs { ALWAYS, NEVER, UNLESS_CENTRALIZED };
+
+    public void deleteMailbox(DeleteBlobs deleteBlobs) throws ServiceException {
+        StoreManager sm = StoreManager.getInstance();
+        boolean deleteStore = deleteBlobs == DeleteBlobs.ALWAYS || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && !sm.supports(StoreFeature.CENTRALIZED));
         SpoolingCache<MailboxBlob> blobs = null;
 
         lock.lock();
         try {
             // first, throw the mailbox into maintenance mode
             //   (so anyone else with a cached reference to the Mailbox can't use it)
-            MailboxMaintenance maintenance = null;
+            MailboxMaintenance maint = null;
             try {
-                maintenance = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
+                maint = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
             } catch (MailServiceException e) {
                 // Ignore wrong mailbox exception.  It may be thrown if we're redoing a DeleteMailbox that was interrupted
                 // when server crashed in the middle of the operation.  Database says the mailbox has been deleted, but
@@ -1854,17 +1859,16 @@ public class Mailbox {
                 }
             }
 
-            boolean needRedo = needRedo(octxt);
+            boolean needRedo = needRedo(null);
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
             boolean success = false;
             try {
-                beginTransaction("deleteMailbox", octxt, redoRecorder);
+                beginTransaction("deleteMailbox", null, redoRecorder);
                 if (needRedo) {
                     redoRecorder.log();
                 }
 
-                StoreManager sm = StoreManager.getInstance();
-                if (!sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
+                if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
                     blobs = DbMailItem.getAllBlobs(this);
                 }
 
@@ -1890,16 +1894,18 @@ public class Mailbox {
                     MailboxManager.getInstance().markMailboxDeleted(this);
 
                     // attempt to nuke the store and index
-                    // FIXME: we're assuming a lot about the store and index here; should use their functions
                     try {
                         index.deleteIndex();
                     } catch (IOException iox) {
-                        ZimbraLog.store.warn("Unable to delete index data.", iox);
+                        ZimbraLog.store.warn("Unable to delete index data", iox);
                     }
-                    try {
-                        sm.deleteStore(this, blobs);
-                    } catch (IOException iox) {
-                        ZimbraLog.store.warn("Unable to delete message data.", iox);
+
+                    if (deleteStore) {
+                        try {
+                            sm.deleteStore(this, blobs);
+                        } catch (IOException iox) {
+                            ZimbraLog.store.warn("Unable to delete message data", iox);
+                        }
                     }
                 }
             } finally {
@@ -1911,14 +1917,14 @@ public class Mailbox {
                     }
                 }
 
-                if (maintenance != null) {
+                if (maint != null) {
                     if (success) {
                         // twiddle the mailbox lock [must be the last command of this function!]
                         //   (so even *we* can't access this Mailbox going forward)
-                        maintenance.markUnavailable();
+                        maint.markUnavailable();
                     } else {
                         // end the maintenance if the delete is not successful.
-                        MailboxManager.getInstance().endMaintenance(maintenance, success, true);
+                        MailboxManager.getInstance().endMaintenance(maint, success, true);
                     }
                 }
 
