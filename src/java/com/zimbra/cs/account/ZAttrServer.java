@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120111-1420 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120127-1151 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -352,6 +352,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetACE(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraACE, "");
+        return attrs;
+    }
+
+    /**
+     * interface address on which Admin HTTPS server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @return zimbraAdminBindAddress, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1368)
+    public String getAdminBindAddress() {
+        return getAttr(Provisioning.A_zimbraAdminBindAddress, null);
+    }
+
+    /**
+     * interface address on which Admin HTTPS server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraAdminBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1368)
+    public void setAdminBindAddress(String zimbraAdminBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminBindAddress, zimbraAdminBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which Admin HTTPS server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraAdminBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1368)
+    public Map<String,Object> setAdminBindAddress(String zimbraAdminBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminBindAddress, zimbraAdminBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which Admin HTTPS server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1368)
+    public void unsetAdminBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which Admin HTTPS server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1368)
+    public Map<String,Object> unsetAdminBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminBindAddress, "");
         return attrs;
     }
 
@@ -3385,6 +3462,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetDatabaseSlowSqlThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * interface address on which zimbra extension server should listen; if
+     * empty, binds to all interfaces
+     *
+     * @return zimbraExtensionBindAddress, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1369)
+    public String getExtensionBindAddress() {
+        return getAttr(Provisioning.A_zimbraExtensionBindAddress, null);
+    }
+
+    /**
+     * interface address on which zimbra extension server should listen; if
+     * empty, binds to all interfaces
+     *
+     * @param zimbraExtensionBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1369)
+    public void setExtensionBindAddress(String zimbraExtensionBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindAddress, zimbraExtensionBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which zimbra extension server should listen; if
+     * empty, binds to all interfaces
+     *
+     * @param zimbraExtensionBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1369)
+    public Map<String,Object> setExtensionBindAddress(String zimbraExtensionBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindAddress, zimbraExtensionBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which zimbra extension server should listen; if
+     * empty, binds to all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1369)
+    public void unsetExtensionBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which zimbra extension server should listen; if
+     * empty, binds to all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1369)
+    public Map<String,Object> unsetExtensionBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindAddress, "");
         return attrs;
     }
 
@@ -7228,6 +7382,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * interface address on which HTTP server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @return zimbraMailBindAddress, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1365)
+    public String getMailBindAddress() {
+        return getAttr(Provisioning.A_zimbraMailBindAddress, null);
+    }
+
+    /**
+     * interface address on which HTTP server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @param zimbraMailBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1365)
+    public void setMailBindAddress(String zimbraMailBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBindAddress, zimbraMailBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which HTTP server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @param zimbraMailBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1365)
+    public Map<String,Object> setMailBindAddress(String zimbraMailBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBindAddress, zimbraMailBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which HTTP server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1365)
+    public void unsetMailBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which HTTP server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1365)
+    public Map<String,Object> unsetMailBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBindAddress, "");
+        return attrs;
+    }
+
+    /**
      * Whether to allow password sent to non-secured port when zimbraMailMode
      * is mixed. If it set to TRUE the server will allow login with clear
      * text AuthRequests and change password with clear text
@@ -8910,6 +9141,160 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailReferMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReferMode, "");
+        return attrs;
+    }
+
+    /**
+     * interface address on which HTTPS server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @return zimbraMailSSLBindAddress, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1366)
+    public String getMailSSLBindAddress() {
+        return getAttr(Provisioning.A_zimbraMailSSLBindAddress, null);
+    }
+
+    /**
+     * interface address on which HTTPS server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @param zimbraMailSSLBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1366)
+    public void setMailSSLBindAddress(String zimbraMailSSLBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLBindAddress, zimbraMailSSLBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which HTTPS server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @param zimbraMailSSLBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1366)
+    public Map<String,Object> setMailSSLBindAddress(String zimbraMailSSLBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLBindAddress, zimbraMailSSLBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which HTTPS server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1366)
+    public void unsetMailSSLBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which HTTPS server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1366)
+    public Map<String,Object> unsetMailSSLBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * interface address on which HTTPS server accepting client certificates
+     * should listen; if empty, binds to all interfaces
+     *
+     * @return zimbraMailSSLClientCertBindAddress, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1367)
+    public String getMailSSLClientCertBindAddress() {
+        return getAttr(Provisioning.A_zimbraMailSSLClientCertBindAddress, null);
+    }
+
+    /**
+     * interface address on which HTTPS server accepting client certificates
+     * should listen; if empty, binds to all interfaces
+     *
+     * @param zimbraMailSSLClientCertBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1367)
+    public void setMailSSLClientCertBindAddress(String zimbraMailSSLClientCertBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertBindAddress, zimbraMailSSLClientCertBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which HTTPS server accepting client certificates
+     * should listen; if empty, binds to all interfaces
+     *
+     * @param zimbraMailSSLClientCertBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1367)
+    public Map<String,Object> setMailSSLClientCertBindAddress(String zimbraMailSSLClientCertBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertBindAddress, zimbraMailSSLClientCertBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which HTTPS server accepting client certificates
+     * should listen; if empty, binds to all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1367)
+    public void unsetMailSSLClientCertBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which HTTPS server accepting client certificates
+     * should listen; if empty, binds to all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1367)
+    public Map<String,Object> unsetMailSSLClientCertBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertBindAddress, "");
         return attrs;
     }
 

@@ -6792,4 +6792,24 @@ TODO: delete them permanently from here
   <defaultCOSValue>15d</defaultCOSValue>
 </attr>
 
+<attr id="1365" name="zimbraMailBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>interface address on which HTTP server should listen; if empty, binds to all interfaces</desc>
+</attr>
+
+<attr id="1366" name="zimbraMailSSLBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>interface address on which HTTPS server should listen; if empty, binds to all interfaces</desc>
+</attr>
+
+<attr id="1367" name="zimbraMailSSLClientCertBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>interface address on which HTTPS server accepting client certificates should listen; if empty, binds to all interfaces</desc>
+</attr>
+
+<attr id="1368" name="zimbraAdminBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>interface address on which Admin HTTPS server should listen; if empty, binds to all interfaces</desc>
+</attr>
+
+<attr id="1369" name="zimbraExtensionBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>interface address on which zimbra extension server should listen; if empty, binds to all interfaces</desc>
+</attr>
+
 </attrs>
