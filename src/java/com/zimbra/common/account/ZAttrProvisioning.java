@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120111-1420 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120127-1151 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1717,6 +1717,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=109)
     public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
+
+    /**
+     * interface address on which Admin HTTPS server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1368)
+    public static final String A_zimbraAdminBindAddress = "zimbraAdminBindAddress";
 
     /**
      * whether to show catchall addresses in admin console
@@ -3614,6 +3623,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=501)
     public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";
+
+    /**
+     * interface address on which zimbra extension server should listen; if
+     * empty, binds to all interfaces
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1369)
+    public static final String A_zimbraExtensionBindAddress = "zimbraExtensionBindAddress";
 
     /**
      * the handler class for getting all groups an account belongs to in the
@@ -5579,6 +5597,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAllowReceiveButNotSendWhenOverQuota = "zimbraMailAllowReceiveButNotSendWhenOverQuota";
 
     /**
+     * interface address on which HTTP server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1365)
+    public static final String A_zimbraMailBindAddress = "zimbraMailBindAddress";
+
+    /**
      * Maximum number of entries for per user black list. This restricts the
      * number of values that can be set on the amavisBlacklistSender
      * attribute of an account. If set to 0, the per user white list feature
@@ -5993,6 +6020,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=105)
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
+
+    /**
+     * interface address on which HTTPS server should listen; if empty, binds
+     * to all interfaces
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1366)
+    public static final String A_zimbraMailSSLBindAddress = "zimbraMailSSLBindAddress";
+
+    /**
+     * interface address on which HTTPS server accepting client certificates
+     * should listen; if empty, binds to all interfaces
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1367)
+    public static final String A_zimbraMailSSLClientCertBindAddress = "zimbraMailSSLClientCertBindAddress";
 
     /**
      * enable authentication via X.509 Client Certificate. Disabled: client
