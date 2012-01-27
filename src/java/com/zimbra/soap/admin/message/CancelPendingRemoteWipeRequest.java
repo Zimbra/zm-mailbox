@@ -27,13 +27,24 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Cancel a pending Remote Wipe request.  Remote Wipe can't be canceled once the device
+ * confirms the wipe.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = SyncAdminConstants.E_CANCEL_PENDING_REMOTE_WIPE_REQUEST)
 public class CancelPendingRemoteWipeRequest {
 
+    /**
+     * @zm-api-field-description Account
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private final AccountSelector account;
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description Device ID
+     */
     @XmlElement(name = SyncConstants.E_DEVICE, required=false)
     private DeviceId deviceId;
 

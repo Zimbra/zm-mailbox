@@ -25,6 +25,10 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class SectionAttr {
 
+    /**
+     * @zm-api-field-tag metadata-section-key
+     * @zm-api-field-description Metadata section key
+     */
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=true)
     private final String section;
 

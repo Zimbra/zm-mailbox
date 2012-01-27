@@ -24,15 +24,34 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SMIMEStoreType;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class SMIMEPublicCertInfo {
 
+    /**
+     * @zm-api-field-tag cert-store-type
+     * @zm-api-field-description Certificate store type
+     * <br />
+     * Valid store types:
+     * <table>
+     * <tr> <td> <b>CONTACT</b> </td> <td> contacts </td> </tr>
+     * <tr> <td> <b>GAL</b> </td> <td> GAL (internal and external) </td> </tr>
+     * <tr> <td> <b>LDAP</b> </td> <td> external LDAP (see GetSMIMEConfig and ModifySMIMEConfig </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=AccountConstants.A_STORE /* store */, required=true)
     private SMIMEStoreType storeType;
 
+    /**
+     * @zm-api-field-tag cert-store-field
+     * @zm-api-field-description Field containing the certificate
+     */
     @XmlAttribute(name=AccountConstants.A_FIELD /* field */, required=true)
     private String field;
 
+    /**
+     * @zm-api-field-tag base64-encoded-cert
+     * @zm-api-field-description Base64 encoded cert
+     */
     @XmlValue
     private String value;
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,28 +21,56 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class TzOnsetInfo {
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_WEEK, required=false)
+    /**
+     * @zm-api-field-tag tzonset-week
+     * @zm-api-field-description Week number; 1=first, 2=second, 3=third, 4=fourth, -1=last
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_WEEK /* week */, required=false)
     private Integer week;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFWEEK, required=false)
+    /**
+     * @zm-api-field-tag tzonset-day-of-week
+     * @zm-api-field-description Day of week; 1=Sunday, 2=Monday, etc.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFWEEK /* wkday */, required=false)
     private Integer dayOfWeek;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_MONTH, required=true)
+    /**
+     * @zm-api-field-tag tzonset-month
+     * @zm-api-field-description Month; 1=January, 2=February, etc.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_MONTH /* mon */, required=true)
     private Integer month;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFMONTH, required=false)
+    /**
+     * @zm-api-field-tag tzonset-day-of-month
+     * @zm-api-field-description Day of month (1..31)
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFMONTH /* mday */, required=false)
     private Integer dayOfMonth;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_HOUR, required=true)
+    /**
+     * @zm-api-field-tag tzonset-hour
+     * @zm-api-field-description Transition hour (0..23)
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_HOUR /* hour */, required=true)
     private Integer hour;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_MINUTE, required=true)
+    /**
+     * @zm-api-field-tag tzonset-minute
+     * @zm-api-field-description Transition minute (0..59)
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_MINUTE /* min */, required=true)
     private Integer minute;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_SECOND, required=true)
+    /**
+     * @zm-api-field-tag tzonset-second
+     * @zm-api-field-description Transition second; 0..59, usually 0
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_SECOND /* sec */, required=true)
     private Integer second;
 
     public TzOnsetInfo() {

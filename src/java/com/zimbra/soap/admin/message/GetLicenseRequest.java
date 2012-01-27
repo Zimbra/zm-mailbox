@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Get License
+ */
 @XmlRootElement(name=AdminConstants.E_GET_LICENSE_REQUEST)
 public class GetLicenseRequest {
 }

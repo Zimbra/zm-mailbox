@@ -24,16 +24,39 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get Certificate
+ * <br />
+ * Currently, GetCertRequest/Response only handle 2 types "staged" and "all".  May need to support other options in
+ * the future
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_GET_CERT_REQUEST)
 public class GetCertRequest {
 
+    /**
+     * @zm-api-field-tag server-id
+     * @zm-api-field-description The server's ID whose cert is to be got
+     */
     @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=true)
     private final String server;
 
+    /**
+     * @zm-api-field-description Certificate type
+     * <br />
+     * staged - view the staged crt
+     * <br />
+     * other options (all, mta, ldap, mailboxd, proxy) are used to view the deployed crt
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private final String type;
 
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description Required only when type is "staged".
+     * <br />
+     * Could be "self" (self-signed cert) or "comm" (commerical cert)
+     */
     @XmlAttribute(name=CertMgrConstants.A_OPTION /* option */, required=false)
     private String option;
 

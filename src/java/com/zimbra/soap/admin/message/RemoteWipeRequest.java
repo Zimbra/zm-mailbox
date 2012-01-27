@@ -27,13 +27,23 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Request a device (e.g. a lost device) be wiped of all its data on the next sync.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncAdminConstants.E_REMOTE_WIPE_REQUEST)
 public class RemoteWipeRequest {
 
+    /**
+     * @zm-api-field-description Account selector
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private final AccountSelector account;
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description Device ID
+     */
     @XmlElement(name=SyncConstants.E_DEVICE, required=false)
     private DeviceId deviceId;
 

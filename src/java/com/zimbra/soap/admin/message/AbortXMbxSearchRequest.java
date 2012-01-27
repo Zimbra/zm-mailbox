@@ -26,16 +26,25 @@ import com.zimbra.common.soap.XMbxSearchConstants;
 import com.zimbra.soap.admin.type.SearchID;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Attempts to abort a running cross mailbox search task
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=XMbxSearchConstants.E_ABORT_XMBX_SEARCH_REQUEST)
 public class AbortXMbxSearchRequest {
 
-    @XmlElement(name=XMbxSearchConstants.E_SrchTask
-                /* searchtask */, required=true)
+    /**
+     * @zm-api-field-description Search task
+     */
+    @XmlElement(name=XMbxSearchConstants.E_SrchTask /* searchtask */, required=true)
     private final SearchID searchTask;
-    @XmlElement(name=AdminConstants.E_ACCOUNT
-    		/* account */,  required=false)
+
+    /**
+     * @zm-api-field-description Select account
+     */
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */,  required=false)
     private AccountSelector account;
+
     /**
      * no-argument constructor wanted by JAXB
      */

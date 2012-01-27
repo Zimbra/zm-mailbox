@@ -24,10 +24,23 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.RestoreSpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Perform an action related to a Restore from backup
+ * <ul>
+ * <li> When includeIncrementals is 1 (true), any incremental backups from the last full backup are also restored.
+ *      Default to 1 (true).
+ * <li> when sysData is 1 (true), restore system tables and local config.
+ * <li> if label is not specified, restore from the latest full backup.
+ * <li> prefix is used to produce new account names if the name is reused or a new account is to be created
+ * </ul>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_RESTORE_REQUEST)
 public class RestoreRequest {
 
+    /**
+     * @zm-api-field-description Restore specification
+     */
     @XmlElement(name=BackupConstants.E_RESTORE /* restore */, required=true)
     private final RestoreSpec restore;
 

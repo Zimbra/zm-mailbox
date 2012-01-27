@@ -23,13 +23,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.LDAPUtilsConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Rename LDAP Entry
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=LDAPUtilsConstants.E_RENAME_LDAP_ENTRIY_REQUEST)
 public class RenameLDAPEntryRequest {
 
+    /**
+     * @zm-api-field-tag current-dn
+     * @zm-api-field-description A valid LDAP DN String (RFC 2253) that identifies the LDAP object
+     */
     @XmlAttribute(name=LDAPUtilsConstants.E_DN /* dn */, required=true)
     private final String dn;
 
+    /**
+     * @zm-api-field-tag new-dn
+     * @zm-api-field-description New DN - a valid LDAP DN String (RFC 2253) that describes the new DN to be given to
+     * the LDAP object
+     */
     @XmlAttribute(name=LDAPUtilsConstants.E_NEW_DN /* new_dn */, required=true)
     private final String newDn;
 

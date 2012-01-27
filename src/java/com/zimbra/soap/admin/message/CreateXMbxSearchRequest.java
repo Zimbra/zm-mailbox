@@ -22,6 +22,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.XMbxSearchConstants;
 import com.zimbra.soap.admin.type.AdminKeyValuePairs;
 
+// Note: ZimbraXMbxSearch/docs/soap.txt documented a non-existent <searchtask> sub-element.
+//       This is not used - the attributes are direct children of <CreateXMbxSearchRequest>
+/**
+ * @zm-api-command-description Creates a search task
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=XMbxSearchConstants.E_CREATE_XMBX_SEARCH_REQUEST)
 public class CreateXMbxSearchRequest extends AdminKeyValuePairs {

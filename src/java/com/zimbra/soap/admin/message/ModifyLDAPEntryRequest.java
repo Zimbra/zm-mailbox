@@ -24,10 +24,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.LDAPUtilsConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Modify an LDAP Entry
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=LDAPUtilsConstants.E_MODIFY_LDAP_ENTRIY_REQUEST)
 public class ModifyLDAPEntryRequest extends AdminAttrsImpl {
 
+    /**
+     * @zm-api-field-tag ldap-DN-string
+     * @zm-api-field-description a valid LDAP DN String (RFC 2253) that identifies the LDAP object
+     */
     @XmlAttribute(name=LDAPUtilsConstants.E_DN /* dn */, required=true)
     private final String dn;
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,13 +22,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Add an alias for the account
+ * <br />
+ * Access: domain admin sufficient.
+ * <br />
+ * Note: this request is by default proxied to the account's home server
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
 public class AddAccountAliasRequest {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
+    /**
+     * @zm-api-field-tag value-of-zimbra-id
+     * @zm-api-field-description Zimbra ID
+     */
+    @XmlAttribute(name=AdminConstants.E_ID /* id */, required=true)
     private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
+
+    /**
+     * @zm-api-field-tag alias
+     * @zm-api-field-description Alias
+     */
+    @XmlAttribute(name=AdminConstants.E_ALIAS /* alias */, required=true)
     private final String alias;
 
     /**

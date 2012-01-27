@@ -25,10 +25,16 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Schedule backups
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_SCHEDULE_BACKUPS_REQUEST)
 public class ScheduleBackupsRequest {
 
+    /**
+     * @zm-api-field-description Server specification
+     */
     @XmlElement(name=AdminConstants.E_SERVER /* server */, required=true)
     private final Name server;
 

@@ -24,15 +24,28 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 
+/**
+ * @zm-api-command-description Get a certificate signing request (CSR)
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_GET_CSR_REQUEST)
 public class GetCSRRequest {
 
-    // Can be "--- All Servers ---" or the ID of a server
+    /**
+     * @zm-api-field-tag server-id
+     * @zm-api-field-description Server ID.  Can be "--- All Servers ---" or the ID of a server
+     */
     @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=false)
     private String server;
 
-    // "self" or "comm"
+    /**
+     * @zm-api-field-tag type
+     * @zm-api-field-description Type of CSR (required)
+     * <table>
+     * <tr> <td> <b>self</b> </td> <td> self-signed certificate </td> </tr>
+     * <tr> <td> <b>comm</b> </td> <td> commercial certificate </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
     private String type;
 

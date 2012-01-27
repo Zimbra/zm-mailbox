@@ -25,10 +25,16 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.ArchiveConstants;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Disable Archiving for an account that already has archiving enabled
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ArchiveConstants.E_DISABLE_ARCHIVE_REQUEST)
 public class DisableArchiveRequest {
 
+    /**
+     * @zm-api-field-description Account
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
     private final AccountSelector account;
 

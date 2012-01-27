@@ -19,13 +19,23 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Remove a device or remove all devices attached to an account. This will not cause a
+ * reset of sync data, but will cause a reset of policies on the next sync.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncAdminConstants.E_REMOVE_DEVICE_REQUEST)
 public class RemoveDeviceRequest {
 
+    /**
+     * @zm-api-field-description Account Selector
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private AccountSelector account;
 
+    /**
+     * @zm-api-field-description Device specification - Note - if not supplied ALL devices will be removed.
+     */
     @XmlElement(name=SyncConstants.E_DEVICE, required=false)
     private DeviceId deviceId;
 

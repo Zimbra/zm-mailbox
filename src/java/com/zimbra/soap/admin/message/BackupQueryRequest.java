@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupQuerySpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Backup Query
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_BACKUP_QUERY_REQUEST)
 public class BackupQueryRequest {
 
+    /**
+     * @zm-api-field-description Query
+     */
     @XmlElement(name=BackupConstants.E_QUERY /* query */, required=true)
     private final BackupQuerySpec query;
 

@@ -24,10 +24,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.ExportMailboxSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Export Mailbox (OLD mailbox move mechanism)
+ * <br />
+ * This request blocks until mailbox move is complete and can take a long time.  Client side should set timeout
+ * accordingly.
+ * <br />
+ * Note: This is the old mailbox move request.  The new mailbox move request is <b>MoveMailboxRequest</b>.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_EXPORTMAILBOX_REQUEST)
 public class ExportMailboxRequest {
 
+    /**
+     * @zm-api-field-description Export Mailbox details
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private final ExportMailboxSelector account;
 

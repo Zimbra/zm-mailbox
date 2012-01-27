@@ -23,10 +23,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.LDAPUtilsConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+// See ZimbraLDAPUtilsExtension/doc/soapadmin.txt
+/**
+ * @zm-api-command-description Delete an LDAP entry
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=LDAPUtilsConstants.E_DELETE_LDAP_ENTRIY_REQUEST)
 public class DeleteLDAPEntryRequest {
 
+    /**
+     * @zm-api-field-tag LDAP-DN-string
+     * @zm-api-field-description A valid LDAP DN String (RFC 2253) that describes the DN to delete
+     */
     @XmlAttribute(name=LDAPUtilsConstants.E_DN /* dn */, required=true)
     private final String dn;
 

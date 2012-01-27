@@ -23,15 +23,29 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class WildcardExpansionQueryInfo implements BaseQueryInfo {
 
+    /**
+     * @zm-api-field-tag wildcard-str
+     * @zm-api-field-description Wildcard expansion string
+     */
     @XmlAttribute(name="str", required=true)
     private final String str;
 
+    /**
+     * @zm-api-field-tag wildcard-expanded
+     * @zm-api-field-description If value is <b>1 (true)</b>, then the wildcard was expanded and the
+     * matches are included in the search.  If value is <b>0 (false)</b> then the wildcard was not specific enough and
+     * therefore no wildcard matches are included (exact-match *is* included in results).
+     */
     @XmlAttribute(name="expanded", required=true)
     private final ZmBoolean expanded;
 
+    /**
+     * @zm-api-field-tag wildcard-num-expanded
+     * @zm-api-field-description Number expanded
+     */
     @XmlAttribute(name="numExpanded", required=true)
     private final int numExpanded;
 

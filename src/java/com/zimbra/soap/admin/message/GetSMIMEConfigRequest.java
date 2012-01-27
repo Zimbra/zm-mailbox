@@ -25,13 +25,26 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.type.NamedElement;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get a configuration for SMIME public key lookup via external LDAP on a domain or
+ * globalconfig
+ * <br />
+ * Notes: if <b>&lt;domain></b> is present, get the config on the domain, otherwise get the config on globalconfig.
+ * @zm-api-command-network-edition
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_REQUEST)
 public class GetSMIMEConfigRequest {
 
+    /**
+     * @zm-api-field-description Config
+     */
     @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
     private final NamedElement config;
 
+    /**
+     * @zm-api-field-description Domain
+     */
     @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=false)
     private final DomainSelector domain;
 

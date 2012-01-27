@@ -82,6 +82,10 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
         return this;
     }
 
+    /**
+     * @zm-api-field-tag request-attrs
+     * @zm-api-field-description Comma separated list of attributes
+     */
     @Override
     @XmlAttribute(name=AdminConstants.A_ATTRS, required=false)
     public String getAttrs() {
@@ -89,7 +93,7 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
             return null;
         return COMMA_JOINER.join(attrs);
     }
-    
+
     public Objects.ToStringHelper addToStringInfo(
             Objects.ToStringHelper helper) {
     return helper

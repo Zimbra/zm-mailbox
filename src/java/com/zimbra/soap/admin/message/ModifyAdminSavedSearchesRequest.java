@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,7 +29,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedValue;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Modifies admin saved searches.
+ * <br />
+ * Returns the admin saved searches.
+ * <br />
+ * <br />
+ * If <b>{search-query}</b> is empty => delete the search if it exists
+ * <br />
+ * If <b>{search-name}</b> already exists => replace with new <b>{search-query}</b>
+ * <br />
+ * If <b>{search-name}</b> does not exist => save as a new search
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_MODIFY_ADMIN_SAVED_SEARCHES_REQUEST)
 public class ModifyAdminSavedSearchesRequest {
 

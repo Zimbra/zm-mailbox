@@ -25,10 +25,16 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.OctopusAdminConstants;
 import com.zimbra.soap.type.AccountSelector;
 
+/**
+ * @zm-api-command-description Get devices
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusAdminConstants.E_GET_DEVICES_REQUEST)
 public class GetDevicesRequest {
 
+    /**
+     * @zm-api-field-description Account
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
     private final AccountSelector account;
 

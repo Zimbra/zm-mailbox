@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,23 +26,47 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountSelector;
 
+/**
+ * @zm-api-command-description Authenticate for administration
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_REQUEST)
 @XmlType(propOrder = {})
 public class AuthRequest {
 
     // TODO: authToken can be more complex than this and needs to be extendable.
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN)
+    /**
+     * @zm-api-field-description An authToken can be passed instead of account/password/name to validate an
+     * existing auth token.
+     */
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=false)
     private String authToken;
+
+    /**
+     * @zm-api-field-tag auth-name
+     * @zm-api-field-description Name.  Only one of <b>{auth-name}</b> or <b>&lt;account></b> can be specified
+     */
     @XmlAttribute(name=AdminConstants.E_NAME, required=false)
     private String name;
-    // password must be present if not using AuthToken
+
+    /**
+     * @zm-api-field-description Password - must be present if not using AuthToken
+     */
     @XmlAttribute(name=AdminConstants.E_PASSWORD, required=false)
     private String password;
+
+    /**
+     * @zm-api-field-description Account
+     */
     @XmlElement(name=AccountConstants.E_ACCOUNT, required=false)
     private AccountSelector account;
-    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST, required=false)
+
+    /**
+     * @zm-api-field-description Virtual host
+     */
+    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST /* virtualHost */, required=false)
     private String virtualHost;
+
     public AuthRequest() {
         this((String)null, (String)null);
     }

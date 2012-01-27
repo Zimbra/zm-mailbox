@@ -23,14 +23,23 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AccountConstants;
 
+/*
+ * Used in GetInfoResponse if ZimbraLicenseExtension is installed
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 public class LicenseAttr {
 
-    // value always "SMIME"
+    /**
+     * @zm-api-field-tag license-attr-name
+     * @zm-api-field-description Name - always "SMIME" at present
+     */
     @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private String name;
 
-    // value is "TRUE" or "FALSE"
+    /**
+     * @zm-api-field-tag license-attr-value
+     * @zm-api-field-description Value - value is "TRUE" or "FALSE"
+     */
     @XmlValue
     private String content;
 

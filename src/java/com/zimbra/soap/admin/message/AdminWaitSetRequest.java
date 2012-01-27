@@ -35,38 +35,101 @@ import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description WaitSetRequest optionally modifies the wait set and checks for any notifications.
+ * If block=1 and there are no notificatins, then this API will BLOCK until there is data.
+ * <p>
+ * Client should always set 'seq' to be the highest known value it has received from the server.  The server will use
+ * this information to retransmit lost data.
+ * </p><p>
+ * If the client sends a last known sync token then the notification is calculated by comparing the accounts current
+ * token with the client's last known.
+ * </p><p>
+ * If the client does not send a last known sync token, then notification is based on change since last Wait
+ * (or change since &lt;add> if this is the first time Wait has been called with the account)
+ * </p><p>
+ * The client may specifiy a custom timeout-length for their request if they know something about the particular
+ * underlying network.  The server may or may not honor this request (depending on server configured max/min values).
+ * See LocalConfig values:
+ * </p>
+ * <pre>
+ * zimbra_waitset_default_request_timeout,
+ * zimbra_waitset_min_request_timeout,
+ * zimbra_waitset_max_request_timeout,
+ * zimbra_admin_waitset_default_request_timeout,
+ * zimbra_admin_waitset_min_request_timeout, and
+ * zimbra_admin_waitset_max_request_timeout
+ * </pre>
+ * <p>
+ * WaitSet: scalable mechanism for listening for changes to one or more accounts
+ * </p>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_REQUEST)
 public class AdminWaitSetRequest {
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description Waitset ID
+     */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
 
+    /**
+     * @zm-api-field-tag waitset-last-known-seq-no
+     * @zm-api-field-description Last known sequence number
+     */
     @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=true)
     private final String lastKnownSeqNo;
 
+    /**
+     * @zm-api-field-tag waitset-block
+     * @zm-api-field-description Flag whether or not to block until some account has new data
+     */
     @XmlAttribute(name=MailConstants.A_BLOCK /* block */, required=false)
     private ZmBoolean block;
 
     // default interest types required for "All" waitsets
+    /**
+     * @zm-api-field-tag default-interests
+     * @zm-api-field-description Default interest types: comma-separated list.  Currently:
+     * <table>
+     * <tr> <td> <b>c</b> </td> <td> contacts </td> </tr>
+     * <tr> <td> <b>m</b> </td> <td> msgs (and subclasses) </td> </tr>
+     * <tr> <td> <b>a</b> </td> <td> appointments </td> </tr>
+     * <tr> <td> <b>t</b> </td> <td> tasks </td> </tr>
+     * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "c,m,a,t,d") * </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=false)
     private String defaultInterests;
 
+    /**
+     * @zm-api-field-tag waitset-timeout-length
+     * @zm-api-field-description Timeout length
+     */
     @XmlAttribute(name=MailConstants.A_TIMEOUT /* timeout */, required=false)
     private Long timeout;
 
-    @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */,
-                    required=false)
+    /**
+     * @zm-api-field-description Waitsets to add
+     */
+    @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<WaitSetAddSpec> addAccounts = Lists.newArrayList();
 
-    @XmlElementWrapper(name=MailConstants.E_WAITSET_UPDATE /* update */,
-                    required=false)
+    /**
+     * @zm-api-field-description Waitsets to update
+     */
+    @XmlElementWrapper(name=MailConstants.E_WAITSET_UPDATE /* update */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<WaitSetAddSpec> updateAccounts = Lists.newArrayList();
 
-    @XmlElementWrapper(name=MailConstants.E_WAITSET_REMOVE /* remove */,
-                    required=false)
+    /**
+     * @zm-api-field-description Waitsets to remove
+     */
+    @XmlElementWrapper(name=MailConstants.E_WAITSET_REMOVE /* remove */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<Id> removeAccounts = Lists.newArrayList();
 

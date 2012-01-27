@@ -32,14 +32,28 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Show mailbox moves in progress on this server.  Both move-ins and move-outs are shown.
+ * <br />
+ * If accounts are given only data for those accounts are returned.  Data for all moves are returned if no accounts
+ * are given.
+ * <br />
+ * If checkPeer=1 (true), peer servers are queried to check if the move is active on the peer. [default 0 (false)]
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_QUERY_MAILBOX_MOVE_REQUEST)
 public class QueryMailboxMoveRequest {
 
+    /**
+     * @zm-api-field-description Flag whether to query peer servers to see if the move is active on them.
+     * [default 0 (false)]
+     */
     @XmlAttribute(name=BackupConstants.A_CHECK_PEER, required=false)
     private ZmBoolean checkPeer;
 
-    // If empty report on all outstanding moves
+    /**
+     * @zm-api-field-description Accounts - If empty report on all outstanding moves
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 

@@ -23,12 +23,18 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class IdAndType {
 
+    /**
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-description Type
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private final String type;
 

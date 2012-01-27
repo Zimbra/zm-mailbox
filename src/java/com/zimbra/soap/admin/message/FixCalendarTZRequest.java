@@ -34,19 +34,43 @@ import com.zimbra.soap.admin.type.TZFixupRule;
 import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Fix timezone definitions in appointments and tasks to reflect changes in daylight
+ * savings time rules in various timezones.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_FIX_CALENDAR_TZ_REQUEST)
 public class FixCalendarTZRequest {
 
+    /**
+     * @zm-api-field-tag sync
+     * @zm-api-field-description Sync flag
+     * <table>
+     * <tr> <td> <b>1 (true)</b> </td> <td> command blocks until processing finishes </td> </tr>
+     * <tr> <td> <b>0 (false) [default]</b> </td> <td> command returns right away </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=AdminConstants.A_TZFIXUP_SYNC /* sync */, required=false)
     private ZmBoolean sync;
 
+    /**
+     * @zm-api-field-tag millis
+     * @zm-api-field-description Fix appts/tasks that have instances after this time
+     * <br />
+     * default = January 1, 2008 00:00:00 in GMT+13:00 timezone.
+     */
     @XmlAttribute(name=AdminConstants.A_TZFIXUP_AFTER /* after */, required=false)
     private Long after;
 
+    /**
+     * @zm-api-field-description Accounts
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
     private List<NamedElement> accounts = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Fixup rules
+     */
     @XmlElementWrapper(name=AdminConstants.E_TZFIXUP /* tzfixup */, required=false)
     @XmlElement(name=AdminConstants.E_FIXUP_RULE /* fixupRule */, required=false)
     private List<TZFixupRule> fixupRules = Lists.newArrayList();

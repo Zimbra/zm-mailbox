@@ -39,7 +39,7 @@ import com.zimbra.soap.type.AccountSelector;
 public class AddAccountLoggerRequest {
 
     /**
-     * @zm-api-field-description Deprecated - use account instead
+     * @zm-api-field-description <b>Deprecated</b> - use <b>&lt;account></b> instead
      */
     @XmlElement(name=AdminConstants.E_ID /* id */, required=false)
     @Deprecated

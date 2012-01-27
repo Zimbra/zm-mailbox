@@ -34,35 +34,62 @@ import com.zimbra.common.soap.CertMgrConstants;
 import com.zimbra.soap.admin.type.CommCert;
 import com.zimbra.soap.admin.type.CSRSubject;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Ask server to install the certificates
+ * @zm-api-command-network-edition
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_INSTALL_CERT_REQUEST)
 @XmlType(propOrder = {"commCert", "validationDays",
     "subject", "subjectAltNames", "keySize"})
 public class InstallCertRequest {
 
+    /**
+     * @zm-api-field-tag server-id
+     * @zm-api-field-description Server ID
+     */
     @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=true)
     private final String server;
 
+    /**
+     * @zm-api-field-description Certificate type
+     * <br />
+     * Could be "self" (self-signed cert) or "comm" (commerical cert)
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private final String type;
 
-    @XmlElement(name=CertMgrConstants.E_comm_cert /* comm_cert */,
-                required=false)
+    /**
+     * @zm-api-field-description Commercial certificate
+     */
+    @XmlElement(name=CertMgrConstants.E_comm_cert /* comm_cert */, required=false)
     private CommCert commCert;
 
-    @XmlElement(name=CertMgrConstants.E_VALIDATION_DAYS /* validation_days */,
-                required=false)
+    /**
+     * @zm-api-field-tag validation-days
+     * @zm-api-field-description Validation days: required.  Number of the validation days of the self signed
+     * certificate,
+     */
+    @XmlElement(name=CertMgrConstants.E_VALIDATION_DAYS /* validation_days */, required=false)
     private String validationDays;
 
+    /**
+     * @zm-api-field-description Subject
+     */
     @XmlElement(name=CertMgrConstants.E_SUBJECT /* subject */, required=false)
     private CSRSubject subject;
 
-    @XmlElement(name=CertMgrConstants.E_SUBJECT_ALT_NAME /* SubjectAltName */,
-                required=false)
+    /**
+     * @zm-api-field-description subjectAltNames
+     */
+    @XmlElement(name=CertMgrConstants.E_SUBJECT_ALT_NAME /* SubjectAltName */, required=false)
     private List<String> subjectAltNames = Lists.newArrayList();
 
-    @XmlElement(name=CertMgrConstants.E_KEYSIZE /* keysize */,
-                required=false)
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description Key Size: 1024|2048, key length of the self-signed certificate
+     */
+    @XmlElement(name=CertMgrConstants.E_KEYSIZE /* keysize */, required=false)
     private String keySize;
 
     /**

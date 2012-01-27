@@ -24,10 +24,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.LDAPUtilsConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+// See ZimbraLDAPUtilsExtension/doc/soapadmin.txt
+/**
+ * @zm-api-command-description Create an LDAP entry
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=LDAPUtilsConstants.E_CREATE_LDAP_ENTRIY_REQUEST)
 public class CreateLDAPEntryRequest extends AdminAttrsImpl {
 
+    /**
+     * @zm-api-field-tag LDAP-DN-string
+     * @zm-api-field-description A valid LDAP DN String (RFC 2253) that describes the new DN to create
+     */
     @XmlAttribute(name=LDAPUtilsConstants.E_DN /* dn */, required=true)
     private final String dn;
 

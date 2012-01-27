@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,19 +22,35 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class VersionInfo {
 
-    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_VERSION, required=true)
+    /**
+     * @zm-api-field-tag version-string
+     * @zm-api-field-description Full version string
+     */
+    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_VERSION /* version */, required=true)
     private final String fullVersion;
 
-    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_RELEASE, required=true)
+    /**
+     * @zm-api-field-tag release-string
+     * @zm-api-field-description Release string
+     */
+    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_RELEASE /* release */, required=true)
     private final String release;
 
-    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_DATE, required=true)
+    /**
+     * @zm-api-field-tag build-date-YYYYMMDD-hhmm
+     * @zm-api-field-description Build date in format: YYYYMMDD-hhmm
+     */
+    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_DATE /* buildDate */, required=true)
     private final String date;
 
-    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_HOST, required=true)
+    /**
+     * @zm-api-field-tag build-host-name
+     * @zm-api-field-description Build host name
+     */
+    @XmlAttribute(name=AccountConstants.A_VERSION_INFO_HOST /* host */, required=true)
     private final String host;
 
     /**

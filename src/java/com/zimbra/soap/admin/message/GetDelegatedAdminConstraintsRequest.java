@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,19 +31,58 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.TargetType;
 import com.zimbra.soap.type.NamedElement;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get constraints (zimbraConstraint) for delegated admin on global config or a COS
+ * <br />
+ * none or several attributes can be specified for which constraints are to be returned.
+ * <br />
+ * If no attribute is specified, all constraints on the global config/cos will be returned.
+ * <br />
+ * If there is no constraint for a requested attribute, <b>&lt;a></b> element for the attribute will not appear in
+ * the response.
+ * <br />
+ * <br />
+ * e.g.
+ * <pre>
+ *     &lt;GetDelegatedAdminConstraintsRequest type="cos" name="cos1">
+ *       &lt;a name="zimbraMailQuota">
+ *     &lt;/GetDelegatedAdminConstraintsRequest>
+ *
+ *     &lt;GetDelegatedAdminConstraintsResponse type="cos" id="e00428a1-0c00-11d9-836a-000d93afea2a" name="cos1">
+ *       &lt;a n="zimbraMailQuota">
+ *         &lt;constraint>
+ *           &lt;max>524288000&lt;/max>
+ *           &lt;min>20971520&lt;/min>
+ *         &lt;/constraint>
+ *       &lt;/a>
+ *     &lt;/GetDelegatedAdminConstraintsResponse>
+ * </pre>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_DELEGATED_ADMIN_CONSTRAINTS_REQUEST)
 public class GetDelegatedAdminConstraintsRequest {
 
+    /**
+     * @zm-api-field-description Target Type
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
     private final TargetType type;
 
+    /**
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID, required=false)
     private final String id;
 
+    /**
+     * @zm-api-field-description name
+     */
     @XmlAttribute(name=AdminConstants.A_NAME, required=false)
     private final String name;
 
+    /**
+     * @zm-api-field-description Attrs
+     */
     @XmlElement(name=AdminConstants.E_A, required=false)
     private List<NamedElement> attrs = Lists.newArrayList();
 

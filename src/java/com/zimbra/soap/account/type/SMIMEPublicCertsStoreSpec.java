@@ -70,7 +70,7 @@ public class SMIMEPublicCertsStoreSpec {
 
     public StoreLookupOpt getStoreLookupOpt() { return storeLookupOpt; }
     public SourceLookupOpt getSourceLookupOpt() { return sourceLookupOpt; }
-    
+
     private List<String> storeTypes = Lists.newArrayList();
 
     /**

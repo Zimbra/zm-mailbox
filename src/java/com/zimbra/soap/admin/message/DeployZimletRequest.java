@@ -27,20 +27,36 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.admin.type.AttachmentIdAttrib;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Deploy Zimlet(s)
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DEPLOY_ZIMLET_REQUEST)
 public class DeployZimletRequest {
 
+    /**
+     * @zm-api-field-tag action
+     * @zm-api-field-description Action - valid values : deployAll|deployLocal|status
+     */
     @XmlAttribute(name=AdminConstants.A_ACTION /* action */, required=true)
     private final String action;
 
+    /**
+     * @zm-api-field-tag flush-cache
+     * @zm-api-field-description Flag whether to flush the cache
+     */
     @XmlAttribute(name=AdminConstants.A_FLUSH /* flush */, required=false)
     private final ZmBoolean flushCache;
 
-    @XmlAttribute(name=AdminConstants.A_SYNCHRONOUS /* synchronous */,
-                    required=false)
+    /**
+     * @zm-api-field-description Synchronous flag
+     */
+    @XmlAttribute(name=AdminConstants.A_SYNCHRONOUS /* synchronous */, required=false)
     private final ZmBoolean synchronous;
 
+    /**
+     * @zm-api-field-description Content
+     */
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=true)
     private final AttachmentIdAttrib content;
 

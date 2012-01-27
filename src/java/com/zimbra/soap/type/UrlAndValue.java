@@ -23,12 +23,20 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class UrlAndValue {
 
+    /**
+     * @zm-api-field-tag url
+     * @zm-api-field-description URL
+     */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
+    /**
+     * @zm-api-field-tag value
+     * @zm-api-field-description Value
+     */
     @XmlValue
     private String value;
 

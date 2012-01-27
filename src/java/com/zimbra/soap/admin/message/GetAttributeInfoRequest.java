@@ -23,19 +23,39 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get attribute information
+ * @zm-api-request-description Only one of <b>attrs</b> or <b>entryTypes</b> can be specified.
+ * <br />
+ * If both are specified, INVALID_REQUEST will be thrown.
+ * <br />
+ * If neither is specified, all attributes will be returned.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ATTRIBUTE_INFO_REQUEST)
 public class GetAttributeInfoRequest {
 
-    // Only one of A_ATTRS or A_ENTRY_TYPES allowed
-
-    // Comma Separated list
+    /**
+     * @zm-api-field-tag attrs-to-return
+     * @zm-api-field-description Comma separated list of attributes to return
+     */
     @XmlAttribute(name=AdminConstants.A_ATTRS /* attrs */, required=false)
     private String attrs;
 
     // Comma Separated list
-    @XmlAttribute(name=AdminConstants.A_ENTRY_TYPES /* entryTypes */,
-                    required=false)
+    /**
+     * @zm-api-field-tag entry-types
+     * @zm-api-field-description Comma separated list of entry types.  Attributes on the specified entry types will
+     * be returned.
+     * <br />
+     * valid entry types:
+     * <pre>
+     *     account,alias,distributionList,cos,globalConfig,domain,server,mimeEntry,zimletEntry,
+     *     calendarResource,identity,dataSource,pop3DataSource,imapDataSource,rssDataSource,
+     *     liveDataSource,galDataSource,signature,xmppComponent,aclTarget
+     * </pre>
+     */
+    @XmlAttribute(name=AdminConstants.A_ENTRY_TYPES /* entryTypes */, required=false)
     private String entryTypes;
 
     public GetAttributeInfoRequest() {

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,23 +27,23 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_CALENDAR_RESOURCES_REQUEST)
 public class SearchCalendarResourcesRequest extends AttributeSelectorImpl {
 
-    @XmlAttribute(name=AdminConstants.A_LIMIT, required=false)
+    @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
     private Integer limit;
-    @XmlAttribute(name=AdminConstants.A_OFFSET, required=false)
+    @XmlAttribute(name=AdminConstants.A_OFFSET /* offset */, required=false)
     private Integer offset;
-    @XmlAttribute(name=AdminConstants.A_DOMAIN, required=false)
+    @XmlAttribute(name=AdminConstants.A_DOMAIN /* domain */, required=false)
     private String domain;
-    @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
+    @XmlAttribute(name=AdminConstants.A_APPLY_COS /* applyCos */, required=false)
     private ZmBoolean applyCos;
-    @XmlAttribute(name=AdminConstants.A_SORT_BY, required=false)
+    @XmlAttribute(name=AdminConstants.A_SORT_BY /* sortBy */, required=false)
     private String sortBy;
-    @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
+    @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING /* sortAscending */, required=false)
     private ZmBoolean sortAscending;
-    @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER, required=false)
+    @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER /* searchFilter */, required=false)
     private EntrySearchFilterInfo searchFilter;
 
     private SearchCalendarResourcesRequest() {

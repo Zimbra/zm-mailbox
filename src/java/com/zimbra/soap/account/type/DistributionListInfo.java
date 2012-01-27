@@ -33,24 +33,50 @@ import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_DL)
 public class DistributionListInfo extends ObjectInfo {
 
+    /**
+     * @zm-api-field-tag isOwner
+     * @zm-api-field-description Flags whether user is the owner of the group.
+     * <br />
+     * Only returned if <b>ownerOf</b> on the request is <b>1 (true)</b>
+     */
     @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=false)
     ZmBoolean isOwner;
+
+    /**
+     * @zm-api-field-tag isMember
+     * @zm-api-field-description Flags whether user is a member of the group.
+     * <br />
+     * Only returned if <b>memberOf</b> on the request is <b>1 (true)</b>
+     */
     @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=false)
     ZmBoolean isMember;
-    
+
+    /**
+     * @zm-api-field-tag dl-is-dynamic
+     * @zm-api-field-description Flags whether the group is dynamic or not
+     */
     @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
     ZmBoolean dynamic;
-    @XmlElement(name=AccountConstants.E_DLM, required=false)
+    /**
+     * @zm-api-field-description Group members
+     */
+    @XmlElement(name=AccountConstants.E_DLM /* dlm */, required=false)
     private List<String> members;
 
-    @XmlElementWrapper(name=AccountConstants.E_DL_OWNERS, required=false)
-    @XmlElement(name=AccountConstants.E_DL_OWNER, required=false)
+    /**
+     * @zm-api-field-description Group owners
+     */
+    @XmlElementWrapper(name=AccountConstants.E_DL_OWNERS /* owners */, required=false)
+    @XmlElement(name=AccountConstants.E_DL_OWNER /* owner */, required=false)
     private List<DistributionListGranteeInfo> owners = Lists.newArrayList();
-    
+
+    /**
+     * @zm-api-field-description Rights
+     */
     @XmlElementWrapper(name=AccountConstants.E_RIGHTS, required=false)
     @XmlElement(name=AccountConstants.E_RIGHT, required=false)
     private List<DistributionListRightInfo> rights = Lists.newArrayList();
@@ -78,19 +104,19 @@ public class DistributionListInfo extends ObjectInfo {
     public void setIsOwner(Boolean isOwner) {
         this.isOwner = ZmBoolean.fromBool(isOwner);
     }
-    
+
     public Boolean isOwner() {
         return ZmBoolean.toBool(isOwner, false);
     }
-    
+
     public void setIsMember(Boolean isMember) {
         this.isMember = ZmBoolean.fromBool(isMember);
     }
-    
+
     public Boolean isMember() {
         return ZmBoolean.toBool(isMember, false);
     }
-    
+
     public void setMembers(Collection <String> members) {
         this.members = Lists.newArrayList();
         if (members != null) {
@@ -121,7 +147,7 @@ public class DistributionListInfo extends ObjectInfo {
     public List<? extends DistributionListGranteeInfoInterface> getOwners() {
         return Collections.unmodifiableList(owners);
     }
-    
+
     public void setRights(List<DistributionListRightInfo> rights) {
         this.rights = rights;
     }

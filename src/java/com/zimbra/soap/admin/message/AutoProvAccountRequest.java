@@ -25,16 +25,29 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.PrincipalSelector;
 
+/**
+ * @zm-api-command-description Auto-provision an account
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTO_PROV_ACCOUNT_REQUEST)
 public class AutoProvAccountRequest {
 
+    /**
+     * @zm-api-field-description Domain
+     */
     @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=true)
     private DomainSelector domain;
 
+    /**
+     * @zm-api-field-description Principal
+     */
     @XmlElement(name=AdminConstants.E_PRINCIPAL /* principal */, required=true)
     private PrincipalSelector principal;
-    
+
+    /**
+     * @zm-api-field-tag password
+     * @zm-api-field-description Password
+     */
     @XmlElement(name=AdminConstants.E_PASSWORD /* password */, required=false)
     private String password;
 
@@ -56,7 +69,7 @@ public class AutoProvAccountRequest {
     public DomainSelector getDomain() { return domain; }
     public PrincipalSelector getPrincipal() { return principal; }
     public String getPassword() { return password; }
-    
+
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper

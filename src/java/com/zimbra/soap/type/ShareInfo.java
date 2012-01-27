@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,32 +22,92 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ShareInfo {
 
-    @XmlAttribute(name=AccountConstants.A_OWNER_ID, required=true)
+    /**
+     * @zm-api-field-tag share-owner-id
+     * @zm-api-field-description Owner ID
+     */
+    @XmlAttribute(name=AccountConstants.A_OWNER_ID /* ownerId */, required=true)
     private String ownerId;
-    @XmlAttribute(name=AccountConstants.A_OWNER_EMAIL, required=true)
+
+    /**
+     * @zm-api-field-tag share-owner-email
+     * @zm-api-field-description Owner email
+     */
+    @XmlAttribute(name=AccountConstants.A_OWNER_EMAIL /* ownerEmail */, required=true)
     private String ownerEmail;
-    @XmlAttribute(name=AccountConstants.A_OWNER_DISPLAY_NAME, required=true)
+
+    /**
+     * @zm-api-field-tag share-owner-display-name
+     * @zm-api-field-description Owner display name
+     */
+    @XmlAttribute(name=AccountConstants.A_OWNER_DISPLAY_NAME /* ownerName */, required=true)
     private String ownerDisplayName;
-    @XmlAttribute(name=AccountConstants.A_FOLDER_ID, required=true)
+
+    /**
+     * @zm-api-field-tag share-folder-id
+     * @zm-api-field-description Folder ID
+     */
+    @XmlAttribute(name=AccountConstants.A_FOLDER_ID /* folderId */, required=true)
     private int folderId;
-    @XmlAttribute(name=AccountConstants.A_FOLDER_PATH, required=true)
+
+    /**
+     * @zm-api-field-tag share-fully-qualified-path
+     * @zm-api-field-description Fully qualified path
+     */
+    @XmlAttribute(name=AccountConstants.A_FOLDER_PATH /* folderPath */, required=true)
     private String folderPath;
-    @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW, required=true)
+
+    /**
+     * @zm-api-field-tag share-default-view
+     * @zm-api-field-description Default type
+     */
+    @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=true)
     private String defaultView;
-    @XmlAttribute(name=AccountConstants.A_RIGHTS, required=true)
+
+    /**
+     * @zm-api-field-tag share-rights
+     * @zm-api-field-description Rights
+     */
+    @XmlAttribute(name=AccountConstants.A_RIGHTS /* rights */, required=true)
     private String rights;
-    @XmlAttribute(name=AccountConstants.A_GRANTEE_TYPE, required=true)
+
+    /**
+     * @zm-api-field-tag grantee-type
+     * @zm-api-field-description Grantee type
+     */
+    @XmlAttribute(name=AccountConstants.A_GRANTEE_TYPE /* granteeType */, required=true)
     private String granteeType;
-    @XmlAttribute(name=AccountConstants.A_GRANTEE_ID, required=true)
+
+    /**
+     * @zm-api-field-tag grantee-id
+     * @zm-api-field-description Grantee ID
+     */
+    @XmlAttribute(name=AccountConstants.A_GRANTEE_ID /* granteeId */, required=true)
     private String granteeId;
-    @XmlAttribute(name=AccountConstants.A_GRANTEE_NAME, required=true)
+
+    /**
+     * @zm-api-field-tag grantee-name
+     * @zm-api-field-description Grantee name
+     */
+    @XmlAttribute(name=AccountConstants.A_GRANTEE_NAME /* granteeName */, required=true)
     private String granteeName;
-    @XmlAttribute(name=AccountConstants.A_GRANTEE_DISPLAY_NAME, required=true)
+
+    /**
+     * @zm-api-field-tag grantee-display-name
+     * @zm-api-field-description Grantee display name
+     */
+    @XmlAttribute(name=AccountConstants.A_GRANTEE_DISPLAY_NAME /* granteeDisplayName */, required=true)
     private String granteeDisplayName;
-    @XmlAttribute(name=AccountConstants.A_MOUNTPOINT_ID, required=false)
+
+    /**
+     * @zm-api-field-tag mountpoint-id
+     * @zm-api-field-description Returned if the share is already mounted.  Contains the folder id of the mountpoint
+     * in the local mailbox.
+     */
+    @XmlAttribute(name=AccountConstants.A_MOUNTPOINT_ID /* mid */, required=false)
     private String mountpointId;
 
     public ShareInfo() {

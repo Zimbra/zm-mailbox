@@ -27,12 +27,30 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Create a distribution list
+ * <br />
+ * Notes:
+ * <ul>
+ * <li> dynamic - create a dynamic distribution list
+ * <li> Extra attrs: <b>description</b>, <b>zimbraNotes</b>
+ * </ul>
+ * <b>Access</b>: domain admin sufficient
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_CREATE_DISTRIBUTION_LIST_REQUEST)
 public class CreateDistributionListRequest extends AdminAttrsImpl {
 
+    /**
+     * @zm-api-field-tag new-dl-name
+     * @zm-api-field-description Name for distribution list
+     */
     @XmlAttribute(name=AdminConstants.E_NAME /* name */, required=true)
     private String name;
+
+    /**
+     * @zm-api-field-description If <b>1 (true)</b> then create a dynamic distribution list
+     */
     @XmlAttribute(name=AdminConstants.A_DYNAMIC /* dynamic */, required=false)
     private ZmBoolean dynamic;
 

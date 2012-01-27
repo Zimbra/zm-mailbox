@@ -22,18 +22,42 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class WaitSetAddSpec {
 
+    /**
+     * @zm-api-field-tag waitset-name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag last-known-sync-token
+     * @zm-api-field-description Last known sync token
+     */
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
+    /**
+     * @zm-api-field-tag waitset-types
+     * @zm-api-field-description interest types: comma-separated list.  Currently:
+     * <table>
+     * <tr> <td> <b>c</b> </td> <td> contacts </td> </tr>
+     * <tr> <td> <b>m</b> </td> <td> msgs (and subclasses) </td> </tr>
+     * <tr> <td> <b>a</b> </td> <td> appointments </td> </tr>
+     * <tr> <td> <b>t</b> </td> <td> tasks </td> </tr>
+     * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "c,m,a,t,d") * </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_TYPES /* types */, required=false)
     private String interests;
 

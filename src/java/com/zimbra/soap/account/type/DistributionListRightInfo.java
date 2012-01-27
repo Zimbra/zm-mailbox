@@ -24,32 +24,38 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 
 public class DistributionListRightInfo {
-    
+
+    /**
+     * @zm-api-field-description Right
+     */
     @XmlAttribute(name=AccountConstants.A_RIGHT, required=true)
     private final String right;
-    
+
+    /**
+     * @zm-api-field-description Grantees
+     */
     @XmlElement(name=AccountConstants.E_GRANTEE, required=false)
     protected List<DistributionListGranteeInfo> grantees;
-    
+
     public DistributionListRightInfo() {
         this(null);
     }
-    
+
     public DistributionListRightInfo(String right) {
         this.right = right;
     }
-    
+
     public String getRight() {
         return right;
     }
-    
+
     public void addGrantee(DistributionListGranteeInfo grantee) {
         if (grantees == null) {
             grantees = Lists.newArrayList();
         }
         grantees.add(grantee);
     }
-    
+
     public void setGrantees(List<DistributionListGranteeInfo> grantees) {
         this.grantees = null;
         if (grantees != null) {
@@ -57,7 +63,7 @@ public class DistributionListRightInfo {
             Iterables.addAll(this.grantees, grantees);
         }
     }
-    
+
     public List<DistributionListGranteeInfo> getGrantees() {
         return grantees;
     }

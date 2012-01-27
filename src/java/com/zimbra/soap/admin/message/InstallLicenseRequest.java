@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AttachmentIdAttrib;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Install a license
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_INSTALL_LICENSE_REQUEST)
 public class InstallLicenseRequest {
 
+    /**
+     * @zm-api-field-description Content
+     */
     @XmlElement(name=AdminConstants.E_CONTENT /* content */, required=true)
     private final AttachmentIdAttrib content;
 

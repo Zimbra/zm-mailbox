@@ -22,9 +22,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Right {
 
+    /**
+     * @zm-api-field-description Right
+     */
     @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
 

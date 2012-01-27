@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Delete a volume
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DELETE_VOLUME_REQUEST)
 public final class DeleteVolumeRequest {
 
+    /**
+     * @zm-api-field-tag volume-id
+     * @zm-api-field-description Volume ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID, required=true)
     private final short id;
 

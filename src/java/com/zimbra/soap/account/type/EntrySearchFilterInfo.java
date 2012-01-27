@@ -29,6 +29,9 @@ import com.zimbra.soap.type.SearchFilterCondition;
 public class EntrySearchFilterInfo
 implements EntrySearchFilterInterface {
 
+    /**
+     * @zm-api-field-description Compound condition or simple condition
+     */
     @XmlElements({
         @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND /* conds */,
             type=EntrySearchFilterMultiCond.class),

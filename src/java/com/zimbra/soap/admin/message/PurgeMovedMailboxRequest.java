@@ -24,10 +24,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Purge moved mailbox.  Following a successful mailbox move to a new server, the
+ * mailbox on the old server remains.  This allows manually checking the new mailbox to confirm the move worked.
+ * Afterwards, <b>PurgeMovedMailboxRequest</b> should be used to remove the old mailbox and reclaim the space.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_PURGE_MOVED_MAILBOX_REQUEST)
 public class PurgeMovedMailboxRequest {
 
+    /**
+     * @zm-api-field-description Mailbox specification
+     */
     @XmlElement(name=BackupConstants.E_MAILBOX /* mbox */, required=true)
     private final Name mailbox;
 

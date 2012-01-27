@@ -24,10 +24,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
+/**
+ * @zm-api-command-description Returns the version info for a mailbox.
+ * <br />
+ * Mailbox move uses this request to prevent a move to an older server.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_GET_MAILBOX_VERSION_REQUEST)
 public class GetMailboxVersionRequest {
 
+    /**
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Account email address
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private Name account;
 

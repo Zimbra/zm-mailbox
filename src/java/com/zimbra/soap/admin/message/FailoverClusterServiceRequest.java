@@ -24,12 +24,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.ClusterConstants;
 import com.zimbra.soap.admin.type.FailoverClusterServiceSpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Failover Cluster Service
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ClusterConstants.E_FAILOVER_CLUSTER_SERVICE_REQUEST)
 public class FailoverClusterServiceRequest {
 
-    @XmlElement(name=ClusterConstants.A_CLUSTER_SERVICE /* service */,
-                    required=false)
+    /**
+     * @zm-api-field-description Failover details
+     */
+    @XmlElement(name=ClusterConstants.A_CLUSTER_SERVICE /* service */, required=false)
     private FailoverClusterServiceSpec service;
 
     public FailoverClusterServiceRequest() {

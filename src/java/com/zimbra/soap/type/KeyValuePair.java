@@ -40,9 +40,17 @@ import com.zimbra.soap.base.KeyAndValue;
  */
 public class KeyValuePair implements KeyAndValue {
 
+    /**
+     * @zm-api-field-tag key
+     * @zm-api-field-description Key
+     */
     @XmlAttribute(name=AdminConstants.A_N, required=true)
     private String key;
 
+    /**
+     * @zm-api-field-tag value
+     * @zm-api-field-description Value
+     */
     @XmlValue
     private String value;
 

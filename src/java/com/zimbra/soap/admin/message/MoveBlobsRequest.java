@@ -25,26 +25,48 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HsmConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Moves blobs between volumes.  Unlike <b>HsmRequest</b>, this request is synchronous,
+ * and reads parameters from the request attributes instead of <b>zimbraHsmPolicy</b>.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=HsmConstants.E_MOVE_BLOBS_REQUEST)
 public class MoveBlobsRequest {
 
     // all or comma separated list of MailItem.Type (gets lowercased)
+    /**
+     * @zm-api-field-tag types
+     * @zm-api-field-description A comma-separated list of item types, or "all" for all types.  See the spec for
+     * <b>&lt;SearchRequest></b> for details.
+     */
     @XmlAttribute(name=AdminConstants.A_TYPES /* types */, required=true)
     private String types;
 
-    // comma separated list
-    @XmlAttribute(name=HsmConstants.A_SOURCE_VOLUME_IDS
-                    /* sourceVolumeIds */, required=true)
+    /**
+     * @zm-api-field-tag volume-ids
+     * @zm-api-field-description A comma separated list of source volume IDs
+     */
+    @XmlAttribute(name=HsmConstants.A_SOURCE_VOLUME_IDS /* sourceVolumeIds */, required=true)
     private String sourceVolumeIds;
 
-    @XmlAttribute(name=HsmConstants.A_DEST_VOLUME_ID
-                    /* destVolumeId */, required=true)
+    /**
+     * @zm-api-field-tag dest-volume-id
+     * @zm-api-field-description Destination volume ID
+     */
+    @XmlAttribute(name=HsmConstants.A_DEST_VOLUME_ID /* destVolumeId */, required=true)
     private Short destVolumeId;
 
+    /**
+     * @zm-api-field-description Limit for the total number of bytes of data to move.  Blob move will abort if this
+     * threshold is exceeded.
+     */
     @XmlAttribute(name=HsmConstants.A_MAX_BYTES /* maxBytes */, required=false)
     private Long maxBytes;
 
+    /**
+     * @zm-api-field-tag query
+     * @zm-api-field-description Query - if specified, only items that match this query will be moved
+     */
     @XmlElement(name=AdminConstants.E_QUERY /* query */, required=false)
     private String query;
 

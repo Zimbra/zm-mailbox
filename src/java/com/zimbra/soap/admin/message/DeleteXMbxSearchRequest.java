@@ -26,16 +26,27 @@ import com.zimbra.common.soap.XMbxSearchConstants;
 import com.zimbra.soap.admin.type.SearchID;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Attempts to delete a search task.
+ * <br />
+ * Returns empty <b>&lt;DeleteXMbxSearchResponse/></b> element on success or Fault document on error.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=XMbxSearchConstants.E_DELETE_XMBX_SEARCH_REQUEST)
 public class DeleteXMbxSearchRequest {
 
-    @XmlElement(name=XMbxSearchConstants.E_SrchTask
-                /* searchtask */, required=true)
+    /**
+     * @zm-api-field-description Search task information
+     */
+    @XmlElement(name=XMbxSearchConstants.E_SrchTask /* searchtask */, required=true)
     private final SearchID searchTask;
-    @XmlElement(name=AdminConstants.E_ACCOUNT
-    		/* account */,  required=false)
+
+    /**
+     * @zm-api-field-description Account
+     */
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */,  required=false)
     private AccountSelector account;
+
     /**
      * no-argument constructor wanted by JAXB
      */

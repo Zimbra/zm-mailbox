@@ -24,10 +24,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
+/**
+ * @zm-api-command-description Reload Account
+ * <br />
+ * Called after another server has made changes to the account object, this request tells the server to reload the
+ * account object from the ldap master to pick up the changes.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_RELOAD_ACCOUNT_REQUEST)
 public class ReloadAccountRequest {
 
+    /**
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Account email address
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private Name account;
 

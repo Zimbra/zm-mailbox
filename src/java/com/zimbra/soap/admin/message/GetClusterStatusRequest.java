@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.ClusterConstants;
 
+/**
+ * @zm-api-command-description Get Cluster Status
+ */
 @XmlRootElement(name=ClusterConstants.E_GET_CLUSTER_STATUS_REQUEST)
 public class GetClusterStatusRequest {
 }

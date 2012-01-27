@@ -19,7 +19,7 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncAdminConstants.E_SUSPEND_DEVICE_REQUEST)
 public class SuspendDeviceRequest {
 
@@ -43,7 +43,7 @@ public class SuspendDeviceRequest {
     public DeviceId getDevice() {
         return this.deviceId;
     }
-    
+
     public void setDeviceId(DeviceId deviceId) {
         this.deviceId = deviceId;
     }

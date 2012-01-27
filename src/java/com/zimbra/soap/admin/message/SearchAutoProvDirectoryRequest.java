@@ -26,29 +26,67 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.type.AttributeSelectorImpl;
 
+/**
+ * @zm-api-command-description Search Auto Prov Directory
+ * <br />
+ * Only one of <b>&lt;name></b> or <b>&lt;query></b> can be provided.  If neither is provided, the configured search
+ * filter for auto provision will be used.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST)
 public class SearchAutoProvDirectoryRequest extends AttributeSelectorImpl {
 
+    /**
+     * @zm-api-field-tag key-attr
+     * @zm-api-field-description Name of attribute for the key.  Value of the key attribute will appear in the 
+     * <b>&lt;key></b> element in the response.  It is recommended to pick a key attribute that is single-valued and
+     * can unique identify an entry in the external auto provision directory.  If the key attribute contains multiple
+     * values then multiple <b>&lt;key></b> elements will appear in the response. 
+     * <br />
+     * Entries are returned in ascending key order.
+     */
     @XmlAttribute(name=AdminConstants.A_KEYATTR /* keyAttr */, required=true)
     private String keyAttr;
 
     // Only one of query and name allowed
+    /**
+     * @zm-api-field-description Query string - should be an LDAP-style filter string (RFC 2254)
+     */
     @XmlAttribute(name=AdminConstants.E_QUERY /* query */, required=false)
     private String query;
 
+    /**
+     * @zm-api-field-description Name to fill the auto provisioning search template configured on the domain 
+     */
     @XmlAttribute(name=AdminConstants.E_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag max-results
+     * @zm-api-field-description Maximum results that the backend will attempt to fetch from the directory before
+     * returning an account.TOO_MANY_SEARCH_RESULTS error.
+     */
     @XmlAttribute(name=AdminConstants.A_MAX_RESULTS /* maxResults */, required=false)
     private Integer maxResults;
 
+    /**
+     * @zm-api-field-tag limit
+     * @zm-api-field-description The number of accounts to return per page (0 is default and means all)
+     */
     @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
     private Integer limit;
 
+    /**
+     * @zm-api-field-tag offset
+     * @zm-api-field-description The starting offset (0, 25, etc)
+     */
     @XmlAttribute(name=AdminConstants.A_OFFSET /* offset */, required=false)
     private Integer offset;
 
+    /**
+     * @zm-api-field-description Domain selector for the domain name to limit the search to (do not use if searching
+     * for domains)
+     */
     @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=true)
     private DomainSelector domain;
 

@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Returns the admin extension addon Zimlets.
+ */
 @XmlRootElement(name=AdminConstants.E_GET_ADMIN_EXTENSION_ZIMLETS_REQUEST)
 public class GetAdminExtensionZimletsRequest {
 }

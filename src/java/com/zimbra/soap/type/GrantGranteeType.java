@@ -28,7 +28,7 @@ public enum GrantGranteeType {
         /**
          * access is granted to an authenticated user
          */
-        usr, 
+        usr,
         /**
          * access is granted to a group of users
          */
@@ -44,13 +44,13 @@ public enum GrantGranteeType {
         /**
          * access is granted to all authenticated users
          */
-        all, 
+        all,
         /**
          * access is granted to all users in a domain
          */
-        dom, 
+        dom,
         /**
-         * access is granted to a non-Zimbra email address and a password 
+         * access is granted to a non-Zimbra email address and a password
          */
         guest,
         /**

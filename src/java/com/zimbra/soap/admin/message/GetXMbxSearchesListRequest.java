@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.XMbxSearchConstants;
 
+/**
+ * @zm-api-command-description Retreives a list of search tasks running or cached on a server
+ */
 @XmlRootElement(name=XMbxSearchConstants.E_GET_XMBX_SEARCHES_REQUEST)
 public class GetXMbxSearchesListRequest {
 }

@@ -38,12 +38,29 @@ import com.zimbra.soap.type.ZmBoolean;
 public class EntrySearchFilterMultiCond
 implements SearchFilterCondition {
 
+    /**
+     * @zm-api-field-tag not
+     * @zm-api-field-description Negation flag
+     * <br />
+     * If set to <b>1 (true)</b> then negate the compound condition
+     */
     @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION /* not */, required=false)
     private ZmBoolean not;
 
+    /**
+     * @zm-api-field-tag or
+     * @zm-api-field-description OR flag
+     * <table>
+     * <tr> <td> <b>1 (true)</b> </td> <td> child conditions are OR'ed together </td> </tr>
+     * <tr> <td> <b>0 (false) [default]</b> </td> <td> child conditions are AND'ed together </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_OR /* or */, required=false)
     private ZmBoolean or;
 
+    /**
+     * @zm-api-field-description Compound condition or simple condition
+     */
     @XmlElements({
         @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND /* conds */,
             type=EntrySearchFilterMultiCond.class),

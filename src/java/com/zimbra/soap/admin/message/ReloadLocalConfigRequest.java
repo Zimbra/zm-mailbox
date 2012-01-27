@@ -18,6 +18,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Reload LocalConfig
+ */
 @XmlRootElement(name=AdminConstants.E_RELOAD_LOCAL_CONFIG_REQUEST)
 public class ReloadLocalConfigRequest {
 }

@@ -24,10 +24,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupAccountQuerySpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Backup Account query
+ * <br />
+ * For each account &lt;backup> is listed from the most recent to earlier ones.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_BACKUP_ACCOUNT_QUERY_REQUEST)
 public class BackupAccountQueryRequest {
 
+    /**
+     * @zm-api-field-description Query
+     */
     @XmlElement(name=BackupConstants.E_QUERY /* query */, required=true)
     private final BackupAccountQuerySpec query;
 

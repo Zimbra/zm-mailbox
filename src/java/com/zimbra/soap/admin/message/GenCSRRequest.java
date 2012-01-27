@@ -32,44 +32,94 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Request a certificate signing request (CSR)
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_GEN_CSR_REQUEST)
 @XmlType(propOrder = {"c", "st", "l", "o", "ou", "cn", "subjectAltNames"})
 public class GenCSRRequest {
 
+    /**
+     * @zm-api-field-tag server-id
+     * @zm-api-field-description Server ID
+     */
     @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=true)
     private final String server;
 
     // "1" means new
+    /**
+     * @zm-api-field-description If value is "1" then force to create a new CSR, the previous one will be overwrited
+     */
     @XmlAttribute(name=CertMgrConstants.A_new /* new */, required=true)
     private String newCSR;
 
+    /**
+     * @zm-api-field-tag type
+     * @zm-api-field-description Type of CSR (required)
+     * <table>
+     * <tr> <td> <b>self</b> </td> <td> self-signed certificate </td> </tr>
+     * <tr> <td> <b>comm</b> </td> <td> commercial certificate </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
     private String type;
 
+    /**
+     * @zm-api-field-tag key-size
+     * @zm-api-field-description Key size - 1024 or 2048
+     */
     @XmlAttribute(name=CertMgrConstants.E_KEYSIZE /* keysize */, required=true)
     private String keySize;
 
+    /**
+     * @zm-api-field-tag subject-attr-C
+     * @zm-api-field-description Subject attr C
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_C /* C */, required=false)
     private String c;
 
+    /**
+     * @zm-api-field-tag subject-attr-ST
+     * @zm-api-field-description Subject attr ST
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_ST /* ST */, required=false)
     private String st;
 
+    /**
+     * @zm-api-field-tag subject-attr-L
+     * @zm-api-field-description Subject attr L
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_L /* L */, required=false)
     private String l;
 
+    /**
+     * @zm-api-field-tag subject-attr-L
+     * @zm-api-field-description Subject attr L
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_O /* O */, required=false)
     private String o;
 
+    /**
+     * @zm-api-field-tag subject-attr-OU
+     * @zm-api-field-description Subject attr OU
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_OU /* OU */, required=false)
     private String ou;
 
+    /**
+     * @zm-api-field-tag subject-attr-CN
+     * @zm-api-field-description Subject attr CN
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_CN /* CN */, required=false)
     private String cn;
 
-    @XmlElement(name=CertMgrConstants.E_SUBJECT_ALT_NAME /* SubjectAltName */,
-                required=false)
+    /**
+     * @zm-api-field-tag subject-alt-name
+     * @zm-api-field-description Used to add the Subject Alt Name extension in the certificate, so multiple hosts can
+     * be supported
+     */
+    @XmlElement(name=CertMgrConstants.E_SUBJECT_ALT_NAME /* SubjectAltName */, required=false)
     private List<String> subjectAltNames = Lists.newArrayList();
 
     /**

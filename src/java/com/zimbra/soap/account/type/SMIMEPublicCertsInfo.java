@@ -30,13 +30,20 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class SMIMEPublicCertsInfo {
 
+    /**
+     * @zm-api-field-tag certs-email-address
+     * @zm-api-field-description Email address
+     */
     @XmlAttribute(name=AccountConstants.A_EMAIL /* email */, required=false)
     private String email;
 
+    /**
+     * @zm-api-field-description Certificates
+     */
     @XmlElement(name=AccountConstants.E_CERT /* cert */, required=false)
     private List<SMIMEPublicCertInfo> certs = Lists.newArrayList();
 

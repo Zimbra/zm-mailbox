@@ -29,9 +29,15 @@ import com.zimbra.soap.type.LicenseStatus;
 @XmlType(propOrder = {})
 public class LicenseInfo {
 
+    /**
+     * @zm-api-field-description Status
+     */
     @XmlAttribute(name=AccountConstants.A_STATUS /* status */, required=true)
     private LicenseStatus status;
 
+    /**
+     * @zm-api-field-description License attribute
+     */
     @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
     private LicenseAttr attr;
 

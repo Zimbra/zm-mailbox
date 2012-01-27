@@ -27,13 +27,15 @@ import com.zimbra.soap.type.AccountBy;
 public class AccountSelector {
 
     /**
-     * @zm-api-field-description Select the meaning of <b>key</b>
+     * @zm-api-field-tag acct-selector-by
+     * @zm-api-field-description Select the meaning of <b>{acct-selector-key}</b>
      */
     @XmlAttribute(name=AdminConstants.A_BY, required=true)
     private final AccountBy accountBy;
 
     /**
-     * @zm-api-field-description The key used to identify the account
+     * @zm-api-field-tag acct-selector-key
+     * @zm-api-field-description The key used to identify the account. Meaning determined by <b>{acct-selector-by}</b>
      */
     @XmlValue
     private final String key;

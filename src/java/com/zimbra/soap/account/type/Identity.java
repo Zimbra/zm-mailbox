@@ -37,9 +37,17 @@ public class Identity extends AttrsImpl {
 
     // TODO:Want constructor for old style Identity
 
+    /**
+     * @zm-api-field-tag identity-name
+     * @zm-api-field-description Identity name
+     */
     @XmlAttribute(name=AccountConstants.A_NAME, required=false)
     private final String name;
 
+    /**
+     * @zm-api-field-tag identity-id
+     * @zm-api-field-description Identity ID
+     */
     @XmlAttribute(name=AccountConstants.A_ID, required=false)
     private String id;
 

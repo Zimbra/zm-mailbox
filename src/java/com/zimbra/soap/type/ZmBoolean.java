@@ -44,7 +44,7 @@ import com.zimbra.soap.json.jackson.ZmBooleanSerializer;
  *     @XmlJavaTypeAdapter(ZmBooleanAdapter.class)
  * to be 100% sure that only "0" and "1" will get output but that causes schemagen to use type "xs:string"
  * when writing types corresponding to fields of this class instead of "zmBoolean".
- * 
+ *
  * JAXB class setters for fields of type ZmBoolean should go via Boolean to ensure that JAXB objects only get
  * populated with ZmBoolean.ZERO and ZmBoolean.ONE
  */
@@ -57,7 +57,7 @@ public enum ZmBoolean {
     @XmlEnumValue("1") ONE,
     @XmlEnumValue("false") FALSE,
     @XmlEnumValue("true") TRUE;
- 
+
     public static ZmBoolean fromBool(Boolean val) {
         if (val == null) {
             return null;

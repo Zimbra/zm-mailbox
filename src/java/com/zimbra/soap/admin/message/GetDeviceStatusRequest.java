@@ -25,12 +25,21 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
+/**
+ * @zm-api-command-description Get the requested device's status
+ */
 @XmlRootElement(name = SyncAdminConstants.E_GET_DEVICE_STATUS_REQUEST)
 public class GetDeviceStatusRequest {
 
+    /**
+     * @zm-api-field-description Account
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private final AccountSelector account;
 
+    /**
+     * @zm-api-field-description Device specification
+     */
     @XmlElement(name = SyncConstants.E_DEVICE, required = false)
     private DeviceId deviceId;
 

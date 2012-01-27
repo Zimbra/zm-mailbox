@@ -20,7 +20,7 @@ public enum MemberOfSelector {
     all,
     directOnly,
     none;
-    
+
     public static MemberOfSelector fromString(String s) throws ServiceException {
         try {
             return MemberOfSelector.valueOf(s);
