@@ -14,11 +14,13 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.Ascii;
-
-import java.nio.ByteBuffer;
-import java.io.IOException;
 
 public final class MailboxName {
     private String name; // Decoded name
@@ -51,7 +53,12 @@ public final class MailboxName {
     }
 
     public static MailboxName decode(String encoded) throws ParseException {
-        return decode(ByteBuffer.wrap(Ascii.getBytes(encoded)));
+        if (StringUtil.isAsciiString(encoded)) {
+            return decode(ByteBuffer.wrap(Ascii.getBytes(encoded)));
+        } else {
+            ZimbraLog.imap_client.debug("mailbox name %s not ASCII, assuming server sent it without encoding", encoded);
+            return new MailboxName(StringUtil.stripControlCharacters(encoded));
+        }
     }
 
     public static MailboxName decode(ByteBuffer bb) throws ParseException {
