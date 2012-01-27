@@ -69,8 +69,20 @@ public abstract class StoreManager {
      */
     public abstract void shutdown();
 
-    public enum StoreFeature { BULK_DELETE };
+    public enum StoreFeature {
+        /** The store has the ability to delete all {@code MailboxBlob}s
+         *  associated with a given {@code Mailbox}, <u>without</u> having
+         *  a list of those blobs provided to it. */
+        BULK_DELETE,
+        /** The store is reachable from any {@code mailboxd} host.  When
+         *  moving mailboxes between hosts, the store should be left untouched,
+         *  as there is no need to move the blobs along with the metadata. */
+        CENTRALIZED
+    };
 
+    /**
+     * Returns whether the store supports a given {@link StoreFeature}.
+     */
     public abstract boolean supports(StoreFeature feature);
 
     /**

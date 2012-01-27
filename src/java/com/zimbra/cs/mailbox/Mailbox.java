@@ -203,6 +203,7 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
@@ -1685,10 +1686,12 @@ public class Mailbox {
     }
 
     public synchronized void deleteMailbox() throws ServiceException {
-        deleteMailbox(null);
+        deleteMailbox(DeleteBlobs.ALWAYS);
     }
 
-    public synchronized void deleteMailbox(OperationContext octxt) throws ServiceException {
+    public enum DeleteBlobs { ALWAYS, NEVER, UNLESS_CENTRALIZED };
+
+    public synchronized void deleteMailbox(DeleteBlobs deleteBlobs) throws ServiceException {
         // first, throw the mailbox into maintenance mode
         //   (so anyone else with a cached reference to the Mailbox can't use it)
         MailboxLock lock = null;
@@ -1704,15 +1707,16 @@ public class Mailbox {
                 throw e;
         }
 
-        boolean needRedo = needRedo(octxt);
+        boolean needRedo = needRedo(null);
         DeleteMailbox redoRecorder = new DeleteMailbox(mId);
 
         StoreManager sm = StoreManager.getInstance();
+        boolean deleteStore = deleteBlobs == DeleteBlobs.ALWAYS || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && !sm.supports(StoreFeature.CENTRALIZED));
         SpoolingCache<MailboxBlob> blobs = null;
 
         boolean success = false;
         try {
-            beginTransaction("deleteMailbox", octxt, redoRecorder);
+            beginTransaction("deleteMailbox", null, redoRecorder);
             if (needRedo)
                 redoRecorder.log();
 
@@ -1724,7 +1728,7 @@ public class Mailbox {
                     DbMailbox.deleteMailbox(conn, this);
                 }
 
-                if (!sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
+                if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
                     blobs = DbMailItem.getAllBlobs(this);
                 }
 
@@ -1750,10 +1754,13 @@ public class Mailbox {
                 } catch (IOException iox) {
                     ZimbraLog.store.warn("Unable to delete index data.", iox);
                 }
-                try {
-                    sm.deleteStore(this, blobs);
-                } catch (IOException iox) {
-                    ZimbraLog.store.warn("Unable to delete message data.", iox);
+
+                if (deleteStore) {
+                    try {
+                        sm.deleteStore(this, blobs);
+                    } catch (IOException iox) {
+                        ZimbraLog.store.warn("Unable to delete message data", iox);
+                    }
                 }
 
                 // twiddle the mailbox lock [must be the last command of this function!]

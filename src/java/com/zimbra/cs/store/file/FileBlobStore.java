@@ -63,6 +63,7 @@ public class FileBlobStore extends StoreManager {
     public boolean supports(StoreFeature feature) {
         switch (feature) {
             case BULK_DELETE:  return true;
+            case CENTRALIZED:  return false;
             default:           return false;
         }
     }
