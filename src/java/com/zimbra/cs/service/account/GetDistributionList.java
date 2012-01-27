@@ -56,6 +56,7 @@ public class GetDistributionList extends DistributionListDocumentHandler {
     private static final Set<String> NON_OWNER_ATTRS = Sets.newHashSet(
             Provisioning.A_description,
             Provisioning.A_displayName,
+            Provisioning.A_zimbraHideInGal,
             Provisioning.A_zimbraNotes,
             Provisioning.A_zimbraDistributionListSubscriptionPolicy,
             Provisioning.A_zimbraDistributionListUnsubscriptionPolicy);
