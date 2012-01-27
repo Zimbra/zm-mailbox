@@ -1295,7 +1295,7 @@ public class Mime {
         System.out.println(s);
         System.out.println(expandNumericCharacterReferences("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt&#x40;&;&#;&#x;&#&#3876;&#55"));
 
-        MimeMessage mm = new FixedMimeMessage(JMSession.getSession(), new java.io.FileInputStream("C:\\Temp\\mail\\24245"));
+        MimeMessage mm = new FixedMimeMessage(JMSession.getSession(), new com.zimbra.common.zmime.ZSharedFileInputStream("C:\\Temp\\mail\\24245"));
         InputStream is = new RawContentMultipartDataSource(mm, new ContentType(mm.getContentType())).getInputStream();
         int num;
         byte buf[] = new byte[1024];

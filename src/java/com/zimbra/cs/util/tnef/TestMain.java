@@ -18,10 +18,10 @@ package com.zimbra.cs.util.tnef;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -46,6 +46,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZSharedFileInputStream;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -296,12 +297,12 @@ public class TestMain {
         sLog.debug("Processing MIME file %s", mimeFile.getPath());
 
         // Prepare the input and output.
-        FileInputStream fisMime = null;
+        InputStream fisMime = null;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(10240);
         Writer baosOut = null;
         boolean doneConversion = false;
         try {
-            fisMime = new FileInputStream(mimeFile);
+            fisMime = new ZSharedFileInputStream(mimeFile);
             baosOut = new OutputStreamWriter(baos, UTF8);
 
             // Do the conversion.
