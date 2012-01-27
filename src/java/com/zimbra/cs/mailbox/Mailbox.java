@@ -6911,12 +6911,25 @@ public class Mailbox {
         }
         int lastChangeID = octxt != null && octxt.change != -1 ? octxt.change : getLastChangeID();
 
+        // Delete the items in batches.  (1000 items by default)
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
         boolean firstTime = true;
-
         while (true) {
+            // Give other threads a chance to use the mailbox between deletion batches.
+            if (firstTime) {
+                firstTime = false;
+            } else {
+                long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
+                try {
+                    ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
+                    Thread.sleep(sleepMillis);
+                } catch (InterruptedException e) {
+                    ZimbraLog.mailbox.warn("Sleep was interrupted", e);
+                }
+            }
+
             Set<Integer> itemIds = null;
             Connection conn = null;
 
@@ -6932,17 +6945,6 @@ public class Mailbox {
 
                 if (itemIds.isEmpty()) {
                     break;
-                }
-                if (firstTime) {
-                    firstTime = false;
-                } else {
-                    long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
-                    try {
-                        ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
-                        Thread.sleep(sleepMillis);
-                    } catch (InterruptedException e) {
-                        ZimbraLog.mailbox.warn("Sleep was interrupted", e);
-                    }
                 }
                 delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.TYPE_UNKNOWN, null);
             }
