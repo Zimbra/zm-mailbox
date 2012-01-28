@@ -74,6 +74,7 @@ public class MySQL extends Db {
             case ROW_LEVEL_LOCKING:          return true;
             case UNIQUE_NAME_INDEX:          return true;
             case SQL_PARAM_LIMIT:            return false;
+            case DUMPSTER_TABLES:            return true;
         }
         return false;
     }

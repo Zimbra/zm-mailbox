@@ -37,6 +37,7 @@ public class CreateFolderPath extends RedoableOp {
     private long mColor;
     private String mUrl;
     private int mFolderIds[];
+    private String mFolderUuids[];
 
     public CreateFolderPath() {
         super(MailboxOperation.CreateFolderPath);
@@ -58,8 +59,13 @@ public class CreateFolderPath extends RedoableOp {
         return mFolderIds;
     }
 
-    public void setFolderIds(int parentIds[]) {
-        mFolderIds = parentIds;
+    public String[] getFolderUuids() {
+        return mFolderUuids;
+    }
+
+    public void setFolderIdsAndUuids(int folderIds[], String folderUuids[]) {
+        mFolderIds = folderIds;
+        mFolderUuids = folderUuids;
     }
 
     @Override
@@ -69,9 +75,9 @@ public class CreateFolderPath extends RedoableOp {
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
         sb.append(", url=").append(mUrl);
         if (mFolderIds != null) {
-            sb.append(", folderIds=[");
+            sb.append(", folderIdsAndUuids=[");
             for (int i = 0; i < mFolderIds.length; i++) {
-                sb.append(mFolderIds[i]);
+                sb.append(mFolderIds[i]).append(" (").append(mFolderUuids[i]).append(")");
                 if (i < mFolderIds.length - 1) {
                     sb.append(", ");
                 }
@@ -94,6 +100,9 @@ public class CreateFolderPath extends RedoableOp {
             out.writeInt(mFolderIds.length);
             for (int i = 0; i < mFolderIds.length; i++) {
                 out.writeInt(mFolderIds[i]);
+                if (getVersion().atLeast(1, 37)) {
+                    out.writeUTF(mFolderUuids[i]);
+                }
             }
         } else {
             out.writeInt(0);
@@ -115,8 +124,12 @@ public class CreateFolderPath extends RedoableOp {
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
             mFolderIds = new int[numParentIds];
+            mFolderUuids = new String[numParentIds];
             for (int i = 0; i < numParentIds; i++) {
                 mFolderIds[i] = in.readInt();
+                if (getVersion().atLeast(1, 37)) {
+                    mFolderUuids[i] = in.readUTF();
+                }
             }
         }
     }

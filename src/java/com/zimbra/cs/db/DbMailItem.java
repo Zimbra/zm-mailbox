@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -56,6 +56,7 @@ import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
@@ -131,8 +132,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mailbox) + "(" + MAILBOX_ID +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
                     " flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date," +
-                    " mod_content) VALUES (" + MAILBOX_ID_VALUE +
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    " mod_content, uuid) VALUES (" + MAILBOX_ID_VALUE +
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             pos = setMailboxId(stmt, mailbox, pos);
             stmt.setInt(pos++, data.id);
@@ -186,6 +187,7 @@ public class DbMailItem {
                 stmt.setNull(pos++, Types.INTEGER);
             }
             stmt.setInt(pos++, data.modContent);
+            stmt.setString(pos++, data.uuid);
             int num = stmt.executeUpdate();
             if (num != 1) {
                 throw ServiceException.FAILURE("failed to create object", null);
@@ -233,7 +235,7 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
+    public static void copy(MailItem item, int id, String uuid, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
         if (id <= 0 || folder == null || parentId == 0) {
@@ -251,10 +253,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + destTable +
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                        " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
+                        " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content, uuid) " +
                         "SELECT " + MAILBOX_ID_VALUE +
                         " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
-                        " flags, tag_names, sender, subject, name, ?, ?, ?, ? FROM " + srcTable +
+                        " flags, tag_names, sender, subject, name, ?, ?, ?, ?, ? FROM " + srcTable +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
@@ -280,6 +282,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
+            stmt.setString(pos++, uuid);                       // UUID
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
@@ -2192,6 +2195,20 @@ public class DbMailItem {
 
     public static UnderlyingData getById(Mailbox mbox, int id, MailItem.Type type, boolean fromDumpster)
     throws ServiceException {
+        return getBy(LookupBy.id, mbox, Integer.toString(id), type, fromDumpster);
+    }
+
+    public static UnderlyingData getByUuid(Mailbox mbox, String uuid, MailItem.Type type, boolean fromDumpster)
+    throws ServiceException {
+        return getBy(LookupBy.uuid, mbox, uuid, type, fromDumpster);
+    }
+
+    private static enum LookupBy {
+        id, uuid;
+    }
+
+    private static UnderlyingData getBy(LookupBy by, Mailbox mbox, String key, MailItem.Type type, boolean fromDumpster)
+    throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
@@ -2200,20 +2217,31 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            String keyColumn = LookupBy.uuid.equals(by) ? "uuid" : "id";
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(mbox, "mi", fromDumpster) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                        " WHERE " + IN_THIS_MAILBOX_AND + keyColumn + " = ?");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, id);
+            stmt.setString(pos++, key);
             rs = stmt.executeQuery();
 
             if (!rs.next()) {
-                throw MailItem.noSuchItem(id, type);
+                if (LookupBy.uuid.equals(by)) {
+                    throw MailItem.noSuchItemUuid(key, type);
+                } else {
+                    int id = Integer.parseInt(key);
+                    throw MailItem.noSuchItem(id, type);
+                }
             }
             UnderlyingData data = constructItem(rs, fromDumpster);
             if (!MailItem.isAcceptableType(type, MailItem.Type.of(data.type))) {
-                throw MailItem.noSuchItem(id, type);
+                if (LookupBy.uuid.equals(by)) {
+                    throw MailItem.noSuchItemUuid(key, type);
+                } else {
+                    int id = Integer.parseInt(key);
+                    throw MailItem.noSuchItem(id, type);
+                }
             }
             if (!fromDumpster && data.type == MailItem.Type.CONVERSATION.toByte()) {
                 completeConversation(mbox, conn, data);
@@ -2221,9 +2249,9 @@ public class DbMailItem {
             return data;
         } catch (SQLException e) {
             if (!fromDumpster) {
-                throw ServiceException.FAILURE("fetching item " + id, e);
+                throw ServiceException.FAILURE("fetching item " + key, e);
             } else {
-                throw ServiceException.FAILURE("fetching item " + id + " from dumpster", e);
+                throw ServiceException.FAILURE("fetching item " + key + " from dumpster", e);
             }
         } finally {
             DbPool.closeResults(rs);
@@ -3221,10 +3249,11 @@ public class DbMailItem {
     public static final int CI_MODIFIED    = 17;
     public static final int CI_MODIFY_DATE = 18;
     public static final int CI_SAVED       = 19;
+    public static final int CI_UUID        = 20;
 
     static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.imap_id, mi.date, " +
         "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject, mi.name, " +
-        "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
+        "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid";
 
     static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
@@ -3277,6 +3306,7 @@ public class DbMailItem {
         if (data.dateChanged == 0) {
             data.dateChanged = -1;
         }
+        data.uuid = rs.getString(CI_UUID + offset);
         return data;
     }
 
@@ -3315,6 +3345,7 @@ public class DbMailItem {
         if (data.dateChanged == 0) {
             data.dateChanged = -1;
         }
+        data.uuid = item.getUuid();
         return data;
     }
 
@@ -4168,5 +4199,97 @@ public class DbMailItem {
             recipients = DbMailItem.normalize(value, DbMailItem.MAX_RECIPIENTS_LENGTH);
         }
         return this;
+    }
+
+    /**
+     * Populate the uuid column in mail_item and mail_item_dumpster tables with unique UUID values.
+     * Only the rows for item types that support UUID will be updated.  This method is not atomic,
+     * as the updates are committed in batches.  It is safe to call this method repeatedly until
+     * it succeeds.
+     * @param mbox
+     * @param reassignExisting if false, only update rows that have uuid=null; if true, clear uuid from
+     *                      all rows first, then populate with new values
+     */
+    public static void assignUuids(Mailbox mbox, boolean reassignExisting) throws ServiceException {
+        // uuid is needed for Octopus types only: folder, mountpoint, document, comment, link
+        // (also including search folder and deprecated wiki because they are sub-types of folder and document)
+        String types = "type IN (1, 2, 8, 13, 14, 17, 18)";
+        // mail_item and mail_item_dumpster tables
+        String[] tables;
+        if (Db.supports(Db.Capability.DUMPSTER_TABLES)) {
+            tables = new String[] { DbMailItem.getMailItemTableName(mbox, false), DbMailItem.getMailItemTableName(mbox, true) };
+        } else {
+            tables = new String[] { DbMailItem.getMailItemTableName(mbox, false) };
+        }
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection(mbox);
+            if (reassignExisting) {
+                for (String table : tables) {
+                    PreparedStatement clear = null;
+                    try {
+                        clear = conn.prepareStatement("UPDATE " + table + " SET uuid = NULL" +
+                                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + " uuid IS NOT NULL");
+                        DbMailItem.setMailboxId(clear, mbox, 1);
+                        clear.execute();
+                        conn.commit();
+                    } catch (SQLException e) {
+                        throw ServiceException.FAILURE("error while clearing existing uuid values", e);
+                    } finally {
+                        conn.closeQuietly(clear);
+                    }
+                }
+            }
+            for (String table : tables) {
+                boolean done = false;
+                int batchSize = 1000;
+                while (!done) {
+                    // Fetch a batch of items that don't have UUID.
+                    PreparedStatement stmt = null;
+                    ResultSet rs = null;
+                    List<Integer> ids = new ArrayList<Integer>(batchSize);
+                    try {
+                        stmt = conn.prepareStatement("SELECT id FROM " + table +
+                                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + types + " AND uuid IS NULL LIMIT ?");
+                        int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
+                        stmt.setInt(pos, batchSize);
+                        rs = stmt.executeQuery();
+                        while (rs.next()) {
+                            ids.add(rs.getInt(1));
+                        }
+                    } catch (SQLException e) {
+                        throw ServiceException.FAILURE("error while fetching rows with missing uuid", e);
+                    } finally {
+                        conn.closeQuietly(rs);
+                        conn.closeQuietly(stmt);
+                    }
+                    // Set UUID one item at a time.
+                    for (int id : ids) {
+                        PreparedStatement update = null;
+                        try {
+                            update = conn.prepareStatement("UPDATE " + table + " SET uuid = ?" +
+                                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + " id = ?");
+                            int pos = 1;
+                            update.setString(pos++, UUIDUtil.generateUUID());
+                            pos = DbMailItem.setMailboxId(update, mbox, pos);
+                            update.setInt(pos, id);
+                            update.execute();
+                        } catch (SQLException e) {
+                            throw ServiceException.FAILURE("error while setting uuid for item " + id, e);
+                        } finally {
+                            conn.closeQuietly(update);
+                        }
+                    }
+                    // Commit the batch.  We don't need overall atomicity for this upgrade.
+                    conn.commit();
+                    done = ids.isEmpty();
+                }
+            }
+        } catch (ServiceException e) {
+            DbPool.quietRollback(conn);
+            throw e;
+        } finally {
+            DbPool.quietClose(conn);
+        }
     }
 }

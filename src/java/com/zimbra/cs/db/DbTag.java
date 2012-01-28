@@ -75,7 +75,7 @@ public final class DbTag {
         long c = rs.getLong(3);
         Color color = rs.wasNull() ? null : Color.fromMetadata(c);
         // FIXME: if Tag weren't a subclass of MailItem, this step wouldn't be necessary
-        data.metadata = Tag.encodeMetadata(color, 1, rp, listed);
+        data.metadata = Tag.encodeMetadata(color, 1, 1, rp, listed);
 
         data.modMetadata = rs.getInt(7);
         data.modContent = data.modMetadata;

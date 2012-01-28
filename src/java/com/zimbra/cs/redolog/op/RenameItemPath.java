@@ -32,6 +32,7 @@ public class RenameItemPath extends RedoableOp {
     protected MailItem.Type type;
     protected String mPath;
     protected int mParentIds[];
+    protected String mParentUuids[];
 
     public RenameItemPath() {
         super(MailboxOperation.RenameItemPath);
@@ -51,8 +52,13 @@ public class RenameItemPath extends RedoableOp {
         return mParentIds;
     }
 
-    public void setParentIds(int parentIds[]) {
+    public String[] getParentUuids() {
+        return mParentUuids;
+    }
+
+    public void setParentIdsAndUuids(int parentIds[], String parentUuids[]) {
         mParentIds = parentIds;
+        mParentUuids = parentUuids;
     }
 
     @Override
@@ -60,9 +66,9 @@ public class RenameItemPath extends RedoableOp {
         StringBuilder sb = new StringBuilder("id=");
         sb.append(mId).append(", type=").append(type).append(", path=").append(mPath);
         if (mParentIds != null) {
-            sb.append(", destParentIds=[");
+            sb.append(", destParentIdsAndUuids=[");
             for (int i = 0; i < mParentIds.length; i++) {
-                sb.append(mParentIds[i]);
+                sb.append(mParentIds[i]).append(" (").append(mParentUuids[i]).append(")");
                 if (i < mParentIds.length - 1) {
                     sb.append(", ");
                 }
@@ -80,6 +86,9 @@ public class RenameItemPath extends RedoableOp {
             out.writeInt(mParentIds.length);
             for (int i = 0; i < mParentIds.length; i++) {
                 out.writeInt(mParentIds[i]);
+                if (getVersion().atLeast(1, 37)) {
+                    out.writeUTF(mParentUuids[i]);
+                }
             }
         } else {
             out.writeInt(0);
@@ -94,8 +103,12 @@ public class RenameItemPath extends RedoableOp {
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
             mParentIds = new int[numParentIds];
+            mParentUuids = new String[numParentIds];
             for (int i = 0; i < numParentIds; i++) {
                 mParentIds[i] = in.readInt();
+                if (getVersion().atLeast(1, 37)) {
+                    mParentUuids[i] = in.readUTF();
+                }
             }
         }
         type = MailItem.Type.of(in.readByte());

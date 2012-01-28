@@ -284,7 +284,7 @@ public class Conversation extends MailItem {
         data.unreadCount = unread;
         data.setFlags(flags);
         data.setTags(new Tag.NormalizedTags(tags));
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msgs));
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, new SenderList(msgs));
         data.contentChanged(mbox);
         new DbMailItem(mbox).create(data);
 
@@ -295,7 +295,7 @@ public class Conversation extends MailItem {
         for (int i = 0; i < msgs.length; i++) {
             mbox.markItemModified(msgs[i], Change.PARENT);
             msgs[i].mData.parentId = id;
-            msgs[i].mData.metadataChanged(mbox);
+            msgs[i].metadataChanged();
         }
         return conv;
     }
@@ -354,7 +354,7 @@ public class Conversation extends MailItem {
 
             int delta = unread ? 1 : -1;
             msg.updateUnread(delta, msg.isTagged(Flag.FlagInfo.DELETED) ? delta : 0);
-            msg.mData.metadataChanged(mMailbox);
+            msg.metadataChanged();
             targets.add(msg.getId());
         }
 
@@ -650,7 +650,7 @@ public class Conversation extends MailItem {
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
         mData.date = mMailbox.getOperationTimestamp();
-        mData.contentChanged(mMailbox);
+        contentChanged();
 
         if (!mMailbox.hasListeners(Session.Type.SOAP)) {
             instantiateSenderList();
@@ -845,16 +845,16 @@ public class Conversation extends MailItem {
         if (encoded == null && mSenderList != null) {
             encoded = mSenderList.toString();
         }
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, encoded);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, encoded);
     }
 
-    static String encodeMetadata(Color color, int version, CustomMetadataList extended, SenderList senders) {
-        return encodeMetadata(new Metadata(), color, version, extended, senders.toString()).toString();
+    static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, SenderList senders) {
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, senders.toString()).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String encodedSenders) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String encodedSenders) {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
-        return MailItem.encodeMetadata(meta, color, null, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
 
     @Override

@@ -49,7 +49,7 @@ public abstract class AuthToken {
         buf.append(":");
         if (b != null)
             buf.append(b);
-        return ByteUtil.getDigest(buf.toString().getBytes());
+        return ByteUtil.getSHA1Digest(buf.toString().getBytes(), true);
     }
     
     public static boolean isAnyAdmin(AuthToken authToken) {

@@ -32,6 +32,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class CopyItem extends RedoableOp {
 
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
+    private Map<Integer, String> mDestUuids = new HashMap<Integer, String>();
     private MailItem.Type type;
     private int mDestFolderId;
     private boolean mFromDumpster;  // false in this class, true in subclass RecoverItem
@@ -50,16 +51,20 @@ public class CopyItem extends RedoableOp {
     }
 
     /**
-     * Sets the ID of the copied item.
-     * @param destId
+     * Sets the ID and UUID of the copied item.
      */
-    public void setDestId(int srcId, int destId) {
+    public void setDest(int srcId, int destId, String destUuid) {
         mDestIds.put(srcId, destId);
+        mDestUuids.put(srcId, destUuid);
     }
 
     public int getDestId(int srcId) {
         Integer destId = mDestIds.get(srcId);
         return destId == null ? -1 : destId;
+    }
+
+    public String getDestUuid(int srcId) {
+        return mDestUuids.get(srcId);
     }
 
     protected void setFromDumpster(boolean fromDumpster) {
@@ -70,9 +75,12 @@ public class CopyItem extends RedoableOp {
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(type);
         sb.append(", destFolder=").append(mDestFolderId);
-        sb.append(", [srcId, destId, srcImap]=");
-        for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet())
-            sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
+        sb.append(", [srcId, destId, destUuid]=");
+        for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
+            int srcId = entry.getKey();
+            sb.append('[').append(srcId).append(',').append(entry.getValue());
+            sb.append(',').append(mDestUuids.get(srcId)).append(']');
+        }
         if (mFromDumpster)
             sb.append(", fromDumpster=").append(mFromDumpster);
         return sb.toString();
@@ -87,8 +95,12 @@ public class CopyItem extends RedoableOp {
         out.writeShort((short) -1);
         out.writeInt(mDestIds.size());
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
-            out.writeInt(entry.getKey());
+            int srcId = entry.getKey();
+            out.writeInt(srcId);
             out.writeInt(entry.getValue());
+            if (getVersion().atLeast(1, 37)) {
+                out.writeUTF(mDestUuids.get(srcId));
+            }
         }
         if (getVersion().atLeast(1, 30)) {
             out.writeBoolean(mFromDumpster);
@@ -111,6 +123,9 @@ public class CopyItem extends RedoableOp {
             for (int i = 0; i < count; i++) {
                 srcId = in.readInt();
                 mDestIds.put(srcId, in.readInt());
+                if (getVersion().atLeast(1, 37)) {
+                    mDestUuids.put(srcId, in.readUTF());
+                }
             }
         }
         if (getVersion().atLeast(1, 30)) {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -75,6 +75,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -102,7 +103,6 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -323,7 +323,7 @@ public class Mailbox {
         DbConnection conn = null;
         RedoableOp recorder = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        Map<Integer, MailItem> itemCache = null;
+        ItemCache itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
 
@@ -447,6 +447,120 @@ public class Mailbox {
         }
     }
 
+    private static class FolderCache {
+        private Map<Integer, Folder> mapById;
+        private Map<String, Folder> mapByUuid;
+
+        public FolderCache() {
+            mapById = new HashMap<Integer, Folder>();
+            mapByUuid = new HashMap<String, Folder>();
+        }
+
+        public void put(Folder folder) {
+            mapById.put(folder.getId(), folder);
+            mapByUuid.put(folder.getUuid(), folder);
+        }
+
+        public Folder get(int id) {
+            return mapById.get(id);
+        }
+
+        public Folder get(String uuid) {
+            return mapByUuid.get(uuid);
+        }
+
+        public void remove(Folder folder) {
+            mapById.remove(folder.getId());
+            mapByUuid.remove(folder.getUuid());
+        }
+
+        public Collection<Folder> values() {
+            return mapById.values();
+        }
+
+        public int size() {
+            return mapById.size();
+        }
+
+        public FolderCache makeCopy() throws ServiceException {
+            FolderCache copy = new FolderCache();
+            for (Folder folder : values()) {
+                MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
+                data.setFlag(Flag.FlagInfo.UNCACHED);
+                data.metadata = folder.encodeMetadata().toString();
+                copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
+            }
+            for (Folder folder : copy.values()) {
+                Folder parent = copy.get(folder.getFolderId());
+                if (parent != null) {
+                    parent.addChild(folder, false);
+                }
+            }
+            return copy;
+        }
+    }
+
+    private static class ItemCache {
+        private Map<Integer /* id */, MailItem> mapById;
+        private Map<String /* uuid */, Integer /* id */> uuid2id;
+
+        public ItemCache() {
+            mapById = new LinkedHashMap<Integer, MailItem>(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
+            uuid2id = new HashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
+        }
+
+        public void put(MailItem item) {
+            int id = item.getId();
+            mapById.put(id, item);
+            String uuid = item.getUuid();
+            if (uuid != null) {
+                uuid2id.put(uuid,  id);
+            }
+        }
+
+        public MailItem get(int id) {
+            return mapById.get(id);
+        }
+
+        public MailItem get(String uuid) {
+            // Always fetch item from mapById map to preserve LRU's access time ordering.
+            Integer id = uuid2id.get(uuid);
+            return id != null ? mapById.get(id) : null;
+        }
+
+        public MailItem remove(MailItem item) {
+            return remove(item.getId());
+        }
+
+        public MailItem remove(int id) {
+            MailItem removed = mapById.remove(id);
+            if (removed != null) {
+                String uuid = removed.getUuid();
+                if (uuid != null) {
+                    uuid2id.remove(uuid);
+                }
+            }
+            return removed;
+        }
+
+        public boolean contains(MailItem item) {
+            return mapById.containsKey(item.getId());
+        }
+
+        public Collection<MailItem> values() {
+            return mapById.values();
+        }
+
+        public int size() {
+            return mapById.size();
+        }
+
+        public void clear() {
+            mapById.clear();
+            uuid2id.clear();
+        }
+    }
+
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLock lock = new MailboxLock();
@@ -462,9 +576,9 @@ public class Mailbox {
     private final MailboxChange currentChange = new MailboxChange();
     private final List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
-    private Map<Integer, Folder> mFolderCache;
+    private FolderCache mFolderCache;
     private Map<Object, Tag>     mTagCache;
-    private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
+    private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
     private final Map <String, Integer> mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
     private final Map <String, Integer> mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
 
@@ -610,6 +724,13 @@ public class Mailbox {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.4", getVersion());
                     MailboxUpgrade.upgradeTo2_4(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 4));
+                }
+
+                // UUID column
+                if (!mData.version.atLeast(2, 5)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.5", getVersion());
+                    MailboxUpgrade.upgradeTo2_5(this);
+                    updateVersion(new MailboxVersion((short) 2, (short) 5));
                 }
             }
 
@@ -1348,10 +1469,10 @@ public class Mailbox {
         }
 
         // keep a hard reference to the item cache to avoid having it GCed during the op
-        Map<Integer, MailItem> cache = mItemCache.get();
+        ItemCache cache = mItemCache.get();
         if (cache == null) {
-            cache = new LinkedHashMap<Integer, MailItem>(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
-            mItemCache = new SoftReference<Map<Integer, MailItem>>(cache);
+            cache = new ItemCache();
+            mItemCache = new SoftReference<ItemCache>(cache);
             ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
         }
         currentChange.itemCache = cache;
@@ -1449,7 +1570,7 @@ public class Mailbox {
     }
 
 
-    private Map<Integer, MailItem> getItemCache() throws ServiceException {
+    private ItemCache getItemCache() throws ServiceException {
         if (!currentChange.isActive()) {
             throw ServiceException.FAILURE("cannot access item cache outside a transaction active=" +
                     currentChange.active + ",depth=" + currentChange.depth, null);
@@ -1476,10 +1597,10 @@ public class Mailbox {
             }
         } else if (item instanceof Folder) {
             if (mFolderCache != null) {
-                mFolderCache.put(item.getId(), (Folder) item);
+                mFolderCache.put((Folder) item);
             }
         } else {
-            getItemCache().put(item.getId(), item);
+            getItemCache().put(item);
         }
 
         ZimbraLog.cache.debug("cached %s %d in mailbox %d", item.getType(), item.getId(), getId());
@@ -1497,9 +1618,9 @@ public class Mailbox {
         } else if (item instanceof Folder) {
             if (mFolderCache == null)
                 return;
-            mFolderCache.remove(item.getId());
+            mFolderCache.remove((Folder) item);
         } else {
-            getItemCache().remove(item.getId());
+            getItemCache().remove(item);
             MessageCache.purge(item);
         }
 
@@ -1639,41 +1760,41 @@ public class Mailbox {
         lock.lock();
         try {
             byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
-            Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.Type.UNKNOWN,
+            Folder root = Folder.create(ID_FOLDER_ROOT, UUIDUtil.generateUUID(), this, null, "ROOT", hidden, MailItem.Type.UNKNOWN,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_TAGS, this, root, "Tags", hidden, MailItem.Type.TAG,
+            Folder.create(ID_FOLDER_TAGS, UUIDUtil.generateUUID(), this, root, "Tags", hidden, MailItem.Type.TAG,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.Type.CONVERSATION,
+            Folder.create(ID_FOLDER_CONVERSATIONS, UUIDUtil.generateUUID(), this, root, "Conversations", hidden, MailItem.Type.CONVERSATION,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_COMMENTS, this, root, "Comments", hidden, MailItem.Type.COMMENT,
+            Folder.create(ID_FOLDER_COMMENTS, UUIDUtil.generateUUID(), this, root, "Comments", hidden, MailItem.Type.COMMENT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_PROFILE, this, root, "Profile", hidden, MailItem.Type.DOCUMENT,
+            Folder.create(ID_FOLDER_PROFILE, UUIDUtil.generateUUID(), this, root, "Profile", hidden, MailItem.Type.DOCUMENT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
 
             byte system = Folder.FOLDER_IS_IMMUTABLE;
-            Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.Type.UNKNOWN,
+            Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, UUIDUtil.generateUUID(), this, root, "USER_ROOT", system, MailItem.Type.UNKNOWN,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_INBOX, this, userRoot, "Inbox", system, MailItem.Type.MESSAGE,
+            Folder.create(ID_FOLDER_INBOX, UUIDUtil.generateUUID(), this, userRoot, "Inbox", system, MailItem.Type.MESSAGE,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_TRASH, this, userRoot, "Trash", system, MailItem.Type.UNKNOWN,
+            Folder.create(ID_FOLDER_TRASH, UUIDUtil.generateUUID(), this, userRoot, "Trash", system, MailItem.Type.UNKNOWN,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_SPAM, this, userRoot, "Junk", system, MailItem.Type.MESSAGE,
+            Folder.create(ID_FOLDER_SPAM, UUIDUtil.generateUUID(), this, userRoot, "Junk", system, MailItem.Type.MESSAGE,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_SENT, this, userRoot, "Sent", system, MailItem.Type.MESSAGE,
+            Folder.create(ID_FOLDER_SENT, UUIDUtil.generateUUID(), this, userRoot, "Sent", system, MailItem.Type.MESSAGE,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_DRAFTS, this, userRoot, "Drafts", system, MailItem.Type.MESSAGE,
+            Folder.create(ID_FOLDER_DRAFTS, UUIDUtil.generateUUID(), this, userRoot, "Drafts", system, MailItem.Type.MESSAGE,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.Type.CONTACT,
+            Folder.create(ID_FOLDER_CONTACTS, UUIDUtil.generateUUID(), this, userRoot, "Contacts", system, MailItem.Type.CONTACT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.Type.APPOINTMENT,
+            Folder.create(ID_FOLDER_CALENDAR, UUIDUtil.generateUUID(), this, userRoot, "Calendar", system, MailItem.Type.APPOINTMENT,
                     Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_TASKS, this, userRoot, "Tasks", system, MailItem.Type.TASK,
+            Folder.create(ID_FOLDER_TASKS, UUIDUtil.generateUUID(), this, userRoot, "Tasks", system, MailItem.Type.TASK,
                     Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.Type.CONTACT,
+            Folder.create(ID_FOLDER_AUTO_CONTACTS, UUIDUtil.generateUUID(), this, userRoot, "Emailed Contacts", system, MailItem.Type.CONTACT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats", system, MailItem.Type.MESSAGE,
+            Folder.create(ID_FOLDER_IM_LOGS,  UUIDUtil.generateUUID(), this, userRoot, "Chats", system, MailItem.Type.MESSAGE,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT,
+            Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
         } finally {
             lock.release();
@@ -1749,7 +1870,7 @@ public class Mailbox {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            mFolderCache = new HashMap<Integer, Folder>();
+            mFolderCache = new FolderCache();
             // create the folder objects and, as a side-effect, populate the new cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
@@ -1769,7 +1890,7 @@ public class Mailbox {
                 boolean badChangeDate = folder.getChangeDate() <= 0;
                 if (badChangeDate) {
                     markItemModified(folder, Change.INTERNAL_ONLY);
-                    folder.mData.metadataChanged(this);
+                    folder.metadataChanged();
                 }
                 // if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
                 if (persist || badChangeDate) {
@@ -2162,24 +2283,12 @@ public class Mailbox {
      *  <p>
      *  If the {@code Mailbox}'s folder cache is {@code null}, this method will
      *  also return {@code null}. */
-    private Map<Integer, Folder> snapshotFolders() throws ServiceException {
+    private FolderCache snapshotFolders() throws ServiceException {
         if (currentChange.depth > 1 || mFolderCache == null) {
             return mFolderCache;
+        } else {
+            return mFolderCache.makeCopy();
         }
-        Map<Integer, Folder> copies = new HashMap<Integer, Folder>();
-        for (Folder folder : mFolderCache.values()) {
-            MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-            data.setFlag(Flag.FlagInfo.UNCACHED);
-            data.metadata = folder.encodeMetadata().toString();
-            copies.put(folder.getId(), (Folder) MailItem.constructItem(this, data));
-        }
-        for (Folder folder : copies.values()) {
-            Folder parent = copies.get(folder.getFolderId());
-            if (parent != null) {
-                parent.addChild(folder, false);
-            }
-        }
-        return copies;
     }
 
     private static Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
@@ -2200,8 +2309,8 @@ public class Mailbox {
         }
         assert(currentChange.depth == 0);
 
-        Map<Integer, MailItem> cache = mItemCache.get();
-        Map<Integer, Folder> folders =  mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache : snapshotFolders();
+        ItemCache cache = mItemCache.get();
+        FolderCache folders =  mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache : snapshotFolders();
 
         PendingModifications snapshot = new PendingModifications();
 
@@ -2225,7 +2334,7 @@ public class Mailbox {
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.containsKey(item.getId())) {
+                    if (cache != null && cache.contains(item)) {
                         item = snapshotItem(item);
                     }
                     snapshot.recordCreated(item);
@@ -2255,7 +2364,7 @@ public class Mailbox {
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.containsKey(item.getId())) {
+                    if (cache != null && cache.contains(item)) {
                         item = snapshotItem(item);
                     }
                     snapshot.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
@@ -2292,29 +2401,32 @@ public class Mailbox {
         return getItemById(id, type, false);
     }
 
+    // Returns true if the item in dumpster is visible to the user.
+    // Item is hidden from non-admin user if it is too old or is a spam.
+    private boolean isVisibleInDumpster(MailItem item) throws ServiceException {
+        OperationContext octxt = getOperationContext();
+        if (!hasFullAdminAccess(octxt)) {
+            long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
+            long threshold = now - getAccount().getDumpsterUserVisibleAge();
+            if (item.getChangeDate() < threshold || item.inSpam()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     MailItem getItemById(int id, MailItem.Type type, boolean fromDumpster) throws ServiceException {
         if (fromDumpster) {
-            boolean noSuchItem = false;
             MailItem item = null;
             try {
                 item = MailItem.getById(this, id, type, true);
-            } catch (NoSuchItemException e) {
-                noSuchItem = true;
-            }
-            if (item != null) {
-                // Pretend the item doesn't exist in the dumpster if user is non-admin and item is too old or is a spam.
-                OperationContext octxt = getOperationContext();
-                if (!hasFullAdminAccess(octxt)) {
-                    long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
-                    long threshold = now - getAccount().getDumpsterUserVisibleAge();
-                    if (item.getChangeDate() < threshold || item.inSpam()) {
-                        noSuchItem = true;
-                    }
+                if (item != null && !isVisibleInDumpster(item)) {
+                    item = null;
                 }
-            }
-            // Both truly non-existent case and filter case throw noSuchItem exception here.  This way the client
+            } catch (NoSuchItemException e) {}
+            // Both truly non-existent case and age-filtered case throw noSuchItem exception here.  This way the client
             // can't distinguish the two cases from the stack trace in the soap fault.
-            if (noSuchItem) {
+            if (item == null) {
                 throw MailItem.noSuchItem(id,  type);
             }
             return item;
@@ -2345,6 +2457,64 @@ public class Mailbox {
             // cache miss, so fetch from the database
             item = MailItem.getById(this, id, type);
         }
+        return item;
+    }
+
+    /**
+     * Returns the <tt>MailItem</tt> with the specified UUID.
+     * @throws NoSuchItemException if the item does not exist
+     */
+    public MailItem getItemByUuid(OperationContext octxt, String uuid, MailItem.Type type) throws ServiceException {
+        return getItemByUuid(octxt, uuid, type, false);
+    }
+
+    public MailItem getItemByUuid(OperationContext octxt, String uuid, MailItem.Type type, boolean fromDumpster)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            // tag/folder caches are populated in beginTransaction...
+            beginTransaction("getItemByUuid", octxt);
+            MailItem item = checkAccess(getItemByUuid(uuid, type, fromDumpster));
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    MailItem getItemByUuid(String uuid, MailItem.Type type) throws ServiceException {
+        return getItemByUuid(uuid, type, false);
+    }
+
+    MailItem getItemByUuid(String uuid, MailItem.Type type, boolean fromDumpster) throws ServiceException {
+        if (fromDumpster) {
+            MailItem item = null;
+            try {
+                item = MailItem.getByUuid(this, uuid, type, true);
+                if (item != null && !isVisibleInDumpster(item)) {
+                    item = null;
+                }
+            } catch (NoSuchItemException e) {}
+            // Both truly non-existent case and age-filtered case throw noSuchItem exception here.  This way the client
+            // can't distinguish the two cases from the stack trace in the soap fault.
+            if (item == null) {
+                throw MailItem.noSuchItemUuid(uuid,  type);
+            }
+            return item;
+        }
+
+        // try the cache first
+        MailItem item = getCachedItemByUuid(uuid, type);
+        if (item != null)
+            return item;
+
+        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+        if (isCachedType(type))
+            throw MailItem.noSuchItemUuid(uuid, type);
+
+        // cache miss, so fetch from the database
+        item = MailItem.getByUuid(this, uuid, type);
+
         return item;
     }
 
@@ -2542,6 +2712,44 @@ public class Mailbox {
         }
 
         logCacheActivity(key, type, item);
+        return item;
+    }
+
+    /** retrieve an item from the Mailbox's caches; return null if no item found */
+    MailItem getCachedItemByUuid(String uuid) throws ServiceException {
+        MailItem item = null;
+        if (item == null && mFolderCache != null) {
+            item = mFolderCache.get(uuid);
+        }
+        if (item == null) {
+            item = getItemCache().get(uuid);
+        }
+        logCacheActivity(uuid, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
+        return item;
+    }
+
+    MailItem getCachedItemByUuid(String uuid, MailItem.Type type) throws ServiceException {
+        MailItem item = null;
+        switch (type) {
+            case UNKNOWN:
+                return getCachedItemByUuid(uuid);
+            case MOUNTPOINT:
+            case SEARCHFOLDER:
+            case FOLDER:
+                if (mFolderCache != null) {
+                    item = mFolderCache.get(uuid);
+                }
+                break;
+            default:
+                item = getItemCache().get(uuid);
+                break;
+        }
+
+        if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.mData.type))) {
+            item = null;
+        }
+
+        logCacheActivity(uuid, type, item);
         return item;
     }
 
@@ -3202,6 +3410,18 @@ public class Mailbox {
         return (Folder) getItemById(id, MailItem.Type.FOLDER);
     }
 
+    /** Returns the folder with the specified uuid.
+     * @throws NoSuchItemException if the folder does not exist */
+    public Folder getFolderByUuid(OperationContext octxt, String uuid) throws ServiceException {
+        return (Folder) getItemByUuid(octxt, uuid, MailItem.Type.FOLDER);
+    }
+
+    /** Returns the folder with the specified uuid.
+     * @throws NoSuchItemException if the folder does not exist */
+    Folder getFolderByUuid(String uuid) throws ServiceException {
+        return (Folder) getItemByUuid(uuid, MailItem.Type.FOLDER);
+    }
+
     /** Returns the folder with the specified parent and name.
      * @throws NoSuchItemException if the folder does not exist */
     public Folder getFolderByName(OperationContext octxt, int parentId, String name) throws ServiceException {
@@ -3344,6 +3564,24 @@ public class Mailbox {
         }
     }
 
+    public FolderNode getFolderTreeByUuid(OperationContext octxt, String uuid, boolean returnAllVisibleFolders)
+            throws ServiceException {
+        lock.lock();
+        try {
+            Folder folder;
+            if (uuid != null) {
+                folder = getFolderByUuid(returnAllVisibleFolders ? null : octxt, uuid);
+            } else {
+                folder = getFolderById(returnAllVisibleFolders ? null : octxt, Mailbox.ID_FOLDER_USER_ROOT);
+            }
+            // for each subNode...
+            Set<Folder> visibleFolders = getVisibleFolders(octxt);
+            return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
+        } finally {
+            lock.release();
+        }
+    }
+
     private FolderNode handleFolder(Folder folder, Set<Folder> visible, boolean returnAllVisibleFolders)
             throws ServiceException {
         boolean isVisible = visible == null || visible.remove(folder);
@@ -3412,6 +3650,9 @@ public class Mailbox {
         return (Mountpoint) getItemById(octxt, mptId, MailItem.Type.MOUNTPOINT);
     }
 
+    public Mountpoint getMountpointByUuid(OperationContext octxt, String mptUuid) throws ServiceException {
+        return (Mountpoint) getItemByUuid(octxt, mptUuid, MailItem.Type.MOUNTPOINT);
+    }
 
     public Note getNoteById(OperationContext octxt, int noteId) throws ServiceException {
         return (Note) getItemById(octxt, noteId, MailItem.Type.NOTE);
@@ -3581,6 +3822,10 @@ public class Mailbox {
 
     public Document getDocumentById(OperationContext octxt, int id) throws ServiceException {
         return (Document) getItemById(octxt, id, MailItem.Type.DOCUMENT);
+    }
+
+    public Document getDocumentByUuid(OperationContext octxt, String uuid) throws ServiceException {
+        return (Document) getItemByUuid(octxt, uuid, MailItem.Type.DOCUMENT);
     }
 
     Document getDocumentById(int id) throws ServiceException {
@@ -4247,8 +4492,8 @@ public class Mailbox {
                                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                                     //bug 49106 - did not find the appointment above in getCalendarItemByUid(), but the mail_item exists
                                     ZimbraLog.calendar.error("failed to create calendar item; already exists. cause: " +
-                                            (scidList.isEmpty() ? "no items in uuid list." :
-                                                "uuid not found in appointment: " + scidList.get(0).invite.getUid() +
+                                            (scidList.isEmpty() ? "no items in uid list." :
+                                                "uid not found in appointment: " + scidList.get(0).invite.getUid() +
                                                 " or bad mail_item type"));
                                 }
                                 throw e;
@@ -5776,9 +6021,18 @@ public class Mailbox {
                             continue;
                         }
                         int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(original.getId()));
-                        Message msg = (Message) original.copy(folder, newId, null);
+                        String uuid;
+                        if (redoPlayer != null) {
+                            uuid = redoPlayer.getDestUuid(original.getId());
+                        } else if (fromDumpster) {
+                            // Keep the same uuid if recovering from dumpster.
+                            uuid = original.getUuid();
+                        } else {
+                            uuid = UUIDUtil.generateUUID();
+                        }
+                        Message msg = (Message) original.copy(folder, newId, uuid, null);
                         msgs.add(msg);
-                        redoRecorder.setDestId(original.getId(), newId);
+                        redoRecorder.setDest(original.getId(), newId, msg.getUuid());
                     }
                     if (msgs.isEmpty()) {
                         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -5787,10 +6041,19 @@ public class Mailbox {
                     } else {
                         int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(conv.getId()));
                         copy = Conversation.create(this, newId, msgs.toArray(new Message[msgs.size()]));
-                        redoRecorder.setDestId(conv.getId(), newId);
+                        redoRecorder.setDest(conv.getId(), newId, copy.getUuid());
                     }
                 } else {
                     int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(item.getId()));
+                    String uuid;
+                    if (redoPlayer != null) {
+                        uuid = redoPlayer.getDestUuid(item.getId());
+                    } else if (fromDumpster) {
+                        // Keep the same uuid if recovering from dumpster.
+                        uuid = item.getUuid();
+                    } else {
+                        uuid = UUIDUtil.generateUUID();
+                    }
                     int parentId = item.getParentId();
                     MailItem parent = null;
                     if (fromDumpster) {
@@ -5803,15 +6066,15 @@ public class Mailbox {
                             }
                         }
                     }
-                    copy = item.copy(folder, newId, parent);
+                    copy = item.copy(folder, newId, uuid, parent);
                     if (fromDumpster) {
                         for (MailItem.UnderlyingData data : DbMailItem.getByParent(item, SortBy.DATE_DESC, -1, true)) {
                             MailItem child = getItem(data);
                             Folder destination = (child.getType() == Type.COMMENT) ? getFolderById(ID_FOLDER_COMMENTS) : folder;
-                            child.copy(destination, getNextItemId(ID_AUTO_INCREMENT), copy);
+                            child.copy(destination, getNextItemId(ID_AUTO_INCREMENT), child.getUuid(), copy);
                         }
                     }
-                    redoRecorder.setDestId(item.getId(), newId);
+                    redoRecorder.setDest(item.getId(), newId, copy.getUuid());
                 }
 
                 result.add(copy);
@@ -5852,12 +6115,13 @@ public class Mailbox {
             for (MailItem item : items) {
                 int srcId = item.getId();
                 int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
+                String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(srcId);
 
                 trainSpamFilter(octxt, item, target, "imap copy");
 
-                MailItem copy = item.icopy(target, newId);
+                MailItem copy = item.icopy(target, newId, newUuid);
                 result.add(copy);
-                redoRecorder.setDestId(srcId, newId);
+                redoRecorder.setDest(srcId, newId, newUuid);
             }
 
             success = true;
@@ -6127,17 +6391,23 @@ public class Mailbox {
                 throw MailServiceException.ALREADY_EXISTS(path);
             }
             int[] recorderParentIds = new int[parts.length - 1];
+            String[] recorderParentUuids = new String[parts.length - 1];
             int[] playerParentIds = redoPlayer == null ? null : redoPlayer.getParentIds();
+            String[] playerParentUuids = redoPlayer == null ? null : redoPlayer.getParentUuids();
             if (playerParentIds != null && playerParentIds.length != recorderParentIds.length) {
-                throw ServiceException.FAILURE("incorrect number of path segments in redo player", null);
+                throw ServiceException.FAILURE("incorrect number of path segment ids in redo player", null);
+            }
+            if (playerParentUuids != null && playerParentUuids.length != recorderParentUuids.length) {
+                throw ServiceException.FAILURE("incorrect number of path segment uuids in redo player", null);
             }
             parent = getFolderById(ID_FOLDER_USER_ROOT);
             for (int i = 0; i < parts.length - 1; i++) {
                 String name = MailItem.validateItemName(parts[i]);
                 int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
+                String subfolderUuid = playerParentUuids == null ? UUIDUtil.generateUUID() : playerParentUuids[i];
                 Folder subfolder = parent.findSubfolder(name);
                 if (subfolder == null) {
-                    subfolder = Folder.create(getNextItemId(subfolderId), this, parent, name);
+                    subfolder = Folder.create(getNextItemId(subfolderId), subfolderUuid, this, parent, name);
                 } else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId()) {
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 } else if (!subfolder.getName().equals(name) && subfolder.isMutable()) {
@@ -6145,9 +6415,10 @@ public class Mailbox {
                     subfolder.rename(name, parent);
                 }
                 recorderParentIds[i] = subfolder.getId();
+                recorderParentUuids[i] = subfolder.getUuid();
                 parent = subfolder;
             }
-            redoRecorder.setParentIds(recorderParentIds);
+            redoRecorder.setParentIdsAndUuids(recorderParentIds, recorderParentUuids);
 
             trainSpamFilter(octxt, item, parent, "rename");
 
@@ -6354,7 +6625,8 @@ public class Mailbox {
             }
 
             CreateTag redoPlayer = (CreateTag) currentChange.getRedoPlayer();
-            Tag tag = createTagInternal(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getTagId(), name, color, true);
+            int tagId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getTagId();
+            Tag tag = createTagInternal(tagId, name, color, true);
             redoRecorder.setTagId(tag.getId());
             success = true;
             return tag;
@@ -6401,15 +6673,9 @@ public class Mailbox {
             beginTransaction("createNote", octxt, redoRecorder);
             CreateNote redoPlayer = (CreateNote) currentChange.getRedoPlayer();
 
-            int noteId;
-            if (redoPlayer == null) {
-                noteId = getNextItemId(ID_AUTO_INCREMENT);
-            } else {
-                noteId = getNextItemId(redoPlayer.getNoteId());
-            }
-            redoRecorder.setNoteId(noteId);
-
+            int noteId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getNoteId());
             Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
+            redoRecorder.setNoteId(noteId);
 
             index.add(note);
             success = true;
@@ -6507,7 +6773,6 @@ public class Mailbox {
 
 
             int contactId = getNextItemId(isRedo ? redoPlayer.getContactId() : ID_AUTO_INCREMENT);
-            redoRecorder.setContactId(contactId);
 
             MailboxBlob mblob = null;
             if (pc.hasAttachment()) {
@@ -6521,6 +6786,7 @@ public class Mailbox {
 
             int flags = 0;
             Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, ntags, null);
+            redoRecorder.setContactId(contactId);
 
             index.add(con);
 
@@ -6648,8 +6914,9 @@ public class Mailbox {
             CreateFolder redoPlayer = (CreateFolder) currentChange.getRedoPlayer();
 
             int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
-            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url, null);
-            redoRecorder.setFolderId(folder.getId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getFolderUuid();
+            Folder folder = Folder.create(folderId, uuid, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url, null);
+            redoRecorder.setFolderIdAndUuid(folder.getId(), folder.getUuid());
             success = true;
             updateRssDataSource(folder);
             return folder;
@@ -6710,17 +6977,23 @@ public class Mailbox {
                 throw MailServiceException.ALREADY_EXISTS(path);
             }
             int[] recorderFolderIds = new int[parts.length];
+            String[] recorderFolderUuids = new String[parts.length];
             int[] playerFolderIds = redoPlayer == null ? null : redoPlayer.getFolderIds();
+            String[] playerFolderUuids = redoPlayer == null ? null : redoPlayer.getFolderUuids();
             if (playerFolderIds != null && playerFolderIds.length != recorderFolderIds.length) {
-                throw ServiceException.FAILURE("incorrect number of path segments in redo player", null);
+                throw ServiceException.FAILURE("incorrect number of path segment ids in redo player", null);
+            }
+            if (playerFolderUuids != null && playerFolderUuids.length != recorderFolderUuids.length) {
+                throw ServiceException.FAILURE("incorrect number of path segment uuids in redo player", null);
             }
             Folder folder = getFolderById(ID_FOLDER_USER_ROOT);
             for (int i = 0; i < parts.length; i++) {
                 boolean last = i == parts.length - 1;
                 int folderId = playerFolderIds == null ? ID_AUTO_INCREMENT : playerFolderIds[i];
+                String folderUuid = playerFolderUuids == null ? UUIDUtil.generateUUID() : playerFolderUuids[i];
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null) {
-                    subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0,
+                    subfolder = Folder.create(getNextItemId(folderId), folderUuid, this, folder, parts[i], (byte) 0,
                             last ? defaultView : MailItem.Type.UNKNOWN, flags, color, last ? url : null, null);
                 } else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId()) {
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
@@ -6728,9 +7001,10 @@ public class Mailbox {
                     throw MailServiceException.ALREADY_EXISTS(path);
                 }
                 recorderFolderIds[i] = subfolder.getId();
+                recorderFolderUuids[i] = subfolder.getUuid();
                 folder = subfolder;
             }
-            redoRecorder.setFolderIds(recorderFolderIds);
+            redoRecorder.setFolderIdsAndUuids(recorderFolderIds, recorderFolderUuids);
             success = true;
             return folder;
         } finally {
@@ -7001,7 +7275,7 @@ public class Mailbox {
                     Invite inv = (Invite) obj;
                     String uid = inv.getUid();
                     if (uid == null) {
-                        uid = LdapUtil.generateUUID();
+                        uid = UUIDUtil.generateUUID();
                         inv.setUid(uid);
                     }
                     // Create the event in accepted state.  (bug 41639)
@@ -7087,14 +7361,14 @@ public class Mailbox {
         updateRssDataSource(folder);
     }
 
-    public void setSubscriptionData(OperationContext octxt, int folderId, long date, String guid)
+    public void setSubscriptionData(OperationContext octxt, int folderId, long date, String uuid)
             throws ServiceException {
-        SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, guid);
+        SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, uuid);
 
         boolean success = false;
         try {
             beginTransaction("setSubscriptionData", octxt, redoRecorder);
-            getFolderById(folderId).setSubscriptionData(guid, date);
+            getFolderById(folderId).setSubscriptionData(uuid, date);
             success = true;
         } finally {
             endTransaction(success);
@@ -7207,9 +7481,10 @@ public class Mailbox {
             CreateSavedSearch redoPlayer = (CreateSavedSearch) currentChange.getRedoPlayer();
 
             int searchId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getSearchId());
-            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort,
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            SearchFolder search = SearchFolder.create(searchId, uuid, getFolderById(folderId), name, query, types, sort,
                     flags, color, null);
-            redoRecorder.setSearchId(search.getId());
+            redoRecorder.setSearchIdAndUuid(search.getId(), search.getUuid());
             success = true;
             return search;
         } finally {
@@ -7252,9 +7527,10 @@ public class Mailbox {
             CreateMountpoint redoPlayer = (CreateMountpoint) currentChange.getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags,
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            Mountpoint mpt = Mountpoint.create(mptId, uuid, getFolderById(folderId), name, ownerId, remoteId, view, flags,
                     color, showReminders, null);
-            redoRecorder.setId(mpt.getId());
+            redoRecorder.setIdAndUuid(mpt.getId(), mpt.getUuid());
             success = true;
             return mpt;
         } finally {
@@ -7540,20 +7816,22 @@ public class Mailbox {
 
             SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
             int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
 
             Document doc;
             switch (type) {
                 case DOCUMENT:
-                    doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null, flags);
+                    doc = Document.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null, flags);
                     break;
                 case WIKI:
-                    doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
+                    doc = WikiItem.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd, null);
                     break;
                 default:
                     throw MailServiceException.INVALID_TYPE(type.toString());
             }
 
             redoRecorder.setMessageId(itemId);
+            redoRecorder.setUuid(doc.getUuid());
             redoRecorder.setDocument(pd);
             redoRecorder.setItemType(type);
             redoRecorder.setDescription(pd.getDescription());
@@ -8333,7 +8611,7 @@ public class Mailbox {
                 sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             }
 
-            Map<Integer, MailItem> cache = currentChange.itemCache;
+            ItemCache cache = currentChange.itemCache;
             if (cache == null)
                 return;
 
@@ -8369,7 +8647,7 @@ public class Mailbox {
         return getAccount().isAttachmentsIndexingEnabled();
     }
 
-    private void logCacheActivity(Integer key, MailItem.Type type, MailItem item) {
+    private void logCacheActivity(Object key, MailItem.Type type, MailItem item) {
         // The global item cache counter always gets updated
         if (!isCachedType(type)) {
             ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 100);
@@ -8436,8 +8714,9 @@ public class Mailbox {
             }
             CreateComment redoPlayer = (CreateComment) currentChange.getRedoPlayer();
             int itemId = redoPlayer == null ? getNextItemId(ID_AUTO_INCREMENT) : redoPlayer.getItemId();
-            Comment comment = Comment.create(this, parent, itemId, text, creatorId, null);
-            redoRecorder.setItemId(comment.getId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            Comment comment = Comment.create(this, parent, itemId, uuid, text, creatorId, null);
+            redoRecorder.setItemIdAndUuid(comment.getId(), comment.getUuid());
             index.add(comment);
             success = true;
             return comment;
@@ -8454,8 +8733,9 @@ public class Mailbox {
             beginTransaction("createLink", octxt, redoRecorder);
             CreateLink redoPlayer = (CreateLink) currentChange.getRedoPlayer();
             int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Link link = Link.create(getFolderById(folderId), itemId, name, ownerId, remoteId, null);
-            redoRecorder.setId(link.getId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            Link link = Link.create(getFolderById(folderId), itemId, uuid, name, ownerId, remoteId, null);
+            redoRecorder.setIdAndUuid(link.getId(), link.getUuid());
             success = true;
             return link;
         } finally {
@@ -8474,6 +8754,23 @@ public class Mailbox {
         try {
             beginTransaction("getComments", octxt, null);
             MailItem parent = getItemById(parentId, Type.UNKNOWN, fromDumpster);
+            return parent.getComments(SortBy.DATE_DESC, offset, length);
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public Collection<Comment> getComments(OperationContext octxt, String parentUuid, int offset, int length)
+            throws ServiceException {
+        return getComments(octxt, parentUuid, offset, length, false);
+    }
+
+    Collection<Comment> getComments(OperationContext octxt, String parentUuid, int offset, int length, boolean fromDumpster)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getComments", octxt, null);
+            MailItem parent = getItemByUuid(parentUuid, Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
         } finally {
             endTransaction(success);

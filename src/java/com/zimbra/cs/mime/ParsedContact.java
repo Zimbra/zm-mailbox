@@ -107,7 +107,7 @@ public final class ParsedContact {
             try {
                 contactAttachments = attachments;
                 mimeMessage = generateMimeMessage(attachments);
-                digest = ByteUtil.getSHA1Digest(Mime.getInputStream(mimeMessage), true);
+                digest = ByteUtil.getSHA256Digest(Mime.getInputStream(mimeMessage), true);
 
                 for (Attachment attach : contactAttachments) {
                     contactFields.remove(attach.getName());

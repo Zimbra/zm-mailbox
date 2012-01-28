@@ -566,7 +566,7 @@ public class Message extends MailItem {
         data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(pm.getNormalizedSubject());
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, dinfo, null, null).toString();
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, dinfo, null, null).toString();
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
@@ -1188,8 +1188,8 @@ public class Message extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem copy(Folder folder, int id, MailItem newParent) throws IOException, ServiceException {
-        Message copy = (Message) super.copy(folder, id, newParent);
+    @Override MailItem copy(Folder folder, int id, String uuid, MailItem newParent) throws IOException, ServiceException {
+        Message copy = (Message) super.copy(folder, id, uuid, newParent);
 
         if (isDraft()) {
             copy.setDraftAutoSendTime(0);
@@ -1209,8 +1209,8 @@ public class Message extends MailItem {
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
     @Override
-    MailItem icopy(Folder target, int copyId) throws IOException, ServiceException {
-        Message copy = (Message) super.icopy(target, copyId);
+    MailItem icopy(Folder target, int copyId, String copyUuid) throws IOException, ServiceException {
+        Message copy = (Message) super.icopy(target, copyId, copyUuid);
         if (isDraft())
             copy.setDraftAutoSendTime(0);
         return copy;
@@ -1312,7 +1312,7 @@ public class Message extends MailItem {
         }
 
         // rewrite the DB row to reflect our new view
-        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, draftInfo,
+        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, draftInfo,
                 calendarItemInfos, calendarIntendedFor));
 
         if (parent instanceof VirtualConversation) {
@@ -1385,18 +1385,18 @@ public class Message extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, sender, recipients, fragment,
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, sender, recipients, fragment,
                 mData.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor);
     }
 
-    private static Metadata encodeMetadata(Color color, int version, CustomMetadataList extended, ParsedMessage pm,
+    private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,
             DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
-        return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), pm.getRecipients(),
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, pm.getSender(), pm.getRecipients(),
                 pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo,
                 calItemInfos, calIntendedFor);
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String sender,
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String sender,
             String recipients, String fragment, String subject, String rawSubj, DraftInfo dinfo,
             List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // try to figure out a simple way to make the raw subject from the normalized one
@@ -1433,7 +1433,7 @@ public class Message extends MailItem {
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 
-        return MailItem.encodeMetadata(meta, color, null, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
 
     /**

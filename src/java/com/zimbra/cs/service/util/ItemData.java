@@ -21,7 +21,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -34,7 +33,7 @@ public class ItemData {
     private String tagsOldFmt = null;
 
     private static enum Keys {
-        id, type, parent_id, folder_id, index_id, imap_id, date, size,
+        id, uuid, type, parent_id, folder_id, index_id, imap_id, date, size,
         volume_id, blob_digest, unread, flags, tags, subject, name,
         metadata, mod_metadata, change_date, mod_content,
         sender, ExtraStr, FlagStr, Path, TagStr, TagNames, Ver
@@ -68,6 +67,10 @@ public class ItemData {
             }
             ud = new MailItem.UnderlyingData();
             ud.id = json.getInt(Keys.id.toString());
+            String uuid = json.optString(Keys.uuid.toString());
+            if (uuid != null && uuid.length() > 0) {  // because optString returns an empty string rather than null
+                ud.uuid = uuid;
+            }
             ud.type = (byte) json.getInt(Keys.type.toString());
             ud.parentId = json.getInt(Keys.parent_id.toString());
             ud.folderId = json.getInt(Keys.folder_id.toString());
@@ -105,6 +108,7 @@ public class ItemData {
         try {
             return new JSONObject().
                 put(Keys.id.toString(), ud.id).
+                put(Keys.uuid.toString(), ud.uuid).
                 put(Keys.type.toString(), ud.type).
                 put(Keys.parent_id.toString(), ud.parentId).
                 put(Keys.folder_id.toString(), ud.folderId).

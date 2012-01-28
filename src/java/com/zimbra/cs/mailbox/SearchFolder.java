@@ -108,7 +108,7 @@ public final class SearchFolder extends Folder {
      * @see #validateItemName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, int flags,
+    static SearchFolder create(int id, String uuid, Folder parent, String name, String query, String types, String sort, int flags,
             Color color, CustomMetadata custom) throws ServiceException {
         if (parent == null || !parent.canContain(Type.SEARCHFOLDER)) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -129,6 +129,7 @@ public final class SearchFolder extends Folder {
         }
         Mailbox mbox = parent.getMailbox();
         UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
         data.id = id;
         data.type = Type.SEARCHFOLDER.toByte();
         data.folderId = parent.getId();
@@ -137,7 +138,7 @@ public final class SearchFolder extends Folder {
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, custom, query, types, sort);
+        data.metadata = encodeMetadata(color, 1, 1, custom, query, types, sort);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
                 name, data.id, parent.getId(), parent.getName());
@@ -211,19 +212,19 @@ public final class SearchFolder extends Folder {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mQuery, mTypes, mSort);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mQuery, mTypes, mSort);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, String query, String types, String sort) {
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, String query, String types, String sort) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, extended, query, types, sort).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, query, types, sort).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String query, String types, String sort) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String query, String types, String sort) {
         meta.put(Metadata.FN_QUERY, query);
         meta.put(Metadata.FN_TYPES, types);
         meta.put(Metadata.FN_SORT,  sort);
-        return MailItem.encodeMetadata(meta, color, null, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion,  version, extended);
     }
 
 

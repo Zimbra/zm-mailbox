@@ -66,7 +66,8 @@ public abstract class Db {
         AVOID_OR_IN_WHERE_CLAUSE, // if set, then try to avoid ORs in WHERE clauses, run them as separate queries and mergesort in memory
         REQUEST_UTF8_UNICODE_COLLATION, // for mysql
         FORCE_INDEX_EVEN_IF_NO_SORT, // for derby
-        SQL_PARAM_LIMIT;
+        SQL_PARAM_LIMIT,
+        DUMPSTER_TABLES;
     }
 
     private static Db sDatabase;

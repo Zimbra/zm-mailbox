@@ -28,7 +28,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
    volume_id     TINYINT,
-   blob_digest   VARCHAR(28),
+   blob_digest   VARCHAR(44),
    unread        INTEGER,
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
@@ -41,6 +41,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    mod_metadata  INTEGER NOT NULL,
    change_date   INTEGER,
    mod_content   INTEGER NOT NULL,
+   uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
 
    CONSTRAINT pk_mail_item PRIMARY KEY (mailbox_id, id),
    CONSTRAINT i_name_folder_id UNIQUE (mailbox_id, folder_id, name),
@@ -61,7 +62,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
    volume_id     TINYINT,
-   blob_digest   VARCHAR(28),
+   blob_digest   VARCHAR(44),
    unread        INTEGER,
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
@@ -74,6 +75,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    mod_metadata  INTEGER NOT NULL,
    change_date   INTEGER,
    mod_content   INTEGER NOT NULL,
+   uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
 
    CONSTRAINT pk_mail_item_dumpster PRIMARY KEY (mailbox_id, id),
    CONSTRAINT fk_mail_item_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
@@ -87,7 +89,7 @@ CREATE TABLE *{DATABASE_NAME}.revision (
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
    volume_id     TINYINT,
-   blob_digest   VARCHAR(28),
+   blob_digest   VARCHAR(44),
    name          VARCHAR(128),
    metadata      VARCHAR(255),
    mod_metadata  INTEGER NOT NULL,
@@ -107,7 +109,7 @@ CREATE TABLE *{DATABASE_NAME}.revision_dumpster (
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
    volume_id     TINYINT,
-   blob_digest   VARCHAR(28),
+   blob_digest   VARCHAR(44),
    name          VARCHAR(128),
    metadata      VARCHAR(255),
    mod_metadata  INTEGER NOT NULL,

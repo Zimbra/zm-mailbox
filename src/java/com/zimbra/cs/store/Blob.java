@@ -88,7 +88,7 @@ public class Blob {
         return compressed;
     }
 
-    /** Returns the SHA1 digest of this blob's uncompressed data,
+    /** Returns the SHA-256 digest of this blob's uncompressed data,
      *  encoded in base64. */
     public String getDigest() throws IOException {
         if (digest == null) {
@@ -116,7 +116,7 @@ public class Blob {
             // Get the stream using the local method.  FileBlobStore.getContent()
             // can call getDigest(), which could result in an infinite loop.
             in = getInputStream();
-            MessageDigest md = MessageDigest.getInstance("SHA1");
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] buffer = new byte[1024];
             int numBytes;
             long totalBytes = 0;

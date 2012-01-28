@@ -158,6 +158,10 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such item: "+ id, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
+    public static MailServiceException NO_SUCH_ITEM_UUID(String uuid) {
+        return new NoSuchItemException("no such item uuid: "+ uuid, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(ITEM_ID, uuid, Argument.Type.IID));
+    }
+
     public static MailServiceException NO_SUCH_ITEM(String name) {
         return new NoSuchItemException("no such item: "+ name, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
@@ -182,6 +186,10 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such folder id: " + id, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
+    public static MailServiceException NO_SUCH_FOLDER_UUID(String uuid) {
+        return new NoSuchItemException("no such folder uuid: " + uuid, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(ITEM_ID, uuid, Argument.Type.IID));
+    }
+
     public static MailServiceException NO_SUCH_FOLDER(String path) {
         return new NoSuchItemException("no such folder path: " + path, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(PATH, path, Argument.Type.STR));
     }
@@ -190,6 +198,14 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such mountpoint id: " + id + "; owner = " + remoteAccountId + ", remoteId=" + remoteId,
                                        NO_SUCH_MOUNTPOINT, SENDERS_FAULT, t,
                                        new Argument(ITEM_ID, id, Argument.Type.IID),
+                                       new Argument(REMOTE_ACCOUNT_ID, remoteAccountId, Argument.Type.ACCTID),
+                                       new Argument(REMOTE_ITEM_ID, remoteId, Argument.Type.IID));
+    }
+
+    public static MailServiceException NO_SUCH_MOUNTPOINT_UUID(String uuid, String remoteAccountId, int remoteId, Throwable t) {
+        return new NoSuchItemException("no such mountpoint uuid: " + uuid + "; owner = " + remoteAccountId + ", remoteId=" + remoteId,
+                                       NO_SUCH_MOUNTPOINT, SENDERS_FAULT, t,
+                                       new Argument(ITEM_ID, uuid, Argument.Type.IID),
                                        new Argument(REMOTE_ACCOUNT_ID, remoteAccountId, Argument.Type.ACCTID),
                                        new Argument(REMOTE_ITEM_ID, remoteId, Argument.Type.IID));
     }
@@ -246,8 +262,16 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such document: " + id, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
+    public static MailServiceException NO_SUCH_DOC_UUID(String uuid) {
+        return new NoSuchItemException("no such document: " + uuid, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, uuid, Argument.Type.IID));
+    }
+
     public static MailServiceException NO_SUCH_REVISION(int docId, int version) {
         return new NoSuchItemException("no such revision: " + docId + '/' + version, NO_SUCH_REVISION, SENDERS_FAULT, new Argument(ITEM_ID, docId, Argument.Type.IID), new Argument(REVISION, version, Argument.Type.NUM));
+    }
+
+    public static MailServiceException NO_SUCH_REVISION_UUID(String docUuid, int version) {
+        return new NoSuchItemException("no such revision: " + docUuid + '/' + version, NO_SUCH_REVISION, SENDERS_FAULT, new Argument(ITEM_ID, docUuid, Argument.Type.IID), new Argument(REVISION, version, Argument.Type.NUM));
     }
 
     public static MailServiceException NO_SUCH_TAG(int id) {

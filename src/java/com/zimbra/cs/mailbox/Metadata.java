@@ -107,7 +107,10 @@ public final class Metadata {
     public static final String FN_URL              = "url";
     @Deprecated
     public static final String FN_MD_VERSION       = "v"; // metadata version; frozen but needs to be encoded for legacy clients
-    public static final String FN_VERSION          = "ver";
+    public static final String FN_METADATA_VERSION = "mdver";  // version for the item's metadata
+                                                               // (not the same as the deprecated "v", which is the version for
+                                                               // the Metadata class serialization format)
+    public static final String FN_VERSION          = "ver";    // version for the item's content
     public static final String FN_VIEW             = "vt";
     public static final String FN_WIKI_WORD        = "ww";
     public static final String FN_ELIDED           = "X";

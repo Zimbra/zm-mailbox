@@ -25,6 +25,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class CreateComment extends RedoableOp {
 
     private int mItemId;
+    private String mUuid;
     private int mParentId;
     private String mCreatorId;
     private String mText;
@@ -45,12 +46,18 @@ public class CreateComment extends RedoableOp {
         return mItemId;
     }
 
-    public void setItemId(int itemId) {
-        mItemId = itemId;
+    public String getUuid() {
+        return mUuid;
     }
-    
+
+    public void setItemIdAndUuid(int itemId, String uuid) {
+        mItemId = itemId;
+        mUuid = uuid;
+    }
+
     @Override protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=").append(mItemId);
+        StringBuilder sb = new StringBuilder("id=").append(mItemId);
+        sb.append(", uuid=").append(mUuid);
         sb.append(", creator=").append(mCreatorId);
         sb.append(", text=").append(mText).append(", parentId=").append(mParentId);
         return sb.toString();
@@ -58,6 +65,9 @@ public class CreateComment extends RedoableOp {
 
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mItemId);
+        if (getVersion().atLeast(1, 37)) {
+            out.writeUTF(mUuid);
+        }
         out.writeInt(mParentId);
         out.writeUTF(mCreatorId);
         out.writeUTF(mText);
@@ -65,6 +75,9 @@ public class CreateComment extends RedoableOp {
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mItemId = in.readInt();
+        if (getVersion().atLeast(1, 37)) {
+            mUuid = in.readUTF();
+        }
         mParentId = in.readInt();
         mCreatorId = in.readUTF();
         mText = in.readUTF();

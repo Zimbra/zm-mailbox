@@ -22,7 +22,7 @@ import com.zimbra.common.service.ServiceException;
 public final class MailboxVersion {
     // These should be incremented with changes to serialization format.
     private static final short CURRENT_MAJOR = 2; // range: 0 - Short.MAX_VALUE
-    private static final short CURRENT_MINOR = 4; // range: 0 - Short.MAX_VALUE
+    private static final short CURRENT_MINOR = 5; // range: 0 - Short.MAX_VALUE
 
     private final short majorVer;
     private final short minorVer;

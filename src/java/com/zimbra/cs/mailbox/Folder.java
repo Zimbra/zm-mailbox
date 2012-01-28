@@ -681,8 +681,8 @@ public class Folder extends MailItem {
      *        permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte) */
-    static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, mbox, parent, name, (byte) 0, Type.UNKNOWN, 0, DEFAULT_COLOR_RGB, null, null);
+    static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name) throws ServiceException {
+        return create(id, uuid, mbox, parent, name, (byte) 0, Type.UNKNOWN, 0, DEFAULT_COLOR_RGB, null, null);
     }
 
     /** Creates a new Folder with optional attributes and persists it
@@ -714,7 +714,7 @@ public class Folder extends MailItem {
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
     @SuppressWarnings("deprecation")
-    public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
+    public static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
             Color color, String url, CustomMetadata custom) throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(Type.FOLDER)) {
@@ -731,6 +731,7 @@ public class Folder extends MailItem {
         }
 
         UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
         data.id = id;
         data.type = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
@@ -739,7 +740,7 @@ public class Folder extends MailItem {
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
+        data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
                 mbox.getOperationChangeID(), -1, 0, 0, 0, null);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
@@ -888,7 +889,7 @@ public class Folder extends MailItem {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(-1, msg.isTagged(Flag.FlagInfo.DELETED) ? -1 : 0);
-                msg.mData.metadataChanged(mMailbox);
+                msg.metadataChanged();
                 targets.add(msg.getId());
             }
         }
@@ -987,7 +988,7 @@ public class Folder extends MailItem {
 
         // for Folder objects rename also means the change in the contents.
         mData.date = mMailbox.getOperationTimestamp();
-        mData.contentChanged(mMailbox);
+        contentChanged();
     }
     
     private void subfolderRenamed(String oldName, String name) {
@@ -1029,7 +1030,7 @@ public class Folder extends MailItem {
         // and update the folder's data (in memory and DB)
         mData.folderId = target.getId();
         mData.parentId = target.getId();
-        mData.metadataChanged(mMailbox);
+        metadataChanged();
         DbMailItem.setFolder(this, target);
 
         if (rights != null) {
@@ -1299,21 +1300,21 @@ public class Folder extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        Metadata m = encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, attributes, defaultView, rights, syncData,
+        Metadata m = encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, rights, syncData,
                 imapUIDNEXT, totalSize, imapMODSEQ, imapRECENT, imapRECENTCutoff, deletedCount,
                 deletedUnreadCount, retentionPolicy);
         return m;
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, Type view,
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, byte attributes, Type view,
             ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff,
             int deleted, int deletedUnread, RetentionPolicy rp) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, extended, attributes, view, rights, fsd, uidnext,
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, attributes, view, rights, fsd, uidnext,
                               totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread, rp).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
             byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
             int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp) {
         if (view != null && view != Type.UNKNOWN) {
@@ -1354,7 +1355,7 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }
 
-        return MailItem.encodeMetadata(meta, color, rights, version, extended);
+        return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, extended);
     }
 
     protected static final String CN_NAME         = "n";

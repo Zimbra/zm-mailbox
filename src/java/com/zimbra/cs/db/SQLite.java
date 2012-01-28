@@ -93,6 +93,7 @@ public final class SQLite extends Db {
             case ROW_LEVEL_LOCKING:          return false;
             case UNIQUE_NAME_INDEX:          return false;
             case SQL_PARAM_LIMIT:            return true;
+            case DUMPSTER_TABLES:            return false;
         }
         return false;
     }

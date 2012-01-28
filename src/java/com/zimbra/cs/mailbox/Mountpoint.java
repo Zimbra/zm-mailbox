@@ -127,7 +127,7 @@ public class Mountpoint extends Folder {
      *        sufficient permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte) */
-    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, Type view, int flags,
+    static Mountpoint create(int id, String uuid, Folder parent, String name, String ownerId, int remoteId, Type view, int flags,
             Color color, boolean reminderEnabled, CustomMetadata custom) throws ServiceException {
         if (parent == null || ownerId == null || remoteId <= 0) {
             throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
@@ -145,6 +145,7 @@ public class Mountpoint extends Folder {
         Mailbox mbox = parent.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
         data.id = id;
         data.type = Type.MOUNTPOINT.toByte();
         data.folderId = parent.getId();
@@ -153,7 +154,7 @@ public class Mountpoint extends Folder {
         data.setFlags(flags & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, custom, view, ownerId, remoteId, reminderEnabled);
+        data.metadata = encodeMetadata(color, 1, 1, custom, view, ownerId, remoteId, reminderEnabled);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
                 name, data.id, parent.getId(), parent.getName());
@@ -182,22 +183,22 @@ public class Mountpoint extends Folder {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mReminderEnabled);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mReminderEnabled);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, Type view, String owner,
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Type view, String owner,
             int remoteId, boolean reminderEnabled) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, extended, (byte) 0, view, owner, remoteId, reminderEnabled).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, (byte) 0, view, owner, remoteId, reminderEnabled).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attrs,
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, byte attrs,
             Type view, String owner, int remoteId, boolean reminderEnabled) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         if (reminderEnabled)
             meta.put(Metadata.FN_REMINDER_ENABLED, reminderEnabled);
-        return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0, null);
+        return Folder.encodeMetadata(meta, color, metaVersion, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0, null);
     }
 
     @Override

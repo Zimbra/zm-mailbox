@@ -26,6 +26,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class CreateLink extends RedoableOp {
 
     private int mId;
+    private String mUuid;
     private int mFolderId;
     private String mName;
     private String mOwnerId;
@@ -50,13 +51,19 @@ public class CreateLink extends RedoableOp {
         return mId;
     }
 
-    public void setId(int id) {
+    public String getUuid() {
+        return mUuid;
+    }
+
+    public void setIdAndUuid(int id, String uuid) {
         mId = id;
+        mUuid = uuid;
     }
 
     @Override
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=").append(mId);
+        sb.append(", uuid=").append(mUuid);
         sb.append(", name=").append(mName).append(", folder=").append(mFolderId);
         sb.append(", owner=").append(mOwnerId).append(", remote=").append(mRemoteId);
         return sb.toString();
@@ -65,6 +72,9 @@ public class CreateLink extends RedoableOp {
     @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
+        if (getVersion().atLeast(1, 37)) {
+            out.writeUTF(mUuid);
+        }
         out.writeUTF(mName);
         out.writeUTF(mOwnerId);
         out.writeInt(mRemoteId);
@@ -74,6 +84,9 @@ public class CreateLink extends RedoableOp {
     @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
+        if (getVersion().atLeast(1, 37)) {
+            mUuid = in.readUTF();
+        }
         mName = in.readUTF();
         mOwnerId = in.readUTF();
         mRemoteId = in.readInt();

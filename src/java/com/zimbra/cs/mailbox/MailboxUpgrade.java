@@ -332,6 +332,13 @@ public final class MailboxUpgrade {
         }
     }
 
+    /**
+     * Populate mail_item[_dumpster].uuid column.
+     */
+    public static void upgradeTo2_5(Mailbox mbox) throws ServiceException {
+        DbMailItem.assignUuids(mbox, false);
+    }
+
     private static void migrateFlagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {
         // for flags that we want to be searchable, put an entry in the TAG table
         for (int tagId : Mailbox.REIFIED_FLAGS) {

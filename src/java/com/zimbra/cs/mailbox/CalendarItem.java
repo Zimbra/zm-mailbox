@@ -486,7 +486,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(subject);
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
         if (!firstInvite.hasRecurId()) {
@@ -772,19 +772,19 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
                               mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, String uid, long startTime, long endTime,
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, String uid, long startTime, long endTime,
                                          Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
                                          ReplyList replyList, AlarmData alarmData) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, extended, uid, startTime, endTime, recur,
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, uid, startTime, endTime, recur,
                               invs, tzmap, replyList, alarmData).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
                                    String uid, long startTime, long endTime, Recurrence.IRecurrence recur,
                                    List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
         meta.put(Metadata.FN_TZMAP, Util.encodeAsMetadata(tzmap));
@@ -805,7 +805,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (alarmData != null)
             meta.put(Metadata.FN_ALARM_DATA, alarmData.encodeMetadata());
 
-        return MailItem.encodeMetadata(meta, color, null, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
 
     /**
@@ -3852,7 +3852,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     @Override
-    MailItem copy(Folder folder, int id, MailItem parent) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int id, String uuid, MailItem parent) throws IOException, ServiceException {
         if (!isPublic()) {
             boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
             boolean privateAccessDest = folder.canAccess(ACL.RIGHT_PRIVATE);
@@ -3863,7 +3863,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 throw ServiceException.PERM_DENIED(
                         "you do not have permission to copy private calendar item to the target folder");
         }
-        return super.copy(folder, id, parent);
+        return super.copy(folder, id, uuid, parent);
     }
 
     @Override

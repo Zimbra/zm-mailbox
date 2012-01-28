@@ -91,9 +91,9 @@ public class BlobBuilder {
     public BlobBuilder init() throws IOException, ServiceException {
         if (!disableDigest) {
             try {
-                digest = MessageDigest.getInstance("SHA1");
+                digest = MessageDigest.getInstance("SHA-256");
             } catch (NoSuchAlgorithmException e) {
-                throw ServiceException.FAILURE("SHA1 digest not found", e);
+                throw ServiceException.FAILURE("SHA-256 digest not found", e);
             }
         }
 

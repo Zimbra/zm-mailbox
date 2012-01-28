@@ -28,6 +28,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SaveDocument extends CreateMessage {
 
+    private String mUuid;
     private String mFilename;
     private String mMimeType;
     private String mAuthor;
@@ -42,6 +43,14 @@ public class SaveDocument extends CreateMessage {
     public SaveDocument(int mailboxId, String digest, int msgSize, int folderId, int flags) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, flags, null);
         mOperation = MailboxOperation.SaveDocument;
+    }
+
+    public String getUuid() {
+        return mUuid;
+    }
+
+    public void setUuid(String uuid) {
+        mUuid = uuid;
     }
 
     public String getFilename() {
@@ -100,6 +109,10 @@ public class SaveDocument extends CreateMessage {
         setDescriptionEnabled(doc.isDescriptionEnabled());
     }
 
+    @Override protected String getPrintableData() {
+        return "uuid=" + mUuid + ", " + super.getPrintableData();
+    }
+
     @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mFilename);
@@ -111,6 +124,9 @@ public class SaveDocument extends CreateMessage {
         }
         if (getVersion().atLeast(1, 31)) {
             out.writeBoolean(mDescEnabled);
+        }
+        if (getVersion().atLeast(1, 37)) {
+            out.writeUTF(mUuid);
         }
         super.serializeData(out);
     }
@@ -128,6 +144,9 @@ public class SaveDocument extends CreateMessage {
             mDescEnabled = in.readBoolean();
         } else {
             mDescEnabled = true;
+        }
+        if (getVersion().atLeast(1, 37)) {
+            mUuid = in.readUTF();
         }
         super.deserializeData(in);
     }

@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.UUIDUtil;
 
 /**
  * Mailbox for accounts with zimbraIsExternalVirtualAccount set to TRUE.
@@ -30,15 +31,15 @@ public class ExternalVirtualMailbox extends Mailbox {
         lock.lock();
         try {
             byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
-            Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.Type.UNKNOWN, 0,
+            Folder root = Folder.create(ID_FOLDER_ROOT, UUIDUtil.generateUUID(), this, null, "ROOT", hidden, MailItem.Type.UNKNOWN, 0,
                     MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_PROFILE, this, root, "Profile", hidden, MailItem.Type.DOCUMENT, 0,
+            Folder.create(ID_FOLDER_PROFILE, UUIDUtil.generateUUID(), this, root, "Profile", hidden, MailItem.Type.DOCUMENT, 0,
                     MailItem.DEFAULT_COLOR_RGB, null, null);
 
             byte system = Folder.FOLDER_IS_IMMUTABLE;
-            Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system,
+            Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, UUIDUtil.generateUUID(), this, root, "USER_ROOT", system,
                     MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-            Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT,
+            Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null);
         } finally {
             lock.release();

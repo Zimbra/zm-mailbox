@@ -35,6 +35,7 @@ public class CreateFolder extends RedoableOp {
     private long mColor;
     private String mUrl;
     private int mFolderId;
+    private String mFolderUuid;
 
     public CreateFolder() {
         super(MailboxOperation.CreateFolder);
@@ -62,8 +63,13 @@ public class CreateFolder extends RedoableOp {
         return mFolderId;
     }
 
-    public void setFolderId(int folderId) {
+    public String getFolderUuid() {
+        return mFolderUuid;
+    }
+
+    public void setFolderIdAndUuid(int folderId, String uuid) {
         mFolderId = folderId;
+        mFolderUuid = uuid;
     }
 
     @Override
@@ -73,7 +79,7 @@ public class CreateFolder extends RedoableOp {
         sb.append(", attrs=").append(mAttrs);
         sb.append(", view=").append(defaultView);
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
-        sb.append(", url=").append(mUrl).append(", id=").append(mFolderId);
+        sb.append(", url=").append(mUrl).append(", id=").append(mFolderId).append(", uuid=").append(mFolderUuid);
         return sb.toString();
     }
 
@@ -88,6 +94,9 @@ public class CreateFolder extends RedoableOp {
         out.writeLong(mColor);
         out.writeUTF(mUrl);
         out.writeInt(mFolderId);
+        if (getVersion().atLeast(1, 37)) {
+            out.writeUTF(mFolderUuid);
+        }
     }
 
     @Override
@@ -106,6 +115,9 @@ public class CreateFolder extends RedoableOp {
         }
         mUrl = in.readUTF();
         mFolderId = in.readInt();
+        if (getVersion().atLeast(1, 37)) {
+            mFolderUuid = in.readUTF();
+        }
     }
 
     @Override

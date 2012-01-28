@@ -406,9 +406,11 @@ public final class ToXML {
         return eACE;
     }
 
-    private static Element encodeFolderCommon(Element elem, ItemIdFormatter ifmt, Folder folder, int fields) {
+    private static Element encodeFolderCommon(Element elem, ItemIdFormatter ifmt, Folder folder, int fields)
+            throws ServiceException {
         int folderId = folder.getId();
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(folder));
+        elem.addAttribute(MailConstants.A_UUID, folder.getUuid());
 
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
             if (needToOutput(fields, Change.NAME)) {
@@ -419,6 +421,7 @@ public final class ToXML {
             }
             if (needToOutput(fields, Change.FOLDER)) {
                 elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
+                elem.addAttribute(MailConstants.A_FOLDER_UUID, folder.getFolderUuid());
             }
         }
 
@@ -454,6 +457,7 @@ public final class ToXML {
         if (needToOutput(fields, Change.CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, folder.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
+            elem.addAttribute(MailConstants.A_METADATA_VERSION, folder.getMetadataVersion());
         }
         if (needToOutput(fields, Change.METADATA)) {
             encodeAllCustomMetadata(elem, folder, fields);
@@ -461,11 +465,13 @@ public final class ToXML {
         return elem;
     }
 
-    public static Element encodeSearchFolder(Element parent, ItemIdFormatter ifmt, SearchFolder search) {
+    public static Element encodeSearchFolder(Element parent, ItemIdFormatter ifmt, SearchFolder search)
+            throws ServiceException {
         return encodeSearchFolder(parent, ifmt, search, NOTIFY_FIELDS);
     }
 
-    public static Element encodeSearchFolder(Element parent, ItemIdFormatter ifmt, SearchFolder search, int fields) {
+    public static Element encodeSearchFolder(Element parent, ItemIdFormatter ifmt, SearchFolder search, int fields)
+            throws ServiceException {
         Element elem = parent.addElement(MailConstants.E_SEARCH);
         encodeFolderCommon(elem, ifmt, search, fields);
         if (needToOutput(fields, Change.QUERY)) {
@@ -477,12 +483,12 @@ public final class ToXML {
     }
 
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx,
-            Mountpoint mpt) {
+            Mountpoint mpt) throws ServiceException {
         return encodeMountpoint(parent, ifmt, octx, mpt, NOTIFY_FIELDS);
     }
 
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx,
-            Mountpoint mpt, int fields) {
+            Mountpoint mpt, int fields) throws ServiceException {
 
         Element el = parent.addElement(MailConstants.E_MOUNT);
         // check to see if this is a delegate request (like bes)
@@ -1264,9 +1270,6 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.DATE)) {
             calItemElem.addAttribute(MailConstants.A_DATE, calItem.getDate());
-        }
-        if (needToOutput(fields, Change.FOLDER)) {
-            calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItem.getFolderId()));
         }
         if (needToOutput(fields, Change.CONFLICT)) {
             calItemElem.addAttribute(MailConstants.A_CHANGE_DATE, calItem.getChangeDate() / 1000);
@@ -2457,6 +2460,7 @@ public final class ToXML {
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields)
     throws ServiceException {
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
+        m.addAttribute(MailConstants.A_UUID, doc.getUuid());
         if (needToOutput(fields, Change.NAME)) {
             m.addAttribute(MailConstants.A_NAME, doc.getName());
         }
@@ -2469,9 +2473,11 @@ public final class ToXML {
         if (needToOutput(fields, Change.FOLDER)) {
             m.addAttribute(MailConstants.A_FOLDER,
                     new ItemId(doc.getMailbox().getAccountId(), doc.getFolderId()).toString(ifmt));
+            m.addAttribute(MailConstants.A_FOLDER_UUID, doc.getFolderUuid());
         }
         if (needToOutput(fields, Change.CONFLICT)) {
             m.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, doc.getModifiedSequence());
+            m.addAttribute(MailConstants.A_METADATA_VERSION, doc.getMetadataVersion());
             m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
             m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
         }
@@ -2519,6 +2525,7 @@ public final class ToXML {
         }
         return m;
     }
+
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element m = parent.addElement(getDsType(ds));
         m.addAttribute(MailConstants.A_ID, ds.getId());
@@ -2887,6 +2894,7 @@ public final class ToXML {
             c.setText(comment.getText());
         }
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(comment));
+        c.addAttribute(MailConstants.A_UUID, comment.getUuid());
         try {
             Account a = comment.getCreatorAccount();
             if (a != null) {
@@ -2908,6 +2916,7 @@ public final class ToXML {
     public static Element encodeLink(Element response, ItemIdFormatter ifmt, Link link, int fields) {
         Element el = response.addElement(MailConstants.E_LINK);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(link));
+        el.addAttribute(MailConstants.A_UUID, link.getUuid());
 
         if (needToOutput(fields, Change.NAME)) {
             String name = link.getName();

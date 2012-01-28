@@ -27,7 +27,7 @@ public class Link extends Document {
         super(mbox, data);
     }
 
-    static Link create(Folder parent, int id, String name, String ownerId, int remoteId, CustomMetadata custom) throws ServiceException {
+    static Link create(Folder parent, int id, String uuid, String name, String ownerId, int remoteId, CustomMetadata custom) throws ServiceException {
         if (!parent.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         }
@@ -38,6 +38,7 @@ public class Link extends Document {
         Mailbox mbox = parent.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
         data.id = id;
         data.type = Type.MOUNTPOINT.toByte();
         data.folderId = parent.getId();
@@ -45,7 +46,7 @@ public class Link extends Document {
         data.date = mbox.getOperationTimestamp();
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, ownerId, remoteId, custom);
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, ownerId, remoteId, custom);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Link %s: id=%d, parentId=%d, parentName=%s.",
                 name, data.id, parent.getId(), parent.getName());
@@ -68,18 +69,18 @@ public class Link extends Document {
     
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mOwnerId, mRemoteId, mExtendedData);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mOwnerId, mRemoteId, mExtendedData);
     }
     
-    private static String encodeMetadata(Color color, int version, String owner, int remoteId, CustomMetadata custom) {
+    private static String encodeMetadata(Color color, int metaVersion, int version, String owner, int remoteId, CustomMetadata custom) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, owner, remoteId, extended).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, owner, remoteId, extended).toString();
     }
     
-    private static Metadata encodeMetadata(Metadata meta, Color color, int version, String owner, int remoteId, CustomMetadataList extended) {
+    private static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, String owner, int remoteId, CustomMetadataList extended) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
-        return encodeMetadata(meta, color, null, version, extended);
+        return encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
     
     @Override

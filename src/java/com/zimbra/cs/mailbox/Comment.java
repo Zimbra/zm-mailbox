@@ -28,11 +28,12 @@ public class Comment extends MailItem {
         super(mbox, data);
     }
 
-    public static Comment create(Mailbox mbox, MailItem parent, int id, String text, String creatorId, CustomMetadata custom) throws ServiceException {
+    public static Comment create(Mailbox mbox, MailItem parent, int id, String uuid, String text, String creatorId, CustomMetadata custom) throws ServiceException {
         if (!(parent instanceof Document))
             throw MailServiceException.CANNOT_PARENT();
         
         UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
         data.id = id;
         data.type = Type.COMMENT.toByte();
         data.folderId = Mailbox.ID_FOLDER_COMMENTS;
@@ -40,7 +41,7 @@ public class Comment extends MailItem {
         data.setSubject(text);
         data.date = mbox.getOperationTimestamp();
         data.size = text.length();
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, creatorId, custom);
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, creatorId, custom);
         data.contentChanged(mbox);
         
         new DbMailItem(mbox).create(data);
@@ -103,17 +104,17 @@ public class Comment extends MailItem {
     
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mCreatorId, mExtendedData);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mCreatorId, mExtendedData);
     }
     
-    private static String encodeMetadata(Color color, int version, String accountId, CustomMetadata custom) {
+    private static String encodeMetadata(Color color, int metaVersion, int version, String accountId, CustomMetadata custom) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, accountId, extended).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, accountId, extended).toString();
     }
     
-    private static Metadata encodeMetadata(Metadata meta, Color color, int version, String accountId, CustomMetadataList extended) {
+    private static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, String accountId, CustomMetadataList extended) {
         meta.put(Metadata.FN_CREATOR, accountId);
-        return encodeMetadata(meta, color, null, version, extended);
+        return encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
     
     @Override

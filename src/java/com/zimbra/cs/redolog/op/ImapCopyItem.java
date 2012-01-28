@@ -29,6 +29,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class ImapCopyItem extends RedoableOp {
 
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
+    private Map<Integer, String> mDestUuids = new HashMap<Integer, String>();
     private MailItem.Type type;
     private int mDestFolderId;
 
@@ -49,8 +50,9 @@ public class ImapCopyItem extends RedoableOp {
      * Sets the ID of the copied item.
      * @param destId
      */
-    public void setDestId(int srcId, int destId) {
+    public void setDest(int srcId, int destId, String destUuid) {
         mDestIds.put(srcId, destId);
+        mDestUuids.put(srcId, destUuid);
     }
 
     public int getDestId(int srcId) {
@@ -58,13 +60,19 @@ public class ImapCopyItem extends RedoableOp {
         return destId == null ? -1 : destId;
     }
 
+    public String getDestUuid(int srcId) {
+        return mDestUuids.get(srcId);
+    }
+
     @Override
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(type);
         sb.append(", destFolder=").append(mDestFolderId);
-        sb.append(", [srcId, destId, srcImap]=");
+        sb.append(", [srcId, destId, destUuid]=");
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
-            sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
+            int srcId = entry.getKey();
+            sb.append('[').append(srcId).append(',').append(entry.getValue());
+            sb.append(',').append(mDestUuids.get(srcId)).append(']');
         }
         return sb.toString();
     }
@@ -80,6 +88,9 @@ public class ImapCopyItem extends RedoableOp {
             out.writeInt(srcId);
             out.writeInt(entry.getValue());
             out.writeInt(-1);                    // now unused; don't break the old format...
+            if (getVersion().atLeast(1, 37)) {
+                out.writeUTF(mDestUuids.get(srcId));
+            }
         }
     }
 
@@ -93,6 +104,9 @@ public class ImapCopyItem extends RedoableOp {
             Integer srcId = in.readInt();
             mDestIds.put(srcId, in.readInt());
             in.readInt();                        // now unused; don't break the old format...
+            if (getVersion().atLeast(1, 37)) {
+                mDestUuids.put(srcId,  in.readUTF());
+            }
         }
     }
 

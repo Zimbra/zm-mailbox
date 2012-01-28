@@ -31,6 +31,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class CreateSavedSearch extends RedoableOp {
 
     private int mSearchId;
+    private String mUuid;
     private String mName;
     private String mQuery;
     private String mTypes;
@@ -61,12 +62,18 @@ public class CreateSavedSearch extends RedoableOp {
         return mSearchId;
     }
 
-    public void setSearchId(int searchId) {
+    public String getUuid() {
+        return mUuid;
+    }
+
+    public void setSearchIdAndUuid(int searchId, String uuid) {
         mSearchId = searchId;
+        mUuid = uuid;
     }
 
     @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=").append(mSearchId);
+        sb.append(", uuid=").append(mUuid);
         sb.append(", name=").append(mName).append(", query=").append(mQuery);
         sb.append(", types=").append(mTypes).append(", sort=").append(mSort);
         sb.append(", flags=").append(mFlags);
@@ -76,6 +83,9 @@ public class CreateSavedSearch extends RedoableOp {
 
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mSearchId);
+        if (getVersion().atLeast(1, 37)) {
+            out.writeUTF(mUuid);
+        }
         out.writeUTF(mName);
         out.writeUTF(mQuery);
         out.writeUTF(mTypes);
@@ -88,6 +98,9 @@ public class CreateSavedSearch extends RedoableOp {
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mSearchId = in.readInt();
+        if (getVersion().atLeast(1, 37)) {
+            mUuid = in.readUTF();
+        }
         mName = in.readUTF();
         mQuery = in.readUTF();
         mTypes = in.readUTF();

@@ -193,13 +193,13 @@ public class Document extends MailItem {
         saveData(new DbMailItem(mMailbox));
     }
 
-    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
+    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, String uuid, Folder folder, String name,
             String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags) throws ServiceException {
 
-        return prepareCreate(type, id, folder, name, mimeType, pd, meta, custom, flags, LC.documents_disable_instant_parsing.booleanValue());
+        return prepareCreate(type, id, uuid, folder, name, mimeType, pd, meta, custom, flags, LC.documents_disable_instant_parsing.booleanValue());
     }
 
-    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
+    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, String uuid, Folder folder, String name,
             String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags, boolean skipParsing) throws ServiceException {
         if (folder == null || !folder.canContain(Type.DOCUMENT)) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -214,6 +214,7 @@ public class Document extends MailItem {
         Mailbox mbox = folder.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
         data.id = id;
         data.type = type.toByte();
         data.folderId = folder.getId();
@@ -226,18 +227,18 @@ public class Document extends MailItem {
         data.name = name;
         data.setSubject(name);
         data.setBlobDigest(pd.getDigest());
-        data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(),
+        data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, 1, extended, mimeType, pd.getCreator(),
                 skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled(), null).toString();
         data.setFlags(flags);
        return data;
     }
 
-    static Document create(int id, Folder folder, String filename, String type, ParsedDocument pd,
+    static Document create(int id, String uuid, Folder folder, String filename, String type, ParsedDocument pd,
             CustomMetadata custom, int flags) throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         Mailbox mbox = folder.getMailbox();
-        UnderlyingData data = prepareCreate(Type.DOCUMENT, id, folder, filename, type, pd, null, custom, flags);
+        UnderlyingData data = prepareCreate(Type.DOCUMENT, id, uuid, folder, filename, type, pd, null, custom, flags);
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s",
@@ -281,11 +282,11 @@ public class Document extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, contentType, creator, fragment, lockOwner,
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, contentType, creator, fragment, lockOwner,
                 lockTimestamp, description, descEnabled, rights);
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
             String mimeType, String creator, String fragment, String lockowner, long lockts, String description,
             boolean descEnabled, ACL rights) {
         if (meta == null) {
@@ -298,7 +299,7 @@ public class Document extends MailItem {
         meta.put(Metadata.FN_LOCK_TIMESTAMP, lockts);
         meta.put(Metadata.FN_DESCRIPTION, description);
         meta.put(Metadata.FN_DESC_ENABLED, descEnabled);
-        return MailItem.encodeMetadata(meta, color, rights, version, extended);
+        return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, extended);
     }
 
     private static final String CN_FRAGMENT  = "fragment";

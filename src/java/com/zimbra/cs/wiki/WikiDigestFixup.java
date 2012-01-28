@@ -124,7 +124,7 @@ public class WikiDigestFixup {
                 try {
                     is = sStore.getContent(blob);
                     byte[] data = ByteUtil.getContent(is, (int) item.getSize());
-                    String digest = ByteUtil.getDigest(data);
+                    String digest = ByteUtil.getSHA1Digest(data, true);
                     String currentDigest = item.getDigest();
                     if (!digest.equals(currentDigest)) {
                         System.out.println("Found id " + id + ", current digest = \"" + currentDigest + "\"");

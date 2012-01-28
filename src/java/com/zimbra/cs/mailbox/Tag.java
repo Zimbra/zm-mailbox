@@ -211,7 +211,7 @@ public class Tag extends MailItem {
         data.folderId = Mailbox.ID_FOLDER_TAGS;
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, null, listed);
+        data.metadata = encodeMetadata(color, 1, 1, null, listed);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
         DbTag.createTag(mbox, data, color, listed);
@@ -243,7 +243,7 @@ public class Tag extends MailItem {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(delta, msg.isTagged(Flag.FlagInfo.DELETED) ? delta : 0);
-                msg.mData.metadataChanged(mMailbox);
+                msg.metadataChanged();
                 targets.add(msg.getId());
             }
         }
@@ -290,7 +290,7 @@ public class Tag extends MailItem {
         // actually rename the tag
         markItemModified(Change.NAME);
         mData.name = newName;
-        mData.contentChanged(mMailbox);
+        contentChanged();
         DbTag.renameTag(this);
         // dump entire item cache because tag names on cached items are now stale
         mMailbox.purge(Type.MESSAGE);
@@ -331,7 +331,7 @@ public class Tag extends MailItem {
 
     @Override
     protected void saveMetadata(String ignored) throws ServiceException {
-        mData.metadataChanged(mMailbox);
+        metadataChanged();
         DbTag.saveMetadata(this);
     }
 
@@ -351,15 +351,15 @@ public class Tag extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, retentionPolicy, isListed);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, retentionPolicy, isListed);
     }
 
-    public static String encodeMetadata(Color color, int version, RetentionPolicy rp, boolean listed) {
-        return encodeMetadata(new Metadata(), color, version, rp, listed).toString();
+    public static String encodeMetadata(Color color, int metaVersion, int version, RetentionPolicy rp, boolean listed) {
+        return encodeMetadata(new Metadata(), color, metaVersion, version, rp, listed).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, RetentionPolicy rp, boolean listed) {
-        MailItem.encodeMetadata(meta, color, null, version, null);
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, RetentionPolicy rp, boolean listed) {
+        MailItem.encodeMetadata(meta, color, null, metaVersion, version, null);
 
         if (rp != null && rp.isSet()) {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));

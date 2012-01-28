@@ -16,20 +16,20 @@ package com.zimbra.cs.ldap;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 // TODO: get rid of this
 import javax.naming.ldap.Rdn;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapTODO.TODO;
 
 
 public class LdapUtil {
-    
+
     public static String formatMultipleMatchedEntries(
-            ZSearchResultEntry first, ZSearchResultEnumeration rest) 
+            ZSearchResultEntry first, ZSearchResultEnumeration rest)
     throws LdapException {
         StringBuffer dups = new StringBuffer();
         dups.append("[" + first.getDN() + "] ");
@@ -37,7 +37,7 @@ public class LdapUtil {
             ZSearchResultEntry dup = rest.next();
             dups.append("[" + dup.getDN() + "] ");
         }
-        
+
         return new String(dups);
     }
 
@@ -52,7 +52,7 @@ public class LdapUtil {
         if (values == null) {
             return false;
         }
-        
+
         for (String s : values) {
             if (s.compareToIgnoreCase(val) == 0) {
                 return true;
@@ -67,7 +67,7 @@ public class LdapUtil {
 
     /*
      * convert a real attrName to a binaryTransferAttrName if necessary
-     * 
+     *
      * e.g. userCertificate => userCertificate;binary
      */
     public static String attrNameToBinaryTransferAttrName(boolean isBinaryTransfer, String attrName) {
@@ -76,7 +76,7 @@ public class LdapUtil {
 
     /*
      * convert a binaryTransferAttrName to the real attrName
-     * 
+     *
      * e.g. userCertificate;binary => userCertificate
      *      zimbraId => zimbraId
      */
@@ -94,19 +94,19 @@ public class LdapUtil {
      * escape *()\ in specified string to make sure user-supplied string doesn't open a security hole.
      * i.e., if the format string is "(sn=*%s*)", and the user types in "a)(zimbraIsAdminAccount=TRUE)(cn=a",
      * we don't want to search for "(sn=*a)(zimbraIsAdminAccount=TRUE)(cn=a*)".
-     * 
+     *
      * @param s
      * @return
      */
     public static String escapeSearchFilterArg(String s) {
         if (s == null)
             return null;
-        else 
+        else
             return s.replaceAll("([\\\\\\*\\(\\)])", "\\\\$0");
     }
 
     public static String generateUUID() {
-        return UUID.randomUUID().toString();
+        return UUIDUtil.generateUUID();
     }
 
     /*
@@ -117,20 +117,20 @@ public class LdapUtil {
         /*
         if (strRep.length() > 36)
             throw new IllegalArgumentException("uuid must be no longer than 36 characters");
-        
+
         UUID uuid = UUID.fromString(strRep);
-        return (uuid != null);   
+        return (uuid != null);
         */
-        
+
         if (strRep.length() > Provisioning.MAX_ZIMBRA_ID_LEN) {
-            throw new IllegalArgumentException("uuid must be no longer than " + 
+            throw new IllegalArgumentException("uuid must be no longer than " +
                     Provisioning.MAX_ZIMBRA_ID_LEN + " characters");
         }
-        
+
         if (strRep.contains(":")) {
             throw new IllegalArgumentException("uuid must not contain ':'");
         }
-        
+
         return true;
     }
 
@@ -163,20 +163,20 @@ public class LdapUtil {
 
     /*
       * expansions for bind dn string:
-      * 
+      *
       * %n = username with @ (or without, if no @ was specified)
       * %u = username with @ removed
       * %d = domain as foo.com
       * %D = domain as dc=foo,dc=com
-      * 
+      *
       * exchange example, where the exchange domian is different than the zimbra one
-      * 
+      *
       * zimbraAuthMech      ldap
       * zimbraAuthLdapURL   ldap://exch1/
       * zimbraAuthLdapDn    %n@example.zimbra.com
-      * 
+      *
       * our own LDAP example:
-      * 
+      *
       * zimbraAuthMech       ldap
       * zimbraAuthLdapURL    ldap://server.example.zimbra.com/
       * zimbraAuthLdapUserDn uid=%u,ou=people,%D
@@ -185,12 +185,12 @@ public class LdapUtil {
        if (template == null || template.equals("") || template.equals("%n")) {
            return name;
        }
-       
+
        int at = name.indexOf("@");
-    
+
        Map<String, String> vars = new HashMap<String, String>();
-       vars.put("n", name);         
-    
+       vars.put("n", name);
+
        if (at  == -1) {
            vars.put("u", name);
        } else {
@@ -199,7 +199,7 @@ public class LdapUtil {
            vars.put("d", d);
            vars.put("D", LdapUtil.domainToDN(d));
        }
-         
+
        return LdapUtil.expandStr(template, vars);
     }
 
@@ -209,7 +209,7 @@ public class LdapUtil {
     //
     @TODO  // replace with unboundid's impl, or make this SDK neutral
     public static String escapeRDNValue(String rdn) {
-        return (String)Rdn.escapeValue(rdn);
+        return Rdn.escapeValue(rdn);
     }
 
     @TODO  // replace with unboundid's impl, or make this SDK neutral
@@ -236,7 +236,7 @@ public class LdapUtil {
     public static String domainToDN(String domain) {
         return domainToDN(domain.split("\\."), 0);
     }
-    
+
     public static String domainToTopLevelDN(String domain) {
         String[] segments = domain.split("\\.");
         return domainToDN(segments, segments.length -1);
@@ -246,18 +246,18 @@ public class LdapUtil {
      * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the String[]
      * [0] = uid=foo
      * [1] = ou=people,dc=widgets,dc=com
-     * 
+     *
      * if the dn cannot be split into rdn and dn:
      * [0] = the input dn
      * [1] = the input dn
-     * 
+     *
      * @param dn
      * @return
      */
     public static String[] dnToRdnAndBaseDn(String dn) {
         String[] values = new String[2];
         int baseDnIdx = dn.indexOf(",");
-        
+
         if (baseDnIdx!=-1 && dn.length()>baseDnIdx+1) {
             values[0] = dn.substring(0, baseDnIdx);
             values[1] = dn.substring(baseDnIdx+1);
@@ -265,7 +265,7 @@ public class LdapUtil {
             values[0] = dn;
             values[1] = dn;
         }
-        
+
         return values;
     }
 
@@ -280,10 +280,10 @@ public class LdapUtil {
     public static String expandStr(String fmt, Map<String, String> vars) {
         if (fmt == null || fmt.equals(""))
             return fmt;
-    
+
         if (fmt.indexOf('%') == -1)
             return fmt;
-    
+
         StringBuffer sb = new StringBuffer(fmt.length()+32);
         for (int i=0; i < fmt.length(); i++) {
             char ch = fmt.charAt(i);
