@@ -90,7 +90,7 @@ public class ServiceException extends Exception {
 
     public static class Argument {
         public static enum Type {
-            IID,       // mail-item ID or mailbox-id 
+            IID,       // mail-item ID or UUID or mailbox-id 
             ACCTID,    // account ID
             STR,       // opaque string
             NUM        // opaque number

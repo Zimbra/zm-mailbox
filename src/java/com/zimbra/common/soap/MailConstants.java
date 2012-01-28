@@ -692,6 +692,7 @@ public final class MailConstants {
     public static final String A_SIZE = "s";
     public static final String A_FLAGS = "f";
     public static final String A_ID = "id";
+    public static final String A_UUID = "uuid";
     public static final String A_IDS = "ids";
     public static final String A_CONV_ID = "cid";
     public static final String A_DRAFT_ID = "did";
@@ -703,6 +704,7 @@ public final class MailConstants {
     public static final String A_TAGS = "t";
     public static final String A_TAG_NAMES = "tn";
     public static final String A_FOLDER = "l";
+    public static final String A_FOLDER_UUID = "luuid";
     public static final String A_VISIBLE = "visible";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
@@ -1109,6 +1111,7 @@ public final class MailConstants {
     public static final String E_DOC = "doc";
     public static final String E_UPLOAD = "upload";
     public static final String A_VERSION = "ver";
+    public static final String A_METADATA_VERSION = "mdver";
     public static final String A_SUBJECT = "su";
     public static final String A_LAST_EDITED_BY = "leb";
     public static final String A_COUNT = "count";

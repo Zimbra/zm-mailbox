@@ -33,7 +33,7 @@ public class CalculatorStream extends InputStream {
     
     public CalculatorStream(InputStream in) {
         try {
-            mDigestCalculator = MessageDigest.getInstance("SHA1");
+            mDigestCalculator = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Unable to initialize " + CalculatorStream.class.getSimpleName(), e);
         }
@@ -42,7 +42,7 @@ public class CalculatorStream extends InputStream {
     }
 
     /**
-     * Returns the SHA1 digest of the bytes read, encoded as base64.
+     * Returns the SHA-256 digest of the bytes read, encoded as base64.
      */
     public String getDigest() {
         return ByteUtil.encodeFSSafeBase64(mDigestCalculator.digest());

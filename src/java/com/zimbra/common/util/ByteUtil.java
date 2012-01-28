@@ -504,15 +504,16 @@ public class ByteUtil {
     }
 
     /**
-     * Returns the SHA1 digest of the supplied data.
+     * Returns the digest of the supplied data.
+     * @param algorithm e.g. "SHA1"
      * @param data data to digest
      * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
      *  as hex string.
-     * @return
+     * @return hex or base64 string
      */
-    public static String getSHA1Digest(byte[] data, boolean base64) {
+    public static String getDigest(String algorithm, byte[] data, boolean base64) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
+            MessageDigest md = MessageDigest.getInstance(algorithm);
             byte[] digest = md.digest(data);
             if (base64)
                 return encodeFSSafeBase64(digest);
@@ -527,16 +528,17 @@ public class ByteUtil {
 
     /**
      * Reads the given <tt>InputStream</tt> in its entirety, closes
-     * the stream, and returns the SHA1 digest of the read data.
+     * the stream, and returns the digest of the read data.
+     * @param algorithm e.g. "SHA1"
      * @param in data to digest
      * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
      *  as hex string.
-     * @return
+     * @return hex or base64 string
      */
-    public static String getSHA1Digest(InputStream in, boolean base64)
+    public static String getDigest(String algorithm, InputStream in, boolean base64)
     throws IOException {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
+            MessageDigest md = MessageDigest.getInstance(algorithm);
             byte[] buffer = new byte[1024];
             int numBytes;
             while ((numBytes = in.read(buffer)) >= 0) {
@@ -557,33 +559,71 @@ public class ByteUtil {
     }
 
     /**
+     * Returns the SHA1 digest of the supplied data.
+     * @param data data to digest
+     * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
+     *  as hex string.
+     * @return hex or base64 string
+     */
+    public static String getSHA1Digest(byte[] data, boolean base64) {
+        return getDigest("SHA1", data, base64);
+    }
+
+    /**
+     * Reads the given <tt>InputStream</tt> in its entirety, closes
+     * the stream, and returns the SHA1 digest of the read data.
+     * @param in data to digest
+     * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
+     *  as hex string.
+     * @return hex or base64 string
+     */
+    public static String getSHA1Digest(InputStream in, boolean base64)
+    throws IOException {
+        return getDigest("SHA1", in, base64);
+    }
+
+    /**
+     * Returns the SHA-256 digest of the supplied data.
+     * @param data data to digest
+     * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
+     *  as hex string.
+     * @return hex or base64 string
+     */
+    public static String getSHA256Digest(byte[] data, boolean base64) {
+        return getDigest("SHA-256", data, base64);
+    }
+
+    /**
+     * Reads the given <tt>InputStream</tt> in its entirety, closes
+     * the stream, and returns the SHA-256 digest of the read data.
+     * @param in data to digest
+     * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
+     *  as hex string.
+     * @return hex or base64 string
+     */
+    public static String getSHA256Digest(InputStream in, boolean base64)
+    throws IOException {
+        return getDigest("SHA-256", in, base64);
+    }
+
+    /**
      * return the MD5 digest of the supplied data.
      * @param data data to digest
      * @param base64 if true, return as base64 String, otherwise return
      *  as hex string.
-     * @return
+     * @return hex or base64 string
      */
     public static String getMD5Digest(byte[] data, boolean base64) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(data);
-            if (base64)
-                return encodeFSSafeBase64(digest);
-            else 
-                return new String(Hex.encodeHex(digest));
-        } catch (NoSuchAlgorithmException e) {
-            // this should never happen unless the JDK is foobar
-            //	e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        return getDigest("MD5", data, base64);
     }
 
     /**
-     * Returns the SHA1 digest for the given data, encoded
+     * Returns the SHA256 digest for the given data, encoded
      * as base64.
+     * @return hex or base64 string
      */
     public static String getDigest(byte[] data) {
-        return getSHA1Digest(data, true);
+        return getSHA256Digest(data, true);
     }
 
     /**
