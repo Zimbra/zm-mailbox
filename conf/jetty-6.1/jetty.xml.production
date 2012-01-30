@@ -25,7 +25,7 @@
       </New>
     </Set>
 
-     <Call name="setAttribute">
+     <Call class="java.lang.System" name="setProperty">
        <Arg> org.mortbay.jetty.Request.maxFormContentSize</Arg>
        <Arg> 4000 </Arg>
     </Call>
