@@ -41,22 +41,7 @@
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="Host">%%zimbraMailBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
-        </New>
-      </Arg>
-    </Call>
-    <Call name="addConnector">
-      <Arg>
-        <New id="http_local" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
-          <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
-          <Set name="Acceptors">1</Set> 
-          <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
-          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="Host">localhost</Set>
-          <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -81,30 +66,7 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
-          <Set name="Host">%%zimbraMailSSLBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
-        </New>
-      </Arg>
-    </Call>
-    <Call name="addConnector">
-      <Arg>
-        <New id="ssl_local" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
-          <Set name="Port">%%zimbraMailSSLPort%%</Set>
-          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set> 
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
-          <Set name="responseBufferSize">16384</Set>
-          <Set name="Acceptors">1</Set>
-          <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
-          <Set name="password">@@mailboxd_keystore_password@@</Set>
-          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
-          <Set name="ExcludeCipherSuites">
-            <Array type="java.lang.String">
-              %%zimbraSSLExcludeCipherSuitesXML%%
-            </Array>
-          </Set>
-          <Set name="Host">localhost</Set>
-          <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -133,34 +95,7 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
          </Set>
-         <Set name="Host">%%zimbraMailSSLClientCertBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
-        </New>
-      </Arg>
-    </Call>
-    <Call name="addConnector">
-      <Arg>
-        <New id="ssl-clientcert_local" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
-          <Set name="Port">%%zimbraMailSSLClientCertPort%%</Set>
-          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set> 
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
-          <Set name="responseBufferSize">16384</Set>
-          <Set name="Acceptors">1</Set>
-          <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
-          <Set name="password">@@mailboxd_keystore_password@@</Set>
-          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
-          <Set name="Truststore">@@mailboxd_truststore@@</Set>
-          <Set name="TrustPassword">@@mailboxd_truststore_password@@</Set>
-          <Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth, true, false%%</Set>
-          <Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth, true, false%%</Set>
-          <Set name="ExcludeCipherSuites">
-            <Array type="java.lang.String">
-              %%zimbraSSLExcludeCipherSuitesXML%%
-            </Array>
-         </Set>
-         <Set name="Host">localhost</Set>
-         <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -186,30 +121,7 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
-          <Set name="Host">%%zimbraAdminBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
-        </New>
-      </Arg>
-    </Call>
-    <Call name="addConnector">
-      <Arg>
-        <New id="admin_local" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
-          <Set name="Port">%%zimbraAdminPort%%</Set>
-          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">0</Set>
-          <Set name="lowResourcesMaxIdleTime">0</Set>
-          <Set name="responseBufferSize">16384</Set>
-          <Set name="Acceptors">1</Set>
-          <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
-          <Set name="password">@@mailboxd_keystore_password@@</Set>
-          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
-          <Set name="ExcludeCipherSuites">
-            <Array type="java.lang.String">
-              %%zimbraSSLExcludeCipherSuitesXML%%
-            </Array>
-          </Set>
-          <Set name="Host">localhost</Set>
-          <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -225,21 +137,7 @@
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">10000</Set>
           <Set name="Acceptors">2</Set>
-          <Set name="Host">%%zimbraExtensionBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
-        </New>
-      </Arg>
-    </Call>
-    <Call name="addConnector">
-      <Arg>
-        <New id="ext_local" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
-          <Set name="Port">7072</Set>
-          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
-          <Set name="Acceptors">1</Set>
-          <Set name="Host">localhost</Set>
-          <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
@@ -656,33 +554,21 @@
     <Ref id="http">
       <Call name="open"/>
     </Ref>
-    <Ref id="http_local">
-      <Call name="open"/>
-    </Ref>
     %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
     
     <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
     <Ref id="ssl">
       <Call name="open"/>
     </Ref>
-    <Ref id="ssl_local">
-      <Call name="open"/>
-    </Ref>    
     %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
     
     <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
     <Ref id="ssl-clientcert">
       <Call name="open"/>
     </Ref>
-    <Ref id="ssl-clientcert_local">
-      <Call name="open"/>
-    </Ref>    
     %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
     
     <Ref id="admin">
-      <Call name="open"/>
-    </Ref>
-    <Ref id="admin_local">
       <Call name="open"/>
     </Ref>
 
