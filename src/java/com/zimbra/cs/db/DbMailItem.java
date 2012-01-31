@@ -1599,11 +1599,11 @@ public class DbMailItem {
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
-        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content, uuid";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
-        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content, uuid";
 
     /**
      * Copy rows from mail_item, appointment and revision table to the corresponding dumpster tables.
