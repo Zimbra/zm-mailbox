@@ -295,10 +295,6 @@ public class PreAuthServlet extends ZimbraServlet {
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
         if (redirectURL != null) {
-            // must be a relative URL
-            if (!redirectURL.startsWith("/")) {
-                throw ServiceException.INVALID_REQUEST("invalid " + PARAM_REDIRECT_URL, null);
-            }
             resp.sendRedirect(redirectURL);
         } else {
             StringBuilder sb = new StringBuilder();
