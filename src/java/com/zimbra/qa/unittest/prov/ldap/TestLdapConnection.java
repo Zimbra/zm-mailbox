@@ -46,7 +46,7 @@ public class TestLdapConnection extends LdapTest {
     private static final String BIND_DN = LC.zimbra_ldap_userdn.value();
     private static final String BIND_PASSWORD = LC.zimbra_ldap_password.value();
     
-    // use a different ldap url for each test so they don't get the same conneciton pool
+    // use a different ldap url for each test so they don't get the same connection pool
     private static String LDAP_URL_ON_CHECKOUT;
     private static String LDAP_URL_AFTER_EXCEPTION;
     private static String LDAP_URL_BACKGROUND;

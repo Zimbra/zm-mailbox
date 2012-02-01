@@ -23,9 +23,11 @@ import com.zimbra.cs.ldap.LdapException;
 
 public class LdapConnUtil {
 
-    static SocketFactory getSocketFactory(LdapConnType connType, boolean allowUntrustedCerts) throws LdapException {
-        
-        if (connType == LdapConnType.LDAPS) {
+    static SocketFactory getSocketFactory(LdapConnType connType, boolean allowUntrustedCerts) 
+    throws LdapException {
+        if (connType == LdapConnType.LDAPI) {
+            return new UnixDomainSocketFactory();
+        } else if (connType == LdapConnType.LDAPS) {
             return LdapSSLUtil.createSSLSocketFactory(allowUntrustedCerts);
         } else {
             // return null for all other cases to use the java default SocketFactory.
@@ -44,7 +46,7 @@ public class LdapConnUtil {
         connOpts.setFollowReferrals(true);   // TODO: expose in LC?
         connOpts.setConnectTimeoutMillis(ldapConfig.getConnectTimeoutMillis());
         connOpts.setResponseTimeoutMillis(ldapConfig.getReadTimeoutMillis());
-        
+
         return connOpts;
     }
 

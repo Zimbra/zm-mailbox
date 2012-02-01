@@ -63,7 +63,10 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
     }
     
     private String getLdapURL() {
-        if (LdapConnType.LDAPS == testConnType) {
+        if (LdapConnType.LDAPI == testConnType) {
+            fail(); // unsupported
+            return null;
+        } else if (LdapConnType.LDAPS == testConnType) {
             return "ldaps://" + LC.zimbra_server_hostname.value() + ":636";
         } else {
             return "ldap://" + LC.zimbra_server_hostname.value() + ":389";

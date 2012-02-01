@@ -73,6 +73,10 @@ public class LdapException extends ServiceException {
         return new LdapException("config error", INVALID_CONFIG,  cause);
     }
     
+    public static LdapException INVALID_CONFIG(String message, Throwable cause) {
+        return new LdapException(format("config error: ", message, cause), INVALID_CONFIG,  cause);
+    }
+    
     // generic LDAP error
     public static LdapException LDAP_ERROR(Throwable cause) {
         return new LdapException("LDAP error", LDAP_ERROR,  cause);

@@ -14,11 +14,21 @@
  */
 package com.zimbra.qa.unittest.prov.ldap;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.*;
 import static org.junit.Assert.*;
+
+import org.newsclub.net.unix.AFUNIXServerSocket;
+import org.newsclub.net.unix.AFUNIXSocketAddress;
+import org.newsclub.net.unix.AFUNIXSocket;
+import org.newsclub.net.unix.AFUNIXSocketException;
 
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPConnectionPoolStatistics;
@@ -32,6 +42,7 @@ import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.unboundid.LdapConnectionPool;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 import com.zimbra.qa.unittest.prov.LocalconfigTestUtil;
+
 
 // Note: do not extend LdapTest, because LdapClient will be initialized in LdapTest.init(),
 // which we don't want.   In this class, each test needs to init and shutdown LdapClient.
@@ -116,6 +127,8 @@ public class TestLdapConnectivity {
      */
     private static enum ConnectionConfig {
         LDAP("ldap://localhost:389", "ldap://localhost:389", "0", "false", "false"),
+        
+        LDAPI("ldapi://", "ldapi://", "0", "false", "false"),
         
         LDAPS_T_UNTRUSTED_T_MISMATCHED("ldaps://localhost:636", "ldaps://localhost:636", "0", "true", "true"),
         // JNDI: OK
@@ -248,39 +261,49 @@ public class TestLdapConnectivity {
      */
     public void testConnectivity(ConnectionConfig connConfig) throws Exception {
         connConfig.setLocalConfig();
-        LdapClient.initialize();
         
-        int expectedPort;
-        
-        if (connConfig == ConnectionConfig.LDAP || 
-                connConfig == ConnectionConfig.STARTTLS_T_UNTRUSTED_T_MISMATCHED || 
-                connConfig == ConnectionConfig.STARTTLS_T_UNTRUSTED_F_MISMATCHED || 
-                connConfig == ConnectionConfig.STARTTLS_F_UNTRUSTED_T_MISMATCHED || 
-                connConfig == ConnectionConfig.STARTTLS_F_UNTRUSTED_F_MISMATCHED) {
-            expectedPort = 389;
-        } else {
-            expectedPort = 636;
+        try {
+            LdapClient.initialize();
+            
+            int expectedPort;
+            
+            if (connConfig == ConnectionConfig.LDAPI) {
+                expectedPort = 1;  // LdapServerPool.DUMMY_LDAPI_PORT
+            } else if (connConfig == ConnectionConfig.LDAP || 
+                    connConfig == ConnectionConfig.STARTTLS_T_UNTRUSTED_T_MISMATCHED || 
+                    connConfig == ConnectionConfig.STARTTLS_T_UNTRUSTED_F_MISMATCHED || 
+                    connConfig == ConnectionConfig.STARTTLS_F_UNTRUSTED_T_MISMATCHED || 
+                    connConfig == ConnectionConfig.STARTTLS_F_UNTRUSTED_F_MISMATCHED) {
+                expectedPort = 389;
+            } else {
+                expectedPort = 636;
+            }
+            
+            UBIDLdapContext zlc1 = getContext();
+            assertEquals(expectedPort, zlc1.getNative().getConnectedPort());
+            
+            ZAttributes attrs = zlc1.getAttributes("cn=zimbra", null);
+            assertEquals("Zimbra Systems Application Data", attrs.getAttrString("description"));
+            
+            UBIDLdapContext zlc2 = getContext();
+            assertEquals(expectedPort, zlc2.getNative().getConnectedPort());
+            
+            closeContext(zlc1);
+            closeContext(zlc2);
+        } finally {
+            // so next test can re-initialized UBIDLdapContext and run
+            LdapClient.shutdown();
         }
-        
-        UBIDLdapContext zlc1 = getContext();
-        assertEquals(expectedPort, zlc1.getNative().getConnectedPort());
-        
-        ZAttributes attrs = zlc1.getAttributes("cn=zimbra", null);
-        assertEquals("Zimbra Systems Application Data", attrs.getAttrString("description"));
-        
-        UBIDLdapContext zlc2 = getContext();
-        assertEquals(expectedPort, zlc2.getNative().getConnectedPort());
-        
-        closeContext(zlc1);
-        closeContext(zlc2);
-        
-        // so next test can re-initialized UBIDLdapContext and run
-        LdapClient.shutdown();
     }
     
     @Test
     public void LDAP() throws Exception {
         testConnectivity(ConnectionConfig.LDAP);
+    }
+    
+    @Test
+    public void LDAPI() throws Exception {
+        testConnectivity(ConnectionConfig.LDAPI);
     }
     
     @Test
@@ -324,30 +347,94 @@ public class TestLdapConnectivity {
     }
     
     
+    /*
+     * junixsocket test
+     */
     
-    @Test
-    @Ignore
-    @TODO  // doesn't seem to work
-    public void testConnPoolIdleTimeout() throws Exception {
-        LDAPConnectionPool connPool = LdapConnectionPool.getConnPoolByName(
-                LdapConnectionPool.CP_ZIMBRA_REPLICA);
-        
-        int numCurAvailConns = connPool.getCurrentAvailableConnections();
-        long curMaxConnAgeMillis = connPool.getMaxConnectionAgeMillis();
-        
-        System.out.println("numCurAvailConns = " + numCurAvailConns);
-        System.out.println("curMaxConnAgeMillis = " + curMaxConnAgeMillis);
-        
-        long maxConnAgeMillis = 3000;
-        connPool.setMaxConnectionAgeMillis(maxConnAgeMillis);
-        
-        long millisToWait = maxConnAgeMillis + 1000;
-        System.out.println("Waiting for " + millisToWait + " milli seconds");
-        Thread.sleep(millisToWait);
-        
-        numCurAvailConns = connPool.getCurrentAvailableConnections();
-        System.out.println("numCurAvailConns = " + numCurAvailConns);
-        assertEquals(0, numCurAvailConns);
+    /**
+     * Needs -Djava.library.path=/opt/zimbra/lib (where the native lib is) when running in Eclipse.
+     * 
+     * A simple junixsocket demo server
+     * 
+     * @author Christian Kohlschütter
+     * @see SimpleTestClient
+     */
+    public static class SimpleTestServer {
+        public static void main(String[] args) throws IOException {
+            final File socketFile = new File(new File(System
+                    .getProperty("java.io.tmpdir")), "junixsocket-test.sock");
+
+            AFUNIXServerSocket server = AFUNIXServerSocket.newInstance();
+            server.bind(new AFUNIXSocketAddress(socketFile));
+            System.out.println("server: " + server);
+
+            while (!Thread.interrupted()) {
+                System.out.println("Waiting for connection...");
+                Socket sock = server.accept();
+                System.out.println("Connected: " + sock);
+
+                InputStream is = sock.getInputStream();
+                OutputStream os = sock.getOutputStream();
+
+                System.out.println("Saying hello to client " + os);
+                os.write("Hello, dear Client".getBytes());
+                os.flush();
+
+                byte[] buf = new byte[128];
+                int read = is.read(buf);
+                System.out
+                        .println("Client's response: " + new String(buf, 0, read));
+
+                os.close();
+                is.close();
+
+                sock.close();
+            }
+        }
+    }
+    
+    /**
+     * Needs -Djava.library.path=/opt/zimbra/lib (where the native lib is) when running in Eclipse.
+     * 
+     * A simple junixsocket demo client.
+     * 
+     * @author Christian Kohlschütter
+     * @see SimpleTestServer
+     */
+    public static class SimpleTestClient {
+        public static void main(String[] args) throws IOException {
+            final File socketFile = new File(new File(System
+                    .getProperty("java.io.tmpdir")), "junixsocket-test.sock");
+
+            AFUNIXSocket sock = AFUNIXSocket.newInstance();
+            try {
+                sock.connect(new AFUNIXSocketAddress(socketFile));
+            } catch (AFUNIXSocketException e) {
+                System.out.println("Cannot connect to server. Have you started it?");
+                System.out.flush();
+                throw e;
+            }
+            System.out.println("Connected");
+
+            InputStream is = sock.getInputStream();
+            OutputStream os = sock.getOutputStream();
+
+            byte[] buf = new byte[128];
+
+            int read = is.read(buf);
+            System.out.println("Server says: " + new String(buf, 0, read));
+
+            System.out.println("Replying to server...");
+            os.write("Hello Server".getBytes());
+            os.flush();
+
+            os.close();
+            is.close();
+
+            sock.close();
+
+            System.out.println("End of communication.");
+        }
     }
 
     

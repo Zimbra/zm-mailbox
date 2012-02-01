@@ -39,6 +39,9 @@ import com.zimbra.cs.ldap.LdapException;
  *
  */
 public class LdapServerPool {
+    private static final String DUMMY_LDAPI_HOST = "dummy_host";
+    private static final int DUMMY_LDAPI_PORT = 1; // SingleServerSet rquires port to be (port > 0) && (port < 65536)
+    
     List<LDAPURL> urls;
     String rawUrls; // for logging, space separated URLs
     LdapConnType connType;
@@ -47,15 +50,42 @@ public class LdapServerPool {
     ServerSet serverSet;
 
     public LdapServerPool(LdapServerConfig config) throws LdapException {
-        this.rawUrls = config.getLdapURL();
+        rawUrls = config.getLdapURL();
         
-        this.urls = new ArrayList<LDAPURL>();
+        urls = new ArrayList<LDAPURL>();
         
         String[] ldapUrls = config.getLdapURL().split(" ");
+        
+        // if connection is ldapi, make sure only one url is configured
+        if (config.getConnType() == LdapConnType.LDAPI) {
+            if (ldapUrls.length > 1) {
+                throw LdapException.INVALID_CONFIG(
+                        "can only specify one url for ldapi connection: " + rawUrls, null);
+            }
+        }
+        
         for (String ldapUrl : ldapUrls) {
             try {
                 LDAPURL url = new LDAPURL(ldapUrl);
-                this.urls.add(url);
+                
+                if (LdapConnType.isLDAPI(url.getScheme())) {
+                    // make sure host and port are *not* specified
+                    if (url.hostProvided() || url.portProvided()) {
+                        throw LdapException.INVALID_CONFIG(
+                                "host and port must not be specified with ldapi url: " + ldapUrl, null);
+                    }
+                    
+                    /*
+                     * ldapi URL does not have host/port, but unboundid SingleServerSet
+                     * requires host/port must not be null - even for ldapi.
+                     * 
+                     * Set dummy host/port to make SingleServerSet happy
+                     */
+                    ldapUrl = ldapUrl + DUMMY_LDAPI_HOST + ":" + DUMMY_LDAPI_PORT;
+                    url = new LDAPURL(ldapUrl);    
+                }
+                
+                urls.add(url);
             } catch (LDAPException e) {
                 throw LdapException.INVALID_CONFIG(e);
             }
@@ -87,7 +117,7 @@ public class LdapServerPool {
         return serverSet;
     }
     
-    private ServerSet createServerSet(SocketFactory socketFactory){
+    private ServerSet createServerSet(SocketFactory socketFactory) {
         
         if (urls.size() == 1) {
             LDAPURL url = urls.get(0);
