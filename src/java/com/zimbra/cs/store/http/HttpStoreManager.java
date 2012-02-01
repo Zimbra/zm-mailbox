@@ -180,12 +180,8 @@ public abstract class HttpStoreManager extends StoreManager {
         }
 
         InputStream is = getContent(mbox, locator);
-        try {
-            cached = localCache.put(locator, is);
-            return new HttpBlob(cached);
-        } finally {
-            ByteUtil.closeStream(is);
-        }
+        cached = localCache.put(locator, is);
+        return new HttpBlob(cached);
     }
 
     @Override

@@ -29,7 +29,6 @@ import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Counter;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
@@ -161,12 +160,8 @@ public class FileDescriptorCache
             FileCache.Item uncompressed = mUncompressedFileCache.get(path);
             if (uncompressed == null) {
                 InputStream in = null;
-                try {
-                    in = new GZIPInputStream(new FileInputStream(file));
-                    mUncompressedFileCache.put(path, in);
-                } finally {
-                    ByteUtil.closeStream(in);
-                }
+                in = new GZIPInputStream(new FileInputStream(file));
+                mUncompressedFileCache.put(path, in);
                 uncompressed = mUncompressedFileCache.get(path);
                 if (uncompressed == null) {
                     // Should not happen, since the uncompressed file is guaranteed to
@@ -276,7 +271,7 @@ public class FileDescriptorCache
             return;
 
         List<Map.Entry<String, SharedFile>> removeList = new ArrayList<Map.Entry<String, SharedFile>>();
-        
+
         synchronized (this) {
             Iterator<Map.Entry<String, SharedFile>> iEntries = mCache.entrySet().iterator();
             while (iEntries.hasNext() && mCache.size() > mMaxSize) {
