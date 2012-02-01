@@ -420,7 +420,21 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                                 Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
                                 Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))));
     }
-    
+
+    @Override
+    public ZLdapFilter externalAccountsHomedOnServer(String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.EXTERNAL_ACCOUNTS_HOMED_ON_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        externalAccounts(),
+                        homedOnServerFilter(serverServiceHostname)));
+    }
+
+    private static Filter externalAccounts() {
+        return Filter.createEqualityFilter(Provisioning.A_zimbraIsExternalVirtualAccount, LdapConstants.LDAP_TRUE);
+    }
+
     @Override
     public ZLdapFilter accountsByExternalGrant(String granteeEmail) {
         return new UBIDLdapFilter(

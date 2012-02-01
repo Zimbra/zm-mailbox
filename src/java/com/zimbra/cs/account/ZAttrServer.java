@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120127-1151 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120130-1427 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3539,6 +3539,136 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetExtensionBindAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExtensionBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getExternalAccountStatusCheckIntervalAsString to access value as a string.
+     *
+     * @see #getExternalAccountStatusCheckIntervalAsString()
+     *
+     * @return zimbraExternalAccountStatusCheckInterval in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public long getExternalAccountStatusCheckInterval() {
+        return getTimeInterval(Provisioning.A_zimbraExternalAccountStatusCheckInterval, 86400000L);
+    }
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraExternalAccountStatusCheckInterval, or "1d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public String getExternalAccountStatusCheckIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraExternalAccountStatusCheckInterval, "1d");
+    }
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraExternalAccountStatusCheckInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public void setExternalAccountStatusCheckInterval(String zimbraExternalAccountStatusCheckInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountStatusCheckInterval, zimbraExternalAccountStatusCheckInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraExternalAccountStatusCheckInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public Map<String,Object> setExternalAccountStatusCheckInterval(String zimbraExternalAccountStatusCheckInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountStatusCheckInterval, zimbraExternalAccountStatusCheckInterval);
+        return attrs;
+    }
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public void unsetExternalAccountStatusCheckInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountStatusCheckInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public Map<String,Object> unsetExternalAccountStatusCheckInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountStatusCheckInterval, "");
         return attrs;
     }
 

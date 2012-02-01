@@ -6812,4 +6812,29 @@ TODO: delete them permanently from here
   <desc>interface address on which zimbra extension server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
+<attr id="1370" name="zimbraExternalAccountStatusCheckInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
+  <globalConfigValue>1d</globalConfigValue>
+  <desc>
+    Interval between successive executions of the task that:
+    - disables an external virtual account when all its accessible shares have been revoked or expired.
+    - deletes an external virtual account after zimbraExternalAccountLifetimeAfterDisabling of being disabled.
+  </desc>
+</attr>
+
+<attr id="1371" name="zimbraExternalAccountDisabledTime" type="gentime" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>
+    Time when external virtual account was last automatically disabled by the system.
+    Applicable only when zimbraIsExternalVirtualAccount on the account is set to TRUE.
+  </desc>
+</attr>
+
+<attr id="1372" name="zimbraExternalAccountLifetimeAfterDisabling" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>
+    Duration after the last time the external virtual account was automatically disabled by the system after which the external virtual account would be automatically deleted.
+    Value of 0 indicates that the external virtual account should never be automatically deleted.
+    Applicable only when zimbraIsExternalVirtualAccount on the account is set to TRUE.
+  </desc>
+</attr>
+
 </attrs>

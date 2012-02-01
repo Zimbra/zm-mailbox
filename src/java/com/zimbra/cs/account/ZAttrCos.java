@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120127-1151 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120130-1427 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4527,6 +4527,142 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetDumpsterUserVisibleAge(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, "");
+        return attrs;
+    }
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getExternalAccountLifetimeAfterDisablingAsString to access value as a string.
+     *
+     * @see #getExternalAccountLifetimeAfterDisablingAsString()
+     *
+     * @return zimbraExternalAccountLifetimeAfterDisabling in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public long getExternalAccountLifetimeAfterDisabling() {
+        return getTimeInterval(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, 2592000000L);
+    }
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraExternalAccountLifetimeAfterDisabling, or "30d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public String getExternalAccountLifetimeAfterDisablingAsString() {
+        return getAttr(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "30d");
+    }
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraExternalAccountLifetimeAfterDisabling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public void setExternalAccountLifetimeAfterDisabling(String zimbraExternalAccountLifetimeAfterDisabling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, zimbraExternalAccountLifetimeAfterDisabling);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraExternalAccountLifetimeAfterDisabling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public Map<String,Object> setExternalAccountLifetimeAfterDisabling(String zimbraExternalAccountLifetimeAfterDisabling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, zimbraExternalAccountLifetimeAfterDisabling);
+        return attrs;
+    }
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public void unsetExternalAccountLifetimeAfterDisabling() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public Map<String,Object> unsetExternalAccountLifetimeAfterDisabling(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "");
         return attrs;
     }
 

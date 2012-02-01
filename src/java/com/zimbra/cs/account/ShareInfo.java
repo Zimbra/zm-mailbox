@@ -444,6 +444,9 @@ public class ShareInfo {
                 GroupMembership aclGroups = prov.getGroupMembership(acct, false);
                 granteeIds.addAll(aclGroups.groupIds());
 
+            } else if (granteeType == ACL.GRANTEE_GUEST && acct.isIsExternalVirtualAccount()) {
+                granteeIds.add(acct.getExternalUserMailAddress());
+
             } else if (granteeType == ACL.GRANTEE_PUBLIC) {
                 includePublicShares = true;
 

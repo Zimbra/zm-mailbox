@@ -154,6 +154,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
+    public ZLdapFilter externalAccountsHomedOnServer(String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.externalAccountsHomedOnServer(serverServiceHostname));
+    }
+
+    @Override
     public ZLdapFilter accountsByExternalGrant(String granteeEmail) {
         return new JNDILdapFilter(LegacyLdapFilter.accountsByExternalGrant(granteeEmail));
     }

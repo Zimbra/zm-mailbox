@@ -156,7 +156,15 @@ public class LegacyLdapFilter {
     public static String accountsHomedOnServerAccountsOnly(String serverServiceHostname) {
         return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS + homedOnServer(serverServiceHostname) + ")";
     }
-    
+
+    public static String externalAccountsHomedOnServer(String serverServiceHostname) {
+        return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS + externalAccount() + homedOnServer(serverServiceHostname) + ")";
+    }
+
+    public static String externalAccount() {
+        return "(" + Provisioning.A_zimbraIsExternalVirtualAccount + "=TRUE)";
+    }
+
     public static String accountsByExternalGrant(String granteeEmail) {
         return String.format("(&%s(zimbraSharedItem=granteeId:%s*))", FILTER_ACCOUNT_OBJECTCLASS, granteeEmail);
     }

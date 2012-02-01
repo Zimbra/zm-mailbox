@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 
+import com.zimbra.cs.account.ExternalAccountManagerTask;
 import org.apache.mina.core.buffer.IoBuffer;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -270,6 +271,11 @@ public final class Zimbra {
             if (app.supports(AclPushTask.class)) {
                 long pushInterval = server.getSharingUpdatePublishInterval();
                 sTimer.schedule(new AclPushTask(), pushInterval, pushInterval);
+            }
+
+            if (app.supports(ExternalAccountManagerTask.class)) {
+                long interval = server.getExternalAccountStatusCheckInterval();
+                sTimer.schedule(new ExternalAccountManagerTask(), interval, interval);
             }
 
             // should be last, so that other subsystems can add dynamic stats counters

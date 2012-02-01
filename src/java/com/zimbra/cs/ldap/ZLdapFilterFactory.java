@@ -93,6 +93,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DOMAIN_LOCKED_FOR_AUTO_PROVISION(SINGLETON.domainLockedForEagerAutoProvision()),
         DYNAMIC_GROUP_BY_ID(SINGLETON.dynamicGroupById("{DYNAMIC-GROUP-ID}")),
         DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
+        EXTERNAL_ACCOUNTS_HOMED_ON_SERVER(SINGLETON.externalAccountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         GLOBAL_CONFIG(SINGLETON.globalConfig()),
         GROUP_BY_ID(SINGLETON.groupById("{GROUP-ID}")),
         GROUP_BY_NAME(SINGLETON.groupByName("{GROUP-NAME}")),
@@ -268,6 +269,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter homedOnServer(String serverServiceHostname);
     public abstract ZLdapFilter accountsOnServerAndCosHasSubordinates(
             String serverServiceHostname, String cosId);
+    public abstract ZLdapFilter externalAccountsHomedOnServer(String serverServiceHostname);
     public abstract ZLdapFilter accountsByExternalGrant(String granteeEmail);
     public abstract ZLdapFilter accountsByGrants(List<String> granteeIds,
             boolean includePublicShares, boolean includeAllAuthedShares);
