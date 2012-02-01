@@ -350,18 +350,24 @@ public class FileCache<K> {
     }
 
     /**
-     * Puts content for the given key into the cache.  The caller is responsible for closing
-     * the stream.
+     * Puts content for the given key into the cache.  Closes the stream implicitly.
      */
     public Item put(K key, InputStream content) throws IOException {
         return put(key, content, null);
     }
 
     /**
-     * Puts content for the given key into the cache.  The caller is responsible for closing
-     * the stream.
+     * Puts content for the given key into the cache.  Closes the stream implicitly.
      */
     public Item put(K key, InputStream content, Map<String, String> userProps) throws IOException {
+        try {
+            return putInternal(key, content, userProps);
+        } finally {
+            ByteUtil.closeStream(content);
+        }
+    }
+
+    private Item putInternal(K key, InputStream content, Map<String, String> userProps) throws IOException {
         if (dataDir == null) {
             throw new IOException("Please call startup() before using the cache.");
         }
