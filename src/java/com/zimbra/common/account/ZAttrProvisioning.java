@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120127-1151 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120130-1427 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3632,6 +3632,47 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1369)
     public static final String A_zimbraExtensionBindAddress = "zimbraExtensionBindAddress";
+
+    /**
+     * Time when external virtual account was last automatically disabled by
+     * the system. Applicable only when zimbraIsExternalVirtualAccount on the
+     * account is set to TRUE.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1371)
+    public static final String A_zimbraExternalAccountDisabledTime = "zimbraExternalAccountDisabledTime";
+
+    /**
+     * Duration after the last time the external virtual account was
+     * automatically disabled by the system after which the external virtual
+     * account would be automatically deleted. Value of 0 indicates that the
+     * external virtual account should never be automatically deleted.
+     * Applicable only when zimbraIsExternalVirtualAccount on the account is
+     * set to TRUE. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1372)
+    public static final String A_zimbraExternalAccountLifetimeAfterDisabling = "zimbraExternalAccountLifetimeAfterDisabling";
+
+    /**
+     * Interval between successive executions of the task that: - disables an
+     * external virtual account when all its accessible shares have been
+     * revoked or expired. - deletes an external virtual account after
+     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1370)
+    public static final String A_zimbraExternalAccountStatusCheckInterval = "zimbraExternalAccountStatusCheckInterval";
 
     /**
      * the handler class for getting all groups an account belongs to in the
