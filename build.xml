@@ -473,6 +473,7 @@
           <include name="libidn*.jar"/>
           <include name="jdom*.jar"/>
           <include name="json.jar"/>
+          <include name="junixsocket*.jar"/>  
           <include name="unboundid*.jar"/>
           <include name="testng*.jar"/>
           <include name="jython*.jar"/>
@@ -1001,6 +1002,7 @@
         <include name="libidn*.jar"/>
         <include name="jdom*.jar"/>
         <include name="json.jar"/>
+        <include name="junixsocket*.jar"/>    
         <include name="unboundid*.jar"/>
         <include name="testng*.jar"/>
         <include name="guava*.jar"/>
@@ -2300,6 +2302,9 @@
       <!-- Note: Assertion statements are ignored in non-forked mode. -->
       <junit printsummary="on" failureproperty="junit.failure" tempdir="${provtest.dir}" fork="yes" forkmode="perBatch">
           <classpath refid="class.path"/>
+          
+          <!-- for native lib for ldapi -->
+          <jvmarg value="-Djava.library.path=/opt/zimbra/lib"/>
 
           <!-- ignored unless fork="yes" in junit element-->
           <assertions><enable/></assertions>
