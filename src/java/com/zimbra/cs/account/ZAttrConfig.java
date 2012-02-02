@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120201-1458 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120201-2313 */
 
     /**
      * RFC2256: descriptive information
@@ -8579,7 +8579,7 @@ public abstract class ZAttrConfig extends Entry {
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -8602,7 +8602,7 @@ public abstract class ZAttrConfig extends Entry {
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -8621,7 +8621,7 @@ public abstract class ZAttrConfig extends Entry {
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -8643,7 +8643,7 @@ public abstract class ZAttrConfig extends Entry {
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -8666,7 +8666,7 @@ public abstract class ZAttrConfig extends Entry {
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -8687,7 +8687,7 @@ public abstract class ZAttrConfig extends Entry {
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is

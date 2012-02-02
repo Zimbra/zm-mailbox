@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120201-1458 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120201-2313 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8273,17 +8273,17 @@ public abstract class ZAttrAccount  extends MailTarget {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * <p>Use getExternalAccountLifetimeAfterDisablingAsString to access value as a string.
+     * <p>Use getExternalAccountLifetimeAfterDisabledAsString to access value as a string.
      *
-     * @see #getExternalAccountLifetimeAfterDisablingAsString()
+     * @see #getExternalAccountLifetimeAfterDisabledAsString()
      *
-     * @return zimbraExternalAccountLifetimeAfterDisabling in millseconds, or 2592000000 (30d)  if unset
+     * @return zimbraExternalAccountLifetimeAfterDisabled in millseconds, or 2592000000 (30d)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public long getExternalAccountLifetimeAfterDisabling() {
-        return getTimeInterval(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, 2592000000L);
+    public long getExternalAccountLifetimeAfterDisabled() {
+        return getTimeInterval(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, 2592000000L);
     }
 
     /**
@@ -8297,13 +8297,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @return zimbraExternalAccountLifetimeAfterDisabling, or "30d" if unset
+     * @return zimbraExternalAccountLifetimeAfterDisabled, or "30d" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public String getExternalAccountLifetimeAfterDisablingAsString() {
-        return getAttr(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "30d");
+    public String getExternalAccountLifetimeAfterDisabledAsString() {
+        return getAttr(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, "30d");
     }
 
     /**
@@ -8317,15 +8317,15 @@ public abstract class ZAttrAccount  extends MailTarget {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @param zimbraExternalAccountLifetimeAfterDisabling new value
+     * @param zimbraExternalAccountLifetimeAfterDisabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public void setExternalAccountLifetimeAfterDisabling(String zimbraExternalAccountLifetimeAfterDisabling) throws com.zimbra.common.service.ServiceException {
+    public void setExternalAccountLifetimeAfterDisabled(String zimbraExternalAccountLifetimeAfterDisabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, zimbraExternalAccountLifetimeAfterDisabling);
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, zimbraExternalAccountLifetimeAfterDisabled);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -8340,16 +8340,16 @@ public abstract class ZAttrAccount  extends MailTarget {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @param zimbraExternalAccountLifetimeAfterDisabling new value
+     * @param zimbraExternalAccountLifetimeAfterDisabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public Map<String,Object> setExternalAccountLifetimeAfterDisabling(String zimbraExternalAccountLifetimeAfterDisabling, Map<String,Object> attrs) {
+    public Map<String,Object> setExternalAccountLifetimeAfterDisabled(String zimbraExternalAccountLifetimeAfterDisabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, zimbraExternalAccountLifetimeAfterDisabling);
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, zimbraExternalAccountLifetimeAfterDisabled);
         return attrs;
     }
 
@@ -8369,9 +8369,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public void unsetExternalAccountLifetimeAfterDisabling() throws com.zimbra.common.service.ServiceException {
+    public void unsetExternalAccountLifetimeAfterDisabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "");
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -8392,9 +8392,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public Map<String,Object> unsetExternalAccountLifetimeAfterDisabling(Map<String,Object> attrs) {
+    public Map<String,Object> unsetExternalAccountLifetimeAfterDisabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "");
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, "");
         return attrs;
     }
 
@@ -47568,174 +47568,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTextAnalyzer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestBinary, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public byte[] getUnittestBinary() {
-        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestBinary, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public String getUnittestBinaryAsString() {
-        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestBinary new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestBinary new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestCertificate, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public byte[] getUnittestCertificate() {
-        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestCertificate, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public String getUnittestCertificateAsString() {
-        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestCertificate new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestCertificate new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
         return attrs;
     }
 

@@ -93,7 +93,7 @@ public class ExternalAccountManagerTask extends TimerTask {
             account.setExternalAccountDisabledTime(new Date());
             account.setAccountStatus(AccountStatus.closed);
         } else {
-            long disabledAcctLifetime = account.getExternalAccountLifetimeAfterDisabling();
+            long disabledAcctLifetime = account.getExternalAccountLifetimeAfterDisabled();
             if (accountStatus == AccountStatus.closed && disabledAcctLifetime != 0) {
                 Date timeWhenDisabled = account.getExternalAccountDisabledTime();
                 if (timeWhenDisabled != null && 

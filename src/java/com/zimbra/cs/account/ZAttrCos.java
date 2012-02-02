@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120201-1458 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120201-2313 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4541,17 +4541,17 @@ public abstract class ZAttrCos extends NamedEntry {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * <p>Use getExternalAccountLifetimeAfterDisablingAsString to access value as a string.
+     * <p>Use getExternalAccountLifetimeAfterDisabledAsString to access value as a string.
      *
-     * @see #getExternalAccountLifetimeAfterDisablingAsString()
+     * @see #getExternalAccountLifetimeAfterDisabledAsString()
      *
-     * @return zimbraExternalAccountLifetimeAfterDisabling in millseconds, or 2592000000 (30d)  if unset
+     * @return zimbraExternalAccountLifetimeAfterDisabled in millseconds, or 2592000000 (30d)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public long getExternalAccountLifetimeAfterDisabling() {
-        return getTimeInterval(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, 2592000000L);
+    public long getExternalAccountLifetimeAfterDisabled() {
+        return getTimeInterval(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, 2592000000L);
     }
 
     /**
@@ -4565,13 +4565,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @return zimbraExternalAccountLifetimeAfterDisabling, or "30d" if unset
+     * @return zimbraExternalAccountLifetimeAfterDisabled, or "30d" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public String getExternalAccountLifetimeAfterDisablingAsString() {
-        return getAttr(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "30d");
+    public String getExternalAccountLifetimeAfterDisabledAsString() {
+        return getAttr(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, "30d");
     }
 
     /**
@@ -4585,15 +4585,15 @@ public abstract class ZAttrCos extends NamedEntry {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @param zimbraExternalAccountLifetimeAfterDisabling new value
+     * @param zimbraExternalAccountLifetimeAfterDisabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public void setExternalAccountLifetimeAfterDisabling(String zimbraExternalAccountLifetimeAfterDisabling) throws com.zimbra.common.service.ServiceException {
+    public void setExternalAccountLifetimeAfterDisabled(String zimbraExternalAccountLifetimeAfterDisabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, zimbraExternalAccountLifetimeAfterDisabling);
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, zimbraExternalAccountLifetimeAfterDisabled);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -4608,16 +4608,16 @@ public abstract class ZAttrCos extends NamedEntry {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @param zimbraExternalAccountLifetimeAfterDisabling new value
+     * @param zimbraExternalAccountLifetimeAfterDisabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public Map<String,Object> setExternalAccountLifetimeAfterDisabling(String zimbraExternalAccountLifetimeAfterDisabling, Map<String,Object> attrs) {
+    public Map<String,Object> setExternalAccountLifetimeAfterDisabled(String zimbraExternalAccountLifetimeAfterDisabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, zimbraExternalAccountLifetimeAfterDisabling);
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, zimbraExternalAccountLifetimeAfterDisabled);
         return attrs;
     }
 
@@ -4637,9 +4637,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public void unsetExternalAccountLifetimeAfterDisabling() throws com.zimbra.common.service.ServiceException {
+    public void unsetExternalAccountLifetimeAfterDisabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "");
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -4660,9 +4660,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public Map<String,Object> unsetExternalAccountLifetimeAfterDisabling(Map<String,Object> attrs) {
+    public Map<String,Object> unsetExternalAccountLifetimeAfterDisabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabling, "");
+        attrs.put(Provisioning.A_zimbraExternalAccountLifetimeAfterDisabled, "");
         return attrs;
     }
 

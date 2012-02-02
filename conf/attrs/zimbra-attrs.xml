@@ -6817,7 +6817,7 @@ TODO: delete them permanently from here
   <desc>
     Interval between successive executions of the task that:
     - disables an external virtual account when all its accessible shares have been revoked or expired.
-    - deletes an external virtual account after zimbraExternalAccountLifetimeAfterDisabling of being disabled.
+    - deletes an external virtual account after zimbraExternalAccountLifetimeAfterDisabled of being disabled.
   </desc>
 </attr>
 
@@ -6828,7 +6828,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1372" name="zimbraExternalAccountLifetimeAfterDisabling" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+<attr id="1372" name="zimbraExternalAccountLifetimeAfterDisabled" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>
     Duration after the last time the external virtual account was automatically disabled by the system after which the external virtual account would be automatically deleted.
@@ -6839,7 +6839,7 @@ TODO: delete them permanently from here
 
 <attr id="1373" name="zimbraFeatureExternalFeedbackEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether externla feedback feature is enabled</desc>
+  <desc>whether external feedback feature is enabled</desc>
 </attr>
 
 </attrs>
