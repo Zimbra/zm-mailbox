@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120201-1458 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120201-2313 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3657,13 +3657,13 @@ public class ZAttrProvisioning {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1372)
-    public static final String A_zimbraExternalAccountLifetimeAfterDisabling = "zimbraExternalAccountLifetimeAfterDisabling";
+    public static final String A_zimbraExternalAccountLifetimeAfterDisabled = "zimbraExternalAccountLifetimeAfterDisabled";
 
     /**
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
-     * zimbraExternalAccountLifetimeAfterDisabling of being disabled. . Must
+     * zimbraExternalAccountLifetimeAfterDisabled of being disabled. . Must
      * be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
      * ms - milliseconds. If time unit is not specified, the default is
@@ -10816,22 +10816,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
