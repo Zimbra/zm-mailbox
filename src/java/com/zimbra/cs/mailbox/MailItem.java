@@ -53,16 +53,17 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.volume.Volume;
 
 /**
  * @since Aug 12, 2004
@@ -463,7 +464,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         private short  inclusions;
         private String query;
 
-        private Mailbox mailbox;
+        private final Mailbox mailbox;
         private int     sentFolder = -1;
 
         public TargetConstraint(Mailbox mbox, short include) {
@@ -577,7 +578,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         private static final long serialVersionUID = -3866150929202858077L;
 
         private final String mSectionKey;
-        private String mSerializedValue;
+        private final String mSerializedValue;
 
         public CustomMetadata(String section) {
             this(section, null);
@@ -1176,9 +1177,18 @@ public abstract class MailItem implements Comparable<MailItem> {
             return rightsNeeded;
         // check to see what access has been granted on the enclosing folder
         Folder folder = !inDumpster() ? getFolder() : getMailbox().getFolderById(Mailbox.ID_FOLDER_TRASH);
-        short granted = (isTagged(Flag.FlagInfo.NO_INHERIT)) ? 
-                checkACL(rightsNeeded, authuser, asAdmin) :
-                folder.checkRights(rightsNeeded, authuser, asAdmin);
+        short granted = 0;
+        // leaf nodes rely on the parent folder's ACL for iwda rights
+        // even if the ACL is explicitly set on the item, so just
+        // combine rights on the item and parent together.  this works
+        // because we don't have negative rights.
+        if (isLeafNode() && isTagged(Flag.FlagInfo.NO_INHERIT)) {
+            granted = (short)(checkACL(rightsNeeded, authuser, asAdmin) | folder.checkRights(rightsNeeded, authuser, asAdmin));
+        } else if (isTagged(Flag.FlagInfo.NO_INHERIT)) {
+            granted = checkACL(rightsNeeded, authuser, asAdmin);
+        } else {
+            granted = folder.checkRights(rightsNeeded, authuser, asAdmin);
+        }
         // FIXME: check to see what access has been granted on the item's tags
         //   granted |= getTags().getGrantedRights(rightsNeeded, authuser);
         // and see if the granted rights are sufficient
@@ -3254,7 +3264,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             }
         }
     }
-    
+
     private ACL makeACLFromMap(String key, Metadata meta) throws ServiceException {
         Metadata aclMetaData = meta.getMap(key, true);
         if (aclMetaData != null) {
@@ -3440,7 +3450,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.setFlag(Flag.FlagInfo.UNCACHED);
         return MailItem.constructItem(mMailbox, data);
     }
-    
+
     protected short checkACL(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // check the ACLs to see if access has been explicitly granted
         Short granted = rights != null ? rights.getGrantedRights(authuser) : null;
