@@ -30,6 +30,11 @@
      <param-value>127.0.0.1</param-value>
     </init-param>
     
+    <init-param>
+     <param-name>maxRequestMs</param-name>
+     <param-value>9223372036854775807</param-value>
+    </init-param>
+    
   </filter>
   
   <filter-mapping>
