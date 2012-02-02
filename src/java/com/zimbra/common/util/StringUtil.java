@@ -751,6 +751,26 @@ public class StringUtil {
         return result.toString();
     }
 
+    /**
+     * Unescapes a string containing entity escapes to a string containing the actual Unicode characters
+     * corresponding to the escapes.
+     */
+    public static String unEscapeHtml(String text) {
+        if (text == null || text.length() == 0) {
+            return "";
+        }
+
+        String result = text;
+        result = result.replace("&lt;", "<");
+        result = result.replace("&gt;", ">");
+        result = result.replace("&amp;", "&");
+        result = result.replace("&quot;", "\"");
+        result = result.replace("&#034;", "\"");
+        result = result.replace("&#039;", "\'");
+
+        return result;
+    }
+
     private static Set<String> sJavaReservedWords =
             new HashSet<String>(Arrays.asList(
                     "abstract",
