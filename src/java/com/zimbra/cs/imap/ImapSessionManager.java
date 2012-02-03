@@ -74,7 +74,7 @@ final class ImapSessionManager {
             ZimbraLog.imap.debug("initializing IMAP session serializer task");
         }
         if (LC.imap_use_ehcache.booleanValue()) {
-            activeSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_ACTIVE_SESSION_CACHE);
+            activeSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_ACTIVE_SESSION_CACHE, true);
             Preconditions.checkState(activeSessionCache != null);
         } else {
             activeSessionCache = new DiskImapCache();
@@ -82,7 +82,7 @@ final class ImapSessionManager {
         //inactive preference order memcache, ehcache, diskcache
         inactiveSessionCache = MemcachedConnector.isConnected() ?
                 new MemcachedImapCache() : (LC.imap_use_ehcache.booleanValue() ? 
-                new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE) :
+                new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Preconditions.checkState(inactiveSessionCache != null);
     }
