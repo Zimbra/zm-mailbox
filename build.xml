@@ -94,7 +94,7 @@
     <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
     <property name="jetty.conf.dir" value="${jetty.home.dir}/etc"/>
     <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
-    <property name="jetty.version" value="7.5.5-SNAPSHOT"/>
+    <property name="jetty.version" value="7.6.0-SNAPSHOT"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
