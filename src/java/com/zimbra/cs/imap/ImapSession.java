@@ -271,7 +271,7 @@ public class ImapSession extends Session {
                     PagedFolderData paged = (PagedFolderData) mFolder;
                     if (paged.getCacheKey() == null || !paged.getCacheKey().equals(MANAGER.cacheKey(this, active))) {
                         //currently cached to wrong cache need to move it so it doesn't get expired or LRU'd
-                        ZimbraLog.imap.debug("relocating cached item, already unloaded but cache key mismatched");
+                        ZimbraLog.imap.trace("relocating cached item to %s already unloaded but cache key mismatched", (active ? "active" : "inactive"));
                         ImapFolder folder = null;
                         try {
                             folder = reload();
@@ -302,10 +302,13 @@ public class ImapSession extends Session {
                 if (paged != null) { // if the data's already paged in, we can short-circuit
                     ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
                     if (i4folder == null) {
-                      //IOException expected up the stack when cache miss occurs
-                      //for now, keep it that way. 
-                      //TODO: refactor later (in 8.0) once we've shaken out any other bugs w/ new cache impl.
-                      throw new IOException(CACHE_MISS);
+                        //IOException expected up the stack when cache miss occurs
+                        //for now, keep it that way. 
+                        //TODO: refactor later (in 8.0) once we've shaken out any other bugs w/ new cache impl.
+                        if (ImapSessionManager.isActiveKey(paged.getCacheKey())) {
+                            ZimbraLog.imap.debug("cache miss in active cache with key %s",paged.getCacheKey());
+                        }
+                        throw new IOException(CACHE_MISS + " from "+(ImapSessionManager.isActiveKey(paged.getCacheKey()) ? "active" : "inactive")+ " cache");
                     }
 
                     try {

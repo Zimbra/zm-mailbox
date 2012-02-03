@@ -47,6 +47,7 @@ public final class EhcacheManager {
         conf.addDiskStore(disk);
         conf.addCache(createImapActiveSessionCache());
         conf.addCache(createImapInactiveSessionCache());
+        conf.setUpdateCheck(false);
         CacheManager.create(conf);
     }
 
@@ -61,8 +62,7 @@ public final class EhcacheManager {
         CacheConfiguration conf = new CacheConfiguration();
         conf.setName(IMAP_ACTIVE_SESSION_CACHE);
         conf.setOverflowToDisk(true);
-        conf.setDiskPersistent(true);
-        conf.setTimeToIdleSeconds(LC.imap_authenticated_max_idle_time.intValue() + 5 * Constants.SECONDS_PER_MINUTE);
+        conf.setDiskPersistent(false);
         conf.setMaxElementsInMemory(1); // virtually disk cache only
         conf.setMaxElementsOnDisk(0); // infinite, but essentially limited by max concurrent IMAP connections
         return conf;
