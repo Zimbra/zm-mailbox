@@ -37,13 +37,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @since May 26, 2004
  * @author schemers
  */
-public class SearchGal extends AdminDocumentHandler {
-
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
-    
-    protected String[] getProxiedAccountPath() { 
-        return TARGET_ACCOUNT_PATH;
-    }
+public class SearchGal extends AdminGalDocumentHandler {
     
     /**
      * must be careful and only return accounts a domain admin can see

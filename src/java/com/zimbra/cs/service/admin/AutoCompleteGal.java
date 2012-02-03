@@ -25,10 +25,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -36,27 +34,20 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class AutoCompleteGal extends AdminDocumentHandler {
+public class AutoCompleteGal extends AdminGalDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
-    
-    protected String[] getProxiedAccountPath() { 
-        return TARGET_ACCOUNT_PATH;
-    }
-    
     /**
      * must be careful and only return accounts a domain admin can see
      */
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
-
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
