@@ -389,6 +389,7 @@ public class AccountConstants {
     public static final String A_NEED_EXP = "needExp";
     public static final String A_NEED_SMIME_CERTS = "needSMIMECerts";
     public static final String A_GAL_ACCOUNT_ID = "galAcctId";
+    public static final String A_GAL_ACCOUNT_PROXIED = "galAcctProxied";
     public static final String A_PAGINATION_SUPPORTED = "paginationSupported";
     public static final String A_OFFSET_INTERNAL = "_offset"; // for server internal use only 
     public static final String A_LIMIT_INTERNAL = "_limit";   // for serer internal use only 
