@@ -424,6 +424,7 @@ public class ShareInfo {
             List<String> granteeIds = new LinkedList<String>();
             boolean includePublicShares = false;
             boolean includeAllAuthedShares = false;
+            String guestAcctDomainId = null;
             if (granteeType == 0) {
                 // no grantee type specified, return all accessible shares
                 granteeIds.add(acct.getId());
@@ -446,6 +447,7 @@ public class ShareInfo {
 
             } else if (granteeType == ACL.GRANTEE_GUEST && acct.isIsExternalVirtualAccount()) {
                 granteeIds.add(acct.getExternalUserMailAddress());
+                guestAcctDomainId = prov.getDomain(acct).getId();
 
             } else if (granteeType == ACL.GRANTEE_PUBLIC) {
                 includePublicShares = true;
@@ -467,7 +469,8 @@ public class ShareInfo {
                         "unsupported grantee type: " + ACL.typeToString(granteeType), null);
             }
 
-            getSharesPublished(prov, visitor, owner, granteeIds, includePublicShares, includeAllAuthedShares);
+            getSharesPublished(prov, visitor, owner, granteeIds, includePublicShares, includeAllAuthedShares, 
+                    guestAcctDomainId);
         }
 
         public static void getPublished(Provisioning prov, DistributionList dl, boolean directOnly, Account owner,
@@ -479,11 +482,12 @@ public class ShareInfo {
             if (!directOnly) {
                 granteeIds.addAll(prov.getGroupMembership(dl, false).groupIds());
             }
-            getSharesPublished(prov, visitor, owner, granteeIds, false, false);
+            getSharesPublished(prov, visitor, owner, granteeIds, false, false, null);
         }
 
         private static void getSharesPublished(Provisioning prov, PublishedShareInfoVisitor visitor, Account owner,
-                List<String> granteeIds, boolean includePublicShares, boolean includeAllAuthedShares)
+                List<String> granteeIds, boolean includePublicShares, boolean includeAllAuthedShares, 
+                String guestAcctDomainId)
                 throws ServiceException {
 
             if (granteeIds.isEmpty() && !includePublicShares && !includeAllAuthedShares) {
@@ -506,6 +510,9 @@ public class ShareInfo {
                     if (!owner.getId().equals(account.getId())) {
                         continue;
                     }
+                }
+                if (guestAcctDomainId != null && !guestAcctDomainId.equals(prov.getDomain(account).getId())) {
+                    continue;
                 }
                 String[] sharedItems = account.getSharedItem();
                 for (String sharedItem : sharedItems) {

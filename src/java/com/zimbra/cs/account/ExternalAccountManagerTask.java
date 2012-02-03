@@ -120,6 +120,7 @@ public class ExternalAccountManagerTask extends TimerTask {
                 if (mountpoint.getOwnerId().equals(shareInfoData.getOwnerAcctId()) &&
                         mountpoint.getRemoteId() == shareInfoData.getItemId()) {
                     result = true;
+                    break;
                 }
             }
         }
