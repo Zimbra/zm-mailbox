@@ -708,7 +708,7 @@ public final class ZimbraQuery {
             if ((!params.getIncludeTagDeleted() && params.getFetchMode() != SearchParams.Fetch.IDS)
                     || params.getAllowableTaskStatuses() != null) {
                 // we have to do some filtering of the result set
-                FilteredQueryResults filtered = new FilteredQueryResults(results);
+                FilteredQueryResults filtered = new FilteredQueryResults(results, params);
 
                 if (!params.getIncludeTagDeleted()) {
                     filtered.setFilterTagDeleted(true);

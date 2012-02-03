@@ -15,6 +15,7 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -28,15 +29,37 @@ import com.zimbra.cs.mailbox.MailItem;
  *  <li>Supports filtering by the \DELETED tag (enable it by calling setFilterTagDeleted API)
  *  <li>Supports filtering by allowable Task-status
  *      (e.g. only show Completed tasks) see setAllowableTaskStatus(Set<TaskHit.Status>) API)
+ *  <li>Supports cursor filtering for proxied hits
  * </ul>
  */
 public final class FilteredQueryResults implements ZimbraQueryResults {
     private final ZimbraQueryResults results;
+    private final SearchParams searchParams;
+    
     private boolean filterTagDeleted = false;
     private Set<TaskHit.Status> allowedTaskStatuses = null;
+    
+    //enable cursor filtering
+    private ZimbraHit firstHit = null;
+    private ZimbraHit endHit = null;
+    private Comparator<ZimbraHit> comp = null;
+    
 
-    FilteredQueryResults(ZimbraQueryResults other) {
+    FilteredQueryResults(ZimbraQueryResults other, SearchParams params) {
         results = other;
+        searchParams = params;
+        
+        if (searchParams != null && searchParams.getCursor() != null) {
+            if (searchParams.getCursor().getSortValue() != null) {
+                firstHit = new ResultsPager.CursorHit(results, searchParams.getCursor().getSortValue(),
+                        searchParams.getCursor().getItemId().getId());
+            }
+            if (searchParams.getCursor().getEndSortValue() != null) {
+                endHit = new ResultsPager.CursorHit(results, searchParams.getCursor().getEndSortValue(), 0);
+            }
+            // get the proper comparator
+            comp = searchParams.getSortBy().getHitComparator(searchParams.getLocale());
+        }
     }
 
     /**
@@ -122,9 +145,19 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
                 }
             }
         }
+        
+        if (hit instanceof ProxiedHit) {
+            if (firstHit != null && comp != null && comp.compare(hit, firstHit) < 0) {
+                return true;
+            }
+            if (endHit != null && comp != null && comp.compare(hit, endHit) >= 0) {
+                return true;
+            }
+        }
 
         return false; // if we got here, include it
     }
+    
 
     @Override
     public ZimbraHit peekNext() throws ServiceException {
