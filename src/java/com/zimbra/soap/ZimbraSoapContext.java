@@ -180,20 +180,40 @@ public final class ZimbraSoapContext {
      * @param zsc context to clone
      * @param targetAccountId different account ID from the original request
      */
-    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
+    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) 
+    throws ServiceException {
         this(zsc, targetAccountId, null);
     }
 
+    /**
+     * Creates a {@link ZimbraSoapContext} from another existing
+     * {@link ZimbraSoapContext} for use in proxying.
+     * 
+     * @param zsc context to clone
+     * @param targetAccountId different account ID from the original request
+     * @param session If session is non-null, it will be used for proxy notifications
+     * @throws ServiceException
+     */
+    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId, Session session) 
+    throws ServiceException {
+        this(zsc, null, targetAccountId, session);
+    }
+    
     /** Creates a <code>ZimbraSoapContext</code> from another existing
      *  <code>ZimbraSoapContext</code> for use in proxying.
-     *  If session is non-null, it will be used for proxy notifications*/
-    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId, Session session) throws ServiceException {
+     *  If session is non-null, it will be used for proxy notifications.
+     *  If authToken is not null, the auth token in the clone will be replaced by authToken.
+     */
+    public ZimbraSoapContext(ZimbraSoapContext zsc, AuthToken authToken, String targetAccountId, Session session) 
+    throws ServiceException {
         mUserAgent = zsc.mUserAgent;
         mRequestIP = zsc.mRequestIP;
         mVia = zsc.mVia;
-        mRawAuthToken = zsc.mRawAuthToken;
-        mAuthToken = zsc.mAuthToken;
-        mAuthTokenAccountId = zsc.mAuthTokenAccountId;
+        
+        mRawAuthToken = authToken == null? zsc.mRawAuthToken : authToken.toZAuthToken();
+        mAuthToken = authToken == null? zsc.mAuthToken : authToken;
+        mAuthTokenAccountId = authToken == null? zsc.mAuthTokenAccountId : authToken.getAccountId();
+        
         mRequestedAccountId = targetAccountId;
         mRequestProtocol = zsc.mRequestProtocol;
         mResponseProtocol = zsc.mResponseProtocol;

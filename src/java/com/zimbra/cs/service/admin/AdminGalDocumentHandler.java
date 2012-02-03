@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,10 +12,11 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -23,11 +24,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public abstract class GalDocumentHandler extends AccountDocumentHandler {
-
+public abstract class AdminGalDocumentHandler extends AdminDocumentHandler {
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
     
     protected String[] getProxiedAccountPath() { 
@@ -48,30 +47,9 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
             if (acctId != null) {
                 Account acct = prov.get(AccountBy.id, acctId, zsc.getAuthToken());
                 if (acct != null) {
-                     if (!Provisioning.onLocalServer(acct)) {
+                    if (!Provisioning.onLocalServer(acct)) {
                         /*
-                         * bug 69805
-                         * 
-                         * This is *not* the home server of the galsync account.
-                         * 
-                         * In a rolling upgrade env, when galsync account resides on a 6.x 
-                         * server and user resides on a 7.x server, 6.x server proxies on 
-                         * the requested account, not galAccountId.  If we get here, and 
-                         * galAcctProxied is true, it means this request was first proxied 
-                         * by GalSearchControl to the home server of the galsync account, 
-                         * which must be a pre-7.x server, otherwise the request would have 
-                         * been handled on that server and would not be proxied back to 
-                         * this server again).  The pre-7.x server proxied the request 
-                         * back to this server based on the requested account, which is 
-                         * the users home server.
-                         * 
-                         * If we just proxy back to the pre-7.x server, it will get into 
-                         * a proxy loop (or PERM_DENIED if the requested account is altered 
-                         * to the galsync account).
-                         * 
-                         * If we are in this situation, just use the 6.x behavior of setting 
-                         * <authToken> to the global admin, and setting <account> (i.e. the 
-                         * requested account) to the galsync account.
+                         * bug 69805, see comments in com.zimbra.cs.service.account.GalDocumentHandler
                          */
                         boolean proxied = request.getAttributeBool(AccountConstants.A_GAL_ACCOUNT_PROXIED, false);
                         if (proxied) {
@@ -80,26 +58,11 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
                              * on a pre-7.x server and this is a 7.x-or-later server.
                              * Just do the pre-7.x behavior for <authToken> and <account> 
                              * in soap header.
-                             *
-                             * Note: we should never get here from another 7.x-or-later server/client.
-                             *
-                             * This proxyRequest call will alter the auth token to the 
-                             * global admin and alter the requested account to the galsync 
-                             * account; and proxy this request to the home server of 
-                             * acctId(i.e. the galsync account), 
                              */
                             return proxyRequest(request, context, AuthProvider.getAdminAuthToken(), acctId);
                         } else {
                             /*
                              * normal path
-                             *
-                             * The original request has the galAcctId attr on soap body, 
-                             * just proxy to the home server of the galAcctId server.
-                             *
-                             * note: do *not* pass acctId to proxyRequest! Doing that will 
-                             * change the requested account to the account by that acctId, 
-                             * which is the galsync account.  We should preserve those in 
-                             * the original request when proxying.
                              */
                             Server server = acct.getServer();
                             return proxyRequest(request, context, server);
@@ -122,5 +85,4 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
             throw e;
         }
     }
-
 }

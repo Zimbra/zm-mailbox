@@ -437,6 +437,16 @@ public abstract class DocumentHandler {
         return proxyRequest(request, context, getServer(acctId), zscTarget);
     }
 
+    protected Element proxyRequest(Element request, Map<String, Object> context, 
+            AuthToken authToken, String acctId) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+
+        // new context for proxied request has a different auth token and "requested account"
+        // and an incremented hop count
+        ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, authToken, acctId, null);
+
+        return proxyRequest(request, context, getServer(acctId), zscTarget);
+    }
 
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server)
     throws ServiceException {

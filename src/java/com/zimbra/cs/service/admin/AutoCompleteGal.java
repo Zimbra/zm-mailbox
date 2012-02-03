@@ -39,14 +39,7 @@ import com.zimbra.soap.type.GalSearchType;
 /**
  * @author schemers
  */
-public class AutoCompleteGal extends AdminDocumentHandler {
-
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
-    
-    @Override
-    protected String[] getProxiedAccountPath() { 
-        return TARGET_ACCOUNT_PATH;
-    }
+public class AutoCompleteGal extends AdminGalDocumentHandler {
     
     /**
      * must be careful and only return accounts a domain admin can see

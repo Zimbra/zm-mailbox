@@ -576,6 +576,8 @@ public class GalSearchControl {
                 req.addAttribute(AccountConstants.A_REF, mParams.getSearchEntryByDn());
             }
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_ID, galSyncAcct.getId());
+            req.addAttribute(AccountConstants.A_GAL_ACCOUNT_PROXIED, true);
+            
             Element resp = transport.invokeWithoutSession(req.detach());
             GalSearchResultCallback callback = mParams.getResultCallback();
 
