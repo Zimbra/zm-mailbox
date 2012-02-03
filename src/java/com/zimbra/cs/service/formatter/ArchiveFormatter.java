@@ -47,7 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
-import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.server.AbstractHttpConnection;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -348,7 +348,7 @@ public abstract class ArchiveFormatter extends Formatter {
      */
     private void disableJettyTimeout() throws IOException {
         if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
-            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
             if (endPoint instanceof SelectChannelEndPoint) {
                 SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
                 scEndPoint.setMaxIdleTime(0);

@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
-import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.server.AbstractHttpConnection;
 import org.eclipse.jetty.util.thread.Timeout;
 
 import com.zimbra.common.localconfig.LC;
@@ -169,7 +169,7 @@ public class SyncGal extends GalDocumentHandler {
      */
     private void disableJettyTimeout() {
         if (LC.zimbra_gal_sync_disable_timeout.booleanValue()) {
-            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
             if (endPoint instanceof SelectChannelEndPoint) {
                 SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
                 try {
