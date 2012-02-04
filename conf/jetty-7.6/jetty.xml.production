@@ -56,6 +56,7 @@
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
           <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -80,6 +81,7 @@
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
           <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -109,6 +111,7 @@
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
+          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -446,6 +449,7 @@
               <Item>org.eclipse.jetty.plus.jaas.</Item>
               <Item>org.eclipse.jetty.websocket.</Item>
               <Item>org.eclipse.jetty.servlet.</Item>
+              <Item>org.eclipse.jetty.servlets.</Item>
               <Item>org.eclipse.jetty.server.</Item>
               <Item>org.eclipse.jetty.io.</Item>
               <Item>org.eclipse.jetty.http.</Item>
@@ -464,6 +468,7 @@
               <Item>-org.eclipse.jetty.plus.jass.</Item>
               <Item>-org.eclipse.jetty.websocket.</Item>
               <Item>-org.eclipse.jetty.servlet.</Item>
+              <Item>-org.eclipse.jetty.servlets.</Item>
               <Item>-org.eclipse.jetty.server.</Item>
               <Item>-org.eclipse.jetty.io.</Item>
               <Item>-org.eclipse.jetty.http.</Item>
@@ -488,6 +493,9 @@
           <New class="org.eclipse.jetty.security.SpnegoLoginService">
             <Set name="name">Spnego Authentication Realm</Set>
             <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
+            <Set name="IdentityService">
+                <New class="org.eclipse.jetty.security.DefaultIdentityService"/>
+            </Set>
           </New>
         </Arg>
     </Call>    

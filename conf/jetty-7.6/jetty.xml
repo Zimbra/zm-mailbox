@@ -57,6 +57,7 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
+          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -87,6 +88,7 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
+          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -125,6 +127,7 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
+          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -456,6 +459,7 @@
               <Item>org.eclipse.jetty.plus.jaas.</Item>
               <Item>org.eclipse.jetty.websocket.</Item>
               <Item>org.eclipse.jetty.servlet.</Item>
+              <Item>org.eclipse.jetty.servlets.</Item>
               <Item>org.eclipse.jetty.server.</Item>
               <Item>org.eclipse.jetty.io.</Item>
               <Item>org.eclipse.jetty.http.</Item>
@@ -474,6 +478,7 @@
               <Item>-org.eclipse.jetty.plus.jass.</Item>
               <Item>-org.eclipse.jetty.websocket.</Item>
               <Item>-org.eclipse.jetty.servlet.</Item>
+              <Item>-org.eclipse.jetty.servlets.</Item>
               <Item>-org.eclipse.jetty.server.</Item>
               <Item>-org.eclipse.jetty.io.</Item>
               <Item>-org.eclipse.jetty.http.</Item>
@@ -492,20 +497,23 @@
     <!-- example).                                                   -->
     <!-- =========================================================== -->
 
-        <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
-        <!-- zimbraSpnegoAuthEnabled
+    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
+    <!-- zimbraSpnegoAuthEnabled
         
     <Call name="addBean">
        <Arg> 
           <New class="org.eclipse.jetty.security.SpnegoLoginService">
             <Set name="name">Spnego Authentication Realm</Set>
             <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
+            <Set name="IdentityService">
+                <New class="org.eclipse.jetty.security.DefaultIdentityService"/>
+            </Set>
           </New>
         </Arg>
     </Call>
     
-    	zimbraSpnegoAuthEnabled -->     
-        <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
+    zimbraSpnegoAuthEnabled -->     
+    <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
 
 
     <!-- =========================================================== -->
