@@ -53,4 +53,19 @@ public class ElementTest {
         Assert.assertEquals(1, e.getPathElementList(new String[] { "child" } ).size());
         Assert.assertEquals(0, e.getPathElementList(new String[] { "bogus" } ).size());
     }
+
+    @Test
+    public void flatten() throws Exception {
+        Element a = Element.parseXML("<a><b foo=\"bar\">doo<c/>wop</b></a>");
+        Assert.assertEquals("toplevel is <a>", "a", a.getName());
+        Assert.assertEquals("<a> has no attrs", 0, a.listAttributes().size());
+        Assert.assertEquals("<a> has 1 child", 1, a.listElements().size());
+
+        Element b = a.listElements().get(0);
+        Assert.assertEquals("child is <b>", "b", b.getName());
+        Assert.assertEquals("<b> has 1 attr", 1, b.listAttributes().size());
+        Assert.assertEquals("<b> attr foo=bar", "bar", b.getAttribute("foo"));
+        Assert.assertEquals("<b> has no children", 0, b.listElements().size());
+        Assert.assertEquals("<b>'s contents are flattened", "doo<c/>wop", b.getText());
+    }
 }

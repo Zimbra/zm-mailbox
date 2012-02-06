@@ -59,14 +59,12 @@ public abstract class Element implements Cloneable {
      *  them for every XML parse. */
     private static final ThreadLocal<javax.xml.parsers.DocumentBuilder> w3DomBuilderTL =
         new ThreadLocal<javax.xml.parsers.DocumentBuilder>() {
-            @Override protected javax.xml.parsers.DocumentBuilder initialValue() {
+            @Override
+            protected javax.xml.parsers.DocumentBuilder initialValue() {
                 try {
-                    return
-                        javax.xml.parsers.DocumentBuilderFactory.newInstance()
-                            .newDocumentBuilder();
+                    return javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
                 } catch (javax.xml.parsers.ParserConfigurationException pce) {
-                    ZimbraLog.misc.error(
-                            "Problem creating w3c DOM document", pce);
+                    ZimbraLog.misc.error("Problem creating w3c DOM document", pce);
                     return null;
                 }
             }
@@ -75,7 +73,8 @@ public abstract class Element implements Cloneable {
     /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
      *  them for every XML parse. */
     private static ThreadLocal<org.dom4j.DocumentFactory> mDocumentFactory = new ThreadLocal<org.dom4j.DocumentFactory>() {
-        @Override protected synchronized org.dom4j.DocumentFactory initialValue() {
+        @Override
+        protected synchronized org.dom4j.DocumentFactory initialValue() {
             return new org.dom4j.DocumentFactory();
         }
     };
@@ -100,10 +99,11 @@ public abstract class Element implements Cloneable {
      *  add a child to an existing <tt>Element</tt>, please use
      *  {@link #addElement(String)} instead. */
     public static Element create(SoapProtocol proto, String name) throws ServiceException {
-        if (proto == SoapProtocol.SoapJS)
+        if (proto == SoapProtocol.SoapJS) {
             return new JSONElement(name);
-        else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
+        } else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12) {
             return new XMLElement(name);
+        }
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: " + proto, null);
     }
 
@@ -112,10 +112,11 @@ public abstract class Element implements Cloneable {
      *  If you want to add a child to an existing <tt>Element</tt>, please
      *  use {@link #addElement(QName) instead. */
     public static Element create(SoapProtocol proto, QName qname) throws ServiceException {
-        if (proto == SoapProtocol.SoapJS)
+        if (proto == SoapProtocol.SoapJS) {
             return new JSONElement(qname);
-        else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
+        } else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12) {
             return new XMLElement(qname);
+        }
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: " + proto, null);
     }
 
@@ -145,7 +146,9 @@ public abstract class Element implements Cloneable {
 
     protected Element setNamespace(String prefix, String uri) {
         if (prefix != null && uri != null && !uri.equals("")) {
-            if (mNamespaces == null)  mNamespaces = new HashMap<String, String>();
+            if (mNamespaces == null) {
+                mNamespaces = new HashMap<String, String>();
+            }
             mNamespaces.put(prefix, uri);
         }
         return this;
@@ -215,14 +218,16 @@ public abstract class Element implements Cloneable {
     protected void detach(Element child) throws ContainerException {
         if (child == null)
             return;
-        if (child.mParent != this)
+        if (child.mParent != this) {
             throw new ContainerException("wrong parent");
+        }
         child.mParent = null;
     }
     public Element detach() throws ContainerException {
         setNamespace(mPrefix, getNamespaceURI(mPrefix));
-        if (mParent != null)
+        if (mParent != null) {
             mParent.detach(this);
+        }
         return this;
     }
 
@@ -235,12 +240,12 @@ public abstract class Element implements Cloneable {
     }
 
     public String getQualifiedName() {
-        return (mPrefix != null && !mPrefix.equals("") ? mPrefix + ':' + mName : mName);
+        return mPrefix != null && !mPrefix.equals("") ? mPrefix + ':' + mName : mName;
     }
 
     public QName getQName() {
         String uri = getNamespaceURI(mPrefix);
-        return (uri == null ? QName.get(mName) : QName.get(getQualifiedName(), uri));
+        return uri == null ? QName.get(mName) : QName.get(getQualifiedName(), uri);
     }
 
     public static QName getQName(String qualifiedName) {
@@ -344,88 +349,99 @@ public abstract class Element implements Cloneable {
 
     public long getAttributeLong(String key, long defaultValue) throws ServiceException {
         String raw = getAttribute(key, null);
-        return (raw == null ? defaultValue : parseLong(key, raw));
+        return raw == null ? defaultValue : parseLong(key, raw);
     }
 
     public int getAttributeInt(String key, int defaultValue) throws ServiceException {
         String raw = getAttribute(key, null);
-        return (raw == null ? defaultValue : parseInt(key, raw));
+        return raw == null ? defaultValue : parseInt(key, raw);
     }
 
     public double getAttributeDouble(String key, double defaultValue) throws ServiceException {
         String raw = getAttribute(key, null);
-        return (raw == null ? defaultValue : parseDouble(key, raw));
+        return raw == null ? defaultValue : parseDouble(key, raw);
     }
 
     public boolean getAttributeBool(String key, boolean defaultValue) throws ServiceException {
         String raw = getAttribute(key, null);
-        return (raw == null ? defaultValue : parseBool(key, raw));
+        return raw == null ? defaultValue : parseBool(key, raw);
     }
 
     protected String getNamespaceURI(String prefix) {
         if (mNamespaces != null) {
             Object uri = mNamespaces.get(prefix);
-            if (uri != null && !((String) uri).trim().equals(""))
+            if (uri != null && !((String) uri).trim().equals("")) {
                 return (String) uri;
+            }
         }
-        return (mParent == null ? null : mParent.getNamespaceURI(prefix));
+        return mParent == null ? null : mParent.getNamespaceURI(prefix);
     }
     protected Element collapseNamespace() {
         if (mNamespaces != null && mParent != null && mParent.mPrefix.equals(mPrefix)) {
             String localURI = mNamespaces.get(mPrefix);
             if (localURI != null && localURI.equals(mParent.getNamespaceURI(mPrefix))) {
                 mNamespaces.remove(mPrefix);
-                if (mNamespaces.isEmpty())
+                if (mNamespaces.isEmpty()) {
                     mNamespaces = null;
+                }
             }
         }
         return this;
     }
 
     public static String checkNull(String key, String value) throws ServiceException {
-        if (value == null)
+        if (value == null) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: " + key, null);
+        }
         return value;
     }
 
     private Element checkNull(String key, Element value) throws ServiceException {
-        if (value == null)
+        if (value == null) {
             throw ServiceException.INVALID_REQUEST("missing required element: " + key, null);
+        }
         return value;
     }
 
     public static long parseLong(String key, String value) throws ServiceException {
-        try { return Long.parseLong(value); }
-        catch (NumberFormatException nfe) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException nfe) {
             throw ServiceException.INVALID_REQUEST("invalid long value '" + value + "' for attribute: " + key, nfe);
         }
     }
 
     public static int parseInt(String key, String value) throws ServiceException {
-        try { return Integer.parseInt(value); }
-        catch (NumberFormatException nfe) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException nfe) {
             throw ServiceException.INVALID_REQUEST("invalid int value '" + value + "' for attribute: " + key, nfe);
         }
     }
 
     public static double parseDouble(String key, String value) throws ServiceException {
-        try { return Double.parseDouble(value); }
-        catch (NumberFormatException nfe) {
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException nfe) {
             throw ServiceException.INVALID_REQUEST("invalid double value '" + value + "' for attribute: " + key, nfe);
         }
     }
 
     public static boolean parseBool(String key, String value) throws ServiceException {
-        if (value.equals("1") || value.equalsIgnoreCase("true"))        return true;
-        else if (value.equals("0") || value.equalsIgnoreCase("false"))  return false;
+        if (value.equals("1") || value.equalsIgnoreCase("true")) {
+            return true;
+        } else if (value.equals("0") || value.equalsIgnoreCase("false")) {
+            return false;
+        }
         throw ServiceException.INVALID_REQUEST("invalid boolean value '" + value + "' for attribute: " + key, null);
     }
 
     protected boolean namespaceDeclarationNeeded(String prefix, String uri) {
-        if (mParent == null || getClass() != mParent.getClass())
+        if (mParent == null || getClass() != mParent.getClass()) {
             return true;
+        }
         String thatURI = mParent.getNamespaceURI(prefix);
-        return (thatURI == null || !thatURI.equals(uri));
+        return thatURI == null || !thatURI.equals(uri);
     }
 
     // dumping the element hierarchy
@@ -451,10 +467,18 @@ public abstract class Element implements Cloneable {
 
     private static final String FORTY_SPACES = "                                        ";
     protected void indent(Appendable sb, int indent, boolean newline) throws IOException {
-        if (indent < 0)      return;
-        if (newline)         sb.append('\n');
-        while (indent > 40)  { sb.append(FORTY_SPACES);  indent -= 40; }
-        if (indent > 0)      sb.append(FORTY_SPACES.substring(40 - indent));
+        if (indent < 0)
+            return;
+        if (newline) {
+            sb.append('\n');
+        }
+        while (indent > 40) {
+            sb.append(FORTY_SPACES);
+            indent -= 40;
+        }
+        if (indent > 0) {
+            sb.append(FORTY_SPACES.substring(40 - indent));
+        }
     }
 
     public org.dom4j.Element toXML() {
@@ -465,10 +489,12 @@ public abstract class Element implements Cloneable {
 
     private org.dom4j.Element toXML(org.dom4j.Element d4parent) {
         org.dom4j.Element d4elt = (d4parent == null ? org.dom4j.DocumentHelper.createElement(getQName()) : d4parent.addElement(getQName()));
-        for (Attribute attr : listAttributes())
+        for (Attribute attr : listAttributes()) {
             d4elt.addAttribute(attr.getKey(), attr.getValue());
-        for (Element elt : listElements())
+        }
+        for (Element elt : listElements()) {
             elt.toXML(d4elt);
+        }
         d4elt.setText(getText());
         return d4elt;
     }
@@ -485,11 +511,11 @@ public abstract class Element implements Cloneable {
         return doc;
     }
 
-    private org.w3c.dom.Node toW3cDom(org.w3c.dom.Document doc,
-            org.w3c.dom.Element parent) {
+    private org.w3c.dom.Node toW3cDom(org.w3c.dom.Document doc, org.w3c.dom.Element parent) {
         String uri = getNamespaceURI(mPrefix);
-        if ((uri != null) && uri.equals("urn:zimbraSoap"))
+        if ((uri != null) && uri.equals("urn:zimbraSoap")) {
             uri = null;
+        }
         org.w3c.dom.Element elem;
         elem = doc.createElementNS(uri, getQualifiedName());
         elem.setTextContent(getText());
@@ -500,8 +526,9 @@ public abstract class Element implements Cloneable {
         for (Attribute attr : listAttributes()) {
             elem.setAttribute(attr.getKey(), attr.getValue());
         }
-        for (Element elt : listElements())
+        for (Element elt : listElements()) {
             elt.toW3cDom(doc, elem);
+        }
         return elem;
     }
 
@@ -511,9 +538,10 @@ public abstract class Element implements Cloneable {
     public String getPathAttribute(String[] xpath) {
         int depth = 0;
         Element cur = this;
-        while (depth < xpath.length - 1 && cur != null)
+        while (depth < xpath.length - 1 && cur != null) {
             cur = cur.getOptionalElement(xpath[depth++]);
-        return (cur == null ? null : cur.getAttribute(xpath[depth], null));
+        }
+        return cur == null ? null : cur.getAttribute(xpath[depth], null);
     }
 
     /** Return the first Element matching the specified path, or null if none was found.
@@ -521,8 +549,9 @@ public abstract class Element implements Cloneable {
     public Element getPathElement(String[] xpath) {
         int depth = 0;
         Element cur = this;
-        while (depth < xpath.length && cur != null)
+        while (depth < xpath.length && cur != null) {
             cur = cur.getOptionalElement(xpath[depth++]);
+        }
         return cur;
     }
 
@@ -532,10 +561,12 @@ public abstract class Element implements Cloneable {
     public List<Element> getPathElementList(String[] xpath) {
         int depth = 0;
         Element cur = this;
-        while (depth < xpath.length-1 && cur != null)
+        while (depth < xpath.length-1 && cur != null) {
             cur = cur.getOptionalElement(xpath[depth++]);
-        if (cur == null)
+        }
+        if (cur == null) {
             return Collections.emptyList();
+        }
         return cur.listElements(xpath[xpath.length-1]);
     }
 
@@ -547,10 +578,12 @@ public abstract class Element implements Cloneable {
             return;
         int depth = 0;
         Element cur = this;
-        while (depth < xpath.length - 1 && cur != null)
+        while (depth < xpath.length - 1 && cur != null) {
             cur = cur.getOptionalElement(xpath[depth++]);
-        if (cur == null)
+        }
+        if (cur == null) {
             throw ServiceException.INVALID_REQUEST("could not find path", null);
+        }
         cur.addAttribute(xpath[depth], value);
     }
 
@@ -619,7 +652,6 @@ public abstract class Element implements Cloneable {
     }
 
     public static class SAXReader extends org.dom4j.io.SAXReader {
-
         public SAXReader() {
             super();
         }
@@ -628,9 +660,7 @@ public abstract class Element implements Cloneable {
             super(factory);
         }
 
-        /**
-         * Factory Method to allow user derived SAXContentHandler objects to be used
-         */
+        /** Factory Method to allow user derived SAXContentHandler objects to be used. */
         @Override
         protected SAXContentHandler createContentHandler(XMLReader reader) {
             return new SAXContentHandler(getDocumentFactory(), getDispatchHandler()) {
@@ -662,19 +692,48 @@ public abstract class Element implements Cloneable {
             org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
             elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
         }
-        String content = null;
+
         for (Iterator<?> it = d4root.elementIterator(); it.hasNext(); ) {
             org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
-            if (XHTML_NS_URI.equalsIgnoreCase(d4elt.getNamespaceURI()) && !d4elt.elements().isEmpty())
-                content = (content == null ? d4elt.asXML() : content + d4elt.asXML());
-            else
+            if (XHTML_NS_URI.equalsIgnoreCase(d4elt.getNamespaceURI()) && !d4elt.elements().isEmpty()) {
+                // need to treat XHTML as text
+                return flattenDOM(d4root, factory);
+            } else {
                 elt.addElement(convertDOM(d4elt, factory));
+            }
         }
-        if (content == null)
-            content = d4root.getText();
-        if (content != null && !content.trim().equals(""))
-            elt.setText(content);
+        String content = d4root.getText();
+        if (content != null && !content.trim().equals("")) {
+            try {
+                elt.setText(content);
+            } catch (ContainerException ce) {
+                // can't hold both children and text on a single node, so flatten contents to text
+                return flattenDOM(d4root, factory);
+            }
+        }
         return elt;
+    }
+
+    private static Element flattenDOM(org.dom4j.Element d4root, ElementFactory factory) {
+        Element elt = factory.createElement(d4root.getQName());
+        for (Iterator<?> it = d4root.attributeIterator(); it.hasNext(); ) {
+            org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
+            elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
+        }
+
+        StringBuilder content = new StringBuilder();
+        for (int i = 0, size = d4root.nodeCount(); i < size; i++) {
+            org.dom4j.Node node = d4root.node(i);
+            switch (node.getNodeType()) {
+                case org.dom4j.Node.TEXT_NODE:
+                    content.append(node.getText());
+                    break;
+                case org.dom4j.Node.ELEMENT_NODE:
+                    content.append(((org.dom4j.Element) node).asXML());
+                    break;
+            }
+        }
+        return elt.setText(content.toString());
     }
 
     public static class ContainerException extends RuntimeException {
@@ -699,9 +758,9 @@ public abstract class Element implements Cloneable {
     }
 
     public static class Attribute {
-        private String  mKey;
+        private final String  mKey;
         private Object  mValue;
-        private Element mParent;
+        private final Element mParent;
 
         Attribute(Map.Entry<String, Object> entry, Element parent) {
             mKey = entry.getKey();
@@ -1131,7 +1190,8 @@ public abstract class Element implements Cloneable {
         }
 
         private static final class JSRequest {
-            String js;  private int offset, max;
+            String js;  private int offset;
+            private final int max;
             JSRequest(String content)  { js = content;  max = js.length(); }
 
             private char readEscaped() throws SoapParseException {
@@ -1552,17 +1612,19 @@ public abstract class Element implements Cloneable {
 
         @Override
         public Element addElement(Element elt) throws ContainerException {
-            if (elt == null || elt.mParent == this)
+            if (elt == null || elt.mParent == this) {
                 return elt;
-            else if (elt.mParent != null)
+            } else if (elt.mParent != null) {
                 throw new ContainerException("element already has a parent - <" + elt.getName() + ">");
-            else if (mText != null)
+            } else if (mText != null) {
                 throw new ContainerException(
                         "cannot add children to element containing text - <" +
                         this.getName() + ">, trying to add <" + elt.getName() + ">");
+            }
 
-            if (mChildren == null)
+            if (mChildren == null) {
                 mChildren = new ArrayList<Element>();
+            }
             mChildren.add(elt);
             elt.mParent = this;
             return elt.collapseNamespace();
@@ -1586,17 +1648,20 @@ public abstract class Element implements Cloneable {
                 mAttributes.remove(key);
             }
             if (mChildren != null) {
-                for (Element child : listElements(key))
-                    if (!child.hasChildren())
+                for (Element child : listElements(key)) {
+                    if (!child.hasChildren()) {
                         child.detach();
+                    }
+                }
             }
             // a null value leaves it unset; a non-null value places the attribute appropriately
             if (value != null) {
                 if (disp == Disposition.CONTENT) {
                     addElement(key).setText(value);
                 } else {
-                    if (mAttributes == null)
+                    if (mAttributes == null) {
                         mAttributes = new HashMap<String, Object>();
+                    }
                     mAttributes.put(key, value);
                 }
             }
@@ -1609,8 +1674,9 @@ public abstract class Element implements Cloneable {
         }
 
         private String validateName(String name) throws ContainerException  {
-            if (name == null || name.equals(""))
+            if (name == null || name.equals("")) {
                 throw new ContainerException("blank/missing XML attribute name");
+            }
 
             for (int i = 0; i < name.length(); i++) {
                 char c = name.charAt(i);
@@ -1618,9 +1684,10 @@ public abstract class Element implements Cloneable {
                     continue;
                 if (i > 0 && (c == '-' || c == '.' || (c >= '0' && c <= '9') || c == 0xB7 || c == 0x203F || c == 0x2040))
                     continue;
-                if (c >= 0xC0 && c <= 0x1FFF && c != 0xD7 && c != 0xF7 && c != 0x37E)
+                if (c >= 0xC0 && c <= 0x1FFF && c != 0xD7 && c != 0xF7 && c != 0x37E) {
                     if (i > 0 || c < 0x300 || c > 0x36F)
                         continue;
+                }
                 if ((c >= 0x2070 && c <= 0x218F) || (c >= 0x2C00 && c <= 0x2FEF) || (c >= 0x3001 && c <= 0xD7FF))
                     continue;
                 if ((c >= 0xF900 && c <= 0xFDCF) || (c >= 0xFDF0 && c <= 0xFFFD) || (c >= 0x10000 && c <= 0xEFFFF))
@@ -1635,51 +1702,62 @@ public abstract class Element implements Cloneable {
             super.detach(elt);
             if (mChildren != null) {
                 mChildren.remove(elt);
-                if (mChildren.size() == 0)
+                if (mChildren.size() == 0) {
                     mChildren = null;
+                }
             }
         }
 
         @Override
         public Element getOptionalElement(String name) {
-            if (mChildren != null && name != null)
-                for (Element elt : mChildren)
-                    if (elt.getName().equals(name))
+            if (mChildren != null && name != null) {
+                for (Element elt : mChildren) {
+                    if (elt.getName().equals(name)) {
                         return elt;
+                    }
+                }
+            }
             return null;
         }
 
         @Override
         public Element getOptionalElement(QName qname) {
             if (mChildren != null && qname != null) {
-                for (Element elt : mChildren)
-                    if (elt.getQName().equals(qname))
+                for (Element elt : mChildren) {
+                    if (elt.getQName().equals(qname)) {
                         return elt;
+                    }
+                }
             }
             return null;
         }
 
         @Override
         public Set<Attribute> listAttributes() {
-            if (mAttributes == null || mAttributes.isEmpty())
+            if (mAttributes == null || mAttributes.isEmpty()) {
                 return Collections.emptySet();
+            }
             HashSet<Attribute> set = new HashSet<Attribute>();
-            for (Map.Entry<String, Object> attr : mAttributes.entrySet())
+            for (Map.Entry<String, Object> attr : mAttributes.entrySet()) {
                 set.add(new Attribute(attr, this));
+            }
             return set;
         }
 
         @Override
         public List<Element> listElements(String name) {
-            if (mChildren == null)
+            if (mChildren == null) {
                 return Collections.emptyList();
+            }
             ArrayList<Element> list = new ArrayList<Element>();
             if (name == null || name.trim().equals("")) {
                 list.addAll(mChildren);
             } else {
-                for (Element elt : mChildren)
-                    if (elt.getName().equals(name))
+                for (Element elt : mChildren) {
+                    if (elt.getName().equals(name)) {
                         list.add(elt);
+                    }
+                }
             }
             return list;
         }
@@ -1697,8 +1775,9 @@ public abstract class Element implements Cloneable {
             List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
             for (Element elt : listElements(eltname)) {
                 String key = elt.getAttribute(attrname, null);
-                if (key != null)
+                if (key != null) {
                     pairs.add(new XMLKeyValuePair(key, elt.getText(), eltname, attrname, false));
+                }
             }
             return pairs;
         }
@@ -1715,17 +1794,20 @@ public abstract class Element implements Cloneable {
 
         @Override
         public String getAttribute(String key, String defaultValue) {
-            if (key == null)
+            if (key == null) {
                 return defaultValue;
+            }
             if (mAttributes != null) {
                 String result;
-                if ((result = (String) mAttributes.get(key)) != null)
+                if ((result = (String) mAttributes.get(key)) != null) {
                     return result;
+                }
             }
             if (mChildren != null) {
                 for (Element elt : mChildren) {
-                    if (elt.getName().equals(key))
+                    if (elt.getName().equals(key)) {
                         return elt.getText();
+                    }
                 }
             }
             return defaultValue;
