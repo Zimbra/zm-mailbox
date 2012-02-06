@@ -1995,10 +1995,10 @@ public class ProxyConfGen
         
         //bug 69648, manually set the server name hash size when too many server names are added
         int size = DEFAULT_SERVER_NAME_HASH_MAX_SIZE;
-        int ssize = mDomainReverseProxyAttrs.size() / DEFAULT_SERVER_NAME_HASH_MAX_SIZE;
-        for (int i = 0; i < ssize; i++) {
-            size *= 2; // could be overflow but it should be OK in common cases
+        if (mDomainReverseProxyAttrs.size() > DEFAULT_SERVER_NAME_HASH_MAX_SIZE) {
+            size = mDomainReverseProxyAttrs.size() + 100; // add a little more than needed
         }
+
         mConfVars.get("web.server_names.size").mValue = size;
         
         mLog.debug("Updating Default Variable Map");
