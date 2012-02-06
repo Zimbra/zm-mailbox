@@ -1612,7 +1612,7 @@ public class ProxyConfGen
         if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
             if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV4_ONLY &&
                     vip instanceof Inet6Address) {
-                String msg = item.virtualIPAddress +
+                String msg = vip.getHostAddress() +
                         " is an IPv6 address but zimbraIPMode is 'ipv4'";
                 mLog.error(msg);
                 throw new ProxyConfException(msg);
@@ -1620,7 +1620,7 @@ public class ProxyConfGen
 
             if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV6_ONLY &&
                     vip instanceof Inet4Address) {
-                String msg = item.virtualIPAddress +
+                String msg = vip.getHostAddress() +
                         " is an IPv4 address but zimbraIPMode is 'ipv6'";
                 mLog.error(msg);
                 throw new ProxyConfException(msg);
