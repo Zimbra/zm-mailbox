@@ -35,6 +35,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.ParseException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Header;
@@ -382,13 +383,13 @@ public class FeedManager {
                 // construct an address for the author
                 InternetAddress addr = addrChannel;
                 try {
-                    addr = new JavaMailInternetAddress(item.getAttribute("author"));
+                    addr = parseAuthor(item.getAttribute("author"));
                 } catch (Exception e) {
-                    addr = parseDublinCreator(item.getAttribute("creator", null), addr);
+                    addr = parseDublinCreator(stripXML(item.getAttribute("creator", null)), addr);
                 }
 
                 // get the item's title and link, defaulting to the channel attributes
-                String title = parseTitle(item.getAttribute("title", subjChannel));
+                String title = stripXML(item.getAttribute("title", subjChannel));
                 String href = item.getAttribute("link", hrefChannel);
                 String guid = item.getAttribute("guid", href);
 
@@ -435,7 +436,7 @@ public class FeedManager {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
             if (addrFeed == null) {
-                addrFeed = new JavaMailInternetAddress("", feed.getAttribute("title"), "utf-8");
+                addrFeed = new JavaMailInternetAddress("", stripXML(feed.getAttribute("title")), "utf-8");
             }
             Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List<Enclosure> enclosures = new ArrayList<Enclosure>();
@@ -456,7 +457,7 @@ public class FeedManager {
                 String type = tblock.getAttribute("type", "text").trim().toLowerCase();
                 String title = tblock.getText();
                 if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml")) {
-                    title = parseTitle(title);
+                    title = stripXML(title);
                 }
 
                 // find the item's link and any enclosures (associated media links)
@@ -564,8 +565,9 @@ public class FeedManager {
     }
 
     private static InternetAddress parseDublinCreator(String creator, InternetAddress addrChannel) {
-        if (creator == null || creator.equals(""))
+        if (creator == null || creator.equals("")) {
             return addrChannel;
+        }
 
         // check for a mailto: link
         String lc = creator.trim().toLowerCase(), address = "", personal = creator;
@@ -599,13 +601,21 @@ public class FeedManager {
         return addrChannel;
     }
 
+    private static InternetAddress parseAuthor(String author) throws IOException, ParseException {
+        if (author != null && author.indexOf('@') == -1) {
+            return new JavaMailInternetAddress("", stripXML(author), "utf-8");
+        } else {
+            return new JavaMailInternetAddress(author);
+        }
+    }
+
     private static InternetAddress parseAtomAuthor(Element author, InternetAddress addrChannel) {
         if (author == null) {
             return addrChannel;
         }
 
-        String address  = author.getAttribute("email", "");
-        String personal = author.getAttribute("name", "");
+        String address  = stripXML(author.getAttribute("email", ""));
+        String personal = stripXML(author.getAttribute("name", ""));
         if (personal.equals("") && address.equals("")) {
             return addrChannel;
         }
@@ -653,7 +663,7 @@ public class FeedManager {
     }
 
     @VisibleForTesting
-    static final String parseTitle(String title) {
+    static final String stripXML(String title) {
         if (title == null) {
             return "";
         } else if (title.indexOf('<') == -1 && title.indexOf('&') == -1) {
