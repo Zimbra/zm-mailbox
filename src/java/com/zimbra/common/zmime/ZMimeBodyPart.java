@@ -206,7 +206,7 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
     public String getDisposition() throws MessagingException {
         if (ZPARSER) {
             String s = getHeader("Content-Disposition", null);
-            return s == null ? null : new ZContentDisposition(s).getDisposition();
+            return s == null || s.isEmpty() ? null : new ZContentDisposition(s).getDisposition();
         } else {
             return super.getDisposition();
         }
