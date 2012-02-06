@@ -6842,4 +6842,11 @@ TODO: delete them permanently from here
   <desc>whether external feedback feature is enabled</desc>
 </attr>
 
+<attr id="1374" name="zimbraReverseProxyGenConfigPerVirtualHostname" type="boolean" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="7.2.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>
+    Control whether to generate per virtual hostname nginx configuration. This would be helpful when multiple virtual host names are defined, but they are actually share the same configuration (like ssl cert, client CA, ...). This attr has to be set as "TRUE" to enable the features like cert per domain.
+  </desc>
+</attr>
+
 </attrs>

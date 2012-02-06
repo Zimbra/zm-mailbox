@@ -26,6 +26,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -1089,7 +1090,7 @@ class WebProxyUpstreamTargetVar extends ProxyConfVar {
 class DomainAttrItem {
     public String domainName;
     public String virtualHostname;
-    public InetAddress virtualIPAddress;
+    public String virtualIPAddress;
     public String sslCertificate;
     public String sslPrivateKey;
     public Boolean useDomainServerCert;
@@ -1097,7 +1098,7 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
 
-    public DomainAttrItem(String dn, String vhn, InetAddress vip, String scrt, String spk, 
+    public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk, 
             String ccm, String cca) {
         this.domainName = dn;
         this.virtualHostname = vhn;
@@ -1147,6 +1148,7 @@ public class ProxyConfGen
     private static Provisioning mProv = null;
     private static String mHost = null;
     private static Server mServer = null;
+    private static boolean mGenConfPerVhn = false;
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
@@ -1216,6 +1218,9 @@ public class ProxyConfGen
     private static List<DomainAttrItem> loadDomainReverseProxyAttrs()
             throws ServiceException {
 
+        if (!mGenConfPerVhn) {
+            return Collections.emptyList();
+        }
         if (!(mProv instanceof LdapProv))
             throw ServiceException.INVALID_REQUEST(
                 "The method can work only when LDAP is available", null);
@@ -1273,30 +1278,22 @@ public class ProxyConfGen
                 //Here assume virtualHostnames and virtualIPAddresses are
                 //same in number
                 int i = 0;
-                try {
 
-                    for( ; i < virtualHostnames.length; i++) {
-                        //bug 66892, only lookup IP when zimbraVirtualIPAddress is unset
-                        InetAddress vip = null;
-                        if (lookupVIP) {
-                            vip = InetAddress.getByName(virtualHostnames[i]);
-                        } else {
-                            vip = InetAddress.getByName(virtualIPAddresses[i]);
-                        }
-                        
-                        if (!ProxyConfUtil.isEmptyString(clientCertCA)){
-                            createDomainSSLDirIfNotExists();
-                        }
-                        result.add(new DomainAttrItem(domainName,
-                                virtualHostnames[i], vip, certificate, privateKey, 
-                                clientCertMode, clientCertCA));
-
+                for( ; i < virtualHostnames.length; i++) {
+                    //bug 66892, only lookup IP when zimbraVirtualIPAddress is unset
+                    String vip = null;
+                    if (lookupVIP) {
+                        vip = null;
+                    } else {
+                        vip = virtualIPAddresses[i];
                     }
-                } catch (UnknownHostException e) {
-                    result.add(new DomainAttrExceptionItem(
-                                    new ProxyConfException("virtual host name \"" + virtualHostnames[i] + "\" is not resolvable", e)));
-
-                    return;          
+                    
+                    if (!ProxyConfUtil.isEmptyString(clientCertCA)){
+                        createDomainSSLDirIfNotExists();
+                    }
+                    result.add(new DomainAttrItem(domainName,
+                            virtualHostnames[i], vip, certificate, privateKey, 
+                            clientCertMode, clientCertCA));
                 }
             }
         };
@@ -1448,6 +1445,11 @@ public class ProxyConfGen
                 //command selection can be extracted if more commands are introduced
                 if(cmd_arg.length == 2 && 
                    cmd_arg[0].compareTo("explode") == 0) {
+                    
+                    if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
+                        return;
+                    }
+                    
                     if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
                         //extract the args in "domain(arg1, arg2, ...)
                         String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
@@ -1594,9 +1596,22 @@ public class ProxyConfGen
         
         String defaultVal = null;
         mVars.put("vhn", item.virtualHostname);
+        
+        //resolve the virtual host name
+        InetAddress vip = null;
+        try {
+            if (item.virtualIPAddress == null) {
+                vip = InetAddress.getByName(item.virtualHostname);
+            } else {
+                vip = InetAddress.getByName(item.virtualIPAddress);
+            }
+        } catch (UnknownHostException e) {
+            throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
+        }
+        
         if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
             if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV4_ONLY &&
-                    item.virtualIPAddress instanceof Inet6Address) {
+                    vip instanceof Inet6Address) {
                 String msg = item.virtualIPAddress +
                         " is an IPv6 address but zimbraIPMode is 'ipv4'";
                 mLog.error(msg);
@@ -1604,7 +1619,7 @@ public class ProxyConfGen
             }
 
             if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV6_ONLY &&
-                    item.virtualIPAddress instanceof Inet4Address) {
+                    vip instanceof Inet4Address) {
                 String msg = item.virtualIPAddress +
                         " is an IPv4 address but zimbraIPMode is 'ipv6'";
                 mLog.error(msg);
@@ -1612,12 +1627,11 @@ public class ProxyConfGen
             }
         }
 
-        if (item.virtualIPAddress instanceof Inet6Address) {
+        if (vip instanceof Inet6Address) {
             //ipv6 address has to be enclosed with [ ]
-            mVars.put("vip", "[" + item.virtualIPAddress.getHostAddress() + "]");
-
+            mVars.put("vip", "[" + vip.getHostAddress() + "]");
         } else {
-            mVars.put("vip", item.virtualIPAddress.getHostAddress());
+            mVars.put("vip", vip.getHostAddress());
         }
 
 
@@ -1989,10 +2003,12 @@ public class ProxyConfGen
             }
         }
 
+        mGenConfPerVhn = mServer.getBooleanAttr("zimbraReverseProxyGenConfigPerVirtualHostname", false);
+
         /* upgrade the variable map from the config in force */
         mLog.debug("Loading Attrs in Domain Level");
         mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
-        
+
         //bug 69648, manually set the server name hash size when too many server names are added
         int size = DEFAULT_SERVER_NAME_HASH_MAX_SIZE;
         if (mDomainReverseProxyAttrs.size() > DEFAULT_SERVER_NAME_HASH_MAX_SIZE) {
