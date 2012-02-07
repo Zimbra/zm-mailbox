@@ -49,7 +49,7 @@ import com.zimbra.soap.admin.type.CheckedRight;
  * </pre>
  * will return:
  * <pre>
- *            &lt;CheckRightResponse hasRight="1">
+ *            &lt;CheckRightResponse allow="1">
  *               &lt;via>
  *                 &lt;target type=domain>D&lt;/target>
  *                 &lt;grantee type=grp>G&lt;/grantee>
@@ -74,7 +74,7 @@ import com.zimbra.soap.admin.type.CheckedRight;
  *           &lt;attrs>
  *       &lt;/CheckRightRequest>
  *
- *       &lt;CheckRightResponse hasRight="0">
+ *       &lt;CheckRightResponse allow="0">
  * </pre>
  */
 @XmlAccessorType(XmlAccessType.NONE)

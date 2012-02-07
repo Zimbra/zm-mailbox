@@ -43,7 +43,7 @@ public class SearchAccountsRequest {
     private final String query;
 
     /**
-     * @zm-api-field-description The number of accounts to return (0 is default and means all)
+     * @zm-api-field-description The maximum number of accounts to return (0 is default and means all)
      */
     @XmlAttribute(name=AdminConstants.A_LIMIT, required=false)
     private final Integer limit;
@@ -79,14 +79,14 @@ public class SearchAccountsRequest {
 
     /**
      * @zm-api-field-tag sort-by
-     * @zm-api-field-description Name of attribute to sort on. default is the account name.
+     * @zm-api-field-description Name of attribute to sort on. Default is the account name.
      */
     @XmlAttribute(name=AdminConstants.A_SORT_BY, required=false)
     private String sortBy;
 
     /**
      * @zm-api-field-tag types
-     * @zm-api-field-description Comma-separated list of types to return. legal values are: <b>accounts|resources</b>
+     * @zm-api-field-description Comma-separated list of types to return. Legal values are: <b>accounts|resources</b>
      * (default is accounts)
      */
     @XmlAttribute(name=AdminConstants.A_TYPES, required=false)

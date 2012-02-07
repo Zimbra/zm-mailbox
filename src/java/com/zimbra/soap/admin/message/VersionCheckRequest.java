@@ -23,10 +23,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Version Check
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_VC_REQUEST)
 public class VersionCheckRequest {
 
+    /**
+     * @zm-api-field-description Action.  Either <b>check</b> or <b>status</b>
+     */
     @XmlAttribute(name=AdminConstants.E_ACTION /* action */, required=true)
     private final String action;
 

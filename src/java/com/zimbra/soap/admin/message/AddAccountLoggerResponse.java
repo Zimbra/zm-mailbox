@@ -34,6 +34,9 @@ import com.zimbra.soap.admin.type.LoggerInfo;
 @XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_LOGGER_RESPONSE)
 public class AddAccountLoggerResponse {
 
+    /**
+     * @zm-api-field-description Information on loggers
+     */
     @XmlElement(name=AdminConstants.E_LOGGER /* logger */, required=false)
     private List<LoggerInfo> loggers = Lists.newArrayList();
 

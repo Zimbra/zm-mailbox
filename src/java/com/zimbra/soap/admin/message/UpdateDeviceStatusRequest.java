@@ -27,13 +27,22 @@ import com.zimbra.common.soap.OctopusAdminConstants;
 import com.zimbra.soap.mail.type.IdStatus;
 import com.zimbra.soap.type.AccountSelector;
 
+/**
+ * @zm-api-command-description Update device status
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusAdminConstants.E_UPDATE_DEVICE_STATUS_REQUEST)
 public class UpdateDeviceStatusRequest {
 
+    /**
+     * @zm-api-field-description Account selector
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
     private final AccountSelector account;
 
+    /**
+     * @zm-api-field-description Information on new device status
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final IdStatus device;
 

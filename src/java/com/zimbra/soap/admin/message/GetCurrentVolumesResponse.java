@@ -35,6 +35,9 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlType(propOrder = {})
 public final class GetCurrentVolumesResponse {
 
+    /**
+     * @zm-api-field-description Current volume information.  Entry for secondary message type (2) is optional
+     */
     @XmlElement(name=AdminConstants.E_VOLUME, required=false)
     private final List<CurrentVolumeInfo> volumes = Lists.newArrayList();
 

@@ -33,6 +33,9 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 @XmlRootElement(name=AdminConstants.E_GET_ALL_VOLUMES_RESPONSE)
 public final class GetAllVolumesResponse {
 
+    /**
+     * @zm-api-field-description Information about volumes
+     */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
     private final List <VolumeInfo> volumes = Lists.newArrayList();
 

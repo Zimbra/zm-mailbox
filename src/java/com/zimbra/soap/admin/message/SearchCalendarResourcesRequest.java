@@ -27,22 +27,59 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Search for Calendar Resources
+ * <b>Access</b>: domain admin sufficient
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_CALENDAR_RESOURCES_REQUEST)
 public class SearchCalendarResourcesRequest extends AttributeSelectorImpl {
 
+    /**
+     * @zm-api-field-tag max-cal-resources
+     * @zm-api-field-description The maximum number of calendar resources to return (0 is default and means all)
+     */
     @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
     private Integer limit;
+
+    /**
+     * @zm-api-field-description The starting offset (0, 25, etc)
+     */
     @XmlAttribute(name=AdminConstants.A_OFFSET /* offset */, required=false)
     private Integer offset;
+
+    /**
+     * @zm-api-field-tag domain-name
+     * @zm-api-field-description The domain name to limit the search to
+     */
     @XmlAttribute(name=AdminConstants.A_DOMAIN /* domain */, required=false)
     private String domain;
+
+    /**
+     * @zm-api-field-tag apply-cos
+     * @zm-api-field-description applyCos - Flag whether or not to apply the COS policy to calendar resource.
+     * Specify <b>0 (false)</b> if only requesting attrs that aren't inherited from COS
+     */
     @XmlAttribute(name=AdminConstants.A_APPLY_COS /* applyCos */, required=false)
     private ZmBoolean applyCos;
+
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Name of attribute to sort on. default is the calendar resource name.
+     */
     @XmlAttribute(name=AdminConstants.A_SORT_BY /* sortBy */, required=false)
     private String sortBy;
+
+    /**
+     * @zm-api-field-tag sort-ascending
+     * @zm-api-field-description Whether to sort in ascending order. Default is <b>1 (true)</b>
+     */
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING /* sortAscending */, required=false)
     private ZmBoolean sortAscending;
+
+    /**
+     * @zm-api-field-description Search Filter
+     */
     @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER /* searchFilter */, required=false)
     private EntrySearchFilterInfo searchFilter;
 

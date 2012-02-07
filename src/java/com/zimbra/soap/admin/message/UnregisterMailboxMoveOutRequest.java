@@ -24,10 +24,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.MailboxMoveSpec;
 
+/**
+ * @zm-api-command-description This request is invoked by move destination server against move source server to
+ * indicate the completion of mailbox move.  This request is also invoked to reset the state after a mailbox move that
+ * died unexpectedly, such as when the destination server crashed.
+ * <br />
+ * <br />
+ * NO_SUCH_MOVE_OUT fault is returned if there is no move-out in progress.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST)
 public class UnregisterMailboxMoveOutRequest {
 
+    /**
+     * @zm-api-field-description Details of Mailbox Move
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private MailboxMoveSpec account;
 

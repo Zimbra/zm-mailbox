@@ -23,13 +23,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ACTIVATE_LICENSE_RESPONSE)
 public class ActivateLicenseResponse {
 
-    @XmlAttribute(name=AdminConstants.A_VALID_FROM /* validFrom */,
-                    required=true)
-    private final long validFrom;
+    /**
+     * @zm-api-field-description Server time in milliseconds
+     */
+    @XmlAttribute(name=AdminConstants.A_SERVER_TIME /* serverTime */, required=true)
+    private final long serverTime;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -39,16 +41,16 @@ public class ActivateLicenseResponse {
         this(-1L);
     }
 
-    public ActivateLicenseResponse(long validFrom) {
-        this.validFrom = validFrom;
+    public ActivateLicenseResponse(long serverTime) {
+        this.serverTime = serverTime;
     }
 
-    public long getValidFrom() { return validFrom; }
+    public long getServerTime() { return serverTime; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("validFrom", validFrom);
+            .add("serverTime", serverTime);
     }
 
     @Override

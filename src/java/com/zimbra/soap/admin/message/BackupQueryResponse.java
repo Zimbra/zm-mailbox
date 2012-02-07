@@ -15,7 +15,12 @@
 
 package com.zimbra.soap.admin.message;
 
+import java.util.List;
+
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -27,24 +32,37 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupQueryInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_BACKUP_QUERY_RESPONSE)
 @XmlType(propOrder = {})
 public class BackupQueryResponse {
 
-    @XmlAttribute(name=BackupConstants.A_TOTAL_SPACE /* totalSpace */,
-                    required=true)
+    /**
+     * @zm-api-field-tag total-space-bytes
+     * @zm-api-field-description total space on the backup target volume in bytes
+     */
+    @XmlAttribute(name=BackupConstants.A_TOTAL_SPACE /* totalSpace */, required=true)
     private final long totalSpace;
 
-    @XmlAttribute(name=BackupConstants.A_FREE_SPACE /* freeSpace */,
-                    required=true)
+    /**
+     * @zm-api-field-tag free-space-bytes
+     * @zm-api-field-description Free space on the backup target volume in bytes
+     */
+    @XmlAttribute(name=BackupConstants.A_FREE_SPACE /* freeSpace */, required=true)
     private final long freeSpace;
 
+    /**
+     * @zm-api-field-tag more-backups
+     * @zm-api-field-description Present with value <b>1 (true)</b> there are more backups to page through
+     */
     @XmlAttribute(name=BackupConstants.A_MORE /* more */, required=false)
     private ZmBoolean more;
 
+    /**
+     * @zm-api-field-description Backup information
+     */
     @XmlElement(name=BackupConstants.E_BACKUP /* backup */, required=false)
-    private BackupQueryInfo backups;
+    private List<BackupQueryInfo> backups = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -60,11 +78,24 @@ public class BackupQueryResponse {
     }
 
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
-    public void setBackups(BackupQueryInfo backups) { this.backups = backups; }
+
+    public void setBackups(Iterable <BackupQueryInfo> backups) {
+        this.backups.clear();
+        if (backups != null) {
+            Iterables.addAll(this.backups,backups);
+        }
+    }
+
+    public void addBackup(BackupQueryInfo backup) {
+        this.backups.add(backup);
+    }
+
     public long getTotalSpace() { return totalSpace; }
     public long getFreeSpace() { return freeSpace; }
     public Boolean getMore() { return ZmBoolean.toBool(more); }
-    public BackupQueryInfo getBackups() { return backups; }
+    public List<BackupQueryInfo> getBackups() {
+        return backups;
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

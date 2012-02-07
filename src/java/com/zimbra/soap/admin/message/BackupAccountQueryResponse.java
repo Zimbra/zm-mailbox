@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupAccountQueryInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_BACKUP_ACCOUNT_QUERY_RESPONSE)
 @XmlType(propOrder = {})
 public class BackupAccountQueryResponse {
 
+    /**
+     * @zm-api-field-description Account backup details
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<BackupAccountQueryInfo> accounts = Lists.newArrayList();
 

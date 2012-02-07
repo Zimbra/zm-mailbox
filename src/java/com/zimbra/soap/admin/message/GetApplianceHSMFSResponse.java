@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.HsmConstants;
 import com.zimbra.soap.admin.type.HsmFileSystemInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=HsmConstants.E_GET_APPLIANCE_HSM_FS_RESPONSE)
 @XmlType(propOrder = {})
 public class GetApplianceHSMFSResponse {
 
+    /**
+     * @zm-api-field-description HSM filesystem information
+     */
     @XmlElement(name=HsmConstants.E_FS /* fs */, required=false)
     private List<HsmFileSystemInfo> fileSystems = Lists.newArrayList();
 

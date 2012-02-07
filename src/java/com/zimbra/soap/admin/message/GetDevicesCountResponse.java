@@ -24,10 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncAdminConstants.E_GET_DEVICES_COUNT_RESPONSE)
 public class GetDevicesCountResponse {
 
+    /**
+     * @zm-api-field-tag registered-device-count-on-server
+     * @zm-api-field-description Number of Registered devices on the server
+     */
     @XmlAttribute(name=SyncAdminConstants.A_COUNT /* count */, required=true)
     private final int count;
 

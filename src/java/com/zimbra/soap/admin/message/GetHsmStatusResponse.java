@@ -24,43 +24,92 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.HsmConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=HsmConstants.E_GET_HSM_STATUS_RESPONSE)
 public class GetHsmStatusResponse {
 
+    /**
+     * @zm-api-field-description <b>1 (true)</b> if an HSM session is currently running, <b>0 (false)</b>
+     * if the information returned applies to the last completed HSM session
+     */
     @XmlAttribute(name=HsmConstants.A_RUNNING /* running */, required=true)
     private final ZmBoolean running;
 
+    /**
+     * @zm-api-field-tag start-date-millis
+     * @zm-api-field-description the start date of the HSM session in milliseconds
+     */
     @XmlAttribute(name=HsmConstants.A_START_DATE /* startDate */, required=false)
     private Long startDate;
 
+    /**
+     * @zm-api-field-tag end-date-millis
+     * @zm-api-field-description the end date of the HSM session in milliseconds
+     */
     @XmlAttribute(name=HsmConstants.A_END_DATE /* endDate */, required=false)
     private Long endDate;
 
+    /**
+     * @zm-api-field-tag was-aborted
+     * @zm-api-field-description <b>1 (true)</b> if the HSM session was aborted
+     */
     @XmlAttribute(name=HsmConstants.A_WAS_ABORTED /* wasAborted */, required=false)
     private ZmBoolean wasAborted;
 
+    /**
+     * @zm-api-field-tag abort-in-progress
+     * @zm-api-field-description <b>1 (true)</b> if the HSM session is in the process of aborting
+     */
     @XmlAttribute(name=HsmConstants.A_ABORTING /* aborting */, required=false)
     private ZmBoolean aborting;
 
+    /**
+     * @zm-api-field-tag error-text
+     * @zm-api-field-description The error message, if an error occurred while processing the last
+     * <b>&lt;HsmRequest></b>
+     */
     @XmlAttribute(name=HsmConstants.A_ERROR /* error */, required=false)
     private String error;
 
+    /**
+     * @zm-api-field-tag num-blobs-moved
+     * @zm-api-field-description The number of blobs that were moved
+     */
     @XmlAttribute(name=HsmConstants.A_NUM_BLOBS_MOVED /* numBlobsMoved */, required=false)
     private Integer numBlobsMoved;
 
+    /**
+     * @zm-api-field-tag num-bytes-moved
+     * @zm-api-field-description The number of bytes that were moved
+     */
     @XmlAttribute(name=HsmConstants.A_NUM_BYTES_MOVED /* numBytesMoved */, required=false)
     private Long numBytesMoved;
 
+    /**
+     * @zm-api-field-tag num-mailboxes-processed
+     * @zm-api-field-description The number of mailboxes that have been processed
+     */
     @XmlAttribute(name=HsmConstants.A_NUM_MAILBOXES /* numMailboxes */, required=false)
     private Integer numMailboxes;
 
+    /**
+     * @zm-api-field-tag total-mailboxes
+     * @zm-api-field-description Total number of mailboxes that should be processed by the HSM session
+     */
     @XmlAttribute(name=HsmConstants.A_TOTAL_MAILBOXES /* totalMailboxes */, required=false)
     private Integer totalMailboxes;
 
+    /**
+     * @zm-api-field-tag dest-volume-id
+     * @zm-api-field-description The ID of the volume to which messages are being moved
+     */
     @XmlAttribute(name=HsmConstants.A_DEST_VOLUME_ID /* destVolumeId */, required=false)
     private Short destVolumeId;
 
+    /**
+     * @zm-api-field-tag search-query
+     * @zm-api-field-description The query that is used to find messages to move
+     */
     @XmlAttribute(name=HsmConstants.A_QUERY /* query */, required=false)
     private String query;
 

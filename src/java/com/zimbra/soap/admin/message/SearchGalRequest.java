@@ -25,27 +25,46 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.GalSearchType;
 
+/**
+ * @zm-api-command-description Search Global Address Book (GAL)
+ * <br />
+ * Notes: admin verison of mail equiv. Used for testing via zmprov.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_GAL_REQUEST)
 public class SearchGalRequest {
 
+    /**
+     * @zm-api-field-description Domain name
+     */
     @XmlAttribute(name=AdminConstants.A_DOMAIN /* domain */, required=true)
     private String domain;
 
+    /**
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=AdminConstants.E_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-description The maximum number of entries to return (0 is default and means all)
+     */
     @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
     private Integer limit;
 
+    /**
+     * @zm-api-field-tag type-of-addresses-to-search
+     * @zm-api-field-description Type of addresses to search.
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
     private GalSearchType type;
 
+    /**
+     * @zm-api-field-tag gal-account-id
+     * @zm-api-field-description GAL account ID
+     */
     @XmlAttribute(name=AccountConstants.A_GAL_ACCOUNT_ID /* galAcctId */, required=false)
     private String galAccountId;
-
-    @XmlAttribute(name=AdminConstants.A_TOKEN /* token */, required=false)
-    private String token;
 
     public SearchGalRequest() {
     }
@@ -63,13 +82,11 @@ public class SearchGalRequest {
     public void setLimit(Integer limit) { this.limit = limit; }
     public void setType(GalSearchType type) { this.type = type; }
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
-    public void setToken(String token) { this.token = token; }
     public String getDomain() { return domain; }
     public String getName() { return name; }
     public Integer getLimit() { return limit; }
     public GalSearchType getType() { return type; }
     public String getGalAccountId() { return galAccountId; }
-    public String getToken() { return token; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -78,8 +95,7 @@ public class SearchGalRequest {
             .add("name", name)
             .add("limit", limit)
             .add("type", type)
-            .add("galAccountId", galAccountId)
-            .add("token", token);
+            .add("galAccountId", galAccountId);
     }
 
     @Override

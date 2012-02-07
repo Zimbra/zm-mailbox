@@ -25,11 +25,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.PurgeMovedMailboxInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_PURGE_MOVED_MAILBOX_RESPONSE)
 @XmlType(propOrder = {})
 public class PurgeMovedMailboxResponse {
 
+    /**
+     * @zm-api-field-description Information about purged mailbxo
+     */
     @XmlElement(name=BackupConstants.E_MAILBOX /* mbox */, required=true)
     private final PurgeMovedMailboxInfo mailbox;
 

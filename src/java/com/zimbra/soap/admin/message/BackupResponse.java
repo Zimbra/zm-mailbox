@@ -25,11 +25,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_BACKUP_RESPONSE)
 @XmlType(propOrder = {})
 public class BackupResponse {
 
+    /**
+     * @zm-api-field-description Information about the backup
+     */
     @XmlElement(name=BackupConstants.E_BACKUP /* backup */, required=true)
     private final BackupInfo backup;
 

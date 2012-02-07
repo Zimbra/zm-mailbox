@@ -23,20 +23,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_INSTALL_LICENSE_RESPONSE)
 public class InstallLicenseResponse {
 
-    @XmlAttribute(name=AdminConstants.A_VALID_FROM
-                /* validFrom */, required=true)
+    /**
+     * @zm-api-field-tag valid-from-date-in-ms
+     * @zm-api-field-description Valid form date in milliseconds
+     */
+    @XmlAttribute(name=AdminConstants.A_VALID_FROM /* validFrom */, required=true)
     private final long validFrom;
 
-    @XmlAttribute(name=AdminConstants.A_VALID_UNTIL
-                /* validUntil */, required=true)
+    /**
+     * @zm-api-field-tag valid-until-date-in-ms
+     * @zm-api-field-description Valid until date in milliseconds
+     */
+    @XmlAttribute(name=AdminConstants.A_VALID_UNTIL /* validUntil */, required=true)
     private final long validUntil;
 
-    @XmlAttribute(name=AdminConstants.A_SERVER_TIME
-                /* serverTime */, required=true)
+    /**
+     * @zm-api-field-tag server-time-in-ms
+     * @zm-api-field-description Time on server in milliseconds
+     */
+    @XmlAttribute(name=AdminConstants.A_SERVER_TIME /* serverTime */, required=true)
     private final long serverTime;
 
     /**

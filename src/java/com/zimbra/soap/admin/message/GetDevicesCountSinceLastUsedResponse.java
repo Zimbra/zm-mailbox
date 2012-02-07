@@ -24,10 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncAdminConstants.E_GET_DEVICES_COUNT_SINCE_LAST_USED_RESPONSE)
 public class GetDevicesCountSinceLastUsedResponse {
 
+    /**
+     * @zm-api-field-tag number-of-devices
+     * @zm-api-field-description Number of mobile devices on the server since the specified last used date
+     */
     @XmlAttribute(name=SyncAdminConstants.A_COUNT /* count */, required=true)
     private final int count;
 

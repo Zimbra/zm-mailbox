@@ -30,6 +30,9 @@ import com.zimbra.soap.admin.type.MailboxVolumesInfo;
 @XmlType(propOrder = {})
 public class GetMailboxVolumesResponse {
 
+    /**
+     * @zm-api-field-description Mailbox Volume Information
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private MailboxVolumesInfo account;
 

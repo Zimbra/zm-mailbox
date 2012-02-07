@@ -25,13 +25,15 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.XMbxSearchConstants;
 import com.zimbra.soap.admin.type.SearchNode;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=XMbxSearchConstants.E_ABORT_XMBX_SEARCH_RESPONSE)
 @XmlType(propOrder = {})
 public class AbortXMbxSearchResponse {
 
-    @XmlElement(name=XMbxSearchConstants.E_SrchTask
-                /* searchtask */, required=true)
+    /**
+     * @zm-api-field-description Search task information
+     */
+    @XmlElement(name=XMbxSearchConstants.E_SrchTask /* searchtask */, required=true)
     private final SearchNode searchNode;
 
     /**

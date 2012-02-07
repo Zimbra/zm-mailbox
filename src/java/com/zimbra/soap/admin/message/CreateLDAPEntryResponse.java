@@ -25,13 +25,15 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.LDAPUtilsConstants;
 import com.zimbra.soap.admin.type.LDAPEntryInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=LDAPUtilsConstants.E_CREATE_LDAP_ENTRY_RESPONSE)
 @XmlType(propOrder = {})
 public class CreateLDAPEntryResponse {
 
-    @XmlElement(name=LDAPUtilsConstants.E_LDAPEntry
-                /* LDAPEntry */, required=true)
+    /**
+     * @zm-api-field-description Information about the newly created LDAP Entry
+     */
+    @XmlElement(name=LDAPUtilsConstants.E_LDAPEntry /* LDAPEntry */, required=true)
     private final LDAPEntryInfo LDAPentry;
 
     /**

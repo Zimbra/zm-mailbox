@@ -25,11 +25,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.VersionCheckInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_VC_RESPONSE)
 @XmlType(propOrder = {})
 public class VersionCheckResponse {
 
+    /**
+     * @zm-api-field-description Version check information
+     */
     @XmlElement(name=AdminConstants.E_VERSION_CHECK, required=false)
     private VersionCheckInfo versionCheck;
 

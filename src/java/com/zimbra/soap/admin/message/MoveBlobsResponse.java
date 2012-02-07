@@ -23,20 +23,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.HsmConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=HsmConstants.E_MOVE_BLOBS_RESPONSE)
 public class MoveBlobsResponse {
 
-    @XmlAttribute(name=HsmConstants.A_NUM_BLOBS_MOVED
-                    /* numBlobsMoved */, required=false)
+    /**
+     * @zm-api-field-tag num-blobs-moved
+     * @zm-api-field-description Number of blobs moved
+     */
+    @XmlAttribute(name=HsmConstants.A_NUM_BLOBS_MOVED /* numBlobsMoved */, required=false)
     private Integer numBlobsMoved;
 
-    @XmlAttribute(name=HsmConstants.A_NUM_BYTES_MOVED
-                    /* numBytesMoved */, required=false)
+    /**
+     * @zm-api-field-tag num-bytes-moved
+     * @zm-api-field-description Number of bytes moved
+     */
+    @XmlAttribute(name=HsmConstants.A_NUM_BYTES_MOVED /* numBytesMoved */, required=false)
     private Long numBytesMoved;
 
-    @XmlAttribute(name=HsmConstants.A_TOTAL_MAILBOXES
-                    /* totalMailboxes */, required=false)
+    /**
+     * @zm-api-field-tag total-mailboxes
+     * @zm-api-field-description Total number of mailboxes
+     */
+    @XmlAttribute(name=HsmConstants.A_TOTAL_MAILBOXES /* totalMailboxes */, required=false)
     private Integer totalMailboxes;
 
     public MoveBlobsResponse() {

@@ -24,28 +24,85 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Search directory
+ * <br />
+ * <b>Access</b>: domain admin sufficient (though a domain admin can't specify "domains" as a type)
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_DIRECTORY_REQUEST)
 public class SearchDirectoryRequest extends AttributeSelectorImpl {
 
+    /**
+     * @zm-api-field-description Query string - should be an LDAP-style filter string (RFC 2254)
+     */
     @XmlAttribute(name=AdminConstants.E_QUERY, required=false)
     private String query;
+
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description Maximum results that the backend will attempt to fetch from the directory before
+     * returning an account.TOO_MANY_SEARCH_RESULTS error.
+     */
     @XmlAttribute(name=AdminConstants.A_MAX_RESULTS, required=false)
     private Integer maxResults;
+
+    /**
+     * @zm-api-field-description The maximum number of accounts to return (0 is default and means all)
+     */
     @XmlAttribute(name=AdminConstants.A_LIMIT, required=false)
     private Integer limit;
+
+    /**
+     * @zm-api-field-description The starting offset (0, 25, etc)
+     */
     @XmlAttribute(name=AdminConstants.A_OFFSET, required=false)
     private Integer offset;
+
+    /**
+     * @zm-api-field-tag domain-name
+     * @zm-api-field-description The domain name to limit the search to
+     */
     @XmlAttribute(name=AdminConstants.A_DOMAIN, required=false)
     private String domain;
+
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description applyCos - Flag whether or not to apply the COS policy to account.
+     * Specify <b>0 (false)</b> if only requesting attrs that aren't inherited from COS
+     */
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
     private ZmBoolean applyCos;
+
+    /**
+     * @zm-api-field-description whether or not to apply the global config attrs to account. specify <b>0 (false)</b>
+     * if only requesting attrs that aren't inherited from global config
+     */
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
     private ZmBoolean applyConfig;
+
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Name of attribute to sort on. Default is the account name.
+     */
     @XmlAttribute(name=AdminConstants.A_SORT_BY, required=false)
     private String sortBy;
+
+    /**
+     * @zm-api-field-tag types
+     * @zm-api-field-description Comma-separated list of types to return. Legal values are:
+     * <br />
+     * <b>accounts|distributionlists|aliases|resources|domains|coses</b>
+     * <br />
+     * (default is accounts)
+     */
     @XmlAttribute(name=AdminConstants.A_TYPES, required=false)
     private String types;
+
+    /**
+     * @zm-api-field-tag sort-ascending
+     * @zm-api-field-description Whether to sort in ascending order. Default is <b>1 (true)</b>
+     */
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
     private ZmBoolean sortAscending;
 

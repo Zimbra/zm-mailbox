@@ -23,13 +23,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.CertMgrConstants;
 
+/**
+ * @zm-api-command-description Verify Certificate Key
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_VERIFY_CERTKEY_REQUEST)
 public class VerifyCertKeyRequest {
 
+    /**
+     * @zm-api-field-description Certificate
+     */
     @XmlAttribute(name=CertMgrConstants.E_cert /* cert */, required=false)
     private String certificate;
 
+    /**
+     * @zm-api-field-description Private key
+     */
     @XmlAttribute(name=CertMgrConstants.A_privkey /* privkey */, required=false)
     private String privateKey;
 

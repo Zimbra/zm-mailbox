@@ -33,13 +33,15 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminZimletInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE)
 @XmlType(propOrder = {})
 public class GetAdminExtensionZimletsResponse {
 
+    /**
+     * @zm-api-field-description Information about Admin Extension Zimlets
+     */
     @XmlElementWrapper(name=AccountConstants.E_ZIMLETS, required=true)
-    // TODO:Compare with Accounts version
     @XmlElement(name=AccountConstants.E_ZIMLET /* zimlet */, required=false)
     private List<AdminZimletInfo> zimlets = Lists.newArrayList();
 

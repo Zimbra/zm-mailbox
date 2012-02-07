@@ -37,6 +37,9 @@ import com.zimbra.soap.mail.type.DeviceInfo;
 @XmlType(propOrder = {})
 public class GetDevicesResponse {
 
+    /**
+     * @zm-api-field-description Information about devices
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=false)
     private List<DeviceInfo> devices = Lists.newArrayList();
 

@@ -22,13 +22,23 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Undeploy Zimlet
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_UNDEPLOY_ZIMLET_REQUEST)
 public class UndeployZimletRequest {
 
+    /**
+     * @zm-api-field-tag zimlet-name
+     * @zm-api-field-description Zimlet name
+     */
     @XmlAttribute(name=AdminConstants.A_NAME, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-description Action
+     */
     @XmlAttribute(name=AdminConstants.A_ACTION, required=false)
     private final String action;
 

@@ -30,6 +30,9 @@ import com.zimbra.soap.admin.type.MailboxVersionInfo;
 @XmlType(propOrder = {})
 public class GetMailboxVersionResponse {
 
+    /**
+     * @zm-api-field-description Mailbox Version information
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private MailboxVersionInfo account;
 

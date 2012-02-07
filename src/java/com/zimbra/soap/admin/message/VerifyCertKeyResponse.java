@@ -27,6 +27,10 @@ import com.zimbra.common.soap.CertMgrConstants;
 @XmlRootElement(name=CertMgrConstants.E_VERIFY_CERTKEY_RESPONSE)
 public class VerifyCertKeyResponse {
 
+    /**
+     * @zm-api-field-tag verify-result
+     * @zm-api-field-description Verify result - <b>true|false|invalid</b>
+     */
     @XmlAttribute(name=CertMgrConstants.A_verifyResult /* verifyResult */, required=true)
     private String verifyResult;
 

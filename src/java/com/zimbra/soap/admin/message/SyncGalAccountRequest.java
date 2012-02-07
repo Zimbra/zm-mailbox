@@ -30,10 +30,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.SyncGalAccountSpec;
 
+/**
+ * @zm-api-command-description Sync GalAccount
+ * <br />
+ * Notes:
+ * <ul>
+ * <li> If fullSync is set to false (or unset) the default behavior is trickle sync which will pull in any new
+ *      contacts or modified contacts since last sync.
+ * <li> If fullSync is set to true, then the server will go through all the contacts that appear in GAL, and resolve
+ *      deleted contacts in addition to new or modified ones.
+ * <li> If reset attribute is set, then all the contacts will be populated again, regardless of the status since last
+ *      sync.  Reset needs to be done when there is a significant change in the configuration, such as filter,
+ *      attribute map, or search base.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SYNC_GAL_ACCOUNT_REQUEST)
 public class SyncGalAccountRequest {
 
+    /**
+     * @zm-api-field-description Sync GalAccount specification
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
     private List<SyncGalAccountSpec> accounts = Lists.newArrayList();
 

@@ -24,10 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_DESTROY_WAIT_SET_RESPONSE)
 public class AdminDestroyWaitSetResponse {
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description WaitSet ID
+     */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
 

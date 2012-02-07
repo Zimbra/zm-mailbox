@@ -25,18 +25,38 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_LICENSE_RESPONSE)
 @XmlType(propOrder = {})
 public class GetLicenseResponse {
 
+    /**
+     * @zm-api-field-description Block containing attributes relating to the license
+     */
     @XmlElement(name=AdminConstants.E_LICENSE /* license */, required=true)
     private AdminAttrsImpl license;
 
-    @XmlElement(name=AdminConstants.E_ACTIVATION /* activation */,
-                    required=false)
+    /**
+     * @zm-api-field-description Block containing attributes relating to activation
+     */
+    @XmlElement(name=AdminConstants.E_ACTIVATION /* activation */, required=false)
     private AdminAttrsImpl activation;
 
+    /**
+     * @zm-api-field-description The info element block contains:
+     * <table>
+     * <tr> <td> <b>Version</b> </td> <td> ZCS version </td> </tr>
+     * <tr> <td> <b>Fingerprint</b> </td> <td> System fingerprint required during activation </td> </tr>
+     * <tr> <td> <b>Status</b> </td> <td> License and activation status </td> </tr>
+     * <tr> <td> <b>TotalAccounts</b> </td> <td> Current number of accounts </td> </tr>
+     * <tr> <td> <b>ArchivingAccounts</b> </td> <td> Current number of archiving accounts</td> </tr>
+     * <tr> <td> <b>ServerTime</b> </td> <td> Current server time </td> </tr>
+     * </table>
+     * <br />
+     * The value of <b>TotalAccounts</b> can be -1 which indicates that the account counting is still
+     * in progress and the server does not have the count.  The account counting can be initiated by
+     * creating an account, use of a Network feature, or by sending a CheckLicense Request.
+     */
     @XmlElement(name=AdminConstants.E_INFO /* info */, required=true)
     private AdminAttrsImpl info;
 

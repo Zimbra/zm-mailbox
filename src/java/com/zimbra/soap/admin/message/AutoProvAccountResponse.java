@@ -31,6 +31,9 @@ import com.zimbra.soap.admin.type.AccountInfo;
 @XmlType(propOrder = {})
 public class AutoProvAccountResponse {
 
+    /**
+     * @zm-api-field-description Account information
+     */
     @XmlElement(name=AccountConstants.E_ACCOUNT /* account */, required=true)
     private AccountInfo account;
 

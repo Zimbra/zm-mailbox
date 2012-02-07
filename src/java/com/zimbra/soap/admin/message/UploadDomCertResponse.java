@@ -27,9 +27,17 @@ import com.zimbra.common.soap.CertMgrConstants;
 @XmlRootElement(name=CertMgrConstants.E_UPLOAD_DOMCERT_RESPONSE)
 public class UploadDomCertResponse {
 
+    /**
+     * @zm-api-field-tag certificate-content
+     * @zm-api-field-description Certificate content
+     */
     @XmlAttribute(name=CertMgrConstants.A_cert_content /* cert_content */, required=false)
     private String certificateContent;
 
+    /**
+     * @zm-api-field-tag key-content
+     * @zm-api-field-description Key content
+     */
     @XmlAttribute(name=CertMgrConstants.A_key_content /* key_content */, required=false)
     private String keyContent;
 

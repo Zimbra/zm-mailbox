@@ -36,6 +36,9 @@ import com.zimbra.soap.admin.type.MailboxMoveInfo;
 @XmlType(propOrder = {})
 public class QueryMailboxMoveResponse {
 
+    /**
+     * @zm-api-field-description Information about mailbox moves that are in progress
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<MailboxMoveInfo> accounts = Lists.newArrayList();
 

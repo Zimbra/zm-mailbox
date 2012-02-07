@@ -40,26 +40,37 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_RESPONSE)
 public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
 
-    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
-    private String sortBy;
-
-    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
-    private Integer offset;
-
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description Set to 1 if the results were truncated
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
-    // Probably not actually used for AutoCompleteGal
-    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
-    private String token;
-
     // TODO:Is this actually set anywhere in the server?
+    /**
+     * @zm-api-field-tag tokenize-key-op
+     * @zm-api-field-description Either "and" or "or" (if present)
+     * <br />
+     * <ul>
+     * <li> Not present if the search key was not tokenized.
+     * <li> Some clients backtrack on GAL results assuming the results of a more specific key is the subset of a
+     *      more generic key, and it checks cached results instead of issuing another SOAP request to the server.  If
+     *      search key was tokenized and expanded with AND or OR, this cannot be assumed.
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private ZmBoolean tokenizeKey;
 
+    /**
+     * @zm-api-field-description Flag if pagination is supported
+     */
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
     private ZmBoolean pagingSupported;
 
+    /**
+     * @zm-api-field-description Contacts matching the autocomplete request
+     */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
 
@@ -67,31 +78,19 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     // If it were used - it would matter what order as it would probably be a list of Id
 
     public AutoCompleteGalResponse() {
-        this((String) null, (Integer) null, (Boolean) null, (Boolean) null);
     }
 
-    private AutoCompleteGalResponse(String sortBy, Integer offset,
-                            Boolean more, Boolean tokenizeKey) {
-        this.setSortBy(sortBy);
-        this.setOffset(offset);
+    private AutoCompleteGalResponse(Boolean more, Boolean tokenizeKey) {
         this.setMore(more);
         this.setTokenizeKey(tokenizeKey);
     }
 
-    public static AutoCompleteGalResponse createForSortByOffsetMoreAndTokenizeKey(String sortBy, Integer offset,
-                            Boolean more, Boolean tokenizeKey) {
-        return new AutoCompleteGalResponse(sortBy, offset, more, tokenizeKey);
+    public static AutoCompleteGalResponse createForMoreAndTokenizeKey(Boolean more, Boolean tokenizeKey) {
+        return new AutoCompleteGalResponse(more, tokenizeKey);
     }
 
-
-    @Override
-    public void setSortBy(String sortBy) { this.sortBy = sortBy; }
-    @Override
-    public void setOffset(Integer offset) { this.offset = offset; }
     @Override
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
-    @Override
-    public void setToken(String token) { this.token = token; }
     @Override
     public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = ZmBoolean.fromBool(tokenizeKey); }
     @Override
@@ -111,13 +110,7 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     }
 
     @Override
-    public String getSortBy() { return sortBy; }
-    @Override
-    public Integer getOffset() { return offset; }
-    @Override
     public Boolean getMore() { return ZmBoolean.toBool(more); }
-    @Override
-    public String getToken() { return token; }
     @Override
     public Boolean getTokenizeKey() { return ZmBoolean.toBool(tokenizeKey); }
     @Override
@@ -145,10 +138,7 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("sortBy", sortBy)
-            .add("offset", offset)
             .add("more", more)
-            .add("token", token)
             .add("tokenizeKey", tokenizeKey)
             .add("pagingSupported", pagingSupported)
             .add("contacts", contacts);

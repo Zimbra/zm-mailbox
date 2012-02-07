@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
+/**
+ * @zm-api-command-description Verify index
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_VERIFY_INDEX_REQUEST)
 public class VerifyIndexRequest {
 
+    /**
+     * @zm-api-field-description Mailbox selector
+     */
     @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
     private final MailboxByAccountIdSelector mbox;
 

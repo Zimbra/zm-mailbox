@@ -36,12 +36,23 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AdminConstants.E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE)
 public class SearchAutoProvDirectoryResponse {
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description <b>1 (true)</b> if more entries to return
+     */
     @XmlAttribute(name=AdminConstants.A_MORE /* more */, required=true)
     private ZmBoolean more;
 
+    /**
+     * @zm-api-field-tag search-total
+     * @zm-api-field-description Total number of accounts that matched search (not affected by limit/offset)
+     */
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL /* searchTotal */, required=true)
     private int searchTotal;
 
+    /**
+     * @zm-api-field-description Entries
+     */
     @XmlElement(name=AdminConstants.E_ENTRY /* entry */, required=false)
     private List<AutoProvDirectoryEntry> entries = Lists.newArrayList();
 

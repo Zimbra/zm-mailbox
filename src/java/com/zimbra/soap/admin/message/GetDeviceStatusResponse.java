@@ -31,11 +31,14 @@ import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceStatusInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = SyncAdminConstants.E_GET_DEVICE_STATUS_RESPONSE)
 @XmlType(propOrder = {})
 public class GetDeviceStatusResponse {
 
+    /**
+     * @zm-api-field-description Information about devices
+     */
     @XmlElement(name = SyncConstants.E_DEVICE /* device */, required = false)
     private List<DeviceStatusInfo> devices = Lists.newArrayList();
 

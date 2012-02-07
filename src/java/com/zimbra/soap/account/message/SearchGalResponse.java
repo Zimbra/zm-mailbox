@@ -41,13 +41,13 @@ public class SearchGalResponse {
 
     /**
      * @zm-api-field-tag sort-by
-     * @zm-api-field-description Name of attribute sorted on. If not present then sorted by the calendar resource name.
+     * @zm-api-field-description Name of attribute sorted on.
      */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
     /**
-     * @zm-api-field-description The 0-based offset into the results list to return as the first result for this
+     * @zm-api-field-description The 0-based offset into the results list returned as the first result for this
      * search operation.
      */
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)

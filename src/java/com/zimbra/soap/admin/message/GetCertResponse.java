@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.CertMgrConstants;
 import com.zimbra.soap.admin.type.CertInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_GET_CERT_RESPONSE)
 @XmlType(propOrder = {})
 public class GetCertResponse {
 
+    /**
+     * @zm-api-field-description Certificate information
+     */
     @XmlElement(name=CertMgrConstants.E_cert /* cert */, required=false)
     private List<CertInfo> certs = Lists.newArrayList();
 

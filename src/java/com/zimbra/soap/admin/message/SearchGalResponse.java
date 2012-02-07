@@ -40,22 +40,44 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class SearchGalResponse {
 
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Name of attribute sorted on.
+     */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
+    /**
+     * @zm-api-field-description The 0-based offset into the results list returned as the first result for this
+     * search operation.
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description Set if the results are truncated
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
-    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
-    private String token;
-
     // TODO:Documented in soap-admin.txt - not sure if this is still used
+    /**
+     * @zm-api-field-tag tokenize-key-op
+     * @zm-api-field-description Valid values: and|or
+     * <ul>
+     * <li> Not present if the search key was not tokenized.
+     * <li> Some clients backtrack on GAL results assuming the results of a more specific key is the subset of a more
+     *      generic key, and it checks cached results instead of issuing another SOAP request to the server.  
+     *      If search key was tokenized and expanded with AND or OR, this cannot be assumed.
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private ZmBoolean tokenizeKey;
 
+    /**
+     * @zm-api-field-description Matching contacts
+     */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
 
@@ -65,7 +87,6 @@ public class SearchGalResponse {
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setOffset(Integer offset) { this.offset = offset; }
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
-    public void setToken(String token) { this.token = token; }
     public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = ZmBoolean.fromBool(tokenizeKey); }
     public void setContacts(Iterable <ContactInfo> contacts) {
         this.contacts.clear();
@@ -81,7 +102,6 @@ public class SearchGalResponse {
     public String getSortBy() { return sortBy; }
     public Integer getOffset() { return offset; }
     public Boolean getMore() { return ZmBoolean.toBool(more); }
-    public String getToken() { return token; }
     public Boolean getTokenizeKey() { return ZmBoolean.toBool(tokenizeKey); }
     public List<ContactInfo> getContacts() {
         return Collections.unmodifiableList(contacts);
@@ -93,7 +113,6 @@ public class SearchGalResponse {
             .add("sortBy", sortBy)
             .add("offset", offset)
             .add("more", more)
-            .add("token", token)
             .add("tokenizeKey", tokenizeKey)
             .add("contacts", contacts);
     }

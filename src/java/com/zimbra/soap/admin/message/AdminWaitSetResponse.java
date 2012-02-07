@@ -35,23 +35,40 @@ import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_RESPONSE)
 @XmlType(propOrder = {"signalledAccounts", "errors"})
 public class AdminWaitSetResponse {
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description WaitSet ID
+     */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
 
+    /**
+     * @zm-api-field-description <b>1(true)</b> if canceled
+     */
     @XmlAttribute(name=MailConstants.A_CANCELED /* canceled */, required=false)
     private ZmBoolean canceled;
 
+    /**
+     * @zm-api-field-tag sequence-num
+     * @zm-api-field-description Sequence number
+     */
     @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=false)
     private String seqNo;
 
+    /**
+     * @zm-api-field-description Signalled accounts
+     */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<Id> signalledAccounts = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Error information
+     */
     @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
     private List<IdAndType> errors = Lists.newArrayList();
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,13 +31,20 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.GranteeInfo;
 import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ALL_EFFECTIVE_RIGHTS_RESPONSE)
 @XmlType(propOrder = {"grantee", "targets"})
 public class GetAllEffectiveRightsResponse {
 
+    /**
+     * @zm-api-field-description Grantee information
+     */
     @XmlElement(name=AdminConstants.E_GRANTEE, required=false)
     private final GranteeInfo grantee;
+
+    /**
+     * @zm-api-field-description Effective rights targets
+     */
     @XmlElement(name=AdminConstants.E_TARGET, required=false)
     private List <EffectiveRightsTarget> targets = Lists.newArrayList();
 

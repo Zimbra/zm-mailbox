@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ZimletDeploymentStatus;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DEPLOY_ZIMLET_RESPONSE)
 @XmlType(propOrder = {})
 public class DeployZimletResponse {
 
+    /**
+     * @zm-api-field-description Progress information on deployment to servers
+     */
     @XmlElement(name=AdminConstants.E_PROGRESS /* progress */, required=false)
     private List<ZimletDeploymentStatus> progresses = Lists.newArrayList();
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -40,15 +40,28 @@ import com.zimbra.soap.admin.type.DomainInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_DIRECTORY_RESPONSE)
 @XmlType(propOrder = {})
 public class SearchDirectoryResponse {
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description <b>1 (true)</b> if more accounts left to return
+     */
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
     private ZmBoolean more;
+
+    /**
+     * @zm-api-field-tag search-total
+     * @zm-api-field-description Total number of accounts that matched search (not affected by limit/offset)
+     */
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
     private long searchTotal;
+
+    /**
+     * @zm-api-field-description Search hits
+     */
     @XmlElements({
         @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE, type=CalendarResourceInfo.class),
         @XmlElement(name=AdminConstants.E_DL, type=DistributionListInfo.class),

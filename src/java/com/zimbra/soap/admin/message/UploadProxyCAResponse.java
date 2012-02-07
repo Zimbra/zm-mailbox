@@ -27,6 +27,10 @@ import com.zimbra.common.soap.CertMgrConstants;
 @XmlRootElement(name=CertMgrConstants.E_UPLOAD_PROXYCA_RESPONSE)
 public class UploadProxyCAResponse {
 
+    /**
+     * @zm-api-field-tag certificate-content
+     * @zm-api-field-description Certificate content
+     */
     @XmlAttribute(name=CertMgrConstants.A_cert_content /* cert_content */, required=false)
     private String certificateContent;
 

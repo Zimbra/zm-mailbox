@@ -19,13 +19,22 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
+/**
+ * @zm-api-command-description Suspend a device or all devices attached to an account from further sync actions
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncAdminConstants.E_SUSPEND_DEVICE_REQUEST)
 public class SuspendDeviceRequest {
 
+    /**
+     * @zm-api-field-description Account selector
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private AccountSelector account;
 
+    /**
+     * @zm-api-field-description Device selector
+     */
     @XmlElement(name=SyncConstants.E_DEVICE, required=false)
     private DeviceId deviceId;
 

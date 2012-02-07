@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AttributeDescription;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ATTRIBUTE_INFO_RESPONSE)
 @XmlType(propOrder = {})
 public class GetAttributeInfoResponse {
 
+    /**
+     * @zm-api-field-description Attribute descriptions
+     */
     @XmlElement(name=AdminConstants.E_A /* a */, required=false)
     private List<AttributeDescription> attrs = Lists.newArrayList();
 

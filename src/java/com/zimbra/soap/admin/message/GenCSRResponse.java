@@ -24,10 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_GEN_CSR_RESPONSE)
 public class GenCSRResponse {
 
+    /**
+     * @zm-api-field-tag server-name
+     * @zm-api-field-description Server name
+     */
     @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=true)
     private final String server;
 

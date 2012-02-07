@@ -23,13 +23,28 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Set Password
+ * <br />
+ * <b>Access</b>: domain admin sufficient
+ * <br />
+ * note: this request is by default proxied to the account's home server
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SET_PASSWORD_REQUEST)
 @XmlType(propOrder = {})
 public class SetPasswordRequest {
 
+    /**
+     * @zm-api-field-tag value-of-zimbra-id
+     * @zm-api-field-description Zimbra ID
+     */
     @XmlAttribute(name=AdminConstants.E_ID, required=true)
     private final String id;
+
+    /**
+     * @zm-api-field-description New PAssword
+     */
     @XmlAttribute(name=AdminConstants.E_NEW_PASSWORD, required=true)
     private final String newPassword;
 

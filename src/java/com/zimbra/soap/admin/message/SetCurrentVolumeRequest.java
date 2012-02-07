@@ -22,13 +22,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
+/**
+ * @zm-api-command-description Set current volume.
+ * <br />
+ * Notes: Each SetCurrentVolumeRequest can set only one current volume type.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SET_CURRENT_VOLUME_REQUEST)
 public final class SetCurrentVolumeRequest {
 
+    /**
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID, required=true)
     private final short id;
 
+    /**
+     * @zm-api-field-tag volume-type
+     * @zm-api-field-description Volume type: 1 (primary message), 2 (secondary message) or 10 (index)
+     */
     @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE, required=true)
     private final short type;
 

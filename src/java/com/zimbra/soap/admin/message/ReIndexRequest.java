@@ -49,6 +49,8 @@ public class ReIndexRequest {
 
     /**
      * @zm-api-field-description Specify reindexing to perform
+     * <br />
+     * Note: Only one of <b>{ids-comma-sep}</b> and <b>{types-comma-sep}</b> may be specified.
      */
     @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
     private final ReindexMailboxInfo mbox;

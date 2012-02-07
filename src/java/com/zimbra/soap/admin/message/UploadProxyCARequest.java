@@ -23,13 +23,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.CertMgrConstants;
 
+/**
+ * @zm-api-command-description Upload proxy CA
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_UPLOAD_PROXYCA_REQUEST)
 public class UploadProxyCARequest {
 
+    /**
+     * @zm-api-field-description Certificate attach ID
+     */
     @XmlAttribute(name=CertMgrConstants.A_CERT_AID /* cert.aid */, required=true)
     private String certificateAttachId;
 
+    /**
+     * @zm-api-field-description Certificate name
+     */
     @XmlAttribute(name=CertMgrConstants.A_CERT_NAME /* cert.filename */, required=true)
     private String certificateName;
 

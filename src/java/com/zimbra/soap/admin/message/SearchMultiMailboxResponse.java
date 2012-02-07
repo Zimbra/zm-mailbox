@@ -31,10 +31,18 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.admin.type.MessageInfo;
 
+// soap-network-admin.txt implies that this is very similar to SearchResponse (presumably in urn:zimbraMail) but it looks
+// like a cut down version with just E_MSG children.  See CrossMailboxSearch.LocalTask.search(mbox, params, writer).
+// Also, there are no summary attributes which probably makes sense as we may not know all the results at the start
+// of writing the reply.
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_MULTIPLE_MAILBOXES_RESPONSE)
 public class SearchMultiMailboxResponse {
 
+    /**
+     * @zm-api-field-description Search hits
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private List<MessageInfo> msgs = Lists.newArrayList();
 

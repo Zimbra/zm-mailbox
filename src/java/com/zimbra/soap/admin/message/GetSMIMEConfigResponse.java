@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.SMIMEConfigInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_SMIME_CONFIG_RESPONSE)
 @XmlType(propOrder = {})
 public class GetSMIMEConfigResponse {
 
+    /**
+     * @zm-api-field-description SMIME configuration information
+     */
     @XmlElement(name=AdminConstants.E_CONFIG /* config */, required=false)
     private List<SMIMEConfigInfo> configs = Lists.newArrayList();
 

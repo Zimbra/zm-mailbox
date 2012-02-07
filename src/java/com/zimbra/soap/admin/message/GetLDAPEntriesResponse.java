@@ -31,13 +31,15 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.LDAPUtilsConstants;
 import com.zimbra.soap.admin.type.LDAPEntryInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=LDAPUtilsConstants.E_GET_LDAP_ENTRIES_RESPONSE)
 @XmlType(propOrder = {})
 public class GetLDAPEntriesResponse {
 
-    @XmlElement(name=LDAPUtilsConstants.E_LDAPEntry
-                    /* LDAPEntry */, required=false)
+    /**
+     * @zm-api-field-description LDAP entries
+     */
+    @XmlElement(name=LDAPUtilsConstants.E_LDAPEntry /* LDAPEntry */, required=false)
     private List<LDAPEntryInfo> LDAPentries = Lists.newArrayList();
 
     public GetLDAPEntriesResponse() {

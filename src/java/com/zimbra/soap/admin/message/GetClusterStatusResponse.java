@@ -33,25 +33,29 @@ import com.zimbra.common.soap.ClusterConstants;
 import com.zimbra.soap.admin.type.ClusterServerInfo;
 import com.zimbra.soap.admin.type.ClusterServiceInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ClusterConstants.E_GET_CLUSTER_STATUS_RESPONSE)
 @XmlType(propOrder = {})
 public class GetClusterStatusResponse {
 
-    @XmlElement(name=ClusterConstants.E_CLUSTER_NAME
-                /* clusterName */, required=false)
+    /**
+     * @zm-api-field-description Cluster name
+     */
+    @XmlElement(name=ClusterConstants.E_CLUSTER_NAME /* clusterName */, required=false)
     private String clusterName;
 
-    @XmlElementWrapper(name=ClusterConstants.A_CLUSTER_SERVERS
-                /* servers */, required=false)
-    @XmlElement(name=ClusterConstants.A_CLUSTER_SERVER
-                /* server */, required=false)
+    /**
+     * @zm-api-field-description Information on cluster servers
+     */
+    @XmlElementWrapper(name=ClusterConstants.A_CLUSTER_SERVERS /* servers */, required=false)
+    @XmlElement(name=ClusterConstants.A_CLUSTER_SERVER /* server */, required=false)
     private List<ClusterServerInfo> servers = Lists.newArrayList();
 
-    @XmlElementWrapper(name=ClusterConstants.A_CLUSTER_SERVICES
-                /* services */, required=false)
-    @XmlElement(name=ClusterConstants.A_CLUSTER_SERVICE
-                /* service */, required=false)
+    /**
+     * @zm-api-field-description Information on cluster services
+     */
+    @XmlElementWrapper(name=ClusterConstants.A_CLUSTER_SERVICES /* services */, required=false)
+    @XmlElement(name=ClusterConstants.A_CLUSTER_SERVICE /* service */, required=false)
     private List<ClusterServiceInfo> services = Lists.newArrayList();
 
     public GetClusterStatusResponse() {

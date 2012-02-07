@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,22 +30,56 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CosInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_INFO_RESPONSE)
 @XmlType(propOrder = {"name","attrList", "cos", "soapURLList", "adminSoapURL", "publicMailURL"})
 public class GetAccountInfoResponse {
 
+    /**
+     * @zm-api-field-tag account-name
+     * @zm-api-field-description Account name
+     */
     @XmlElement(name=AdminConstants.E_NAME, required=true)
     private String name;
+
+    /**
+     * @zm-api-field-description Attributes
+     */
     @XmlElement(name=AdminConstants.E_A)
     private List<Attr> attrList = new ArrayList<Attr>();
+
+    /**
+     * @zm-api-field-description Class of Service (COS) information for account
+     */
     @XmlElement(name=AdminConstants.E_COS)
     private CosInfo cos;
-    @XmlElement(name=AdminConstants.E_SOAP_URL)
+
+    /**
+     * @zm-api-field-tag acct-soap-url
+     * @zm-api-field-description URL to talk to for SOAP service for this account. e.g.:
+     * <pre>
+     *     http://server:7070/service/soap/
+     * </pre>
+     * Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
+     * then only one URL will be returned.
+     */
+    @XmlElement(name=AdminConstants.E_SOAP_URL /* soapURL */, required=false)
     private List<String> soapURLList = new ArrayList<String>();
-    @XmlElement(name=AdminConstants.E_ADMIN_SOAP_URL, required=false)
+
+    /**
+     * @zm-api-field-tag admin-soap-url
+     * @zm-api-field-description URL for the Admin SOAP service
+     * <br />
+     * Note: Admin app only runs over SSL.
+     */
+    @XmlElement(name=AdminConstants.E_ADMIN_SOAP_URL /* adminSoapURL */, required=false)
     private String adminSoapURL;
-    @XmlElement(name=AdminConstants.E_PUBLIC_MAIL_URL, required=false)
+
+    /**
+     * @zm-api-field-tag web-mail-url
+     * @zm-api-field-description URL for Web Mail application
+     */
+    @XmlElement(name=AdminConstants.E_PUBLIC_MAIL_URL /* publicMailURL */, required=false)
     private String publicMailURL;
 
     public GetAccountInfoResponse() {

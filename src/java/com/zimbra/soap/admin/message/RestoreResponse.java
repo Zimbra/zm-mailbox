@@ -33,17 +33,27 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_RESTORE_RESPONSE)
 @XmlType(propOrder = {})
 public class RestoreResponse {
 
+    /**
+     * @zm-api-field-description Status - one of <b>ok|interrupted|err</b>
+     */
     @XmlAttribute(name=BackupConstants.A_STATUS /* status */, required=false)
     private String status;
 
+    /**
+     * @zm-api-field-tag rebuilt-schema
+     * @zm-api-field-description Flag whether schema was rebuilt
+     */
     @XmlAttribute(name=BackupConstants.A_REBUILTSCHEMA /* rebuiltSchema */, required=false)
     private ZmBoolean rebuildSchema;
 
+    /**
+     * @zm-api-field-description Accounts
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 
