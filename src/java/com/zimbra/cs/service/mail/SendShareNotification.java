@@ -15,6 +15,8 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,24 +29,27 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.ibm.icu.text.MessageFormat;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -52,8 +57,8 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
@@ -144,7 +149,7 @@ public class SendShareNotification extends MailDocumentHandler {
             }
             shareInfos.add(getShareInfoData(zsc, context, account, octxt, granteeType, granteeEmail, granteeId, granteeDisplayName, item));
         }
-        
+
         return shareInfos;
     }
 
@@ -217,7 +222,7 @@ public class SendShareNotification extends MailDocumentHandler {
             String granteeId,
             String granteeDisplayName,
             MailItem item) throws ServiceException {
-        
+
         Provisioning prov = Provisioning.getInstance();
         MatchingGrant matchingGrant;
 
@@ -509,8 +514,57 @@ public class SendShareNotification extends MailDocumentHandler {
         mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
         // also send a copy of the message out to relay MTA
         if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled()) {
-            MailSender.relayMessage(mm);
+            sendExternalNotificationEmail(octxt, authAccount, sid);
         }
+    }
+
+    private static long timestamp;
+    private static String template;
+
+    private void sendExternalNotificationEmail(OperationContext octxt, Account authAccount, ShareInfoData sid)
+        throws ServiceException, MessagingException {
+        // ideally template needs to be stored in globalConfig,
+        // but the java generate-getters is having trouble with
+        // escaping multi line html.  we'll store the template
+        // as a separate file until we sort that out.
+        String templateFile = "/opt/zimbra/conf/notification-template.html";
+        File f = new File(templateFile);
+        if (!f.exists()) {
+            sLog.warn("template file %s doesn't exist", templateFile);
+            return;
+        }
+        if (timestamp < f.lastModified()) {
+            try {
+                template = new String(ByteUtil.readInput(new FileInputStream(f), (int)f.length(), (int)f.length()), "UTF-8");
+                timestamp = f.lastModified();
+            } catch (IOException e) {
+                sLog.warn("can't read template", e);
+                return;
+            }
+        }
+        String folderName = sid.getName();
+        String displayName = authAccount.getDisplayName();
+        if (displayName == null) {
+            displayName = authAccount.getName();
+        }
+        Provisioning prov = Provisioning.getInstance();
+        String subject = L10nUtil.getMessage(MsgKey.octopus_share_notification_email_subject, folderName);
+        String url = URLUtil.getPublicURLForDomain(prov.getLocalServer(), prov.getDomain(authAccount), "/", true);
+        String avatar = url + "profile/" + authAccount.getName() + "/image";
+        String message = L10nUtil.getMessage(MsgKey.octopus_share_notification_email_message, displayName, folderName);
+        String accept = L10nUtil.getMessage(MsgKey.octopus_share_notification_email_accept);
+        String ignore = L10nUtil.getMessage(MsgKey.octopus_share_notification_email_ignore);
+
+        String email = MessageFormat.format(template, avatar, message, accept, ignore, url);
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        mm.setSubject(subject);
+        mm.setSentDate(new Date());
+        mm.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
+        String recipient = sid.getGranteeName();
+        mm.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
+        mm.setContent(email, "text/html; charset=utf-8");
+        mm.saveChanges();
+        MailSender.relayMessage(mm);
     }
 }
 
