@@ -19,18 +19,12 @@ import java.util.List;
 
 public interface AutoCompleteGalInterface {
 
-    public void setSortBy(String sortBy);
-    public void setOffset(Integer offset);
     public void setMore(Boolean more);
-    public void setToken(String token);
     public void setTokenizeKey(Boolean tokenizeKey);
     public void setPagingSupported(Boolean pagingSupported);
     public void setContactInterfaces(Iterable <ContactInterface> contacts);
     public void addContactInterface(ContactInterface contact);
-    public String getSortBy();
-    public Integer getOffset();
     public Boolean getMore();
-    public String getToken();
     public Boolean getTokenizeKey();
     public Boolean getPagingSupported();
     public List<ContactInterface> getContactInterfaces();
