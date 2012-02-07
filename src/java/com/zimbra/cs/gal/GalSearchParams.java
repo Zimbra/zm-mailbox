@@ -21,6 +21,7 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
@@ -271,6 +272,13 @@ public class GalSearchParams {
             return;
         }
         setRequest(request);
+        // bug 69338
+        // SearchParams.parse relies on A_SEARCH_TYPES on the request to determine search type, 
+        // which will then determine if cursor should be used to narrow db query.  
+        // If A_SEARCH_TYPES is not set, default type is conversation, cursor is not used to 
+        // narrow db query for conversations.   We do not require clients to set types 
+        // on GAL soap APIs.  Set it to "contact" here.
+        request.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.CONTACT.toString());
         mSearchParams = SearchParams.parse(request, mSoapContext, searchQuery);
         mSearchParams.setTypes(EnumSet.of(MailItem.Type.CONTACT));
         setLimit(mSearchParams.getLimit());
