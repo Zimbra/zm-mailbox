@@ -26,6 +26,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -760,7 +761,7 @@ class TimeInSecVarWrapper extends ProxyConfVar {
 class DomainAttrItem {
     public String domainName;
     public String virtualHostname;
-    public InetAddress virtualIPAddress;
+    public String virtualIPAddress;
     public String sslCertificate;
     public String sslPrivateKey;
     public Boolean useDomainServerCert;
@@ -768,7 +769,7 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
 
-    public DomainAttrItem(String dn, String vhn, InetAddress vip, String scrt, String spk, 
+    public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk, 
             String ccm, String cca) {
         this.domainName = dn;
         this.virtualHostname = vhn;
@@ -818,6 +819,7 @@ public class ProxyConfGen
     private static Provisioning mProv = null;
     private static String mHost = null;
     private static Server mServer = null;
+    private static boolean mGenConfPerVhn = false;
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
@@ -906,7 +908,9 @@ public class ProxyConfGen
      */
     private static List<DomainAttrItem> loadDomainReverseProxyAttrs()
             throws ServiceException {
-
+        if (!mGenConfPerVhn) {
+            return Collections.emptyList();
+        }
         if (!(mProv instanceof LdapProvisioning))
             throw ServiceException.INVALID_REQUEST(
                 "The method can work only when LDAP is available", null);
@@ -950,24 +954,15 @@ public class ProxyConfGen
                 //Here assume virtualHostnames and virtualIPAddresses are
                 //same in number
                 int i = 0;
-                try {
 
-                    for( ; i < virtualHostnames.length; i++) {
-                        InetAddress vip = InetAddress.getByName(virtualHostnames[i]);
-                        if (!ProxyConfUtil.isEmptyString(clientCertCA)){
+                for( ; i < virtualHostnames.length; i++) {
+                    if (!ProxyConfUtil.isEmptyString(clientCertCA)){
 
-                            createDomainSSLDirIfNotExists();
-                        }
-                        result.add(new DomainAttrItem(domainName,
-                                virtualHostnames[i], vip, certificate, privateKey, 
-                                clientCertMode, clientCertCA));
-
+                        createDomainSSLDirIfNotExists();
                     }
-                } catch (UnknownHostException e) {
-                    result.add(new DomainAttrExceptionItem(
-                                    new ProxyConfException("virtual host name \"" + virtualHostnames[i] + "\" is not resolvable", e)));
-
-                    return;          
+                    result.add(new DomainAttrItem(domainName,
+                            virtualHostnames[i], null, certificate, privateKey, 
+                            clientCertMode, clientCertCA));
                 }
             }
         };
@@ -1112,6 +1107,10 @@ public class ProxyConfGen
                 //command selection can be extracted if more commands are introduced
                 if(cmd_arg.length == 2 && 
                    cmd_arg[0].compareTo("explode") == 0) {
+                    if (!mGenConfPerVhn) {  // explode only when GenConfPerVhn is enabled
+                        return;
+                    }
+
                     if (cmd_arg[1].compareTo("vhn_vip_ssl") == 0) {
                         expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(r, w);
                     } else {
@@ -1184,29 +1183,37 @@ public class ProxyConfGen
             throws UnknownHostException, ProxyConfException {
         String defaultVal = null;
         mVars.put("vhn", item.virtualHostname);
+        
+        //resolve the virtual host name
+        InetAddress vip = null;
+        try {
+            vip = InetAddress.getByName(item.virtualHostname);
+        } catch (UnknownHostException e) {
+            throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
+        }
         if (getZimbraIPMode() != IPMode.BOTH) {
             if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
-                    item.virtualIPAddress instanceof Inet6Address) {
-                String msg = item.virtualIPAddress +
+                    vip instanceof Inet6Address) {
+                String msg = vip +
                         " is an IPv6 address but zimbraIPMode is 'ipv4'";
                 mLog.error(msg);
                 throw new ProxyConfException(msg);
             }
 
             if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
-                    item.virtualIPAddress instanceof Inet4Address) {
-                String msg = item.virtualIPAddress +
+                    vip instanceof Inet4Address) {
+                String msg = vip.getHostAddress() +
                         " is an IPv4 address but zimbraIPMode is 'ipv6'";
                 mLog.error(msg);
                 throw new ProxyConfException(msg);
             }
         }
-        if (item.virtualIPAddress instanceof Inet6Address) {
+        if (vip instanceof Inet6Address) {
             //ipv6 address has to be enclosed with [ ]
-            mVars.put("vip", "[" + item.virtualIPAddress.getHostAddress() + "]");
+            mVars.put("vip", "[" + vip.getHostAddress() + "]");
 
         } else {
-            mVars.put("vip", item.virtualIPAddress.getHostAddress());
+            mVars.put("vip", vip.getHostAddress());
         }
 
 
@@ -1573,6 +1580,8 @@ public class ProxyConfGen
                 return(exitCode);
             }
         }
+
+        mGenConfPerVhn = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxyGenConfigPerVirtualHostname", false);
 
         /* upgrade the variable map from the config in force */
         mLog.debug("Loading Attrs in Domain Level");
