@@ -2003,7 +2003,7 @@ public class ProxyConfGen
             }
         }
 
-        mGenConfPerVhn = mServer.getBooleanAttr("zimbraReverseProxyGenConfigPerVirtualHostname", false);
+        mGenConfPerVhn = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxyGenConfigPerVirtualHostname", false);
 
         /* upgrade the variable map from the config in force */
         mLog.debug("Loading Attrs in Domain Level");
