@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -136,12 +136,12 @@ public class L10nUtil {
         shareNotifBodyActionFreebusy,
         shareNotifBodyActionSubfolder,
         //////////////////////
-        
+
         // group subscription request
         dlSubscriptionRequestSubject,
         dlSubscribeRequestText,
         dlUnsubscribeRequestText,
-        
+
         // group subscription response
         dlSubscriptionResponseSubject,
         dlSubscribeResponseAcceptedText,
@@ -214,7 +214,12 @@ public class L10nUtil {
         passwordViolation,
 
         domainAggrQuotaWarnMsgSubject,
-        domainAggrQuotaWarnMsgBody
+        domainAggrQuotaWarnMsgBody,
+
+        octopus_share_notification_email_subject,
+        octopus_share_notification_email_message,
+        octopus_share_notification_email_accept,
+        octopus_share_notification_email_ignore
         // add other messages in the future...
     }
 
@@ -250,7 +255,7 @@ public class L10nUtil {
 
     public static ClassLoader getMsgClassLoader() {
         return sMsgClassLoader;
-    } 
+    }
 
     public static String getMessage(MsgKey key, Object... args) {
         return getMessage(key.toString(), (Locale) null, args);
@@ -304,7 +309,7 @@ public class L10nUtil {
             else
                 return fmt;
         } catch (MissingResourceException e) {
-            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " + 
+            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " +
                     "(locale=" + key + ")", e);
             return null;
         }
@@ -379,6 +384,7 @@ public class L10nUtil {
             }
         }
 
+        @Override
         public boolean accept(File dir, String name) {
             if (!name.endsWith(".properties"))
                 return false;
@@ -444,6 +450,7 @@ public class L10nUtil {
             mInLocale = inLocale;
         }
 
+        @Override
         public int compare(Locale a, Locale b) {
             String da = a.getDisplayName(mInLocale);
             String db = b.getDisplayName(mInLocale);
@@ -462,7 +469,7 @@ public class L10nUtil {
     }
 
     /**
-     * Return all localized(i.e. translated) locales sorted by their inLocale display name 
+     * Return all localized(i.e. translated) locales sorted by their inLocale display name
      * @return
      */
     public static Locale[] getLocalesSorted(Locale inLocale) {
@@ -479,9 +486,9 @@ public class L10nUtil {
     private static class LocalizedClientLocales {
         enum ClientResource {
             // I18nMsg,  // generated, all locales are there, so we don't count this resource
-            AjxMsg, 
-            ZMsg, 
-            ZaMsg, 
+            AjxMsg,
+            ZMsg,
+            ZaMsg,
             ZhMsg,
             ZmMsg
         }
@@ -495,7 +502,7 @@ public class L10nUtil {
 
         /*
          * load only those supported by JAVA
-         */ 
+         */
         private static void loadBundlesByJavaLocal(Set<Locale> locales, String msgsDir) {
             ClassLoader classLoader = getClassLoader(msgsDir);
             Locale[] allLocales = Locale.getAvailableLocales();
@@ -507,9 +514,9 @@ public class L10nUtil {
                         Locale rbLocale = rb.getLocale();
                         if (rbLocale.equals(locale)) {
                             /*
-                             * found a resource for the locale, a locale is considered "installed" as long as 
+                             * found a resource for the locale, a locale is considered "installed" as long as
                              * any of its resource (the list in ClientResource) is present
-                             */ 
+                             */
                             ZimbraLog.misc.info("Adding locale " + locale.toString());
                             locales.add(locale);
                             break;
@@ -559,8 +566,8 @@ public class L10nUtil {
             loadBundlesByDiskScan(sLocalizedLocales, msgsDir);
 
             /*
-             * UI displays locales with country in sub menus. 
-             * 
+             * UI displays locales with country in sub menus.
+             *
              * E.g. if there are:
              *      id: "zh_CN", name: "Chinese (China)"
              *      id: "zh_HK", name: "Chinese (Hong Kong)"
@@ -570,11 +577,11 @@ public class L10nUtil {
              *                   Chinese (China)
              *                   Chinese (Hong Kong)
              *
-             *      UI relies on the presence of a "language only" entry 
-             *      for the top level label "Chinese".    
+             *      UI relies on the presence of a "language only" entry
+             *      for the top level label "Chinese".
              *      i.e. id: "zh", name: "Chinese"
-             *          
-             *      Thus we need to add a "language only" pseudo entry for locales that have 
+             *
+             *      Thus we need to add a "language only" pseudo entry for locales that have
              *      a country part but the "language only" entry is not already there.
              */
             Set<Locale> pseudoLocales = new HashSet<Locale>();
