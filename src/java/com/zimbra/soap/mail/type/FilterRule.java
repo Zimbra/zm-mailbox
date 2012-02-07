@@ -31,31 +31,34 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+// JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"tests", "actions"})
+@JsonPropertyOrder({ "name", "active", "tests", "actions" })
 public final class FilterRule {
 
-    @XmlAttribute(name=MailConstants.A_NAME, required=true)
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=MailConstants.A_ACTIVE, required=true)
+    @XmlAttribute(name=MailConstants.A_ACTIVE /* active */, required=true)
     private final ZmBoolean active;
 
-    @XmlElement(name=MailConstants.E_FILTER_TESTS, required=true)
+    @XmlElement(name=MailConstants.E_FILTER_TESTS /* filterTests */, required=true)
     private FilterTests tests;
 
-    @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS, required=false)
+    @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS /* filterActions */, required=false)
     @XmlElements({
-        @XmlElement(name=MailConstants.E_ACTION_KEEP, type=FilterAction.KeepAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_DISCARD, type=FilterAction.DiscardAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_FILE_INTO, type=FilterAction.FileIntoAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_FLAG, type=FilterAction.FlagAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_TAG, type=FilterAction.TagAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_REDIRECT, type=FilterAction.RedirectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_REPLY, type=FilterAction.ReplyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_NOTIFY, type=FilterAction.NotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_STOP, type=FilterAction.StopAction.class)
+        @XmlElement(name=MailConstants.E_ACTION_KEEP /* actionKeep */, type=FilterAction.KeepAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_DISCARD /* actionDiscard */, type=FilterAction.DiscardAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_FILE_INTO /* actionFileInto */, type=FilterAction.FileIntoAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_FLAG /* actionFlag */, type=FilterAction.FlagAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_TAG /* actionTag */, type=FilterAction.TagAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REDIRECT /* actionRedirect */, type=FilterAction.RedirectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class)
     })
     private final List<FilterAction> actions = Lists.newArrayList();
 
