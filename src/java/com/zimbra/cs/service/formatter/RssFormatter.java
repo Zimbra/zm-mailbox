@@ -35,7 +35,7 @@ import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class RssFormatter extends Formatter {
 
-    private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+    protected SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
     @Override
     public void formatCallback(UserServletContext context) throws IOException, ServiceException {
