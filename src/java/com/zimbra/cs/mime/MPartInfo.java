@@ -40,7 +40,7 @@ public class MPartInfo {
     boolean mIsToplevelAttachment;
 
     @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("MPartInfo: {");
         sb.append("partName: ").append(mPartName).append(", ");
         sb.append("contentType: ").append(mContentType).append(", ");
@@ -49,6 +49,7 @@ public class MPartInfo {
         sb.append("filename: ").append(mFilename).append(", ");
         sb.append("partNum: ").append(mPartNum).append(", ");
         sb.append("isFilterableAttachment: ").append(mIsFilterableAttachment);
+        sb.append("isToplevelAttachment: ").append(mIsToplevelAttachment);
         sb.append("}");
         return sb.toString();
     }
@@ -63,6 +64,10 @@ public class MPartInfo {
      */
     public boolean isFilterableAttachment() {
         return mIsFilterableAttachment;
+    }
+
+    public boolean isTopLevelAttachment() {
+        return mIsToplevelAttachment;
     }
 
     public MimePart getMimePart() {
