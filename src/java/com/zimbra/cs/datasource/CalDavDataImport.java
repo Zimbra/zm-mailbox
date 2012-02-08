@@ -107,7 +107,7 @@ public class CalDavDataImport extends MailItemImport {
         mClient.setCredential(getUsername(), getDecryptedPassword());
         mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
         try {
-            mClient.login(getPrincipalUrl());
+            mClient.login(getDefaultPrincipalUrl());
         } catch (Exception x) {
             throw ServiceException.FAILURE(x.getMessage(), x);
         }
@@ -123,7 +123,7 @@ public class CalDavDataImport extends MailItemImport {
 
     protected byte getDefaultColor() { return 0; }
 
-    protected String getPrincipalUrl() {
+    private String getDefaultPrincipalUrl() {
         DataSource ds = getDataSource();
         String attrs[] = ds.getMultiAttr(Provisioning.A_zimbraDataSourceAttribute);
         for (String a : attrs) {
@@ -162,7 +162,7 @@ public class CalDavDataImport extends MailItemImport {
             mClient.setAppName(getAppName());
             mClient.setCredential(getUsername(), getDecryptedPassword());
             mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
-            mClient.login(getPrincipalUrl());
+            mClient.login(getDefaultPrincipalUrl());
         }
         return mClient;
     }

@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
+import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -63,7 +65,37 @@ public class CalDavClient extends WebDavClient {
 		mSchedulingEnabled = enable;
 	}
 	
-	public void login(String principalUrl) throws IOException, DavException {
+	private String getCurrentUserPrincipal() {
+	    DavRequest propfind = DavRequest.PROPFIND("/.well-known/caldav");
+        propfind.addRequestProp(DavElements.E_CURRENT_USER_PRINCIPAL);
+        HttpMethod m = null;
+        try {
+            m = executeFollowRedirect(propfind);
+            int status = m.getStatusCode();
+            if (status >= 400)
+                return null;
+            Document doc = com.zimbra.common.soap.Element.getSAXReader().read(m.getResponseBodyAsStream());
+            Element top = doc.getRootElement();
+            for (Object obj : top.elements(DavElements.E_RESPONSE)) {
+                if (obj instanceof Element) {
+                    DavObject davObject = new DavObject((Element)obj);
+                    Element e = davObject.getProperty(DavElements.E_CURRENT_USER_PRINCIPAL);
+                    if (e != null)
+                        return e.getStringValue().trim();
+                }
+            }
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (m != null)
+                m.releaseConnection();
+        }
+        return null;
+	}
+	public void login(String defaultPrincipalUrl) throws IOException, DavException {
+	    String principalUrl = getCurrentUserPrincipal();
+	    if (principalUrl == null)
+	        principalUrl = defaultPrincipalUrl;
 		DavRequest propfind = DavRequest.PROPFIND(principalUrl);
 		propfind.addRequestProp(DavElements.E_DISPLAYNAME);
 		propfind.addRequestProp(DavElements.E_CALENDAR_HOME_SET);
