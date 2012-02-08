@@ -76,6 +76,9 @@ public class DavException extends Exception {
 		protected void setError(QName error) {
 			mErrMsg.getRootElement().addElement(error);
 		}
+		protected void setError(Element error) {
+		    mErrMsg.getRootElement().add(error);
+		}
 	}
 	public static class CannotModifyProtectedProperty extends DavExceptionWithErrorMessage {
 		public CannotModifyProtectedProperty(QName prop) {
@@ -89,4 +92,13 @@ public class DavException extends Exception {
 	        setError(DavElements.E_PROPFIND_FINITE_DEPTH);
 	    }
 	}
+	
+    public static class UnsupportedReport extends DavExceptionWithErrorMessage {
+        public UnsupportedReport(QName report) {
+            super(report + " not implemented in REPORT", HttpServletResponse.SC_FORBIDDEN);
+            Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_REPORT);
+            e.addElement(DavElements.E_REPORT).addElement(report);
+            setError(e);
+        }
+    }
 }

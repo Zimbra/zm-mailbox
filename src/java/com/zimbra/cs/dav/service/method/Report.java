@@ -61,7 +61,7 @@ public class Report extends DavMethod {
 		QName topName = top.getQName();
 		DavMethod report = sReports.get(topName);
 		if (report == null)
-			throw new DavException("msg "+top.getName()+" not implemented in REPORT", HttpServletResponse.SC_BAD_REQUEST, null);
+		    throw new DavException.UnsupportedReport(topName);
 		
 		if (ctxt.getDepth() != DavContext.Depth.zero)
 			ctxt.getDavResponse().createResponse(ctxt);
