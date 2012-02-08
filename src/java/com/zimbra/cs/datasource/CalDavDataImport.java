@@ -123,7 +123,7 @@ public class CalDavDataImport extends MailItemImport {
 
     protected byte getDefaultColor() { return 0; }
 
-    private String getDefaultPrincipalUrl() {
+    protected String getDefaultPrincipalUrl() {
         DataSource ds = getDataSource();
         String attrs[] = ds.getMultiAttr(Provisioning.A_zimbraDataSourceAttribute);
         for (String a : attrs) {
