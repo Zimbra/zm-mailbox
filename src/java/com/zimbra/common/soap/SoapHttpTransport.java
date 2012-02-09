@@ -28,7 +28,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -45,6 +44,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.ElementHandler;
 import org.dom4j.io.SAXReader;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.httpclient.HttpProxyConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.ProxyHostConfiguration;
@@ -170,8 +170,6 @@ public class SoapHttpTransport extends SoapTransport {
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
             String changeToken, String tokenType, ResponseHandler respHandler)
             throws IOException, HttpException, ServiceException {
-        Map<String, String> cookieMap = getAuthToken() == null ? null : getAuthToken().cookieMap(false);
-        HttpState state = null;
         PostMethod method = null;
 
         try {
@@ -220,26 +218,19 @@ public class SoapHttpTransport extends SoapTransport {
                     method.setRequestHeader(entry.getKey(), entry.getValue());
             }
 
-            if (cookieMap != null) {
-                for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                    if (state == null)
-                        state = new HttpState();
-                    state.addCookie(new Cookie(method.getURI().getHost(), ck.getKey(), ck.getValue(), "/", null, false));
-                }
-            }
+            String host = method.getURI().getHost();
+            HttpState state = HttpClientUtil.newHttpState(getAuthToken(), host, false);
 
             if (mHttpDebugListener != null)
                 mHttpDebugListener.sendSoapMessage(method, soapReq);
 
-            params.setCookiePolicy(state == null ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
+            params.setCookiePolicy(state.getCookies().length == 0 ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
             params.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
             params.setSoTimeout(mTimeout);
             params.setVersion(HttpVersion.HTTP_1_1);
             method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
 
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
-                if (state == null)
-                    state = new HttpState();
                 state.setProxyCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword()));
             }
             int responseCode = mClient.executeMethod(mHostConfig, method, state);
