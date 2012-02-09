@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -1874,9 +1873,11 @@ public class ZMailbox implements ToZJSONObject {
             statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
-            if (statusCode == 200) {
+            if (statusCode == HttpServletResponse.SC_OK) {
                 String response = post.getResponseBodyAsString();
                 aid = getAttachmentId(response);
+            } else if (statusCode == HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE) {
+                throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
             } else {
                 throw ZClientException.UPLOAD_FAILED("Attachment post failed, status=" + statusCode, null);
             }
@@ -1908,9 +1909,11 @@ public class ZMailbox implements ToZJSONObject {
             statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
-            if (statusCode == 200) {
+            if (statusCode == HttpServletResponse.SC_OK) {
                 String response = post.getResponseBodyAsString();
                 aid = getAttachmentId(response);
+            } else if (statusCode == HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE) {
+                throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
             } else {
                 throw ZClientException.UPLOAD_FAILED("Attachment post failed, status=" + statusCode, null);
             }
@@ -1943,29 +1946,9 @@ public class ZMailbox implements ToZJSONObject {
         throw ZClientException.UPLOAD_FAILED("upload failed, response: " + result, null);
     }
 
-    private void addAuthCookie(Map<String, String> cookieMap, URI uri, HttpState state) {
-        if (cookieMap == null)
-            return;
-
-        for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-            Cookie cookie = new Cookie(uri.getHost(), ck.getKey(), ck.getValue(), "/", -1, false);
-            state.addCookie(cookie);
-        }
-    }
-
     public HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-        HttpState initialState = new HttpState();
-
-        Map<String, String> cookieMap;
-        if (isAdmin) {
-            cookieMap = getAuthToken().cookieMap(isAdmin);
-            addAuthCookie(cookieMap, uri, initialState);
-        }
-
-        cookieMap = getAuthToken().cookieMap(false);
-        addAuthCookie(cookieMap, uri, initialState);
-
+        HttpState initialState = HttpClientUtil.newHttpState(getAuthToken(), uri.getHost(), isAdmin);
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
@@ -2434,7 +2417,7 @@ public class ZMailbox implements ToZJSONObject {
 
             statusCode = HttpClientUtil.executeMethod(client, get);
             // parse the response
-            if (statusCode == 200) {
+            if (statusCode == HttpServletResponse.SC_OK) {
                 return new GetMethodInputStream(get);
             } else {
                 String msg = String.format("GET from %s failed, status=%d.  %s", uri.toString(), statusCode, get.getStatusText());
@@ -2502,7 +2485,7 @@ public class ZMailbox implements ToZJSONObject {
             post = HttpClientUtil.addInputStreamToHttpMethod(post, is, length, contentType != null ? contentType: "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
             // parse the response
-            if (statusCode == 200) {
+            if (statusCode == HttpServletResponse.SC_OK) {
                 //
             } else {
                 throw ServiceException.FAILURE("POST failed, status=" + statusCode+" "+post.getStatusText(), null);
@@ -4854,7 +4837,7 @@ public class ZMailbox implements ToZJSONObject {
         }
         return result;
     }
-  
+
     public boolean checkRights(String name, List<String> rights) throws ServiceException {
         Element req = newRequestElement(AccountConstants.CHECK_RIGHTS_REQUEST);
         Element eTarget = req.addElement(AccountConstants.E_TARGET);
