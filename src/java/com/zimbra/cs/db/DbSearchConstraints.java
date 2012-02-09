@@ -460,6 +460,22 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         }
     }
     
+    private static class SenderRangesPrinter {
+        void run(StringBuilder str, Collection<StringRange> collect, String intro) {
+            if (!ListUtil.isEmpty(collect)) {
+                boolean atFirst = true;
+                for (StringRange elt: collect) {
+                    if (!atFirst) 
+                        str.append(" ");
+                    str.append(intro).append(":(");
+                    str.append(elt.toString());
+                    str.append(")");
+                    atFirst = false;
+                }
+            }
+        }
+    }
+    
     private static class ObjectPrinter<T extends Object> extends Printer<T> {
         void printOne(StringBuilder s, T t) {
             s.append(t.toString());
@@ -564,8 +580,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         if (!subjectRanges.isEmpty())
             new ObjectPrinter<StringRange>().run(retVal, subjectRanges, "SUBJECT");
         
-        if (!senderRanges.isEmpty())
-            new ObjectPrinter<StringRange>().run(retVal, senderRanges, "FROM");
+        if (!senderRanges.isEmpty()) {
+            new SenderRangesPrinter().run(retVal, senderRanges, "FROM");
+        }
 
         return retVal.toString();
     }
