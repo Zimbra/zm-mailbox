@@ -447,7 +447,7 @@ public class FileUploadServlet extends ZimbraServlet {
         try {
             Provisioning prov = Provisioning.getInstance();
             Account acct = AuthProvider.validateAuthToken(prov, at, true);
-            if (!isAdminRequest) {    
+            if (!isAdminRequest) {
                 // fetching the mailbox will except if it's in maintenance mode
                 if (Provisioning.onLocalServer(acct)) {
                     Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct, false);
@@ -654,12 +654,17 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
 
-        resp.setContentType("text/html; charset=utf-8");
+        resp.setStatus(status);
         PrintWriter out = resp.getWriter();
 
-        if (raw) {
+        if (extended) {
+            resp.setContentType("application/json");
+            out.println(results);
+        } else if (raw) {
+            resp.setContentType("text/plain");
             out.println(results);
         } else {
+            resp.setContentType("text/html");
             out.println("<html><head>" +
                     "<script language='javascript'>\nfunction doit() { window.parent._uploadManager.loaded("+ results + "); }\n</script>" +
                     "</head><body onload='doit()'></body></html>\n");
@@ -698,7 +703,7 @@ public class FileUploadServlet extends ZimbraServlet {
     protected ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize, Account acct) {
     	return getUploader(limitByFileUploadMaxSize);
     }
-    
+
     private static ServletFileUpload getUploader(boolean limitByFileUploadMaxSize) {
         // look up the maximum file size for uploads
     	long maxSize = DEFAULT_MAX_SIZE;
