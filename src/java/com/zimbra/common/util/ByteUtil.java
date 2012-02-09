@@ -178,9 +178,13 @@ public class ByteUtil {
             if (length == 0)
                 return new byte[0];
 
-            BufferStream bs = sizeLimit == -1 ?
-                    new BufferStream(sizeHint, Integer.MAX_VALUE, Integer.MAX_VALUE) :
-                    new BufferStream(sizeHint, (int) sizeLimit, sizeLimit);
+            BufferStream bs;
+            if (sizeLimit == -1)
+                bs = new BufferStream(sizeHint, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            else if (sizeLimit > Integer.MAX_VALUE)
+                bs = new BufferStream(sizeHint, Integer.MAX_VALUE, sizeLimit);
+            else
+                bs = new BufferStream(sizeHint, (int) sizeLimit, sizeLimit);
 
             bs.readFrom(is, length == -1 ? Long.MAX_VALUE : length);
             if (sizeLimit > 0 && bs.size() > sizeLimit)
