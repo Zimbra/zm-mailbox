@@ -120,6 +120,7 @@ public class DavProtocol {
 	public static final String HEADER_IF = "If";
 	public static final String HEADER_LOCK_TOKEN = "Lock-Token";
 	public static final String HEADER_OVERWRITE = "Overwrite";
+	public static final String HEADER_BRIEF = "Brief";
 	public static final String HEADER_STATUS_URI = "Status-URI";
 	public static final String HEADER_TIMEOUT = "Timeout";
 	

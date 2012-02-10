@@ -109,6 +109,7 @@ public class DavContext {
     private String mDavCompliance;
     private String mPathInfo;
     private boolean mOverwrite;
+    private boolean mBrief;
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
@@ -248,6 +249,8 @@ public class DavContext {
 		mDavCompliance = DavProtocol.getDefaultComplianceString();
 		String overwrite = mReq.getHeader(DavProtocol.HEADER_OVERWRITE);
 		mOverwrite = (overwrite != null && overwrite.equals("F")) ? false : true;
+	    String brief = mReq.getHeader(DavProtocol.HEADER_BRIEF);
+	    mBrief = (brief != null && brief.equals("t")) ? true : false;
 	}
 	
 	/* Returns HttpServletRequest object containing the current DAV request. */
@@ -574,6 +577,10 @@ public class DavContext {
     
     public boolean isOverwriteSet() {
         return mOverwrite;
+    }
+    
+    public boolean isBrief() {
+        return mBrief;
     }
         
     public Collection getDestinationCollection() throws DavException {

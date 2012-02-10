@@ -158,7 +158,8 @@ public class DavResponse {
 				DavException ex = errPropMap.get(name);
 				propstat.add(name, null, ex.getStatus());
 			} else if (prop == null) {
-				propstat.add(name, null, HttpServletResponse.SC_NOT_FOUND);
+			    if (!ctxt.isBrief())
+			        propstat.add(name, null, HttpServletResponse.SC_NOT_FOUND);
 			} else {
 				propstat.add(prop);
 			}

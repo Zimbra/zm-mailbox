@@ -75,7 +75,8 @@ public class ExpandProperty extends Report {
 			Prop p = new Prop(property);
 			ResourceProperty rp = rs.getProperty(p.getQName());
 			if (rp == null) {
-				propstat.add(p.getQName(), null, HttpServletResponse.SC_NOT_FOUND);
+			    if (!ctxt.isBrief())
+			        propstat.add(p.getQName(), null, HttpServletResponse.SC_NOT_FOUND);
 			} else {
 				Iterator subProps = property.elementIterator();
 				if (subProps.hasNext()) {
