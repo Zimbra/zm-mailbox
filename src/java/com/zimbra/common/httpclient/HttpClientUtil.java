@@ -55,8 +55,10 @@ public class HttpClientUtil {
         HttpState state = new HttpState();
         if (authToken != null) {
             Map<String, String> cookieMap = authToken.cookieMap(isAdmin);
-            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                state.addCookie(new Cookie(host, ck.getKey(), ck.getValue(), "/", null, false));
+            if (cookieMap != null) {
+                for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                    state.addCookie(new Cookie(host, ck.getKey(), ck.getValue(), "/", null, false));
+                }
             }
         }
         return state;
