@@ -439,6 +439,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         if (at == null) {
+            mLog.info("Auth token not present.  Returning %d response.", HttpServletResponse.SC_UNAUTHORIZED);
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
             return;
