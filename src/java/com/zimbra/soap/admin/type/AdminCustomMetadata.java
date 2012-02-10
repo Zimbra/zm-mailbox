@@ -36,8 +36,17 @@ public class AdminCustomMetadata
 extends AdminKeyValuePairs
 implements CustomMetadataInterface {
 
-    // Normally present but sometimes an empty element is created to show that
-    // CustomMetadata info is present but there are no sections to report on.
+    /**
+     * @zm-api-field-tag metadata-section-key
+     * @zm-api-field-description Metadata section key.
+     * <br />
+     * Must be no more than 36 characters long and must be in the format of <b>{namespace}:{section-name}</b>.
+     * Currently the only valid namespace is "zwc".
+     * <br />
+     * <br />
+     * Normally present but sometimes an empty element is created to show that custom metadata info is present but
+     * there are no sections to report on.
+     */
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=false)
     private String section;
 

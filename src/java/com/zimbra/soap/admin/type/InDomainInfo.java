@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,10 +28,18 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.admin.type.EffectiveRightsInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class InDomainInfo {
+
+    /**
+     * @zm-api-field-description Domains
+     */
     @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
     private List <NamedElement> domains = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-description Rights
+     */
     @XmlElement(name=AdminConstants.E_RIGHTS, required=true)
     private final EffectiveRightsInfo rights;
 

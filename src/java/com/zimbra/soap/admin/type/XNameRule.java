@@ -32,10 +32,18 @@ import com.zimbra.soap.base.XNameRuleInterface;
 public class XNameRule
 implements XNameRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_NAME, required=false)
+    /**
+     * @zm-api-field-tag xname-name
+     * @zm-api-field-description Name
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_NAME /* name */, required=false)
     private final String name;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_VALUE, required=false)
+    /**
+     * @zm-api-field-tag xname-value
+     * @zm-api-field-description Value
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_VALUE /* value */, required=false)
     private final String value;
 
     /**

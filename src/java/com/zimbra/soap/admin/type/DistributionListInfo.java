@@ -36,11 +36,21 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AdminConstants.E_DL)
 public class DistributionListInfo extends AdminObjectInfo {
 
+    /**
+     * @zm-api-field-tag dl-is-dynamic
+     * @zm-api-field-description Flags whether this is a dynamic distribution list or not
+     */
     @XmlAttribute(name=AdminConstants.A_DYNAMIC /* dynamic */, required=false)
     ZmBoolean dynamic;
+    /**
+     * @zm-api-field-description dl-members
+     */
     @XmlElement(name=AdminConstants.E_DLM /* dlm */, required=false)
     private List<String> members;
 
+    /**
+     * @zm-api-field-description Owner information
+     */
     @XmlElementWrapper(name=AdminConstants.E_DL_OWNERS /* owners */, required=false)
     @XmlElement(name=AdminConstants.E_DL_OWNER /* owner */, required=false)
     private List<GranteeInfo> owners = Lists.newArrayList();

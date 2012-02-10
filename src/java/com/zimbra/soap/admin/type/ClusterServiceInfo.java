@@ -22,23 +22,36 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.ClusterConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ClusterServiceInfo {
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_NAME
-                /* name */, required=true)
+    // soap-admin.txt implies that there is a "starts" attribute but handler does not add that
+    /**
+     * @zm-api-field-tag cluster-service-name
+     * @zm-api-field-description Cluster service name
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_STATE
-                /* state */, required=true)
+    /**
+     * @zm-api-field-tag cluster-service-name
+     * @zm-api-field-description Cluster service name
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_STATE /* state */, required=true)
     private final String state;
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_OWNER
-                /* owner */, required=true)
+    /**
+     * @zm-api-field-tag cluster-service-owner-server
+     * @zm-api-field-description Name of server that owns this service
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_OWNER /* owner */, required=true)
     private final String owner;
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_LAST_OWNER
-                /* lastOwner */, required=true)
+    /**
+     * @zm-api-field-tag cluster-service-last-owner-server
+     * @zm-api-field-description Name of server that last owned this service
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_LAST_OWNER /* lastOwner */, required=true)
     private final String lastOwner;
 
     /**
@@ -49,8 +62,7 @@ public class ClusterServiceInfo {
         this((String) null, (String) null, (String) null, (String) null);
     }
 
-    public ClusterServiceInfo(String name, String state,
-                            String owner, String lastOwner) {
+    public ClusterServiceInfo(String name, String state, String owner, String lastOwner) {
         this.name = name;
         this.state = state;
         this.owner = owner;

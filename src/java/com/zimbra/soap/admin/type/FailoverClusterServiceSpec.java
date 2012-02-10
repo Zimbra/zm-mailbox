@@ -22,15 +22,21 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.ClusterConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class FailoverClusterServiceSpec {
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_NAME /* name */,
-                    required=true)
+    /**
+     * @zm-api-field-tag cluster-svc-name
+     * @zm-api-field-description Cluster service name
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVICE_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=ClusterConstants.A_FAILOVER_NEW_SERVER /* newServer */,
-                    required=true)
+    /**
+     * @zm-api-field-tag new-server
+     * @zm-api-field-description New Server
+     */
+    @XmlAttribute(name=ClusterConstants.A_FAILOVER_NEW_SERVER /* newServer */, required=true)
     private final String newServer;
 
     /**

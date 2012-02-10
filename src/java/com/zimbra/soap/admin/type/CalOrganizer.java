@@ -34,25 +34,54 @@ import com.zimbra.soap.base.XParamInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CalOrganizer implements CalOrganizerInterface {
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
+    /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description Email address (without "MAILTO:")
+     */
+    @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=false)
     private String address;
 
-    @XmlAttribute(name=MailConstants.A_URL, required=false)
+    /**
+     * @zm-api-field-tag url
+     * @zm-api-field-description URL - has same value as <b>{email-address}</b>.
+     * <br />
+     * Maintained for backwards compatibility with ZCS 4.5
+     */
+    @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
-    @XmlAttribute(name=MailConstants.A_DISPLAY, required=false)
+    /**
+     * @zm-api-field-tag friendly-name
+     * @zm-api-field-description Friendly name - "CN" in iCalendar
+     */
+    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
     private String displayName;
 
-    @XmlAttribute(name=MailConstants.A_CAL_SENTBY, required=false)
+    /**
+     * @zm-api-field-tag sent-by
+     * @zm-api-field-description iCalendar SENT-BY
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_SENTBY /* sentBy */, required=false)
     private String sentBy;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DIR, required=false)
+    /**
+     * @zm-api-field-tag dir
+     * @zm-api-field-description iCalendar DIR - Reference to a directory entry associated with the calendar user.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DIR /* dir */, required=false)
     private String dir;
 
-    @XmlAttribute(name=MailConstants.A_CAL_LANGUAGE, required=false)
+    /**
+     * @zm-api-field-tag language
+     * @zm-api-field-description iCalendar LANGUAGE - As defined in RFC5646 * (e.g. "en-US")
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_LANGUAGE /* lang */, required=false)
     private String language;
 
-    @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
+    /**
+     * @zm-api-field-description Non-standard parameters (XPARAMs)
+     */
+    @XmlElement(name=MailConstants.E_CAL_XPARAM /* xparam */, required=false)
     private List<XParam> xParams = Lists.newArrayList();
 
     public CalOrganizer() {

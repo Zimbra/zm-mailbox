@@ -27,15 +27,37 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class SyncGalAccountDataSourceSpec {
 
+    /**
+     * @zm-api-field-tag datasource-by
+     * @zm-api-field-description By - <b>id|name</b>
+     */
     @XmlAttribute(name=AdminConstants.A_BY /* by */, required=true)
     private String by;
 
+    /**
+     * @zm-api-field-tag full-sync
+     * @zm-api-field-description If fullSync is set to <b>0 (false)</b> or unset the default behavior is trickle
+     * sync which will pull in any new contacts or modified contacts since last sync.
+     * <br />
+     * If fullSync is set to <b>1 (true)</b>, then the server will go through all the contacts that appear in GAL,
+     * and resolve deleted contacts in addition to new or modified ones.
+     */
     @XmlAttribute(name=AdminConstants.A_FULLSYNC /* fullSync */, required=false)
     private ZmBoolean fullSync;
 
+    /**
+     * @zm-api-field-tag reset flag
+     * @zm-api-field-description Reset flag.  If set, then all the contacts will be populated again, regardless of
+     * the status since last sync.  Reset needs to be done when there is a significant change in the configuration,
+     * such as filter, attribute map, or search base.
+     */
     @XmlAttribute(name=AdminConstants.A_RESET /* reset */, required=false)
     private ZmBoolean reset;
 
+    /**
+     * @zm-api-field-tag key
+     * @zm-api-field-description Key - meaning determined by <b>{datasource-by}</b>
+     */
     @XmlValue
     private String value;
 

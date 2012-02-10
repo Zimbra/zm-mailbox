@@ -30,33 +30,59 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class BackupAccountQuerySpec {
 
-    @XmlAttribute(name=BackupConstants.A_BACKUP_TARGET
-                        /* target */, required=false)
+    /**
+     * @zm-api-field-tag path-to-backup-target
+     * @zm-api-field-description Path to backup target
+     */
+    @XmlAttribute(name=BackupConstants.A_BACKUP_TARGET /* target */, required=false)
     private String target;
 
+    /**
+     * @zm-api-field-tag backup-type
+     * @zm-api-field-description Backup type - <b>full|incremental</b>.  Means both types if omitted or bogus value
+     */
     @XmlAttribute(name=BackupConstants.A_TYPE /* type */, required=false)
     private String type;
 
+    /**
+     * @zm-api-field-tag start-time-millis
+     * @zm-api-field-description Return backups whose start time is at or after this time.  Defaults to beginning of
+     * time if not specified.
+     */
     @XmlAttribute(name=BackupConstants.A_FROM /* from */, required=false)
     private Long from;
 
+    /**
+     * @zm-api-field-tag end-time-millis
+     * @zm-api-field-description Return backups whose start time is at or before this time.  Defaults to end of time
+     * if not specified
+     */
     @XmlAttribute(name=BackupConstants.A_TO /* to */, required=false)
     private Long to;
 
-    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_OFFSET
-                        /* backupListOffset */, required=false)
+    /**
+     * @zm-api-field-tag backup-list-offset-number
+     * @zm-api-field-description Backup list offset number.  Default = 0
+     */
+    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_OFFSET /* backupListOffset */, required=false)
     private Integer backupListOffset;
 
-    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_COUNT
-                        /* backupListCount */, required=false)
+    /**
+     * @zm-api-field-tag backup-list-count-number
+     * @zm-api-field-description Backup list count number.  Default = -1, meaning all
+     */
+    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_COUNT /* backupListCount */, required=false)
     private Integer backupListCount;
 
-    @XmlElement(name=BackupConstants.E_ACCOUNT
-                        /* account */, required=false)
+    /**
+     * @zm-api-field-tag account-email-or-all
+     * @zm-api-field-description Either the account email address or <b>all</b>
+     */
+    @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 
     public BackupAccountQuerySpec() {

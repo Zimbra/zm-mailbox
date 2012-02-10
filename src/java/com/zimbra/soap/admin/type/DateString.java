@@ -23,9 +23,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class DateString {
 
+    /**
+     * @zm-api-field-tag yyyy-MM-dd
+     * @zm-api-field-description Date in format : <b>yyyy-MM-dd</b>
+     */
     @XmlAttribute(name=SyncAdminConstants.A_DATE /* date */, required=true)
     private final String date;
 

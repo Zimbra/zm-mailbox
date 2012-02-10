@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,30 +13,17 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.base;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PackageSelector {
-
-    /**
-     * @zm-api-field-tag name
-     * @zm-api-field-description Name
-     */
-    @XmlAttribute(name=AdminConstants.A_NAME, required=false)
-    private final String name;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private PackageSelector() { this(null); }
-
-    public PackageSelector(String name) { this.name = name; }
-
-    public String getName() { return name; }
+public interface DtValInterface {
+    public void setStartTimeInterface(DtTimeInfoInterface startTime);
+    public void setEndTimeInterface(DtTimeInfoInterface endTime);
+    public void setDurationInterface(DurationInfoInterface duration);
+    public DtTimeInfoInterface getStartTimeInterface();
+    public DtTimeInfoInterface getEndTimeInterface();
+    public DurationInfoInterface getDurationInterface();
 }

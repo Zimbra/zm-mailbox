@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,13 +21,21 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BufferedCommitInfo {
 
-    @XmlAttribute(name=AdminConstants.A_AID, required=true)
+    /**
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description Account ID
+     */
+    @XmlAttribute(name=AdminConstants.A_AID /* aid */, required=true)
     private final String aid;
 
-    @XmlAttribute(name=AdminConstants.A_CID, required=true)
+    /**
+     * @zm-api-field-tag commit-id
+     * @zm-api-field-description Commit ID
+     */
+    @XmlAttribute(name=AdminConstants.A_CID /* cid */, required=true)
     private final String cid;
 
     /**

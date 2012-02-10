@@ -29,10 +29,18 @@ import com.zimbra.soap.type.ZmBoolean;
 public class Notification
 implements NotificationInterface {
 
-    @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT, required=false)
+    /**
+     * @zm-api-field-tag truncated-flag
+     * @zm-api-field-description Truncated flag
+     */
+    @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT /* truncated */, required=false)
     private ZmBoolean truncatedContent;
 
-    @XmlElement(name=MailConstants.E_CONTENT, required=false)
+    /**
+     * @zm-api-field-tag content
+     * @zm-api-field-description Content
+     */
+    @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private String content;
 
     public Notification() {

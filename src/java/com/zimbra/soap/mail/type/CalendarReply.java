@@ -34,18 +34,45 @@ extends RecurIdInfo
 implements CalendarReplyInterface {
 
     // zdsync
+    /**
+     * @zm-api-field-tag sequence-num
+     * @zm-api-field-description Sequence number
+     */
     @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=true)
-    private final String seq;
+    private int seq;
 
+    /**
+     * @zm-api-field-tag dtstamp
+     * @zm-api-field-description DTSTAMP date in milliseconds
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=true)
-    private final String date;
+    private long date;
 
+    /**
+     * @zm-api-field-tag attendee
+     * @zm-api-field-description Attendee address
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ATTENDEE /* at */, required=true)
-    private final String attendee;
+    private String attendee;
 
+    /**
+     * @zm-api-field-tag sent-by
+     * @zm-api-field-description iCalendar SENT-BY
+     */
     @XmlAttribute(name=MailConstants.A_CAL_SENTBY /* sentBy */, required=false)
     private String sentBy;
 
+    /**
+     * @zm-api-field-tag participation-status
+     * @zm-api-field-description iCalendar PTST (Participation status)
+     * <br />
+     * Valid values: <b>NE|AC|TE|DE|DG|CO|IN|WE|DF</b>
+     * <br />
+     * Meanings:
+     * <br />
+     * "NE"eds-action, "TE"ntative, "AC"cept, "DE"clined, "DG" (delegated), "CO"mpleted (todo), "IN"-process (todo),
+     * "WA"iting (custom value only for todo), "DF" (deferred; custom value only for todo)
+     */
     @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT /* ptst */, required=false)
     private String partStat;
 
@@ -54,18 +81,15 @@ implements CalendarReplyInterface {
      */
     @SuppressWarnings("unused")
     private CalendarReply() {
-        this((String) null, (String) null, (String) null);
     }
 
-    public CalendarReply(String seq, String date, String attendee) {
+    public CalendarReply(int seq, long date, String attendee) {
         this.seq = seq;
         this.date = date;
         this.attendee = attendee;
     }
 
-    @Override
-    public CalendarReplyInterface createFromSeqDateAttendee(String seq,
-            String date, String attendee) {
+    public static CalendarReplyInterface createFromSeqDateAttendee(int seq, long date, String attendee) {
         return new CalendarReply(seq, date, attendee);
     }
 
@@ -74,9 +98,9 @@ implements CalendarReplyInterface {
     @Override
     public void setPartStat(String partStat) { this.partStat = partStat; }
     @Override
-    public String getSeq() { return seq; }
+    public int getSeq() { return seq; }
     @Override
-    public String getDate() { return date; }
+    public long getDate() { return date; }
     @Override
     public String getAttendee() { return attendee; }
     @Override

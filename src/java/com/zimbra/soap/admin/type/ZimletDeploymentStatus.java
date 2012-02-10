@@ -22,15 +22,27 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ZimletDeploymentStatus {
 
+    /**
+     * @zm-api-field-tag server-name
+     * @zm-api-field-description Server name
+     */
     @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=true)
     private final String server;
 
+    /**
+     * @zm-api-field-tag status-succeeded|failed|pending
+     * @zm-api-field-description Status - valid values <b>succeeded|failed|pending</b>
+     */
     @XmlAttribute(name=AdminConstants.A_STATUS /* status */, required=true)
     private final String status;
 
+    /**
+     * @zm-api-field-tag error-message
+     * @zm-api-field-description Error message
+     */
     @XmlAttribute(name=AdminConstants.A_ERROR /* error */, required=false)
     private final String error;
 

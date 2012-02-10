@@ -31,29 +31,29 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class TZFixupRuleMatch {
 
+    /**
+     * @zm-api-field-description Match rules:
+     * <table>
+     * <tr> <td> <b> &lt;any&gt; </b> </td> <td> match any timezone </td> </tr>
+     * <tr> <td> <b> &lt;tzid&gt; </b> </td> <td> match the timezone's TZID string </td> </tr>
+     * <tr> <td> <b> &lt;nonDst&gt; </b> </td>
+     *      <td> match the GMT offset of a timezone that doesn't use daylight saving time </td> </tr>
+     * <tr> <td> <b> &lt;rules&gt; </b> </td>
+     *      <td> match DST timezone based on transition rules specified as month/week number in month/week day </td> </tr>
+     * <tr> <td> <b> &lt;dates&gt; </b> </td>
+     *      <td> match DST timezone based on transition rules specified as month and day of month </td> </tr>
+     * </table>
+     */
     @XmlElements({
-        // match any timezone
-        @XmlElement(name=AdminConstants.E_ANY /* any */,
-            type=SimpleElement.class),
-        // match the timezone's TZID string
-        @XmlElement(name=AdminConstants.E_TZID /* tzid */,
-            type=Id.class),
-        // match the GMT offset of a timezone that doesn't use
-        // daylight saving time
-        @XmlElement(name=AdminConstants.E_NON_DST /* nonDst */,
-            type=Offset.class),
-        // match DST timezone based on transition rules
-        // specified as month/week number in month/week day
-        @XmlElement(name=AdminConstants.E_RULES /* rules */,
-            type=TZFixupRuleMatchRules.class),
-        // match DST timezone based on transition rules specified as
-        // month and day of month
-        @XmlElement(name=AdminConstants.E_DATES /* dates */,
-            type=TZFixupRuleMatchDates.class)
+        @XmlElement(name=AdminConstants.E_ANY /* any */, type=SimpleElement.class),
+        @XmlElement(name=AdminConstants.E_TZID /* tzid */, type=Id.class),
+        @XmlElement(name=AdminConstants.E_NON_DST /* nonDst */, type=Offset.class),
+        @XmlElement(name=AdminConstants.E_RULES /* rules */, type=TZFixupRuleMatchRules.class),
+        @XmlElement(name=AdminConstants.E_DATES /* dates */, type=TZFixupRuleMatchDates.class)
     })
     private List<Object> elements = Lists.newArrayList();
 

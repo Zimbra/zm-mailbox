@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,22 +33,42 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class SessionInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ZIMBRA_ID, required=false)
+    /**
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description Account ID
+     */
+    @XmlAttribute(name=AdminConstants.A_ZIMBRA_ID /* zid */, required=false)
     private final String zimbraId;
 
-    @XmlAttribute(name=AdminConstants.A_NAME, required=false)
+    /**
+     * @zm-api-field-tag account-name
+     * @zm-api-field-description Account name
+     */
+    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=false)
     private final String name;
 
-    @XmlAttribute(name=AdminConstants.A_SESSION_ID, required=true)
+    /**
+     * @zm-api-field-tag session-id
+     * @zm-api-field-description Session ID
+     */
+    @XmlAttribute(name=AdminConstants.A_SESSION_ID /* sid */, required=true)
     private final String sessionId;
 
-    @XmlAttribute(name=AdminConstants.A_CREATED_DATE, required=true)
+    /**
+     * @zm-api-field-tag creation-date
+     * @zm-api-field-description Creation date
+     */
+    @XmlAttribute(name=AdminConstants.A_CREATED_DATE /* cd */, required=true)
     private final long createdDate;
 
-    @XmlAttribute(name=AdminConstants.A_LAST_ACCESSED_DATE, required=true)
+    /**
+     * @zm-api-field-tag last-accessed-date
+     * @zm-api-field-description Last accessed date
+     */
+    @XmlAttribute(name=AdminConstants.A_LAST_ACCESSED_DATE /* ld */, required=true)
     private final long lastAccessedDate;
 
     // Overrides of Server-side encodedState MAY add elements or attributes.
@@ -57,9 +77,15 @@ public class SessionInfo {
     // ImapSession.doEncodeState adds an "imap" element which is
     // populated by PagedFolderData.doEncodeState or ImapFolder.doEncodeState
 
+    /**
+     * @zm-api-field-description Extra attributes - possibly including "push"
+     */
     @XmlAnyAttribute
     private Map<QName,Object> extraAttributes = Maps.newHashMap();
 
+    /**
+     * @zm-api-field-description Extra elements - possibly including an "imap" element
+     */
     @XmlAnyElement
     private List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 

@@ -27,21 +27,53 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailboxMoveInfo {
 
+    /**
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Account email address
+     */
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-tag move-start-millis
+     * @zm-api-field-description Move start time in milliseconds
+     */
     @XmlAttribute(name=BackupConstants.A_START /* start */, required=true)
     private long start;
 
+    /**
+     * @zm-api-field-description Mailbox move type.  Whether this is a move-out to destination server or move-in
+     * from source server
+     */
     @XmlAttribute(name=BackupConstants.A_TYPE /* type */, required=true)
     private MailboxMoveType moveType;
 
+    /**
+     * @zm-api-field-tag src-hostname
+     * @zm-api-field-description Hostname of source server (this server's howtname if type="out")
+     */
     @XmlAttribute(name=BackupConstants.A_SOURCE /* src */, required=true)
     private String source;
 
+    /**
+     * @zm-api-field-tag dest-hostname
+     * @zm-api-field-description Hostname of destination server (this server's howtname if type="in")
+     */
     @XmlAttribute(name=BackupConstants.A_TARGET /* dest */, required=true)
     private String target;
 
+    /**
+     * @zm-api-field-tag no-peer
+     * @zm-api-field-description Set if move is NOT in progress on destination server; only used when checkPeer
+     * was set in the request.
+     * <br />
+     * If <b>noPeer</b> is set, it can mean one of:
+     * <ol>
+     * <li> The peer server is not reachable
+     * <li> The peer server doesn't think account is being moved (possible if peer was restarted during a move)
+     * <li> Race condition (because move status on multiple servers are not updated/queried transactionally)
+     * </ol>
+     */
     @XmlAttribute(name=BackupConstants.A_NO_PEER /* noPeer */, required=false)
     private ZmBoolean noPeer;
 

@@ -34,25 +34,25 @@ import com.zimbra.soap.base.XParamInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CalOrganizer implements CalOrganizerInterface {
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
+    @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=false)
     private String address;
 
-    @XmlAttribute(name=MailConstants.A_URL, required=false)
+    @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
-    @XmlAttribute(name=MailConstants.A_DISPLAY, required=false)
+    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
     private String displayName;
 
-    @XmlAttribute(name=MailConstants.A_CAL_SENTBY, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_SENTBY /* sentBy */, required=false)
     private String sentBy;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DIR, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_DIR /* dir */, required=false)
     private String dir;
 
-    @XmlAttribute(name=MailConstants.A_CAL_LANGUAGE, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_LANGUAGE /* lang */, required=false)
     private String language;
 
-    @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
+    @XmlElement(name=MailConstants.E_CAL_XPARAM /* xparam */, required=false)
     private List<XParam> xParams = Lists.newArrayList();
 
     public CalOrganizer() {

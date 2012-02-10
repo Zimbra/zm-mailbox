@@ -22,12 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class AttributeDescription {
 
+    /**
+     * @zm-api-field-tag attr-name
+     * @zm-api-field-description Attribute name
+     */
     @XmlAttribute(name=AdminConstants.A_N /* n */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag attr-desc
+     * @zm-api-field-description Attribute description
+     */
     @XmlAttribute(name=AdminConstants.A_DESC /* desc */, required=true)
     private final String description;
 

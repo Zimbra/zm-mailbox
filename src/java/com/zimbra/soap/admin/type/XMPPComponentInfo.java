@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,18 +23,32 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class XMPPComponentInfo extends AdminAttrsImpl {
 
-    @XmlAttribute(name=AccountConstants.A_NAME, required=true)
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
+    @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=AccountConstants.A_ID, required=true)
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
+    @XmlAttribute(name=AccountConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-description x-domainName
+     */
     @XmlAttribute(name="x-domainName", required=false)
     private String domainName;
 
+    /**
+     * @zm-api-field-description x-serverName
+     */
     @XmlAttribute(name="x-serverName", required=false)
     private String serverName;
 

@@ -22,18 +22,27 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class TZFixupRuleMatchRule {
 
-    // Value between 1 (January) and 12 (December)
+    /**
+     * @zm-api-field-tag match-month
+     * @zm-api-field-description Match month.  Value between 1 (January) and 12 (December)
+     */
     @XmlAttribute(name=AdminConstants.A_MON /* mon */, required=true)
     private final int month;
 
-    // -1 means last week of month else between 1 and 4
+    /**
+     * @zm-api-field-tag match-week
+     * @zm-api-field-description Match week.  -1 means last week of month else between 1 and 4
+     */
     @XmlAttribute(name=AdminConstants.A_WEEK /* week */, required=true)
     private final int week;
 
-    // Value between 1 (Sunday) and 7 (Saturday)
+    /**
+     * @zm-api-field-tag match-week-day
+     * @zm-api-field-description Match week day.  Value between 1 (Sunday) and 7 (Saturday)
+     */
     @XmlAttribute(name=AdminConstants.A_WKDAY /* wkday */, required=true)
     private final int weekDay;
 

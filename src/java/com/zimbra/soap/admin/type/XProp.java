@@ -35,12 +35,23 @@ import com.zimbra.soap.base.XParamInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class XProp implements XPropInterface {
 
+    /**
+     * @zm-api-field-tag xprop-name
+     * @zm-api-field-description XPROP name
+     */
     @XmlAttribute(name=MailConstants.A_NAME, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag xprop-value
+     * @zm-api-field-description XPROP value
+     */
     @XmlAttribute(name=MailConstants.A_VALUE, required=true)
     private final String value;
 
+    /**
+     * @zm-api-field-description XPARAMs
+     */
     @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
     private List<XParam> xParams = Lists.newArrayList();
 

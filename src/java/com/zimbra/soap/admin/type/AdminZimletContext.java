@@ -27,12 +27,26 @@ import com.zimbra.soap.base.ZimletContextInterface;
 public class AdminZimletContext
 implements ZimletContextInterface {
 
+    /**
+     * @zm-api-field-tag zimlet-base-url
+     * @zm-api-field-description Zimlet Base URL
+     */
     @XmlAttribute(name=AccountConstants.A_ZIMLET_BASE_URL /* baseUrl */, required=true)
     private String zimletBaseUrl;
 
+    /**
+     * @zm-api-field-tag zimlet-priority
+     * @zm-api-field-description Zimlet Priority
+     */
     @XmlAttribute(name=AccountConstants.A_ZIMLET_PRIORITY /* priority */, required=false)
     private Integer zimletPriority;
 
+    /**
+     * @zm-api-field-tag zimlet-presence
+     * @zm-api-field-description Zimlet presence
+     * <br />
+     * Valid values: <b>mandatory</b> | <b>enabled</b> | <b>disabled</b>
+     */
     @XmlAttribute(name=AccountConstants.A_ZIMLET_PRESENCE /* presence */, required=true)
     private String zimletPresence;
 

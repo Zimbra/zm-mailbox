@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,35 +23,70 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class VersionCheckUpdateInfo {
 
-    @XmlAttribute(name=AdminConstants.A_UPDATE_TYPE, required=false)
+    /**
+     * @zm-api-field-tag type
+     * @zm-api-field-description Type
+     */
+    @XmlAttribute(name=AdminConstants.A_UPDATE_TYPE /* type */, required=false)
     private String type;
 
-    @XmlAttribute(name=AdminConstants.A_CRITICAL, required=false)
+    /**
+     * @zm-api-field-tag critical
+     * @zm-api-field-description Critical
+     */
+    @XmlAttribute(name=AdminConstants.A_CRITICAL /* critical */, required=false)
     private ZmBoolean critical;
 
-    @XmlAttribute(name=AdminConstants.A_UPDATE_URL, required=false)
+    /**
+     * @zm-api-field-tag updateURL
+     * @zm-api-field-description updateURL
+     */
+    @XmlAttribute(name=AdminConstants.A_UPDATE_URL /* updateURL */, required=false)
     private String updateURL;
 
-    @XmlAttribute(name=AdminConstants.A_DESCRIPTION /* description */,
-                        required=false)
+    /**
+     * @zm-api-field-tag description
+     * @zm-api-field-description Description
+     */
+    @XmlAttribute(name=AdminConstants.A_DESCRIPTION /* description */, required=false)
     private String description;
 
-    @XmlAttribute(name=AdminConstants.A_SHORT_VERSION, required=false)
+    /**
+     * @zm-api-field-tag shortversion
+     * @zm-api-field-description Short Version
+     */
+    @XmlAttribute(name=AdminConstants.A_SHORT_VERSION /* shortversion */, required=false)
     private String shortVersion;
 
-    @XmlAttribute(name=AdminConstants.A_RELEASE, required=false)
+    /**
+     * @zm-api-field-tag release
+     * @zm-api-field-description Release
+     */
+    @XmlAttribute(name=AdminConstants.A_RELEASE /* release */, required=false)
     private String release;
 
-    @XmlAttribute(name=AdminConstants.A_VERSION, required=false)
+    /**
+     * @zm-api-field-tag version
+     * @zm-api-field-description Version
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION /* version */, required=false)
     private String version;
 
-    @XmlAttribute(name=AdminConstants.A_BUILDTYPE, required=false)
+    /**
+     * @zm-api-field-tag buildtype
+     * @zm-api-field-description Build Type
+     */
+    @XmlAttribute(name=AdminConstants.A_BUILDTYPE /* buildtype */, required=false)
     private String buildType;
 
-    @XmlAttribute(name=AdminConstants.A_PLATFORM, required=false)
+    /**
+     * @zm-api-field-tag platform
+     * @zm-api-field-description Platform
+     */
+    @XmlAttribute(name=AdminConstants.A_PLATFORM /* platform */, required=false)
     private String platform;
 
     public VersionCheckUpdateInfo() {
@@ -76,8 +111,7 @@ public class VersionCheckUpdateInfo {
     public String getBuildType() { return buildType; }
     public String getPlatform() { return platform; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("type", type)
             .add("critical", critical)
@@ -92,7 +126,6 @@ public class VersionCheckUpdateInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

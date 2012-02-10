@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Offset {
 
+    /**
+     * @zm-api-field-tag offset
+     * @zm-api-field-description Offset
+     */
     @XmlAttribute(name=AdminConstants.A_OFFSET /* offset */, required=true)
     private final long offset;
 

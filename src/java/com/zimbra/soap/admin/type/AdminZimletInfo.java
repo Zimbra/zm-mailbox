@@ -37,12 +37,21 @@ import com.zimbra.soap.base.ZimletInterface;
 public class AdminZimletInfo
 implements ZimletInterface {
 
+    /**
+     * @zm-api-field-description Zimlet context
+     */
     @XmlElement(name=AccountConstants.E_ZIMLET_CONTEXT /* zimletContext */, required=false)
     private AdminZimletContext zimletContext;
 
+    /**
+     * @zm-api-field-description Zimlet description
+     */
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_ZIMLET /* zimlet */, required=false)
     private AdminZimletDesc zimlet;
 
+    /**
+     * @zm-api-field-description Other elements
+     */
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_CONFIG /* zimletConfig */, required=false)
     private AdminZimletConfigInfo zimletConfig;
 

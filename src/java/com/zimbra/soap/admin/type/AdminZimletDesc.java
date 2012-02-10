@@ -40,21 +40,46 @@ public class AdminZimletDesc implements ZimletDesc {
     // Turning schema validation on for WSDL clients using WSDL derived
     // from this class appears to hit problems.  Believe that @XmlAnyElement
     // and @XmlMixed are fundamentally incompatible with schema validation
+
+    /**
+     * @zm-api-field-tag zimlet-name
+     * @zm-api-field-description Zimlet name
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag version-string
+     * @zm-api-field-description Version string
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_VERSION /* version */, required=false)
     private String version;
 
+    /**
+     * @zm-api-field-tag zimlet-description
+     * @zm-api-field-description Zimlet description
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_DESCRIPTION /* description */, required=false)
     private String description;
 
+    /**
+     * @zm-api-field-tag is-extension
+     * @zm-api-field-description Valid values <b>true|false</b>
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_EXTENSION /* extension */, required=false)
     private String extension;
 
+    /**
+     * @zm-api-field-tag zimlet-target
+     * @zm-api-field-description Zimlet target
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, required=false)
     private String target;
 
+    /**
+     * @zm-api-field-tag zimlet-label
+     * @zm-api-field-description Zimlet label
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_TAG_LABEL /* label */, required=false)
     private String label;
 
@@ -64,6 +89,9 @@ public class AdminZimletDesc implements ZimletDesc {
     // ZimletConstants.ZIMLET_TAG_PANEL_ITEM will map to org.w3c.dom.Element
     // ZimletConstants.ZIMLET_DISABLE_UI_UNDEPLOY will map to org.w3c.dom.Element
 
+    /**
+     * @zm-api-field-description Elements
+     */
     @XmlElementRefs({
         @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION /* serverExtension */,
                 type=ZimletServerExtension.class),

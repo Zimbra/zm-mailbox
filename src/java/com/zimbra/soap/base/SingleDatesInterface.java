@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,8 @@
 
 package com.zimbra.soap.base;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
@@ -22,10 +24,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 public interface SingleDatesInterface {
     public void setTimezone(String timezone);
     public String getTimezone();
-    public void setStartTimeInterface(DtTimeInfoInterface startTime);
-    public void setEndTimeInterface(DtTimeInfoInterface endTime);
-    public void setDurationInterface(DurationInfoInterface duration);
-    public DtTimeInfoInterface getStartTimeInterface();
-    public DtTimeInfoInterface getEndTimeInterface();
-    public DurationInfoInterface getDurationInterface();
+    public void setDtValInterfaces(Iterable <DtValInterface> dtvals);
+    public void addDtValInterface(DtValInterface dtval);
+    public List<DtValInterface> getDtValInterfaces();
 }

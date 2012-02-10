@@ -41,17 +41,30 @@ public class InviteInfo
 implements InviteInfoInterface {
 
     // Valid values - "appt" and "task"
-    @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE, required=true)
+    /**
+     * @zm-api-field-tag appt-or-task
+     * @zm-api-field-description Invite type - <b>appt|task</b>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
     private final String calItemType;
 
-    @XmlElement(name=MailConstants.E_CAL_TZ, required=false)
+    /**
+     * @zm-api-field-description Timezones
+     */
+    @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_INVITE_COMPONENT, required=false)
+    /**
+     * @zm-api-field-description Invite components
+     */
+    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
     private InviteComponent inviteComponent;
 
-    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES, required=false)
-    @XmlElement(name=MailConstants.E_CAL_REPLY, required=false)
+    /**
+     * @zm-api-field-description List of replies received from attendees.
+     */
+    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
+    @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
     /**
@@ -132,7 +145,7 @@ implements InviteInfoInterface {
     public void setInviteComponentInterface(
             InviteComponentInterface inviteComponent) {
         setInviteComponent((InviteComponent) inviteComponent);
-        
+
     }
 
     @Override

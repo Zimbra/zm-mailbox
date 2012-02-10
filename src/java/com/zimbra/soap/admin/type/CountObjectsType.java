@@ -25,7 +25,7 @@ public enum CountObjectsType {
     domain,
     cos,
     server;
-    
+
     public static CountObjectsType fromString(String type) throws ServiceException {
         try {
             // for backward compatibility
@@ -38,7 +38,7 @@ public enum CountObjectsType {
             throw ServiceException.INVALID_REQUEST("unknown count objects type: " + type, e);
         }
     }
-    
+
     public static String names(String separator) {
         Joiner joiner = Joiner.on(separator);
         return joiner.join(CountObjectsType.values());

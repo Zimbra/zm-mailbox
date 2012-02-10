@@ -31,22 +31,41 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class BackupQueryAccounts {
 
+    /**
+     * @zm-api-field-tag total-accts-in-backup-set
+     * @zm-api-field-description Total number of accounts in backup set
+     */
     @XmlAttribute(name=BackupConstants.A_TOTAL_COUNT /* total */, required=false)
     private Integer totalCount;
 
+    /**
+     * @zm-api-field-tag num-accts-whose-backups-completed-successfully
+     * @zm-api-field-description Number of accounts whose backup completed successfully
+     */
     @XmlAttribute(name=BackupConstants.A_COMPLETION_COUNT /* completionCount */, required=false)
     private Integer completionCount;
 
+    /**
+     * @zm-api-field-tag num-accts-with-errors
+     * @zm-api-field-description Number of accounts that had error during backup
+     */
     @XmlAttribute(name=BackupConstants.A_ERROR_COUNT /* errorCount */, required=false)
     private Integer errorCount;
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description Present if there are more accounts to page through
+     */
     @XmlAttribute(name=BackupConstants.A_MORE /* more */, required=false)
     private ZmBoolean more;
 
+    /**
+     * @zm-api-field-description Account list returned if request specified accountListStatus
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<BackupQueryAccountStatus> accounts = Lists.newArrayList();
 

@@ -35,19 +35,16 @@ import com.zimbra.soap.base.RecurrenceInfoInterface;
 public class RecurrenceInfo
 implements RecurRuleBase, RecurrenceInfoInterface {
 
+    /**
+     * @zm-api-field-description Recurrence rules
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_CAL_ADD,
-            type=AddRecurrenceInfo.class),
-        @XmlElement(name=MailConstants.E_CAL_EXCLUDE,
-            type=ExcludeRecurrenceInfo.class),
-        @XmlElement(name=MailConstants.E_CAL_EXCEPT,
-            type=ExceptionRuleInfo.class),
-        @XmlElement(name=MailConstants.E_CAL_CANCEL,
-            type=CancelRuleInfo.class),
-        @XmlElement(name=MailConstants.E_CAL_DATES,
-            type=SingleDates.class),
-        @XmlElement(name=MailConstants.E_CAL_RULE,
-            type=SimpleRepeatingRule.class)
+        @XmlElement(name=MailConstants.E_CAL_ADD /* add */, type=AddRecurrenceInfo.class),
+        @XmlElement(name=MailConstants.E_CAL_EXCLUDE /* exclude */, type=ExcludeRecurrenceInfo.class),
+        @XmlElement(name=MailConstants.E_CAL_EXCEPT /* except */, type=ExceptionRuleInfo.class),
+        @XmlElement(name=MailConstants.E_CAL_CANCEL /* cancel */, type=CancelRuleInfo.class),
+        @XmlElement(name=MailConstants.E_CAL_DATES /* dates */, type=SingleDates.class),
+        @XmlElement(name=MailConstants.E_CAL_RULE /* rule */, type=SimpleRepeatingRule.class)
     })
     private List<RecurRuleBase> rules = Lists.newArrayList();
 

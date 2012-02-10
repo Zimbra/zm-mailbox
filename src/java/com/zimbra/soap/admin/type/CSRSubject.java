@@ -23,25 +23,43 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.CertMgrConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class CSRSubject {
 
+    /**
+     * @zm-api-field-description C
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_C /* C */, required=false)
     private String c;
 
+    /**
+     * @zm-api-field-description ST
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_ST /* ST */, required=false)
     private String st;
 
+    /**
+     * @zm-api-field-description L
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_L /* L */, required=false)
     private String l;
 
+    /**
+     * @zm-api-field-description O
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_O /* O */, required=false)
     private String o;
 
+    /**
+     * @zm-api-field-description OU
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_OU /* OU */, required=false)
     private String ou;
 
+    /**
+     * @zm-api-field-description CN
+     */
     @XmlElement(name=CertMgrConstants.E_subjectAttr_CN /* CN */, required=false)
     private String cn;
 

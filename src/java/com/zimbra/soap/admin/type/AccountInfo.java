@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,9 +23,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class AccountInfo extends AdminObjectInfo {
 
+    /**
+     * @zm-api-field-tag is-external
+     * @zm-api-field-description Whether the account's <b>zimbraMailTranport</b> points to the designated
+     * protocol(lmtp) and server(home server of the account).
+     */
     @XmlAttribute(name=AccountConstants.A_IS_EXTERNAL, required=false)
     private final ZmBoolean isExternal;
 

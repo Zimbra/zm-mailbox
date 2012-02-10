@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,29 +30,60 @@ import com.zimbra.soap.type.ZmBoolean;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+// soap-admin.txt implies there is a "stale" attribute (See GetMailQueueResponse/server/queue) but SOAP
+// handler does not add this
+
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"queueSummaries", "queueItems"})
 public class MailQueueDetails {
 
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
+    /**
+     * @zm-api-field-tag queue-name
+     * @zm-api-field-description Queue name
+     */
+    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=AdminConstants.A_TIME, required=true)
+    /**
+     * @zm-api-field-tag scan-time
+     * @zm-api-field-description Scan time
+     */
+    @XmlAttribute(name=AdminConstants.A_TIME /* time */, required=true)
     private final long time;
 
-    @XmlAttribute(name=AdminConstants.A_SCAN, required=true)
+    /**
+     * @zm-api-field-tag scan-flag
+     * @zm-api-field-description Indicates that the server has not completed scanning the MTA queue, and that this
+     * scan is in progress, and the client should ask again in a little while.
+     */
+    @XmlAttribute(name=AdminConstants.A_SCAN /* scan */, required=true)
     private final ZmBoolean stillScanning;
 
-    @XmlAttribute(name=AdminConstants.A_TOTAL, required=true)
+    /**
+     * @zm-api-field-tag mail-queue-detail-total
+     * @zm-api-field-description
+     */
+    @XmlAttribute(name=AdminConstants.A_TOTAL /* total */, required=true)
     private final int total;
 
-    @XmlAttribute(name=AdminConstants.A_MORE, required=true)
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description Indicates that more qi's are available past the limit specified in the request.
+     */
+    @XmlAttribute(name=AdminConstants.A_MORE /* more */, required=true)
     private final ZmBoolean more;
 
-    @XmlElement(name=AdminConstants.A_QUEUE_SUMMARY, required=false)
+    /**
+     * @zm-api-field-description Queue summary.  The <b>&lt;qs></b> elements summarize the queue by various types of
+     * data (sender addresses, recipient domain, etc).  Only the deferred queue has error summary type.
+     */
+    @XmlElement(name=AdminConstants.A_QUEUE_SUMMARY /* qs */, required=false)
     private List<QueueSummary> queueSummaries = Lists.newArrayList();
 
-    @XmlElement(name=AdminConstants.A_QUEUE_ITEM, required=false)
+    /**
+     * @zm-api-field-description The various queue items that match the requested query.
+     */
+    @XmlElement(name=AdminConstants.A_QUEUE_ITEM /* qi */, required=false)
     private List<QueueItem> queueItems = Lists.newArrayList();
 
     /**

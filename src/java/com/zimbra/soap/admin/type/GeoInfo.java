@@ -27,10 +27,18 @@ import com.zimbra.soap.base.GeoInfoInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class GeoInfo implements GeoInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE, required=false)
+    /**
+     * @zm-api-field-tag longitude
+     * @zm-api-field-description Longitude (float value)
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_GEO_LATITUDE /* lat */, required=false)
     private final String latitude;
 
-    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE, required=false)
+    /**
+     * @zm-api-field-tag longitude
+     * @zm-api-field-description Longitude (float value)
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_GEO_LONGITUDE /* lon */, required=false)
     private final String longitude;
 
     /**

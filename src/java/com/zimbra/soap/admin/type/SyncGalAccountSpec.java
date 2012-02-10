@@ -26,17 +26,22 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class SyncGalAccountSpec {
 
+    /**
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description Account ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private String id;
 
+    /**
+     * @zm-api-field-description SyncGalAccount data source specifications
+     */
     @XmlElement(name=AdminConstants.E_DATASOURCE /* datasource */, required=false)
     private List<SyncGalAccountDataSourceSpec> dataSources = Lists.newArrayList();
 

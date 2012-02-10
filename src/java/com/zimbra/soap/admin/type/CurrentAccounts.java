@@ -30,13 +30,21 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class CurrentAccounts {
 
+    // soapbackup.txt implies there is a "more" attribute also but code doesn't add that.
+    /**
+     * @zm-api-field-tag current-acct-total
+     * @zm-api-field-description Total number of accounts currently being backed up
+     */
     @XmlAttribute(name=BackupConstants.A_TOTAL_COUNT /* total */, required=false)
     private Integer totalCount;
 
+    /**
+     * @zm-api-field-description Information on accounts
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 

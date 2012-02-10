@@ -22,20 +22,35 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupQueryCounter {
 
+    /**
+     * @zm-api-field-tag counter-name
+     * @zm-api-field-description Counter name
+     */
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag counter-unit
+     * @zm-api-field-description Counter unit
+     */
     @XmlAttribute(name=BackupConstants.A_COUNTER_UNIT /* unit */, required=true)
     private final String counterUnit;
 
+    /**
+     * @zm-api-field-tag counter-value
+     * @zm-api-field-description Counter value
+     */
     @XmlAttribute(name=BackupConstants.A_COUNTER_SUM /* sum */, required=true)
     private final Long counterSum;
 
-    @XmlAttribute(name=BackupConstants.A_COUNTER_NUM_SAMPLES /* numSamples */,
-                            required=true)
+    /**
+     * @zm-api-field-tag num-samples-or-data-points
+     * @zm-api-field-description Number of samples or data points
+     */
+    @XmlAttribute(name=BackupConstants.A_COUNTER_NUM_SAMPLES /* numSamples */, required=true)
     private final Long counterNumSamples;
 
     /**

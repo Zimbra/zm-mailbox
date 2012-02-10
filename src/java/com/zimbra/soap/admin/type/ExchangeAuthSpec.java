@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,36 +26,51 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ExchangeAuthSpec {
 
     @XmlEnum
     public enum AuthScheme {
         // case must match protocol
-        name, id, foreignPrincipal, adminName, appAdminName, krb5Principal;
+        basic, form;
 
         public static AuthScheme fromString(String s)
         throws ServiceException {
             try {
                 return AuthScheme.valueOf(s);
             } catch (IllegalArgumentException e) {
-               throw ServiceException.INVALID_REQUEST("unknown AuthScheme: " +
-                       s + ", valid values: " +
+               throw ServiceException.INVALID_REQUEST("unknown AuthScheme: " + s + ", valid values: " +
                        Arrays.asList(AuthScheme.values()), null);
             }
         }
     }
 
-    @XmlAttribute(name=AdminConstants.A_URL, required=true)
+    /**
+     * @zm-api-field-tag url-to-exchange-server
+     * @zm-api-field-description URL to Exchange server
+     */
+    @XmlAttribute(name=AdminConstants.A_URL /* url */, required=true)
     private final String url;
 
-    @XmlAttribute(name=AdminConstants.A_USER, required=true)
+    /**
+     * @zm-api-field-tag exchange-user
+     * @zm-api-field-description Exchange user
+     */
+    @XmlAttribute(name=AdminConstants.A_USER /* user */, required=true)
     private final String authUserName;
 
-    @XmlAttribute(name=AdminConstants.A_PASS, required=true)
+    /**
+     * @zm-api-field-tag exchange-password
+     * @zm-api-field-description Exchange password
+     */
+    @XmlAttribute(name=AdminConstants.A_PASS /* pass */, required=true)
     private final String authPassword;
 
-    @XmlAttribute(name=AdminConstants.A_SCHEME, required=true)
+    /**
+     * @zm-api-field-tag auth-scheme
+     * @zm-api-field-description Auth scheme
+     */
+    @XmlAttribute(name=AdminConstants.A_SCHEME /* scheme */, required=true)
     private final AuthScheme scheme;
 
     /**

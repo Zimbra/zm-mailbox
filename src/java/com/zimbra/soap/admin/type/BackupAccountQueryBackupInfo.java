@@ -22,23 +22,42 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupAccountQueryBackupInfo {
 
+    /**
+     * @zm-api-field-tag backup-label
+     * @zm-api-field-description Backup label
+     */
     @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
     private String label;
 
+    /**
+     * @zm-api-field-tag backup-type
+     * @zm-api-field-description Backup type - <b>full|incremental</b>
+     */
     @XmlAttribute(name=BackupConstants.A_TYPE /* type */, required=false)
     private String type;
 
+    /**
+     * @zm-api-field-tag start-time-in-millis
+     * @zm-api-field-description Start time in milliseconds
+     */
     @XmlAttribute(name=BackupConstants.A_START /* start */, required=false)
     private Long start;
 
+    /**
+     * @zm-api-field-tag end-time-in-millis
+     * @zm-api-field-description End time in milliseconds
+     */
     @XmlAttribute(name=BackupConstants.A_END /* end */, required=false)
     private Long end;
 
-    @XmlAttribute(name=BackupConstants.A_ACCOUNT_ID /* accountId */,
-                    required=false)
+    /**
+     * @zm-api-field-tag account-uid
+     * @zm-api-field-description Account UID
+     */
+    @XmlAttribute(name=BackupConstants.A_ACCOUNT_ID /* accountId */, required=false)
     private String accountId;
 
     public BackupAccountQueryBackupInfo() {

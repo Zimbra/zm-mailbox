@@ -31,11 +31,18 @@ import com.zimbra.soap.base.WkDayInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class WkDay implements WkDayInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_DAY, required=true)
+    /**
+     * @zm-api-field-tag weekday
+     * @zm-api-field-description Weekday -  <b>SU|MO|TU|WE|TH|FR|SA</b>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_DAY /* day */, required=true)
     private final String day;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYDAY_WKDAY_ORDWK,
-                    required=false)
+    /**
+     * @zm-api-field-tag ord-wk-[[+]|-]num
+     * @zm-api-field-description Week number.  <b>[[+]|-]num</b> num: 1 to 53
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYDAY_WKDAY_ORDWK /* ordwk */, required=false)
     private Integer ordWk;
 
     /**

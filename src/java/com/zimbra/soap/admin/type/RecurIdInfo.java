@@ -26,16 +26,34 @@ import com.zimbra.soap.base.RecurIdInfoInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class RecurIdInfo implements RecurIdInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, required=true)
+    /**
+     * @zm-api-field-tag range-type
+     * @zm-api-field-description Recurrence range type
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE /* rangeType */, required=true)
     private int recurrenceRangeType;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID, required=true)
+    /**
+     * @zm-api-field-tag YYMMDD[THHMMSS[Z]]
+     * @zm-api-field-description Recurrence ID in format : YYMMDD[THHMMSS[Z]]
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID /* recurId */, required=true)
     private String recurrenceId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)
+    /**
+     * @zm-api-field-tag timezone-name
+     * @zm-api-field-description Timezone name
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z, required=false)
+    /**
+     * @zm-api-field-tag YYMMDDTHHMMSSZ
+     * @zm-api-field-description Recurrence-id in UTC time zone; used in non-all-day appointments only
+     * <br />
+     * Format: YYMMDDTHHMMSSZ
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */, required=false)
     private String recurIdZ;
 
     public RecurIdInfo() {

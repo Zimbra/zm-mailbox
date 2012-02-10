@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,14 +38,33 @@ import com.zimbra.soap.type.ZeroOrOne;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ServiceStatus {
 
-    @XmlAttribute(name=AdminConstants.A_SERVER, required=true)
+    /**
+     * @zm-api-field-tag server
+     * @zm-api-field-description Server
+     */
+    @XmlAttribute(name=AdminConstants.A_SERVER /* server */, required=true)
     private final String server;
-    @XmlAttribute(name=AdminConstants.A_SERVICE, required=true)
+
+    /**
+     * @zm-api-field-tag service
+     * @zm-api-field-description Service
+     */
+    @XmlAttribute(name=AdminConstants.A_SERVICE /* service */, required=true)
     private final String service;
-    @XmlAttribute(name=AdminConstants.A_T, required=true)
+
     // seconds since epoch
+    /**
+     * @zm-api-field-tag date-time
+     * @zm-api-field-description Number of seconds since the epoch (1970), UTC time
+     */
+    @XmlAttribute(name=AdminConstants.A_T /* t */, required=true)
     private final long time;
+
     // "1" or "0"
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description Status
+     */
     @XmlValue
     private final ZeroOrOne status;
 
@@ -99,7 +118,7 @@ public class ServiceStatus {
             columns.remove("timestamp");
             Map<String,String> row = Maps.newHashMap();
             String lastTS = null;
-            
+
             while (r.hasNext()) {
                 String ts = r.getValue("timestamp");
                 boolean rowHasData = false;

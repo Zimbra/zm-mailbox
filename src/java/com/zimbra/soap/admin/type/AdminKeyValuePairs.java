@@ -44,9 +44,12 @@ import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
 @XmlAccessorType(XmlAccessType.NONE)
 public class AdminKeyValuePairs implements KeyValuePairs {
 
+    /**
+     * @zm-api-field-description Key Value pairs
+     */
     @JsonSerialize(using=KeyAndValueListSerializer.class)
     @JsonProperty("_attrs")
-    @XmlElement(name=AdminConstants.E_A)
+    @XmlElement(name=AdminConstants.E_A /* a */, required=false)
     private List<KeyValuePair> keyValuePairs;
 
     public AdminKeyValuePairs() {

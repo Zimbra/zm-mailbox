@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class AttachmentIdAttrib {
 
+    /**
+     * @zm-api-field-tag attachment-id
+     * @zm-api-field-description Attachment ID
+     */
     @XmlAttribute(name=AdminConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachmentId;
 

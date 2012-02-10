@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,15 +28,28 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class AdminObjectInfo {
 
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
+    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
     private final String name;
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
+    @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final String id;
-    @XmlElement(name=AdminConstants.E_A)
+
+    /**
+     * @zm-api-field-description Attributes
+     */
+    @XmlElement(name=AdminConstants.E_A /* a */, required=false)
     private final List <Attr> attrList;
 
     /**

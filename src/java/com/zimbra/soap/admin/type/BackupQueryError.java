@@ -23,13 +23,20 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupQueryError {
 
-    @XmlAttribute(name=BackupConstants.A_ERROR_MESSAGE /* errorMessage */,
-                        required=false)
+    /**
+     * @zm-api-field-tag error-message
+     * @zm-api-field-description Error message
+     */
+    @XmlAttribute(name=BackupConstants.A_ERROR_MESSAGE /* errorMessage */, required=false)
     private String errorMessage;
 
+    /**
+     * @zm-api-field-tag error-stack-trace
+     * @zm-api-field-description Error stack trace, if available
+     */
     @XmlValue
     private String trace;
 

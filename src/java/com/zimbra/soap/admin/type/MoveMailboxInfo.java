@@ -26,30 +26,74 @@ import com.zimbra.common.soap.BackupConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class MoveMailboxInfo {
 
+    /**
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Account email address
+     */
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-tag target-svr-hostname
+     * @zm-api-field-description Hostname of target server
+     */
     @XmlAttribute(name=BackupConstants.A_TARGET /* dest */, required=true)
     private String target;
 
+    /**
+     * @zm-api-field-tag source-svr-hostname
+     * @zm-api-field-description Hostname of source server
+     */
     @XmlAttribute(name=BackupConstants.A_SOURCE /* src */, required=true)
     private String source;
 
+    /**
+     * @zm-api-field-tag include|exclude|config
+     * @zm-api-field-description Option to include/exclude blobs in a move - <b>include|exclude|config</b>
+     * <br />
+     * Default value is "config", to use the configured value.  "include" or "exclude" overrides the configuration
+     */
     @XmlAttribute(name=BackupConstants.A_BLOBS /* blobs */, required=false)
     private String blobs;
 
+    /**
+     * @zm-api-field-tag include|exclude|config
+     * @zm-api-field-description Option to include/exclude secondary blobs in a move - <b>include|exclude|config</b>
+     * <br />
+     * Default value is "config", to use the configured value.  "include" or "exclude" overrides the configuration
+     * <br />
+     * Meaningful only when blobs isn't excluded.
+     */
     @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS /* secondaryBlobs */, required=false)
     private String secondaryBlobs;
 
+    /**
+     * @zm-api-field-tag include|exclude|config
+     * @zm-api-field-description Option to include/exclude searchIndex in a move - <b>include|exclude|config</b>
+     * <br />
+     * Default value is "config", to use the configured value.  "include" or "exclude" overrides the configuration
+     */
     @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX /* searchIndex */, required=false)
     private String searchIndex;
 
+    /**
+     * @zm-api-field-tag max-syncs
+     * @zm-api-field-description Maximum number of syncs.  Default is 10
+     */
     @XmlAttribute(name=BackupConstants.A_MAX_SYNCS /* maxSyncs */, required=false)
     private Integer maxSyncs;
 
+    /**
+     * @zm-api-field-tag sync-finish-threshold-millisecs
+     * @zm-api-field-description Sync finish threshold.  Default is 30000 (30 seconds)
+     */
     @XmlAttribute(name=BackupConstants.A_SYNC_FINISH_THRESHOLD /* syncFinishThreshold */, required=false)
     private Long syncFinishThreshold;
 
+    /**
+     * @zm-api-field-tag sync
+     * @zm-api-field-description If set, run synchronously; command doesn't return until move is finished
+     */
     @XmlAttribute(name=BackupConstants.A_SYNC /* sync */, required=false)
     private ZmBoolean sync;
 

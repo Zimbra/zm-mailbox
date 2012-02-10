@@ -28,12 +28,24 @@ import com.zimbra.soap.base.CalendarAttachInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CalendarAttach implements CalendarAttachInterface {
 
+    /**
+     * @zm-api-field-tag alarm-attach-uri
+     * @zm-api-field-description URI
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ATTACH_URI /* uri */, required=false)
     private String uri;
 
+    /**
+     * @zm-api-field-tag alarm-attach-content-type
+     * @zm-api-field-description Content Type for <b>{base64-encoded-binary-alarm-attach-data}</b>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ATTACH_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
+    /**
+     * @zm-api-field-tag base64-encoded-binary-alarm-attach-data
+     * @zm-api-field-description Base64 encoded binary alarrm attach data
+     */
     @XmlValue
     private String binaryB64Data;
 

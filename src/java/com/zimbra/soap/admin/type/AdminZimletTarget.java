@@ -36,6 +36,10 @@ import com.zimbra.soap.base.ZimletTarget;
 public class AdminZimletTarget
 implements ZimletTarget {
 
+    /**
+     * @zm-api-field-tag zimlet-target
+     * @zm-api-field-description Zimlet target
+     */
     @XmlValue
     private String value;
 

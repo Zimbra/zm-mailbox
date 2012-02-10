@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,12 +21,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class QueueSummaryItem {
 
+    /**
+     * @zm-api-field-tag q-summ-count
+     * @zm-api-field-description Count
+     */
     @XmlAttribute(name=AdminConstants.A_N, required=true)
     private final int count;
 
+    /**
+     * @zm-api-field-tag text-for-item
+     * @zm-api-field-description Text for item.  e.g. "connect to 10.10.20.40 failed"
+     */
     @XmlAttribute(name=AdminConstants.A_T, required=true)
     private final String term;
 

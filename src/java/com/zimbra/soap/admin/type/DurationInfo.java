@@ -28,28 +28,66 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DurationInfo implements DurationInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_DURATION_NEGATIVE, required=false)
+    /**
+     * @zm-api-field-tag duration-negative
+     * @zm-api-field-description Set if the duration is negative.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DURATION_NEGATIVE /* neg */, required=false)
     private ZmBoolean durationNegative;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DURATION_WEEKS, required=false)
+    /**
+     * @zm-api-field-tag duration-weeks
+     * @zm-api-field-description Weeks component of the duration
+     * <br />
+     * <b>Special note: if WEEKS are specified, NO OTHER OFFSET MAY BE SPECIFIED (weeks must be alone, per RFC2445)</b>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DURATION_WEEKS /* w */, required=false)
     private Integer weeks;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DURATION_DAYS, required=false)
+    /**
+     * @zm-api-field-tag duration-days
+     * @zm-api-field-description Days component of the duration
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DURATION_DAYS /* d */, required=false)
     private Integer days;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DURATION_HOURS, required=false)
+    /**
+     * @zm-api-field-tag duration-hours
+     * @zm-api-field-description Hours component of the duration
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DURATION_HOURS /* h */, required=false)
     private Integer hours;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DURATION_MINUTES, required=false)
+    /**
+     * @zm-api-field-tag duration-minutes
+     * @zm-api-field-description Minutes component of the duration
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DURATION_MINUTES /* m */, required=false)
     private Integer minutes;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DURATION_SECONDS, required=false)
+    /**
+     * @zm-api-field-tag duration-seconds
+     * @zm-api-field-description Seconds component of the duration
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DURATION_SECONDS /* s */, required=false)
     private Integer seconds;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALARM_RELATED, required=false)
+    // added by Alarm.toXml after mTriggerRelative.toXml
+    /**
+     * @zm-api-field-tag alarm-related
+     * @zm-api-field-description Specifies whether the alarm is related to the start of end.
+     * <br />
+     * Valid values are : <b>START|END</b>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_ALARM_RELATED /* related */, required=false)
     private String related;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALARM_COUNT, required=false)
+    // added by Alarm.toXml after mRepeatDuration.toXml
+    /**
+     * @zm-api-field-tag alarm-repeat-count
+     * @zm-api-field-description Alarm repeat count
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_ALARM_COUNT /* count */, required=false)
     private Integer repeatCount;
 
     public DurationInfo() {

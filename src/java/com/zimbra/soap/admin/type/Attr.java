@@ -39,6 +39,10 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AdminConstants.E_A)
 public class Attr extends KeyValuePair {
 
+    /**
+     * @zm-api-field-tag is-cos-attr
+     * @zm-api-field-description Flags that this is a Class Of Service (COS) attribute.
+     */
     @XmlAttribute(name=AdminConstants.A_C /* c */, required=false)
     private ZmBoolean isCosAttr;
 

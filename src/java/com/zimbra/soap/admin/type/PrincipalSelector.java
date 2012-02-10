@@ -27,9 +27,18 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 @XmlAccessorType(XmlAccessType.NONE)
 public class PrincipalSelector {
 
+    /**
+     * @zm-api-field-tag principal-selector-by
+     * @zm-api-field-description Select the meaning of <b>{principal-selector-key}</b>
+     */
     @XmlAttribute(name=AdminConstants.A_BY /* by */, required=true)
     private AutoProvPrincipalBy by;
 
+    /**
+     * @zm-api-field-tag principal-selector-key
+     * @zm-api-field-description The key used to identify the principal.
+     * Meaning determined by <b>{principal-selector-by}</b>
+     */
     @XmlValue
     private String key;
 

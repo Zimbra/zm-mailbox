@@ -25,9 +25,17 @@ import com.zimbra.common.soap.BackupConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailboxMoveSpec {
 
+    /**
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Account email address
+     */
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-tag dest-hostname
+     * @zm-api-field-description Hostname of destination server
+     */
     @XmlAttribute(name=BackupConstants.A_TARGET /* dest */, required=true)
     private String target;
 

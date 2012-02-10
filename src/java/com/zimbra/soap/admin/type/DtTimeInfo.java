@@ -27,13 +27,42 @@ import com.zimbra.soap.base.DtTimeInfoInterface;
 public class DtTimeInfo
 implements DtTimeInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_DATETIME, required=false)
+    /**
+     * @zm-api-field-tag YYYYMMDD['T'HHMMSS[Z]]
+     * @zm-api-field-description Date and/or time.  Format is : <b>YYYYMMDD['T'HHMMSS[Z]]</b>
+     * <br />
+     * where:
+     * <pre>
+     *     YYYY - 4 digit year
+     *     MM   - 2 digit month
+     *     DD   - 2 digit day
+     * Optionally:
+     *     'T' the literal char "T" then 
+     *     HH - 2 digit hour (00-23)
+     *     MM - 2 digit minute (00-59)
+     *     SS - 2 digit second (00-59)
+     *     ...and finally an optional "Z" meaning that the time is UTC,
+     *     otherwise the tz="TIMEZONE" param MUST be specified with the DATETIME
+     *     e.g:
+     *         20050612  June 12, 2005
+     *         20050315T18302305Z  March 15, 2005 6:30:23.05 PM UTC
+     * </pre>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DATETIME /* d */, required=false)
     private final String dateTime;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)
+    /**
+     * @zm-api-field-tag timezone-identifier
+     * @zm-api-field-description Java timezone identifier
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
-    @XmlAttribute(name=MailConstants.A_CAL_DATETIME_UTC, required=false)
+    /**
+     * @zm-api-field-tag utc-time
+     * @zm-api-field-description UTC time as milliseconds since the epoch.  Set if non-all-day
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DATETIME_UTC /* u */, required=false)
     private Long utcTime;
 
     /**

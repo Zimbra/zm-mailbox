@@ -25,10 +25,24 @@ import com.zimbra.soap.type.GranteeType;
 @XmlAccessorType(XmlAccessType.NONE)
 public class GranteeInfo {
 
+    /**
+     * @zm-api-field-tag grantee-type
+     * @zm-api-field-description Grantee type
+     */
     @XmlAttribute(name=AdminConstants.A_TYPE, required=false)
     private final GranteeType type;
+
+    /**
+     * @zm-api-field-tag grantee-id
+     * @zm-api-field-description Grantee ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID, required=true)
     private final String id;
+
+    /**
+     * @zm-api-field-tag grantee-name
+     * @zm-api-field-description Grantee name
+     */
     @XmlAttribute(name=AdminConstants.A_NAME, required=true)
     private final String name;
 

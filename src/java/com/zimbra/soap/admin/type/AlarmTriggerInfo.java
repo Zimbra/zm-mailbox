@@ -30,10 +30,16 @@ import com.zimbra.soap.base.DurationInfoInterface;
 @XmlType(propOrder = {})
 public class AlarmTriggerInfo implements AlarmTriggerInfoInterface {
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_ABSOLUTE, required=false)
+    /**
+     * @zm-api-field-description Absolute trigger information
+     */
+    @XmlElement(name=MailConstants.E_CAL_ALARM_ABSOLUTE /* abs */, required=false)
     private DateAttr absolute;
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_RELATIVE, required=false)
+    /**
+     * @zm-api-field-description Relative trigger information
+     */
+    @XmlElement(name=MailConstants.E_CAL_ALARM_RELATIVE /* rel */, required=false)
     private DurationInfo relative;
 
     public AlarmTriggerInfo() {

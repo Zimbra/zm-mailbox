@@ -23,12 +23,20 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.HsmConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class HsmFileSystemInfo {
 
+    /**
+     * @zm-api-field-tag size
+     * @zm-api-field-description Size
+     */
     @XmlAttribute(name=HsmConstants.A_SIZE /* size */, required=true)
     private final String size;
 
+    /**
+     * @zm-api-field-tag filesystem
+     * @zm-api-field-description Filesystem
+     */
     @XmlValue
     private String fileSystem;
 

@@ -37,46 +37,103 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class CalendarAttendee implements CalendarAttendeeInterface {
 
+    /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description Email address (without "MAILTO:")
+     */
     @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=false)
     private String address;
 
-    // For backwards compatibility
+    /**
+     * @zm-api-field-tag url
+     * @zm-api-field-description URL - has same value as <b>{email-address}</b>.
+     * <br />
+     * Maintained for backwards compatibility with ZCS 4.5
+     */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
+    /**
+     * @zm-api-field-tag friendly-name
+     * @zm-api-field-description Friendly name - "CN" in iCalendar
+     */
     @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
     private String displayName;
 
+    /**
+     * @zm-api-field-tag sent-by
+     * @zm-api-field-description iCalendar SENT-BY
+     */
     @XmlAttribute(name=MailConstants.A_CAL_SENTBY /* sentBy */, required=false)
     private String sentBy;
 
+    /**
+     * @zm-api-field-tag dir
+     * @zm-api-field-description iCalendar DIR - Reference to a directory entry associated with the calendar user.
+     * the property.
+     */
     @XmlAttribute(name=MailConstants.A_CAL_DIR /* dir */, required=false)
     private String dir;
 
+    /**
+     * @zm-api-field-tag language
+     * @zm-api-field-description iCalendar LANGUAGE - As defined in RFC5646 * (e.g. "en-US")
+     */
     @XmlAttribute(name=MailConstants.A_CAL_LANGUAGE /* lang */, required=false)
     private String language;
 
+    /**
+     * @zm-api-field-tag calendar-user-type
+     * @zm-api-field-description iCalendar CUTYPE (Calendar user type)
+     */
     @XmlAttribute(name=MailConstants.A_CAL_CUTYPE /* cutype */, required=false)
     private String cuType;
 
+    /**
+     * @zm-api-field-tag role
+     * @zm-api-field-description iCalendar ROLE
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ROLE /* role */, required=false)
     private String role;
 
+    /**
+     * @zm-api-field-tag participation-status
+     * @zm-api-field-description iCalendar PTST (Participation status)
+     */
     @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT /* ptst */, required=false)
     private String partStat;
 
+    /**
+     * @zm-api-field-tag rsvp
+     * @zm-api-field-description iCalendar RSVP
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RSVP /* rsvp */, required=false)
     private ZmBoolean rsvp;
 
+    /**
+     * @zm-api-field-tag member
+     * @zm-api-field-description iCalendar MEMBER - The group or list membership of the calendar user
+     */
     @XmlAttribute(name=MailConstants.A_CAL_MEMBER /* member */, required=false)
     private String member;
 
+    /**
+     * @zm-api-field-tag delegated-to
+     * @zm-api-field-description iCalendar DELEGATED-TO
+     */
     @XmlAttribute(name=MailConstants.A_CAL_DELEGATED_TO /* delTo */, required=false)
     private String delegatedTo;
 
+    /**
+     * @zm-api-field-tag delegated-from
+     * @zm-api-field-description iCalendar DELEGATED-FROM
+     */
     @XmlAttribute(name=MailConstants.A_CAL_DELEGATED_FROM /* delFrom */, required=false)
     private String delegatedFrom;
 
+    /**
+     * @zm-api-field-description Non-standard parameters (XPARAMs)
+     */
     @XmlElement(name=MailConstants.E_CAL_XPARAM /* xparam */, required=false)
     private List<XParam> xParams = Lists.newArrayList();
 

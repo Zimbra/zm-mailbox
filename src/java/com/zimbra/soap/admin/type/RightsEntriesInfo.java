@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,11 +28,19 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.admin.type.EffectiveRightsInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class RightsEntriesInfo {
-    @XmlElement(name=AdminConstants.E_ENTRY, required=false)
+
+    /**
+     * @zm-api-field-description Entries
+     */
+    @XmlElement(name=AdminConstants.E_ENTRY /* entry */, required=false)
     private List <NamedElement> entries = Lists.newArrayList();
-    @XmlElement(name=AdminConstants.E_RIGHTS, required=true)
+
+    /**
+     * @zm-api-field-description Effective rights
+     */
+    @XmlElement(name=AdminConstants.E_RIGHTS /* rights */, required=true)
     private final EffectiveRightsInfo rights;
 
     /**

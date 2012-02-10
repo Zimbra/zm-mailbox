@@ -26,6 +26,10 @@ import com.zimbra.soap.base.ByMinuteRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByMinuteRule implements ByMinuteRuleInterface {
 
+    /**
+     * @zm-api-field-tag minute-list
+     * @zm-api-field-description Comma separated list of minutes where minute is a number between 0 and 59
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMINUTE_MINLIST, required=true)
     private final String list;
 

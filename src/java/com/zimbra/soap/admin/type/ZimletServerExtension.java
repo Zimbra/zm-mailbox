@@ -29,12 +29,24 @@ import com.zimbra.soap.base.ZimletServerExtensionInterface;
 public class ZimletServerExtension
 implements ZimletServerExtensionInterface {
 
+    /**
+     * @zm-api-field-tag keyword
+     * @zm-api-field-description Keyword
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_HAS_KEYWORD /* hasKeyword */, required=false)
     private String hasKeyword;
 
+    /**
+     * @zm-api-field-tag extension-class
+     * @zm-api-field-description Extension class
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_EXTENSION_CLASS /* extensionClass */, required=false)
     private String extensionClass;
 
+    /**
+     * @zm-api-field-tag regex
+     * @zm-api-field-description Regex
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_REGEX /* regex */, required=false)
     private String regex;
 

@@ -23,23 +23,45 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ExportMailboxSelector {
 
-    // Account must exist and be provisioned on the local server
+    /**
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Account email address.
+     * <br />
+     * Account must exist and be provisioned on the local server
+     */
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private final String name;
 
-    // Must differ from the account's host server
+    /**
+     * @zm-api-field-tag hostname-of-target-server
+     * @zm-api-field-description Hostname of target server.
+     * <br />
+     * Must differ from the account's host server
+     */
     @XmlAttribute(name=BackupConstants.A_TARGET /* dest */, required=true)
     private final String target;
 
+    /**
+     * @zm-api-field-tag target-port-for-import
+     * @zm-api-field-description Target port for mailbox import
+     */
     @XmlAttribute(name=BackupConstants.A_PORT /* destPort */, required=false)
     private Integer destPort;
 
+    /**
+     * @zm-api-field-tag source-svr-tempdir
+     * @zm-api-field-description Temporary directory to use on source server
+     */
     @XmlAttribute(name=BackupConstants.A_TEMP_DIR /* tempDir */, required=false)
     private String tempDir;
 
+    /**
+     * @zm-api-field-tag overwrite-flag
+     * @zm-api-field-description If this flag is set, the target mailbox will be replaced if it exists
+     */
     @XmlAttribute(name=BackupConstants.A_OVERWRITE /* overwrite */, required=false)
     private ZmBoolean overwrite;
 

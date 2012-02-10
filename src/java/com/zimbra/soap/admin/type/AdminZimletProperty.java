@@ -33,9 +33,17 @@ import com.zimbra.soap.base.ZimletProperty;
 public class AdminZimletProperty
 implements ZimletProperty {
 
+    /**
+     * @zm-api-field-description zimlet-property-name
+     * @zm-api-field-description Property name
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-description zimlet-property-value
+     * @zm-api-field-description Property value
+     */
     @XmlValue
     private String value;
 

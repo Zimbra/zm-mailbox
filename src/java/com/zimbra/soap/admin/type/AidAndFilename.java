@@ -23,12 +23,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class AidAndFilename {
 
+    /**
+     * @zm-api-field-tag attachment-id
+     * @zm-api-field-description Attachment ID
+     */
     @XmlAttribute(name=AdminConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachmentId;
 
+    /**
+     * @zm-api-field-tag filename
+     * @zm-api-field-description Filename
+     */
     @XmlAttribute(name=CertMgrConstants.A_FILENAME /* filename */, required=false)
     private String filename;
 

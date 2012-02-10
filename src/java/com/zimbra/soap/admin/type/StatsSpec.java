@@ -25,17 +25,23 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlMixed;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class StatsSpec {
 
+    /**
+     * @zm-api-field-tag limit
+     * @zm-api-field-description if limit="true" is specified, attempt to reduce result set to under 500 records
+     */
     @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
     private final String limit;
 
+    /**
+     * @zm-api-field-tag stats-name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=false)
     private final String name;
 
@@ -45,11 +51,17 @@ public class StatsSpec {
     //
     // Note: StatsValueWrapper needs an @XmlRootElement annotation in order
     // to avoid getting a schemagen error:
+    /**
+     * @zm-api-field-description Either something like:
+     * <pre>
+     *     &lt;values>&lt;stat name="counter1"/>&lt;stat name="counterN"/>&lt;/values>
+     * </pre>
+     * or just non-empty text - e.g. "1"
+     */
     @XmlElementRefs({
-        @XmlElementRef(name=AdminConstants.E_VALUES,
-            type=StatsValueWrapper.class)
+        @XmlElementRef(name=AdminConstants.E_VALUES, type=StatsValueWrapper.class)
     })
-    @XmlMixed 
+    @XmlMixed
     private List <Object> content;
 
     /**
@@ -131,12 +143,12 @@ public class StatsSpec {
         StringBuilder sb = null;
         for (Object obj : getContent()) {
             if (obj instanceof String) {
-                if (sb == null) 
+                if (sb == null)
                     sb = new StringBuilder();
                 sb.append((String) obj);
             }
         }
-        if (sb == null) 
+        if (sb == null)
             return null;
         else
             return sb.toString();

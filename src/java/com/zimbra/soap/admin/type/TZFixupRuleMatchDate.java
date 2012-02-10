@@ -22,14 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class TZFixupRuleMatchDate {
 
-    // Value between 1 (January) and 12 (December)
+    /**
+     * @zm-api-field-taga match-month
+     * @zm-api-field-descriptiona Match month.  Value between 1 (January) and 12 (December)
+     */
     @XmlAttribute(name=AdminConstants.A_MON /* mon */, required=true)
     private final int month;
 
-    // Value between 1 and 31
+    /**
+     * @zm-api-field-taga match-month-day
+     * @zm-api-field-descriptiona Match month day.  Value between 1 and 31
+     */
     @XmlAttribute(name=AdminConstants.A_MDAY /* mday */, required=true)
     private final int monthDay;
 

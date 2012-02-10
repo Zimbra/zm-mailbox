@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,14 +25,14 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class CosSelector {
 
     @XmlEnum
-    public static enum CosBy { 
+    public static enum CosBy {
         // case must match protocol
         id, name;
-        
+
         public static CosBy fromString(String s) throws ServiceException {
             try {
                 return CosBy.valueOf(s);
@@ -42,8 +42,17 @@ public class CosSelector {
         }
     }
 
-    @XmlValue private final String key;
+    /**
+     * @zm-api-field-tag cos-selector-by
+     * @zm-api-field-description Select the meaning of <b>{cos-selector-key}</b>
+     */
     @XmlAttribute(name=AdminConstants.A_BY) private final CosBy cosBy;
+
+    /**
+     * @zm-api-field-tag cos-selector-key
+     * @zm-api-field-description The key used to identify the COS. Meaning determined by <b>{cos-selector-by}</b>
+     */
+    @XmlValue private final String key;
 
     /**
      * no-argument constructor wanted by JAXB

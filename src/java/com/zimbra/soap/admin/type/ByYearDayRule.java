@@ -26,8 +26,14 @@ import com.zimbra.soap.base.ByYearDayRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByYearDayRule implements ByYearDayRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYYEARDAY_YRDAYLIST,
-                        required=true)
+    /**
+     * @zm-api-field-tag byyearday-yrdaylist
+     * @zm-api-field-description BYYEARDAY yearday list.
+     * Format : <b>[[+]|-]num[,...]"</b> where num is between 1 and 366
+     * <br />
+     * e.g. <b>&lt;byyearday yrdaylist="1,+2,-1"/></b> means January 1st, January 2nd, and December 31st.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYYEARDAY_YRDAYLIST /* yrdaylist */, required=true)
     private final String list;
 
     /**

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,47 +32,98 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.IdAndType;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+// soap-waitset.txt implies a lot of these attributes are directly unser QueryWaitSetResponse.  They aren't.
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"sessions", "errors", "signalledAccounts",
     "bufferedCommits"})
 public class WaitSetInfo {
 
     //  This class provides a single JAXB object for handling all of
     //  WaitSetBase / AllAccountsWaitSet / SomeAccountsWaitSet
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description WaitSet ID
+     */
+    @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final String waitSetId;
 
-    @XmlAttribute(name=AdminConstants.A_OWNER, required=true)
+    /**
+     * @zm-api-field-tag waitset-owner-acct-id
+     * @zm-api-field-description WaitSet owner account ID
+     */
+    @XmlAttribute(name=AdminConstants.A_OWNER /* owner */, required=true)
     private final String owner;
 
-    @XmlElement(name="session", required=false)
-    private List<SessionForWaitSet> sessions = Lists.newArrayList();
-
-    @XmlAttribute(name=AdminConstants.A_DEFTYPES, required=true)
+    /**
+     * @zm-api-field-tag default-interests
+     * @zm-api-field-description Default interest types: comma-separated list.  Currently:
+     * <table>
+     * <tr> <td> <b>c</b> </td> <td> contacts </td> </tr>
+     * <tr> <td> <b>m</b> </td> <td> msgs (and subclasses) </td> </tr>
+     * <tr> <td> <b>a</b> </td> <td> appointments </td> </tr>
+     * <tr> <td> <b>t</b> </td> <td> tasks </td> </tr>
+     * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "c,m,a,t,d") * </td> </tr>
+     * </table>
+     */
+    @XmlAttribute(name=AdminConstants.A_DEFTYPES /* defTypes */, required=true)
     private final String defaultInterests;
 
-    @XmlAttribute(name=AdminConstants.A_LAST_ACCESSED_DATE, required=true)
+    /**
+     * @zm-api-field-tag last-access-date
+     * @zm-api-field-description Last access date
+     */
+    @XmlAttribute(name=AdminConstants.A_LAST_ACCESSED_DATE /* ld */, required=true)
     private final long lastAccessDate;
 
-    @XmlElementWrapper(name=AdminConstants.E_ERRORS, required=false)
-    @XmlElement(name=MailConstants.E_ERROR, required=false)
+    /**
+     * @zm-api-field-description Error information
+     */
+    @XmlElementWrapper(name=AdminConstants.E_ERRORS /* errors */, required=false)
+    @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
     private List<IdAndType> errors = Lists.newArrayList();
 
-    @XmlElement(name=AdminConstants.A_READY, required=false)
+    /**
+     * @zm-api-field-tag ready-comm-sep-acct-ids
+     * @zm-api-field-description Comma separated list of account IDs
+     */
+    @XmlElement(name=AdminConstants.A_READY /* ready */, required=false)
     private AccountsAttrib signalledAccounts;
 
-    @XmlAttribute(name=AdminConstants.A_CB_SEQ_NO, required=false)
+    /**
+     * @zm-api-field-tag cb-seq-no
+     * @zm-api-field-description CB sequence number
+     */
+    @XmlAttribute(name=AdminConstants.A_CB_SEQ_NO /* cbSeqNo */, required=false)
     private String cbSeqNo;
 
-    @XmlAttribute(name=AdminConstants.A_CURRENT_SEQ_NO, required=false)
+    /**
+     * @zm-api-field-tag curr-seq-no
+     * @zm-api-field-description Current sequence number
+     */
+    @XmlAttribute(name=AdminConstants.A_CURRENT_SEQ_NO /* currentSeqNo */, required=false)
     private String currentSeqNo;
 
-    @XmlAttribute(name=AdminConstants.A_NEXT_SEQ_NO, required=false)
+    /**
+     * @zm-api-field-tag next-seq-no
+     * @zm-api-field-description Next sequence number
+     */
+    @XmlAttribute(name=AdminConstants.A_NEXT_SEQ_NO /* nextSeqNo */, required=false)
     private String nextSeqNo;
 
+    /**
+     * @zm-api-field-description Buffered commit information
+     */
     @XmlElementWrapper(name="buffered", required=false)
     @XmlElement(name="commit", required=false)
     private List<BufferedCommitInfo> bufferedCommits = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-description Session information
+     */
+    @XmlElement(name="session", required=false)
+    private List<SessionForWaitSet> sessions = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB

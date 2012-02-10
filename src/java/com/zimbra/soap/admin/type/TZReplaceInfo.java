@@ -25,15 +25,21 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class TZReplaceInfo {
 
     // TZID from /opt/zimbra/conf/timezones.ics
-    @XmlElement(name=AdminConstants.E_WELL_KNOWN_TZ /* wellKnownTz */,
-                required=false)
+    /**
+     * @zm-api-field-tag well-known-tzid
+     * @zm-api-field-description TZID from /opt/zimbra/conf/timezones.ics
+     */
+    @XmlElement(name=AdminConstants.E_WELL_KNOWN_TZ /* wellKnownTz */, required=false)
     private Id wellKnownTz;
 
+    /**
+     * @zm-api-field-description Timezone
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private CalTZInfo calTz;
 

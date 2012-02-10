@@ -15,27 +15,39 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonTypeName;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class AdminAttrsImpl implements AdminAttrs {
 
+    /**
+     * @zm-api-field-description Attributes
+     */
     @XmlElement(name=AdminConstants.E_A /* a */, required=false)
+    @JsonSerialize(using=KeyAndValueListSerializer.class)
+    @JsonProperty("_attrs")
     private List<Attr> attrs = Lists.newArrayList();
 
     public AdminAttrsImpl() {

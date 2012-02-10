@@ -31,68 +31,145 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"fileCopier", "accounts"})
 public class RestoreSpec {
 
-    // Valid values ca/ra/mb
+    /**
+     * @zm-api-field-tag ca|ra|mb
+     * @zm-api-field-description Method.  Valid values <b>ca|ra|mb</b>
+     */
     @XmlAttribute(name=BackupConstants.A_METHOD /* method */, required=false)
     private String method;
 
     // Valid values are include/exclude (case insensitive)
+    /**
+     * @zm-api-field-tag include|exclude
+     * @zm-api-field-description whether to include or exclude searchIndex.  Valid values <b>include|exclude</b>
+     */
     @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX /* searchIndex */, required=false)
     private String searchIndex;
 
     // Valid values are include/exclude (case insensitive)
+    /**
+     * @zm-api-field-tag include|exclude
+     * @zm-api-field-description whether to include or exclude blobs.  Valid values <b>include|exclude</b>
+     */
     @XmlAttribute(name=BackupConstants.A_BLOBS /* blobs */, required=false)
     private String blobs;
 
     // Valid values are include/exclude (case insensitive)
+    /**
+     * @zm-api-field-tag include|exclude
+     * @zm-api-field-description whether to include or exclude secondary blobs.  Valid values <b>include|exclude</b>
+     * <br />
+     * Meaningful only when blob restore isn't excluded
+     */
     @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS /* secondaryBlobs */, required=false)
     private String secondaryBlobs;
 
+    /**
+     * @zm-api-field-tag path-to-backup-target
+     * @zm-api-field-description Path to backup target
+     */
     @XmlAttribute(name=BackupConstants.A_BACKUP_TARGET /* target */, required=false)
     private String target;
 
+    /**
+     * @zm-api-field-tag label-to-full-backup-set
+     * @zm-api-field-description Label to full backup set
+     */
     @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
     private String label;
 
+    /**
+     * @zm-api-field-tag sysData-flag
+     * @zm-api-field-description When sysData is set, restore system tables and local config.
+     */
     @XmlAttribute(name=BackupConstants.A_SYSDATA /* sysData */, required=false)
     private ZmBoolean sysData;
 
+    /**
+     * @zm-api-field-tag include-incrementals
+     * @zm-api-field-description when includeIncrementals is set, any incremental backups from the last full backup
+     * are also restored. Default to <b>1 (true)</b>
+     */
     @XmlAttribute(name=BackupConstants.A_INCLUDEINCREMENTALS /* includeIncrementals */, required=false)
     private ZmBoolean includeIncrementals;
 
+    /**
+     * @zm-api-field-tag replay-redo-logs
+     * @zm-api-field-description Replay redo logs
+     */
     @XmlAttribute(name=BackupConstants.A_REPLAY_CURRENT_REDOLOGS /* replayRedo */, required=false)
     private ZmBoolean replayCurrentRedoLogs;
 
+    /**
+     * @zm-api-field-tag continue-on-error
+     * @zm-api-field-description Continue on error
+     */
     @XmlAttribute(name=BackupConstants.A_CONTINUE /* continue */, required=false)
     private ZmBoolean continueOnError;
 
+    /**
+     * @zm-api-field-tag new-acct-prefix
+     * @zm-api-field-description Used to produce new account names if the name is reused or a new account is to be
+     * created
+     */
     @XmlAttribute(name=BackupConstants.A_PREFIX /* prefix */, required=false)
     private String prefix;
 
+    /**
+     * @zm-api-field-tag restore-to-millis
+     * @zm-api-field-description Restore to time in milliseconds
+     */
     @XmlAttribute(name=BackupConstants.A_RESTORE_TO_TIME /* restoreToTime */, required=false)
     private Long restoreToTime;
 
+    /**
+     * @zm-api-field-tag redo-log-seq-number
+     * @zm-api-field-description Redo log sequence number
+     */
     @XmlAttribute(name=BackupConstants.A_RESTORE_TO_REDO_SEQ /* restoreToRedoSeq */, required=false)
     private Long restoreToRedoSeq;
 
+    /**
+     * @zm-api-field-tag incremental-backup-label
+     * @zm-api-field-description Restore to incremental backup label
+     */
     @XmlAttribute(name=BackupConstants.A_RESTORE_TO_INCR_LABEL /* restoreToIncrLabel */, required=false)
     private String restoreToIncrLabel;
 
+    /**
+     * @zm-api-field-tag ignore-redo-errors
+     * @zm-api-field-description Ignore redo errors
+     */
     @XmlAttribute(name=BackupConstants.A_IGNORE_REDO_ERRORS /* ignoreRedoErrors */, required=false)
     private ZmBoolean ignoreRedoErrors;
 
+    /**
+     * @zm-api-field-tag skip-delete-ops
+     * @zm-api-field-description Skip delete operations during redo replay.  Default <b>0 (false)</b>
+     */
     @XmlAttribute(name=BackupConstants.A_SKIP_DELETE_OPS /* skipDeleteOps */, required=false)
     private ZmBoolean skipDeleteOps;
 
+    /**
+     * @zm-api-field-tag skip-del-accts
+     * @zm-api-field-description Skip deleted accounts
+     */
     @XmlAttribute(name=BackupConstants.A_SKIP_DELETED_ACCT /* skipDeletedAccounts */, required=false)
     private ZmBoolean skipDeletedAccounts;
 
+    /**
+     * @zm-api-field-description File copier specification
+     */
     @XmlElement(name=BackupConstants.E_FILE_COPIER /* fileCopier */, required=false)
     private FileCopierSpec fileCopier;
 
+    /**
+     * @zm-api-field-description Accounts - if all accounts then use <b>&lt;account name="all"/></b>
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 

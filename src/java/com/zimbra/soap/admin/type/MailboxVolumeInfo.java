@@ -25,12 +25,24 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailboxVolumeInfo {
 
+    /**
+     * @zm-api-field-tag volume-id
+     * @zm-api-field-description Volume ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private short id;
 
+    /**
+     * @zm-api-field-tag volume-type
+     * @zm-api-field-description Volume type
+     */
     @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE /* type */, required=true)
     private short volumeType;
 
+    /**
+     * @zm-api-field-tag volume-rootpath
+     * @zm-api-field-description Root of the mailbox data
+     */
     @XmlAttribute(name=AdminConstants.A_VOLUME_ROOTPATH /* rootpath */, required=true)
     private String volumeRootpath;
 

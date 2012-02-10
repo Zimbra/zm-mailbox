@@ -26,51 +26,116 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"fileCopier", "accounts"})
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupSpec {
 
+    /**
+     * @zm-api-field-tag backup-method
+     * @zm-api-field-description Backup method - <b>full|incremental|abort|delete</b>
+     */
     @XmlAttribute(name=BackupConstants.A_METHOD /* method */, required=false)
     private String method;
 
+    /**
+     * @zm-api-field-tag path-to-backup-target
+     * @zm-api-field-description Path to backup target
+     */
     @XmlAttribute(name=BackupConstants.A_BACKUP_TARGET /* target */, required=false)
     private String target;
 
+    /**
+     * @zm-api-field-tag full-backup-label
+     * @zm-api-field-description Full backup label
+     */
     @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
     private String label;
 
+    /**
+     * @zm-api-field-tag before
+     * @zm-api-field-description Used for selecting backups to delete for method="delete".
+     * <br />
+     * Value is either a full backup label or a date or a time period.
+     * <br />
+     * If it is a date, the format is <b>YYYY/MM/DD[-hh:mm:ss]</b>
+     * If it is a time period, the format is <b>nn{d|m|y}</b> where d = day, m = month, y = year
+     * <br />
+     * e.g., before="7d" means delete backups older than 7 days.  before="1y" means delete backups older than a year.
+     */
     @XmlAttribute(name=BackupConstants.A_BEFORE /* before */, required=false)
     private String before;
 
+    /**
+     * @zm-api-field-tag sync-flag
+     * @zm-api-field-description Run synchronously; command doesn't return until backup is finished
+     */
     @XmlAttribute(name=BackupConstants.A_SYNC /* sync */, required=false)
     private ZmBoolean sync;
 
     // Valid values are config/include/exclude (case insensitive)
+    /**
+     * @zm-api-field-tag include-search-index-setting
+     * @zm-api-field-description Option to include/exclude search index in a full backup (not applicable in
+     * incremental backup).  Values: <b>include|exclude|config</b>
+     * <br />
+     * Default value is "config", to use the configured value.  "include" or "exclude" overrides the configuration.
+     */
     @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX /* searchIndex */, required=false)
     private String searchIndex;
 
     // Valid values are config/include/exclude (case insensitive)
+    /**
+     * @zm-api-field-tag include-blobs-setting
+     * @zm-api-field-description Option to include/exclude blobs in a full backup (not applicable in
+     * incremental backup).  Values: <b>include|exclude|config</b>
+     * <br />
+     * Default value is "config", to use the configured value.  "include" or "exclude" overrides the configuration.
+     */
     @XmlAttribute(name=BackupConstants.A_BLOBS /* blobs */, required=false)
     private String blobs;
 
     // Valid values are config/include/exclude (case insensitive)
+    /**
+     * @zm-api-field-tag include-secondary-blobs-setting
+     * @zm-api-field-description Option to include/exclude secondary blobs in a full backup (not applicable in
+     * incremental backup).  Values: <b>include|exclude|config</b>
+     * <br />
+     * Default value is "config", to use the configured value.  "include" or "exclude" overrides the configuration.
+     * <br />
+     * Meaningful only when blob backup isn't excluded
+     */
     @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS /* secondaryBlobs */, required=false)
     private String secondaryBlobs;
 
+    /**
+     * @zm-api-field-tag backup-blobs-to-zip
+     * @zm-api-field-description Backup blobs to zip files.  Defaults to <b>1 (true)</b>
+     */
     @XmlAttribute(name=BackupConstants.A_ZIP /* zip */, required=false)
     private ZmBoolean zip;
 
+    /**
+     * @zm-api-field-tag zip-store
+     * @zm-api-field-description if set, store blobs uncompressed in zip files (used only when
+     * <b>{backup-blobs-to-zip}</b> is set.  Defaults to <b>1 (true)</b>
+     */
     @XmlAttribute(name=BackupConstants.A_ZIP_STORE /* zipStore */, required=false)
     private ZmBoolean zipStore;
 
+    /**
+     * @zm-api-field-description File copier specification
+     */
     @XmlElement(name=BackupConstants.E_FILE_COPIER /* fileCopier */, required=false)
     private FileCopierSpec fileCopier;
 
+    /**
+     * @zm-api-field-tag account-sel
+     * @zm-api-field-description Account selector - either one <b>&lt;account name="all"/></b> or a list of
+     * <b>&lt;account name="{account email addr}"/></b>
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 

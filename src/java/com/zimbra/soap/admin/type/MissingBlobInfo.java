@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,22 +21,42 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class MissingBlobInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
+    @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final int id;
 
-    @XmlAttribute(name=AdminConstants.A_REVISION, required=true)
+    /**
+     * @zm-api-field-tag revision
+     * @zm-api-field-description revision
+     */
+    @XmlAttribute(name=AdminConstants.A_REVISION /* rev */, required=true)
     private final int revision;
 
-    @XmlAttribute(name=AdminConstants.A_SIZE, required=true)
+    /**
+     * @zm-api-field-tag data-size
+     * @zm-api-field-description Data size
+     */
+    @XmlAttribute(name=AdminConstants.A_SIZE /* s */, required=true)
     private final long size;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_ID, required=true)
+    /**
+     * @zm-api-field-tag volume-id
+     * @zm-api-field-description Volume ID
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_ID /* volumeId */, required=true)
     private final short volumeId;
 
-    @XmlAttribute(name=AdminConstants.A_BLOB_PATH, required=true)
+    /**
+     * @zm-api-field-tag blob-path
+     * @zm-api-field-description Blob path
+     */
+    @XmlAttribute(name=AdminConstants.A_BLOB_PATH /* blobPath */, required=true)
     private final String blobPath;
 
     /**

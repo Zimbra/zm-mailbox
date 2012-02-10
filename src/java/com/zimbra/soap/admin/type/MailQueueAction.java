@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -65,10 +65,22 @@ public class MailQueueAction {
         }
     }
 
-    @XmlAttribute(name=AdminConstants.A_OP, required=true)
+    /**
+     * @zm-api-field-tag operation
+     * @zm-api-field-description Operation.
+     */
+    @XmlAttribute(name=AdminConstants.A_OP /* op */, required=true)
     private QueueAction op;
 
-    @XmlAttribute(name=AdminConstants.A_BY, required=true)
+    /**
+     * @zm-api-field-tag by
+     * @zm-api-field-description By selector.
+     * <table>
+     * <tr> <td> <b>by</b> </td> <td> Body contains a list of ids </td> </tr>
+     * <tr> <td> <b>query</b> </td> <td> Body contains a query element</td> </tr>
+     * </table>
+     */
+    @XmlAttribute(name=AdminConstants.A_BY /* by */, required=true)
     private QueueActionBy by;
 
     // Used for Jaxb marshalling
@@ -77,13 +89,17 @@ public class MailQueueAction {
     //
     // Note: QueueQuery needs an @XmlRootElement annotation in order
     // to avoid schemagen error:
-    //  error: Invalid @XmlElementRef : 
+    //  error: Invalid @XmlElementRef :
     //      Type "com.zimbra.soap.admin.type.QueueQuery"
     //      or any of its subclasses are not known to this context.
+
+    /**
+     * @zm-api-field-description Either <b>&lt;query></b> element or a list of ids
+     */
     @XmlElementRefs({
-        @XmlElementRef(name=AdminConstants.E_QUERY, type=QueueQuery.class)
+        @XmlElementRef(name=AdminConstants.E_QUERY /* query */, type=QueueQuery.class)
     })
-    @XmlMixed 
+    @XmlMixed
     private List <Object> content;
 
     /**
@@ -105,7 +121,7 @@ public class MailQueueAction {
         }
     }
 
-    public String getIds() { 
+    public String getIds() {
         if (content == null)
             return null;
         if ( by != null && (!by.equals(QueueActionBy.id)) )

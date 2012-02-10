@@ -25,18 +25,38 @@ import com.zimbra.common.soap.BackupConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailboxVersionInfo {
 
+    /**
+     * @zm-api-field-tag mailbox-id
+     * @zm-api-field-description Mailbox ID
+     */
     @XmlAttribute(name=BackupConstants.A_MAILBOXID /* mbxid */, required=true)
     private int mailboxId;
 
+    /**
+     * @zm-api-field-tag mailbox-major-version
+     * @zm-api-field-description Major version of mailbox
+     */
     @XmlAttribute(name=BackupConstants.A_MAJOR_VERSION /* majorVer */, required=true)
     private short majorVersion;
 
+    /**
+     * @zm-api-field-tag mailbox-minor-version
+     * @zm-api-field-description Minor version of mailbox
+     */
     @XmlAttribute(name=BackupConstants.A_MINOR_VERSION /* minorVer */, required=true)
     private short minorVersion;
 
+    /**
+     * @zm-api-field-tag db-schema-version
+     * @zm-api-field-description Database schema version
+     */
     @XmlAttribute(name=BackupConstants.A_DB_VERSION /* dbVer */, required=true)
     private int dbVersion;
 
+    /**
+     * @zm-api-field-tag search-index-version
+     * @zm-api-field-description Search index version
+     */
     @XmlAttribute(name=BackupConstants.A_INDEX_VERSION /* indexVer */, required=true)
     private int indexVersion;
 

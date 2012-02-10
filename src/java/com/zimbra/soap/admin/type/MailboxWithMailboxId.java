@@ -26,11 +26,25 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlType(propOrder = {})
 public class MailboxWithMailboxId {
 
+    /**
+     * @zm-api-field-tag mailbox-id
+     * @zm-api-field-description Mailbox ID
+     */
     @XmlAttribute(name=AdminConstants.A_MAILBOXID /* mbxid */, required=true)
     private final int mbxid;
+
+    /**
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description Account ID
+     */
     @XmlAttribute(name=AdminConstants.A_ACCOUNTID /* id */, required=false)
     private String accountId;
+
     // DeleteMailbox doesn't set this
+    /**
+     * @zm-api-field-tag size-in-bytes
+     * @zm-api-field-description Size in bytes
+     */
     @XmlAttribute(name=AdminConstants.A_SIZE /* s */, required=false)
     private final Long size;
 
@@ -47,7 +61,7 @@ public class MailboxWithMailboxId {
         this.size = size;
         this.accountId = accountId;
     }
-    
+
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }

@@ -27,7 +27,11 @@ import com.zimbra.soap.base.IntervalRuleInterface;
 public class IntervalRule
 implements IntervalRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_INTERVAL_IVAL, required=true)
+    /**
+     * @zm-api-field-tag rule-interval
+     * @zm-api-field-description Rule interval count - a positive integer
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_INTERVAL_IVAL /* ival */, required=true)
     private final int ival;
 
     /**

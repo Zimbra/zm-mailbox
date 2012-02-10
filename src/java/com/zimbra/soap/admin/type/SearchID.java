@@ -22,11 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.XMbxSearchConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class SearchID {
 
-    @XmlAttribute(name=XMbxSearchConstants.A_searchID /* searchID */,
-                required=true)
+    /**
+     * @zm-api-field-tag search-id
+     * @zm-api-field-description Search ID
+     */
+    @XmlAttribute(name=XMbxSearchConstants.A_searchID /* searchID */, required=true)
     private final int searchID;
 
     /**

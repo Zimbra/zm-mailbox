@@ -32,15 +32,22 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class VersionCheckInfo {
 
-    @XmlAttribute(name=AdminConstants.A_VERSION_CHECK_STATUS, required=false)
+    /**
+     * @zm-api-field-tag version-check-status
+     * @zm-api-field-description Version check status
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_CHECK_STATUS /* status */, required=false)
     private ZmBoolean status;
 
-    @XmlElementWrapper(name=AdminConstants.E_UPDATES, required=false)
-    @XmlElement(name=AdminConstants.E_UPDATE, required=false)
+    /**
+     * @zm-api-field-description Version check update information
+     */
+    @XmlElementWrapper(name=AdminConstants.E_UPDATES /* updates */, required=false)
+    @XmlElement(name=AdminConstants.E_UPDATE /* update */, required=false)
     private List<VersionCheckUpdateInfo> updates = Lists.newArrayList();
 
     public VersionCheckInfo() {

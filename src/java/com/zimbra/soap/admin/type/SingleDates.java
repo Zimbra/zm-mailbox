@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,90 +16,81 @@
 package com.zimbra.soap.admin.type;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.base.DtTimeInfoInterface;
-import com.zimbra.soap.base.DurationInfoInterface;
+import com.zimbra.soap.base.DtValInterface;
 import com.zimbra.soap.base.SingleDatesInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class SingleDates
 implements RecurRuleBase, SingleDatesInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)
+    /**
+     * @zm-api-field-tag TZID
+     * @zm-api-field-description TZID
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
-    @XmlElement(name=MailConstants.E_CAL_START_TIME, required=false)
-    private DtTimeInfo startTime;
-
-    @XmlElement(name=MailConstants.E_CAL_END_TIME, required=false)
-    private DtTimeInfo endTime;
-
-    @XmlElement(name=MailConstants.E_CAL_DURATION, required=false)
-    private DurationInfo duration;
+    /**
+     * @zm-api-field-description Information on start date/time and end date/time or duration
+     */
+    @XmlElement(name=MailConstants.E_CAL_DATE_VAL /* dtval */, required=false)
+    private List<DtVal> dtVals = Lists.newArrayList();
 
     public SingleDates() {
     }
 
-    @Override
     public void setTimezone(String timezone) { this.timezone = timezone; }
-    public void setStartTime(DtTimeInfo startTime) {
-        this.startTime = startTime;
+    public void setDtvals(Iterable <DtVal> dtVals) {
+        this.dtVals.clear();
+        if (dtVals != null) {
+            Iterables.addAll(this.dtVals,dtVals);
+        }
     }
-    public void setEndTime(DtTimeInfo endTime) { this.endTime = endTime; }
-    public void setDuration(DurationInfo duration) { this.duration = duration; }
-    @Override
-    public String getTimezone() { return timezone; }
-    public DtTimeInfo getStartTime() { return startTime; }
-    public DtTimeInfo getEndTime() { return endTime; }
-    public DurationInfo getDuration() { return duration; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public void addDtval(DtVal dtVal) {
+        this.dtVals.add(dtVal);
+    }
+
+    public String getTimezone() { return timezone; }
+    public List<DtVal> getDtvals() {
+        return dtVals;
+    }
+
+    @Override
+    public void setDtValInterfaces(Iterable<DtValInterface> dtVals) {
+        setDtvals(DtVal.fromInterfaces(dtVals));
+    }
+
+    @Override
+    public void addDtValInterface(DtValInterface dtVal) {
+        addDtval((DtVal) dtVal);
+    }
+
+    @Override
+    public List<DtValInterface> getDtValInterfaces() {
+        return DtVal.toInterfaces(dtVals);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("timezone", timezone)
-            .add("startTime", startTime)
-            .add("endTime", endTime)
-            .add("duration", duration);
+            .add("dtVals", dtVals);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
-    }
-
-    @Override
-    public void setStartTimeInterface(DtTimeInfoInterface startTime) {
-        setStartTime((DtTimeInfo) startTime);
-    }
-
-    @Override
-    public void setEndTimeInterface(DtTimeInfoInterface endTime) {
-        setEndTime((DtTimeInfo) endTime);
-    }
-
-    @Override
-    public void setDurationInterface(DurationInfoInterface duration) {
-        setDuration((DurationInfo) duration);
-    }
-
-    @Override
-    public DtTimeInfoInterface getStartTimeInterface() {
-        return startTime;
-    }
-
-    @Override
-    public DtTimeInfoInterface getEndTimeInterface() {
-        return endTime;
-    }
-
-    @Override
-    public DurationInfoInterface getDurationInterface() {
-        return duration;
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

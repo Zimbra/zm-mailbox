@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,14 +31,18 @@ import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Names {
 
     private static Splitter COMMA_SPLITTER =
         Splitter.on(",").trimResults().omitEmptyStrings();
-    
+
     private static Joiner COMMA_JOINER = Joiner.on(",");
 
+    /**
+     * @zm-api-field-tag comma-sep-names
+     * @zm-api-field-description Comma separated list of names
+     */
     @XmlAttribute(name=AdminConstants.A_NAME, required=true)
     private final String names;
 

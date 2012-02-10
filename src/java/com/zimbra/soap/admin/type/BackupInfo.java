@@ -22,14 +22,21 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupInfo {
 
+    /**
+     * @zm-api-field-tag full-backup-set-label
+     * @zm-api-field-description Full backup set label
+     */
     @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
     private String label;
 
-    @XmlAttribute(name=BackupConstants.A_INCR_LABEL /* incr-label */,
-                    required=false)
+    /**
+     * @zm-api-field-tag incremental-backup-label
+     * @zm-api-field-description Incremental backup label
+     */
+    @XmlAttribute(name=BackupConstants.A_INCR_LABEL /* incr-label */, required=false)
     private String incrementalLabel;
 
     public BackupInfo() {

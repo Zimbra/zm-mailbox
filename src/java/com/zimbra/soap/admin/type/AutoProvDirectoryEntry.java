@@ -26,17 +26,22 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-// import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-// @XmlType(propOrder = {})
 public class AutoProvDirectoryEntry extends AdminKeyValuePairs {
 
+    /**
+     * @zm-api-field-tag dn
+     * @zm-api-field-description DN
+     */
     @XmlAttribute(name=AdminConstants.A_DN /* dn */, required=true)
     private String dn;
 
+    /**
+     * @zm-api-field-description Keys
+     */
     @XmlElement(name=AdminConstants.E_KEY /* key */, required=false)
     private List<String> keys = Lists.newArrayList();
 

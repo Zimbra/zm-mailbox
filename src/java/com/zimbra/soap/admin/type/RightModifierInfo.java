@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,18 +23,42 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class RightModifierInfo {
 
-    @XmlAttribute(name=AdminConstants.A_DENY, required=false)
+    /**
+     * @zm-api-field-tag deny-flag
+     * @zm-api-field-description Deny flag - default is <b>0 (false)</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_DENY /* deny */, required=false)
     private final ZmBoolean deny;
 
-    @XmlAttribute(name=AdminConstants.A_CAN_DELEGATE, required=false)
+    /**
+     * @zm-api-field-tag can-delegate-flag
+     * @zm-api-field-description Flag whether can delegate - default is <b>0 (false)</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_CAN_DELEGATE /* canDelegate */, required=false)
     private final ZmBoolean canDelegate;
 
-    @XmlAttribute(name=AdminConstants.A_SUB_DOMAIN, required=false)
+    /**
+     * @zm-api-field-tag subdomain-flag
+     * @zm-api-field-description subDomain flag - default is <b>0 (false)</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_SUB_DOMAIN /* subDomain */, required=false)
     private final ZmBoolean subDomain;
 
+    /**
+     * @zm-api-field-tag right
+     * @zm-api-field-description Value is of the form : {right-name} | {inline-right} where
+     * <br />
+     * {right-name} = a system defined right name
+     * <br />
+     * {inline-right} = {op}.{target-type}.{attr-name}
+     * <br />
+     * {op} = set | get
+     * <br />
+     * {attr-name} = a valid attribute name on the specified target type
+     */
     @XmlValue
     private final String value;
 

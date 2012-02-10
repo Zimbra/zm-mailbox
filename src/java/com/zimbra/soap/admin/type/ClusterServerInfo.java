@@ -22,15 +22,21 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.ClusterConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ClusterServerInfo {
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVER_NAME
-                /* name */, required=true)
+    /**
+     * @zm-api-field-tag cluster-server-name
+     * @zm-api-field-description Cluster server name
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVER_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVER_STATUS
-                /* status */, required=true)
+    /**
+     * @zm-api-field-tag cluster-server-status
+     * @zm-api-field-description Server status - 1 or 0
+     */
+    @XmlAttribute(name=ClusterConstants.A_CLUSTER_SERVER_STATUS /* status */, required=true)
     private final int status;
 
     /**

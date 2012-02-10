@@ -27,51 +27,92 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"currentAccounts", "accounts", "errors", "stats"})
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupQueryInfo {
 
+    /**
+     * @zm-api-field-tag backup-set-label
+     * @zm-api-field-description Backup set label
+     */
     @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
     private String label;
 
+    /**
+     * @zm-api-field-tag backup-type
+     * @zm-api-field-description Backup type - <b>full|incremental</b>
+     */
     @XmlAttribute(name=BackupConstants.A_TYPE /* type */, required=false)
     private String type;
 
+    /**
+     * @zm-api-field-tag aborted-flag
+     * @zm-api-field-description Set if backup was aborted by the abort command
+     */
     @XmlAttribute(name=BackupConstants.A_ABORTED /* aborted */, required=false)
     private ZmBoolean aborted;
 
+    /**
+     * @zm-api-field-tag start-time-millis
+     * @zm-api-field-description Start time in milliseconds
+     */
     @XmlAttribute(name=BackupConstants.A_START /* start */, required=false)
     private Long start;
 
+    /**
+     * @zm-api-field-tag end-time-millis
+     * @zm-api-field-description End time in milliseconds.  Omitted for a live backup
+     */
     @XmlAttribute(name=BackupConstants.A_END /* end */, required=false)
     private Long end;
 
-    @XmlAttribute(name=BackupConstants.A_MIN_REDO_SEQ /* minRedoSeq */,
-                            required=false)
+    /**
+     * @zm-api-field-tag min-redo-seq
+     * @zm-api-field-description Minimum redo sequence in this backup set
+     */
+    @XmlAttribute(name=BackupConstants.A_MIN_REDO_SEQ /* minRedoSeq */, required=false)
     private Long minRedoSeq;
 
-    @XmlAttribute(name=BackupConstants.A_MAX_REDO_SEQ /* maxRedoSeq */,
-                            required=false)
+    /**
+     * @zm-api-field-tag max-redo-seq
+     * @zm-api-field-description Maximum redo sequence in this backup set
+     */
+    @XmlAttribute(name=BackupConstants.A_MAX_REDO_SEQ /* maxRedoSeq */, required=false)
     private Long maxRedoSeq;
 
+    /**
+     * @zm-api-field-tag live-backup-in-progress
+     * @zm-api-field-description "live" means backup is currently in progress
+     */
     @XmlAttribute(name=BackupConstants.A_LIVE /* live */, required=false)
     private ZmBoolean live;
 
-    @XmlElement(name=BackupConstants.E_CURRENT_ACCOUNTS /* currentAccounts */,
-                        required=false)
+    /**
+     * @zm-api-field-description Information about current accounts.  <b>&lt;currentAccounts></b> is returned only for
+     * a live backup.
+     */
+    @XmlElement(name=BackupConstants.E_CURRENT_ACCOUNTS /* currentAccounts */, required=false)
     private CurrentAccounts currentAccounts;
 
+    /**
+     * @zm-api-field-description Backup information by account
+     */
     @XmlElement(name=BackupConstants.E_ACCOUNTS /* accounts */, required=false)
     private BackupQueryAccounts accounts;
 
+    /**
+     * @zm-api-field-description Any errors that are not account-specific; account-specific errors are returned in
+     * <b>&lt;account></b>.
+     */
     @XmlElement(name=BackupConstants.E_ERROR /* error */, required=false)
     private List<BackupQueryError> errors = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Statistics.  Returned if request specified stats="1" (true)
+     */
     @XmlElementWrapper(name=BackupConstants.E_STATS /* stats */, required=false)
     @XmlElement(name=BackupConstants.E_COUNTER /* counter */, required=false)
     private List<BackupQueryCounter> stats = Lists.newArrayList();

@@ -23,20 +23,33 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class TZFixupRule {
 
+    /**
+     * @zm-api-field-description Match
+     */
     @XmlElement(name=AdminConstants.E_MATCH /* match */, required=true)
     private TZFixupRuleMatch match;
 
     // Need either "touch" or "replace" but not both
 
     // Force sync clients to refetch
+    /**
+     * @zm-api-field-tag touch
+     * @zm-api-field-description Force sync clients to refetch.
+     * <br />
+     * Need either "touch" or "replace" but not both
+     */
     @XmlElement(name=AdminConstants.E_TOUCH /* touch */, required=false)
     private SimpleElement touch;
 
-    // replace any matching timezone with this timezone
+    /**
+     * @zm-api-field-description Replace any matching timezone with this timezone
+     * <br />
+     * Need either "touch" or "replace" but not both
+     */
     @XmlElement(name=AdminConstants.E_REPLACE /* replace */, required=false)
     private TZReplaceInfo replace;
 

@@ -24,19 +24,33 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class TZFixupRuleMatchRules {
 
+    /**
+     * @zm-api-field-tag stdoff
+     * @zm-api-field-description offset from UTC in standard time; local = UTC + offset
+     */
     @XmlAttribute(name=AdminConstants.A_STDOFF /* stdoff */, required=true)
     private long stdOffset;
 
+    /**
+     * @zm-api-field-tag dayoff
+     * @zm-api-field-description offset from UTC in daylight time; present only if DST is used
+     */
     @XmlAttribute(name=AdminConstants.A_DAYOFF /* dayoff */, required=true)
     private long dstOffset;
 
+    /**
+     * @zm-api-field-description Standard match rule
+     */
     @XmlElement(name=AdminConstants.E_STANDARD /* standard */, required=true)
     private TZFixupRuleMatchRule standard;
 
+    /**
+     * @zm-api-field-description Daylight saving match rule
+     */
     @XmlElement(name=AdminConstants.E_DAYLIGHT /* daylight */, required=true)
     private TZFixupRuleMatchRule daylight;
 

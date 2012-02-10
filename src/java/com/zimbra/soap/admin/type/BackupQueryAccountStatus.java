@@ -23,19 +23,34 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BackupQueryAccountStatus {
 
+    /**
+     * @zm-api-field-tag account-email
+     * @zm-api-field-description Account email
+     */
     @XmlAttribute(name=BackupConstants.A_NAME /* name */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description Status - <b>NOTSTARTED|INPROGRESS|COMPLETED|ERROR</b>
+     */
     @XmlAttribute(name=BackupConstants.A_STATUS /* status */, required=true)
     private final String status;
 
-    @XmlAttribute(name=BackupConstants.A_ERROR_MESSAGE /* errorMessage */,
-                    required=false)
+    /**
+     * @zm-api-field-tag error-message
+     * @zm-api-field-description Error message
+     */
+    @XmlAttribute(name=BackupConstants.A_ERROR_MESSAGE /* errorMessage */, required=false)
     private String errorMessage;
 
+    /**
+     * @zm-api-field-tag error-stack-trace
+     * @zm-api-field-description Error stack trace, if available
+     */
     @XmlValue
     private String trace;
 

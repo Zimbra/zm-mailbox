@@ -36,12 +36,23 @@ import com.zimbra.common.soap.MailConstants;
 @XmlType(propOrder = {})
 public class MailboxVolumesInfo {
 
+    /**
+     * @zm-api-field-tag mailbox-id
+     * @zm-api-field-description Mailbox ID
+     */
     @XmlAttribute(name=BackupConstants.A_MAILBOXID /* mbxid */, required=true)
     private int mailboxId;
 
+    /**
+     * @zm-api-field-tag sync-token
+     * @zm-api-field-description Current sync token of the mailbox
+     */
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=true)
     private int token;
 
+    /**
+     * @zm-api-field-description Volumes
+     */
     @XmlElement(name=AdminConstants.E_VOLUME /* volume */, required=false)
     private List<MailboxVolumeInfo> volumes = Lists.newArrayList();
 

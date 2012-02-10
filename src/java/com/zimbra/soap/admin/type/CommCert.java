@@ -25,22 +25,28 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.CertMgrConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"cert", "rootCA", "intermediateCAs"})
+@XmlAccessorType(XmlAccessType.NONE)
 public class CommCert {
 
+    /**
+     * @zm-api-field-description Certificate information
+     */
     @XmlElement(name=CertMgrConstants.E_cert /* cert */, required=false)
     private AidAndFilename cert;
 
+    /**
+     * @zm-api-field-description rootCA information
+     */
     @XmlElement(name=CertMgrConstants.E_rootCA /* rootCA */, required=false)
     private AidAndFilename rootCA;
 
-    @XmlElement(name=CertMgrConstants.E_intermediateCA /* intermediateCA */,
-                required=false)
+    /**
+     * @zm-api-field-description intermediateCA information
+     */
+    @XmlElement(name=CertMgrConstants.E_intermediateCA /* intermediateCA */, required=false)
     private List<AidAndFilename> intermediateCAs = Lists.newArrayList();
 
     public CommCert() {

@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class LDAPEntryInfo extends AdminAttrsImpl {
 
+    /**
+     * @zm-api-field-tag ldap-entry-name
+     * @zm-api-field-description LDAP Entry name
+     */
     @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
     private final String name;
 

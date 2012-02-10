@@ -25,37 +25,82 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public final class VolumeInfo {
 
-    @XmlAttribute(name=AdminConstants.A_ID, required=false)
+    /**
+     * @zm-api-field-tag volume-id
+     * @zm-api-field-description Volume ID
+     */
+    @XmlAttribute(name=AdminConstants.A_ID /* id */, required=false)
     private short id = -1;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_NAME, required=false)
+    /**
+     * @zm-api-field-tag volume-name
+     * @zm-api-field-description Name or description of volume
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_NAME /* name */, required=false)
     private String name;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_ROOTPATH, required=false)
+    /**
+     * @zm-api-field-tag volume-root-path
+     * @zm-api-field-description Absolute path to root of volume, e.g. /opt/zimbra/store
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_ROOTPATH /* rootpath */, required=false)
     private String rootPath;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE, required=false)
+    /**
+     * @zm-api-field-tag volume-type
+     * @zm-api-field-description Volume type
+     * <table>
+     * <tr> <td> <b>1</b> </td> <td> Primary message volume </td> </tr>
+     * <tr> <td> <b>2</b> </td> <td> Secondary message volume </td> </tr>
+     * <tr> <td> <b>10</b> </td> <td> index volume </td> </tr>
+     * </table>
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE /* type */, required=false)
     private short type = -1;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESS_BLOBS, required=false)
+    /**
+     * @zm-api-field-tag compress-blobs
+     * @zm-api-field-description Specifies whether blobs in this volume are compressed
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESS_BLOBS /* compressBlobs */, required=false)
     private ZmBoolean compressBlobs;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD, required=false)
+    /**
+     * @zm-api-field-tag compression-threshold
+     * @zm-api-field-description Long value that specifies the maximum uncompressed file size, in bytes, of blobs
+     * that will not be compressed (in other words blobs larger than this threshold are compressed)
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD /* compressionThreshold */, required=false)
     private long compressionThreshold = -1;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_MGBITS, required=false)
+    /**
+     * @zm-api-field-description mgbits
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_MGBITS /* mgbits */, required=false)
     private short mgbits;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_MBITS, required=false)
+    /**
+     * @zm-api-field-description mbits
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_MBITS /* mbits */, required=false)
     private short mbits;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_FGBITS, required=false)
+    /**
+     * @zm-api-field-description fgbits
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_FGBITS /* fgbits */, required=false)
     private short fgbits;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_FBITS, required=false)
+    /**
+     * @zm-api-field-description fbits
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_FBITS /* fbits */, required=false)
     private short fbits;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT, required=false)
+    /**
+     * @zm-api-field-description Set if the volume is current.
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT /* isCurrent */, required=false)
     private ZmBoolean current;
 
     public void setId(short value) {

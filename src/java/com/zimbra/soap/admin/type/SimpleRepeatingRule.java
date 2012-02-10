@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ByDayRuleInterface;
@@ -46,55 +45,101 @@ import com.zimbra.soap.base.WkstRuleInterface;
 import com.zimbra.soap.base.XNameRuleInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"until", "count", "interval", "bySecond", "byMinute",
-            "byHour", "byDay", "byMonthDay", "byYearDay", "byWeekNo",
-            "byMonth", "bySetPos", "weekStart", "xNames"})
 public class SimpleRepeatingRule
 implements RecurRuleBase, SimpleRepeatingRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_FREQ, required=true)
+    /**
+     * @zm-api-field-tag freq
+     * @zm-api-field-description Frequency - <b>SEC,MIN,HOU,DAI,WEE,MON,YEA</b>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_FREQ /* freq */, required=true)
     private final String frequency;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_UNTIL, required=false)
+    /**
+     * @zm-api-field-tag until
+     * @zm-api-field-description UNTIL date specification
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_UNTIL /* until */, required=false)
     private DateTimeStringAttr until;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_COUNT, required=false)
+    /**
+     * @zm-api-field-tag instance-count
+     * @zm-api-field-description Count of instances to generate
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_COUNT /* count */, required=false)
     private NumAttr count;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_INTERVAL, required=false)
+    /**
+     * @zm-api-field-description Interval specification
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_INTERVAL /* interval */, required=false)
     private IntervalRule interval;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYSECOND, required=false)
+    /**
+     * @zm-api-field-description BYSECOND rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYSECOND /* bysecond */, required=false)
     private BySecondRule bySecond;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYMINUTE, required=false)
+    /**
+     * @zm-api-field-description BYMINUTE rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYMINUTE /* byminute */, required=false)
     private ByMinuteRule byMinute;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYHOUR, required=false)
+    /**
+     * @zm-api-field-description BYHOUR rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYHOUR /* byhour */, required=false)
     private ByHourRule byHour;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYDAY, required=false)
+    /**
+     * @zm-api-field-description BYDAY rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYDAY /* byday */, required=false)
     private ByDayRule byDay;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYMONTHDAY, required=false)
+    /**
+     * @zm-api-field-description BYMONTHDAY rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYMONTHDAY /* bymonthday */, required=false)
     private ByMonthDayRule byMonthDay;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYYEARDAY, required=false)
+    /**
+     * @zm-api-field-description BYYEARDAY rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYYEARDAY /* byyearday */, required=false)
     private ByYearDayRule byYearDay;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYWEEKNO, required=false)
+    /**
+     * @zm-api-field-description BYWEEKNO rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYWEEKNO /* byweekno */, required=false)
     private ByWeekNoRule byWeekNo;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYMONTH, required=false)
+    /**
+     * @zm-api-field-description BYMONTH rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYMONTH /* bymonth */, required=false)
     private ByMonthRule byMonth;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYSETPOS, required=false)
+    /**
+     * @zm-api-field-description BYSETPOS rule
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYSETPOS /* bysetpos */, required=false)
     private BySetPosRule bySetPos;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_WKST, required=false)
+    /**
+     * @zm-api-field-tag wkst
+     * @zm-api-field-description Week start day - <b>SU,MO,TU,WE,TH,FR,SA</b>
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_WKST /* wkst */, required=false)
     private WkstRule weekStart;
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME, required=false)
+    /**
+     * @zm-api-field-description X Name rules
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME /* rule-x-name */, required=false)
     private List<XNameRule> xNames = Lists.newArrayList();
 
     /**
@@ -208,7 +253,6 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
     @Override
     public void setBySecondInterface(BySecondRuleInterface bySecond) {
         setBySecond((BySecondRule) bySecond);
-        
     }
 
     @Override

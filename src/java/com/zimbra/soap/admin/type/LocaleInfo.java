@@ -27,12 +27,24 @@ import com.zimbra.soap.base.LocaleInterface;
 public class LocaleInfo
 implements LocaleInterface {
 
+    /**
+     * @zm-api-field-tag locale-id
+     * @zm-api-field-description Locale ID.  e.g. "en_US"
+     */
     @XmlAttribute(name=AccountConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag locale-name
+     * @zm-api-field-description Locale name - the name in the locale itself.  e.g. "English (United States)"
+     */
     @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag locale-local-name
+     * @zm-api-field-description Locale name in the user's locale.  e.g. "English (United States)"
+     */
     @XmlAttribute(name=AccountConstants.A_LOCAL_NAME /* localName */, required=false)
     private final String localName;
 

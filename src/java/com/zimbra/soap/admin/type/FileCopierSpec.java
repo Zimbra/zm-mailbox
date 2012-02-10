@@ -22,40 +22,62 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class FileCopierSpec {
 
+    /**
+     * @zm-api-field-tag file-copier-method
+     * @zm-api-field-description File copier method - <b>PARALLEL | PIPE | SERIAL</b>
+     */
     @XmlAttribute(name=BackupConstants.A_FC_METHOD /* fcMethod */, required=false)
     private String method;
 
+    /**
+     * @zm-api-field-description fcIOTYpe - <b>OIO | NIO</b>.  For all methods
+     */
     @XmlAttribute(name=BackupConstants.A_FC_IOTYPE /* fcIOType */, required=false)
     private String iotype;
 
-    @XmlAttribute(name=BackupConstants.A_FC_OIO_COPY_BUFSIZE
-                            /* fcOIOCopyBufferSize */, required=false)
+    /**
+     * @zm-api-field-description fcOIOCopyBufferSize in bytes.   For all methods
+     */
+    @XmlAttribute(name=BackupConstants.A_FC_OIO_COPY_BUFSIZE /* fcOIOCopyBufferSize */, required=false)
     private Integer oioCopyBufSize;
 
-    @XmlAttribute(name=BackupConstants.A_FC_ASYNC_QUEUE_CAPACITY
-                            /* fcAsyncQueueCapacity */, required=false)
+    /**
+     * @zm-api-field-description fcAsyncQueueCapacity.  For PARALLEL and PIPE only
+     */
+    @XmlAttribute(name=BackupConstants.A_FC_ASYNC_QUEUE_CAPACITY /* fcAsyncQueueCapacity */, required=false)
     private Integer asyncQueueCapacity;
 
-    @XmlAttribute(name=BackupConstants.A_FC_PARALLEL_WORKERS
-                            /* fcParallelWorkers */, required=false)
+    /**
+     * @zm-api-field-description fcParallelWorkers.  For PARALLEL only
+     */
+    @XmlAttribute(name=BackupConstants.A_FC_PARALLEL_WORKERS /* fcParallelWorkers */, required=false)
     private Integer parallelWorkers;
 
+    /**
+     * @zm-api-field-description fcPipes.  For PIPE only
+     */
     @XmlAttribute(name=BackupConstants.A_FC_PIPES /* fcPipes */, required=false)
     private Integer pipes;
 
-    @XmlAttribute(name=BackupConstants.A_FC_PIPE_BUFFER_SIZE
-                            /* fcPipeBufferSize */, required=false)
+    /**
+     * @zm-api-field-description fcPipeBufferSize. For PIPE only
+     */
+    @XmlAttribute(name=BackupConstants.A_FC_PIPE_BUFFER_SIZE /* fcPipeBufferSize */, required=false)
     private Integer pipeBufferSize;
 
-    @XmlAttribute(name=BackupConstants.A_FC_PIPE_READERS
-                            /* fcPipeReadersPerPipe */, required=false)
+    /**
+     * @zm-api-field-description fcPipeReadersPerPipe. For PIPE only
+     */
+    @XmlAttribute(name=BackupConstants.A_FC_PIPE_READERS /* fcPipeReadersPerPipe */, required=false)
     private Integer pipeReaders;
 
-    @XmlAttribute(name=BackupConstants.A_FC_PIPE_WRITERS
-                            /* fcPipeWritersPerPipe */, required=false)
+    /**
+     * @zm-api-field-description fcPipeWritersPerPipe. Ffor PIPE only
+     */
+    @XmlAttribute(name=BackupConstants.A_FC_PIPE_WRITERS /* fcPipeWritersPerPipe */, required=false)
     private Integer pipeWriters;
 
     public FileCopierSpec() {

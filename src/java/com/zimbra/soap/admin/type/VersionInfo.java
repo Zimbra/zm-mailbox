@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,26 +21,66 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class VersionInfo {
 
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_TYPE, required=false)
+    /**
+     * @zm-api-field-tag type
+     * @zm-api-field-description Type
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_TYPE /* type */, required=false)
     private String type;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_VERSION, required=true)
+
+    /**
+     * @zm-api-field-tag version-string
+     * @zm-api-field-description Version string
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_VERSION /* version */, required=true)
     private String version;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_RELEASE, required=true)
+
+    /**
+     * @zm-api-field-tag release-string
+     * @zm-api-field-description Release string
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_RELEASE /* release */, required=true)
     private String release;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_DATE, required=true)
+
+    /**
+     * @zm-api-field-tag buildDate-YYYYMMDD-hhmm
+     * @zm-api-field-description Build Date - format : <b>YYYYMMDD-hhmm</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_DATE /* buildDate */, required=true)
     private String buildDate;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_HOST, required=true)
+
+    /**
+     * @zm-api-field-tag host-name
+     * @zm-api-field-description Host name
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_HOST /* host */, required=true)
     private String host;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_MAJOR, required=true)
+
+    /**
+     * @zm-api-field-description Major version
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_MAJOR /* majorversion */, required=true)
     private String majorVersion;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_MINOR, required=true)
+
+    /**
+     * @zm-api-field-description Minor version
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_MINOR /* minorversion */, required=true)
     private String minorVersion;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_MICRO, required=true)
+
+    /**
+     * @zm-api-field-description Micro version
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_MICRO /* microversion */, required=true)
     private String microVersion;
-    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_PLATFORM, required=true)
+
+    /**
+     * @zm-api-field-description Platform
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_PLATFORM /* platform */, required=true)
     private String platform;
 
     public VersionInfo() {

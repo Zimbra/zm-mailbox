@@ -22,12 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class PurgeMovedMailboxInfo {
 
+    /**
+     * @zm-api-field-tag server-hostname
+     * @zm-api-field-description Hostname of server the purge took place on
+     */
     @XmlAttribute(name=BackupConstants.A_SERVER /* server */, required=true)
     private final String server;
 
+    /**
+     * @zm-api-field-tag purged-mailbox-id
+     * @zm-api-field-description Purged mailbox ID
+     */
     @XmlAttribute(name=BackupConstants.A_MAILBOXID /* mbxid */, required=true)
     private final int mailboxId;
 
