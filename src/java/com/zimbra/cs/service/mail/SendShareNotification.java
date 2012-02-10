@@ -95,7 +95,7 @@ public class SendShareNotification extends MailDocumentHandler {
         // send the messages
         try {
             for (ShareInfoData sid : shareInfos) {
-                sendShareNotif(octxt, account, mbox, sid, notes);
+                sendShareNotif(octxt, getAuthenticatedAccount(zsc), mbox, sid, notes);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
@@ -484,8 +484,11 @@ public class SendShareNotification extends MailDocumentHandler {
         mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
         mm.setSentDate(new Date());
 
-        // from the auth account
-        mm.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
+        // from the owner
+        mm.setFrom(AccountUtil.getFriendlyEmailAddress(mbox.getAccount()));
+
+        // sent by auth account
+        mm.setSender(AccountUtil.getFriendlyEmailAddress(authAccount));
 
         // to the grantee
         String recipient = sid.getGranteeName();
