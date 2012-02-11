@@ -24,15 +24,16 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
-import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -44,8 +45,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CancelCalendarItem extends CalendarRequest {
@@ -98,37 +97,39 @@ public class CancelCalendarItem extends CalendarRequest {
                     tzmap.add(tz);
                 }
                 RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap);
-    
+
                 // trace logging
                 ZimbraLog.calendar.info("<CancelCalendarItem> id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
                         calItem.getId(), calItem.getFolderId(), inv.isPublic() ? inv.getName() : "(private)",
                         calItem.getUid(), recurId.getDtZ());
-    
+
                 Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
                 cancelInstance(zsc, octxt, msgElem, acct, mbox, calItem, inv, recurId, inv.getAttendees(), sendQueue);
             } else {
                 // if recur is not set, then we're canceling the entire calendar item...
-    
+
                 // trace logging
                 ZimbraLog.calendar.info("<CancelCalendarItem> id=%d, folderId=%d, subject=\"%s\", UID=%s",
                         calItem.getId(), calItem.getFolderId(), inv.isPublic() ? inv.getName() : "(private)",
                         calItem.getUid());
-    
+
                 Invite seriesInv = calItem.getDefaultInviteOrNull();
                 if (seriesInv != null) {
                     if (seriesInv.getMethod().equals(ICalTok.REQUEST.toString()) ||
                         seriesInv.getMethod().equals(ICalTok.PUBLISH.toString())) {
-    
+
                         if (seriesInv.isOrganizer()) {
                             // Send cancel notice to attendees who were invited to exception instances only.
                             // These attendees need to be notified separately because they aren't included in the series
                             // cancel notice.
                             List<ZAttendee> atsSeries = seriesInv.getAttendees();
                             Invite[] invs = calItem.getInvites();
+                            long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
                             for (Invite exceptInv : invs) {
                                 if (exceptInv != seriesInv) {
                                     String mthd = exceptInv.getMethod();
-                                    if (mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) {
+                                    if ((mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) &&
+                                            inviteIsAfterTime(exceptInv, now)) {
                                         List<ZAttendee> atsExcept = exceptInv.getAttendees();
                                         // Find exception instance attendees who aren't series attendees.
                                         List<ZAttendee> ats = CalendarUtils.getRemovedAttendees(atsExcept, atsSeries, false, acct);
@@ -140,7 +141,7 @@ public class CancelCalendarItem extends CalendarRequest {
                                 }
                             }
                         }
-    
+
                         // Finally, cancel the series.
                         Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
                         cancelInvite(zsc, octxt, msgElem, acct, mbox, calItem, seriesInv, sendQueue);

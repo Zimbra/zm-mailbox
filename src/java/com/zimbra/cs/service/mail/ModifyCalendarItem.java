@@ -22,11 +22,15 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.mail.Address;
-import javax.mail.MessagingException;
 import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
@@ -38,10 +42,6 @@ import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -238,7 +238,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             boolean notifyAllAttendees = true;
             if (inv.isRecurrence()) {
                 // Figure out if we're notifying all attendees.  Must do this before clearing recipients from dat.mMm.
-                notifyAllAttendees = isNotifyingAll(dat.mMm, atsAdded);    
+                notifyAllAttendees = isNotifyingAll(dat.mMm, atsAdded);
                 // Clear to/cc/bcc from the MimeMessage, so that the sendCalendarMessage call only updates the organizer's
                 // own appointment without notifying any attendees.  Notifications will be sent later,
                 removeAllRecipients(dat.mMm);
@@ -249,9 +249,10 @@ public class ModifyCalendarItem extends CalendarRequest {
                 if (!acct.isCalendarKeepExceptionsOnSeriesTimeChange()) {
                     InviteChanges ic = new InviteChanges(seriesInv, dat.mInvite);
                     if (ic.isExceptionRemovingChange()) {
+                        long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
                         Invite[] invites = calItem.getInvites();
                         for (Invite except : invites) {
-                            if (!except.isNeverSent() && except.hasRecurId() && !except.isCancel()) {
+                            if (!except.isNeverSent() && except.hasRecurId() && !except.isCancel() && inviteIsAfterTime(except, now)) {
                                 List<ZAttendee> toNotify = CalendarUtils.getRemovedAttendees(
                                         except.getAttendees(), seriesInv.getAttendees(), false, acct);
                                 if (!toNotify.isEmpty()) {
