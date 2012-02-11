@@ -101,4 +101,11 @@ public class DavException extends Exception {
             setError(e);
         }
     }
+    
+    public static class InvalidData extends DavExceptionWithErrorMessage {
+        public InvalidData(QName prop, String msg) {
+            super(msg, HttpServletResponse.SC_FORBIDDEN);
+            setError(prop);
+        }
+    }
 }

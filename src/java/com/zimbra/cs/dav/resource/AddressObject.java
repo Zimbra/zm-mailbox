@@ -246,10 +246,10 @@ public class AddressObject extends MailItemResource {
                 }
             }
         } catch (ServiceException e) {
-            throw new DavException("cannot parse vcard ", HttpServletResponse.SC_BAD_REQUEST, e);
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA, "cannot parse vcard");
         }
         if (res == null)
-            throw new DavException("cannot parse vcard ", HttpServletResponse.SC_BAD_REQUEST);
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA, "cannot parse vcard");
         return res;
     }
 

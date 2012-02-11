@@ -244,7 +244,7 @@ public class CalendarCollection extends Collection {
             MailItem.Type type = i.getItemType();
             if (type == MailItem.Type.APPOINTMENT || type == MailItem.Type.TASK) {
                 if (uid != null && uid.compareTo(i.getUid()) != 0)
-                    throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
+                    throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_OBJECT_RESOURCE, "too many components");
                 uid = i.getUid();
             }
             if (i.isRecurrence())
@@ -253,7 +253,7 @@ public class CalendarCollection extends Collection {
                 inviteList.addLast(i);
         }
         if (uid == null)
-            throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
+            throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_COMPONENT, "no event in the request");
         invites.clear();
         invites.addAll(inviteList);
         return uid;
@@ -262,9 +262,10 @@ public class CalendarCollection extends Collection {
     /* creates an appointment sent in PUT request in this calendar. */
     @Override
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-        if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR) ||
-                ctxt.getUpload().getSize() <= 0)
-            throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
+        if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR))
+            throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_DATA,"not a calendar data");
+         if (ctxt.getUpload().getSize() <= 0)
+            throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"empty request");
 
         /*
          * some of the CalDAV clients do not behave very well when it comes to
@@ -306,7 +307,7 @@ public class CalendarCollection extends Collection {
                         vcalendar,
                         true);
             } catch (ServiceException se) {
-                throw new DavException("cannot parse ics", HttpServletResponse.SC_BAD_REQUEST, se);
+                throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"cannot parse ics");
             }
 
             String uid = findEventUid(invites);
