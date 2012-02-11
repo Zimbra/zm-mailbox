@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,12 +24,12 @@ import java.util.Set;
 
 import org.json.JSONException;
 
+import com.zimbra.client.event.ZModifyContactEvent;
+import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.client.event.ZModifyContactEvent;
-import com.zimbra.client.event.ZModifyEvent;
 
 public class ZContact implements ZItem, ToZJSONObject {
 
@@ -49,20 +49,20 @@ public class ZContact implements ZItem, ToZJSONObject {
     public static final String FA_COMPANY_FIRST_LAST = "7";
     /** "File as" setting: <i>[explicitly specified "file as" string]</i> */
     public static final String FA_EXPLICIT = "8";
-    
+
     public static class ZContactAttachmentInfo {
         private String mContentType;
         private String mFileName;
         private String mPart;
         private long mLength;
-        
+
         public ZContactAttachmentInfo(String part, String fileName, String contentType, long length) {
             mPart = part;
             mFileName = fileName;
             mContentType = contentType;
             mLength = length;
         }
-        
+
         public String getContentType() {
             return mContentType;
         }
@@ -94,11 +94,11 @@ public class ZContact implements ZItem, ToZJSONObject {
         attachment('a');
 
         private char mFlagChar;
-        
+
         public char getFlagChar() { return mFlagChar; }
 
         public static String toNameList(String flags) {
-            if (flags == null || flags.length() == 0) return "";            
+            if (flags == null || flags.length() == 0) return "";
             StringBuilder sb = new StringBuilder();
             for (int i=0; i < flags.length(); i++) {
                 String v = null;
@@ -113,12 +113,12 @@ public class ZContact implements ZItem, ToZJSONObject {
             }
             return sb.toString();
         }
-        
+
         Flag(char flagChar) {
-            mFlagChar = flagChar;            
+            mFlagChar = flagChar;
         }
     }
-    
+
     public ZContact(Element e, boolean galContact, ZMailbox mailbox) throws ServiceException {
         this(e, mailbox);
         mGalContact = galContact;
@@ -133,7 +133,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
-        
+
         HashMap<String, String> attrs = new HashMap<String, String>();
         HashMap<String, ZContactAttachmentInfo> attachments = new HashMap<String, ZContactAttachmentInfo>();
 
@@ -149,7 +149,7 @@ public class ZContact implements ZItem, ToZJSONObject {
                 attrs.put(name, attrEl.getText());
             }
         }
-        
+
         mAttrs = Collections.unmodifiableMap(attrs);
         mAttachments = Collections.unmodifiableMap(attachments);
     }
@@ -157,7 +157,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     public ZMailbox getMailbox() {
         return mMailbox;
     }
-    
+
     public String getFolderId() {
         return mFolderId;
     }
@@ -166,8 +166,14 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mMailbox.getFolderById(mFolderId);
     }
 
+    @Override
     public String getId() {
         return mId;
+    }
+
+    @Override
+    public String getUuid() {
+        return null;
     }
 
     public boolean isGalContact() {
@@ -182,6 +188,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         return ZEmailAddress.parseAddresses(getAttrs().get("dlist"), ZEmailAddress.EMAIL_TYPE_TO);
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
@@ -200,6 +207,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZContact %s]", mId);
     }
@@ -215,18 +223,18 @@ public class ZContact implements ZItem, ToZJSONObject {
     public Map<String, String> getAttrs() {
         return mAttrs;
     }
-    
+
     /**
      * Returns the attachment names, or an empty set.
      */
     public Set<String> getAttachmentNames() {
         return mAttachments.keySet();
     }
-    
+
     public String getAttachmentPartName(String name) {
         return mAttachments.get(name).getPart();
     }
-    
+
     public InputStream getAttachmentData(String name)
     throws ServiceException {
         String part = mAttachments.get(name).getPart();
@@ -236,11 +244,11 @@ public class ZContact implements ZItem, ToZJSONObject {
         String url = String.format("?id=%s&part=%s", getId(), part);
         return mMailbox.getRESTResource(url);
     }
-    
+
     public ZContactAttachmentInfo getAttachmentPartInfo(String name) {
         return mAttachments.get(name);
     }
-    
+
     public long getDate() {
         return mDate;
     }
@@ -258,7 +266,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
 
     public boolean hasFlags() {
-        return mFlags != null && mFlags.length() > 0;        
+        return mFlags != null && mFlags.length() > 0;
     }
 
     public boolean hasTags() {
@@ -273,7 +281,8 @@ public class ZContact implements ZItem, ToZJSONObject {
         return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
     }
 
-	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+	@Override
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyContactEvent) {
 			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
             if (cevent.getId().equals(mId)) {
@@ -296,7 +305,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     public void deleteItem() throws ServiceException {
         delete();
     }
-    
+
     public void trash() throws ServiceException {
         if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
         mMailbox.trashContact(mId);

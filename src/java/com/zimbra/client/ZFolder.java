@@ -23,14 +23,13 @@ import java.util.List;
 
 import org.json.JSONException;
 
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.client.event.ZModifyEvent;
-import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
 import com.zimbra.soap.mail.type.Mountpoint;
@@ -62,6 +61,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private ZFolder.Color mColor;
     private String mRgb;
     private String mId;
+    private String mUuid;
     private String mName;
     private int mUnreadCount;
     private int mImapUnreadCount;
@@ -207,13 +207,14 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
                 return unknown;
             }
         }
-        
+
     }
 
     public ZFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
         mParent = parent;
         mId = e.getAttribute(MailConstants.A_ID);
+        mUuid = e.getAttribute(MailConstants.A_UUID, null);
         mName = e.getAttribute(MailConstants.A_NAME, null);
         mParentId = e.getAttribute(MailConstants.A_FOLDER, null);
         mIsPlaceholder = mParentId == null;
@@ -248,7 +249,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
                 mGrants.add(new ZGrant(grant));
             }
         }
-        
+
         Element rpEl = e.getOptionalElement(MailConstants.E_RETENTION_POLICY);
         if (rpEl != null) {
             mRetentionPolicy = new RetentionPolicy(rpEl);
@@ -271,6 +272,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mMailbox = mailbox;
         mParent = parent;
         mId = f.getId();
+        mUuid = f.getUuid();
         mName = f.getName();
         mParentId = f.getParentId();
         mIsPlaceholder = mParentId == null;
@@ -285,12 +287,12 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
         mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
         mImapMessageCount = SystemUtil.coalesce(f.getImapItemCount(), mMessageCount);
-        
+
         mDefaultView = View.conversation;
         if (f.getView() != null) {
             mDefaultView = SoapConverter.FROM_SOAP_VIEW.apply(f.getView());
         }
-        
+
         mModifiedSequence = SystemUtil.coalesce(f.getModifiedSequence(), -1);
         mContentSequence = SystemUtil.coalesce(f.getRevision(), -1);
         mImapUIDNEXT = SystemUtil.coalesce(f.getImapUidNext(), -1);
@@ -298,16 +300,16 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mRemoteURL = f.getUrl();
         mEffectivePerms = f.getPerm();
         mSize = SystemUtil.coalesce(f.getTotalSize(), 0L);
-        
+
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
-        
+
         for (Grant g : f.getGrants()) {
             mGrants.add(new ZGrant(g));
         }
-        
+
         mRetentionPolicy = f.getRetentionPolicy();
-        
+
         for (Folder folder : f.getSubfolders()) {
             if (folder instanceof SearchFolder) {
                 mSubFolders.add(new ZSearchFolder((SearchFolder) folder, this, mMailbox));
@@ -323,13 +325,13 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         // search
         for (Element s : e.listElements(MailConstants.E_SEARCH))
             mSubFolders.add(new ZSearchFolder(s, this, mMailbox));
-        
+
         // link
         for (Element l : e.listElements(MailConstants.E_MOUNT))
             mSubFolders.add(new ZMountpoint(l, this, mMailbox));
             */
     }
-    
+
     protected ZFolder createSubFolder(Element element) throws ServiceException {
         return new ZFolder(element, this, getMailbox());
     }
@@ -392,6 +394,11 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     @Override
     public String getId() {
         return mId;
+    }
+
+    @Override
+    public String getUuid() {
+        return mUuid;
     }
 
     /** Returns the folder's name.  Note that this is the folder's
@@ -671,7 +678,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             return false;
         }
     }
-    
+
     public RetentionPolicy getRetentionPolicy() {
         return mRetentionPolicy;
     }
@@ -680,6 +687,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
+        jo.put("uuid", mUuid);
         jo.put("name", mName);
         jo.put("path", getPath());
         jo.put("pathURLEncoded", getPathURLEncoded());

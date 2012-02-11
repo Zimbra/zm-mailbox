@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,18 +16,18 @@
 package com.zimbra.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import org.json.JSONException;
 
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.client.event.ZModifyEvent;
-import com.zimbra.client.event.ZModifyMessageEvent;
 
 public class ZMessage implements ZItem, ToZJSONObject {
 
@@ -55,7 +55,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
     private ZMailbox mMailbox;
     private Map<String, String> mReqHdrs;
     private String mIdentityId;
-    
+
     public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
@@ -75,13 +75,13 @@ public class ZMessage implements ZItem, ToZJSONObject {
         mPartName = e.getAttribute(MailConstants.A_PART, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
-        
+
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
             mContentURL = content.getAttribute(MailConstants.A_URL, null);
         }
-        
+
         mAddresses = new ArrayList<ZEmailAddress>();
         for (Element emailEl: e.listElements(MailConstants.E_EMAIL)) {
             mAddresses.add(new ZEmailAddress(emailEl));
@@ -93,7 +93,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         if(attrsEl != null) {
             for (Element.Attribute eHdr : attrsEl.listAttributes()) {
                 mReqHdrs.put(eHdr.getKey(),eHdr.getValue());
-            }       
+            }
         }
 
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
@@ -113,6 +113,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         }
     }
 
+    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyMessageEvent) {
     		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
@@ -142,45 +143,52 @@ public class ZMessage implements ZItem, ToZJSONObject {
     }
 
     /**
-     * 
+     *
      * @return Zimbra id of message we are replying to if this is a draft.
      */
     public String getOriginalId() {
         return mOrigId;
     }
-    
+
     /**
-     * 
+     *
      * @return message-id header of message we are replying to if this is a draft
      */
     public String getInReplyTo() {
         return mInReplyTo;
     }
-    
+
     /**
-     * 
+     *
      * @return reply type if this is a draft
      */
     public String getReplyType() {
         return mReplyType;
     }
-    
+
     public long getSize() {
         return mSize;
     }
 
+    @Override
     public String getId() {
         return mId;
     }
 
+    @Override
+    public String getUuid() {
+        return null;
+    }
+
     public boolean hasFlags() {
-        return mFlags != null && mFlags.length() > 0;        
+        return mFlags != null && mFlags.length() > 0;
     }
 
     public boolean hasTags() {
         return mTags != null && mTags.length() > 0;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", mId);
@@ -218,10 +226,11 @@ public class ZMessage implements ZItem, ToZJSONObject {
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
         zjo.put("idnt", mIdentityId);
-        zjo.putMap("requestHeaders", mReqHdrs);        
+        zjo.putMap("requestHeaders", mReqHdrs);
         return zjo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZMessage %s]", mId);
     }
@@ -237,7 +246,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
     public String getPartName() {
         return mPartName;
     }
-       
+
     public String getFlags() {
         return mFlags;
     }
@@ -261,7 +270,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
     public Map<String,String> getRequestHeader() {
         return mReqHdrs;
     }
-    
+
     public List<ZEmailAddress> getEmailAddresses() {
         return mAddresses;
     }
@@ -285,21 +294,21 @@ public class ZMessage implements ZItem, ToZJSONObject {
     public long getSentDate() {
         return mSentDate;
     }
-    
+
     /** content of the message, if raw is specified. if message too big or not ASCII, a content servlet URL is returned */
     public String getContent() {
         return mContent;
     }
-    
+
     /** if raw is specified and message too big or not ASCII, a content servlet URL is returned */
     public String getContentURL() {
         return mContentURL;
     }
-    
+
     public String getIdentityId() {
         return mIdentityId;
     }
-    
+
     public static class ZMimePart implements ToZJSONObject {
         private String mPartName;
         private String mName;
@@ -315,7 +324,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         private long mSize;
         private ZMimePart mParent;
         private boolean mTruncated;
-        
+
         public ZMimePart(ZMimePart parent, Element e) throws ServiceException {
             mParent = parent;
             mPartName = e.getAttribute(MailConstants.A_PART);
@@ -336,6 +345,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
             mTruncated = e.getAttributeBool(MailConstants.A_TRUNCATED_CONTENT, false);
         }
 
+        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("partName", mPartName);
@@ -353,6 +363,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
             return zjo;
         }
 
+        @Override
         public String toString() {
             return String.format("[ZMimePart %s]", mPartName);
         }
@@ -364,12 +375,12 @@ public class ZMessage implements ZItem, ToZJSONObject {
         public ZMimePart getParent() {
             return mParent;
         }
-        
+
         /** "" means top-level part, 1 first part, 1.1 first part of a multipart inside of 1. */
         public String getPartName() {
             return mPartName;
         }
-        
+
         /** name attribute from the Content-Type param list */
         public String getName() {
             return mName;
@@ -384,46 +395,46 @@ public class ZMessage implements ZItem, ToZJSONObject {
         public String getContentDispostion() {
             return mContentDisposition;
         }
-        
+
         /** filename attribute from the Content-Disposition param list */
         public String getFileName() {
             return mFileName;
         }
-        
+
         /** MIME Content-ID (for display of embedded images) */
         public String getContentId() {
             return mContentId;
         }
-        
+
         /** MIME/Microsoft Content-Location (for display of embedded images) */
         public String getContentLocation() {
             return mContentLocation;
         }
-        
+
         /** MIME Content-Description.  Note cont-desc is not currently used in the code. */
         public String getContentDescription() {
             return mContentDescription;
         }
-        
+
         /** content of the part, if requested */
         public String getContent() {
             return mContent;
         }
-        
+
         /** set to 1, if this part is considered to be the "body" of the message for display purposes */
         public boolean isBody() {
             return mIsBody;
         }
-        
+
         /** get child parts */
         public List<ZMimePart> getChildren() {
             return mChildren;
         }
-        
+
         public long getSize() {
             return mSize;
         }
-        
+
         public boolean wasTruncated() {
             return mTruncated;
         }
@@ -464,7 +475,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
     public boolean isUnread() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
     }
-    
+
     public boolean isHighPriority() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
     }

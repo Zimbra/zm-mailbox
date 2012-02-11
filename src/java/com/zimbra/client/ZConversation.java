@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,17 +15,18 @@
 
 package com.zimbra.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONException;
+
+import com.zimbra.client.event.ZModifyConversationEvent;
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.client.event.ZModifyConversationEvent;
-import com.zimbra.client.event.ZModifyEvent;
-import com.zimbra.client.event.ZModifyMessageEvent;
-import org.json.JSONException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ZConversation implements ZItem, ToZJSONObject {
 
@@ -37,15 +38,15 @@ public class ZConversation implements ZItem, ToZJSONObject {
         lowPriority('?'),
         sentByMe('s'),
         replied('r'),
-        forwarded('w'),   
+        forwarded('w'),
         attachment('a');
 
         private char mFlagChar;
-        
+
         public char getFlagChar() { return mFlagChar; }
 
         public static String toNameList(String flags) {
-            if (flags == null || flags.length() == 0) return "";            
+            if (flags == null || flags.length() == 0) return "";
             StringBuilder sb = new StringBuilder();
             for (int i=0; i < flags.length(); i++) {
                 String v = null;
@@ -60,10 +61,10 @@ public class ZConversation implements ZItem, ToZJSONObject {
             }
             return sb.toString();
         }
-        
+
         Flag(char flagChar) {
             mFlagChar = flagChar;
-            
+
         }
     }
 
@@ -74,20 +75,21 @@ public class ZConversation implements ZItem, ToZJSONObject {
     private int mMessageCount;
     private List<ZMessageSummary> mMessageSummaries;
     private ZMailbox mMailbox;
-        
+
     public ZConversation(Element e, ZMailbox mailbox) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTags = e.getAttribute(MailConstants.A_TAGS, null);
         mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
-        
+
         mMessageSummaries = new ArrayList<ZMessageSummary>();
         for (Element msgEl: e.listElements(MailConstants.E_MSG)) {
             mMessageSummaries.add(new ZMessageSummary(msgEl));
-        }        
+        }
     }
 
+    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyConversationEvent) {
     		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
@@ -102,14 +104,21 @@ public class ZConversation implements ZItem, ToZJSONObject {
         }
     }
 
+    @Override
     public String getId() {
         return mId;
+    }
+
+    @Override
+    public String getUuid() {
+        return null;
     }
 
     public ZMailbox getMailbox() {
         return mMailbox;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
@@ -121,6 +130,7 @@ public class ZConversation implements ZItem, ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZConversation %s]", mId);
     }
@@ -148,19 +158,19 @@ public class ZConversation implements ZItem, ToZJSONObject {
     public List<ZMessageSummary> getMessageSummaries() {
         return mMessageSummaries;
     }
-    
+
     public class ZMessageSummary implements ZItem, ToZJSONObject {
 
         private long mDate;
         private String mFlags;
-        private String mTags;        
+        private String mTags;
         private String mFragment;
         private String mId;
         private String mFolderId;
         private ZEmailAddress mSender;
         private long mSize;
         private Element mElement;
-        
+
         public ZMessageSummary(Element e) throws ServiceException {
             mElement = e;
             mId = e.getAttribute(MailConstants.A_ID);
@@ -173,9 +183,10 @@ public class ZConversation implements ZItem, ToZJSONObject {
             Element emailEl = e.getOptionalElement(MailConstants.E_EMAIL);
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);
         }
-        
+
         public Element getElement() { return mElement; }
-        
+
+        @Override
         public void modifyNotification(ZModifyEvent event) throws ServiceException {
         	if (event instanceof ZModifyMessageEvent) {
         		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
@@ -187,6 +198,7 @@ public class ZConversation implements ZItem, ToZJSONObject {
             }
         }
 
+        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject jo = new ZJSONObject();
             jo.put("id", mId);
@@ -213,6 +225,7 @@ public class ZConversation implements ZItem, ToZJSONObject {
             return jo;
         }
 
+        @Override
         public String toString() {
             return String.format("[ZMessageSummary %s]", mId);
         }
@@ -233,8 +246,14 @@ public class ZConversation implements ZItem, ToZJSONObject {
             return mFragment;
         }
 
+        @Override
         public String getId() {
             return mId;
+        }
+
+        @Override
+        public String getUuid() {
+            return null;
         }
 
         public ZEmailAddress getSender() {
@@ -305,13 +324,13 @@ public class ZConversation implements ZItem, ToZJSONObject {
             return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
         }
     }
-    
+
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;
     }
 
     public boolean hasTags() {
-        return mTags != null && mTags.length() > 0;        
+        return mTags != null && mTags.length() > 0;
     }
 
     public boolean hasAttachment() {

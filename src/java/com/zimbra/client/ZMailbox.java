@@ -59,7 +59,32 @@ import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZInvite.ZTimeZone;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.client.ZSearchParams.Cursor;
-import com.zimbra.client.event.*;
+import com.zimbra.client.event.ZCreateAppointmentEvent;
+import com.zimbra.client.event.ZCreateContactEvent;
+import com.zimbra.client.event.ZCreateConversationEvent;
+import com.zimbra.client.event.ZCreateEvent;
+import com.zimbra.client.event.ZCreateFolderEvent;
+import com.zimbra.client.event.ZCreateMessageEvent;
+import com.zimbra.client.event.ZCreateMountpointEvent;
+import com.zimbra.client.event.ZCreateSearchFolderEvent;
+import com.zimbra.client.event.ZCreateTagEvent;
+import com.zimbra.client.event.ZCreateTaskEvent;
+import com.zimbra.client.event.ZDeleteEvent;
+import com.zimbra.client.event.ZEventHandler;
+import com.zimbra.client.event.ZModifyAppointmentEvent;
+import com.zimbra.client.event.ZModifyContactEvent;
+import com.zimbra.client.event.ZModifyConversationEvent;
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifyFolderEvent;
+import com.zimbra.client.event.ZModifyMailboxEvent;
+import com.zimbra.client.event.ZModifyMessageEvent;
+import com.zimbra.client.event.ZModifyMountpointEvent;
+import com.zimbra.client.event.ZModifySearchFolderEvent;
+import com.zimbra.client.event.ZModifyTagEvent;
+import com.zimbra.client.event.ZModifyTaskEvent;
+import com.zimbra.client.event.ZModifyVoiceMailItemEvent;
+import com.zimbra.client.event.ZModifyVoiceMailItemFolderEvent;
+import com.zimbra.client.event.ZRefreshEvent;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
@@ -302,11 +327,53 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
+    private static class ItemCache {
+        private Map<String /* id */, ZItem> idMap;
+        private Map<String /* uuid */, ZItem> uuidMap;
+
+        public ItemCache() {
+            idMap = new HashMap<String, ZItem>();
+            uuidMap = new HashMap<String, ZItem>();
+        }
+
+        public void clear() {
+            idMap.clear();
+            uuidMap.clear();
+        }
+
+        public void put(ZItem item) {
+            putWithId(item.getId(), item);
+        }
+
+        public void putWithId(String id, ZItem item) {
+            idMap.put(id, item);
+            if (item.getUuid() != null) {
+                uuidMap.put(item.getUuid(), item);
+            }
+        }
+
+        public ZItem getById(String id) {
+            return idMap.get(id);
+        }
+
+        public ZItem getByUuid(String uuid) {
+            return uuidMap.get(uuid);
+        }
+
+        public ZItem removeById(String id) {
+            ZItem removed = idMap.remove(id);
+            if (removed != null && removed.getUuid() != null) {
+                uuidMap.remove(removed.getUuid());
+            }
+            return removed;
+        }
+    }
+
     private ZAuthToken mAuthToken;
     private SoapHttpTransport mTransport;
     private NotifyPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
-    private Map<String, ZItem> mIdToItem;
+    private ItemCache mItemCache;
     private ZGetInfoResult mGetInfoResult;
     private ZFolder mUserRoot;
     private ZSearchPagerCache mSearchPagerCache;
@@ -418,7 +485,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     private void initPreAuth(Options options) {
-        mIdToItem = new HashMap<String, ZItem>();
+        mItemCache = new ItemCache();
         setSoapURI(options);
         if (options.getDebugListener() != null)
             mTransport.setDebugListener(options.getDebugListener());
@@ -741,7 +808,7 @@ public class ZMailbox implements ToZJSONObject {
             ZFolder root = event.getUserRoot();
             List<ZTag> tags = event.getTags();
 
-            mIdToItem.clear();
+            mItemCache.clear();
             mMessageCache.clear();
             mContactCache.clear();
             mTransport.setMaxNotifySeq(0);
@@ -810,12 +877,12 @@ public class ZMailbox implements ToZJSONObject {
             for (String id : event.toList()) {
                 mMessageCache.remove(id);
                 mContactCache.remove(id);
-                ZItem item = mIdToItem.get(id);
+                ZItem item = mItemCache.getById(id);
                 if (item instanceof ZMountpoint) {
                     ZMountpoint sl = (ZMountpoint) item;
                     if (sl.getParent() != null)
                         sl.getParent().removeChild(sl);
-                    mIdToItem.remove(sl.getCanonicalRemoteId());
+                    mItemCache.removeById(sl.getCanonicalRemoteId());
                 } else if (item instanceof ZFolder) {
                     ZFolder sf = (ZFolder) item;
                     if (sf.getParent() != null)
@@ -826,7 +893,7 @@ public class ZMailbox implements ToZJSONObject {
                         mNameToTag.remove(((ZTag) item).getName());
                 }
                 if (item != null)
-                    mIdToItem.remove(item.getId());
+                    mItemCache.removeById(item.getId());
             }
         }
     }
@@ -838,11 +905,11 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     void addItemIdMapping(ZItem item) {
-        mIdToItem.put(item.getId(), item);
+        mItemCache.put(item);
     }
 
     void addRemoteItemIdMapping(String remoteId, ZItem item) {
-        mIdToItem.put(remoteId, item);
+        mItemCache.putWithId(remoteId, item);
     }
 
     private void reparent(ZFolder f, String newParentId) throws ServiceException {
@@ -1037,7 +1104,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     public ZTag getTagById(String id) throws ServiceException {
         populateTagCache();
-        ZItem item = mIdToItem.get(id);
+        ZItem item = mItemCache.getById(id);
         if (item instanceof ZTag)
             return (ZTag) item;
         else
@@ -2242,7 +2309,21 @@ public class ZMailbox implements ToZJSONObject {
      */
     public ZFolder getFolderById(String id) throws ServiceException {
         populateFolderCache();
-        ZItem item = mIdToItem.get(id);
+        ZItem item = mItemCache.getById(id);
+        if (!(item instanceof ZFolder)) return null;
+        ZFolder folder = (ZFolder) item;
+        return folder.isHierarchyPlaceholder() ? null : folder;
+    }
+
+    /**
+     * find the folder with the specified UUID.
+     * @param uuid UUID of folder
+     * @return ZFolder if found, null otherwise.
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public ZFolder getFolderByUuid(String uuid) throws ServiceException {
+        populateFolderCache();
+        ZItem item = mItemCache.getByUuid(uuid);
         if (!(item instanceof ZFolder)) return null;
         ZFolder folder = (ZFolder) item;
         return folder.isHierarchyPlaceholder() ? null : folder;
@@ -2525,7 +2606,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     public ZSearchFolder getSearchFolderById(String id) throws ServiceException {
         populateFolderCache();
-        ZItem item = mIdToItem.get(id);
+        ZItem item = mItemCache.getById(id);
         if (item instanceof ZSearchFolder)
             return (ZSearchFolder) item;
         else
@@ -2540,7 +2621,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     public ZMountpoint getMountpointById(String id) throws ServiceException {
         populateFolderCache();
-        ZItem item = mIdToItem.get(id);
+        ZItem item = mItemCache.getById(id);
         if (item instanceof ZMountpoint)
             return (ZMountpoint) item;
         else
