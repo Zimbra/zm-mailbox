@@ -80,7 +80,7 @@ import com.zimbra.cs.util.JMSession;
 
 public class ShareInfo {
 
-    private static String S_DELIMITER = ";";
+//    private static String S_DELIMITER = ";";
 
     protected ShareInfoData mData;
 
@@ -111,52 +111,55 @@ public class ShareInfo {
         return (mGrants != null);
     }
 
-    /**
-     * serialize this ShareInfo into String persisted in LDAP
-     *
-     * The format is:
-     * owner-zimbraId:itemId:btencoded-metadata
-     *
-     * @return
-     */
-    protected String serialize() throws ServiceException {
-        // callsites should *not* call this if validateAndDiscoverGrants return false.
-        if (mGrants == null)
-            throw ServiceException.FAILURE("internal error, no matching grants", null);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(serializeOwnerAndFolder());
-        sb.append(S_DELIMITER);
-        sb.append(mGrants.toString());
-
-        return sb.toString();
-    }
-
-    protected String serializeOwnerAndFolder() throws ServiceException {
-        if (mGrants == null)
-            throw ServiceException.FAILURE("internal error, no matching grants", null);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(mData.getOwnerAcctId());
-        sb.append(S_DELIMITER);
-        sb.append(mData.getItemId());
-
-        return sb.toString();
-    }
-
-    protected void deserialize(String encodedShareInfo) throws ServiceException {
-
-        String[] parts = encodedShareInfo.split(S_DELIMITER);
-        if (parts.length != 3) {
-            throw ServiceException.FAILURE("malformed share info: " + encodedShareInfo, null);
-        }
-
-        mData.setOwnerAcctId(parts[0]);
-        mData.setItemId(Integer.valueOf(parts[1]));
-
-        String encodedMetadata = parts[2];
-        mGrants = new MetadataList(encodedMetadata);
-    }
+//    /**
+//     * serialize this ShareInfo into String persisted in LDAP
+//     *
+//     * The format is:
+//     * owner-zimbraId:itemId:btencoded-metadata
+//     *
+//     * @return
+//     */
+//    protected String serialize() throws ServiceException {
+//        // callsites should *not* call this if validateAndDiscoverGrants return false.
+//        if (mGrants == null)
+//            throw ServiceException.FAILURE("internal error, no matching grants", null);
+//
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(serializeOwnerAndFolder());
+//        sb.append(S_DELIMITER);
+//        sb.append(mGrants.toString());
+//
+//        return sb.toString();
+//    }
+//
+//    protected String serializeOwnerAndFolder() throws ServiceException {
+//        if (mGrants == null)
+//            throw ServiceException.FAILURE("internal error, no matching grants", null);
+//
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(mData.getOwnerAcctId());
+//        sb.append(S_DELIMITER);
+//        sb.append(mData.getItemId());
+//        sb.append(S_DELIMITER);
+//        sb.append(mData.getItemUuid());
+//
+//        return sb.toString();
+//    }
+//
+//    protected void deserialize(String encodedShareInfo) throws ServiceException {
+//
+//        String[] parts = encodedShareInfo.split(S_DELIMITER);
+//        if (parts.length != 4) {   // <----------------------------------------- EDITED: 3 -> 4
+//            throw ServiceException.FAILURE("malformed share info: " + encodedShareInfo, null);
+//        }
+//
+//        mData.setOwnerAcctId(parts[0]);
+//        mData.setItemId(Integer.valueOf(parts[1]));
+//        mData.setItemUuid(parts[2]);  // <-------------------------------------- NEW LINE
+//
+//        String encodedMetadata = parts[3];  // <-------------------------------- EDITED: 2 -> 3
+//        mGrants = new MetadataList(encodedMetadata);
+//    }
 
     private static boolean matchesGranteeType(byte onTheGrant, byte wanted) {
         return (wanted == 0 ) || (onTheGrant == wanted);
@@ -387,6 +390,7 @@ public class ShareInfo {
                     si.mData.setOwnerAcctEmail(ownerAcct.getName());
                     si.mData.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
                     si.mData.setItemId(folder.getId());
+                    si.mData.setItemUuid(folder.getUuid());
                     si.mData.setPath(folder.getPath());
                     si.mData.setFolderDefaultView(folder.getDefaultView());
                     si.mData.setRights(grant.getGrantedRights());
@@ -469,7 +473,7 @@ public class ShareInfo {
                         "unsupported grantee type: " + ACL.typeToString(granteeType), null);
             }
 
-            getSharesPublished(prov, visitor, owner, granteeIds, includePublicShares, includeAllAuthedShares, 
+            getSharesPublished(prov, visitor, owner, granteeIds, includePublicShares, includeAllAuthedShares,
                     guestAcctDomainId);
         }
 
@@ -486,7 +490,7 @@ public class ShareInfo {
         }
 
         private static void getSharesPublished(Provisioning prov, PublishedShareInfoVisitor visitor, Account owner,
-                List<String> granteeIds, boolean includePublicShares, boolean includeAllAuthedShares, 
+                List<String> granteeIds, boolean includePublicShares, boolean includeAllAuthedShares,
                 String guestAcctDomainId)
                 throws ServiceException {
 

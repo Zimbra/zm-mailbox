@@ -22,11 +22,11 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
 public class JNDILdapFilterFactory extends ZLdapFilterFactory {
-    
+
     @Override
     public void debug() {
         // TODO Auto-generated method stub
-        
+
     }
 
 
@@ -34,7 +34,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public String encodeValue(String value) {
         return value;
     }
-    
+
     /*
      * operational
      */
@@ -42,12 +42,12 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter hasSubordinates() {
         return new JNDILdapFilter(LegacyLdapFilter.hasSubordinates());
     }
-    
+
     @Override
     public ZLdapFilter createdLaterOrEqual(String generalizedTime) {
         return new JNDILdapFilter(LegacyLdapFilter.createdLaterOrEqual(generalizedTime));
     }
-    
+
     /*
      * general
      */
@@ -55,27 +55,27 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter anyEntry() {
         return new JNDILdapFilter(LegacyLdapFilter.anyEntry());
     }
-    
+
     @Override
-    public ZLdapFilter fromFilterString(FilterId filterId, String filterString) 
+    public ZLdapFilter fromFilterString(FilterId filterId, String filterString)
     throws LdapException {
         return new JNDILdapFilter(encloseFilterIfNot(filterString));
     }
-    
+
     @Override
     public ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter) {
         return new JNDILdapFilter(LegacyLdapFilter.andWith(
-                filter.toFilterString(), 
+                filter.toFilterString(),
                 otherFilter.toFilterString()));
     }
-    
+
     @Override
     public ZLdapFilter negate(ZLdapFilter filter) {
         return new JNDILdapFilter(LegacyLdapFilter.negate(
                 filter.toFilterString()));
     }
-    
-    
+
+
     /*
      * Mail target (accounts and groups)
      */
@@ -83,8 +83,8 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter addrsExist(String[] addrs) {
         return new JNDILdapFilter(LegacyLdapFilter.addrsExist(addrs));
     }
-    
-    
+
+
     /*
      * account
      */
@@ -92,17 +92,17 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter allAccounts() {
         return new JNDILdapFilter(LegacyLdapFilter.allAccounts());
     }
-    
+
     @Override
     public ZLdapFilter allAccountsOnly() {
         return new JNDILdapFilter(LegacyLdapFilter.allAccountsOnly());
     }
-    
+
     @Override
     public ZLdapFilter allAdminAccounts() {
         return new JNDILdapFilter(LegacyLdapFilter.allAdminAccounts());
     }
-    
+
     @Override
     public ZLdapFilter allNonSystemAccounts() {
         return new JNDILdapFilter(LegacyLdapFilter.allNonSystemAccounts());
@@ -117,17 +117,17 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountById(String id) {
         return new JNDILdapFilter(LegacyLdapFilter.accountById(id));
     }
-    
+
     @Override
     public ZLdapFilter accountByMemberOf(String dynGroupId) {
         return new JNDILdapFilter(LegacyLdapFilter.accountByMemberOf(dynGroupId));
     }
-    
+
     @Override
     public ZLdapFilter accountByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.accountByName(name));
     }
-    
+
     @Override
     public ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name) {
         return new JNDILdapFilter(LegacyLdapFilter.adminAccountByRDN(namingRdnAttr, name));
@@ -137,7 +137,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountsHomedOnServer(String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.accountsHomedOnServer(serverServiceHostname));
     }
-    
+
     @Override
     public ZLdapFilter accountsHomedOnServerAccountsOnly(String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.accountsHomedOnServerAccountsOnly(serverServiceHostname));
@@ -162,29 +162,29 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountsByExternalGrant(String granteeEmail) {
         return new JNDILdapFilter(LegacyLdapFilter.accountsByExternalGrant(granteeEmail));
     }
-    
+
     @Override
     public ZLdapFilter accountsByGrants(List<String> granteeIds,
             boolean includePublicShares, boolean includeAllAuthedShares) {
         return new JNDILdapFilter(LegacyLdapFilter.accountsByGrants(
                 granteeIds, includePublicShares, includeAllAuthedShares));
     }
-    
+
     @Override
     public ZLdapFilter CMBSearchAccountsOnly() {
         return new JNDILdapFilter(LegacyLdapFilter.CMBSearchAccountsOnly());
     }
-    
+
     @Override
     public ZLdapFilter CMBSearchAccountsOnlyWithArchive() {
         return new JNDILdapFilter(LegacyLdapFilter.CMBSearchAccountsOnlyWithArchive());
     }
-    
+
     @Override
     public ZLdapFilter CMBSearchNonSystemResourceAccountsOnly() {
         return new JNDILdapFilter(LegacyLdapFilter.CMBSearchNonSystemResourceAccountsOnly());
     }
-    
+
     /*
      * alias
      */
@@ -192,7 +192,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter allAliases() {
         return new JNDILdapFilter(LegacyLdapFilter.allAliases());
     }
-    
+
     /*
      * calendar resource
      */
@@ -213,15 +213,15 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
 
     @Override
     public ZLdapFilter calendarResourceByName(String name) {
-        return new JNDILdapFilter(LegacyLdapFilter.calendarResourceByName(name));       
-    }
-    
-    @Override
-    public ZLdapFilter calendarResourcesHomedOnServer(String serverServiceHostname) {
-        return new JNDILdapFilter(LegacyLdapFilter.calendarResourcesHomedOnServer(serverServiceHostname));  
+        return new JNDILdapFilter(LegacyLdapFilter.calendarResourceByName(name));
     }
 
-    
+    @Override
+    public ZLdapFilter calendarResourcesHomedOnServer(String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.calendarResourcesHomedOnServer(serverServiceHostname));
+    }
+
+
     /*
      * cos
      */
@@ -240,7 +240,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.cosesByMailHostPool(server));
     }
 
-    
+
     /*
      * data source
      */
@@ -259,7 +259,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.dataSourceByName(name));
     }
 
-    
+
     /*
      * distribution list
      */
@@ -277,13 +277,13 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter distributionListByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.distributionListByName(name));
     }
-    
+
     @Override
     public ZLdapFilter distributionListsByMemberAddrs(String[] memberAddrs) {
         return new JNDILdapFilter(LegacyLdapFilter.distributionListsByMemberAddrs(memberAddrs));
     }
 
-    
+
     /*
      * dynamic group
      */
@@ -291,12 +291,12 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter dynamicGroupById(String id) {
         return new JNDILdapFilter(LegacyLdapFilter.dynamicGroupById(id));
     }
-    
+
     @Override
     public ZLdapFilter dynamicGroupByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.dynamicGroupByName(name));
     }
-    
+
     /*
      * groups (distribution list or dynamic group)
      */
@@ -304,15 +304,17 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter allGroups() {
         return new JNDILdapFilter(LegacyLdapFilter.allGroups());
     }
-    
+
+    @Override
     public ZLdapFilter groupById(String id) {
         return new JNDILdapFilter(LegacyLdapFilter.groupById(id));
     }
-    
+
+    @Override
     public ZLdapFilter groupByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.groupByName(name));
     }
-    
+
     /*
      * domain
      */
@@ -335,12 +337,12 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainByKrb5Realm(String krb5Realm) {
         return new JNDILdapFilter(LegacyLdapFilter.domainByKrb5Realm(krb5Realm));
     }
-    
+
     @Override
     public ZLdapFilter domainByVirtualHostame(String virtualHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.domainByVirtualHostame(virtualHostname));
     }
-    
+
     @Override
     public ZLdapFilter domainByForeignName(String foreignName) {
         return new JNDILdapFilter(LegacyLdapFilter.domainByForeignName(foreignName));
@@ -355,16 +357,17 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainLockedForEagerAutoProvision() {
         return new JNDILdapFilter(LegacyLdapFilter.domainLockedForEagerAutoProvision());
     }
-    
-    
+
+
     /*
      * global config
      */
+    @Override
     public ZLdapFilter globalConfig() {
         return new JNDILdapFilter(LegacyLdapFilter.globalConfig());
     }
-    
-    
+
+
     /*
      * identity
      */
@@ -378,7 +381,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.identityByName(name));
     }
 
-    
+
     /*
      * mime enrty
      */
@@ -391,7 +394,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter mimeEntryByMimeType(String mimeType) {
         return new JNDILdapFilter(LegacyLdapFilter.mimeEntryByMimeType(mimeType));
     }
-    
+
 
     /*
      * server
@@ -411,7 +414,15 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.serverByService(service));
     }
 
-    
+
+    /*
+     * share locator
+     */
+    @Override
+    public ZLdapFilter shareLocatorById(String id) {
+        return new JNDILdapFilter(LegacyLdapFilter.shareLocatorById(id));
+    }
+
     /*
      * signature
      */
@@ -425,15 +436,15 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.signatureById(id));
     }
 
-    
-    /* 
+
+    /*
      * XMPPComponent
      */
     @Override
     public ZLdapFilter allXMPPComponents() {
         return new JNDILdapFilter(LegacyLdapFilter.allXMPPComponents());
     }
-    
+
     @Override
     public ZLdapFilter imComponentById(String id) {
         return new JNDILdapFilter(LegacyLdapFilter.imComponentById(id));
@@ -452,15 +463,16 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter allZimlets() {
         return new JNDILdapFilter(LegacyLdapFilter.allZimlets());
     }
-    
-    
+
+
     /*
      * AD
      */
+    @Override
     public ZLdapFilter memberOf(String dnOfGroup) {
         return new JNDILdapFilter(LegacyLdapFilter.memberOf(dnOfGroup));
     }
-    
+
     /*
      * Velodrome
      */
@@ -468,27 +480,27 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter velodromeAllAccountsByDomain(String domainName) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsByDomain(domainName));
     }
-    
+
     @Override
     public ZLdapFilter velodromeAllAccountsOnlyByDomain(String domainName) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsOnlyByDomain(domainName));
     }
-    
+
     @Override
     public ZLdapFilter velodromeAllCalendarResourcesByDomain(String domainName) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllCalendarResourcesByDomain(domainName));
     }
-    
+
     @Override
     public ZLdapFilter velodromeAllAccountsByDomainAndServer(String domainName, String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsByDomainAndServer(domainName, serverServiceHostname));
     }
-    
+
     @Override
     public ZLdapFilter velodromeAllAccountsOnlyByDomainAndServer(String domainName, String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsOnlyByDomainAndServer(domainName, serverServiceHostname));
     }
-    
+
     @Override
     public ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(String domainName, String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllCalendarResourcesByDomainAndServer(domainName, serverServiceHostname));
@@ -498,5 +510,5 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter dnSubtreeMatch(String... dns) {
         return new JNDILdapFilter(LegacyLdapFilter.dnSubtreeMatch(dns));
     }
-    
+
 }

@@ -244,8 +244,9 @@ public class SendShareNotification extends MailDocumentHandler {
         sid.setOwnerAcctEmail(ownerAcct.getName());
         sid.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
 
-        // folder id used for mounting
+        // folder id/uuid used for mounting
         sid.setItemId(item.getId());
+        sid.setItemUuid(item.getUuid());
 
         //
         // just a display name for the shared folder for the grantee to see.

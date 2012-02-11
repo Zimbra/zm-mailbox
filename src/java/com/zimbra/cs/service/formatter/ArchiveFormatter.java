@@ -51,7 +51,6 @@ import org.eclipse.jetty.server.AbstractHttpConnection;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
@@ -62,13 +61,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.Chat;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Conversation;
@@ -78,10 +78,13 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailboxMaintenance;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -89,13 +92,9 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
-import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
-import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
@@ -341,10 +340,10 @@ public abstract class ArchiveFormatter extends Formatter {
      * and whenever we have a long pause while working to create an archive.
      *
      * This method instructs Jetty not to close the connection when the idle time is reached. Given that we don't send a content-length
-     * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. 
-     * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not 
+     * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that..
+     * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not
      * in this case.
-     * @throws IOException 
+     * @throws IOException
      */
     private void disableJettyTimeout() throws IOException {
         if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
@@ -490,7 +489,7 @@ public abstract class ArchiveFormatter extends Formatter {
         try {
             ArchiveOutputEntry aoe;
             byte data[] = null;
-            String path = mi instanceof Contact ? getEntryName(mi, fldr, name, ext, 
+            String path = mi instanceof Contact ? getEntryName(mi, fldr, name, ext,
                 charsetEncoder, names) : getEntryName(mi, fldr, name, ext,
                 charsetEncoder, !(mi instanceof Document));
             long miSize = mi.getSize();
@@ -652,7 +651,7 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     /**
-     * Get entry name using set of previously created names to guarantee uniqueness 
+     * Get entry name using set of previously created names to guarantee uniqueness
      */
     private String getEntryName(MailItem mi, String fldr, String name,
         String ext, CharsetEncoder encoder, Set<String> names) {
@@ -673,7 +672,7 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     /**
-     * Get entry name. If prefix is true guarantee uniqueness by prepending itemId. If prefix is false caller must guarantee uniqueness   
+     * Get entry name. If prefix is true guarantee uniqueness by prepending itemId. If prefix is false caller must guarantee uniqueness
      */
     private String getEntryName(MailItem mi, String fldr, String name,
             String ext, CharsetEncoder encoder, boolean prefix) {
@@ -1323,7 +1322,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     fldr = createParent(context, fmap, path, Folder.Type.UNKNOWN);
                     newItem = mbox.createMountpoint(context.opContext,
                         fldr.getId(), mp.getName(), mp.getOwnerId(),
-                        mp.getRemoteId(), mp.getDefaultView(),
+                        mp.getRemoteId(), mp.getRemoteUuid(), mp.getDefaultView(),
                         mp.getFlagBitmask(), mp.getColor(), mp.isReminderEnabled());
                 }
                 break;

@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.NamedEntry.Visitor;
@@ -49,6 +50,7 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, List<MimeTypeInfo>> mimeConfig =
         new HashMap<String, List<MimeTypeInfo>>();
     private final Config config = new Config(new HashMap<String, Object>(), this);
+    private final Map<String, ShareLocator> shareLocators = new HashMap<String, ShareLocator>();
     private final Server localhost;
 
     public MockProvisioning() {
@@ -598,6 +600,23 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ShareLocator get(ShareLocatorBy keyType, String key) throws ServiceException {
+        return shareLocators.get(key);
+    }
+
+    @Override
+    public ShareLocator createShareLocator(String id, Map<String, Object> attrs) throws ServiceException {
+        ShareLocator shloc = new ShareLocator(id, attrs, this);
+        shareLocators.put(id, shloc);
+        return shloc;
+    }
+
+    @Override
+    public void deleteShareLocator(String id) throws ServiceException {
+        shareLocators.remove(id);
     }
 
 }

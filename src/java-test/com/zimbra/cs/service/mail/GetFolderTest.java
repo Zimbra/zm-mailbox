@@ -35,6 +35,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -158,10 +159,11 @@ public class GetFolderTest {
         Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
 
         int folderId = mbox2.createFolder(null, "foo", (byte) 0, MailItem.Type.DOCUMENT).getId();
+        Folder folder = mbox2.getFolderById(null, folderId);
         mbox2.createFolder(null, "bar", folderId, MailItem.Type.DOCUMENT, 0, (byte) 0, null);
         mbox2.grantAccess(null, folderId, acct.getId(), ACL.GRANTEE_USER, (short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE), null);
 
-        Mountpoint mpt = mbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remote", acct2.getId(), folderId, MailItem.Type.DOCUMENT, 0, (byte) 2, false);
+        Mountpoint mpt = mbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remote", acct2.getId(), folderId, folder.getUuid(), MailItem.Type.DOCUMENT, 0, (byte) 2, false);
 
         // fetch the mountpoint directly
         Element request = new Element.XMLElement(MailConstants.GET_FOLDER_REQUEST);

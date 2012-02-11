@@ -29,6 +29,7 @@ public class ShareInfoData {
 
     // item
     private int mItemId;
+    private String mItemUuid;
     private String mPath;
     private MailItem.Type folderDefaultView;
     private MailItem.Type type;
@@ -109,6 +110,14 @@ public class ShareInfoData {
         return mItemId;
     }
 
+    public void setItemUuid(String itemUuid) {
+        mItemUuid = itemUuid;
+    }
+
+    public String getItemUuid() {
+        return mItemUuid;
+    }
+
     public void setPath(String path) {
         mPath = path;
     }
@@ -134,11 +143,11 @@ public class ShareInfoData {
     public MailItem.Type getFolderDefaultViewCode() {
         return folderDefaultView;
     }
-    
+
     public void setType(MailItem.Type type) {
         this.type = type;
     }
-    
+
     public MailItem.Type getType() {
         return (type == null ? MailItem.Type.UNKNOWN : type);
     }
@@ -256,6 +265,7 @@ public class ShareInfoData {
         sid.setOwnerAcctEmail(sInfo.getOwnerEmail());
         sid.setOwnerAcctDisplayName(sInfo.getOwnerDisplayName());
         sid.setItemId(sInfo.getFolderId());
+        sid.setItemUuid(sInfo.getFolderUuid());
         sid.setPath(sInfo.getFolderPath());
         sid.setFolderDefaultView(MailItem.Type.of(sInfo.getDefaultView()));
         sid.setRights(ACL.stringToRights(sInfo.getRights()));
@@ -275,6 +285,7 @@ public class ShareInfoData {
         sid.setOwnerAcctEmail(eShare.getAttribute(AccountConstants.A_OWNER_EMAIL, null));
         sid.setOwnerAcctDisplayName(eShare.getAttribute(AccountConstants.A_OWNER_DISPLAY_NAME, null));
         sid.setItemId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
+        sid.setItemUuid(eShare.getAttribute(AccountConstants.A_FOLDER_UUID, null));
         sid.setPath(eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null));
         sid.setFolderDefaultView(MailItem.Type.of(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null)));
         sid.setRights(ACL.stringToRights(eShare.getAttribute(AccountConstants.A_RIGHTS)));
@@ -294,6 +305,7 @@ public class ShareInfoData {
         eShare.addAttribute(AccountConstants.A_OWNER_EMAIL,          getOwnerAcctEmail());
         eShare.addAttribute(AccountConstants.A_OWNER_DISPLAY_NAME,   getOwnerAcctDisplayName());
         eShare.addAttribute(AccountConstants.A_FOLDER_ID,            getItemId());
+        eShare.addAttribute(AccountConstants.A_FOLDER_UUID,          getItemUuid());
         eShare.addAttribute(AccountConstants.A_FOLDER_PATH,          getPath());
         eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,            getFolderDefaultView());
         eShare.addAttribute(AccountConstants.A_RIGHTS,               getRights());
@@ -306,6 +318,7 @@ public class ShareInfoData {
             eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
     }
 
+    @Override
     public String toString() {
         String format = "    %15s : %s\n";
         StringBuffer sb = new StringBuffer();
@@ -317,6 +330,8 @@ public class ShareInfoData {
                 format, "owner display",   getOwnerAcctDisplayName()));
         sb.append(String.format(
                 format, "folder id",       String.valueOf(getItemId())));
+        sb.append(String.format(
+                format, "folder uuid",     getItemUuid()));
         sb.append(String.format(
                 format, "folder path",     getPath()));
         sb.append(String.format(

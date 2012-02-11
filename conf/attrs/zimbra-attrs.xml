@@ -189,7 +189,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>From Microsoft Schema</desc>
 </attr>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget" flags="domainAdminModifiable,accountInfo">
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget,shareLocator" flags="domainAdminModifiable,accountInfo">
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
@@ -6848,5 +6848,15 @@ TODO: delete them permanently from here
     Control whether to generate per virtual hostname nginx configuration. This would be helpful when multiple virtual host names are defined, but they are actually share the same configuration (like ssl cert, client CA, ...). This attr has to be set as "TRUE" to enable the features like cert per domain.
   </desc>
 </attr>
+
+<attr id="1375" name="zimbraShareOwnerAccountId" type="id" cardinality="single" requiredIn="shareLocator" since="8.0.0">
+  <desc>account ID of the owner of the shared folder</desc>
+</attr>
+
+<!--
+<attr id="1376" name="zimbraSharedFolderUuid" type="id" cardinality="single" requiredIn="shareLocator" since="8.0.0">
+  <desc>UUID of the shared folder</desc>
+</attr>
+-->
 
 </attrs>

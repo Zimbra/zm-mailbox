@@ -23,11 +23,11 @@ import java.util.TreeMap;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BEncoding;
+import com.zimbra.common.util.BEncoding.BEncodingException;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
-import com.zimbra.common.util.BEncoding.BEncodingException;
-import com.zimbra.common.soap.Element;
 
 public final class Metadata {
 
@@ -92,6 +92,7 @@ public final class Metadata {
     public static final String FN_RETENTION_POLICY = "rp";
     public static final String FN_REV_SIZE         = "rs";
     public static final String FN_REPLY_TO         = "rt";
+    public static final String FN_REMOTE_UUID      = "ruuid";
     public static final String FN_SENDER           = "s";
     public static final String FN_SORT             = "s";
     public static final String FN_SYNC_DATE        = "sd";

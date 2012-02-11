@@ -41,8 +41,8 @@ import javax.mail.internet.MimeUtility;
 
 import org.json.JSONException;
 
-import com.google.common.base.Strings;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
@@ -56,7 +56,6 @@ import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -95,11 +94,35 @@ import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.Chat;
+import com.zimbra.cs.mailbox.Comment;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Link;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContextData;
+import com.zimbra.cs.mailbox.RetentionPolicyManager;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.SenderList;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -118,6 +141,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
@@ -512,6 +536,7 @@ public final class ToXML {
         if (needToOutput(fields, Change.CONTENT)) {
             el.addAttribute(MailConstants.A_ZIMBRA_ID, mpt.getOwnerId());
             el.addAttribute(MailConstants.A_REMOTE_ID, mpt.getRemoteId());
+            el.addAttribute(MailConstants.A_REMOTE_UUID, mpt.getRemoteUuid());
             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(mpt.getOwnerId(), ACL.GRANTEE_USER);
             el.addAttribute(MailConstants.A_OWNER_NAME, nentry == null ? null : nentry.getName());
             if (mpt.getDefaultView() != MailItem.Type.UNKNOWN) {
@@ -632,13 +657,13 @@ public final class ToXML {
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields)
     throws ServiceException {
-        return encodeContact(parent, ifmt, octxt, contact, null, null, summary, 
+        return encodeContact(parent, ifmt, octxt, contact, null, null, summary,
                 attrFilter, fields, null, false, GetContacts.NO_LIMIT_MAX_MEMBERS);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
-            Collection<String> attrFilter, int fields, String migratedDlist, 
+            Collection<String> attrFilter, int fields, String migratedDlist,
             boolean returnHiddenAttrs, long maxMembers)
     throws ServiceException {
         Element el = parent.addElement(MailConstants.E_CONTACT);
@@ -712,10 +737,10 @@ public final class ToXML {
             for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
-                
-                // don't put returnHiddenAttrs in one of the && condition because member 
+
+                // don't put returnHiddenAttrs in one of the && condition because member
                 // can be configured as a hidden or non-hidden field
-                if (ContactConstants.A_member.equals(name) && 
+                if (ContactConstants.A_member.equals(name) &&
                             maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
                     // there is a limit on the max number of members to return
                     ContactDLMembers dlMembers = new ContactDLMembers(contact);
@@ -724,7 +749,7 @@ public final class ToXML {
                         continue;
                     }
                 }
-                
+
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
                     encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic);
                 }

@@ -36,6 +36,7 @@ public class CreateMountpoint extends RedoableOp {
     private String mName;
     private String mOwnerId;
     private int mRemoteId;
+    private String mRemoteUuid;
     private MailItem.Type defaultView;
     private int mFlags;
     private long mColor;
@@ -46,8 +47,8 @@ public class CreateMountpoint extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, MailItem.Type view,
-            int flags, Color color, boolean reminderEnabled) {
+    public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, String remoteUuid,
+            MailItem.Type view, int flags, Color color, boolean reminderEnabled) {
         this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -55,6 +56,7 @@ public class CreateMountpoint extends RedoableOp {
         mName = name != null ? name : "";
         mOwnerId = ownerId;
         mRemoteId = remoteId;
+        mRemoteUuid = remoteUuid;
         defaultView = view;
         mFlags = flags;
         mColor = color.getValue();
@@ -79,7 +81,7 @@ public class CreateMountpoint extends RedoableOp {
         StringBuilder sb = new StringBuilder("id=").append(mId);
         sb.append(", uuid=").append(mUuid);
         sb.append(", name=").append(mName).append(", folder=").append(mFolderId);
-        sb.append(", owner=").append(mOwnerId).append(", remote=").append(mRemoteId);
+        sb.append(", owner=").append(mOwnerId).append(", remoteId=").append(mRemoteId).append(", remoteUuid=").append(mRemoteUuid);
         sb.append(", view=").append(defaultView).append(", flags=").append(mFlags).append(", color=").append(mColor);
         sb.append(", reminder=").append(mReminderEnabled);
         return sb.toString();
@@ -94,6 +96,9 @@ public class CreateMountpoint extends RedoableOp {
         out.writeUTF(mName);
         out.writeUTF(mOwnerId);
         out.writeInt(mRemoteId);
+        if (getVersion().atLeast(1, 38)) {
+            out.writeUTF(mRemoteUuid);
+        }
         out.writeInt(mFolderId);
         out.writeByte(defaultView.toByte());
         out.writeInt(mFlags);
@@ -110,6 +115,9 @@ public class CreateMountpoint extends RedoableOp {
         mName = in.readUTF();
         mOwnerId = in.readUTF();
         mRemoteId = in.readInt();
+        if (getVersion().atLeast(1, 38)) {
+            mRemoteUuid = in.readUTF();
+        }
         mFolderId = in.readInt();
         defaultView = MailItem.Type.of(in.readByte());
         mFlags = in.readInt();
@@ -129,8 +137,8 @@ public class CreateMountpoint extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, defaultView, mFlags,
-                    Color.fromMetadata(mColor), mReminderEnabled);
+            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mRemoteUuid,
+                    defaultView, mFlags, Color.fromMetadata(mColor), mReminderEnabled);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 if (mLog.isInfoEnabled()) {

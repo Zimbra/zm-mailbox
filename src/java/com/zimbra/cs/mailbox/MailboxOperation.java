@@ -103,26 +103,27 @@ public enum MailboxOperation {
     CreateLink(85),
     SetRetentionPolicy(86),
     Watch(87),       // Octopus item watch / follow
-    Unwatch(88);
-    
+    Unwatch(88),
+    RefreshMountpoint(89);
+
     private MailboxOperation(int c) {
         code = c;
     }
-    
+
     public int getCode() {
         return code;
     }
-    
+
     private int code;
-    
+
     private static final HashMap<Integer,MailboxOperation> operations = new HashMap<Integer,MailboxOperation>();
-    
+
     static {
         for (MailboxOperation op : EnumSet.allOf(MailboxOperation.class)) {
             operations.put(op.getCode(), op);
         }
     }
-    
+
     public static MailboxOperation fromInt(int op) {
         return operations.get(op);
     }

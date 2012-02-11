@@ -19,13 +19,13 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -91,13 +91,14 @@ public class CreateMountpoint extends MailDocumentHandler {
 
         Element remote = fetchRemoteFolder(zsc, context, ownerId, (int) t.getAttributeLong(MailConstants.A_REMOTE_ID, -1), t.getAttribute(MailConstants.A_PATH, null));
         int remoteId = new ItemId(remote.getAttribute(MailConstants.A_ID), zsc).getId();
+        String remoteUuid = remote.getAttribute(MailConstants.A_UUID, null);
         if (view == null)
             view = remote.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
 
         Mountpoint mpt;
         try {
             Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
-            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.Type.of(view),
+            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, remoteUuid, MailItem.Type.of(view),
                     Flag.toBitmask(flags), itemColor, reminderEnabled);
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {

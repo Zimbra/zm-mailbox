@@ -63,9 +63,8 @@ import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.soap.admin.type.CountObjectsType;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -78,12 +77,41 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountCache;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DomainCache;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.GalMode;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.EntryCacheDataKey;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.GlobalGrant;
+import com.zimbra.cs.account.GroupedEntry;
+import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntryCache;
+import com.zimbra.cs.account.PreAuthKey;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchDirectoryOptions;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ShareLocator;
+import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -92,10 +120,9 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
-import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.callback.CallbackContext;
-import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 import com.zimbra.cs.account.gal.GalNamedFilter;
 import com.zimbra.cs.account.gal.GalOp;
@@ -107,7 +134,6 @@ import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.account.ldap.DomainNameMappingHandler;
 import com.zimbra.cs.account.ldap.Groups;
 import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
 import com.zimbra.cs.account.ldap.LdapLockoutPolicy;
 import com.zimbra.cs.account.ldap.LdapMimeTypeCache;
@@ -120,28 +146,39 @@ import com.zimbra.cs.account.ldap.RenameDomain;
 import com.zimbra.cs.account.ldap.SpecialAttrs;
 import com.zimbra.cs.account.ldap.Validators;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
-import com.zimbra.cs.account.ldap.legacy.LegacyJNDIAttributes;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
-import com.zimbra.cs.account.ldap.legacy.LegacyLdapHelper;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
-import com.zimbra.cs.account.ldap.legacy.entry.*;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapAccount;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapAlias;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapCalendarResource;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapCos;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapDataSource;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapDistributionList;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapDomain;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapGlobalGrant;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapIdentity;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapMimeType;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapServer;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapSignature;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapXMPPComponent;
+import com.zimbra.cs.account.ldap.legacy.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtil;
-import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions;
-import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.admin.type.CountObjectsType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
 
@@ -153,7 +190,7 @@ import com.zimbra.soap.type.TargetBy;
  * @author schemers
  */
 public class LegacyLdapProvisioning extends LdapProv {
-    
+
     private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, false, false);
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
@@ -178,7 +215,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                 LC.ldap_cache_external_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
     private LdapMimeTypeCache sMimeTypeCache = new LdapMimeTypeCache();
-    	
+
     private NamedEntryCache<Server> sServerCache =
         new NamedEntryCache<Server>(
                 LC.ldap_cache_server_maxsize.intValue(),
@@ -206,8 +243,8 @@ public class LegacyLdapProvisioning extends LdapProv {
         new NamedEntryCache<XMPPComponent>(
                 LC.ldap_cache_xmppcomponent_maxsize.intValue(),
                 LC.ldap_cache_xmppcomponent_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-    
-    
+
+
     private static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
@@ -227,43 +264,43 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public int getAccountCacheSize() { return sAccountCache.getSize(); }
-    
+
     @Override
     public double getAccountCacheHitRate() { return sAccountCache.getHitRate(); }
-    
+
     @Override
     public int getCosCacheSize() { return sCosCache.getSize(); }
-    
+
     @Override
     public double getCosCacheHitRate() { return sCosCache.getHitRate(); }
-    
+
     @Override
     public int getDomainCacheSize() { return sDomainCache.getSize(); }
-    
+
     @Override
     public double getDomainCacheHitRate() { return sDomainCache.getHitRate(); }
-    
+
     @Override
     public int getServerCacheSize() { return sServerCache.getSize(); }
-    
+
     @Override
     public double getServerCacheHitRate() { return sServerCache.getHitRate(); }
-    
+
     @Override
     public int getZimletCacheSize() { return sZimletCache.getSize(); }
-    
+
     @Override
     public double getZimletCacheHitRate() { return sZimletCache.getHitRate(); }
-    
+
     @Override
     public int getGroupCacheSize() { return sAclGroupCache.getSize(); }
-    
+
     @Override
     public double getGroupCacheHitRate() { return sAclGroupCache.getHitRate(); }
-    
+
     @Override
     public int getXMPPCacheSize() { return sXMPPComponentCache.getSize(); }
-    
+
     @Override
     public double getXMPPCacheHitRate() { return sXMPPComponentCache.getHitRate(); }
 
@@ -271,30 +308,30 @@ public class LegacyLdapProvisioning extends LdapProv {
     private static GlobalGrant sGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
     private Groups mAllDLs; // email addresses of all distribution lists on the system
-    
+
     private static LegacyLdapProvisioning SINGLETON = null;
-    
+
     private static synchronized void ensureSingleton(LegacyLdapProvisioning prov) {
         if (SINGLETON != null) {
             // pass an exception to have the stack logged
-            Zimbra.halt("Only one instance of LdapProvisioning can be created", 
+            Zimbra.halt("Only one instance of LdapProvisioning can be created",
                     ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
         }
         SINGLETON = prov;
     }
-    
+
     public LegacyLdapProvisioning() {
         ensureSingleton(this);
-        
+
         setDIT();
         setHelper(new LegacyLdapHelper(this));
         mAllDLs = new Groups(this);
-        
+
         register(new Validators.DomainAccountValidator());
         register(new Validators.DomainMaxAccountsValidator());
     }
 
-    
+
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
      */
@@ -309,7 +346,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         public String[] oldAddrs() { return mOldAddrs; }
         public String[] newAddrs() { return mNewAddrs; }
     }
-    
+
     public IAttributes toIAttributesByDIT(Attributes attrs) {
         if (LdapDIT.isZimbraDefault(mDIT)) {
             return null;
@@ -317,7 +354,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             return new LegacyJNDIAttributes(attrs);
         }
     }
-    
+
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)
             throws ServiceException {
@@ -359,10 +396,10 @@ public class LegacyLdapProvisioning extends LdapProv {
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
         }
-        
+
         modifyLdapAttrs(entry, initZlc, attrs);
     }
-    
+
     private void modifyLdapAttrs(Entry entry, LegacyZimbraLdapContext initZlc, Map<String, ? extends Object> attrs)
             throws ServiceException {
         LegacyZimbraLdapContext zlc = initZlc;
@@ -570,7 +607,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     public List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
     	return sMimeTypeCache.getMimeTypes(this, mimeType);
     }
-    
+
     @Override
     public List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException {
         LegacyZimbraLdapContext zlc = null;
@@ -596,7 +633,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
-    
+
     @Override
     public List<MimeTypeInfo> getAllMimeTypes() throws ServiceException {
     	return sMimeTypeCache.getAllMimeTypes(this);
@@ -783,7 +820,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         return getAccountByName(emailAddress, loadFromMaster, true);
     }
-    
+
     Account getAccountByName(String emailAddress, boolean loadFromMaster, boolean checkAliasDomain) throws ServiceException {
 
         Account account = getAccountByNameInternal(emailAddress, loadFromMaster);
@@ -818,39 +855,39 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public Account getAccountByForeignName(String foreignName, String application, Domain domain) throws ServiceException {
-        // first try direct match 
-        Account acct = getAccountByForeignPrincipal(application + ":" + foreignName); 
-        
+        // first try direct match
+        Account acct = getAccountByForeignPrincipal(application + ":" + foreignName);
+
         if (acct != null)
             return acct;
-        
+
         if (domain == null) {
             String parts[] = foreignName.split("@");
             if (parts.length != 2)
                 return null;
-            
+
             String domainName = parts[1];
             domain = getDomain(Key.DomainBy.foreignName, application + ":" + domainName, true);
         }
-        
+
         if (domain == null)
             return null;
-        
+
         // see if there is a custom hander on the domain
         DomainNameMappingHandler.HandlerConfig handlerConfig = DomainNameMappingHandler.getHandlerConfig(domain, application);
-        
+
         String acctName;
         if (handlerConfig != null) {
-            // invoke the custom handler 
+            // invoke the custom handler
             acctName = DomainNameMappingHandler.mapName(handlerConfig, foreignName, domain.getName());
         } else {
             // do our builtin mapping of {localpart}@{zimbra domain name}
             acctName = foreignName.split("@")[0] + "@" + domain.getName();
         }
-            
+
         return get(AccountBy.name, acctName);
     }
-    
+
     private Cos lookupCos(String key, LegacyZimbraLdapContext zlc) throws ServiceException {
         Cos c = null;
         c = getCosById(key, zlc);
@@ -923,7 +960,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             if (d == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
             }
-            
+
             if (!d.isLocal()) {
                 throw ServiceException.INVALID_REQUEST("domain type must be local", null);
             }
@@ -1099,20 +1136,20 @@ public class LegacyLdapProvisioning extends LdapProv {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
-    
+
     @Override
     public void searchOCsForSuperClasses(Map<String, Set<String>> ocs) {
-        
+
         LegacyZimbraLdapContext zlc = null;
         try {
             zlc = new LegacyZimbraLdapContext(true);
             DirContext schema = zlc.getSchema();
-          
+
             Map<String, Object> attrs;
             for (Map.Entry<String, Set<String>> entry : ocs.entrySet()) {
                 String oc = entry.getKey();
                 Set<String> superOCs = entry.getValue();
-                
+
                 attrs = null;
                 try {
                     ZimbraLog.account.debug("Looking up OC: " + oc);
@@ -1122,10 +1159,10 @@ public class LegacyLdapProvisioning extends LdapProv {
                 } catch (NamingException e) {
                     ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
                 }
-                
+
                 if (attrs == null)
                     continue;
-                
+
                 for (Map.Entry<String, Object> attr : attrs.entrySet()) {
                     String attrName = attr.getKey();
                     if ("SUP".compareToIgnoreCase(attrName) == 0) {
@@ -1138,8 +1175,8 @@ public class LegacyLdapProvisioning extends LdapProv {
                         }
                     }
                 }
-              
-            }          
+
+            }
 
         } catch (NamingException e) {
             ZimbraLog.account.warn("unable to load LDAP schema", e);
@@ -1194,7 +1231,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
-    
+
     private boolean addDefaultMailHost(Attributes attrs, Server server)  throws ServiceException {
         String localMailHost = server.getAttr(Provisioning.A_zimbraServiceHostname);
         boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
@@ -1464,8 +1501,8 @@ public class LegacyLdapProvisioning extends LdapProv {
 
                         // skip admin accounts
                         // if we are looking for domains or coses, they can be under config branch in non default DIT impl.
-                        if (dn.endsWith(configBranchBaseDn) && 
-                                !objectclass.contains(AttributeClass.OC_zimbraDomain) && 
+                        if (dn.endsWith(configBranchBaseDn) &&
+                                !objectclass.contains(AttributeClass.OC_zimbraDomain) &&
                                 !objectclass.contains(AttributeClass.OC_zimbraCOS))
                             continue;
 
@@ -1613,7 +1650,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
         removeAliasInternal(dl, alias);
-        
+
         Set<String> toRemove = new HashSet<String>();
         toRemove.add(alias);
         mAllDLs.removeGroup(toRemove);
@@ -2016,7 +2053,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         // note: *always* use negative cache for keys from external source
         //       - virtualHostname, foreignName, krb5Realm
-         
+
         GetFromDomainCacheOption option = checkNegativeCache ? GetFromDomainCacheOption.BOTH : GetFromDomainCacheOption.POSITIVE;
 
         switch(keyType) {
@@ -2027,7 +2064,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             case virtualHostname:
                 return getDomainByVirtualHostnameInternal(key, GetFromDomainCacheOption.BOTH);
             case foreignName:
-                return getDomainByForeignNameInternal(key, GetFromDomainCacheOption.BOTH);    
+                return getDomainByForeignNameInternal(key, GetFromDomainCacheOption.BOTH);
             case krb5Realm:
                 return getDomainByKrb5RealmInternal(key, GetFromDomainCacheOption.BOTH);
             default:
@@ -2108,7 +2145,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
         return domain;
     }
-    
+
     private Domain getDomainByForeignNameInternal(String foreignName, GetFromDomainCacheOption option) throws ServiceException {
         Domain d = sDomainCache.getByForeignName(foreignName, option);
         if (d instanceof DomainCache.NonExistingDomain)
@@ -2471,19 +2508,19 @@ public class LegacyLdapProvisioning extends LdapProv {
             Domain domain = getDomainByAsciiName(newDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
-            
+
             domainChanged = !newDomain.equals(oldDomain);
-            
+
             if (domainChanged) {
                 validate(ProvisioningValidator.RENAME_ACCOUNT, newName, acct.getMultiAttr(Provisioning.A_objectClass, false), acct.getAttrs(false));
                 validate(ProvisioningValidator.RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, newName, acct.getAttrs(false));
-                
+
                 // make sure the new domain is a local domain
                 if (!domain.isLocal()) {
                     throw ServiceException.INVALID_REQUEST("domain type must be local", null);
                 }
             }
-            
+
             String newDn = mDIT.accountDNRename(oldDn, newLocal, domain.getName());
             boolean dnChanged = (!newDn.equals(oldDn));
 
@@ -2564,7 +2601,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         // reload it to cache using the master, bug 45736
         Account renamedAcct = getAccountById(zimbraId, null, true);
-        
+
         if (domainChanged)
             PermissionCache.invalidateCache(renamedAcct);
     }
@@ -2661,10 +2698,10 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         try {
             zlc = new LegacyZimbraLdapContext(true);
-            
-            RenameDomain.RenameDomainLdapHelper helper = 
+
+            RenameDomain.RenameDomainLdapHelper helper =
                 new RenameDomain.RenameDomainLdapHelper(this, zlc) {
-                
+
                 private LegacyZimbraLdapContext toLegacyZimbraLdapContext() {
                     return LdapClient.toLegacyZimbraLdapContext(mProv, mZlc);
                 }
@@ -2674,7 +2711,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                         throws ServiceException {
                     Attributes attributes = new BasicAttributes(true);
                     LegacyLdapUtil.mapToAttrs(attrs, attributes);
-                    
+
                     LegacyZimbraLdapContext ldapContext = toLegacyZimbraLdapContext();
                     try {
                         ldapContext.createEntry(dn, attributes, "renameDomain-createAccount");
@@ -2692,7 +2729,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                         throw ServiceException.FAILURE("", e);
                     }
                 }
-                
+
                 @Override
                 public void renameEntry(String oldDn, String newDn)
                         throws ServiceException {
@@ -2747,9 +2784,9 @@ public class LegacyLdapProvisioning extends LdapProv {
                         Map<String, ? extends Object> attrs)
                         throws ServiceException {
                     // TODO Auto-generated method stub
-                    
+
                 }
-                
+
             };
 
             Domain oldDomain = getDomainById(zimbraId, zlc);
@@ -3002,35 +3039,35 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
 
      }
-    
+
     private static class CountingVisitor extends SearchLdapVisitor {
         long numAccts = 0;
-        
+
         CountingVisitor() {
             super(false);
         }
-            
+
         @Override
         public void visit(String dn, IAttributes ldapAttrs) {
             numAccts++;
         }
-            
+
         long getNumAccts() {
             return numAccts;
         }
     };
-        
-    private long getNumAccountsOnServer(Server server) throws ServiceException {        
+
+    private long getNumAccountsOnServer(Server server) throws ServiceException {
         String query = LegacyLdapFilter.accountsHomedOnServer(server.getServiceHostname());
         String base = mDIT.mailBranchBaseDN();
         String attrs[] = new String[] {Provisioning.A_zimbraId};
-        
+
         CountingVisitor visitor = new CountingVisitor();
         searchLdapOnMaster(base, query, attrs, visitor);
-        
+
         return visitor.getNumAccts();
     }
-    
+
     @Override
     public void deleteServer(String zimbraId) throws ServiceException {
         LdapServer server = (LdapServer) getServerByIdInternal(zimbraId);
@@ -3041,7 +3078,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         long numAcctsOnServer = getNumAccountsOnServer(server);
         if (numAcctsOnServer != 0)
             throw ServiceException.INVALID_REQUEST("There are " + numAcctsOnServer + " account(s) on this server.", null);
-        
+
         LegacyZimbraLdapContext zlc = null;
         try {
             zlc = new LegacyZimbraLdapContext(true);
@@ -3088,7 +3125,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
-            
+
             if (!d.isLocal()) {
                 throw ServiceException.INVALID_REQUEST("domain type must be local", null);
             }
@@ -3121,7 +3158,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createDistributionList");
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
-            
+
             if (dlist != null) {
 	            AttributeManager.getInstance().postModify(listAttrs, dlist, callbackContext);
 	            mAllDLs.addGroup(dlist);
@@ -3145,7 +3182,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         return getContainingGroups(list, directOnly, via);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, LegacyZimbraLdapContext initZlc, String[] returnAttrs) 
+    private DistributionList getDistributionListByQuery(String base, String query, LegacyZimbraLdapContext initZlc, String[] returnAttrs)
     throws ServiceException {
         DistributionList dl = null;
         LegacyZimbraLdapContext zlc = initZlc;
@@ -3207,7 +3244,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             }
-            
+
             if (domainChanged) {
                 // make sure the new domain is a local domain
                 if (!domain.isLocal()) {
@@ -3279,7 +3316,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         } finally {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
-        
+
         if (domainChanged)
             PermissionCache.invalidateCache();
     }
@@ -3316,7 +3353,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         // make a copy of all addrs of this DL, after the delete all aliases on this dl
         // object will be gone, but we need to remove them from the allgroups cache after the DL is deleted
         Set<String> addrs = new HashSet<String>(dl.getMultiAttrSet(Provisioning.A_mail));
-        
+
         // remove the DL from all DLs
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
 
@@ -3350,7 +3387,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         } finally {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
-        
+
         PermissionCache.invalidateCache();
     }
 
@@ -3362,7 +3399,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                                           LegacyLdapFilter.distributionListByName(listAddress),
                                           null, null);
     }
-    
+
     @Override
     public boolean isDistributionList(String addr) {
         return mAllDLs.isGroup(addr);
@@ -3375,7 +3412,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     static final String DATA_ACLGROUP_LIST_ADMINS_ONLY = "AG_LIST_ADMINS_ONLY";
 
 
-    
+
     /*
      * - cached in LdapProvisioning
      * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
@@ -3394,7 +3431,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
     }
 
-    
+
     private DistributionList getAclGroupFromCache(Key.DistributionListBy keyType, String key) {
         switch(keyType) {
         case id:
@@ -3617,7 +3654,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         if (!onLocalServer(acct)) {
             reload(acct, false);  // reload from the replica
         }
-        
+
         String accountStatus = acct.getAccountStatus(Provisioning.getInstance());
         if (accountStatus == null)
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "missing account status");
@@ -3630,13 +3667,13 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, 
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires,
             String preAuth, Map<String, Object> authCtxt) throws ServiceException {
         preAuthAccount(acct, acctValue, acctBy, timestamp, expires, preAuth, false, authCtxt);
     }
 
     @Override
-    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, 
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires,
             String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
         try {
             preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, admin, authCtxt);
@@ -3743,8 +3780,8 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
     }
 
-    private void authAccount(Account acct, String password, 
-            boolean checkPasswordPolicy, Map<String, Object> authCtxt) 
+    private void authAccount(Account acct, String password,
+            boolean checkPasswordPolicy, Map<String, Object> authCtxt)
     throws ServiceException {
         checkAccountStatus(acct, authCtxt);
 
@@ -3783,7 +3820,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     public void accountAuthed(Account acct) throws ServiceException {
         updateLastLogon(acct);
     }
-    
+
     @Override
     public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
         try {
@@ -3802,9 +3839,9 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     private void ssoAuth(Account acct, Map<String, Object> authCtxt) throws ServiceException {
-        
+
         checkAccountStatus(acct, authCtxt);
-        
+
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
         try {
             if (lockoutPolicy.isLockedOut())
@@ -3853,8 +3890,8 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
 
     }
-    
-    
+
+
     private static Provisioning.Result toResult(NamingException e, String dn) {
         if (e instanceof CommunicationException) {
             if (e.getRootCause() instanceof UnknownHostException) {
@@ -3873,24 +3910,24 @@ public class LegacyLdapProvisioning extends LdapProv {
         } else if (e instanceof NameNotFoundException) {
             return new Provisioning.Result(Check.STATUS_NAME_NOT_FOUND, e, dn);
         } else if (e instanceof InvalidSearchFilterException) {
-            return new Provisioning.Result(Check.STATUS_INVALID_SEARCH_FILTER, e, dn);            
+            return new Provisioning.Result(Check.STATUS_INVALID_SEARCH_FILTER, e, dn);
         }  else {
             return new Provisioning.Result(Check.STATUS_FAILURE, e, dn);
         }
     }
-    
-    private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) 
+
+    private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password)
     throws NamingException, IOException {
-        if (password == null || password.equals("")) 
+        if (password == null || password.equals(""))
             throw new AuthenticationException("empty password");
-        
+
         LegacyZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
     }
 
-    private void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, 
+    private void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase,
             String searchFilter, String searchDn, String searchPassword) throws ServiceException, NamingException, IOException {
-        
-        if (password == null || password.equals("")) 
+
+        if (password == null || password.equals(""))
             throw new AuthenticationException("empty password");
 
         LegacyZimbraLdapContext zlc = null;
@@ -3913,7 +3950,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             LegacyZimbraLdapContext.closeContext(zlc);
             LegacyLdapUtil.closeEnumContext(ne);
         }
-        
+
         if (tooMany != null) {
             ZimbraLog.account.warn(String.format("ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)", resultDn, tooMany, searchFilter));
             throw new AuthenticationException("too many results from search filter!");
@@ -3921,25 +3958,25 @@ public class LegacyLdapProvisioning extends LdapProv {
             throw new AuthenticationException("empty search");
         }
         if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
-        ldapAuthenticate(url, requireStartTLS, resultDn, password); 
+        ldapAuthenticate(url, requireStartTLS, resultDn, password);
     }
-    
+
     @Override
-    public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) 
+    public Provisioning.Result checkAuthConfig(Map attrs, String name, String password)
     throws ServiceException {
         AuthMech mech = AuthMech.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech));
         if (!(mech == AuthMech.ldap) || mech == AuthMech.ad) {
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+
                     AuthMech.ldap.name() + " or " + AuthMech.ad.name(), null);
         }
-        
+
         String url[] = Check.getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
-        
+
         // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
         String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
         boolean startTLS = startTLSEnabled == null ? false : ProvisioningConstants.TRUE.equals(startTLSEnabled);
         boolean requireStartTLS = LdapConnType.requireStartTLS(url,  startTLS);
-        
+
         try {
             String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
             if (searchFilter != null) {
@@ -3950,9 +3987,9 @@ public class LegacyLdapProvisioning extends LdapProv {
                 searchFilter = LdapUtil.computeDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
-                return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);                
+                return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);
             }
-        
+
             String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
                 String dn = LdapUtil.computeDn(name, bindDn);
@@ -3960,18 +3997,18 @@ public class LegacyLdapProvisioning extends LdapProv {
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Provisioning.Result(Check.STATUS_OK, "", dn);
             }
-            
-            throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter + " or " + 
+
+            throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter + " or " +
                     Provisioning.A_zimbraAuthLdapBindDn, null);
         } catch (NamingException e) {
             return toResult(e, "");
         } catch (IOException e) {
             return Check.toResult(e, "");
-        } 
+        }
     }
 
     @Override
-    public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) 
+    public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp)
     throws ServiceException {
         GalMode mode = GalMode.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
         if (mode != GalMode.ldap)
@@ -3984,14 +4021,14 @@ public class LegacyLdapProvisioning extends LdapProv {
         try {
             SearchGalResult result = null;
             if (galOp == GalOp.autocomplete)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null);
             else if (galOp == GalOp.search)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null);
             else if (galOp == GalOp.sync)
-                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
-            else 
+                result = LegacyLdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null);
+            else
                 throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
-            
+
             return new Provisioning.GalResult(Check.STATUS_OK, "", result.getMatches());
         } catch (NamingException e) {
             return toResult(e, "");
@@ -3999,25 +4036,25 @@ public class LegacyLdapProvisioning extends LdapProv {
             return Check.toResult(e, "");
         }
     }
-    
+
     @Override
-    public void externalLdapAuth(Domain d, AuthMech authMech, Account acct, String password, 
+    public void externalLdapAuth(Domain d, AuthMech authMech, Account acct, String password,
             Map<String, Object> authCtxt) throws ServiceException {
         externalLdapAuth(d, authMech, acct, null, password, authCtxt);
     }
-    
+
     @Override
-    public void externalLdapAuth(Domain d, AuthMech authMech, String principal, String password, 
+    public void externalLdapAuth(Domain d, AuthMech authMech, String principal, String password,
             Map<String, Object> authCtxt) throws ServiceException {
         externalLdapAuth(d, authMech, null, principal, password, authCtxt);
     }
-    
-    void externalLdapAuth(Domain d, AuthMech authMech, Account acct, String principal, 
+
+    void externalLdapAuth(Domain d, AuthMech authMech, Account acct, String principal,
             String password, Map<String, Object> authCtxt) throws ServiceException {
         // exactly one of acct or principal is not null
         // when acct is null, we are from the auto provisioning path
         assert((acct == null) != (principal == null));
-        
+
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
 
         if (url == null || url.length == 0) {
@@ -4037,13 +4074,13 @@ public class LegacyLdapProvisioning extends LdapProv {
                     ldapAuthenticate(url, requireStartTLS, externalDn, password);
                     return;
                 }
-                
+
                 // principal must be null, user account's name for principal
                 principal = acct.getName();
             }
-            
+
             // principal must not be null by now
-            
+
             String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
             if (searchFilter != null && AuthMech.ad != authMech) {
                 String searchPassword = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword);
@@ -4079,13 +4116,13 @@ public class LegacyLdapProvisioning extends LdapProv {
         ZimbraLog.account.fatal(msg);
         throw ServiceException.FAILURE(msg, null);
     }
-    
+
     @Override
     public void zimbraLdapAuthenticate(Account acct, String password, Map<String, Object> authCtxt)
             throws ServiceException {
         try {
             LegacyZimbraLdapContext.ldapAuthenticate(((LdapEntry)acct).getDN(), password);
-            return; // good password, RETURN                
+            return; // good password, RETURN
         } catch (AuthenticationException e) {
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), e.getMessage(), e);
         } catch (AuthenticationNotSupportedException e) {
@@ -4226,23 +4263,23 @@ public class LegacyLdapProvisioning extends LdapProv {
     public SetPasswordResult setPassword(Account acct, String newPassword) throws ServiceException {
         SetPasswordResult result = new SetPasswordResult();
         String msg = null;
-        
+
         try {
             // dry run to pick up policy violation, if any
             setPassword(acct, newPassword, false, true);
         } catch (ServiceException e) {
             msg = e.getMessage();
         }
-        
+
         setPassword(acct, newPassword, false, false);
-        
+
         if (msg != null) {
-            msg = L10nUtil.getMessage(L10nUtil.MsgKey.passwordViolation, 
+            msg = L10nUtil.getMessage(L10nUtil.MsgKey.passwordViolation,
                     acct.getLocale(), acct.getName(), msg);
-            
+
             result.setMessage(msg);
         }
-        
+
         return result;
     }
 
@@ -4251,7 +4288,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         checkPasswordStrength(password, acct, null, null);
     }
 
-    private int getInt(Account acct, Cos cos, Attributes attrs, String name, int defaultValue) 
+    private int getInt(Account acct, Cos cos, Attributes attrs, String name, int defaultValue)
     throws ServiceException {
         if (acct != null) {
             return acct.getIntAttr(name, defaultValue);
@@ -4269,11 +4306,11 @@ public class LegacyLdapProvisioning extends LdapProv {
         } catch (NamingException ne) {
             throw ServiceException.FAILURE(ne.getMessage(), ne);
         }
-        
+
         return cos.getIntAttr(name, defaultValue);
     }
-    
-    private String getString(Account acct, Cos cos, Attributes attrs, String name) 
+
+    private String getString(Account acct, Cos cos, Attributes attrs, String name)
     throws ServiceException {
         if (acct != null) {
             return acct.getAttr(name);
@@ -4287,7 +4324,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         } catch (NamingException ne) {
             throw ServiceException.FAILURE(ne.getMessage(), ne);
         }
-        
+
         return cos.getAttr(name);
     }
 
@@ -4301,17 +4338,17 @@ public class LegacyLdapProvisioning extends LdapProv {
      * @param attrs
      * @throws ServiceException
      */
-    private void checkPasswordStrength(String password, Account acct, Cos cos, Attributes attrs) 
+    private void checkPasswordStrength(String password, Account acct, Cos cos, Attributes attrs)
     throws ServiceException {
         int minLength = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinLength, 0);
         if (minLength > 0 && password.length() < minLength) {
-            throw AccountServiceException.INVALID_PASSWORD("too short", 
+            throw AccountServiceException.INVALID_PASSWORD("too short",
                     new Argument(Provisioning.A_zimbraPasswordMinLength, minLength, Argument.Type.NUM));
         }
 
         int maxLength = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMaxLength, 0);
         if (maxLength > 0 && password.length() > maxLength) {
-            throw AccountServiceException.INVALID_PASSWORD("too long", 
+            throw AccountServiceException.INVALID_PASSWORD("too long",
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
         }
 
@@ -4320,21 +4357,21 @@ public class LegacyLdapProvisioning extends LdapProv {
         int minNumeric = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinNumericChars, 0);
         int minPunctuation = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinPunctuationChars, 0);
         int minAlpha = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinAlphaChars, 0);
-        
+
         String allowedChars = getString(acct, cos, attrs, Provisioning.A_zimbraPasswordAllowedChars);
         Pattern allowedCharsPattern = null;
         if (allowedChars != null) {
             try {
                 allowedCharsPattern = Pattern.compile(allowedChars);
             } catch (PatternSyntaxException e) {
-                throw AccountServiceException.INVALID_PASSWORD(Provisioning.A_zimbraPasswordAllowedChars + 
+                throw AccountServiceException.INVALID_PASSWORD(Provisioning.A_zimbraPasswordAllowedChars +
                         " is not valid regex: " + e.getMessage());
             }
         }
-        
+
         boolean hasPolicies = minUpperCase > 0 || minLowerCase > 0 || minNumeric > 0 || minPunctuation > 0 ||
                 minAlpha > 0 || allowedCharsPattern != null;
-            
+
         if (!hasPolicies) {
             return;
         }
@@ -4360,39 +4397,39 @@ public class LegacyLdapProvisioning extends LdapProv {
                 punctuation++;
                 isAlpha = false;
             }
-            
+
             if (isAlpha) {
                 alpha++;
             }
-            
+
             if (allowedCharsPattern != null) {
                 char character = password.charAt(i);
                 if (!allowedCharsPattern.matcher(Character.toString(character)).matches()) {
-                    throw AccountServiceException.INVALID_PASSWORD(character + " is not an allowed character", 
+                    throw AccountServiceException.INVALID_PASSWORD(character + " is not an allowed character",
                             new Argument(Provisioning.A_zimbraPasswordAllowedChars, allowedChars, Argument.Type.STR));
                 }
             }
-            
+
         }
 
         if (upper < minUpperCase) {
-            throw AccountServiceException.INVALID_PASSWORD("not enough upper case characters", 
+            throw AccountServiceException.INVALID_PASSWORD("not enough upper case characters",
                     new Argument(Provisioning.A_zimbraPasswordMinUpperCaseChars, minUpperCase, Argument.Type.NUM));
         }
         if (lower < minLowerCase) {
-            throw AccountServiceException.INVALID_PASSWORD("not enough lower case characters", 
+            throw AccountServiceException.INVALID_PASSWORD("not enough lower case characters",
                     new Argument(Provisioning.A_zimbraPasswordMinLowerCaseChars, minLowerCase, Argument.Type.NUM));
         }
         if (numeric < minNumeric) {
-            throw AccountServiceException.INVALID_PASSWORD("not enough numeric characters", 
+            throw AccountServiceException.INVALID_PASSWORD("not enough numeric characters",
                     new Argument(Provisioning.A_zimbraPasswordMinNumericChars, minNumeric, Argument.Type.NUM));
         }
         if (punctuation < minPunctuation) {
-            throw AccountServiceException.INVALID_PASSWORD("not enough punctuation characters", 
+            throw AccountServiceException.INVALID_PASSWORD("not enough punctuation characters",
                     new Argument(Provisioning.A_zimbraPasswordMinPunctuationChars, minPunctuation, Argument.Type.NUM));
         }
         if (alpha < minAlpha) {
-            throw AccountServiceException.INVALID_PASSWORD("not enough alpha characters", 
+            throw AccountServiceException.INVALID_PASSWORD("not enough alpha characters",
                     new Argument(Provisioning.A_zimbraPasswordMinAlphaChars, minAlpha, Argument.Type.NUM));
         }
     }
@@ -4452,7 +4489,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                     acct.getAttr(Provisioning.A_userPassword),
                     enforceHistory);
             attrs.put(Provisioning.A_zimbraPasswordHistory, newHistory);
-            
+
             if (enforcePolicy || dryRun)
                 checkHistory(newPassword, newHistory);
         }
@@ -4460,7 +4497,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         if (dryRun) {
             return;
         }
-        
+
         String encodedPassword = PasswordUtil.SSHA.generateSSHA(newPassword, null);
 
         // unset it so it doesn't take up space...
@@ -4732,11 +4769,11 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     private void setAccountDefaults(Account acct, int flags) throws ServiceException {
         boolean setDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == 0;
-        
+
         if (!setDefaults) {
             return;
         }
-        
+
         boolean setSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == 0;
 
         acct.setAccountDefaults(setSecondaryDefaults);
@@ -5115,14 +5152,14 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsOnlyByDomain(d).toFilterString(), 
+        return searchAccounts(d, mDIT.filterAccountsOnlyByDomain(d).toFilterString(),
                 null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsOnlyByDomain(d).toFilterString(), null, 
+        searchObjects(mDIT.filterAccountsOnlyByDomain(d).toFilterString(), null,
                 mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
     }
 
@@ -5131,8 +5168,8 @@ public class LegacyLdapProvisioning extends LdapProv {
         getAllAccountsInternal(d, s, visitor, false);
     }
 
-    private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, 
-            boolean noDefaults) 
+    private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor,
+            boolean noDefaults)
     throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
         String filter = mDIT.filterAccountsOnlyByDomain(d).toFilterString();
@@ -5193,8 +5230,8 @@ public class LegacyLdapProvisioning extends LdapProv {
                               null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
     }
 
-    private List searchAccounts(Domain d, String query, String returnAttrs[], 
-            String sortAttr, boolean sortAscending, int flags) 
+    private List searchAccounts(Domain d, String query, String returnAttrs[],
+            String sortAttr, boolean sortAscending, int flags)
     throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
         return searchObjects(query, returnAttrs, sortAttr, sortAscending,
@@ -5209,7 +5246,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                                      String token) throws ServiceException {
         return searchGal(d, n, type, galMode, token, null);
     }
-    
+
     @Override
     public void searchGal(GalSearchParams params) throws ServiceException {
         try {
@@ -5237,7 +5274,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             return searchResourcesGal(d, n, maxResults, token, galOp, visitor);
         else if (type == GalSearchType.group)
             return searchGroupsGal(d, n, maxResults, null, galOp, null);
-        
+
         GalMode mode = galMode != null ? galMode : GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
         SearchGalResult results = null;
         if (mode == null || mode == GalMode.zimbra) {
@@ -5287,7 +5324,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     throws ServiceException {
         return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraCalendarResourceFilter(galOp), n, maxResults, token, visitor);
     }
-    
+
     private SearchGalResult searchGroupsGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
     throws ServiceException {
         return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraGroupFilter(galOp), n, maxResults, token, visitor);
@@ -5311,7 +5348,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         String queryExpr = GalSearchConfig.getFilterDef(filterName);
         String query = null;
-        
+
         String tokenize = GalUtil.tokenizeKey(galParams, galOp);
         if (queryExpr != null) {
             if (token != null)
@@ -5387,41 +5424,41 @@ public class LegacyLdapProvisioning extends LdapProv {
         LdapDistributionList ldl = (LdapDistributionList) list;
         removeListMembers(ldl, members);
     }
-    
+
     private void addListMembers(DistributionList dl, String[] members) throws ServiceException {
         Set<String> existing = dl.getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
         Set<String> mods = new HashSet<String>();
-        
+
         // all addrs of thie DL
         AddrsOfEntry addrsOfDL = getAllAddressesOfEntry(dl.getName());
-        
-        for (int i = 0; i < members.length; i++) { 
+
+        for (int i = 0; i < members.length; i++) {
             String memberName = members[i].toLowerCase();
             memberName = IDNUtil.toAsciiEmail(memberName);
-            
+
             if (addrsOfDL.isIn(memberName))
                 throw ServiceException.INVALID_REQUEST("Cannot add self as a member: " + memberName, null);
-            
+
             if (!existing.contains(memberName)) {
                 mods.add(memberName);
 
                 // clear the DL cache on accounts/dl
 
-                // can't do prov.getFromCache because it only caches by primary name 
+                // can't do prov.getFromCache because it only caches by primary name
                 Account acct = get(AccountBy.name, memberName);
                 if (acct != null)
                     clearUpwardMembershipCache(acct);
                 else {
-                    // for DistributionList/ACLGroup, get it from cache because 
-                    // if the dl is not in cache, after loading it prov.getAclGroup 
-                    // always compute the upward membership.  Sounds silly if we are 
-                    // about to clean the cache.  If memberName is indeed an alias 
-                    // of one of the cached DL/ACLGroup, it will get expired after 15 
-                    // mins, just like the multi-node case. 
+                    // for DistributionList/ACLGroup, get it from cache because
+                    // if the dl is not in cache, after loading it prov.getAclGroup
+                    // always compute the upward membership.  Sounds silly if we are
+                    // about to clean the cache.  If memberName is indeed an alias
+                    // of one of the cached DL/ACLGroup, it will get expired after 15
+                    // mins, just like the multi-node case.
                     //
                     // Note: do not call clearUpwardMembershipCache for AclGroup because
-                    // the upward membership cache for that is computed and cache only when 
-                    // the entry is loaded/being cached, instead of lazily computed like we 
+                    // the upward membership cache for that is computed and cache only when
+                    // the entry is loaded/being cached, instead of lazily computed like we
                     // do for account.
                     removeGroupFromCache(Key.DistributionListBy.name, memberName);
                 }
@@ -5434,23 +5471,23 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
 
         PermissionCache.invalidateCache();
-        
+
         Map<String,String[]> modmap = new HashMap<String,String[]>();
-        modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
+        modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, mods.toArray(new String[0]));
         modifyAttrs(dl, modmap, true);
     }
 
     private void removeListMembers(DistributionList dl, String[] members) throws ServiceException {
         Set<String> curMembers = dl.getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
-        
+
         // bug 46219, need a case insentitive Set
         Set<String> existing = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         existing.addAll(curMembers);
-        
+
         Set<String> mods = new HashSet<String>();
         HashSet<String> failed = new HashSet<String>();
 
-        for (int i = 0; i < members.length; i++) { 
+        for (int i = 0; i < members.length; i++) {
             String memberName = members[i].toLowerCase();
             memberName = IDNUtil.toAsciiEmail(memberName);
             if (memberName.length() == 0) {
@@ -5466,7 +5503,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             //   - junk (allAddrs will be returned as null)
             AddrsOfEntry addrsOfEntry = getAllAddressesOfEntry(memberName);
             List<String> allAddrs = addrsOfEntry.getAll();
-                
+
             if (mods.contains(memberName)) {
                 // already been added in mods (is the primary or alias of previous entries in members[])
             } else if (existing.contains(memberName)) {
@@ -5489,7 +5526,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                 if (!inList)
                     failed.add(memberName);
             }
-            
+
             // clear the DL cache on accounts/dl
             String primary = addrsOfEntry.getPrimary();
             if (primary != null) {
@@ -5518,11 +5555,11 @@ public class LegacyLdapProvisioning extends LdapProv {
         if (mods.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("empty remove set", null);
         }
-        
+
         PermissionCache.invalidateCache();
-        
+
         Map<String,String[]> modmap = new HashMap<String,String[]>();
-        modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
+        modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, mods.toArray(new String[0]));
         modifyAttrs(dl, modmap);
 
     }
@@ -5533,17 +5570,17 @@ public class LegacyLdapProvisioning extends LdapProv {
         acct.setCachedData(LegacyLdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
     }
-    
+
     private class AddrsOfEntry {
         List<String> mAllAddrs = new ArrayList<String>(); // including primary
         String mPrimary = null;  // primary addr
         boolean mIsAccount = false;
-        
+
         void setPrimary(String primary) {
             mPrimary = primary;
             add(primary);
         }
-        
+
         void setIsAccount(boolean isAccount) {
             mIsAccount = isAccount;
         }
@@ -5551,44 +5588,44 @@ public class LegacyLdapProvisioning extends LdapProv {
         void add(String addr) {
             mAllAddrs.add(addr);
         }
-        
+
         void addAll(String[] addrs) {
             mAllAddrs.addAll(Arrays.asList(addrs));
         }
-        
+
         List<String> getAll() {
             return mAllAddrs;
         }
-        
+
         String getPrimary() {
             return mPrimary;
         }
-        
+
         boolean isAccount() {
             return mIsAccount;
         }
-        
+
         int size() {
             return mAllAddrs.size();
         }
-        
+
         boolean isIn(String addr) {
             return mAllAddrs.contains(addr.toLowerCase());
         }
     }
-    
-    
+
+
     //
-    // returns the primary address and all aliases of the named account or DL 
+    // returns the primary address and all aliases of the named account or DL
     //
     private AddrsOfEntry getAllAddressesOfEntry(String name) {
-        
+
         String primary = null;
         String aliases[] = null;
         AddrsOfEntry addrs = new AddrsOfEntry();
-        
+
         try {
-            // bug 56621.  Do not count implicit aliases (aliases resolved by alias domain) 
+            // bug 56621.  Do not count implicit aliases (aliases resolved by alias domain)
             // when dealing with distribution list members.
             Account acct = getAccountByName(name, false, false);
             if (acct != null) {
@@ -5605,12 +5642,12 @@ public class LegacyLdapProvisioning extends LdapProv {
         } catch (ServiceException se) {
             // swallow any exception and go on
         }
-        
+
         if (primary != null)
             addrs.setPrimary(primary);
         if (aliases != null)
             addrs.addAll(aliases);
-               
+
         return addrs;
     }
 
@@ -5966,7 +6003,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
-        callbackContext.setData(DataKey.MAX_SIGNATURE_LEN, 
+        callbackContext.setData(DataKey.MAX_SIGNATURE_LEN,
                 account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
         boolean checkImmutable = !restoring;
         AttributeManager.getInstance().preModify(signatureAttrs, null, callbackContext, checkImmutable);
@@ -6259,7 +6296,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query.toString()+" message: "+e.getMessage(), e);
         } finally {
         }
-        
+
         return exists;
     }
 
@@ -7202,19 +7239,19 @@ public class LegacyLdapProvisioning extends LdapProv {
             searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
         }
     }
-    
+
     @Override
     public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         return smime.get(configName);
     }
-    
+
     @Override
     public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         smime.modify(configName, attrs);
     }
-    
+
     @Override
     public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
@@ -7226,40 +7263,40 @@ public class LegacyLdapProvisioning extends LdapProv {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         return smime.get(configName);
     }
-    
+
     @Override
     public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         smime.modify(configName, attrs);
     }
-    
+
     @Override
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         smime.remove(configName);
     }
-    
+
     @Override
     public void searchLdapOnMaster(String base, String filter,
             String[] returnAttrs, SearchLdapVisitor visitor)
             throws ServiceException {
         searchZimbraLdap(base, filter, returnAttrs, true, visitor);
     }
-    
+
     @Override
     public void searchLdapOnReplica(String base, String filter,
             String[] returnAttrs, SearchLdapVisitor visitor)
             throws ServiceException {
         searchZimbraLdap(base, filter, returnAttrs, false, visitor);
     }
-    
+
     @Override
     public void searchLdapOnMaster(String base, ZLdapFilter filter,
             String[] returnAttrs, SearchLdapVisitor visitor)
             throws ServiceException {
         searchLdapOnMaster(base, filter.toFilterString(), returnAttrs, visitor);
     }
-    
+
     @Override
     public void searchLdapOnReplica(String base, ZLdapFilter filter,
             String[] returnAttrs, SearchLdapVisitor visitor)
@@ -7267,7 +7304,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         searchLdapOnReplica(base, filter.toFilterString(), returnAttrs, visitor);
     }
 
-    private void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor) 
+    private void searchZimbraLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapOptions.SearchLdapVisitor visitor)
     throws ServiceException {
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -7277,17 +7314,17 @@ public class LegacyLdapProvisioning extends LdapProv {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
-    
+
     @Override
     public void waitForLdapServer() {
         LegacyZimbraLdapContext.waitForServer();
     }
-    
+
     @Override
     public void alwaysUseMaster() {
         LegacyZimbraLdapContext.forceMasterURL();
     }
-    
+
     @Override
     public void dumpLdapSchema(PrintWriter pw) throws ServiceException {
         LegacyZimbraLdapContext zlc = null;
@@ -7320,8 +7357,8 @@ public class LegacyLdapProvisioning extends LdapProv {
             LegacyZimbraLdapContext.closeContext(zlc);
         }
     }
-    
-    
+
+
     private void dumpAttrs(PrintWriter writer, String name, Attributes attrs) throws NamingException {
         NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>) attrs.getAll();
         List<javax.naming.directory.Attribute> attrsList = new LinkedList<javax.naming.directory.Attribute>();
@@ -7329,6 +7366,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             attrsList.add(attrIter.next());
         }
         Collections.sort(attrsList, new Comparator<javax.naming.directory.Attribute>() {
+            @Override
             public int compare(javax.naming.directory.Attribute a1, javax.naming.directory.Attribute b1) {
                 return a1.getID().compareTo(b1.getID());
             }
@@ -7345,5 +7383,20 @@ public class LegacyLdapProvisioning extends LdapProv {
                 writer.println(name + ": " + attr.getID() + ": " + val);
             }
         }
+    }
+
+    @Override
+    public ShareLocator get(ShareLocatorBy keyType, String key) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ShareLocator createShareLocator(String id, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteShareLocator(String id) throws ServiceException {
+        throw new UnsupportedOperationException();
     }
 }

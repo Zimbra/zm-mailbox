@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.mailbox.acl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -37,6 +40,7 @@ public class AclPushSerializer {
     public static String serialize(ShareInfoData shareInfoData) {
         return serialize(
                 shareInfoData.getItemId(),
+                shareInfoData.getItemUuid(),
                 shareInfoData.getPath(),
                 shareInfoData.getFolderDefaultViewCode(),
                 shareInfoData.getType(),
@@ -49,7 +53,7 @@ public class AclPushSerializer {
 
     public static String serialize(MailItem item, ACL.Grant grant) {
         return serialize(
-                item.getId(),
+                item.getId(), item.getUuid(),
                 (item instanceof Folder) ? ((Folder)item).getPath() : item.getName(),
                 (item instanceof Folder) ? ((Folder)item).getDefaultView() : item.getType(),
                 item.getType(),
@@ -60,7 +64,7 @@ public class AclPushSerializer {
                 grant.getEffectiveExpiry(item.getACL()));
     }
 
-    public static String serialize(int itemId, String path, MailItem.Type folderDefaultView, MailItem.Type type,
+    public static String serialize(int itemId, String itemUuid, String path, MailItem.Type folderDefaultView, MailItem.Type type,
             String granteeId, String granteeName, byte granteeType, short rights, long expiry) {
         // Mailbox ACLs typically persist grantee id but not grantee name
         if (granteeName == null && granteeId != null) {
@@ -101,6 +105,7 @@ public class AclPushSerializer {
                 append(";granteeName:").append(granteeName).
                 append(";granteeType:").append(ACL.typeToString(granteeType)).
                 append(";folderId:").append(itemId).
+                append(";folderUuid:").append(itemUuid).
                 append(";folderPath:").append(path).
                 append(";folderDefaultView:").append(folderDefaultView).
                 append(";rights:").append(ACL.rightsToString(rights)).
@@ -113,25 +118,33 @@ public class AclPushSerializer {
 
     public static ShareInfoData deserialize(String sharedItemInfo) throws ServiceException {
         String[] parts = sharedItemInfo.split(";");
+        Map<String, String> attrs = new HashMap<String, String>();
+        for (String part : parts) {
+            String x[] = part.split(":", 2);
+            attrs.put(x[0], x[1]);
+        }
         ShareInfoData obj = new ShareInfoData();
-        int pos = 0;
-        // granteeId and granteeName could be "null", e.g. for public/all shares
-        String granteeId = parts[pos++].substring("granteeId:".length());
+
+        String granteeId = attrs.get("granteeId");
         obj.setGranteeId("null".equals(granteeId) ? null : granteeId);
-        String granteeName = parts[pos++].substring("granteeName:".length());
+        String granteeName = attrs.get("granteeName");
         obj.setGranteeName("null".equals(granteeName) ? null : granteeName);
-        obj.setGranteeType(ACL.stringToType(parts[pos++].substring("granteeType:".length())));
-        obj.setItemId(Integer.valueOf(parts[pos++].substring("folderId:".length())));
-        obj.setPath(parts[pos++].substring("folderPath:".length()));
-        obj.setFolderDefaultView(MailItem.Type.of(parts[pos++].substring("folderDefaultView:".length())));
-        obj.setRights(ACL.stringToRights(parts[pos++].substring("rights:".length())));
-        if (pos < parts.length) {
-            obj.setType(MailItem.Type.of(parts[pos++].substring("type:".length())));
+        obj.setGranteeType(ACL.stringToType(attrs.get("granteeType")));
+        obj.setItemId(Integer.valueOf(attrs.get("folderId")));
+        String uuid = attrs.get("folderUuid");
+        obj.setItemUuid("null".equals(uuid) ? null : uuid);
+        obj.setPath(attrs.get("folderPath"));
+        obj.setFolderDefaultView(MailItem.Type.of(attrs.get("folderDefaultView")));
+        obj.setRights(ACL.stringToRights(attrs.get("rights")));
+        String type = attrs.get("type");
+        if (type != null) {
+            obj.setType(MailItem.Type.of(type));
         } else {
             obj.setType(MailItem.Type.FOLDER);
         }
-        if (pos < parts.length) {
-            obj.setExpiry(Long.valueOf(parts[pos++].substring("expiry:".length())));
+        String expiry = attrs.get("expiry");
+        if (expiry != null) {
+            obj.setExpiry(Long.valueOf(expiry));
         }
         return obj;
     }

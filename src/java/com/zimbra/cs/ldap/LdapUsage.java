@@ -33,6 +33,7 @@ public enum LdapUsage {
     CREATE_DYNAMICGROUP,
     CREATE_IDENTITY,
     CREATE_SERVER,
+    CREATE_SHARELOCATOR,
     CREATE_SIGNATURE,
     CREATE_XMPPCOMPONENT,
     CREATE_ZIMLET,
@@ -44,6 +45,7 @@ public enum LdapUsage {
     DELETE_DYNAMICGROUP,
     DELETE_IDENTITY,
     DELETE_SERVER,
+    DELETE_SHARELOCATOR,
     DELETE_SIGNATURE,
     DELETE_XMPPCOMPONENT,
     DELETE_ZIMLET,
@@ -65,6 +67,7 @@ public enum LdapUsage {
     GET_GROUP_MEMBER,
     GET_SCHEMA,
     GET_SERVER,
+    GET_SHARELOCATOR,
     GET_XMPPCOMPONENT,
     GET_ZIMLET,
     MODIFY_ENTRY,
@@ -81,6 +84,7 @@ public enum LdapUsage {
     MODIFY_IDENTITY,
     MODIFY_MIMETYPE,
     MODIFY_SERVER,
+    MODIFY_SHARELOCATOR,
     MODIFY_SIGNATURE,
     MODIFY_XMPPCOMPONENT,
     MODIFY_ZIMLET,
@@ -98,13 +102,13 @@ public enum LdapUsage {
     RENAME_DOMAIN,
     RENAME_SIGNATURE,
     RENAME_XMPPCOMPONENT,
-    SEARCH, 
+    SEARCH,
     EXTERNAL_GROUP,
     SMIME_LOOKUP,
     NGINX_LOOKUP,
     UNITTEST,
     UPGRADE;
-    
+
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {
             case ACCOUNT: return MODIFY_ACCOUNT;
@@ -126,7 +130,7 @@ public enum LdapUsage {
             default: return MODIFY_ENTRY;
         }
     }
-    
+
     public static LdapUsage fromGalOp(GalOp galOp) {
         if (galOp == null) {
             ZimbraLog.ldap.warn("unknown GAL op");
@@ -137,14 +141,14 @@ public enum LdapUsage {
                 return GAL_AUTOCOMPLETE;
             case search:
                 return GAL_SEARCH;
-            case sync: 
+            case sync:
                 return GAL_SYNC;
             default:
                 ZimbraLog.ldap.warn("unknown GAL op");
                 return GAL;
         }
     }
-    
+
     public static LdapUsage fromGalOpLegacy(GalOp galOp) {
         if (galOp == null) {
             ZimbraLog.ldap.warn("unknown GAL op");
@@ -155,7 +159,7 @@ public enum LdapUsage {
                 return GAL_LEGACY_AUTOCOMPLETE;
             case search:
                 return GAL_LEGACY_SEARCH;
-            case sync: 
+            case sync:
                 return GAL_LEGACY_SYNC;
             default:
                 ZimbraLog.ldap.warn("unknown GAL op");

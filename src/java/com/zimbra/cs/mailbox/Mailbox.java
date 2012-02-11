@@ -46,9 +46,12 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
@@ -84,6 +87,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
@@ -175,6 +179,7 @@ import com.zimbra.cs.redolog.op.PurgeOldMessages;
 import com.zimbra.cs.redolog.op.PurgeRevision;
 import com.zimbra.cs.redolog.op.RecoverItem;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.op.RefreshMountpoint;
 import com.zimbra.cs.redolog.op.RenameItem;
 import com.zimbra.cs.redolog.op.RenameItemPath;
 import com.zimbra.cs.redolog.op.RenameMailbox;
@@ -7510,16 +7515,18 @@ public class Mailbox {
         }
     }
 
-    public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId,
+    public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
+            String ownerId, int remoteId, String remoteUuid,
             MailItem.Type view, int flags, byte color, boolean showReminders) throws ServiceException {
-        return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new Color(color),
+        return createMountpoint(octxt, folderId, name, ownerId, remoteId, remoteUuid, view, flags, new Color(color),
                 showReminders);
     }
 
-    public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId,
+    public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
+            String ownerId, int remoteId, String remoteUuid,
             MailItem.Type view, int flags, Color color, boolean showReminders) throws ServiceException {
-        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color,
-                showReminders);
+        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, remoteUuid,
+                view, flags, color, showReminders);
 
         boolean success = false;
         try {
@@ -7528,7 +7535,7 @@ public class Mailbox {
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
             String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
-            Mountpoint mpt = Mountpoint.create(mptId, uuid, getFolderById(folderId), name, ownerId, remoteId, view, flags,
+            Mountpoint mpt = Mountpoint.create(mptId, uuid, getFolderById(folderId), name, ownerId, remoteId, remoteUuid, view, flags,
                     color, showReminders, null);
             redoRecorder.setIdAndUuid(mpt.getId(), mpt.getUuid());
             success = true;
@@ -7536,6 +7543,65 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /**
+     * Updates the remote owner and item id stored in the mountpoint to match the current location of the
+     * target folder.  The target folder is identified by the remote UUID stored in the mountpoint's metadata.
+     * @param octxt
+     * @param mountpointId item id of the Mountpoint
+     * @return
+     * @throws ServiceException
+     */
+    public Mountpoint refreshMountpoint(OperationContext octxt, int mountpointId) throws ServiceException {
+        Mountpoint mp = getMountpointById(octxt, mountpointId);
+        Provisioning prov = Provisioning.getInstance();
+        ShareLocator shloc = prov.getShareLocatorById(mp.getRemoteUuid());
+        if (shloc == null || mp.getOwnerId().equalsIgnoreCase(shloc.getShareOwnerAccountId())) {
+            // Share apparently did not move.
+            return mp;
+        }
+
+        // Look up remote folder by UUID to discover the new numeric id.
+        Account shareOwner = Provisioning.getInstance().get(Key.AccountBy.id, shloc.getShareOwnerAccountId());
+        AuthToken at = octxt.getAuthToken();
+        String pxyAuthToken = Provisioning.onLocalServer(shareOwner) ? null : at.getProxyAuthToken();
+        ZAuthToken zat = null;
+        if (pxyAuthToken == null) {
+            zat = at.toZAuthToken();
+            zat.resetProxyAuthToken();
+        } else {
+            zat = new ZAuthToken(pxyAuthToken);
+        }
+        ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(shareOwner));
+        zoptions.setNoSession(true);
+        zoptions.setTargetAccount(shareOwner.getId());
+        zoptions.setTargetAccountBy(Key.AccountBy.id);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        ZFolder zfolder = zmbx.getFolderByUuid(shloc.getUuid());
+
+        if (zfolder != null) {
+            ItemId fid = new ItemId(zfolder.getId(), shareOwner.getId());
+            return refreshMountpoint(octxt, mountpointId, shareOwner.getId(), fid.getId());
+        } else {
+            return null;
+        }
+    }
+
+    public Mountpoint refreshMountpoint(OperationContext octxt, int mountpointId, String ownerId, int remoteId)
+            throws ServiceException {
+        RefreshMountpoint redoRecorder = new RefreshMountpoint(mId, mountpointId, ownerId, remoteId);
+        boolean success = false;
+        try {
+            beginTransaction("refreshMountpoint", octxt, redoRecorder);
+            Mountpoint mpt = getMountpointById(octxt, mountpointId);
+            mpt.setRemoteInfo(ownerId, remoteId);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+
+        return getMountpointById(octxt, mountpointId);
     }
 
     public void enableSharedReminder(OperationContext octxt, int mountpointId, boolean enable) throws ServiceException {

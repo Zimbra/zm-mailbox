@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120201-2313 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20120208-1709 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6622,7 +6622,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether externla feedback feature is enabled
+     * whether external feedback feature is enabled
      *
      * @return zimbraFeatureExternalFeedbackEnabled, or false if unset
      *
@@ -6634,7 +6634,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether externla feedback feature is enabled
+     * whether external feedback feature is enabled
      *
      * @param zimbraFeatureExternalFeedbackEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6649,7 +6649,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether externla feedback feature is enabled
+     * whether external feedback feature is enabled
      *
      * @param zimbraFeatureExternalFeedbackEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6665,7 +6665,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether externla feedback feature is enabled
+     * whether external feedback feature is enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6679,7 +6679,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether externla feedback feature is enabled
+     * whether external feedback feature is enabled
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

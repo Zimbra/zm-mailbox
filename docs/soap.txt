@@ -1321,7 +1321,7 @@ attributes are required.
 Mountpoints:
 
   <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] owner="{owner's-display-name}" zid="{owner's-zimbra-id}"
-        rid="{id-of-shared-item}" oname="{owner's-name-for-item}" [color="{color}"] [view="{default-type}"]
+        rid="{id-of-shared-item}" ruuid="{UUID-of-shared-item}" oname="{owner's-name-for-item}" [color="{color}"] [view="{default-type}"]
         reminder="{reminder-enabled}"/>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
@@ -1331,6 +1331,7 @@ Mountpoints:
   {owner's-display-name} = primary email address of the owner of the linked-to resource
   {owner's-zimbra-id} = Zimbra id (guid) of the owner of the linked-to resource
   {id-of-shared-item} = item id of the linked-to resource in the remote mailbox
+  {UUID-of-shared-item} = UUID of the linked-to resource in the remote mailbox
   {owner's-name-for-item} = The name presently used for the item by the owner
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
@@ -1774,12 +1775,14 @@ msg ID, two additional flags will be included in <e> elements for the message:
 ----------
 
 <GetFolderRequest [visible="0|1"] [needGranteeName="0|1"] [view="{folder-view-constraint}"] [depth="{subfolder-levels}"] [tr="{traverse-mountpoints}"]>
-  [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"]/>]
+  [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"] [uuid="base-folder-uuid"]/>]
 </GetFolderRequest>
 
-  - either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
-      if neither is present, the descent of the folder hierarchy begins at the mailbox's root folder (id 1).
-      if both are present, the path is treated as relative to the folder that was specified by id
+  - a {base-folder-id}, a {base-folder-uuid} or a {fully-qualified-path} can optionally be specified;
+      if none is present, the descent of the folder hierarchy begins at the mailbox's root folder (id 1).
+      if {fully-qualified-path} is present and {base-folder-id} or {base-folder-uuid} is also present,
+      the path is treated as relative to the folder that was specified by id/uuid.
+      {base-folder-id} is ignored if {base-folder-uuid} is present.
 
   - if "visible" is 1, we include all visible subfolders of the specified folder
       when you have full rights on the mailbox, this is indistinguishable from the normal <GetFolderResponse>

@@ -14,6 +14,11 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.cs.account.Account;
@@ -25,21 +30,16 @@ import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.ZimbraApplication;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
-
 
 public abstract class MailboxListener {
-    
+
     public static class ChangeNotification {
         public Account mailboxAccount;
         public OperationContext ctxt;
         public int lastChangeId;
         public PendingModifications mods;
         public long timestamp;
-        
+
         public ChangeNotification(Account account, PendingModifications mods, OperationContext ctxt, int lastChangeId, long timestamp) {
             this.mailboxAccount = account;
             this.mods = mods;
@@ -52,19 +52,19 @@ public abstract class MailboxListener {
     /**
      * Listeners will be notified at the end of each <code>Mailbox</code>
      * transaction.  The listener must not throw any Exception in this method.
-     * The listener must refrain from making synchronous network operation 
+     * The listener must refrain from making synchronous network operation
      * or other long latency operation within notify method.
-     * 
+     *
      * @param notification
      */
     public abstract void notify(ChangeNotification notification);
-    
+
     protected static final Set<Type> ALL_ITEM_TYPES = EnumSet.allOf(Type.class);
-    
+
     /**
      * Listener can indicate specific item types it is interested in,
      * which will reduce the number of notification callbacks.
-     * 
+     *
      * @return Set of item types listener wants to be notified of
      */
     public Set<MailItem.Type> registerForItemTypes() {
@@ -87,6 +87,7 @@ public abstract class MailboxListener {
         register(new MemcachedCacheManager());
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
+        register(new ShareStartStopListener());
     }
 
     public static void register(MailboxListener listener) {

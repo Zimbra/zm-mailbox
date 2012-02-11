@@ -2,18 +2,33 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.cs.service;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -47,19 +62,6 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.mail.message.FolderActionRequest;
 import com.zimbra.soap.mail.type.FolderActionSelector;
-import org.apache.commons.codec.binary.Hex;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class ExternalUserProvServlet extends ZimbraServlet {
 
@@ -251,7 +253,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                             Provisioning.A_zimbraSharedItem });
             searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByExternalGrant(extUserEmail));
             List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
-            
+
             if (accounts.isEmpty()) {
                 throw new ServletException("no shares discovered");
             }
@@ -293,7 +295,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     int parent = shareData.getFolderDefaultViewCode() == MailItem.Type.DOCUMENT ?
                             Mailbox.ID_FOLDER_BRIEFCASE : Mailbox.ID_FOLDER_USER_ROOT;
                     Mountpoint mtpt = granteeMbox.createMountpoint(
-                            null, parent, mountpointName, account.getId(), shareData.getItemId(),
+                            null, parent, mountpointName, account.getId(), shareData.getItemId(), shareData.getItemUuid(),
                             shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
                     if (shareData.getFolderDefaultViewCode() == MailItem.Type.APPOINTMENT) {
                         // make sure that the mountpoint is checked in the UI by default

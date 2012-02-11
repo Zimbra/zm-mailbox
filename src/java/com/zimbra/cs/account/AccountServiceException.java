@@ -50,6 +50,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_DATA_SOURCE = "account.NO_SUCH_DATA_SOURCE";
     public static final String NO_SUCH_RIGHT       = "account.NO_SUCH_RIGHT";
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";
+    public static final String NO_SUCH_SHARE_LOCATOR = "account.NO_SUCH_SHARE_LOCATOR";
     public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";
     public static final String NO_SUCH_XMPP_COMPONENT = "account.NO_SUCH_XMPP_COMPONENT";
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
@@ -62,6 +63,7 @@ public class AccountServiceException extends ServiceException {
     public static final String COS_EXISTS         = "account.COS_EXISTS";
     public static final String RIGHT_EXISTS       = "account.RIGHT_EXISTS";
     public static final String SERVER_EXISTS      = "account.SERVER_EXISTS";
+    public static final String SHARE_LOCATOR_EXISTS = "account.SHARE_LOCATOR_EXISTS";
     public static final String ZIMLET_EXISTS      = "account.ZIMLET_EXISTS";
     public static final String DISTRIBUTION_LIST_EXISTS = "account.DISTRIBUTION_LIST_EXISTS";
     public static final String MAINTENANCE_MODE   = "account.MAINTENANCE_MODE";
@@ -135,7 +137,7 @@ public class AccountServiceException extends ServiceException {
         public static AuthFailedServiceException AUTH_FAILED(String namePassedIn, String reason, Throwable t) {
             return new AuthFailedServiceException("N/A", namePassedIn, reason, AUTH_FAILED, SENDERS_FAULT, t);
         }
-        
+
         public static AuthFailedServiceException AUTH_FAILED(String reason, Throwable t) {
             return new AuthFailedServiceException("N/A", "N/A", reason, AUTH_FAILED, SENDERS_FAULT, t);
         }
@@ -157,15 +159,15 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("lookup returned multiple accounts: "+desc, MULTIPLE_ACCOUNTS_MATCHED, SENDERS_FAULT, null);
     }
 
-    
+
     public static AccountServiceException MULTIPLE_DOMAINS_MATCHED(String desc) {
         return new AccountServiceException("lookup returned multiple domains: "+desc, MULTIPLE_DOMAINS_MATCHED, SENDERS_FAULT, null);
     }
-    
+
     public static AccountServiceException MULTIPLE_ENTRIES_MATCHED(String desc, Throwable t) {
         return new AccountServiceException("lookup returned multiple entries: "+desc, MULTIPLE_ENTRIES_MATCHED, SENDERS_FAULT, t);
     }
-    
+
     public static AccountServiceException PASSWORD_CHANGE_TOO_SOON() {
         return new AccountServiceException("password can't be changed yet", PASSWORD_CHANGE_TOO_SOON, SENDERS_FAULT, null);
     }
@@ -185,11 +187,11 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException INVALID_ATTR_VALUE(String msg, Throwable t) {
         return new AccountServiceException(msg, INVALID_ATTR_VALUE, SENDERS_FAULT, t);
     }
-    
+
     public static AccountServiceException NO_SMIME_CONFIG(String desc) {
         return new AccountServiceException("no SMIME config: "+ desc, NO_SMIME_CONFIG, SENDERS_FAULT, null);
     }
-    
+
     public static AccountServiceException NO_SUCH_ACCOUNT(String name) {
         return new AccountServiceException("no such account: "+name, NO_SUCH_ACCOUNT, SENDERS_FAULT, null);
     }
@@ -208,6 +210,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException NO_SUCH_COS(String name) {
         return new AccountServiceException("no such cos: "+name, NO_SUCH_COS, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException NO_SUCH_SHARE_LOCATOR(String id) {
+        return new AccountServiceException("no such share locator: "+id, NO_SUCH_SHARE_LOCATOR, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException NO_SUCH_GRANT(String grant) {
@@ -279,7 +285,11 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException SERVER_EXISTS(String name) {
         return new AccountServiceException("server already exists: " + name, SERVER_EXISTS, SENDERS_FAULT, null);
     }
-    
+
+    public static AccountServiceException SHARE_LOCATOR_EXISTS(String id) {
+        return new AccountServiceException("share locator already exists: " + id, SHARE_LOCATOR_EXISTS, SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException ZIMLET_EXISTS(String name) {
         return new AccountServiceException("zimlet already exists: " + name, ZIMLET_EXISTS, SENDERS_FAULT, null);
     }

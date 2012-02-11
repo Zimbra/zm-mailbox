@@ -249,4 +249,14 @@
   </comment>
 </objectclass>
 
+<objectclass id="28" name="zimbraShareLocator" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Share locator</desc>
+  <comment>
+    A share locator points to the current location of the share.  This
+    allows shared data to be relocated transparently without requiring
+    the share users to update their mountpoint definition.
+  </comment>
+</objectclass>
+
 </objectclasses>

@@ -14,6 +14,12 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.Collections;
+import java.util.List;
+
+import junit.framework.TestCase;
+
+import com.zimbra.client.ZMailbox;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
@@ -23,14 +29,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.account.message.GetShareInfoRequest;
 import com.zimbra.soap.account.message.GetShareInfoResponse;
 import com.zimbra.soap.type.ShareInfo;
-import junit.framework.TestCase;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  */
@@ -76,6 +77,7 @@ public class TestAclPush extends TestCase {
         assertEquals(ACL.typeToString(ACL.GRANTEE_USER), share.getGranteeType());
         assertEquals(folder.getPath(), share.getFolderPath());
         assertEquals(folder.getId(), share.getFolderId());
+        assertEquals(folder.getUuid(), share.getFolderUuid());
         assertEquals(folder.getDefaultView().toString(), share.getDefaultView());
         assertEquals("r", share.getRights());
         assertEquals(acct1.getId(), share.getOwnerId());

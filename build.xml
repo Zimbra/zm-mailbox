@@ -373,7 +373,11 @@
             <param name="getter.class" value="group"/>
             <param name="getter.output" value="ZAttrDynamicGroup.java"/>
         </antcall>
-        <antcall target="generate-provisioning"/>
+        <antcall target="generate-getter">
+            <param name="getter.class" value="shareLocator"/>
+            <param name="getter.output" value="ZAttrShareLocator.java"/>
+        </antcall>
+    	<antcall target="generate-provisioning"/>
     </target>
 
     <target name="generate-getter">
