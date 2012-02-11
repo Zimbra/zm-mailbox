@@ -24,11 +24,12 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
-import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -44,8 +45,6 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CancelCalendarItem extends CalendarRequest {
@@ -122,10 +121,12 @@ public class CancelCalendarItem extends CalendarRequest {
                             // cancel notice.
                             List<ZAttendee> atsSeries = seriesInv.getAttendees();
                             Invite[] invs = calItem.getInvites();
+                            long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
                             for (Invite exceptInv : invs) {
                                 if (exceptInv != seriesInv) {
                                     String mthd = exceptInv.getMethod();
-                                    if (mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) {
+                                    if ((mthd.equals(ICalTok.REQUEST.toString()) || mthd.equals(ICalTok.PUBLISH.toString())) &&
+                                            inviteIsAfterTime(exceptInv, now)) {
                                         List<ZAttendee> atsExcept = exceptInv.getAttendees();
                                         // Find exception instance attendees who aren't series attendees.
                                         List<ZAttendee> ats = CalendarUtils.getRemovedAttendees(atsExcept, atsSeries, false, acct);
