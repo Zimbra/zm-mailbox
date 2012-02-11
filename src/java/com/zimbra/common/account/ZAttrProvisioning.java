@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120201-2313 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20120208-1709 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3994,7 +3994,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureExportFolderEnabled = "zimbraFeatureExportFolderEnabled";
 
     /**
-     * whether externla feedback feature is enabled
+     * whether external feedback feature is enabled
      *
      * @since ZCS 8.0.0
      */
@@ -9545,6 +9545,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyErrorHandlerURL = "zimbraReverseProxyErrorHandlerURL";
 
     /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public static final String A_zimbraReverseProxyGenConfigPerVirtualHostname = "zimbraReverseProxyGenConfigPerVirtualHostname";
+
+    /**
      * Whether to enable HTTP proxy
      *
      * @since ZCS 5.0.3
@@ -10129,6 +10141,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1342)
     public static final String A_zimbraShareNotificationMtaPort = "zimbraShareNotificationMtaPort";
+
+    /**
+     * account ID of the owner of the shared folder
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public static final String A_zimbraShareOwnerAccountId = "zimbraShareOwnerAccountId";
 
     /**
      * Interval between successive executions of the task that publishes

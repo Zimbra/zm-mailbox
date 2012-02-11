@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,7 +32,7 @@ public class AccountConstants {
     public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_END_SESSION_REQUEST = "EndSessionRequest";
     public static final String E_END_SESSION_RESPONSE = "EndSessionResponse";
-    
+
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
     public static final String E_GET_PREFS_RESPONSE = "GetPrefsResponse";
     public static final String E_GET_INFO_REQUEST = "GetInfoRequest";
@@ -60,7 +60,7 @@ public class AccountConstants {
     public static final String E_MODIFY_ZIMLET_PREFS_REQUEST = "ModifyZimletPrefsRequest";
     public static final String E_MODIFY_ZIMLET_PREFS_RESPONSE = "ModifyZimletPrefsResponse";
 
-    // GAL    
+    // GAL
     public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
     public static final String E_AUTO_COMPLETE_GAL_RESPONSE = "AutoCompleteGalResponse";
     public static final String E_SEARCH_CALENDAR_RESOURCES_REQUEST = "SearchCalendarResourcesRequest";
@@ -69,7 +69,7 @@ public class AccountConstants {
     public static final String E_SEARCH_GAL_RESPONSE = "SearchGalResponse";
     public static final String E_SYNC_GAL_REQUEST = "SyncGalRequest";
     public static final String E_SYNC_GAL_RESPONSE = "SyncGalResponse";
-    
+
     // identities
     public static final String E_CREATE_IDENTITY_REQUEST = "CreateIdentityRequest";
     public static final String E_CREATE_IDENTITY_RESPONSE = "CreateIdentityResponse";
@@ -89,7 +89,7 @@ public class AccountConstants {
     public static final String E_MODIFY_SIGNATURE_RESPONSE = "ModifySignatureResponse";
     public static final String E_DELETE_SIGNATURE_REQUEST = "DeleteSignatureRequest";
     public static final String E_DELETE_SIGNATURE_RESPONSE = "DeleteSignatureResponse";
-    
+
     // distribution list
     public static final String E_CREATE_DISTRIBUTION_LIST_REQUEST = "CreateDistributionListRequest";
     public static final String E_CREATE_DISTRIBUTION_LIST_RESPONSE = "CreateDistributionListResponse";
@@ -103,7 +103,7 @@ public class AccountConstants {
     public static final String E_GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE = "GetDistributionListMembersResponse";
     public static final String E_SUBSCRIBE_DISTRIBUTION_LIST_REQUEST = "SubscribeDistributionListRequest";
     public static final String E_SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE = "SubscribeDistributionListResponse";
-    
+
     // rights
     public static final String E_CHECK_RIGHTS_REQUEST = "CheckRightsRequest";
     public static final String E_CHECK_RIGHTS_RESPONSE = "CheckRightsResponse";
@@ -115,11 +115,11 @@ public class AccountConstants {
     public static final String E_GRANT_RIGHTS_RESPONSE = "GrantRightsResponse";
     public static final String E_REVOKE_RIGHTS_REQUEST = "RevokeRightsRequest";
     public static final String E_REVOKE_RIGHTS_RESPONSE = "RevokeRightsResponse";
-    
+
     // system
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
-    
+
     // SMIME
     public static final String E_GET_SMIME_PUBLIC_CERTS_REQUEST = "GetSMIMEPublicCertsRequest";
     public static final String E_GET_SMIME_PUBLIC_CERTS_RESPONSE = "GetSMIMEPublicCertsResponse";
@@ -127,7 +127,7 @@ public class AccountConstants {
     // profile
     public static final String E_UPDATE_PROFILE_REQUEST = "UpdateProfileRequest";
     public static final String E_UPDATE_PROFILE_RESPONSE = "UpdateProfileResponse";
-    
+
     // ZimbraLicenseExtension - LicenseService
     public static final String E_CHECK_LICENSE_REQUEST = "CheckLicenseRequest";
     public static final String E_CHECK_LICENSE_RESPONSE = "CheckLicenseResponse";
@@ -139,7 +139,7 @@ public class AccountConstants {
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName END_SESSION_REQUEST = QName.get(E_END_SESSION_REQUEST, NAMESPACE);
     public static final QName END_SESSION_RESPONSE = QName.get(E_END_SESSION_RESPONSE, NAMESPACE);
-    
+
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
     public static final QName GET_PREFS_RESPONSE = QName.get(E_GET_PREFS_RESPONSE, NAMESPACE);
@@ -168,7 +168,7 @@ public class AccountConstants {
     public static final QName MODIFY_ZIMLET_PREFS_REQUEST = QName.get(E_MODIFY_ZIMLET_PREFS_REQUEST, NAMESPACE);
     public static final QName MODIFY_ZIMLET_PREFS_RESPONSE = QName.get(E_MODIFY_ZIMLET_PREFS_RESPONSE, NAMESPACE);
 
-    // GAL    
+    // GAL
     public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get(E_AUTO_COMPLETE_GAL_REQUEST, NAMESPACE);
     public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get(E_AUTO_COMPLETE_GAL_RESPONSE, NAMESPACE);
     public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST = QName.get(E_SEARCH_CALENDAR_RESOURCES_REQUEST, NAMESPACE);
@@ -177,7 +177,7 @@ public class AccountConstants {
     public static final QName SEARCH_GAL_RESPONSE = QName.get(E_SEARCH_GAL_RESPONSE, NAMESPACE);
     public static final QName SYNC_GAL_REQUEST = QName.get(E_SYNC_GAL_REQUEST, NAMESPACE);
     public static final QName SYNC_GAL_RESPONSE = QName.get(E_SYNC_GAL_RESPONSE, NAMESPACE);
-    
+
     // identities
     public static final QName CREATE_IDENTITY_REQUEST = QName.get(E_CREATE_IDENTITY_REQUEST, NAMESPACE);
     public static final QName CREATE_IDENTITY_RESPONSE = QName.get(E_CREATE_IDENTITY_RESPONSE, NAMESPACE);
@@ -211,7 +211,7 @@ public class AccountConstants {
     public static final QName GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE = QName.get(E_GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE, NAMESPACE);
     public static final QName SUBSCRIBE_DISTRIBUTION_LIST_REQUEST = QName.get(E_SUBSCRIBE_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE = QName.get(E_SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
-    
+
     // rights
     public static final QName CHECK_RIGHTS_REQUEST = QName.get(E_CHECK_RIGHTS_REQUEST, NAMESPACE);
     public static final QName CHECK_RIGHTS_RESPONSE = QName.get(E_CHECK_RIGHTS_RESPONSE, NAMESPACE);
@@ -223,11 +223,11 @@ public class AccountConstants {
     public static final QName GRANT_RIGHTS_RESPONSE = QName.get(E_GRANT_RIGHTS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_RIGHTS_REQUEST = QName.get(E_REVOKE_RIGHTS_REQUEST, NAMESPACE);
     public static final QName REVOKE_RIGHTS_RESPONSE = QName.get(E_REVOKE_RIGHTS_RESPONSE, NAMESPACE);
-    
+
     // system
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
-    
+
     // SMIME
     public static final QName GET_SMIME_PUBLIC_CERTS_REQUEST = QName.get(E_GET_SMIME_PUBLIC_CERTS_REQUEST, NAMESPACE);
     public static final QName GET_SMIME_PUBLIC_CERTS_RESPONSE = QName.get(E_GET_SMIME_PUBLIC_CERTS_RESPONSE, NAMESPACE);
@@ -235,7 +235,7 @@ public class AccountConstants {
     // profile
     public static final QName UPDATE_PROFILE_REQUEST = QName.get(E_UPDATE_PROFILE_REQUEST, NAMESPACE);
     public static final QName UPDATE_PROFILE_RESPONSE = QName.get(E_UPDATE_PROFILE_RESPONSE, NAMESPACE);
-    
+
     // ZimbraLicenseExtension - LicenseService
     public static final QName CHECK_LICENSE_REQUEST = QName.get(E_CHECK_LICENSE_REQUEST, NAMESPACE);
     public static final QName CHECK_LICENSE_RESPONSE = QName.get(E_CHECK_LICENSE_RESPONSE, NAMESPACE);
@@ -313,7 +313,7 @@ public class AccountConstants {
     public static final String E_SHARE = "share";
     public static final String E_CONTACT_ID = "cid";
     public static final String E_STORE = "store";
-    
+
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
     public static final String A_ADDR = "addr";
@@ -363,7 +363,7 @@ public class AccountConstants {
     public static final String A_SMIME_SOURCE_LOOKUP_OPT = "sourceLookupOpt";
     public static final String A_VIA = "via";
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
-    
+
     // account ACLs
     public static final String A_ACCESSKEY = "key";
     public static final String A_ALLOW = "allow";
@@ -382,7 +382,7 @@ public class AccountConstants {
     public static final String E_RIGHTS = "rights";
     public static final String E_TARGET = "target";
     public static final String E_TARGETS = "targets";
-    
+
     // gal
     public static final String A_IS_GROUP = "isGroup";
     public static final String A_EXP = "exp";
@@ -391,11 +391,12 @@ public class AccountConstants {
     public static final String A_GAL_ACCOUNT_ID = "galAcctId";
     public static final String A_GAL_ACCOUNT_PROXIED = "galAcctProxied";
     public static final String A_PAGINATION_SUPPORTED = "paginationSupported";
-    public static final String A_OFFSET_INTERNAL = "_offset"; // for server internal use only 
-    public static final String A_LIMIT_INTERNAL = "_limit";   // for serer internal use only 
-    
+    public static final String A_OFFSET_INTERNAL = "_offset"; // for server internal use only
+    public static final String A_LIMIT_INTERNAL = "_limit";   // for serer internal use only
+
     // share info
     public static final String A_FOLDER_ID = "folderId";
+    public static final String A_FOLDER_UUID = "folderUuid";
     public static final String A_FOLDER_PATH = "folderPath";
     public static final String A_GRANTEE_ID = "granteeId";
     public static final String A_GRANTEE_NAME = "granteeName";
@@ -425,14 +426,14 @@ public class AccountConstants {
     public static final String A_VERSION_INFO_RELEASE = "release";
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
-    
+
     // XMPPComponent APIs
     public static final String E_XMPP_COMPONENT = "xmppcomponent";
-    
+
     // upload limits
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
-    
+
     public static final String E_PROFILE = "profile";
     public static final String A_IMAGE = "image";
 }

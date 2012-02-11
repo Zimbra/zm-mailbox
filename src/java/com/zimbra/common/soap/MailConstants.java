@@ -796,6 +796,7 @@ public final class MailConstants {
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
+    public static final String A_REMOTE_UUID = "ruuid";
     public static final String A_OWNER_NAME = "owner";
     public static final String A_OWNER_FOLDER_NAME = "oname";
 

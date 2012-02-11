@@ -208,7 +208,7 @@ public final class ZimbraLog {
      * the "zimbra.autoprov" logger. For account auto provision related events.
      */
     public static final Log autoprov = LogFactory.getLog("zimbra.autoprov");
-    
+
     /**
      * the "zimbra.gal" logger. For gal-related events.
      */
@@ -396,11 +396,16 @@ public final class ZimbraLog {
 
 
     public static final Log nginxlookup = LogFactory.getLog("zimbra.nginxlookup");
-    
+
     /**
      * the "zimbra.contact" logger.  Logs contact operations.
      */
     public static final Log contact = LogFactory.getLog("zimbra.contact");
+
+    /**
+     * the "zimbra.share" logger.  Logs share operations.
+     */
+    public static final Log share = LogFactory.getLog("zimbra.share");
 
 
     /**

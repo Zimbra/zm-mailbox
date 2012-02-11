@@ -432,6 +432,12 @@ public final class LC {
     public static final KnownKey ldap_cache_cos_maxage = KnownKey.newKey(15);
 
     @Supported
+    public static final KnownKey ldap_cache_share_locator_maxsize = KnownKey.newKey(5000);
+
+    @Supported
+    public static final KnownKey ldap_cache_share_locator_maxage = KnownKey.newKey(15);
+
+    @Supported
     public static final KnownKey ldap_cache_domain_maxsize = KnownKey.newKey(100);
 
     @Supported
