@@ -54,6 +54,13 @@ public class ShareInfo {
     private int folderId;
 
     /**
+     * @zm-api-field-tag share-folder-uuid
+     * @zm-api-field-description Folder UUID
+     */
+    @XmlAttribute(name=AccountConstants.A_FOLDER_UUID /* folderUuid */, required=true)
+    private String folderUuid;
+
+    /**
      * @zm-api-field-tag share-fully-qualified-path
      * @zm-api-field-description Fully qualified path
      */
@@ -132,6 +139,10 @@ public class ShareInfo {
     public void setFolderId(int folderId) { this.folderId = folderId; }
 
     public int getFolderId() { return folderId; }
+
+    public void setFolderUuid(String folderUuid) { this.folderUuid = folderUuid; }
+
+    public String getFolderUuid() { return folderUuid; }
 
     public void setFolderPath(String folderPath) {
         this.folderPath = folderPath;

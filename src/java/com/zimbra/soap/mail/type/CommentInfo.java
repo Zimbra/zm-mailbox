@@ -15,10 +15,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +26,9 @@ import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -41,6 +40,9 @@ public class CommentInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
+
+    @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=false)
+    private String uuid;
 
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
     private String creatorEmail;
@@ -78,6 +80,7 @@ public class CommentInfo {
 
     public void setParentId(String parentId) { this.parentId = parentId; }
     public void setId(String id) { this.id = id; }
+    public void setUuid(String uuid) { this.uuid = uuid; }
     public void setCreatorEmail(String creatorEmail) { this.creatorEmail = creatorEmail; }
     public void setFlags(String flags) { this.flags = flags; }
     @Deprecated
@@ -99,6 +102,7 @@ public class CommentInfo {
 
     public String getParentId() { return parentId; }
     public String getId() { return id; }
+    public String getUuid() { return uuid; }
     public String getCreatorEmail() { return creatorEmail; }
     public String getFlags() { return flags; }
     @Deprecated
@@ -112,7 +116,7 @@ public class CommentInfo {
     }
 
     // non-JAXB method
-    public void setText(String text) { 
+    public void setText(String text) {
         if (elements == null)
             elements = Lists.newArrayList();
         // note that remove in foreach would be unsafe.
@@ -125,7 +129,7 @@ public class CommentInfo {
     }
 
     // non-JAXB method
-    public String getText() { 
+    public String getText() {
         if (elements == null)
             return null;
         StringBuilder sb = new StringBuilder();
@@ -171,6 +175,7 @@ public class CommentInfo {
         return helper
             .add("parentId", parentId)
             .add("id", id)
+            .add("uuid", uuid)
             .add("creatorEmail", creatorEmail)
             .add("flags", flags)
             .add("tags", tags)

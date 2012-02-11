@@ -15,11 +15,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -27,6 +27,9 @@ public class LinkInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
+
+    @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=true)
+    private final String uuid;
 
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private final String name;
@@ -42,17 +45,19 @@ public class LinkInfo {
      */
     @SuppressWarnings("unused")
     private LinkInfo() {
-        this((String) null, (String) null, (String) null, (String) null);
+        this((String) null, (String) null, (String) null, (String) null, (String) null);
     }
 
-    public LinkInfo(String id, String name, String defaultView, String rights) {
+    public LinkInfo(String id, String uuid, String name, String defaultView, String rights) {
         this.id = id;
+        this.uuid = uuid;
         this.name = name;
         this.defaultView = defaultView;
         this.rights = rights;
     }
 
     public String getId() { return id; }
+    public String getUuid() { return uuid; }
     public String getName() { return name; }
     public String getDefaultView() { return defaultView; }
     public String getRights() { return rights; }
@@ -61,6 +66,7 @@ public class LinkInfo {
                 Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
+            .add("uuid", uuid)
             .add("name", name)
             .add("defaultView", defaultView)
             .add("rights", rights);

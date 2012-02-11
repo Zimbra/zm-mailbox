@@ -2,21 +2,18 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.soap.mail.type;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +31,8 @@ import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -96,6 +95,9 @@ public class Folder {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
+
+    @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=true)
+    private String uuid;
 
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
@@ -170,7 +172,7 @@ public class Folder {
         @XmlElement(name="search", type=SearchFolder.class)
     })
     private List<Folder> subfolders = new ArrayList<Folder>();
-    
+
     @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
     private RetentionPolicy retentionPolicy;
 
@@ -178,6 +180,7 @@ public class Folder {
     }
 
     public String getId() { return id; }
+    public String getUuid() { return uuid; }
     public String getName() { return name; }
     public String getParentId() { return parentId; }
     public String getFlags() { return flags; }
@@ -219,9 +222,10 @@ public class Folder {
     public Integer getImapModifiedSequence() { return imapModifiedSequence; }
     public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
     public Boolean getRecursive() { return ZmBoolean.toBool(recursive); }
-    
+
     public void setId(String id) { this.id = id; }
     public void setId(int id) { this.id = Integer.toString(id); }
+    public void setUuid(String id) { this.uuid = id; }
     public void setName(String name) { this.name = name; }
     public void setParentId(String parentId) { this.parentId = parentId; }
     public void setFlags(String flags) { this.flags = flags; }

@@ -15,10 +15,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +25,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -38,6 +37,9 @@ public class CommonDocumentInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
+
+    @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=false)
+    private String uuid;
 
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
@@ -110,6 +112,7 @@ public class CommonDocumentInfo {
     }
 
     public void setId(String id) { this.id = id; }
+    public void setUuid(String uuid) { this.uuid = uuid; }
     public void setName(String name) { this.name = name; }
     public void setSize(Long size) { this.size = size; }
     public void setDate(Long date) { this.date = date; }
@@ -164,6 +167,7 @@ public class CommonDocumentInfo {
     }
 
     public String getId() { return id; }
+    public String getUuid() { return uuid; }
     public String getName() { return name; }
     public Long getSize() { return size; }
     public Long getDate() { return date; }
@@ -194,6 +198,7 @@ public class CommonDocumentInfo {
                 Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
+            .add("uuid", uuid)
             .add("name", name)
             .add("size", size)
             .add("date", date)
