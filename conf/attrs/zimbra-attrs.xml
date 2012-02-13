@@ -6837,7 +6837,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1373" name="zimbraFeatureExternalFeedbackEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
+<attr id="1373" name="zimbraFeatureExternalFeedbackEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether external feedback feature is enabled</desc>
 </attr>
