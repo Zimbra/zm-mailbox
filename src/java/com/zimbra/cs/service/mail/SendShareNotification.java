@@ -131,8 +131,8 @@ public class SendShareNotification extends MailDocumentHandler {
         for (EmailAddrInfo email : req.getEmailAddresses()) {
             // treat the non-existing accounts as guest for now
             Pair<NamedEntry, String> grantee;
-            boolean internalGrantee = false;
-            byte granteeType = ACL.GRANTEE_GUEST;
+            boolean internalGrantee = true;
+            byte granteeType = ACL.GRANTEE_USER;
             String granteeId = null;
             String granteeEmail = email.getAddress();
             String granteeDisplayName = null;
@@ -141,10 +141,14 @@ public class SendShareNotification extends MailDocumentHandler {
                 NamedEntry entry = grantee.getFirst();
                 if (entry instanceof MailTarget &&
                         StringUtil.equal(((MailTarget) entry).getDomainName(), mbox.getAccount().getDomainName())) {
-                    internalGrantee = true;
-                    granteeType = entry instanceof Group ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                    if (entry instanceof Group) {
+                        granteeType = ACL.GRANTEE_GROUP;
+                    }
                     granteeId = entry.getId();
                     granteeDisplayName = grantee.getSecond();
+                } else {
+                    // grantee is not in the same domain as the grantor
+                    internalGrantee = false;
                 }
             } catch (ServiceException e) {
                 if (!e.getCode().equals(MailServiceException.NO_SUCH_GRANTEE)) {
@@ -152,6 +156,7 @@ public class SendShareNotification extends MailDocumentHandler {
                 }
             }
             if (!internalGrantee) {
+                granteeType = ACL.GRANTEE_GUEST;
                 // if guest, granteeId is the same as granteeEmail
                 granteeId = granteeEmail;
             }
