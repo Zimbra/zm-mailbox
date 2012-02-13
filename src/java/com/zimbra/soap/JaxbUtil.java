@@ -447,6 +447,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.AutoCompleteGalResponse.class,
             com.zimbra.soap.admin.message.AutoProvAccountRequest.class,
             com.zimbra.soap.admin.message.AutoProvAccountResponse.class,
+            com.zimbra.soap.admin.message.AutoProvTaskControlRequest.class,
+            com.zimbra.soap.admin.message.AutoProvTaskControlResponse.class,
             com.zimbra.soap.admin.message.BackupAccountQueryRequest.class,
             com.zimbra.soap.admin.message.BackupAccountQueryResponse.class,
             com.zimbra.soap.admin.message.BackupQueryRequest.class,
