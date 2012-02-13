@@ -1346,6 +1346,10 @@ public class SoapSession extends Session {
 
     protected static final String A_ID = "id";
 
+    private boolean encodingMatches(Element parent, Element newChild) {
+        return parent.getClass().equals(newChild.getClass());
+    }
+
     /** Write a single instance of the PendingModifications structure into the
      *  passed-in <ctxt> block. */
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
@@ -1408,7 +1412,11 @@ public class SoapSession extends Session {
                     ZimbraLog.session.debug("adding %d proxied creates", rns.created.size());
                 }
                 for (Element elt : rns.created) {
-                    eCreated.addElement(elt.clone().detach());
+                    if (encodingMatches(parent, elt)) {
+                        eCreated.addElement(elt.clone().detach());
+                    } else {
+                        ZimbraLog.session.warn("unable to add remote notification due to mismatched SOAP protocol");
+                    }
                 }
             }
         }
@@ -1450,7 +1458,11 @@ public class SoapSession extends Session {
                     ZimbraLog.session.debug("adding %d proxied modifies", rns.modified.size());
                 }
                 for (Element elt : rns.modified) {
-                    eModified.addElement(elt.clone().detach());
+                    if (encodingMatches(parent, elt)) {
+                        eModified.addElement(elt.clone().detach());
+                    } else {
+                        ZimbraLog.session.warn("unable to add remote notification due to mismatched SOAP protocol");
+                    }
                 }
             }
         }
