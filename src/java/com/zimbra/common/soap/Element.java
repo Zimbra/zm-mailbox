@@ -664,6 +664,7 @@ public abstract class Element implements Cloneable {
                 return elt;
             else if (elt.mParent != null)
                 throw new ContainerException("element already has a parent");
+            assert(elt instanceof JSONElement);
 
             String name = elt.getName();
             Object obj = mAttributes.get(name);
@@ -1234,7 +1235,7 @@ public abstract class Element implements Cloneable {
                 throw new ContainerException("element already has a parent");
             else if (mText != null)
                 throw new ContainerException("cannot add children to element containing text");
-
+            assert(elt instanceof XMLElement);
             if (mChildren == null)
                 mChildren = new ArrayList<Element>();
             mChildren.add(elt);
