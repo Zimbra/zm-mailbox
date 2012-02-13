@@ -450,6 +450,8 @@ public final class AdminConstants {
     // Auto Provision
     public static final String E_AUTO_PROV_ACCOUNT_REQUEST = "AutoProvAccountRequest";
     public static final String E_AUTO_PROV_ACCOUNT_RESPONSE = "AutoProvAccountResponse";
+    public static final String E_AUTO_PROV_TASK_CONTROL_REQUEST = "AutoProvTaskControlRequest";
+    public static final String E_AUTO_PROV_TASK_CONTROL_RESPONSE = "AutoProvTaskControlResponse";
     public static final String E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST = "SearchAutoProvDirectoryRequest";
     public static final String E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = "SearchAutoProvDirectoryResponse";
 
@@ -890,6 +892,8 @@ public final class AdminConstants {
     // Auto provision
     public static final QName AUTO_PROV_ACCOUNT_REQUEST = QName.get(E_AUTO_PROV_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName AUTO_PROV_ACCOUNT_RESPONSE = QName.get(E_AUTO_PROV_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName AUTO_PROV_TASK_CONTROL_REQUEST = QName.get(E_AUTO_PROV_TASK_CONTROL_REQUEST, NAMESPACE);
+    public static final QName AUTO_PROV_TASK_CONTROL_RESPONSE = QName.get(E_AUTO_PROV_TASK_CONTROL_RESPONSE, NAMESPACE);
     public static final QName SEARCH_AUTO_PROV_DIRECTORY_REQUEST = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST, NAMESPACE);
     public static final QName SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE, NAMESPACE);
 
