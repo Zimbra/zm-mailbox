@@ -912,6 +912,7 @@ public abstract class Element implements Cloneable {
             } else if (elt.mParent != null) {
                 throw new ContainerException("element already has a parent");
             }
+            assert(elt instanceof JSONElement);
             String name = elt.getName();
             Object obj = mAttributes.get(name);
             if (obj instanceof Element) {
@@ -1621,7 +1622,7 @@ public abstract class Element implements Cloneable {
                         "cannot add children to element containing text - <" +
                         this.getName() + ">, trying to add <" + elt.getName() + ">");
             }
-
+            assert(elt instanceof XMLElement);
             if (mChildren == null) {
                 mChildren = new ArrayList<Element>();
             }
