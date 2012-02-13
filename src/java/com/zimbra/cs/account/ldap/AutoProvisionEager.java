@@ -103,13 +103,12 @@ public class AutoProvisionEager extends AutoProvision {
                     + domain.getName(), null);
         }
 
-        if (!lockDomain(zlc)) {
-            ZimbraLog.autoprov.info("EAGER auto provision unable to lock domain: skip domain " +
-                    domain.getName() + " on server " + prov.getLocalServer().getName());
-            return;
-        }
-
         try {
+            if (!lockDomain(zlc)) {
+                ZimbraLog.autoprov.info("EAGER auto provision unable to lock domain: skip domain " +
+                        domain.getName() + " on server " + prov.getLocalServer().getName());
+                return;
+            }
             createAccountBatch();
         } finally {
             unlockDomain(zlc);
@@ -193,6 +192,10 @@ public class AutoProvisionEager extends AutoProvision {
         attrs.put(Provisioning.A_zimbraAutoProvLock, "");
         
         prov.getHelper().modifyAttrs(zlc, ((LdapEntry)domain).getDN(), attrs, domain);
+        
+        // need to refresh the domain entry, because this modify is not done via the normal 
+        // LdapProvisioning.modifyAttr path.  
+        prov.reload(domain, true);
     }
     
     private boolean searchAccounts(final List<ExternalEntry> entries) 

@@ -2606,7 +2606,32 @@ Notes:
   more-flag = true if more entries left to return
   search-total = total number of accounts that matched search (not affected by limit/offset)
 
+-----------------------------
+<AutoProvTaskControlRequest action="start|status|stop">
+</AutoProvTaskControlRequest>
 
+<AutoProvTaskControlResponse status="started|running|idle|stopped">
+</AutoProvTaskControlResponse>
+
+Under normal situations, the EAGER auto provisioning task(thread) should be started/stopped 
+automatically by the server when appropriate.  The task should be running when 
+zimbraAutoProvPollingInterval is not 0 and zimbraAutoProvScheduledDomains is not empty.  
+The task should be stopped otherwise.
+ 
+This API is to manually force start/stop or query status of the EAGER auto provisioning task. 
+It is only for diagnosis purpose and should not be used under normal situations.
+
+  action start - start EAGER auto provisioning task
+    status started - success
+    status running - EAGER auto provisioning task is already running
+  action status - show EAGER auto provisioning task status
+    status running - EAGER auto provisioning task is running
+    status idle - EAGER auto provisioning task is not running
+  action stop - stop EAGER auto provisioning task
+    status stopped - success
+    status idle - EAGER auto provisioning task is not running
+
+   
 -----------------------------
 
 The system retention policy SOAP APIs allow the administrator to edit

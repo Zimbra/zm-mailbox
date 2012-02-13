@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Set;
+
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -90,6 +92,22 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
             } else {
                 ZimbraLog.autoprov.debug("shutdown() called, but auto provision thread is not running.");
             }
+        }
+    }
+    
+    public synchronized static void switchAutoProvThreadIfNecessary() throws ServiceException {
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        
+        long interval = localServer.getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 0);
+        Set<String> scheduledDomains = 
+            localServer.getMultiAttrSet(Provisioning.A_zimbraAutoProvScheduledDomains);
+        
+        boolean needRunning = interval > 0 && !scheduledDomains.isEmpty();
+        
+        if (needRunning && !AutoProvisionThread.isRunning()) {
+            AutoProvisionThread.startup();
+        } else if (!needRunning && AutoProvisionThread.isRunning()) {
+            AutoProvisionThread.shutdown();
         }
     }
     

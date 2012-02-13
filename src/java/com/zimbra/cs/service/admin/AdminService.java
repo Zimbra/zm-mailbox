@@ -121,6 +121,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, new GetDistributionListMembership());
         
         dispatcher.registerHandler(AdminConstants.AUTO_PROV_ACCOUNT_REQUEST, new AutoProvAccount());
+        dispatcher.registerHandler(AdminConstants.AUTO_PROV_TASK_CONTROL_REQUEST, new AutoProvTaskControl());
         dispatcher.registerHandler(AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_REQUEST, new SearchAutoProvDirectory());
 
         dispatcher.registerHandler(AdminConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());

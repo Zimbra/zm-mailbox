@@ -71,5 +71,10 @@ public class Server extends ZAttrServer {
     public boolean hasMailboxService() {
         return getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
     }
+    
+    public boolean isLocalServer() throws ServiceException {
+        Server localServer = getProvisioning().getLocalServer();
+        return getId() != null && getId().equals(localServer.getId());
+    }
 
 }

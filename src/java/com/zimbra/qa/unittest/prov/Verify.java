@@ -17,12 +17,14 @@ package com.zimbra.qa.unittest.prov;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.zimbra.cs.account.NamedEntry;
 
 public class Verify {
@@ -156,6 +158,11 @@ public class Verify {
         }
     }
     
+    public static void verifyEquals(Set<String> expected, String[] actual) 
+    throws Exception {
+        verifyEquals(expected, Sets.newHashSet(Arrays.asList(actual)));
+    }
+    
     public static void verifyEquals(List<String> expected, List<String> actual) 
     throws Exception {
         try {
@@ -168,6 +175,11 @@ public class Verify {
             dump(e, expected, actual);
             throw e;
         }
+    }
+    
+    public static void verifyEquals(List<String> expected, String[] actual) 
+    throws Exception {
+        verifyEquals(expected, Arrays.asList(actual));
     }
     
     private static void dump(AssertionError e, Collection<String> expected, Collection<String> actual) {

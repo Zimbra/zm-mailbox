@@ -258,7 +258,7 @@ public final class Zimbra {
             }
 
             if (app.supports(AutoProvisionThread.class.getName())) {
-                AutoProvisionThread.startup();
+                AutoProvisionThread.switchAutoProvThreadIfNecessary();
             }
 
             if (LC.smtp_to_lmtp_enabled.booleanValue()) {

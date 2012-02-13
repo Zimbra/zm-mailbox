@@ -16,17 +16,62 @@ package com.zimbra.qa.unittest.prov;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.AutoProvisionListener;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZMutableEntry;
 
 public class AutoProvisionTestUtil {
+
+    /**
+     * A AutoProvisionListener that marks entry "provisioned" in the external directory
+     *
+     */
+    public static class MarkEntryProvisionedListener implements AutoProvisionListener {
+        private static final String PROVED_INDICATOR_ATTR = Provisioning.A_zimbraNotes;
+        private static final String PROVED_NOTE = "PROVISIONED IN ZIMBRA";
+        public static final String NOT_PROVED_FILTER = "(!(" + PROVED_INDICATOR_ATTR + "=" + PROVED_NOTE + "))";
+        
+        public MarkEntryProvisionedListener() {
+        }
+        
+        @Override
+        public void postCreate(Domain domain, Account acct, String externalDN) {
+            Map<String, Object> attrs = Maps.newHashMap();
+            attrs.put(PROVED_INDICATOR_ATTR, PROVED_NOTE);
+            try {
+                modifyExternalAcctEntry(externalDN, attrs);
+            } catch (Exception e) {
+                fail();
+            }
+        }
+        
+        private void modifyExternalAcctEntry(String externalDN, Map<String, Object> extAcctAttrs) 
+        throws Exception {
+            ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
+            try {
+                ZMutableEntry entry = LdapClient.createMutableEntry();
+                entry.mapToAttrs(extAcctAttrs);
+                zlc.replaceAttributes(externalDN, entry.getAttributes());
+            } finally {
+                LdapClient.closeContext(zlc);
+            }
+        }
+    }
 
     public static Map<String, Object> commonZimbraDomainAttrs() {
         Map<String, Object> zimbraDomainAttrs = new HashMap<String, Object>();

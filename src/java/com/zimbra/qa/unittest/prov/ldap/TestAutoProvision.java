@@ -24,7 +24,6 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 
-import com.google.common.collect.Maps;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -37,12 +36,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.AutoProvisionListener;
 import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
-import com.zimbra.cs.ldap.ZLdapContext;
-import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.AutoProvisionTestUtil;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
@@ -94,18 +88,6 @@ public class TestAutoProvision extends LdapTest {
         extAcctAttrs.put(Provisioning.A_sn, "last name");
         Account extAcct = prov.createAccount(extAcctName, externalPassword, extAcctAttrs);
         return extAcctName;
-    }
-    
-    private static void modifyExternalAcctEntry(String externalDN, Map<String, Object> extAcctAttrs) 
-    throws Exception {
-        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
-        try {
-            ZMutableEntry entry = LdapClient.createMutableEntry();
-            entry.mapToAttrs(extAcctAttrs);
-            zlc.replaceAttributes(externalDN, entry.getAttributes());
-        } finally {
-            LdapClient.closeContext(zlc);
-        }
     }
     
     private String externalEntryDN(String externalEntryLocalPart) {
@@ -175,31 +157,6 @@ public class TestAutoProvision extends LdapTest {
             return instance;
         }
     }
-    
-    /**
-     * A AutoProvisionListener that marks entry "provisioned" in the external directory
-     *
-     */
-    public static class MarkEntryProvisionedListener implements AutoProvisionListener {
-        private static final String PROVED_INDICATOR_ATTR = Provisioning.A_zimbraNotes;
-        private static final String PROVED_NOTE = "PROVISIONIN IN ZIMBRA";
-        private static final String NOT_PROVED_FILTER = "(!(" + PROVED_INDICATOR_ATTR + "=" + PROVED_NOTE + "))";
-        
-        public MarkEntryProvisionedListener() {
-        }
-        
-        @Override
-        public void postCreate(Domain domain, Account acct, String externalDN) {
-            Map<String, Object> attrs = Maps.newHashMap();
-            attrs.put(PROVED_INDICATOR_ATTR, PROVED_NOTE);
-            try {
-                modifyExternalAcctEntry(externalDN, attrs);
-            } catch (Exception e) {
-                fail();
-            }
-        }
-    }
-
     
     @Test
     public void lazyModeListener() throws Exception {
@@ -488,7 +445,7 @@ public class TestAutoProvision extends LdapTest {
         // setup auto prov
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, 
-                "(&(uid=%u)(mail=eagerMode*)" + MarkEntryProvisionedListener.NOT_PROVED_FILTER + ")");
+                "(&(uid=%u)(mail=eagerMode*)" + AutoProvisionTestUtil.MarkEntryProvisionedListener.NOT_PROVED_FILTER + ")");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, Provisioning.A_uid);
         
         // set batch size to a smaller number then num account matching the filter, 
@@ -496,7 +453,7 @@ public class TestAutoProvision extends LdapTest {
         int batchSize = totalAccts - 1;
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.valueOf(batchSize).toString());
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvListenerClass, 
-                MarkEntryProvisionedListener.class.getName());
+                AutoProvisionTestUtil.MarkEntryProvisionedListener.class.getName());
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                 
         // schedule the domain on local server
