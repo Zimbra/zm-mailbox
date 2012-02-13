@@ -43,8 +43,11 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
@@ -128,22 +131,27 @@ public class SendShareNotification extends MailDocumentHandler {
         for (EmailAddrInfo email : req.getEmailAddresses()) {
             // treat the non-existing accounts as guest for now
             Pair<NamedEntry, String> grantee;
-            byte granteeType = ACL.GRANTEE_USER;
+            boolean internalGrantee = false;
+            byte granteeType = ACL.GRANTEE_GUEST;
             String granteeId = null;
             String granteeEmail = email.getAddress();
             String granteeDisplayName = null;
             try {
                 grantee = getGrantee(zsc, granteeType, granteeId, granteeEmail);
-                if (grantee.getFirst() instanceof com.zimbra.cs.account.Group) {
-                    granteeType = ACL.GRANTEE_GROUP;
+                NamedEntry entry = grantee.getFirst();
+                if (entry instanceof MailTarget &&
+                        StringUtil.equal(((MailTarget) entry).getDomainName(), mbox.getAccount().getDomainName())) {
+                    internalGrantee = true;
+                    granteeType = entry instanceof Group ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                    granteeId = entry.getId();
+                    granteeDisplayName = grantee.getSecond();
                 }
-                granteeId = grantee.getFirst().getId();
-                granteeDisplayName = grantee.getSecond();
             } catch (ServiceException e) {
                 if (!e.getCode().equals(MailServiceException.NO_SUCH_GRANTEE)) {
                     throw e;
                 }
-                granteeType = ACL.GRANTEE_GUEST;
+            }
+            if (!internalGrantee) {
                 // if guest, granteeId is the same as granteeEmail
                 granteeId = granteeEmail;
             }
