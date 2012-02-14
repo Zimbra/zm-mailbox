@@ -150,17 +150,19 @@ public class CalendarMailSender {
 
         boolean hidePrivate = !calItem.isPublic() && !calItem.allowPrivateAccess(authAccount, asAdmin);
         String subject;
-        if (hidePrivate)
+        if (hidePrivate) {
             subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
-        else
+        } else {
             subject = inv.getName();
+        }
         StringBuilder sb = new StringBuilder("Organizer has been changed to " + fromAccount.getName());
         sb.append("\r\n\r\n");
 
         if (!hidePrivate) {
             MimeMessage mmInv = inv.getMimeMessage();
-            if (mmInv != null)
+            if (mmInv != null) {
                 attachInviteSummary(sb, inv, mmInv, locale);
+            }
         }
 
         ZVCalendar iCal = inv.newToICalendar(true);
@@ -174,7 +176,7 @@ public class CalendarMailSender {
                 throw MailServiceException.ADDRESS_PARSE_ERROR(e);
             }
         }
-        return createCalendarMessage(from, sender, rcpts, subject, sb.toString(), null, inv.getUid(), iCal);
+        return createCalendarMessage(authAccount, from, sender, rcpts, subject, sb.toString(), null, inv.getUid(), iCal);
     }
 
     public static MimeMessage createDefaultReply(Account fromAccount, Account authAccount, boolean asAdmin,
@@ -260,7 +262,7 @@ public class CalendarMailSender {
         Address senderAddr = null;
         if (onBehalfOf)
             senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
-        return createCalendarMessage(AccountUtil.getFriendlyEmailAddress(fromAccount),
+        return createCalendarMessage(authAccount, AccountUtil.getFriendlyEmailAddress(fromAccount),
                 senderAddr, toList, replySubject, replyText.toString(), null, inv.getUid(), iCal);
     }
 
@@ -365,7 +367,7 @@ public class CalendarMailSender {
             sender = AccountUtil.getFriendlyEmailAddress(senderAccount);
 
         return createCalendarMessage(
-                from, sender, toAddrs, sbj, sb.toString(), null,
+                senderAccount, from, sender, toAddrs, sbj, sb.toString(), null,
                 defaultInv != null ? defaultInv.getUid() : "unknown", iCal);
     }
 
@@ -376,26 +378,26 @@ public class CalendarMailSender {
         String descHtml = inv.getDescriptionHtml();
         String uid = inv.getUid();
         ZVCalendar cal = inv.newToICalendar(true);
-        return createCalendarMessage(null, null, null, subject, desc, descHtml, uid, cal);
+        return createCalendarMessage(null, null, null, null, subject, desc, descHtml, uid, cal);
     }
 
     public static MimeMessage createCalendarMessage(
-            Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            Account account, Address fromAddr, Address senderAddr, List<Address> toAddrs,
             String subject, String desc, String descHtml,
             String uid, ZCalendar.ZVCalendar cal)
     throws ServiceException {
-        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal, true);
+        return createCalendarMessage(account, fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal, true);
     }
 
     public static MimeMessage createCalendarMessage(
-            Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            Account account, Address fromAddr, Address senderAddr, List<Address> toAddrs,
             String subject, String desc, String descHtml,
             String uid, ZCalendar.ZVCalendar cal, boolean replyToSender)
     throws ServiceException {
         if (desc == null)
             desc = "";
         try {
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
 
             MimeMultipart mmp = new ZMimeMultipart("alternative");
             mm.setContent(mmp);
@@ -431,8 +433,9 @@ public class CalendarMailSender {
 
             // ///////
             // MESSAGE HEADERS
-            if (subject != null)
+            if (subject != null) {
                 mm.setSubject(subject, MimeConstants.P_CHARSET_UTF8);
+            }
 
             if (toAddrs != null) {
                 Address[] addrs = new Address[toAddrs.size()];
@@ -443,8 +446,9 @@ public class CalendarMailSender {
                 mm.setFrom(fromAddr);
             if (senderAddr != null) {
                 mm.setSender(senderAddr);
-                if (replyToSender)
+                if (replyToSender) {
                     mm.setReplyTo(new Address[]{senderAddr});
+                }
             }
             mm.setSentDate(new Date());
             mm.saveChanges();
@@ -521,7 +525,7 @@ public class CalendarMailSender {
     }
 
     public static MimeMessage createCalendarMessage(
-            Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            Account account, Address fromAddr, Address senderAddr, List<Address> toAddrs,
             MimeMessage srcMm, Invite inv, ZVCalendar cal,
             boolean replyToSender)
     throws ServiceException {
@@ -569,7 +573,7 @@ public class CalendarMailSender {
                 String subject = inv.getName();
                 String desc = inv.getDescription();
                 String descHtml = inv.getDescriptionHtml();
-                return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal, false);
+                return createCalendarMessage(account, fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal, false);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
@@ -614,7 +618,7 @@ public class CalendarMailSender {
     }
 
     public static MimeMessage createForwardedPrivateInviteMessage(
-            Locale lc, String method, List<Invite> invites, String origSenderEmail, String forwarderEmail, String[] forwardTo)
+            Account account, Locale lc, String method, List<Invite> invites, String origSenderEmail, String forwarderEmail, String[] forwardTo)
     throws ServiceException {
         if (invites == null || invites.isEmpty())
             return null;
@@ -651,7 +655,7 @@ public class CalendarMailSender {
 
         MimeMessage mm = null;
         try {
-            mm = new Mime.FixedMimeMessage(JMSession.getSession());
+            mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
             mm.setFrom(new JavaMailInternetAddress(origSenderEmail));
             mm.addRecipients(RecipientType.TO, rcpts.toArray(new Address[0]));
             // Set special header to indicate the forwarding attendee.
@@ -723,7 +727,7 @@ public class CalendarMailSender {
             senderAddr = AccountUtil.getFriendlyEmailAddress(senderAccount);
         List<Address> toAddrs = new ArrayList<Address>(1);
         toAddrs.add(toAddr);
-        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, text, null, uid, iCal);
+        return createCalendarMessage(senderAccount, fromAddr, senderAddr, toAddrs, subject, text, null, uid, iCal);
     }
 
     public static void sendInviteDeniedMessage(

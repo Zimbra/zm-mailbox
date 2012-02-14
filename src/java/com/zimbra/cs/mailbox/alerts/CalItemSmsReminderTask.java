@@ -14,6 +14,13 @@
  */
 package com.zimbra.cs.mailbox.alerts;
 
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -30,12 +37,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
-
-import javax.mail.internet.MimeMessage;
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  */
@@ -55,7 +56,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         Account account = calItem.getAccount();
         Locale locale = account.getLocale();
         TimeZone tz = ICalTimeZone.getAccountTimeZone(account);
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
         String to = account.getAttr(Provisioning.A_zimbraCalendarReminderDeviceEmail);
         if (to == null) {
             ZimbraLog.scheduler.info("Unable to send calendar reminder sms since %s is not set", Provisioning.A_zimbraCalendarReminderDeviceEmail);

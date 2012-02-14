@@ -336,7 +336,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             os = null;
 
             is = new ZSharedFileInputStream(tempMmFile);
-            csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
+            csd.mMm = new FixedMimeMessage(JMSession.getSmtpSession(acct), is);
         } catch (IOException e) {
             if (tempMmFile != null)
                 tempMmFile.delete();
@@ -433,15 +433,15 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
     private static void insertDeliveryFailureMessage(OperationContext octxt, Mailbox mbox, String subject, Argument[] addressArgs) {
     	try {
-    		MimeMessage failedDeliverymm = new Mime.FixedMimeMessage(JMSession.getSession());
-    		MailUtil.populateFailureDeliveryMessageFields(failedDeliverymm, subject, mbox.getAccount().getName(), addressArgs);
+    	    MimeMessage failedDeliverymm = new Mime.FixedMimeMessage(JMSession.getSession());
+    	    MailUtil.populateFailureDeliveryMessageFields(failedDeliverymm, subject, mbox.getAccount().getName(), addressArgs);
 
-    		Mime.recursiveRepairTransferEncoding(failedDeliverymm);
-    		failedDeliverymm.saveChanges();
+    	    Mime.recursiveRepairTransferEncoding(failedDeliverymm);
+    	    failedDeliverymm.saveChanges();
 
-    		ParsedMessage pm = new ParsedMessage(failedDeliverymm, true);
-    		DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setNoICal(true).setFlags(Flag.BITMASK_UNREAD);
-    		mbox.addMessage(octxt, pm, dopt);
+    	    ParsedMessage pm = new ParsedMessage(failedDeliverymm, true);
+    	    DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setNoICal(true).setFlags(Flag.BITMASK_UNREAD);
+    	    mbox.addMessage(octxt, pm, dopt);
         } catch (Exception e) {
             ZimbraLog.sync.warn("Can't add the partial send failure notice to the user's INBOX " + e);
         }
@@ -612,7 +612,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 } else {
                     rcpts = addedRcpts;
                 }
-                MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
+                MimeMessage mmModify = CalendarMailSender.createCalendarMessage(authAcct, from, sender, rcpts, mmInv, inv, cal, true);
                 CalendarMailSender.sendPartial(octxt, mbox, mmModify, null, null,
                         new ItemId(mbox, inv.getMailItemId()), null, null, false);
             }

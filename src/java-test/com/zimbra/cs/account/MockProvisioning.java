@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,7 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.cs.account.NamedEntry.Visitor;
@@ -37,15 +39,18 @@ import com.zimbra.cs.mime.handler.UnknownTypeHandler;
  */
 public final class MockProvisioning extends Provisioning {
 
-    private final Map<String, Account> id2account = new HashMap<String, Account>();
-    private final Map<String, Account> name2account = new HashMap<String, Account>();
-    private final Map<String, List<MimeTypeInfo>> mimeConfig = new HashMap<String, List<MimeTypeInfo>>();
+    private final Map<String, Account> id2account = Maps.newHashMap();
+    private final Map<String, Account> name2account = Maps.newHashMap();
+
+    private final Map<String, Domain> id2domain = Maps.newHashMap();
+
+    private final Map<String, List<MimeTypeInfo>> mimeConfig = Maps.newHashMap();
     private final Config config = new Config(new HashMap<String, Object>(), this);
     private final Server localhost;
 
     public MockProvisioning() {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraServiceHostname, "localhost");
+        attrs.put(A_zimbraServiceHostname, "localhost");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
     }
 
@@ -265,23 +270,51 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Domain createDomain(String name, Map<String, Object> attrs) {
-        throw new UnsupportedOperationException();
+    public Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException {
+        name = name.trim().toLowerCase();
+        if (get(DomainBy.name, name) != null) {
+            throw AccountServiceException.DOMAIN_EXISTS(name);
+        }
+
+        String id = (String) attrs.get(A_zimbraId);
+        if (id == null) {
+            attrs.put(A_zimbraId, id = UUID.randomUUID().toString());
+        }
+        if (!attrs.containsKey(A_zimbraSmtpHostname)) {
+            attrs.put(A_zimbraSmtpHostname, "localhost");
+        }
+
+        Domain domain = new Domain(name, id, attrs, null, this);
+        id2domain.put(id, domain);
+        return domain;
     }
 
     @Override
     public Domain get(DomainBy keyType, String key) {
-        throw new UnsupportedOperationException();
+        switch (keyType) {
+            case id:
+                return id2domain.get(key);
+
+            case name:
+                for (Domain domain : id2domain.values()) {
+                    if (domain.getName().equals(key)) {
+                        return domain;
+                    }
+                }
+                break;
+        }
+
+        return null;
     }
 
     @Override
     public List<Domain> getAllDomains() {
-        throw new UnsupportedOperationException();
+        return new ArrayList<Domain>(id2domain.values());
     }
 
     @Override
     public void deleteDomain(String zimbraId) {
-        throw new UnsupportedOperationException();
+        id2domain.remove(zimbraId);
     }
 
     @Override

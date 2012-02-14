@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,10 +31,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -56,10 +56,10 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
@@ -68,8 +68,9 @@ public class ScheduleOutbox extends Collection {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_OUTBOX);
 	}
-	
-	public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
+
+	@Override
+    public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
 		String      originator = ctxt.getRequest().getHeader(DavProtocol.HEADER_ORIGINATOR);
 		Enumeration recipients = ctxt.getRequest().getHeaders(DavProtocol.HEADER_RECIPIENT);
 
@@ -220,7 +221,7 @@ public class ScheduleOutbox extends Collection {
             }
         }
     }
-	
+
 	private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy, String originator, String rcpt, Element resp) throws DavException, ServiceException {
 		ZProperty dtstartProp = vfreebusy.getProperty(ICalTok.DTSTART);
 		ZProperty dtendProp = vfreebusy.getProperty(ICalTok.DTEND);
@@ -243,7 +244,7 @@ public class ScheduleOutbox extends Collection {
 		}
 
 		ZimbraLog.dav.debug("rcpt: "+rcpt+", start: "+new Date(start)+", end: "+new Date(end));
-		
+
 		FreeBusy fb = null;
         if (ctxt.isFreebusyEnabled()) {
         	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end, null);
@@ -263,18 +264,20 @@ public class ScheduleOutbox extends Collection {
         }
 	}
 
-    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) throws ServiceException,DavException {
+    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp)
+    throws ServiceException, DavException {
         if (!ctxt.isSchedulingEnabled()) {
             resp.addElement(DavElements.E_RECIPIENT).addElement(DavElements.E_HREF).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.3;No scheduling for the user");
             return;
         }
+
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         InternetAddress from, sender, to;
+        Account target = null;
         try {
             originator = stripMailto(originator);
             sender = new JavaMailInternetAddress(originator);
-            Account target = null;
             Provisioning prov = Provisioning.getInstance();
             if (ctxt.getPathInfo() != null) {
                 target = prov.getAccountByName(ctxt.getPathInfo());
@@ -305,7 +308,7 @@ public class ScheduleOutbox extends Collection {
 
         status = req.getPropVal(ICalTok.STATUS, "");
         method = cal.getPropVal(ICalTok.METHOD, "REQUEST");
-        
+
         if (method.equals("REQUEST")) {
             ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
             if (organizerProp != null) {
@@ -328,7 +331,7 @@ public class ScheduleOutbox extends Collection {
                 subject = "Decline: ";
             }
         }
-        
+
         if (status.equals("CANCELLED"))
             subject = "Cancelled: ";
         subject += req.getPropVal(ICalTok.SUMMARY, "");
@@ -346,7 +349,7 @@ public class ScheduleOutbox extends Collection {
             if ((descHtml == null) || (descHtml.length() == 0))
                 descHtml = friendlyDesc.getAsHtml();
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, sender, recipients, subject, desc, descHtml, uid, cal);
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(target, from, sender, recipients, subject, desc, descHtml, uid, cal);
             mbox.getMailSender().setSendPartial(true).sendMimeMessage(
                 ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, null, false);
         } catch (ServiceException e) {
@@ -357,7 +360,7 @@ public class ScheduleOutbox extends Collection {
         resp.addElement(DavElements.E_RECIPIENT).addElement(DavElements.E_HREF).setText(rcpt);
         resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
     }
-    
+
     /*
      * to workaround the pre release iCal bugs
      */

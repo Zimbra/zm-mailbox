@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -104,12 +104,11 @@ public final class JMSession {
     private static Session getSmtpSession(Domain domain) throws MessagingException {
         Server server;
         String smtpHost = null;
-
         try {
             server = Provisioning.getInstance().getLocalServer();
             smtpHost = getRandomSmtpHost(domain);
         } catch (ServiceException e) {
-            throw new MessagingException("Unable initialize JavaMail session", e);
+            throw new MessagingException("Unable to initialize JavaMail session", e);
         }
         if (smtpHost == null) {
             String msg = "No SMTP hosts available";
@@ -135,11 +134,17 @@ public final class JMSession {
         props.setProperty(SMTP_SEND_PARTIAL_PROPERTY, sendPartial.toString());
         props.setProperty(SMTPS_SEND_PARTIAL_PROPERTY, sendPartial.toString());
 
+        // indirectly hack up the Message-ID value
+        if (domain != null) {
+            props.setProperty("mail.host", domain.getName());
+        }
+
         Session session = Session.getInstance(props);
         setProviders(session);
         if (LC.javamail_smtp_debug.booleanValue()) {
             session.setDebug(true);
         }
+
         return session;
     }
 
@@ -197,7 +202,7 @@ public final class JMSession {
      * @param domain the domain, or <tt>null</tt> to use server settings
      */
     private static String getRandomSmtpHost(Domain domain) throws ServiceException {
-        String[] hosts = getSmtpHostsFromLdap(domain);
+        String[] hosts = lookupSmtpHosts(domain);
         if (hosts.length == 0) {
             return null;
         }
@@ -234,7 +239,7 @@ public final class JMSession {
      */
     public static Set<String> getSmtpHosts(Domain domain) throws ServiceException {
         Set<String> hosts = new HashSet<String>();
-        for (String host : getSmtpHostsFromLdap(domain)) {
+        for (String host : lookupSmtpHosts(domain)) {
             if (!isHostBad(host)) {
                 hosts.add(host);
             }
@@ -267,7 +272,7 @@ public final class JMSession {
      * @param domain, or <tt>null</tt> to use the local server
      * @return the SMTP hosts, or an empty array
      */
-    private static String[] getSmtpHostsFromLdap(Domain domain) throws ServiceException {
+    private static String[] lookupSmtpHosts(Domain domain) throws ServiceException {
         String[] hosts = NO_HOSTS;
         if (domain != null) {
             hosts = domain.getSmtpHostname();
