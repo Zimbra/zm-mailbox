@@ -1,5 +1,14 @@
 package com.zimbra.cs.service.mail;
 
+import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.codec.binary.Hex;
+
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -13,13 +22,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
-import org.apache.commons.codec.binary.Hex;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.security.SecureRandom;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * Handler for sending a verification code to a device.
@@ -44,7 +46,7 @@ public class SendVerificationCode extends MailDocumentHandler {
     }
 
     static void sendVerificationCode(String emailAddr, String code, Mailbox mbox) throws MessagingException, ServiceException {
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(mbox.getAccount()));
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
         mm.setText(L10nUtil.getMessage(L10nUtil.MsgKey.deviceSendVerificationCodeText,
                                        mbox.getAccount().getLocale(), code),

@@ -487,12 +487,12 @@ public class SendShareNotification extends MailDocumentHandler {
     // send using MailSender
     //
     private void sendShareNotif(OperationContext octxt, Account authAccount, Mailbox mbox, ShareInfoData sid, String notes)
-            throws ServiceException, MessagingException {
+    throws ServiceException, MessagingException {
 
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
 
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
 
         String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
         subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), sid.getOwnerNotifName());
@@ -540,7 +540,7 @@ public class SendShareNotification extends MailDocumentHandler {
     private static String template;
 
     private void sendExternalNotificationEmail(OperationContext octxt, Account authAccount, ShareInfoData sid)
-        throws ServiceException, MessagingException {
+    throws ServiceException, MessagingException {
         // ideally template needs to be stored in globalConfig,
         // but the java generate-getters is having trouble with
         // escaping multi line html.  we'll store the template
@@ -574,7 +574,7 @@ public class SendShareNotification extends MailDocumentHandler {
         String ignore = L10nUtil.getMessage(MsgKey.octopus_share_notification_email_ignore);
 
         String email = MessageFormat.format(template, avatar, message, accept, ignore, url);
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
         mm.setSubject(subject);
         mm.setSentDate(new Date());
         mm.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));

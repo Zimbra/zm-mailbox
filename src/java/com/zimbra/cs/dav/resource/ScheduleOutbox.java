@@ -31,8 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.ZCalendar;
@@ -41,9 +40,10 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -264,18 +264,20 @@ public class ScheduleOutbox extends Collection {
         }
     }
 
-    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) throws ServiceException,DavException {
+    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp)
+    throws ServiceException, DavException {
         if (!ctxt.isSchedulingEnabled()) {
             resp.addElement(DavElements.E_RECIPIENT).addElement(DavElements.E_HREF).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.3;No scheduling for the user");
             return;
         }
+
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         InternetAddress from, sender, to;
+        Account target = null;
         try {
             originator = stripMailto(originator);
             sender = new JavaMailInternetAddress(originator);
-            Account target = null;
             Provisioning prov = Provisioning.getInstance();
             if (ctxt.getPathInfo() != null) {
                 target = prov.getAccountByName(ctxt.getPathInfo());
@@ -347,7 +349,7 @@ public class ScheduleOutbox extends Collection {
             if ((descHtml == null) || (descHtml.length() == 0))
                 descHtml = friendlyDesc.getAsHtml();
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, sender, recipients, subject, desc, descHtml, uid, cal);
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(target, from, sender, recipients, subject, desc, descHtml, uid, cal);
             mbox.getMailSender().setSendPartial(true).sendMimeMessage(
                     ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, false);
         } catch (ServiceException e) {

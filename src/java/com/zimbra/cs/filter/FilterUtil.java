@@ -32,9 +32,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.collect.Sets;
-import com.zimbra.common.util.CharsetUtil;
-import com.zimbra.common.util.L10nUtil;
-
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -42,13 +42,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -66,8 +67,6 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 public final class FilterUtil {
 
@@ -317,7 +316,7 @@ public final class FilterUtil {
     }
 
     public static void reply(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage, String bodyTemplate)
-            throws MessagingException, ServiceException {
+    throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
         if (isMailLoop(mailbox, mimeMessage)) {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
@@ -328,8 +327,8 @@ public final class FilterUtil {
             return;
         }
 
-        MimeMessage replyMsg = new Mime.FixedMimeMessage(JMSession.getSession());
         Account account = mailbox.getAccount();
+        MimeMessage replyMsg = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
         replyMsg.setHeader(HEADER_FORWARDED, account.getName());
 
         String to = mimeMessage.getHeader("Reply-To", null);
@@ -366,15 +365,15 @@ public final class FilterUtil {
 
     public static void notify(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage,
             String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
-        throws MessagingException, ServiceException {
+    throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
         if (isMailLoop(mailbox, mimeMessage)) {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
             throw ServiceException.FAILURE(error, null);
         }
 
-        MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSession());
         Account account = mailbox.getAccount();
+        MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
         notification.setHeader(HEADER_FORWARDED, account.getName());
         MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
 

@@ -1118,7 +1118,7 @@ public class Message extends MailItem {
                             }
                             if (!rcptsFiltered.isEmpty()) {
                                 MimeMessage mm = CalendarMailSender.createForwardedPrivateInviteMessage(
-                                        acct.getLocale(), method, invites, origSender, forwarder, rcptsFiltered.toArray(new String[0]));
+                                        acct, acct.getLocale(), method, invites, origSender, forwarder, rcptsFiltered.toArray(new String[0]));
                                 if (mm != null) {
                                     ItemId origMsgId = new ItemId(getMailbox(), getId());
                                     CalendarMailSender.sendInviteAutoForwardMessage(octxt, getMailbox(), origMsgId, mm);

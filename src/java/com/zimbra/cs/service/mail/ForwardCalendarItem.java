@@ -376,9 +376,9 @@ public class ForwardCalendarItem extends CalendarRequest {
             if (htmlDesc != null)
                 htmlDescStr = (String) htmlDesc.getContent();
             setDescProps(cal, plainDescStr, htmlDescStr);
-            mm = createMergedMessage(from, sender, mmInv, inv, cal, plainDesc, htmlDesc);
+            mm = createMergedMessage(senderAcct, from, sender, mmInv, inv, cal, plainDesc, htmlDesc);
         } else {
-            mm = CalendarMailSender.createCalendarMessage(from, sender, null, mmInv, inv, cal, false);
+            mm = CalendarMailSender.createCalendarMessage(senderAcct, from, sender, null, mmInv, inv, cal, false);
         }
         // Copy recipient headers from forward wrapper msg.
         RecipientType rcptTypes[] = { RecipientType.TO, RecipientType.CC, RecipientType.BCC };
@@ -394,7 +394,7 @@ public class ForwardCalendarItem extends CalendarRequest {
     // Take mmInv and mutate it.  text/calendar part is replaced by cal and plain and html parts
     // are replaced by plainDescPart and htmlDescPart.
     private static MimeMessage createMergedMessage(
-            Address fromAddr, Address senderAddr,
+            Account account, Address fromAddr, Address senderAddr,
             MimeMessage mmInv, Invite inv, ZVCalendar cal,
             MimeBodyPart plainDescPart, MimeBodyPart htmlDescPart)
     throws ServiceException {
@@ -444,7 +444,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                     throw ServiceException.FAILURE(
                             "Messaging Exception while retrieving description", e);
                 }
-                return CalendarMailSender.createCalendarMessage(fromAddr, senderAddr, null, subject, desc, descHtml, uid, cal, false);
+                return CalendarMailSender.createCalendarMessage(account, fromAddr, senderAddr, null, subject, desc, descHtml, uid, cal, false);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(

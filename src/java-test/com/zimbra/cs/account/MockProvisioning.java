@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
@@ -45,39 +46,42 @@ import com.zimbra.soap.admin.type.DataSourceType;
 public final class MockProvisioning extends Provisioning {
     public static final String DEFAULT_ACCOUNT_ID = new UUID(0L, 0L).toString();
 
-    private final Map<String, Account> id2account = new HashMap<String, Account>();
-    private final Map<String, Account> name2account = new HashMap<String, Account>();
-    private final Map<String, List<MimeTypeInfo>> mimeConfig =
-        new HashMap<String, List<MimeTypeInfo>>();
+    private final Map<String, Account> id2account = Maps.newHashMap();
+    private final Map<String, Account> name2account = Maps.newHashMap();
+
+    private final Map<String, Domain> id2domain = Maps.newHashMap();
+
+    private final Map<String, List<MimeTypeInfo>> mimeConfig = Maps.newHashMap();
     private final Config config = new Config(new HashMap<String, Object>(), this);
-    private final Map<String, ShareLocator> shareLocators = new HashMap<String, ShareLocator>();
+    private final Map<String, ShareLocator> shareLocators = Maps.newHashMap();
+
     private final Server localhost;
 
     public MockProvisioning() {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraServiceHostname, "localhost");
-        attrs.put(Provisioning.A_zimbraRedoLogProvider, MockRedoLogProvider.class.getName());
-        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        attrs.put(Provisioning.A_zimbraMailMode, Provisioning.MailMode.http.toString());
+        attrs.put(A_zimbraServiceHostname, "localhost");
+        attrs.put(A_zimbraRedoLogProvider, MockRedoLogProvider.class.getName());
+        attrs.put(A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(A_zimbraMailMode, MailMode.http.toString());
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
     }
 
     @Override
     public Account createAccount(String email, String password, Map<String, Object> attrs) throws ServiceException {
         validate(ProvisioningValidator.CREATE_ACCOUNT, email, null, attrs);
-        if (!attrs.containsKey(Provisioning.A_zimbraId)) {
-            attrs.put(Provisioning.A_zimbraId, DEFAULT_ACCOUNT_ID);
+        if (!attrs.containsKey(A_zimbraId)) {
+            attrs.put(A_zimbraId, DEFAULT_ACCOUNT_ID);
         }
-        if (!attrs.containsKey(Provisioning.A_zimbraMailHost)) {
-            attrs.put(Provisioning.A_zimbraMailHost, "localhost");
+        if (!attrs.containsKey(A_zimbraMailHost)) {
+            attrs.put(A_zimbraMailHost, "localhost");
         }
-        if (!attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
-            attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
+        if (!attrs.containsKey(A_zimbraAccountStatus)) {
+            attrs.put(A_zimbraAccountStatus, ACCOUNT_STATUS_ACTIVE);
         }
-        if (!attrs.containsKey(Provisioning.A_zimbraDumpsterEnabled)) {
-            attrs.put(Provisioning.A_zimbraDumpsterEnabled, Provisioning.TRUE);
+        if (!attrs.containsKey(A_zimbraDumpsterEnabled)) {
+            attrs.put(A_zimbraDumpsterEnabled, TRUE);
         }
-        attrs.put(Provisioning.A_zimbraBatchedIndexingSize, Integer.MAX_VALUE); // suppress indexing
+        attrs.put(A_zimbraBatchedIndexingSize, Integer.MAX_VALUE); // suppress indexing
         Account account = new Account(email, email, attrs, null, this);
         try {
             name2account.put(email, account);
@@ -274,23 +278,51 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Domain createDomain(String name, Map<String, Object> attrs) {
-        throw new UnsupportedOperationException();
+    public Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException {
+        name = name.trim().toLowerCase();
+        if (get(Key.DomainBy.name, name) != null) {
+            throw AccountServiceException.DOMAIN_EXISTS(name);
+        }
+
+        String id = (String) attrs.get(A_zimbraId);
+        if (id == null) {
+            attrs.put(A_zimbraId, id = UUID.randomUUID().toString());
+        }
+        if (!attrs.containsKey(A_zimbraSmtpHostname)) {
+            attrs.put(A_zimbraSmtpHostname, "localhost");
+        }
+
+        Domain domain = new Domain(name, id, attrs, null, this);
+        id2domain.put(id, domain);
+        return domain;
     }
 
     @Override
     public Domain get(Key.DomainBy keyType, String key) {
+        switch (keyType) {
+            case id:
+                return id2domain.get(key);
+
+            case name:
+                for (Domain domain : id2domain.values()) {
+                    if (domain.getName().equals(key)) {
+                        return domain;
+                    }
+                }
+                break;
+        }
+
         return null;
     }
 
     @Override
     public List<Domain> getAllDomains() {
-        throw new UnsupportedOperationException();
+        return new ArrayList<Domain>(id2domain.values());
     }
 
     @Override
     public void deleteDomain(String zimbraId) {
-        throw new UnsupportedOperationException();
+        id2domain.remove(zimbraId);
     }
 
     @Override

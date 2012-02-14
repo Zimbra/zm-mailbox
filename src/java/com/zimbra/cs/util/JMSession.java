@@ -108,6 +108,7 @@ public final class JMSession {
                 ZimbraLog.smtp.warn("Unable to look up domain for account %s.", account.getName(), e);
             }
         }
+
         Session session = getSmtpSession(domain);
         if (account != null && account.isSmtpEnableTrace()) {
             session.setDebug(true);
@@ -124,7 +125,6 @@ public final class JMSession {
      */
     private static Session getSmtpSession(Domain domain) throws MessagingException {
         Server server;
-
         try {
             server = Provisioning.getInstance().getLocalServer();
         } catch (ServiceException e) {
@@ -196,11 +196,12 @@ public final class JMSession {
     }
 
     private static class SmtpAuthenticator extends Authenticator {
-        private String username;
-        private String password;
+        private final String username;
+        private final String password;
         public SmtpAuthenticator(String username, String password) {
             this.username = username;  this.password = password;
         }
+        @Override
         protected PasswordAuthentication getPasswordAuthentication() {
             return new PasswordAuthentication(username, password);
         }
@@ -212,7 +213,7 @@ public final class JMSession {
         try {
             smtpHost = getRandomSmtpHost(domain);
         } catch (ServiceException e) {
-            throw new MessagingException("Unable initialize JavaMail session", e);
+            throw new MessagingException("Unable to initialize JavaMail session", e);
         }
         if (smtpHost == null) {
             String msg = "No SMTP hosts available";
@@ -236,6 +237,12 @@ public final class JMSession {
         Boolean sendPartial = Boolean.parseBoolean(getValue(server, domain, Provisioning.A_zimbraSmtpSendPartial));
         props.setProperty(SMTP_SEND_PARTIAL_PROPERTY, sendPartial.toString());
         props.setProperty(SMTPS_SEND_PARTIAL_PROPERTY, sendPartial.toString());
+
+        // indirectly hack up the Message-ID value
+        if (domain != null) {
+            props.setProperty("mail.host", domain.getName());
+        }
+
         return props;
     }
 
@@ -293,7 +300,7 @@ public final class JMSession {
      */
     public static List<String> getSmtpHosts(Domain domain) throws ServiceException {
         List<String> hosts = new ArrayList<String>();
-        for (String host : getSmtpHostsFromLdap(domain)) {
+        for (String host : lookupSmtpHosts(domain)) {
             if (!isHostBad(host)) {
                 hosts.add(host);
             }
@@ -327,7 +334,7 @@ public final class JMSession {
      * @param domain, or <tt>null</tt> to use the local server
      * @return the SMTP hosts, or an empty array
      */
-    private static String[] getSmtpHostsFromLdap(Domain domain) throws ServiceException {
+    private static String[] lookupSmtpHosts(Domain domain) throws ServiceException {
         String[] hosts = NO_HOSTS;
         if (domain != null) {
             hosts = domain.getSmtpHostname();

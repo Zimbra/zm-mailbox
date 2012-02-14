@@ -368,7 +368,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     os = null;
 
                     is = new ZSharedFileInputStream(tempMmFile);
-                    csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
+                    csd.mMm = new FixedMimeMessage(JMSession.getSmtpSession(acct), is);
                 } catch (IOException e) {
                     if (tempMmFile != null)
                         tempMmFile.delete();
@@ -571,7 +571,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 } else {
                     rcpts = addedRcpts;
                 }
-                MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
+                MimeMessage mmModify = CalendarMailSender.createCalendarMessage(authAcct, from, sender, rcpts, mmInv, inv, cal, true);
                 CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
                         new ItemId(mbox, inv.getMailItemId()), null, null, false);
             }

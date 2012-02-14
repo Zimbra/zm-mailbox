@@ -46,7 +46,7 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         Locale locale = account.getLocale();
         TimeZone tz = Util.getAccountTimeZone(account);
 
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
 
         String to = account.getAttr(Provisioning.A_zimbraPrefCalendarReminderEmail);
         if (to == null) {
