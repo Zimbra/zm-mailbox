@@ -108,7 +108,11 @@ public final class BlobMetaData {
             if (entry.getValue() instanceof String) {
                 String value = (String) entry.getValue();
                 if (value.length() > 5 && value.indexOf('=') != -1) {
-                    entry.setValue(decodeRecursive(value));
+                    try {
+                        entry.setValue(decodeRecursive(value));
+                    } catch (BlobMetaDataEncodingException e) {
+                        ZimbraLog.mailbox.warn("Unable to decode BlobMetaData value [%s] due to exception", value, e);
+                    }
                 }
             }
         }
