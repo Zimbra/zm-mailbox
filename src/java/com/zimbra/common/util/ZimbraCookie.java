@@ -15,6 +15,7 @@
 package com.zimbra.common.util;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.localconfig.LC;
@@ -44,6 +45,10 @@ public class ZimbraCookie {
         }
         
         cookie.setPath(path);
+    }
+    
+    public static boolean secureCookie(HttpServletRequest request) {
+        return "https".equalsIgnoreCase(request.getScheme());
     }
     
     public static void addHttpOnlyCookie(HttpServletResponse response, String name, String value, 
