@@ -55,8 +55,8 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_NAME, account.getName(), Element.Disposition.CONTENT);
         response.addKeyValuePair(Provisioning.A_zimbraId, account.getId(), AccountConstants.E_ATTR, AccountConstants.A_NAME);
         response.addKeyValuePair(Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost), AccountConstants.E_ATTR, AccountConstants.A_NAME);
+        response.addKeyValuePair(Provisioning.A_displayName, account.getAttr(Provisioning.A_displayName), AccountConstants.E_ATTR, AccountConstants.A_NAME);
         addUrls(response, account);
-
         return response;
     }
 
