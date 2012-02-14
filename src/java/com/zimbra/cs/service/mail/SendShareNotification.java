@@ -154,6 +154,7 @@ public class SendShareNotification extends MailDocumentHandler {
                 if (!e.getCode().equals(MailServiceException.NO_SUCH_GRANTEE)) {
                     throw e;
                 }
+                internalGrantee = false;
             }
             if (!internalGrantee) {
                 granteeType = ACL.GRANTEE_GUEST;
