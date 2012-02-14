@@ -133,4 +133,17 @@ public class MetadataTest {
         Assert.assertTrue("new(er) appointment with bad metadata", caught);
     }
 
+    @Test
+    public void standardMetadataFormat() throws MailServiceException {
+        String encoded = "d3:prt94:d1:X5:false1:fd1:a25:roland.schemers@gmail.com1:d6:Roland1:p15:Roland Schemerse2:noi2e1:vi10ee1:vi10ee";
+        Metadata md = new Metadata(encoded);
+        Assert.assertNotNull(md);
+    }
+
+    @Test
+    public void legacyBlobMetadataFormat() throws MailServiceException {
+        String encoded = "s=43:Roland Schemers <roland.schemers@gmail.com>;rt=44:forward schemers <roland.schemers@gmail.com>;f=74:http://support.microsoft.com/default.aspx?scid=kb;en-us;177378&Product=iep;";
+        Metadata md = new Metadata(encoded);
+        Assert.assertNotNull(md);
+    }
 }
