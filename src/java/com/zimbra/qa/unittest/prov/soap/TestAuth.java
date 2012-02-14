@@ -19,7 +19,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -32,6 +34,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -50,8 +55,13 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.qa.unittest.prov.Verify;
+import com.zimbra.soap.account.message.AuthRequest;
+import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.AuthToken;
 
 public class TestAuth extends SoapTest {
     
@@ -222,4 +232,59 @@ public class TestAuth extends SoapTest {
         
         provUtil.deleteAccount(acct);
     }
+    
+    @Test
+    public void attrsReturnedInAuthResponse() throws Exception {
+        String ATTR_NAME = Provisioning.A_zimbraFeatureExternalFeedbackEnabled;
+        String ATTR_VALUE = ProvisioningConstants.TRUE;
+            
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(ATTR_NAME, ATTR_VALUE);
+        
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain, attrs);
+        
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setHttpDebugListener(new SoapDebugListener());
+        
+        com.zimbra.soap.type.AccountSelector acctSel = 
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
+        
+        AuthRequest req = new AuthRequest(acctSel, "test123");
+        req.addAttr(ATTR_NAME);
+        AuthResponse resp = invokeJaxb(transport, req);
+        
+        Set<String> result = Sets.newHashSet();
+        for (Attr attr : resp.getAttrs()) {
+            String attrName = attr.getName();
+            String attrValue = attr.getValue();
+            
+            result.add(Verify.makeResultStr(attrName, attrValue));
+        }
+        Verify.verifyEquals(Sets.newHashSet(Verify.makeResultStr(ATTR_NAME, ATTR_VALUE)), result);
+        
+        /*
+         * test the auth by auth toke npath
+         */
+        String authTokenStr = resp.getAuthToken();
+        AuthToken authToken = new AuthToken(authTokenStr, Boolean.FALSE);
+        req = new AuthRequest();
+        req.setAuthToken(authToken);
+        req.addAttr(ATTR_NAME);
+        
+        transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setHttpDebugListener(new SoapDebugListener());
+        
+        resp = invokeJaxb(transport, req);
+        
+        result = Sets.newHashSet();
+        for (Attr attr : resp.getAttrs()) {
+            String attrName = attr.getName();
+            String attrValue = attr.getValue();
+            
+            result.add(Verify.makeResultStr(attrName, attrValue));
+        }
+        Verify.verifyEquals(Sets.newHashSet(Verify.makeResultStr(ATTR_NAME, ATTR_VALUE)), result);
+    }
 }
+
+
