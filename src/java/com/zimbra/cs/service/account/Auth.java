@@ -24,6 +24,7 @@ import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -42,12 +43,17 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author schemers
@@ -197,6 +203,14 @@ public class Auth extends AccountDocumentHandler {
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
+        
+        /* 
+         * bug 67078
+         * also return auth token cookie in http header
+         */
+        HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
+        HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
+        at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq));
         
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);

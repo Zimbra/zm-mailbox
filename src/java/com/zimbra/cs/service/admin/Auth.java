@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -39,11 +42,13 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.SoapEngine;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class Auth extends AdminDocumentHandler {
@@ -190,6 +195,14 @@ public class Auth extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
 
+        /* 
+         * bug 67078
+         * also return auth token cookie in http header
+         */
+        HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
+        HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
+        at.encode(httpResp, true, ZimbraCookie.secureCookie(httpReq));
+        
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
 
         boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
