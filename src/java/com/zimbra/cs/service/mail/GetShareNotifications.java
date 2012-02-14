@@ -16,6 +16,7 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,6 +30,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.share.ShareNotification;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MessageHit;
@@ -36,6 +39,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -45,15 +49,18 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetShareNotifications extends MailDocumentHandler {
 
+    private static final Log sLog = LogFactory.getLog(GetShareNotifications.class);
     private final String query = "type:" + MimeConstants.CT_XML_ZIMBRA_SHARE + " AND in:inbox";
     private final Set<MailItem.Type> SEARCH_TYPES = EnumSet.of(MailItem.Type.MESSAGE);
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         Element response = zsc.createElement(MailConstants.GET_SHARE_NOTIFICATIONS_RESPONSE);
-        
+        HashSet<String> shares = new HashSet<String>();
+
         ZimbraQueryResults zqr = null;
         try {
             zqr = mbox.index.search(octxt, query, SEARCH_TYPES, SortBy.DATE_DESC, 10);
@@ -66,7 +73,17 @@ public class GetShareNotifications extends MailDocumentHandler {
                             String ctype = StringUtil.stripControlCharacters(part.getContentType());
                             if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
                                 ShareNotification sn = ShareNotification.fromMimePart(part.getMimePart());
-                                
+                                String shareItemId = sn.getGrantorId() + ":" + sn.getItemId();
+                                if (shares.contains(shareItemId)) {
+                                    // this notification is stale as there is
+                                    // a new one for the same share.  delete
+                                    // this notification and skip to the next one.
+                                    sLog.info("deleting stale notification %s", message.getId());
+                                    mbox.delete(octxt, message.getId(), Type.MESSAGE);
+                                    continue;
+                                }
+                                shares.add(shareItemId);
+
                                 Element share = response.addElement(MailConstants.E_SHARE);
                                 Element g = share.addUniqueElement(MailConstants.E_GRANTOR);
                                 g.addAttribute(MailConstants.A_ID, sn.getGrantorId());
@@ -95,7 +112,7 @@ public class GetShareNotifications extends MailDocumentHandler {
         } finally {
             Closeables.closeQuietly(zqr);
         }
-        
+
         return response;
     }
 }
