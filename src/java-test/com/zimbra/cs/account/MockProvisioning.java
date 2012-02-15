@@ -51,6 +51,7 @@ public final class MockProvisioning extends Provisioning {
     public MockProvisioning() {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(A_zimbraServiceHostname, "localhost");
+        attrs.put(A_zimbraSmtpPort, "7025");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
     }
 
