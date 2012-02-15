@@ -63,6 +63,7 @@ public final class MockProvisioning extends Provisioning {
         attrs.put(A_zimbraRedoLogProvider, MockRedoLogProvider.class.getName());
         attrs.put(A_zimbraId, UUID.randomUUID().toString());
         attrs.put(A_zimbraMailMode, MailMode.http.toString());
+        attrs.put(A_zimbraSmtpPort, "7025");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
     }
 
