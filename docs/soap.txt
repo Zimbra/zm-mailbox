@@ -275,16 +275,18 @@ Example:
     }
   }
 
-The response format is XML by default. To change, specify a "format"
-element in the request's Header element with a "type" attribute. The
-value must be either "xml" or "js".
+The response format is the same as the request format by default.
+To change, specify a "format" element in the request's Header element
+with a "type" attribute. The value must be either "xml" or "js".
 
 SOAP request with JSON response:
 
   <soap:Envelope ...>
     <soap:Header>
-      ...
-      <format type='js' />
+      <context xmlns="urn:zimbra">
+        ...
+        <format type='js' />
+      </context>
     </soap:Header>
     ...
   </soap:Envelope>
@@ -293,9 +295,12 @@ JSON request with XML response:
 
   {
     "Header": {
-      ...
-      "format": { "type": "xml" }
-     },
+      "context": {
+        ...
+        "format": { "type": "xml" },
+        "_jsns": "urn:zimbra"
+      }
+    },
      ...
   }
 
