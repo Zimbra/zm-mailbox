@@ -31,7 +31,6 @@ import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.AllTermQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.MailboxIndex;
@@ -86,12 +85,11 @@ public class TextQuery extends Query {
             }
             stream.end();
             stream.close();
-        } catch (IOException ignore) {}
-        
-        // Handle the case where its a wildcard operation with no prefix or, suffix e.g content:*
-        if (text.equals("*")) {
-            wildcardTerm = "*";
-        } else if (text.endsWith("*")) { // must look at original text here b/c analyzer strips *'s
+        } catch (IOException ignore) {
+        }
+
+        // must look at original text here b/c analyzer strips *'s
+        if (text.endsWith("*")) {
             // wildcard query!
             String wcToken;
 
@@ -147,10 +145,6 @@ public class TextQuery extends Query {
 
     @Override
     public QueryOperation getQueryOperation(boolean bool) {
-        
-        if (term.equals("*"))
-            return new AllTermQueryOperation();
-        
         if (tokens.size() <= 0 && oredTokens.size() <= 0) {
             // if we have no tokens, that is usually because the analyzer removed them
             // -- the user probably queried for a stop word like "a" or "an" or "the"
