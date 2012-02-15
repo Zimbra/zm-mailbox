@@ -583,6 +583,14 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
 
                 for (int j = i + 1; j < mQueryOperations.size(); j++) {
                     QueryOperation rhs = mQueryOperations.get(j);
+                    
+                    //Bug: 70043
+                    //DBQueryOperation AND ALL_TERM_QUERY_OP = DBQueryOperation
+                    if (lhs instanceof DBQueryOperation && rhs instanceof AllTermQueryOperation) {
+                        mQueryOperations.remove(j);
+                        continue JOIN_LOOP;
+                    }
+                    
                     QueryOperation joined = lhs.combineOps(rhs, false);
                     if (joined != null) {
                         mQueryOperations.remove(j);

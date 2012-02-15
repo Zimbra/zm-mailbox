@@ -507,5 +507,12 @@ public class QueryParserTest {
         Assert.assertEquals("(Q(l.contactData,zimbra,quoted,test *=test [0 terms]) || Q(l.content,zimbra,quoted,test))",
                 Query.toString(parser.parse("\"Zimbra \\\"quoted\\\" test\"")));
     }
+    
+    @Test
+    public void wildcard() throws Exception {
+        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        String src = "content:*";
+        Assert.assertEquals("Q(l.content *=* [0 terms])", Query.toString(parser.parse(src)));
+    }
 
 }
