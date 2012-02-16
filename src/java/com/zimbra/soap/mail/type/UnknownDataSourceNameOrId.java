@@ -18,12 +18,6 @@ package com.zimbra.soap.mail.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import com.zimbra.common.soap.MailConstants;
-
-@XmlAccessorType(XmlAccessType.FIELD)
-public class UnknownDataSourceNameOrId extends NameOrId {
-
-    public UnknownDataSourceNameOrId() {
-    }
-
+@XmlAccessorType(XmlAccessType.NONE)
+public class UnknownDataSourceNameOrId extends DataSourceNameOrId {
 }

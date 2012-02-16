@@ -31,10 +31,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FilterRule;
 
+/**
+ * @zm-api-command-description Modify Outgoing Filter rules
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_MODIFY_OUTGOING_FILTER_RULES_REQUEST)
 public final class ModifyOutgoingFilterRulesRequest {
 
+    /**
+     * @zm-api-field-description Outgoing filter rules
+     */
     @XmlElementWrapper(name=MailConstants.E_FILTER_RULES, required=true)
     @XmlElement(name=MailConstants.E_FILTER_RULE, required=false)
     private final List<FilterRule> rules = Lists.newArrayList();

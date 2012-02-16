@@ -21,10 +21,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
+/**
+ * @zm-api-command-description Global search
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GLOBAL_SEARCH_REQUEST)
 public final class GlobalSearchRequest {
 
+    /**
+     * @zm-api-field-tag query
+     * @zm-api-field-description Query
+     */
     @XmlElement(name = MailConstants.E_QUERY, required = true)
     private String query;
 

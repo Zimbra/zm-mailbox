@@ -28,7 +28,10 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name = MailConstants.E_GLOBAL_SEARCH_RESPONSE)
 public final class GlobalSearchResponse {
 
-    @XmlElement(name = MailConstants.E_DOC)
+    /**
+     * @zm-api-field-description Search result documents
+     */
+    @XmlElement(name = MailConstants.E_DOC, required=false)
     private List<Document> documents;
 
     public List<Document> getDocuments() {
@@ -41,25 +44,53 @@ public final class GlobalSearchResponse {
 
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class Document {
-        @XmlAttribute(name = MailConstants.A_ID)
+        /**
+         * @zm-api-field-tag id
+         * @zm-api-field-description ID
+         */
+        @XmlAttribute(name = MailConstants.A_ID /* id */, required=false)
         private String id;
 
-        @XmlAttribute(name = MailConstants.A_SCORE)
+        /**
+         * @zm-api-field-tag score
+         * @zm-api-field-description Score
+         */
+        @XmlAttribute(name = MailConstants.A_SCORE /* score */, required=false)
         private int score;
 
-        @XmlAttribute(name = MailConstants.A_NAME)
+        /**
+         * @zm-api-field-tag name
+         * @zm-api-field-description Name
+         */
+        @XmlAttribute(name = MailConstants.A_NAME /* name */, required=false)
         private String name;
 
-        @XmlAttribute(name = MailConstants.A_DATE)
+        /**
+         * @zm-api-field-tag date
+         * @zm-api-field-description Date
+         */
+        @XmlAttribute(name = MailConstants.A_DATE /* d */, required=false)
         private long date;
 
-        @XmlAttribute(name = MailConstants.A_SIZE)
+        /**
+         * @zm-api-field-tag size
+         * @zm-api-field-description Size
+         */
+        @XmlAttribute(name = MailConstants.A_SIZE /* s */, required=false)
         private long size;
 
-        @XmlAttribute(name = MailConstants.A_CONTENT_TYPE)
+        /**
+         * @zm-api-field-tag content-type
+         * @zm-api-field-description Content type
+         */
+        @XmlAttribute(name = MailConstants.A_CONTENT_TYPE /* ct */, required=false)
         private String contentType;
 
-        @XmlElement(name = MailConstants.E_FRAG)
+        /**
+         * @zm-api-field-tag fragment
+         * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+         */
+        @XmlElement(name = MailConstants.E_FRAG /* fr */, required=false)
         private String fragment;
 
         public String getID() {

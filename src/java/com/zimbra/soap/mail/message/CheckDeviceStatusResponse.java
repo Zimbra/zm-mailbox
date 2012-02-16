@@ -20,17 +20,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.IdStatus;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_CHECK_DEVICE_STATUS_RESPONSE)
-@XmlType(propOrder = {})
 public class CheckDeviceStatusResponse {
 
+    /**
+     * @zm-api-field-description Information on device status
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final IdStatus device;
 

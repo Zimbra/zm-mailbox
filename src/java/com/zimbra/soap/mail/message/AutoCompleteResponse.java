@@ -27,20 +27,25 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AutoCompleteMatch;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_AUTO_COMPLETE_RESPONSE)
-@XmlType(propOrder = {})
 public class AutoCompleteResponse {
 
+    /**
+     * @zm-api-field-tag can-be-cached
+     * @zm-api-field-description Flag whether can be cached
+     */
     @XmlAttribute(name=MailConstants.A_CANBECACHED /* canBeCached */, required=false)
     private ZmBoolean canBeCached;
 
+    /**
+     * @zm-api-field-description Matches
+     */
     @XmlElement(name=MailConstants.E_MATCH /* match */, required=false)
     private List<AutoCompleteMatch> matches = Lists.newArrayList();
 

@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AccountACEinfo;
@@ -35,11 +34,13 @@ import com.zimbra.soap.mail.type.AccountACEinfo;
  * Delete this class in bug 66989
  */
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GRANT_PERMISSION_RESPONSE)
-@XmlType(propOrder = {})
 public class GrantPermissionResponse {
 
+    /**
+     * @zm-api-field-description Permissions that were successfully granted
+     */
     @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
     private List<AccountACEinfo> aces = Lists.newArrayList();
 
@@ -62,15 +63,13 @@ public class GrantPermissionResponse {
         return Collections.unmodifiableList(aces);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("aces", aces);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

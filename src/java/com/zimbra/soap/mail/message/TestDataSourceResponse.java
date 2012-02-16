@@ -24,13 +24,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_TEST_DATA_SOURCE_RESPONSE)
 public class TestDataSourceResponse {
 
+    /**
+     * @zm-api-field-tag success
+     * @zm-api-field-description Flags whether the test was successful
+     */
     @XmlAttribute(name=MailConstants.A_DS_SUCCESS /* success */, required=true)
     private final ZmBoolean success;
 
+    /**
+     * @zm-api-field-tag error-message
+     * @zm-api-field-description Error message
+     */
     @XmlAttribute(name=MailConstants.A_DS_ERROR /* error */, required=false)
     private String error;
 
@@ -50,8 +58,7 @@ public class TestDataSourceResponse {
     public boolean getSuccess() { return ZmBoolean.toBool(success); }
     public String getError() { return error; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("success", success)
             .add("error", error);
@@ -59,7 +66,6 @@ public class TestDataSourceResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

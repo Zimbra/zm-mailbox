@@ -25,13 +25,23 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SectionAttr;
 
+/**
+ * @zm-api-command-description Get Custom metadata
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_METADATA_REQUEST)
 public class GetCustomMetadataRequest {
 
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description Item ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-description Metadata section selector
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private SectionAttr metadata;
 

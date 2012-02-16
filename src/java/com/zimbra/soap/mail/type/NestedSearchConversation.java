@@ -31,11 +31,11 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.SpellingSuggestionsQueryInfo;
+import com.zimbra.soap.mail.type.SuggestedQueryString;
 import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"messages", "queryInfos"})
 public class NestedSearchConversation {
 
@@ -62,9 +62,16 @@ public class NestedSearchConversation {
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private List<MessageHitInfo> messages = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Info block.  Used to return general status information about your search.
+     * The <b>&lt;wildcard></b> element tells you about the status of wildcard expansions within your search.
+     * If expanded is set, then the wildcard was expanded and the matches are included in the search.  If expanded is
+     * unset then the wildcard was not specific enough and therefore no wildcard matches are included
+     * (exact-match <b>is</b> included in results).
+     */
     @XmlElementWrapper(name=MailConstants.E_INFO /* info */, required=false)
     @XmlElements({
-        @XmlElement(name=MailConstants.E_SUGEST, type=SpellingSuggestionsQueryInfo.class),
+        @XmlElement(name=MailConstants.E_SUGEST, type=SuggestedQueryString.class),
         @XmlElement(name="wildcard", type=WildcardExpansionQueryInfo.class)
     })
     private List<BaseQueryInfo> queryInfos = Lists.newArrayList();

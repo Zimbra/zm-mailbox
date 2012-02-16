@@ -25,6 +25,7 @@ public class ApiClassDocumentation {
     private String commandDescription;
     private boolean networkEdition;
     private String classDescription;
+    private String deprecationDescription;
     private Map <String, String> fieldDescriptions = Maps.newHashMap();
     private Map <String, String> fieldTags = Maps.newHashMap();
 
@@ -84,6 +85,14 @@ public class ApiClassDocumentation {
         return networkEdition;
     }
 
+    public String getDeprecationDescription() {
+        return deprecationDescription;
+    }
+
+    public void setDeprecationDescription(String deprecationDescription) {
+        this.deprecationDescription = deprecationDescription;
+    }
+
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -95,6 +104,9 @@ public class ApiClassDocumentation {
         }
         if (classDescription != null) {
             buf.append("[CLASS:").append(classDescription).append("]");
+        }
+        if (deprecationDescription != null) {
+            buf.append("[DEPRECATION:").append(deprecationDescription).append("]");
         }
         for (Entry<String, String> entry : fieldDescriptions.entrySet()) {
             buf.append("[FIELD:").append(entry.getKey()).append("=").append(entry.getValue()).append("]");

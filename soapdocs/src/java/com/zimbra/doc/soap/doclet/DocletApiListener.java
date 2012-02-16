@@ -64,7 +64,9 @@ public class DocletApiListener {
             } else if (ZmApiTags.TAG_COMMAND_REQUEST_DESCRIPTION.equals(tag.name())) {
                 doc.setClassDescription(tag.text());
             } else if (ZmApiTags.TAG_COMMAND_NETWORK_ONLY.equals(tag.name())) {
-                doc.setClassDescription(tag.text());
+                doc.setNetworkEdition(true);
+            } else if (ZmApiTags.TAG_COMMAND_WILL_BE_DEPRECATED.equals(tag.name())) {
+                doc.setDeprecationDescription(tag.text());
             } else if (ZmApiTags.TAG_COMMAND_RESPONSE_DESCRIPTION.equals(tag.name())) {
                 doc.setClassDescription(tag.text());
             }

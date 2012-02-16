@@ -34,10 +34,19 @@ import com.zimbra.soap.mail.type.AccountACEinfo;
  * Delete this class in bug 66989
  */
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-will-be-deprecated Note: to be deprecated in Zimbra 9.  Use zimbraAccount GrantRights instead.
+ * @zm-api-command-description Grant account level permissions
+ * <br />
+ * GrantPermissionResponse returns permissions that are successfully granted.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GRANT_PERMISSION_REQUEST)
 public class GrantPermissionRequest {
 
+    /**
+     * @zm-api-field-description Specify Access Control Entries (ACEs)
+     */
     @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
     private List<AccountACEinfo> aces = Lists.newArrayList();
 
@@ -60,15 +69,13 @@ public class GrantPermissionRequest {
         return Collections.unmodifiableList(aces);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("aces", aces);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

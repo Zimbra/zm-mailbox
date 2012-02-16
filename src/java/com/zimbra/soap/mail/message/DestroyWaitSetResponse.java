@@ -23,10 +23,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_DESTROY_WAIT_SET_RESPONSE)
 public class DestroyWaitSetResponse {
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description WaitSet ID
+     */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
 
@@ -44,15 +48,13 @@ public class DestroyWaitSetResponse {
 
     public String getWaitSetId() { return waitSetId; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("waitSetId", waitSetId);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

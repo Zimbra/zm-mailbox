@@ -29,6 +29,9 @@ import com.zimbra.soap.mail.type.IdAndOperation;
 @XmlRootElement(name=OctopusXmlConstants.E_DOCUMENT_ACTION_RESPONSE)
 public class DocumentActionResponse {
 
+    /**
+     * @zm-api-field-description Details of action
+     */
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private IdAndOperation action;
 
@@ -46,15 +49,13 @@ public class DocumentActionResponse {
     public void setAction(IdAndOperation action) { this.action = action; }
     public IdAndOperation getAction() { return action; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("action", action);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

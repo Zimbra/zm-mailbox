@@ -31,16 +31,33 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Send share notification
+ * <br />
+ * The client can list the recipient email addresses for the share, along with the itemId of the item being shared.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEND_SHARE_NOTIFICATION_REQUEST)
 public class SendShareNotificationRequest {
 
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description Item ID
+     */
     @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
     private Id item;
 
+    /**
+     * @zm-api-field-tag email-addrs
+     * @zm-api-field-description Email addresses
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag notes
+     * @zm-api-field-description Notes
+     */
     @XmlElement(name=MailConstants.E_NOTES /* notes */, required=false)
     private String notes;
 
@@ -65,8 +82,7 @@ public class SendShareNotificationRequest {
     }
     public String getNotes() { return notes; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("item", item)
             .add("email", emailAddresses)
@@ -75,7 +91,6 @@ public class SendShareNotificationRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

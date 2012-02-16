@@ -35,11 +35,17 @@ import com.zimbra.soap.mail.type.IdEmailName;
 @XmlRootElement(name=MailConstants.E_GET_COMMENTS_RESPONSE)
 public class GetCommentsResponse {
 
-    @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=false)
-    private List<CommentInfo> comments = Lists.newArrayList();
-
+    /**
+     * @zm-api-field-description Users
+     */
     @XmlElement(name=MailConstants.A_USER /* user */, required=false)
     private List<IdEmailName> users = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-description Comment information
+     */
+    @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=false)
+    private List<CommentInfo> comments = Lists.newArrayList();
 
     public GetCommentsResponse() {
     }

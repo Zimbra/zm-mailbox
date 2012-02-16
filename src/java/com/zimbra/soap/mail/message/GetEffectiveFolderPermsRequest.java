@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FolderSpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Returns the effective permissions of the specified folder
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_EFFECTIVE_FOLDER_PERMS_REQUEST)
 public class GetEffectiveFolderPermsRequest {
 
+    /**
+     * @zm-api-field-description Folder specification
+     */
     @XmlElement(name=MailConstants.E_FOLDER /* folder */, required=true)
     private final FolderSpec folder;
 

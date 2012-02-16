@@ -25,10 +25,17 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Check device status
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_CHECK_DEVICE_STATUS_REQUEST)
 public class CheckDeviceStatusRequest {
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description Device ID
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final Id device;
 

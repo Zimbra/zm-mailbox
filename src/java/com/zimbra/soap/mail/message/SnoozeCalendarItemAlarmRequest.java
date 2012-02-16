@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,15 +33,19 @@ import com.zimbra.soap.mail.type.SnoozeAlarm;
 import com.zimbra.soap.mail.type.SnoozeAppointmentAlarm;
 import com.zimbra.soap.mail.type.SnoozeTaskAlarm;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Snooze alarm(s) for appointments or tasks
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SNOOZE_CALITEM_ALARM_REQUEST)
 public class SnoozeCalendarItemAlarmRequest {
 
+    /**
+     * @zm-api-field-description Details of alarms
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
-            type=SnoozeAppointmentAlarm.class),
-        @XmlElement(name=MailConstants.E_TASK /* task */,
-            type=SnoozeTaskAlarm.class)
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=SnoozeAppointmentAlarm.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=SnoozeTaskAlarm.class)
     })
     private List<SnoozeAlarm> alarms = Lists.newArrayList();
 
@@ -64,15 +68,13 @@ public class SnoozeCalendarItemAlarmRequest {
         return Collections.unmodifiableList(alarms);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("alarms", alarms);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

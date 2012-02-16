@@ -35,6 +35,9 @@ import com.zimbra.soap.mail.type.FilterRule;
 @XmlRootElement(name=MailConstants.E_GET_FILTER_RULES_RESPONSE)
 public final class GetFilterRulesResponse {
 
+    /**
+     * @zm-api-field-description Filter rules
+     */
     @XmlElementWrapper(name=MailConstants.E_FILTER_RULES /* filterRules */, required=true)
     @XmlElement(name=MailConstants.E_FILTER_RULE /* filterRule */, required=false)
     private final List<FilterRule> rules = Lists.newArrayList();

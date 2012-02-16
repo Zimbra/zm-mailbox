@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ParentId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get comments
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_COMMENTS_REQUEST)
 public class GetCommentsRequest {
 
+    /**
+     * @zm-api-field-description Select parent for comments
+     */
     @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=true)
     private final ParentId comment;
 

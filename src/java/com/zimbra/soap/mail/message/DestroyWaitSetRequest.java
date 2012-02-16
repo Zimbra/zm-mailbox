@@ -23,10 +23,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Use this to close out the waitset.  Note that the server will automatically time out
+ * a wait set if there is no reference to it for (default of) 20 minutes.
+ * <p>
+ * WaitSet: scalable mechanism for listening for changes to one or more accounts
+ * </p>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_DESTROY_WAIT_SET_REQUEST)
 public class DestroyWaitSetRequest {
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description Waitset ID
+     */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
 

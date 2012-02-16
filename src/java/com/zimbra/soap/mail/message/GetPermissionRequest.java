@@ -34,10 +34,21 @@ import com.zimbra.soap.mail.type.Right;
  * Delete this class in bug 66989
  */
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-will-be-deprecated Note: to be deprecated in Zimbra 9.  Use zimbraAccount GetRights instead.
+ * @zm-api-command-description Get account level permissions
+ * <br />
+ * If no <b>&lt;ace></b> elements are provided, all ACEs are returned in the response.
+ * <br />
+ * If <b>&lt;ace></b> elements are provided, only those ACEs with specified rights are returned in the response.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_PERMISSION_REQUEST)
 public class GetPermissionRequest {
 
+    /**
+     * @zm-api-field-description Specification of rights
+     */
     @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
     private List<Right> aces = Lists.newArrayList();
 
@@ -60,15 +71,13 @@ public class GetPermissionRequest {
         return Collections.unmodifiableList(aces);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("aces", aces);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

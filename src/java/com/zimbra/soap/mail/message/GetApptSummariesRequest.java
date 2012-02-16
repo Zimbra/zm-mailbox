@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
- * 
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,17 +23,35 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-will-be-deprecated Note: This API is deprecated Use <b>&lt;SearchRequest></b> with the
+ * <b>calExpandInstStart</b> and <b>calExpandInstEnd</b> parameters
+ * @zm-api-command-description
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_APPT_SUMMARIES_REQUEST)
 public class GetApptSummariesRequest {
 
-    @XmlAttribute(name=MailConstants.A_CAL_START_TIME, required=true)
+    /**
+     * @zm-api-field-tag range-start-millis-gmt
+     * @zm-api-field-description Range start in milliseconds since the epoch GMT
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_START_TIME /* s */, required=true)
     private final long startTime;
 
-    @XmlAttribute(name=MailConstants.A_CAL_END_TIME, required=true)
+    /**
+     * @zm-api-field-tag range-end-millis-gmt
+     * @zm-api-field-description Range end in milliseconds since the epoch GMT
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_END_TIME /* e */, required=true)
     private final long endTime;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID.  Optional folder to constrain requests to; otherwise, searches all
+     * folders but trash and spam
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
     /**
@@ -54,8 +72,7 @@ public class GetApptSummariesRequest {
     public long getEndTime() { return endTime; }
     public String getFolderId() { return folderId; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("startTime", startTime)
             .add("endTime", endTime)
@@ -64,7 +81,6 @@ public class GetApptSummariesRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

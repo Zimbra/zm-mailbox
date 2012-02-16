@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,10 +32,10 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"content", "headers", "mimePart", "attachments", "invite",
            "emailAddresses", "timezones", "fragment", "extraElements"})
-public class CalendarItemMsg {
+public class Msg {
 
     @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachmentId;
@@ -91,7 +91,7 @@ public class CalendarItemMsg {
     @XmlAnyElement
     private List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
-    public CalendarItemMsg() {
+    public Msg() {
     }
 
     public void setAttachmentId(String attachmentId) {
@@ -171,8 +171,7 @@ public class CalendarItemMsg {
         return Collections.unmodifiableList(extraElements);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("attachmentId", attachmentId)
             .add("origId", origId)
@@ -194,8 +193,7 @@ public class CalendarItemMsg {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
     public static final class Header {

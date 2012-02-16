@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.OctopusXmlConstants;
 
+/**
+ * @zm-api-command-description Returns a list of items in the user's mailbox currently being watched by other users.
+ */
 @XmlRootElement(name=OctopusXmlConstants.E_GET_WATCHERS_REQUEST)
 public class GetWatchersRequest {
 }

@@ -32,14 +32,22 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Misspelling;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CHECK_SPELLING_RESPONSE)
 public class CheckSpellingResponse {
 
-    @XmlAttribute(name=MailConstants.A_AVAILABLE, required=true)
+    /**
+     * @zm-api-field-tag available
+     * @zm-api-field-description The "available" attribute specifies whether the server-side spell checking
+     * interface is available or not.
+     */
+    @XmlAttribute(name=MailConstants.A_AVAILABLE /* available */, required=true)
     private ZmBoolean available;
 
-    @XmlElement(name=MailConstants.E_MISSPELLED, required=false)
+    /**
+     * @zm-api-field-description Information for misspelled words
+     */
+    @XmlElement(name=MailConstants.E_MISSPELLED /* misspelled */, required=false)
     private List<Misspelling> misspelledWords = Lists.newArrayList();
 
     private CheckSpellingResponse() {

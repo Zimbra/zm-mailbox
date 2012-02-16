@@ -35,6 +35,9 @@ import com.zimbra.soap.mail.type.WatcherInfo;
 @XmlRootElement(name=OctopusXmlConstants.E_GET_WATCHERS_RESPONSE)
 public class GetWatchersResponse {
 
+    /**
+     * @zm-api-field-description Information on items being watched by users
+     */
     @XmlElement(name=MailConstants.E_WATCHER /* watcher */, required=false)
     private List<WatcherInfo> watchers = Lists.newArrayList();
 
@@ -56,15 +59,13 @@ public class GetWatchersResponse {
         return Collections.unmodifiableList(watchers);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("watchers", watchers);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

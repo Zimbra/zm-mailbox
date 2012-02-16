@@ -33,16 +33,54 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Create a waitset to listen for changes on one or more accounts
+ * <br />
+ * Called once to initialize a WaitSet and to set its "default interest types"
+ * <p>
+ * <b>WaitSet</b>: scalable mechanism for listening for changes to one or more accounts
+ * </p>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CREATE_WAIT_SET_REQUEST)
 public class CreateWaitSetRequest {
 
+    /**
+     * @zm-api-field-tag default-interests
+     * @zm-api-field-description Default interest types: comma-separated list.  Currently:
+     * <table>
+     * <tr> <td> <b>c</b> </td> <td> contacts </td> </tr>
+     * <tr> <td> <b>m</b> </td> <td> msgs (and subclasses) </td> </tr>
+     * <tr> <td> <b>a</b> </td> <td> appointments </td> </tr>
+     * <tr> <td> <b>t</b> </td> <td> tasks </td> </tr>
+     * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "c,m,a,t,d") * </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=true)
     private final String defaultInterests;
 
+    /**
+     * @zm-api-field-tag all-accounts
+     * @zm-api-field-description If <b>{all-accounts}</b> is set, then all mailboxes on the system will be listened
+     * to, including any mailboxes which are created on the system while the WaitSet is in existence.
+     * Additionally:
+     * <ul>
+     * <li> &lt;add>, &lt;remove> and &lt;update> tags are IGNORED
+     * <li> The requesting authtoken must be an admin token
+     * </ul>
+     * <p>
+     * AllAccounts WaitSets are *semi-persistent*, that is, even if the server restarts, it is OK to call
+     * &lt;WaitSetRequest> passing in your previous sequence number.  The server will attempt to resynchronize the
+     * waitset using the sequence number you provide (the server's ability to do this is limited by the RedoLogs that
+     * are available)
+     */
     @XmlAttribute(name=MailConstants.A_ALL_ACCOUNTS /* allAccounts */, required=false)
     private ZmBoolean allAccounts;
 
+    /**
+     * @zm-api-field-description Waitsets to add
+     */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<WaitSetAddSpec> accounts = Lists.newArrayList();
@@ -80,8 +118,7 @@ public class CreateWaitSetRequest {
         return Collections.unmodifiableList(accounts);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("defaultInterests", defaultInterests)
             .add("allAccounts", allAccounts)
@@ -90,7 +127,6 @@ public class CreateWaitSetRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

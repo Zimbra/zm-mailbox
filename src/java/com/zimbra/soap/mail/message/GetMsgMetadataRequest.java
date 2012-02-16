@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.IdsAttr;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get message metadata
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_REQUEST)
 public class GetMsgMetadataRequest {
 
+    /**
+     * @zm-api-field-description Messages selector
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final IdsAttr msgIds;
 
@@ -45,15 +51,13 @@ public class GetMsgMetadataRequest {
 
     public IdsAttr getMsgIds() { return msgIds; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("msgIds", msgIds);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

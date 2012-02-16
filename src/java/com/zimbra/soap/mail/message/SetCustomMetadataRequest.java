@@ -25,13 +25,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCustomMetadata;
 
+/**
+ * @zm-api-command-description Set Custom Metadata
+ * <br />
+ * Setting a custom metadata section but providing no key/value pairs will remove the sction from the item
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SET_METADATA_REQUEST)
 public class SetCustomMetadataRequest {
 
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description Item ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-description New metadata information
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private MailCustomMetadata metadata;
 
@@ -54,8 +66,7 @@ public class SetCustomMetadataRequest {
     public String getId() { return id; }
     public MailCustomMetadata getMetadata() { return metadata; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("metadata", metadata);
@@ -63,7 +74,6 @@ public class SetCustomMetadataRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

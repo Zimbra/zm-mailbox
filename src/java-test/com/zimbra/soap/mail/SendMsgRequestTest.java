@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.zimbra.soap.mail.message.SendMsgRequest;
-import com.zimbra.soap.mail.type.CalendarItemMsg;
+import com.zimbra.soap.mail.type.Msg;
 
 /**
  * Unit test for {@link SendMsgRequest}.
@@ -45,10 +45,10 @@ public final class SendMsgRequestTest {
     @Test
     public void marshal() throws Exception {
         SendMsgRequest req = new SendMsgRequest();
-        CalendarItemMsg msg = new CalendarItemMsg();
+        Msg msg = new Msg();
         msg.setHeaders(ImmutableList.of(
-                new CalendarItemMsg.Header("name1", "value1"),
-                new CalendarItemMsg.Header("name2", "value2")));
+                new Msg.Header("name1", "value1"),
+                new Msg.Header("name2", "value2")));
         req.setMsg(msg);
         StringWriter writer = new StringWriter();
         marshaller.marshal(req, writer);

@@ -26,13 +26,24 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AddMsgSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Add a message
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_ADD_MSG_REQUEST)
 public class AddMsgRequest {
 
+    /**
+     * @zm-api-field-tag filter-sent
+     * @zm-api-field-description If set, then do outgoing message filtering if the msg is being added to the Sent
+     * folder and has been flagged as sent. Default is unset.
+     */
     @XmlAttribute(name=MailConstants.A_FILTER_SENT /* filterSent */, required=false)
     private ZmBoolean filterSent;
 
+    /**
+     * @zm-api-field-description Specification of the message to add
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final AddMsgSpec msg;
 

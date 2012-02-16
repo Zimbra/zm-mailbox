@@ -20,16 +20,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Rights;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_EFFECTIVE_FOLDER_PERMS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetEffectiveFolderPermsResponse {
 
+    /**
+     * @zm-api-field-description Folder permissions information
+     */
     @XmlElement(name=MailConstants.E_FOLDER /* folder */, required=true)
     private final Rights folder;
 
@@ -47,15 +48,13 @@ public class GetEffectiveFolderPermsResponse {
 
     public Rights getFolder() { return folder; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("folder", folder);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

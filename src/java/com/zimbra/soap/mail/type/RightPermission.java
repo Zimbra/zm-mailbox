@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,44 +13,54 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.NoteInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=MailConstants.E_GET_NOTE_RESPONSE)
-public class GetNoteResponse {
+public class RightPermission {
 
     /**
-     * @zm-api-field-description Note information
+     * @zm-api-field-tag has-right-on-target
+     * @zm-api-field-description If set then the authed user has the right <b>{right-name}</b> on the target.
      */
-    @XmlElement(name=MailConstants.E_NOTE /* note */, required=true)
-    private final NoteInfo note;
+    @XmlAttribute(name=MailConstants.A_ALLOW /* allow */, required=true)
+    private final ZmBoolean allow;
+
+    /**
+     * @zm-api-field-tag right-name
+     * @zm-api-field-description Right name
+     */
+    @XmlValue
+    private String rightName;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetNoteResponse() {
-        this((NoteInfo) null);
+    private RightPermission() {
+        this((Boolean) null);
     }
 
-    public GetNoteResponse(NoteInfo note) {
-        this.note = note;
+    public RightPermission(Boolean allow) {
+        this.allow = ZmBoolean.fromBool(allow);
     }
 
-    public NoteInfo getNote() { return note; }
+    public void setRightName(String rightName) { this.rightName = rightName; }
+    public ZmBoolean getAllow() { return allow; }
+    public String getRightName() { return rightName; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
-            .add("note", note);
+            .add("allow", allow)
+            .add("rightName", rightName);
     }
 
     @Override

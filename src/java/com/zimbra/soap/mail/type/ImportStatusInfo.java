@@ -23,18 +23,36 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class ImportStatusInfo {
+@XmlAccessorType(XmlAccessType.NONE)
+public abstract class ImportStatusInfo {
 
+    /**
+     * @zm-api-field-tag datasource-id
+     * @zm-api-field-description Data source ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag is-running
+     * @zm-api-field-description Whether data is currently being imported from this data source
+     */
     @XmlAttribute(name=MailConstants.A_DS_IS_RUNNING /* isRunning */, required=false)
     private ZmBoolean running;
 
+    /**
+     * @zm-api-field-tag success
+     * @zm-api-field-description Whether the last import completed successfully.  (not returned if the
+     * import has not run yet)
+     */
     @XmlAttribute(name=MailConstants.A_DS_SUCCESS /* success */, required=false)
     private ZmBoolean success;
 
+    /**
+     * @zm-api-field-tag error-message
+     * @zm-api-field-description If the last import failed, this is the error message that was returned.  (not
+     * returned if the import has not run yet)
+     */
     @XmlAttribute(name=MailConstants.A_DS_ERROR /* error */, required=false)
     private String error;
 
@@ -50,8 +68,7 @@ public class ImportStatusInfo {
     public Boolean getSuccess() { return ZmBoolean.toBool(success); }
     public String getError() { return error; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("running", running)
@@ -61,7 +78,6 @@ public class ImportStatusInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

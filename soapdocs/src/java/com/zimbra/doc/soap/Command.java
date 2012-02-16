@@ -35,6 +35,8 @@ public class Command implements java.io.Serializable {
     private String namespace = null;
 
     private String description = null;
+    private Boolean networkEdition = false;
+    private String deprecation = null;
 
     Command(Service service, String name, String namespace) {
         this.service = service;
@@ -65,6 +67,11 @@ public class Command implements java.io.Serializable {
         return Strings.nullToEmpty(this.description);
     }
 
+    public Boolean hasDeprecationDescription() { return ! Strings.isNullOrEmpty(deprecation); }
+
+    public String getDeprecation() {
+        return Strings.nullToEmpty(this.deprecation);
+    }
     /**
      * Gets the short description. This is the description up to the first
      * period "." in the description.
@@ -81,6 +88,10 @@ public class Command implements java.io.Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setDeprecation(String deprecation) {
+        this.deprecation = deprecation;
     }
 
     public void setRootRequestElement(XmlElementDescription request) {
@@ -151,6 +162,9 @@ public class Command implements java.io.Serializable {
         els.remove(this.response);
         return els;
     }
+
+    public void setNetworkEdition(boolean networkEdition) { this.networkEdition = networkEdition; }
+    public Boolean isNetworkEdition() { return networkEdition; }
 
     /**
      * Dumps the contents to <code>System.out.println</code>

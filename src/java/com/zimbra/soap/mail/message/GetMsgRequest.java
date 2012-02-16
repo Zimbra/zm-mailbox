@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MsgSpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get Message
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_MSG_REQUEST)
 public class GetMsgRequest {
 
+    /**
+     * @zm-api-field-description Message specification
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final MsgSpec msg;
 
@@ -45,15 +51,13 @@ public class GetMsgRequest {
 
     public MsgSpec getMsg() { return msg; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("msg", msg);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

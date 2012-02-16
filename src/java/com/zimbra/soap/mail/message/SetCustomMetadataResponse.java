@@ -27,6 +27,10 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name=MailConstants.E_SET_METADATA_RESPONSE)
 public class SetCustomMetadataResponse {
 
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description Item ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
@@ -44,15 +48,13 @@ public class SetCustomMetadataResponse {
 
     public String getId() { return id; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

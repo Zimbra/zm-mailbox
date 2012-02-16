@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,11 +13,8 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.mail.type;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import com.zimbra.common.soap.MailConstants;
-
-@XmlRootElement(name=MailConstants.E_SEND_VERIFICATION_CODE_RESPONSE)
-public class SendVerificationCodeResponse {
+abstract public class DataSourceNameOrId
+extends NameOrId {
 }

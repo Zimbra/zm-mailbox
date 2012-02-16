@@ -20,16 +20,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCustomMetadata;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_MAILBOX_METADATA_RESPONSE)
-@XmlType(propOrder = {})
 public class GetMailboxMetadataResponse {
 
+    /**
+     * @zm-api-field-description Metadata information
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private MailCustomMetadata metadata;
 
@@ -39,15 +40,13 @@ public class GetMailboxMetadataResponse {
     public void setMetadata(MailCustomMetadata metadata) { this.metadata = metadata; }
     public MailCustomMetadata getMetadata() { return metadata; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("metadata", metadata);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

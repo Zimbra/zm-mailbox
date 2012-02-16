@@ -22,8 +22,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class SaveDraftMsg extends CalendarItemMsg {
+@XmlAccessorType(XmlAccessType.NONE)
+public class SaveDraftMsg extends Msg {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private Integer id;

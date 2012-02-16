@@ -27,22 +27,21 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ChatSummary;
 import com.zimbra.soap.mail.type.MessageSummary;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_RESPONSE)
-@XmlType(propOrder = {})
 public class GetMsgMetadataResponse {
 
+    /**
+     * @zm-api-field-description Message metadata
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class)
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatSummary.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageSummary.class)
     })
     private List<MessageSummary> messages = Lists.newArrayList();
 
@@ -64,15 +63,13 @@ public class GetMsgMetadataResponse {
         return Collections.unmodifiableList(messages);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("messages", messages);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

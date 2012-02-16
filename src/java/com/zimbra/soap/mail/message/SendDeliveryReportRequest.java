@@ -23,10 +23,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Send a delivery report
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEND_REPORT_REQUEST)
 public class SendDeliveryReportRequest {
 
+    /**
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
+     */
     @XmlAttribute(name=MailConstants.A_MESSAGE_ID /* mid */, required=true)
     private final String messageId;
 
@@ -44,15 +51,13 @@ public class SendDeliveryReportRequest {
 
     public String getMessageId() { return messageId; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("messageId", messageId);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

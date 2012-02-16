@@ -25,10 +25,28 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.IdStatus;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Update device status
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_UPDATE_DEVICE_STATUS_REQUEST)
 public class UpdateDeviceStatusRequest {
 
+    /**
+     * @zm-api-field-description Information about device status.
+     * Setting of "status" attribute:
+     * <table>
+     * <tr> <td> <b>enabled</b> </td> <td> in normal operation </td> </tr>
+     * <tr> <td> <b>disabled</b> </td>
+     *      <td> user or admin requested to disable this device.  the device will perform self wipe next time it
+     *           contacts the server.  </td> </tr>
+     * <tr> <td> <b>locked</b> </td> <td> device is temporarily locked </td> </tr>
+     * <tr> <td> <b>wiped</b> </td> 
+     *      <td> device has acknowledged the disable request, and wiped the the downloaded files and
+     *           authentication information.
+     * </td> </tr>
+     * </table>
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final IdStatus device;
 
@@ -46,15 +64,13 @@ public class UpdateDeviceStatusRequest {
 
     public IdStatus getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

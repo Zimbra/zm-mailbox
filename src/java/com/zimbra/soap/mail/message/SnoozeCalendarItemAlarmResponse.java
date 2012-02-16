@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,23 +27,22 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.UpdatedAlarmInfo;
 import com.zimbra.soap.mail.type.UpdatedAppointmentAlarmInfo;
 import com.zimbra.soap.mail.type.UpdatedTaskAlarmInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="SnoozeCalendarItemAlarmResponse")
-@XmlType(propOrder = {})
 public class SnoozeCalendarItemAlarmResponse {
 
+    /**
+     * @zm-api-field-description Updated alarm information so the client knows when to trigger the next alarm
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
-            type=UpdatedAppointmentAlarmInfo.class),
-        @XmlElement(name=MailConstants.E_TASK /* task */,
-            type=UpdatedTaskAlarmInfo.class)
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=UpdatedAppointmentAlarmInfo.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=UpdatedTaskAlarmInfo.class)
     })
     private List<UpdatedAlarmInfo> updatedAlarms = Lists.newArrayList();
 
@@ -67,15 +66,13 @@ public class SnoozeCalendarItemAlarmResponse {
         return Collections.unmodifiableList(updatedAlarms);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("updatedAlarms", updatedAlarms);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

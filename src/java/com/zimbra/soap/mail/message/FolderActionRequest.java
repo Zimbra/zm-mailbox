@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,10 +24,99 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Perform an action on a folder
+ * <br />
+ * Actions:
+ * <pre>
+ *   &lt;action op="read" id="{list}"/>
+ *     - mark all items in the folder as read
+ *
+ *   &lt;action op="delete" id="{list}"/>
+ *     - hard-delete the folder, all items in the folder, and all the folder's subfolders
+ *
+ *   &lt;action op="empty" id="{list}" [recusive="{delete-subfolders}"]/>
+ *     - hard-delete all items in the folder (and all the folder's subfolders if "recursive" is set)
+ *
+ *   &lt;action op="rename" id="{list}" name="{new-name}" [l="{new-folder}"]/>
+ *     - change the folder's name (and optionally location);
+ *       if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
+ *
+ *   &lt;action op="move" id="{list}" l="{new-folder}"/>
+ *     - move the folder to be a child of {target-folder}
+ *
+ *   &lt;action op="trash" id="{list}"/>
+ *     - move the folder to the Trash, marking all contents as read and
+ *       renaming the folder if a folder by that name is already present in the Trash
+ *
+ *   &lt;action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
+ *     - see ItemActionRequest
+ *
+ *   &lt;action op="grant" id="{list}">
+ *     &lt;grant perm="..." gt="..." zid="..." [expiry="{millis-since-epoch}"] [d="..."] [key="..."]/>
+ *   &lt;/action>
+ *     - add the &lt;grant> object to the folder
+ *
+ *   &lt;action op="!grant" id="{list}" zid="{grantee-zimbra-id}"/>
+ *     - revoke access from {grantee-zimbra-id}
+ *         (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
+ *         or use "99999999-9999-9999-9999-999999999999" to revoke acces granted to "pub" )
+ *
+ *   &lt;action op="revokeorphangrants" id="{folder-id}" zid="{grantee-zimbra-id}" gt="{grantee-type}"/>
+ *     - revoke orphan grants on the folder hierarchy granted to the grantee specified by zid and gt
+ *       "orphan grant" is a grant whose grantee object is deleted/non-existing.  Server will throw
+ *       INVALID_REQUEST if zid points to an existing object,
+ *       Only supported if gt is usr|grp|cos|dom; otherwise server will throw INVALID_REQUEST.
+ *
+ *   &lt;action op="url" id="{list}" url="{target-url}" [excludeFreeBusy="{exclude-free-busy-boolean}"]/>
+ *     - set the synchronization url on the folder to {target-url}, empty the folder, and\
+ *       synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean}
+ *
+ *   &lt;action op="sync" id="{list}"/>
+ *     - synchronize the folder's contents to the remote feed specified by the folder's {url}
+ *
+ *   &lt;action op="import" id="{list}" url="{target-url}"/>
+ *     - add the contents to the remote feed at {target-url} to the folder [1-time action]
+ *
+ *   &lt;action op="fb" id="{list}" excludeFreeBusy="{exclude-free-busy-boolean}"/>
+ *     - set the excludeFreeBusy boolean for this folder (must specify {exclude-free-busy-boolean})
+ *
+ *   &lt;action op="[!]check" id="{list}"/>
+ *     - set or unset the "checked" state of the folder in the UI
+ *
+ *   &lt;action op="[!]syncon" id="{list}"/>
+ *     - set or unset the "sync" flag of the folder to sync a local folder with a remote source
+ *
+ *   &lt;action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"]
+ *                          [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>
+ *     [&lt;acl>&lt;grant .../>*&lt;/acl>]
+ *   &lt;/action>
+ *     - do several operations at once:
+ *           name="{new-name}"        to change the folder's name
+ *           l="{target-folder}"      to change the folder's location
+ *           color="{new-color}"      to set the folder's color
+ *           view="{new-view}"        to change folder's default view (useful for migration)
+ *           f="{new-flags}"          to change the folder's exclude free/(b)usy, checked (#), and
+ *                                    IMAP subscribed (*) state
+ *           &lt;acl>&lt;grant ...>*&lt;/acl>  to replace the folder's existing ACL with a new ACL
+ *
+ *   {list} = on input, list of folders to act on, on output, list of
+ *            folders that were acted on;
+ *            list may only have 1 element for action "rename" or "empty"
+ *
+ * output of "grant" action includes the zimbra id the rights were granted on
+ *
+ * note that "delete", "empty", "rename", "move", "color", "update" can be used on search folders as well as standard
+ * folders
+ * </pre>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_FOLDER_ACTION_REQUEST)
 public class FolderActionRequest {
 
+    /**
+     * @zm-api-field-description Select action to perform on folder
+     */
     @XmlElement(name=MailConstants.E_ACTION, required=true)
     private final FolderActionSelector action;
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,26 +39,55 @@ import com.zimbra.soap.mail.type.ExpandedRecurrenceInvite;
 import com.zimbra.soap.mail.type.FreeBusyUserSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Check conflicts in recurrence against list of users.
+ * <br />
+ * Set <b>all</b> attribute to get all instances, even those without conflicts.  By default only instances that have
+ * conflicts are returned.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CHECK_RECUR_CONFLICTS_REQUEST)
 @XmlType(propOrder = {"timezones", "components", "freebusyUsers"})
 public class CheckRecurConflictsRequest {
 
+    /**
+     * @zm-api-field-tag start-time-millis
+     * @zm-api-field-description Start time in millis.  If not specified, defaults to current time
+     */
     @XmlAttribute(name=MailConstants.A_CAL_START_TIME /* s */, required=false)
     private Long startTime;
 
+    /**
+     * @zm-api-field-tag end-time-millis
+     * @zm-api-field-description End time in millis.  If not specified, unlimited
+     */
     @XmlAttribute(name=MailConstants.A_CAL_END_TIME /* e */, required=false)
     private Long endTime;
 
+    /**
+     * @zm-api-field-tag get-all-instances
+     * @zm-api-field-description Set this to get all instances, even those without conflicts.  By default only
+     * instances that have conflicts are returned.
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ALL /* all */, required=false)
     private ZmBoolean allInstances;
 
+    /**
+     * @zm-api-field-tag exclude-uid
+     * @zm-api-field-description UID of appointment to exclude from free/busy search
+     */
     @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID /* excludeUid */, required=false)
     private String excludeUid;
 
+    /**
+     * @zm-api-field-description Timezones
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Expanded recurrences
+     */
     @XmlElements({
         @XmlElement(name=MailConstants.E_CAL_CANCEL /* cancel */, type=ExpandedRecurrenceCancel.class),
         @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, type=ExpandedRecurrenceInvite.class),
@@ -66,6 +95,9 @@ public class CheckRecurConflictsRequest {
     })
     private List<ExpandedRecurrenceComponent> components = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Freebusy user specifications
+     */
     @XmlElement(name=MailConstants.E_FREEBUSY_USER /* usr */, required=false)
     private List<FreeBusyUserSpec> freebusyUsers = Lists.newArrayList();
 

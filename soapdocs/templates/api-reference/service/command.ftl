@@ -38,6 +38,16 @@ function windowTitle()
 <font SIZE="-1">Namespace: "${command.namespace}"</font>
 <br>
 ${command.name} SOAP Command</h2>
+<#if command.hasDeprecationDescription()>
+<p>
+<b>${command.deprecation}</b>
+</p>
+</#if>
+<#if command.isNetworkEdition()>
+<p>
+This is a <b>Network edition only</b> API
+</p>
+</#if>
 <p>
 ${command.description}
 </p>

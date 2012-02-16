@@ -27,7 +27,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CaldavImportStatusInfo;
@@ -40,28 +39,22 @@ import com.zimbra.soap.mail.type.RssImportStatusInfo;
 import com.zimbra.soap.mail.type.UnknownImportStatusInfo;
 import com.zimbra.soap.mail.type.YabImportStatusInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_IMPORT_STATUS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetImportStatusResponse {
 
+    /**
+     * @zm-api-field-description Import Status information
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_DS_IMAP /* imap */,
-            type=ImapImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_POP3 /* pop3 */,
-            type=Pop3ImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_CALDAV /* caldav */,
-            type=CaldavImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_YAB /* yab */,
-            type=YabImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_RSS /* rss */,
-            type=RssImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_GAL /* gal */,
-            type=GalImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_CAL /* cal */,
-            type=CalImportStatusInfo.class),
-        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */,
-            type=UnknownImportStatusInfo.class)
+        @XmlElement(name=MailConstants.E_DS_IMAP /* imap */, type=ImapImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_POP3 /* pop3 */, type=Pop3ImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_CALDAV /* caldav */, type=CaldavImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_YAB /* yab */, type=YabImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=RssImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=GalImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=CalImportStatusInfo.class),
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=UnknownImportStatusInfo.class)
     })
     private List<ImportStatusInfo> statuses = Lists.newArrayList();
 
@@ -84,15 +77,13 @@ public class GetImportStatusResponse {
         return Collections.unmodifiableList(statuses);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("statuses", statuses);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,22 +23,22 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class SetCalendarItemInfo {
 
     @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT, required=false)
     private String partStat;
 
     @XmlElement(name=MailConstants.E_MSG, required=false)
-    private CalendarItemMsg msg;
+    private Msg msg;
 
     public SetCalendarItemInfo() {
     }
 
     public void setPartStat(String partStat) { this.partStat = partStat; }
-    public void setMsg(CalendarItemMsg msg) { this.msg = msg; }
+    public void setMsg(Msg msg) { this.msg = msg; }
     public String getPartStat() { return partStat; }
-    public CalendarItemMsg getMsg() { return msg; }
+    public Msg getMsg() { return msg; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

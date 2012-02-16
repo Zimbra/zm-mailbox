@@ -26,16 +26,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ShareNotificationInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_SHARE_NOTIFICATIONS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetShareNotificationsResponse {
 
+    /**
+     * @zm-api-field-description Share notification information
+     */
     @XmlElement(name=MailConstants.E_SHARE /* share */, required=false)
     private List<ShareNotificationInfo> shares = Lists.newArrayList();
 
@@ -57,15 +58,13 @@ public class GetShareNotificationsResponse {
         return Collections.unmodifiableList(shares);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("shares", shares);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

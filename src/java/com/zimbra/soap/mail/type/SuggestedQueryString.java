@@ -24,35 +24,37 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.soap.type.BaseQueryInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class SpellingSuggestionsQueryInfo implements BaseQueryInfo {
+public class SuggestedQueryString implements BaseQueryInfo {
 
+    /**
+     * @zm-api-field-tag suggested-query-string
+     * @zm-api-field-description Suggested query string
+     */
     @XmlValue
     private String suggestedQueryString;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    private SpellingSuggestionsQueryInfo() {
+    private SuggestedQueryString() {
         this((String) null);
     }
 
-    private SpellingSuggestionsQueryInfo(String suggestedQueryString) {
+    private SuggestedQueryString(String suggestedQueryString) {
         this.suggestedQueryString = suggestedQueryString;
     }
 
-    public static SpellingSuggestionsQueryInfo createForSuggestedQueryString(String suggestedQueryString) {
-        return new SpellingSuggestionsQueryInfo(suggestedQueryString);
+    public static SuggestedQueryString createForSuggestedQueryString(String suggestedQueryString) {
+        return new SuggestedQueryString(suggestedQueryString);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("suggestedQueryString", suggestedQueryString);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

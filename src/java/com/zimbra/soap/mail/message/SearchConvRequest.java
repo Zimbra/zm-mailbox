@@ -25,16 +25,43 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailSearchParams;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Search a conversation
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_CONV_REQUEST)
 public class SearchConvRequest extends MailSearchParams {
 
-    @XmlAttribute(name=MailConstants.A_NEST_MESSAGES /* nest */, required=false)
-    private ZmBoolean nestMessages;
-
+    /**
+     * @zm-api-field-tag conversation-id
+     * @zm-api-field-description The ID of the conversation to search within.  <b>REQUIRED</b>.
+     */
     @XmlAttribute(name=MailConstants.A_CONV_ID /* cid */, required=true)
     private final String conversationId;
 
+    /**
+     * @zm-api-field-tag nest-messages-inside-conv
+     * @zm-api-field-description If set then the response will contain a top level <b>&lt;c</b> element representing
+     * the conversation with child <b>&lt;m></b> elements representing messages in the conversation.
+     * <br />
+     * If unset, no <b>&lt;c></b> element is included - <b>&lt;m></b> elements will be top level elements.
+     */
+    @XmlAttribute(name=MailConstants.A_NEST_MESSAGES /* nest */, required=false)
+    private ZmBoolean nestMessages;
+
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description If 'needExp' is set in the request, and when when the 'fetch' attr is set to a
+     * message ID, two additional flags may be included in <b>&lt;e></b> elements for the message:
+     * <ul>
+     * <li> isGroup - set if the email address is a group
+     * <li> exp - present only when isGroup="1".
+     *      <br />
+     *      Set if the authed user can (has permission to) expand members in this group
+     *      <br />
+     *      Unset if the authed user does not have permission to expand group members
+     * </ul>
+     */
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
     private ZmBoolean needCanExpand;
 
@@ -56,8 +83,7 @@ public class SearchConvRequest extends MailSearchParams {
     public String getConversationId() { return conversationId; }
     public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("nestMessages", nestMessages)
@@ -67,7 +93,6 @@ public class SearchConvRequest extends MailSearchParams {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

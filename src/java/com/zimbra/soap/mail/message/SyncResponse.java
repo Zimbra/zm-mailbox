@@ -50,21 +50,45 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {"deleted", "items"})
 public class SyncResponse {
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Change date
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=true)
     private long changeDate;
 
+    /**
+     * @zm-api-field-tag new-sync-token
+     * @zm-api-field-description New sync token
+     */
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
+    /**
+     * @zm-api-field-tag size
+     * @zm-api-field-description Size
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description If set, the response does <b>not</b> bring the client completely up to date.
+     * <br />
+     * More changes are still queued, and another SyncRequest (using the new returned token) is necessary.
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
+    /**
+     * @zm-api-field-description Information on deletes
+     */
     @XmlElement(name=MailConstants.E_DELETED /* deleted */, required=false)
     private SyncDeletedInfo deleted;
 
+    /**
+     * @zm-api-field-description Item information
+     */
     @XmlElements({
         @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=Folder.class),
         @XmlElement(name=MailConstants.E_TAG /* tag */, type=TagInfo.class),
@@ -116,8 +140,7 @@ public class SyncResponse {
         return Collections.unmodifiableList(items);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("changeDate", changeDate)
             .add("token", token)
@@ -129,7 +152,6 @@ public class SyncResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

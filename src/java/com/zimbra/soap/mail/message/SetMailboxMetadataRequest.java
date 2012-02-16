@@ -24,10 +24,23 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCustomMetadata;
 
+/**
+ * @zm-api-command-description Set Mailbox Metadata
+ * <ul>
+ * <li> Setting a mailbox metadata section but providing no key/value pairs will remove the section from mailbox
+ *      metadata
+ * <li> Empty value not allowed
+ * <li> <b>{metadata-section-key}</b> must be no more than 36 characters long and must be in the format of
+ *      <b>{namespace}:{section-name}</b>.  currently the only valid namespace is <b>"zwc"</b>.
+ * </ul>
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SET_MAILBOX_METADATA_REQUEST)
 public class SetMailboxMetadataRequest {
 
+    /**
+     * @zm-api-field-description New metadata information
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private MailCustomMetadata metadata;
 
@@ -37,15 +50,13 @@ public class SetMailboxMetadataRequest {
     public void setMetadata(MailCustomMetadata metadata) { this.metadata = metadata; }
     public MailCustomMetadata getMetadata() { return metadata; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("metadata", metadata);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

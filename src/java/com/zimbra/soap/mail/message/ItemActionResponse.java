@@ -28,6 +28,11 @@ import com.zimbra.soap.mail.type.IdAndOperation;
 @XmlRootElement(name=MailConstants.E_ITEM_ACTION_RESPONSE)
 public class ItemActionResponse {
 
+    /**
+     * @zm-api-field-description The <b>&lt;action></b> element in the response always contains the same id list that
+     * the client sent in the request.  In particular, IDs that were ignored due to constraints are included in the
+     * id list.
+     */
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private final IdAndOperation action;
 
@@ -45,15 +50,13 @@ public class ItemActionResponse {
 
     public IdAndOperation getAction() { return action; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("action", action);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -20,16 +20,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MsgWithGroupInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_MSG_RESPONSE)
-@XmlType(propOrder = {})
 public class GetMsgResponse {
 
+    /**
+     * @zm-api-field-description Message information
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private MsgWithGroupInfo msg;
 
@@ -39,15 +40,13 @@ public class GetMsgResponse {
     public void setMsg(MsgWithGroupInfo msg) { this.msg = msg; }
     public MsgWithGroupInfo getMsg() { return msg; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("msg", msg);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

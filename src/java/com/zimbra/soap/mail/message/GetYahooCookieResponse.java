@@ -23,19 +23,35 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_YAHOO_COOKIE_RESPONSE)
 public class GetYahooCookieResponse {
 
+    /**
+     * @zm-api-field-tag error
+     * @zm-api-field-description Error
+     */
     @XmlAttribute(name="error", required=false)
     private String error;
 
+    /**
+     * @zm-api-field-tag crumb
+     * @zm-api-field-description Crumb
+     */
     @XmlAttribute(name="crumb", required=false)
     private String crumb;
 
+    /**
+     * @zm-api-field-tag y
+     * @zm-api-field-description y
+     */
     @XmlAttribute(name="y", required=false)
     private String y;
 
+    /**
+     * @zm-api-field-tag t
+     * @zm-api-field-description t
+     */
     @XmlAttribute(name="t", required=false)
     private String t;
 
@@ -51,8 +67,7 @@ public class GetYahooCookieResponse {
     public String getY() { return y; }
     public String getT() { return t; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("error", error)
             .add("crumb", crumb)
@@ -62,7 +77,6 @@ public class GetYahooCookieResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

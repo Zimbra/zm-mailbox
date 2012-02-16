@@ -34,38 +34,98 @@ import com.zimbra.soap.mail.type.CalReply;
 import com.zimbra.soap.mail.type.SetCalendarItemInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+//   TODO: need way to link message to appointment after the fact
+/**
+ * @zm-api-command-description Directly set status of an entire appointment.  This API is intended for mailbox
+ * Migration (ie migrating a mailbox onto this server) and is not used by normal mail clients.
+ * <br />
+ * <br />
+ * Need to specifiy folder for appointment
+ * <br />
+ * <br />
+ * Need way to add message WITHOUT processing it for calendar parts.
+ * Need to generate and patch-in the iCalendar for the <b>&lt;inv></b> but w/o actually processing the
+ * <b>&lt;inv></b> as a new request
+ * </ol>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SET_APPOINTMENT_REQUEST)
 public class SetAppointmentRequest {
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags (Deprecated - use <b>{tag-names}</b> instead)
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description ID of folder to create appointment in
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
+    /**
+     * @zm-api-field-tag no-next-alarm
+     * @zm-api-field-description Set if all alarms have been dismissed; if this is set, nextAlarm should not be set
+     */
     @XmlAttribute(name=MailConstants.A_CAL_NO_NEXT_ALARM /* noNextAlarm */, required=false)
     private ZmBoolean noNextAlarm;
 
+    /**
+     * @zm-api-field-tag next-alarm-will-go-off-at
+     * @zm-api-field-description If specified, time when next alarm should go off.
+     * <br />
+     * If missing, two possibilities:
+     * <ol>
+     * <li> if noNextAlarm isn't set, keep current next alarm time (this is a backward compatibility case)
+     * <li> if noNextAlarm is set, indicates all alarms have been dismissed
+     * </ol>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
+    /**
+     * @zm-api-field-description Default calendar item information
+     */
     @XmlElement(name=MailConstants.A_DEFAULT /* default */, required=false)
     private SetCalendarItemInfo defaultId;
 
+    /**
+     * @zm-api-field-description Calendar item information for exceptions
+     */
     @XmlElement(name=MailConstants.E_CAL_EXCEPT /* except */, required=false)
     private List<SetCalendarItemInfo> exceptions = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Calendar item information for cancellations
+     */
     @XmlElement(name=MailConstants.E_CAL_CANCEL /* cancel */, required=false)
     private List<SetCalendarItemInfo> cancellations = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description List of replies received from attendees.  If SetAppointmenRequest doesn't contain
+     * a <b>&lt;replies></b> block, existing replies will be kept.  If <b>&lt;replies/></b> element is provided with
+     * no <b>&lt;reply></b> elements inside, existing replies will be removed, replaced with an empty set.
+     * If <b>&lt;replies></b> contains one or more <b>&lt;reply></b> elements, existing replies are replaced with the
+     * ones provided.
+     */
     @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalReply> replies = Lists.newArrayList();
@@ -136,8 +196,7 @@ public class SetAppointmentRequest {
         return Collections.unmodifiableList(replies);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("flags", flags)
             .add("tags", tags)
@@ -153,7 +212,6 @@ public class SetAppointmentRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

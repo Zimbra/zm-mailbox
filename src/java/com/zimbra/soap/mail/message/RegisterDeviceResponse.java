@@ -20,17 +20,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.NameId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_REGISTER_DEVICE_RESPONSE)
-@XmlType(propOrder = {})
 public class RegisterDeviceResponse {
 
+    /**
+     * @zm-api-field-description Information on the registered device
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final NameId device;
 
@@ -53,15 +54,13 @@ public class RegisterDeviceResponse {
 
     public NameId getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

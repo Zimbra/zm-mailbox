@@ -29,6 +29,9 @@ import com.zimbra.soap.mail.type.MessageSummary;
 @XmlRootElement(name=MailConstants.E_ADD_MSG_RESPONSE)
 public class AddMsgResponse {
 
+    /**
+     * @zm-api-field-description Details of added message
+     */
     @XmlElements({
         @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatSummary.class),
         @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageSummary.class)

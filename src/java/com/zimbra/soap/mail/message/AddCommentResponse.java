@@ -20,16 +20,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_ADD_COMMENT_RESPONSE)
-@XmlType(propOrder = {})
 public class AddCommentResponse {
 
+    /**
+     * @zm-api-field-tag comment-item-id
+     * @zm-api-field-description Item ID for the comment
+     */
     @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=true)
     private final Id comment;
 

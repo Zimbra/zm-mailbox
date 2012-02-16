@@ -59,12 +59,15 @@ import com.zimbra.soap.admin.type.QueueQueryField;
 import com.zimbra.soap.admin.type.ServerWithQueueAction;
 import com.zimbra.soap.admin.type.ValueAttrib;
 import com.zimbra.soap.mail.message.ConvActionRequest;
+import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
 import com.zimbra.soap.mail.message.GetContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactActionSelector;
 import com.zimbra.soap.mail.type.FolderActionSelector;
+import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
 import com.zimbra.soap.mail.type.NoteActionSelector;
+import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.common.soap.AccountConstants;
@@ -537,6 +540,31 @@ public class JaxbToElementTest {
         Assert.assertEquals("toString output", 
             "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
             request.toString());
+    }
+
+    /*
+     * Currently, DeleteDataSourceRequest does not have a setter for all datasource children.  Making sure that
+     * it works.  Actually believe that JAXB ignores setters for lists and adds by using the getter to get the
+     * list and adding to that.
+     */
+    @Test
+    public void DeleteDataSourceRequestTest () throws Exception {
+        DeleteDataSourceRequest req = new DeleteDataSourceRequest();
+        Pop3DataSourceNameOrId pop = new Pop3DataSourceNameOrId();
+        pop.setName("pop3name");
+        ImapDataSourceNameOrId imap = new ImapDataSourceNameOrId();
+        imap.setName("imap4name");
+        req.addDataSource(pop);
+        req.addDataSource(imap);
+        Element elem = JaxbUtil.jaxbToElement(req, XMLElement.mFactory);
+        Assert.assertNotNull("DataSourceRequest elem", elem);
+        Element imapE = elem.getElement(MailConstants.E_DS_IMAP);
+        Assert.assertNotNull("imap elem", imapE);
+        Element popE = elem.getElement(MailConstants.E_DS_POP3);
+        Assert.assertNotNull("imap elem", popE);
+        req = JaxbUtil.elementToJaxb(elem, DeleteDataSourceRequest.class);
+        Assert.assertNotNull("JAXB DeleteDataSourceRequest", req);
+        Assert.assertEquals("Number of datasources in JAXB", 2, req.getDataSources().size());
     }
 
     @Test

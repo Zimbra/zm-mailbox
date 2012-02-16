@@ -25,10 +25,16 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.DocumentActionSelector;
 
+/**
+ * @zm-api-command-description Document Action
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_DOCUMENT_ACTION_REQUEST)
 public class DocumentActionRequest {
 
+    /**
+     * @zm-api-field-description Document action selector
+     */
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private DocumentActionSelector action;
 
@@ -46,15 +52,13 @@ public class DocumentActionRequest {
     public void setAction(DocumentActionSelector action) { this.action = action; }
     public DocumentActionSelector getAction() { return action; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("action", action);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

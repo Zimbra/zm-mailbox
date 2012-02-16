@@ -25,10 +25,16 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.type.NamedElement;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Register a device
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_REGISTER_DEVICE_REQUEST)
 public class RegisterDeviceRequest {
 
+    /**
+     * @zm-api-field-description Specify the device
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final NamedElement device;
 
@@ -46,15 +52,13 @@ public class RegisterDeviceRequest {
 
     public NamedElement getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

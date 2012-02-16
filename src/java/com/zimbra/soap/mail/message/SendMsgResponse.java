@@ -20,16 +20,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEND_MSG_RESPONSE)
-@XmlType(propOrder = {})
 public class SendMsgResponse {
 
+    /**
+     * @zm-api-field-description Message information.  Note, "id" attribute will be absent if the message was not saved
+     * to a folder.
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final Id msg;
 
@@ -47,15 +49,13 @@ public class SendMsgResponse {
 
     public Id getMsg() { return msg; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("msg", msg);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
- * 
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,15 +33,16 @@ import com.zimbra.soap.mail.type.LegacyAppointmentData;
 import com.zimbra.soap.mail.type.LegacyCalendaringData;
 import com.zimbra.soap.mail.type.LegacyTaskData;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="GetTaskSummariesResponse")
 public class GetTaskSummariesResponse {
 
+    /**
+     * @zm-api-field-description Task summary information
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_APPOINTMENT,
-            type=LegacyAppointmentData.class),
-        @XmlElement(name=MailConstants.E_TASK,
-            type=LegacyTaskData.class)
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=LegacyAppointmentData.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=LegacyTaskData.class)
     })
     private List<LegacyCalendaringData> calEntries = Lists.newArrayList();
 
@@ -55,25 +56,21 @@ public class GetTaskSummariesResponse {
         }
     }
 
-    public GetTaskSummariesResponse addCalEntry(
-                            LegacyCalendaringData calEntry) {
+    public void addCalEntry(LegacyCalendaringData calEntry) {
         this.calEntries.add(calEntry);
-        return this;
     }
 
     public List<LegacyCalendaringData> getCalEntries() {
-        return Collections.unmodifiableList(calEntries);
+        return calEntries;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("calEntries", calEntries);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

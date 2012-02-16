@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,6 +16,10 @@
 package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -25,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalDataSourceNameOrId;
 import com.zimbra.soap.mail.type.CaldavDataSourceNameOrId;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.GalDataSourceNameOrId;
 import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
 import com.zimbra.soap.mail.type.NameOrId;
@@ -33,45 +38,44 @@ import com.zimbra.soap.mail.type.RssDataSourceNameOrId;
 import com.zimbra.soap.mail.type.UnknownDataSourceNameOrId;
 import com.zimbra.soap.mail.type.YabDataSourceNameOrId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Deletes the given data sources.  The name or id of each data source must be specified.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_DELETE_DATA_SOURCE_REQUEST)
 public class DeleteDataSourceRequest {
 
+    /**
+     * @zm-api-field-description Specify the datasources to delete
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_DS_IMAP /* imap */,
-            type=ImapDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_POP3 /* pop3 */,
-            type=Pop3DataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_CALDAV /* caldav */,
-            type=CaldavDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_YAB /* yab */,
-            type=YabDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_RSS /* rss */,
-            type=RssDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_GAL /* gal */,
-            type=GalDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_CAL /* cal */,
-            type=CalDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */,
-            type=UnknownDataSourceNameOrId.class)
+        @XmlElement(name=MailConstants.E_DS_IMAP /* imap */, type=ImapDataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_POP3 /* pop3 */, type=Pop3DataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_CALDAV /* caldav */, type=CaldavDataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_YAB /* yab */, type=YabDataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=RssDataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=GalDataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=CalDataSourceNameOrId.class),
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=UnknownDataSourceNameOrId.class)
     })
-    private NameOrId dataSource;
+    private List<DataSourceNameOrId> dataSources = Lists.newArrayList();
 
     public DeleteDataSourceRequest() {
     }
 
-    public void setDataSource(NameOrId dataSource) { this.dataSource = dataSource; }
-    public NameOrId getDataSource() { return dataSource; }
+    public void addDataSource(DataSourceNameOrId dataSource) { this.dataSources.add(dataSource); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public List<? extends NameOrId> getDataSources() {
+        return dataSources;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
-            .add("dataSource", dataSource);
+            .add("dataSources", dataSources);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

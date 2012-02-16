@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
- * 
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -27,7 +28,11 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=MailConstants.E_NO_OP_RESPONSE)
 public final class NoOpResponse {
 
-    @XmlAttribute(name=MailConstants.A_WAIT_DISALLOWED, required=false)
+    /**
+     * @zm-api-field-tag wait-disallowed
+     * @zm-api-field-description Set if wait was disallowed
+     */
+    @XmlAttribute(name=MailConstants.A_WAIT_DISALLOWED /* waitDisallowed */, required=false)
     private ZmBoolean waitDisallowed;
 
     public NoOpResponse() {
@@ -41,15 +46,16 @@ public final class NoOpResponse {
         return new NoOpResponse(waitDisallowed);
     }
 
-    public void setWaitDisallowed(Boolean waitDisallowed) {
-        this.waitDisallowed = ZmBoolean.fromBool(waitDisallowed);
-    }
+    public void setWaitDisallowed(Boolean waitDisallowed) { this.waitDisallowed = ZmBoolean.fromBool(waitDisallowed); }
     public Boolean getWaitDisallowed() { return ZmBoolean.toBool(waitDisallowed); }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("waitDisallowed", waitDisallowed);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("waitDisallowed", waitDisallowed)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

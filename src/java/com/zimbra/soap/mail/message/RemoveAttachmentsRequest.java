@@ -24,10 +24,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MsgPartIds;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Remove attachments from a message body
+ * <br />
+ * <b>NOTE</b> that this operation is effectively a create and a delete, and thus the message's item ID will change
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_REMOVE_ATTACHMENTS_REQUEST)
 public class RemoveAttachmentsRequest {
 
+    /**
+     * @zm-api-field-description Specification of parts to remove
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final MsgPartIds msg;
 
@@ -45,15 +53,13 @@ public class RemoveAttachmentsRequest {
 
     public MsgPartIds getMsg() { return msg; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("msg", msg);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

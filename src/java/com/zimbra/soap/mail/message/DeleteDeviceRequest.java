@@ -25,10 +25,16 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Permanently deletes mapping for indicated device.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_DELETE_DEVICE_REQUEST)
 public class DeleteDeviceRequest {
 
+    /**
+     * @zm-api-field-description Device ID
+     */
     @XmlElement(name=MailConstants.E_DEVICE /* device */, required=true)
     private final Id device;
 
@@ -46,15 +52,13 @@ public class DeleteDeviceRequest {
 
     public Id getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

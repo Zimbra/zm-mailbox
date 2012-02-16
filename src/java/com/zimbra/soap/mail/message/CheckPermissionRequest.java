@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -34,32 +34,50 @@ import com.zimbra.soap.mail.type.TargetSpec;
 /*
  * Delete this class in bug 66989
  */
+/**
+ * @zm-api-command-will-be-deprecated Note: to be deprecated in Zimbra 9.  Use zimbraAccount CheckRights instead.
+ * @zm-api-command-description Check if the authed user has the specified right(s) on a target.
+ * <br />
+ * If the specified target cannot be found:
+ * <ul>
+ * <li> if by is "id", throw NO_SUCH_ACCOUNT/NO_SUCH_CALENDAR_RESOURCE
+ * <li> if by is "name", return the default permission for the right.
+ * </ul>
+ * e.g.  With user1's auth token, the following checks if user1 can invite user2 and view user2's free/busy.
+ * <pre>
+ *     &lt;CheckPermissionRequest>
+ *       &lt;target type="account" by="name">user2@test.com&lt;/target>
+ *       &lt;right>invite&lt;/right>
+ *       &lt;right>viewFreeBusy&lt;/right>
+ *     &lt;/CheckPermissionRequest>
+ *
+ *     &lt;CheckPermissionResponse allow="{1|0}">
+ *       &lt;right allow="{1|0}">invite&lt;/right>
+ *       &lt;right allow="{1|0}">viewFreeBusy&lt;/right>
+ *     &lt;/CheckPermissionResponse>
+ * </pre>
+ */
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CHECK_PERMISSION_REQUEST)
 public class CheckPermissionRequest {
 
+    /**
+     * @zm-api-field-description Target specification
+     */
     @XmlElement(name=MailConstants.E_TARGET /* target */, required=false)
-    private List<TargetSpec> targets = Lists.newArrayList();
+    private TargetSpec target;
 
+    /**
+     * @zm-api-field-description Rights to check
+     */
     @XmlElement(name=MailConstants.E_RIGHT /* right */, required=false)
     private List<String> rights = Lists.newArrayList();
 
     public CheckPermissionRequest() {
     }
 
-    public void setTargets(Iterable <TargetSpec> targets) {
-        this.targets.clear();
-        if (targets != null) {
-            Iterables.addAll(this.targets,targets);
-        }
-    }
-
-    public CheckPermissionRequest addTarget(TargetSpec target) {
-        this.targets.add(target);
-        return this;
-    }
-
+    public void setTarget(TargetSpec target) { this.target = target; }
     public void setRights(Iterable <String> rights) {
         this.rights.clear();
         if (rights != null) {
@@ -67,28 +85,23 @@ public class CheckPermissionRequest {
         }
     }
 
-    public CheckPermissionRequest addRight(String right) {
+    public void addRight(String right) {
         this.rights.add(right);
-        return this;
     }
 
-    public List<TargetSpec> getTargets() {
-        return Collections.unmodifiableList(targets);
-    }
+    public TargetSpec getTarget() { return target; }
     public List<String> getRights() {
-        return Collections.unmodifiableList(rights);
+        return rights;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
-            .add("targets", targets)
+            .add("target", target)
             .add("rights", rights);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

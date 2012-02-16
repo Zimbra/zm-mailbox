@@ -23,13 +23,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get Yahoo Auth Token
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_YAHOO_AUTH_TOKEN_REQUEST)
 public class GetYahooAuthTokenRequest {
 
+    /**
+     * @zm-api-field-tag user
+     * @zm-api-field-description User
+     */
     @XmlAttribute(name="user", required=true)
     private final String user;
 
+    /**
+     * @zm-api-field-tag Password
+     * @zm-api-field-description Password
+     */
     @XmlAttribute(name="password", required=true)
     private final String password;
 
@@ -49,8 +60,7 @@ public class GetYahooAuthTokenRequest {
     public String getUser() { return user; }
     public String getPassword() { return password; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("user", user)
             .add("password", password);
@@ -58,7 +68,6 @@ public class GetYahooAuthTokenRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

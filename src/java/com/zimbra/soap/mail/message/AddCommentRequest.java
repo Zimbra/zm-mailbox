@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AddedComment;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Add a comment to the specified item.  Currently comments can only be added to documents
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_ADD_COMMENT_REQUEST)
 public class AddCommentRequest {
 
+    /**
+     * @zm-api-field-description Added comment
+     */
     @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=true)
     private final AddedComment comment;
 
@@ -45,8 +51,7 @@ public class AddCommentRequest {
 
     public AddedComment getComment() { return comment; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("comment", comment);
     }

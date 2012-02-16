@@ -19,7 +19,6 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalendarItemInfo;
@@ -35,9 +34,11 @@ import com.zimbra.soap.mail.type.TagInfo;
 import com.zimbra.soap.mail.type.TaskItemInfo;
 
 @XmlRootElement(name=MailConstants.E_GET_ITEM_RESPONSE)
-@XmlType(propOrder = {})
 public class GetItemResponse {
 
+    /**
+     * @zm-api-field-description Item
+     */
     @XmlElements({
         @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=Folder.class),
         @XmlElement(name=MailConstants.E_TAG /* tag */, type=TagInfo.class),

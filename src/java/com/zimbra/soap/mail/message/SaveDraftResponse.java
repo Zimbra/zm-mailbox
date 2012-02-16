@@ -21,22 +21,21 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ChatMessageInfo;
 import com.zimbra.soap.mail.type.MessageInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SAVE_DRAFT_RESPONSE)
-@XmlType(propOrder = {})
 public class SaveDraftResponse {
 
+    /**
+     * @zm-api-field-description Information on saved draft
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatMessageInfo.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageInfo.class)
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatMessageInfo.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageInfo.class)
     })
     private MessageInfo message;
 
@@ -46,15 +45,13 @@ public class SaveDraftResponse {
     public void setMessage(MessageInfo message) { this.message = message; }
     public MessageInfo getMessage() { return message; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("message", message);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

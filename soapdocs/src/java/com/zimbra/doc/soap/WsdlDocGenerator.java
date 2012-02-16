@@ -241,6 +241,8 @@ public class WsdlDocGenerator {
             ApiClassDocumentation doc = javadocInfo.get(reqClass);
             if ((doc != null) && (!Strings.isNullOrEmpty(doc.getCommandDescription()))) {
                 cmd.setDescription(doc.getCommandDescription());
+                cmd.setNetworkEdition(doc.isNetworkEdition());
+                cmd.setDeprecation(doc.getDeprecationDescription());
             } else {
                 String respClass = cmd.getResponse().getJaxbClass().getName();
                 doc = javadocInfo.get(respClass);

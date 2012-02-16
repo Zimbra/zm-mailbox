@@ -23,10 +23,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get Yahoo cookie
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_YAHOO_COOKIE_REQUEST)
 public class GetYahooCookieRequest {
 
+    /**
+     * @zm-api-field-tag user
+     * @zm-api-field-description User
+     */
     @XmlAttribute(name="user", required=true)
     private final String user;
 
@@ -44,15 +51,13 @@ public class GetYahooCookieRequest {
 
     public String getUser() { return user; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("user", user);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

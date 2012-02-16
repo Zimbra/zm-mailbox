@@ -26,6 +26,10 @@ public class ZmApiTags {
      */
     public static final String TAG_COMMAND_NETWORK_ONLY = "@zm-api-command-network-edition";
     /**
+     * Use to flag that a command will be deprecated
+     */
+    public static final String TAG_COMMAND_WILL_BE_DEPRECATED = "@zm-api-command-will-be-deprecated";
+    /**
      * Use for description of the SOAP Request.  Use in JAXB class for a Request.
      */
     public static final String TAG_COMMAND_REQUEST_DESCRIPTION = "@zm-api-request-description";

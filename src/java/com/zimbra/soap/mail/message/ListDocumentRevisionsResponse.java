@@ -35,11 +35,17 @@ import com.zimbra.soap.mail.type.IdEmailName;
 @XmlRootElement(name=MailConstants.E_LIST_DOCUMENT_REVISIONS_RESPONSE)
 public class ListDocumentRevisionsResponse {
 
-    @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
-    private List<DocumentInfo> revisions = Lists.newArrayList();
-
+    /**
+     * @zm-api-field-description User information
+     */
     @XmlElement(name=MailConstants.A_USER /* user */, required=false)
     private List<IdEmailName> users = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-description Document revision information
+     */
+    @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
+    private List<DocumentInfo> revisions = Lists.newArrayList();
 
     public ListDocumentRevisionsResponse() {
     }
@@ -73,8 +79,7 @@ public class ListDocumentRevisionsResponse {
         return Collections.unmodifiableList(users);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("revisions", revisions)
             .add("users", users);
@@ -82,7 +87,6 @@ public class ListDocumentRevisionsResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

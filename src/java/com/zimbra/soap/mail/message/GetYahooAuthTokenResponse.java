@@ -24,10 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_YAHOO_AUTH_TOKEN_RESPONSE)
 public class GetYahooAuthTokenResponse {
 
+    /**
+     * @zm-api-field-tag failed
+     * @zm-api-field-description Failed
+     */
     @XmlAttribute(name="failed", required=false)
     private ZmBoolean failed;
 
@@ -37,15 +41,13 @@ public class GetYahooAuthTokenResponse {
     public void setFailed(Boolean failed) { this.failed = ZmBoolean.fromBool(failed); }
     public Boolean getFailed() { return ZmBoolean.toBool(failed); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("failed", failed);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

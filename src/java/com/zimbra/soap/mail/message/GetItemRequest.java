@@ -24,10 +24,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ItemSpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get item
+ * <br />
+ * A successful GetItemResponse will contain a single element appropriate for the type of the requested item if there
+ * is no matching item, a fault containing the code mail.NO_SUCH_ITEM is returned
+ * @zm-api-request-description The caller must specify one of:
+ * <ul>
+ * <li> an {item-id},
+ * <li> a fully-qualified {path}, or
+ * <li> both a {folder-id} and a relative {path}
+ * </ul>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_ITEM_REQUEST)
 public class GetItemRequest {
 
+    /**
+     * @zm-api-field-description Item specification
+     */
     @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
     private ItemSpec item;
 
@@ -37,15 +52,13 @@ public class GetItemRequest {
     public void setItem(ItemSpec item) { this.item = item; }
     public ItemSpec getItem() { return item; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("item", item);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

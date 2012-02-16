@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SectionAttr;
 
+/**
+ * @zm-api-command-description Get Mailbox metadata
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_MAILBOX_METADATA_REQUEST)
 public class GetMailboxMetadataRequest {
 
+    /**
+     * @zm-api-field-description Metadata section specification
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private SectionAttr metadata;
 
@@ -37,15 +43,13 @@ public class GetMailboxMetadataRequest {
     public void setMetadata(SectionAttr metadata) { this.metadata = metadata; }
     public SectionAttr getMetadata() { return metadata; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("metadata", metadata);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

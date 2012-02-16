@@ -25,23 +25,46 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description AutoComplete
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_AUTO_COMPLETE_REQUEST)
 public class AutoCompleteRequest {
 
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag gal-search-type
+     * @zm-api-field-description GAL Search type - default value is <b>"account"</b>
+     */
     @XmlAttribute(name=MailConstants.A_TYPE /* t */, required=false)
     private GalSearchType type;
 
+    /**
+     * @zm-api-field-tag need-exp
+     * @zm-api-field-description Set if the "exp" flag is needed in the response for group entries.  Default is unset.
+     */
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
     private ZmBoolean needCanExpand;
 
     // Comma separated list of integers
+    /**
+     * @zm-api-field-tag comma-sep-folder-ids
+     * @zm-api-field-description Comma separated list of folder IDs
+     */
     @XmlAttribute(name=MailConstants.A_FOLDERS /* folders */, required=false)
     private String folderList;
 
+    /**
+     * @zm-api-field-tag include-GAL
+     * @zm-api-field-description Flag whether to include Global Address Book (GAL)
+     */
     @XmlAttribute(name=MailConstants.A_INCLUDE_GAL /* includeGal */, required=false)
     private ZmBoolean includeGal;
 
@@ -73,8 +96,7 @@ public class AutoCompleteRequest {
     public String getFolderList() { return folderList; }
     public Boolean getIncludeGal() { return ZmBoolean.toBool(includeGal); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("type", type)
@@ -85,7 +107,6 @@ public class AutoCompleteRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

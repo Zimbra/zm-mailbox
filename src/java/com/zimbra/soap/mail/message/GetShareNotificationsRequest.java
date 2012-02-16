@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 
+/**
+ * @zm-api-command-description Get Share notifications
+ */
 @XmlRootElement(name=MailConstants.E_GET_SHARE_NOTIFICATIONS_REQUEST)
 public class GetShareNotificationsRequest {
 }

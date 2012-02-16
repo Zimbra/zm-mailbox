@@ -32,20 +32,43 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.IdAndType;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CREATE_WAIT_SET_RESPONSE)
 @XmlType(propOrder = {})
 public class CreateWaitSetResponse {
 
+    /**
+     * @zm-api-field-tag waitset-id
+     * @zm-api-field-description WaitSet ID
+     */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
     private final String waitSetId;
 
+    /**
+     * @zm-api-field-tag default-interests
+     * @zm-api-field-description Default interest types: comma-separated list.  Currently:
+     * <table>
+     * <tr> <td> <b>c</b> </td> <td> contacts </td> </tr>
+     * <tr> <td> <b>m</b> </td> <td> msgs (and subclasses) </td> </tr>
+     * <tr> <td> <b>a</b> </td> <td> appointments </td> </tr>
+     * <tr> <td> <b>t</b> </td> <td> tasks </td> </tr>
+     * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "c,m,a,t,d") * </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=true)
     private final String defaultInterests;
 
+    /**
+     * @zm-api-field-tag sequence
+     * @zm-api-field-description Sequence
+     */
     @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=true)
     private final int sequence;
 
+    /**
+     * @zm-api-field-description Error information
+     */
     @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
     private List<IdAndType> errors = Lists.newArrayList();
 
