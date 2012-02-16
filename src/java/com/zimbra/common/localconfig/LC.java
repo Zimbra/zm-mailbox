@@ -401,20 +401,11 @@ public final class LC {
     public static final KnownKey ldap_common_threads = KnownKey.newKey(8);
     public static final KnownKey ldap_common_toolthreads = KnownKey.newKey(1);
     public static final KnownKey ldap_common_writetimeout = KnownKey.newKey(0);
-    public static final KnownKey ldap_db_cachefree = KnownKey.newKey(1);
-    public static final KnownKey ldap_db_cachesize = KnownKey.newKey(10000);
     public static final KnownKey ldap_db_checkpoint = KnownKey.newKey("64 5");
-    public static final KnownKey ldap_db_dncachesize = KnownKey.newKey(0);
-    public static final KnownKey ldap_db_idlcachesize = KnownKey.newKey(10000);
-    public static final KnownKey ldap_db_shmkey = KnownKey.newKey(0);
-    public static final KnownKey ldap_accesslog_cachefree = KnownKey.newKey(1);
-    public static final KnownKey ldap_accesslog_cachesize = KnownKey.newKey(10000);
+    public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920);
     public static final KnownKey ldap_accesslog_checkpoint = KnownKey.newKey("64 5");
-    public static final KnownKey ldap_accesslog_dncachesize = KnownKey.newKey(0);
-    public static final KnownKey ldap_accesslog_idlcachesize = KnownKey.newKey(10000);
-    public static final KnownKey ldap_accesslog_shmkey = KnownKey.newKey(0);
+    public static final KnownKey ldap_accesslog_maxsize = KnownKey.newKey(85899345920);
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
-    public static final KnownKey ldap_overlay_syncprov_sessionlog = KnownKey.newKey(500);
     public static final KnownKey ldap_overlay_accesslog_logpurge = KnownKey.newKey("01+00:00  00+04:00");
 
     public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
