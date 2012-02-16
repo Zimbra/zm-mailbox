@@ -33,6 +33,7 @@ import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
@@ -150,6 +151,15 @@ public class SaveDocument extends WikiDocumentHandler {
             } else {
                 String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
                 doc = new Doc(inlineContent, explicitName, explicitCtype, description);
+            }
+            
+            // set content-type based on file extension if it's application/octet-stream or application/ms-tnef
+            if (doc.name != null &&
+                    (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(doc.contentType) ||
+                    MimeConstants.CT_APPLICATION_TNEF.equals(doc.contentType))) {
+                String guess = MimeDetect.getMimeDetect().detect(doc.name);
+                if (guess != null)
+                    doc.contentType = guess;
             }
 
             Document docItem = null;

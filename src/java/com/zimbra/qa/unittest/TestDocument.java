@@ -56,6 +56,24 @@ public class TestDocument extends TestCase {
         List<String> ids = TestUtil.search(mbox, "in:briefcase tag:\\note", ZSearchParams.TYPE_DOCUMENT);
         assertEquals(1, ids.size());
         assertEquals(note.getId(), ids.get(0));
+
+    }
+
+    /**
+     * Tests the content-type based on file extension.
+     */
+
+ public void testContentType()
+    throws Exception {
+        // Create two documents.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE);
+        ZDocument doc1 = TestUtil.createDocument(mbox, folderId, NAME_PREFIX + "-docOne.doc", "application/octet-stream", "doc1".getBytes());
+        ZDocument doc2 = TestUtil.createDocument(mbox, folderId, NAME_PREFIX + "-docTwo.xls", "application/ms-tnef", "doc2".getBytes());
+        
+        // Confirm that the content-type changed based on file extension
+        assertEquals("application/msword", doc1.getContentType());
+        assertEquals("application/vnd.ms-excel", doc2.getContentType());
     }
 
     @Override public void tearDown()
