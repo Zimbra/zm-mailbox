@@ -157,7 +157,6 @@ public class DbBlobConsistency {
                               String idColName, Collection<Integer> itemIds, String path)
     throws ServiceException {
         PreparedStatement stmt = null;
-        ResultSet rs = null;
 
         if (!(Db.getInstance() instanceof MySQL)) {
             throw ServiceException.INVALID_REQUEST("export is only supported for MySQL", null);
@@ -176,11 +175,10 @@ public class DbBlobConsistency {
                 stmt.setInt(pos++, id);
             }
             stmt.setString(pos++, path);
-            rs = stmt.executeQuery();
+            stmt.execute();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("exporting table " + tableName + " to " + path, e);
         } finally {
-            DbPool.closeResults(rs);
             DbPool.quietCloseStatement(stmt);
         }
     }
