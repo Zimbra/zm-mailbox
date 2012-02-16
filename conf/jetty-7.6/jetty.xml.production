@@ -41,6 +41,7 @@
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+          <Set name="Host">%%zimbraMailBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
@@ -65,6 +66,7 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
+          <Set name="Host">%%zimbraMailSSLBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
@@ -94,6 +96,7 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
          </Set>
+         <Set name="Host">%%zimbraMailSSLClientCertBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
@@ -120,11 +123,35 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
+          <Set name="Host">%%zimbraAdminBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
     </Call>
-
+    <!-- ADMINLOCALBEGIN %%comment VAR:zimbraAdminLocalBind,-->%%
+    <Call name="addConnector">
+      <Arg>
+        <New id="admin_local" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
+          <Set name="Port">%%zimbraAdminPort%%</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+          <Set name="maxIdleTime">0</Set>
+          <Set name="lowResourcesMaxIdleTime">0</Set>
+          <Set name="responseBufferSize">16384</Set>
+          <Set name="Acceptors">1</Set>
+          <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
+          <Set name="password">@@mailboxd_keystore_password@@</Set>
+          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
+          <Set name="ExcludeCipherSuites">
+            <Array type="java.lang.String">
+              %%zimbraSSLExcludeCipherSuitesXML%%
+            </Array>
+          </Set>
+          <Set name="Host">localhost</Set>
+          <Set name="Forwarded">true</Set>
+        </New>
+      </Arg>
+    </Call>
+	%%comment VAR:zimbraAdminLocalBind,<!--%% ADMINLOCALEND -->
     <!-- =============================================================== -->
     <!-- Extension port                                                  -->
     <!-- =============================================================== -->
@@ -136,6 +163,7 @@
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">10000</Set>
           <Set name="Acceptors">2</Set>
+          <Set name="Host">%%zimbraExtensionBindAddress%%</Set>
 	  <Set name="Forwarded">true</Set>
         </New>
       </Arg>
@@ -570,5 +598,9 @@
     <Ref id="admin">
       <Call name="open"/>
     </Ref>
-
+    <!-- ADMINLOCALBEGIN %%comment VAR:zimbraAdminLocalBind,-->%%
+    <Ref id="admin_local">
+      <Call name="open"/>
+    </Ref>
+	%%comment VAR:zimbraAdminLocalBind,<!--%% ADMINLOCALEND -->
 </Configure>

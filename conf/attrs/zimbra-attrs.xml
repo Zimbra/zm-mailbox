@@ -6804,7 +6804,7 @@ TODO: delete them permanently from here
   <desc>interface address on which HTTPS server accepting client certificates should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="1368" name="zimbraAdminBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+<attr id="1368" name="zimbraAdminBindAddress" type="string" max="128"  callback="LocalBind" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
   <desc>interface address on which Admin HTTPS server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
@@ -6858,5 +6858,9 @@ TODO: delete them permanently from here
   <desc>UUID of the shared folder</desc>
 </attr>
 -->
+
+<attr id="1377" name="zimbraAdminLocalBind" type="boolean" cardinality="single" immutable="1" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>Specifies whether the admin server should bound to localhost or not. This is an immutable property and is generated based on zimbraAdminBindAddress.</desc>
+</attr>
 
 </attrs>
