@@ -270,40 +270,22 @@ SECTION ldap
 	LOCAL ldap_common_threads
 	LOCAL ldap_common_toolthreads
 	LOCAL ldap_common_writetimeout
-	LOCAL ldap_db_cachefree
-	LOCAL ldap_db_cachesize
 	LOCAL ldap_db_checkpoint
-	LOCAL ldap_db_dncachesize
-	LOCAL ldap_db_idlcachesize
-	LOCAL ldap_db_shmkey
-	LOCAL ldap_accesslog_cachefree
-	LOCAL ldap_accesslog_cachesize
+	LOCAL ldap_db_maxsize
 	LOCAL ldap_accesslog_checkpoint
-	LOCAL ldap_accesslog_dncachesize
-	LOCAL ldap_accesslog_idlcachesize
-	LOCAL ldap_accesslog_shmkey
+	LOCAL ldap_accesslog_maxsize
 	LOCAL ldap_overlay_syncprov_checkpoint
-	LOCAL ldap_overlay_syncprov_sessionlog
 	LOCAL ldap_overlay_accesslog_logpurge
 	LDAP ldap_common_loglevel LOCAL ldap_common_loglevel
 	LDAP ldap_common_require_tls LOCAL ldap_common_require_tls
 	LDAP ldap_common_threads LOCAL ldap_common_threads
 	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
 	LDAP ldap_common_writetimeout LOCAL ldap_common_writetimeout
-	LDAP ldap_db_cachefree LOCAL ldap_db_cachefree
-	LDAP ldap_db_cachesize LOCAL ldap_db_cachesize
 	LDAP ldap_db_checkpoint LOCAL ldap_db_checkpoint
-	LDAP ldap_db_dncachesize LOCAL ldap_db_dncachesize
-	LDAP ldap_db_idlcachesize LOCAL ldap_db_idlcachesize
-	LDAP ldap_db_shmkey LOCAL ldap_db_shmkey
-	LDAP ldap_accesslog_cachefree LOCAL ldap_accesslog_cachefree
-	LDAP ldap_accesslog_cachesize LOCAL ldap_accesslog_cachesize
+	LDAP ldap_db_maxsize LOCAL ldap_db_maxsize
 	LDAP ldap_accesslog_checkpoint LOCAL ldap_accesslog_checkpoint
-	LDAP ldap_accesslog_dncachesize LOCAL ldap_accesslog_dncachesize
-	LDAP ldap_accesslog_idlcachesize LOCAL ldap_accesslog_idlcachesize
-	LDAP ldap_accesslog_shmkey LOCAL ldap_accesslog_shmkey
+	LDAP ldap_accesslog_maxsize LOCAL ldap_accesslog_maxsize
 	LDAP ldap_overlay_syncprov_checkpoint LOCAL ldap_overlay_syncprov_checkpoint
-	LDAP ldap_overlay_syncprov_sessionlog LOCAL ldap_overlay_syncprov_sessionlog
 	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
 
 SECTION cbpolicyd
