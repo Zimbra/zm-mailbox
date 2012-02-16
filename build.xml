@@ -333,10 +333,10 @@
                 <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={0}config.ldif"/>
                 <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={-1}frontend.ldif"/>
                 <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={1}monitor.ldif"/>
-                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={2}hdb.ldif"/>
-                <copy todir="${build.dir}/ldap-config/config/olcDatabase={2}hdb" file="${slapd.config.dir}/cn=config/olcDatabase={2}hdb/olcOverlay={0}dynlist.ldif"/>
-                <copy todir="${build.dir}/ldap-config/config/olcDatabase={2}hdb" file="${slapd.config.dir}/cn=config/olcDatabase={2}hdb/olcOverlay={1}unique.ldif"/>
-                <copy todir="${build.dir}/ldap-config/config/olcDatabase={2}hdb" file="${slapd.config.dir}/cn=config/olcDatabase={2}hdb/olcOverlay={2}noopsrch.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config" file="${slapd.config.dir}/cn=config/olcDatabase={2}mdb.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config/olcDatabase={2}mdb" file="${slapd.config.dir}/cn=config/olcDatabase={2}mdb/olcOverlay={0}dynlist.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config/olcDatabase={2}mdb" file="${slapd.config.dir}/cn=config/olcDatabase={2}mdb/olcOverlay={1}unique.ldif"/>
+                <copy todir="${build.dir}/ldap-config/config/olcDatabase={2}mdb" file="${slapd.config.dir}/cn=config/olcDatabase={2}mdb/olcOverlay={2}noopsrch.ldif"/>
             </then>
         </if>
     </target>
@@ -1253,9 +1253,8 @@
 
       <mkdir dir="${zimbra.home.dir}/data"/>
         <mkdir dir="${zimbra.home.dir}/data/ldap"/>
-         <mkdir dir="${zimbra.home.dir}/data/ldap/hdb"/>
-         <mkdir dir="${zimbra.home.dir}/data/ldap/hdb/db"/>
-         <mkdir dir="${zimbra.home.dir}/data/ldap/hdb/logs"/>
+         <mkdir dir="${zimbra.home.dir}/data/ldap/mdb"/>
+         <mkdir dir="${zimbra.home.dir}/data/ldap/mdb/db"/>
          <mkdir dir="${zimbra.home.dir}/data/ldap/config"/>
         <mkdir dir="${zimbra.home.dir}/data/mailboxd/imap/cache"/>
 
