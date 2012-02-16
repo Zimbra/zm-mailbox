@@ -201,6 +201,8 @@ SECTION mailbox
 	VAR nio_imap_enabled
 	VAR zimbraSSLExcludeCipherSuites
 	VAR zimbraSSLExcludeCipherSuitesXML
+	VAR zimbraMailBindAddress
+	VAR zimbraMailSSLBindAddress
 	LOCAL mailboxd_keystore_password
 	LOCAL mailboxd_truststore_password
 	LOCAL zimbra_uid
