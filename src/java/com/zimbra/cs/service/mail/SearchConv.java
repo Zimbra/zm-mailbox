@@ -143,7 +143,8 @@ public class SearchConv extends Search {
                 // format for us.  TODO somehow make this functionality a bit more exposed in the
                 // ZimbraQuery APIs...
                 String rewrittenQueryString = mbox.getRewrittenQueryString(octxt, params);
-                proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
+                if (rewrittenQueryString != null && rewrittenQueryString.length() > 0)
+                    proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
 
                 // proxy to remote account
                 Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
