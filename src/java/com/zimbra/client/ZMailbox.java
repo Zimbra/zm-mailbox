@@ -3792,7 +3792,7 @@ public class ZMailbox implements ToZJSONObject {
 
     public synchronized void saveIncomingFilterRules(ZFilterRules rules) throws ServiceException {
         ModifyFilterRulesRequest req = new ModifyFilterRulesRequest();
-        req.addFilterRule(rules.toJAXB());
+        req.addFilterRules(rules.toJAXB());
         invokeJaxb(req);
         incomingRules = new ZFilterRules(rules);
     }
