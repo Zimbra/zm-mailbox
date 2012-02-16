@@ -402,9 +402,9 @@ public final class LC {
     public static final KnownKey ldap_common_toolthreads = KnownKey.newKey(1);
     public static final KnownKey ldap_common_writetimeout = KnownKey.newKey(0);
     public static final KnownKey ldap_db_checkpoint = KnownKey.newKey("64 5");
-    public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920);
+    public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_accesslog_checkpoint = KnownKey.newKey("64 5");
-    public static final KnownKey ldap_accesslog_maxsize = KnownKey.newKey(85899345920);
+    public static final KnownKey ldap_accesslog_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
     public static final KnownKey ldap_overlay_accesslog_logpurge = KnownKey.newKey("01+00:00  00+04:00");
 
