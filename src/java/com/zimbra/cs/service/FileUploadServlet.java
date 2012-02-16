@@ -655,17 +655,20 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
 
-        resp.setStatus(status);
         PrintWriter out = resp.getWriter();
 
-        if (extended) {
-            resp.setContentType("application/json");
-            out.println(results);
-        } else if (raw) {
+        if (raw) {
+            // Response will be consumed by zclient or another client that's not in a
+            // browser.  Return plain text content.
+            resp.setStatus(status);
             resp.setContentType("text/plain");
             out.println(results);
         } else {
-            resp.setContentType("text/html");
+            // Response will be consumed by the web client.  Return JSON wrapped in
+            // HTML.  We also don't set status so that the browser doesn't try to
+            // render the error.  The web client parses out the error from the content
+            // and handles it.
+            resp.setContentType("text/html; charset=utf-8");
             out.println("<html><head>" +
                     "<script language='javascript'>\nfunction doit() { window.parent._uploadManager.loaded("+ results + "); }\n</script>" +
                     "</head><body onload='doit()'></body></html>\n");

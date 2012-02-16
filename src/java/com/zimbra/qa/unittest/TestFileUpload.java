@@ -43,20 +43,25 @@ extends TestCase {
         cleanUp();
     }
 
-    public void testUnauthorized() throws Exception {
+    /**
+     * When {@code fmt=extended}, the response status is always 200 so that the browser
+     * doesn't try to render the error.  The client parses out the error from the response
+     * payload and handles it.
+     */
+    public void testUnauthorizedExtended() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "fmt=extended");
+        URI uri = new URI(uriString);
+        postAndVerify(mbox, uri, true, HttpServletResponse.SC_OK, "text/html");
+    }
+
+    /**
+     * When {@code fmt=raw}, the http client will get the correct HTTP status back.
+     */
+    public void testUnauthorizedRaw() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
-        HttpClient client = mbox.getHttpClient(uri);
-        client.getState().clearCookies();
-
-        Part attachmentPart = mbox.createAttachmentPart("test.txt", new byte[10]);
-        Part requestIdPart = new StringPart("requestId", "<script></script>");
-        Part[] parts = new Part[] { attachmentPart, requestIdPart };
-
-        PostMethod post = new PostMethod(uri.toString());
-        post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-        int statusCode = HttpClientUtil.executeMethod(client, post);
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, statusCode);
+        postAndVerify(mbox, uri, true, HttpServletResponse.SC_UNAUTHORIZED, "text/plain");
     }
 
     /**
@@ -86,29 +91,43 @@ extends TestCase {
         post.releaseConnection();
     }
 
+    /**
+     * When {@code fmt=raw}, the response comes back as text/plain.
+     */
     public void testTextResponse() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
-        postAndVerify(mbox, uri, HttpServletResponse.SC_OK, "text/plain");
+        postAndVerify(mbox, uri, false, HttpServletResponse.SC_OK, "text/plain");
     }
 
+    /**
+     * When {@code fmt=extended}, the response comes back as JSON embedded in HTML.
+     */
     public void testJsonResponse() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "fmt=extended");
         URI uri = new URI(uriString);
-        postAndVerify(mbox, uri, HttpServletResponse.SC_OK, "application/json");
+        // Check for text/html instead of application/json.  See bug 70126.
+        postAndVerify(mbox, uri, false, HttpServletResponse.SC_OK, "text/html");
     }
 
+    /**
+     * When {@code fmt} is not set, the response comes back as HTML.
+     */
     public void testHtmlResponse() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "");
         URI uri = new URI(uriString);
-        postAndVerify(mbox, uri, HttpServletResponse.SC_OK, "text/html");
+        postAndVerify(mbox, uri, false, HttpServletResponse.SC_OK, "text/html");
     }
 
-    private String postAndVerify(ZMailbox mbox, URI uri, int expectedStatus, String expectedContentType)
+    private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies, int expectedStatus, String expectedContentType)
     throws IOException {
         HttpClient client = mbox.getHttpClient(uri);
+        if (clearCookies) {
+            client.getState().clearCookies();
+        }
+
         Part attachmentPart = mbox.createAttachmentPart("test.txt", new byte[10]);
         Part requestIdPart = new StringPart("requestId", "<script></script>");
         Part[] parts = new Part[] { attachmentPart, requestIdPart };
