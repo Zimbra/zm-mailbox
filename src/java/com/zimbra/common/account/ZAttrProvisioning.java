@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20120208-1709 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120215-1239 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1809,6 +1809,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1113)
     public static final String A_zimbraAdminImapImportNumThreads = "zimbraAdminImapImportNumThreads";
+
+    /**
+     * Specifies whether the admin server should bound to localhost or not.
+     * This is an immutable property and is generated based on
+     * zimbraAdminBindAddress.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1377)
+    public static final String A_zimbraAdminLocalBind = "zimbraAdminLocalBind";
 
     /**
      * SSL port for admin UI
