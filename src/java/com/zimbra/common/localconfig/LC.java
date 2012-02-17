@@ -893,7 +893,7 @@ public final class LC {
     public static final KnownKey conversation_max_age_ms = KnownKey.newKey(31 * Constants.MILLIS_PER_DAY);
     public static final KnownKey tombstone_max_age_ms = KnownKey.newKey(3 * Constants.MILLIS_PER_MONTH);
 
-    public static final KnownKey autpprov_initial_sleep_ms = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
+    public static final KnownKey autoprov_initial_sleep_ms = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
 
     @Supported
     public static final KnownKey httpclient_internal_connmgr_max_host_connections = KnownKey.newKey(100);
