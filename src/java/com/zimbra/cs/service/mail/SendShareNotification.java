@@ -81,6 +81,8 @@ public class SendShareNotification extends MailDocumentHandler {
         return TARGET_ITEM_PATH;
     }
 
+    private static final String REVOKE = "revoke";
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -93,12 +95,19 @@ public class SendShareNotification extends MailDocumentHandler {
 
         // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
+        String action = request.getAttribute(MailConstants.A_ACTION, null);
         String notes = (eNotes==null)?null:eNotes.getText();
 
         // send the messages
         try {
+            Account authAccount = getAuthenticatedAccount(zsc);
             for (ShareInfoData sid : shareInfos) {
-                sendShareNotif(octxt, getAuthenticatedAccount(zsc), mbox, sid, notes);
+                MimeMessage mm = generateShareNotification(authAccount, account, sid, notes, REVOKE.equals(action));
+                mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
+                // also send a copy of the message out to relay MTA
+                if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled()) {
+                    sendExternalNotificationEmail(octxt, authAccount, sid);
+                }
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
@@ -118,6 +127,7 @@ public class SendShareNotification extends MailDocumentHandler {
             return Arrays.asList(validateShareRecipient(zsc, context, octxt, mbox, eShare));
         }
 
+        String action = request.getAttribute(MailConstants.A_ACTION, null);
         ArrayList<ShareInfoData> shareInfos = new ArrayList<ShareInfoData>();
         SendShareNotificationRequest req = JaxbUtil.elementToJaxb(request);
         ItemId iid = new ItemId(req.getItem().getId(), zsc);
@@ -129,7 +139,8 @@ public class SendShareNotification extends MailDocumentHandler {
             account = prov.get(AccountBy.id, mp.getOwnerId());
         }
         for (EmailAddrInfo email : req.getEmailAddresses()) {
-            // treat the non-existing accounts as guest for now
+            // add the non-existing grantee as type GRANTEE_GUEST for share notification.
+            // for revoke notifications return the non-existing grantees only
             Pair<NamedEntry, String> grantee;
             boolean internalGrantee = true;
             byte granteeType = ACL.GRANTEE_USER;
@@ -161,7 +172,7 @@ public class SendShareNotification extends MailDocumentHandler {
                 // if guest, granteeId is the same as granteeEmail
                 granteeId = granteeEmail;
             }
-            shareInfos.add(getShareInfoData(zsc, context, account, octxt, granteeType, granteeEmail, granteeId, granteeDisplayName, item));
+            shareInfos.add(getShareInfoData(zsc, context, account, octxt, granteeType, granteeEmail, granteeId, granteeDisplayName, item, REVOKE.equals(action)));
         }
 
         return shareInfos;
@@ -223,7 +234,7 @@ public class SendShareNotification extends MailDocumentHandler {
             folder = mp;
         }
 
-        return getShareInfoData(zsc, context, ownerAcct, octxt, granteeType, granteeEmail, matchingId, granteeDisplayName, folder);
+        return getShareInfoData(zsc, context, ownerAcct, octxt, granteeType, granteeEmail, matchingId, granteeDisplayName, folder, false);
     }
 
     private ShareInfoData getShareInfoData(
@@ -235,7 +246,8 @@ public class SendShareNotification extends MailDocumentHandler {
             String granteeEmail,
             String granteeId,
             String granteeDisplayName,
-            MailItem item) throws ServiceException {
+            MailItem item,
+            boolean revoke) throws ServiceException {
 
         Provisioning prov = Provisioning.getInstance();
         MatchingGrant matchingGrant;
@@ -246,7 +258,7 @@ public class SendShareNotification extends MailDocumentHandler {
         else
             matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct, item.getId());
 
-        if (matchingGrant == null)
+        if (!revoke && matchingGrant == null)
             throw ServiceException.INVALID_REQUEST("no matching grant", null);
 
         //
@@ -273,14 +285,19 @@ public class SendShareNotification extends MailDocumentHandler {
         sid.setPath(path);
         sid.setFolderDefaultView((item instanceof Folder) ? ((Folder)item).getDefaultView() : item.getType());
 
-        // rights
-        sid.setRights(matchingGrant.getGrantedRights());
-
         // grantee
         sid.setGranteeType(granteeType);
         sid.setGranteeId(granteeId);
         sid.setGranteeName(granteeEmail);
         sid.setGranteeDisplayName(granteeDisplayName);
+
+        if (revoke) {
+            sid.setGranteeName(granteeEmail);
+            return sid;
+        }
+
+        // rights
+        sid.setRights(matchingGrant.getGrantedRights());
 
         // if the grantee is a guest, set URL and password
         if (granteeType == ACL.GRANTEE_GUEST) {
@@ -334,7 +351,7 @@ public class SendShareNotification extends MailDocumentHandler {
             byte granteeType, String granteeId, Account ownerAcct) throws ServiceException {
         ACL acl = item.getEffectiveACL();
         if (acl == null)
-            throw ServiceException.INVALID_REQUEST("no grant on folder", null);
+            return null;
 
         for (ACL.Grant grant : acl.getGrants()) {
             if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
@@ -482,13 +499,7 @@ public class SendShareNotification extends MailDocumentHandler {
         return folder;
     }
 
-
-    //
-    // send using MailSender
-    //
-    private void sendShareNotif(OperationContext octxt, Account authAccount, Mailbox mbox, ShareInfoData sid, String notes)
-    throws ServiceException, MessagingException {
-
+    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid, String notes, boolean action) throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
 
@@ -500,7 +511,7 @@ public class SendShareNotification extends MailDocumentHandler {
         mm.setSentDate(new Date());
 
         // from the owner
-        mm.setFrom(AccountUtil.getFriendlyEmailAddress(mbox.getAccount()));
+        mm.setFrom(AccountUtil.getFriendlyEmailAddress(ownerAccount));
 
         // sent by auth account
         mm.setSender(AccountUtil.getFriendlyEmailAddress(authAccount));
@@ -509,14 +520,12 @@ public class SendShareNotification extends MailDocumentHandler {
         String recipient = sid.getGranteeName();
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
 
-        MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(
-                sid, notes, locale);
+        MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid, notes, locale, action);
         mm.setContent(mmp);
         mm.saveChanges();
 
         if (sLog.isDebugEnabled()) {
             // log4j.logger.com.zimbra.cs.service.mail=DEBUG
-
             try {
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
                 mm.writeTo(buf);
@@ -528,12 +537,7 @@ public class SendShareNotification extends MailDocumentHandler {
                 sLog.debug("failed log debug share notification message", e);
             }
         }
-
-        mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
-        // also send a copy of the message out to relay MTA
-        if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled()) {
-            sendExternalNotificationEmail(octxt, authAccount, sid);
-        }
+        return mm;
     }
 
     private static long timestamp;

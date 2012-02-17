@@ -3859,7 +3859,7 @@ mid="{mountpoint-id}" : returned if the share is already mounted.
 
 ----------------------------
 
-<SendShareNotificationRequest>
+<SendShareNotificationRequest [action="revoke"]>
     <item id="{item-id}"/>
     [<e a="{email-addr}"/>]+
     [<notes>{notes}</notes>]
@@ -3997,8 +3997,17 @@ added to Documents only.
       <grantor id="{zimbra-id}" email="{email-address}" name="{display-name}"/>
       <link id="{shared-item-id}" name="{item-name}" view="{item-type}" perm="{permissions-granted}"/>
     </share>]*
+   [<revoke id="{notification-item-id}" d="{date}">
+      <grantor id="{zimbra-id}" email="{email-address}" name="{display-name}"/>
+      <link id="{revoked-item-id}" name="{item-name}" view="{item-type}"/>
+    </revoke>]*
 </GetShareNotificationsResponse>
 
+    There will be at most one <share/> or <revoke/> block for each shared item
+    regardless of how many times the share notification was re-sent by the
+    owner.  <revoke/> indicates the previous share is no longer available
+    to the user and should be hidden or removed from the UI.
+    
     notification-item-id = the id of the share notification message.  The message must be in the Inbox folder.
     status is "new" if the message is unread or "seen" if the message is read.
     perm = combination of r (read) w (write) i (insert) d (delete) x (action) a (admin)

@@ -41,6 +41,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
+import org.dom4j.QName;
 
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
@@ -557,7 +558,7 @@ public class ShareInfo {
                                                   ACL.RIGHT_ACTION;
 
 
-        public static MimeMultipart genNotifBody(ShareInfoData sid, String notes, Locale locale)
+        public static MimeMultipart genNotifBody(ShareInfoData sid, String notes, Locale locale, boolean revoke)
                 throws MessagingException, ServiceException {
 
             // Body
@@ -576,23 +577,31 @@ public class ShareInfo {
             }
 
             // TEXT part (add me first!)
+            String mimePartText;
+            if (revoke) {
+                mimePartText = genRevokeText(sid, locale, false);
+            } else {
+                mimePartText = genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, false);
+            }
             MimeBodyPart textPart = new ZMimeBodyPart();
-            textPart.setText(
-                    genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, false),
-                    MimeConstants.P_CHARSET_UTF8);
+            textPart.setText(mimePartText, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part
+            if (revoke) {
+                mimePartText = genRevokeText(sid, locale, true);
+            } else {
+                mimePartText = genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, true);
+            }
             MimeBodyPart htmlPart = new ZMimeBodyPart();
-            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(genPart(
-                    sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, true))));
+            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(mimePartText)));
             mmp.addBodyPart(htmlPart);
 
             // XML part
             if (sid.getGranteeTypeCode() != ACL.GRANTEE_GUEST) {
                 MimeBodyPart xmlPart = new ZMimeBodyPart();
                 xmlPart.setDataHandler(
-                        new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null))));
+                        new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null, revoke))));
                 mmp.addBodyPart(xmlPart);
             }
 
@@ -658,13 +667,27 @@ public class ShareInfo {
                     toString();
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb) throws ServiceException {
+        private static String genRevokeText(ShareInfoData sid, Locale locale, boolean html) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(L10nUtil.getMessage((html ? MsgKey.shareRevokeBodyHtml : MsgKey.shareRevokeBodyText),
+                    sid.getName(),
+                    formatFolderDesc(locale, sid),
+                    sid.getOwnerNotifName()));
+            return sb.toString();
+        }
+
+        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, boolean revoke) throws ServiceException {
             if (sb == null)
                 sb = new StringBuilder();
-            Element share = Element.create(SoapProtocol.Soap12, ShareConstants.SHARE).addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).addAttribute(ShareConstants.A_ACTION, ShareConstants.ACTION_NEW);
+            QName action = revoke ? ShareConstants.REVOKE : ShareConstants.SHARE;
+            Element share = Element.create(SoapProtocol.Soap12, action).addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).addAttribute(ShareConstants.A_ACTION, ShareConstants.ACTION_NEW);
             share.addElement(ShareConstants.E_GRANTEE).addAttribute(ShareConstants.A_ID, sid.getGranteeId()).addAttribute(ShareConstants.A_EMAIL, sid.getGranteeName()).addAttribute(ShareConstants.A_NAME, sid.getGranteeNotifName());
             share.addElement(ShareConstants.E_GRANTOR).addAttribute(ShareConstants.A_ID, sid.getOwnerAcctId()).addAttribute(ShareConstants.A_EMAIL, sid.getOwnerAcctEmail()).addAttribute(ShareConstants.A_NAME, sid.getOwnerNotifName());
-            share.addElement(ShareConstants.E_LINK).addAttribute(ShareConstants.A_ID, sid.getItemId()).addAttribute(ShareConstants.A_NAME, sid.getName()).addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView()).addAttribute(ShareConstants.A_PERM, ACL.rightsToString(sid.getRightsCode()));
+            Element link = share.addElement(ShareConstants.E_LINK);
+            link.addAttribute(ShareConstants.A_ID, sid.getItemId()).addAttribute(ShareConstants.A_NAME, sid.getName()).addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView());
+            if (!revoke) {
+                link.addAttribute(ShareConstants.A_PERM, ACL.rightsToString(sid.getRightsCode()));
+            }
             return share.prettyPrint();
         }
 
@@ -786,10 +809,10 @@ public class ShareInfo {
 
                  if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genXmlPart(sid, null, sb);
+                        genXmlPart(sid, null, sb, false);
                     }
                 } else {
-                    genXmlPart(mShares.get(idx), null, sb);
+                    genXmlPart(mShares.get(idx), null, sb, false);
                 }
                 return sb.toString();
             }

@@ -84,7 +84,7 @@ public class GetShareNotifications extends MailDocumentHandler {
                                 }
                                 shares.add(shareItemId);
 
-                                Element share = response.addElement(MailConstants.E_SHARE);
+                                Element share = response.addElement(sn.isRevoke() ? MailConstants.ShareConstants.E_REVOKE : MailConstants.ShareConstants.E_SHARE);
                                 Element g = share.addUniqueElement(MailConstants.E_GRANTOR);
                                 g.addAttribute(MailConstants.A_ID, sn.getGrantorId());
                                 g.addAttribute(MailConstants.A_EMAIL, sn.getGrantorEmail());
@@ -98,6 +98,10 @@ public class GetShareNotifications extends MailDocumentHandler {
                                 share.addAttribute(MailConstants.A_STATUS, status);
                                 share.addAttribute(MailConstants.A_ID, "" + message.getId());
                                 share.addAttribute(MailConstants.A_DATE, message.getDate());
+                                if (sn.isRevoke()) {
+                                    // purge revoke notification upon receipt
+                                    mbox.delete(octxt, message.getId(), Type.MESSAGE);
+                                }
                             }
                         }
                     } catch (IOException e) {
