@@ -6863,4 +6863,12 @@ TODO: delete them permanently from here
   <desc>Specifies whether the admin server should bound to localhost or not. This is an immutable property and is generated based on zimbraAdminBindAddress.</desc>
 </attr>
 
+<attr id="1378" name="zimbraReverseProxyUpstreamServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+  <desc>The servers to be included in the "upstream" block in the nginx web proxy config file. The servers configured here will only affect the proxy of pre-login requests. Leaving empty means using all the servers whose zimbraReverseProxyLookupTarget is TRUE.</desc>
+</attr>
+
+<attr id="1379" name="zimbraReverseProxyAvailableLookupTargets" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+  <desc>The servers to be included in the proxy lookup hanlders list. Proxy will only use the servers specified here to do the lookup. Leaving empty means using all the servers whose zimbraReverseProxyLookupTarget is TRUE.</desc>
+</attr>
+
 </attrs>

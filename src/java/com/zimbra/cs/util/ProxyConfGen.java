@@ -636,44 +636,69 @@ abstract class ServersVar extends ProxyConfVar {
     
     @Override
     public void update() throws ServiceException {
-        ArrayList<String> servers = new ArrayList<String>();
+        ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(mPortAttrName, "");
-        /* $(zmprov garpb) */
-        List<Server> us = mProv.getAllServers();
 
-        for (Server u : us) {
-            boolean isTarget = u.getBooleanAttr(
-                    Provisioning.A_zimbraReverseProxyLookupTarget, false);
-            if (isTarget) {
-                String mode = u.getAttr(Provisioning.A_zimbraMailMode, "");
-                String serverName = u.getAttr(
-                        Provisioning.A_zimbraServiceHostname, "");
-
-                if (mode.equalsIgnoreCase(Provisioning.MailMode.http.toString())
-                        || mode.equalsIgnoreCase(Provisioning.MailMode.mixed
-                                .toString())
-                        || mode.equalsIgnoreCase(Provisioning.MailMode.both
-                                .toString())) {
-                    int serverPort = u.getIntAttr(portName, 0);
-                    int timeout = u.getIntAttr(
-                            Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
-                    int maxFails = u.getIntAttr("zimbraMailProxyMaxFails", 1);
-                    if (maxFails != 1) {
-                        servers.add(String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
-                                timeout, maxFails));
-                    } else  {
-                        servers.add(String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
-                                timeout));
-                    }
+        String[] upstreams = serverSource.getMultiAttr("zimbraReverseProxyUpstreamServers");
+        if (upstreams.length > 0) {
+            for (String serverName: upstreams) {
+                Server server = mProv.getServerByName(serverName);
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added server to HTTP upstream: " + serverName);
-                } else {
-                    mLog.warn("Upstream: Ignoring server: " + serverName
-                            + " ,because its mail mode is: " + (mode.equals("")?"EMPTY":mode));
+                }
+            }
+        } else {
+            /* $(zmprov garpb) */
+            List<Server> servers = mProv.getAllServers();
+    
+            for (Server server: servers) {
+               String serverName = server.getAttr(
+                        Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.info("Added server to HTTP upstream: " + serverName);
                 }
             }
         }
 
-        mValue = servers;
+        mValue = directives;
+    }
+    
+    boolean isValidUpstream(Server server, String serverName) {
+        boolean isTarget = server.getBooleanAttr(
+                Provisioning.A_zimbraReverseProxyLookupTarget, false);
+        if(!isTarget) {
+            return false;
+        }
+        
+        String mode = server.getAttr(Provisioning.A_zimbraMailMode, "");
+        if (mode.equalsIgnoreCase(Provisioning.MailMode.http.toString())
+                || mode.equalsIgnoreCase(Provisioning.MailMode.mixed
+                        .toString())
+                || mode.equalsIgnoreCase(Provisioning.MailMode.both
+                        .toString())) {
+            return true;
+        } else {
+            
+            mLog.warn("Upstream: Ignoring server: " + serverName
+                    + " ,because its mail mode is: " + (mode.equals("")?"EMPTY":mode));
+            return false;
+        }
+    }
+    
+    String generateServerDirective(Server server, String serverName, String portName) {
+        int serverPort = server.getIntAttr(portName, 0);
+        int timeout = server.getIntAttr(
+                Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
+        int maxFails = server.getIntAttr("zimbraMailProxyMaxFails", 1);
+        if (maxFails != 1) {
+            return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
+                    timeout, maxFails);
+        } else  {
+            return String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
+                    timeout);
+        }
     }
     
     @Override
@@ -835,18 +860,34 @@ class ZMLookupHandlerVar extends ProxyConfVar{
     @Override
     public void update() throws ServiceException {
         ArrayList<String> servers = new ArrayList<String>();
-
-        List<Server> allServers = mProv.getAllServers();
         int REVERSE_PROXY_PORT = 7072;
-        for (Server s : allServers)
-        {
-            String sn = s.getAttr(Provisioning.A_zimbraServiceHostname,"");
-            boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
-            if (isTarget) {
-                Formatter f = new Formatter();
-                f.format("%s:%d", sn, REVERSE_PROXY_PORT);
-                servers.add(f.toString());
-                mLog.debug("Route Lookup: Added server " + sn);
+        
+        String[] handlerNames = serverSource.getMultiAttr("zimbraReverseProxyAvailableLookupTargets");
+        if (handlerNames.length > 0) {
+            for (String handlerName: handlerNames) {
+                Server s = mProv.getServerByName(handlerName);
+                String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
+                if (isTarget) {
+                    Formatter f = new Formatter();
+                    f.format("%s:%d", sn, REVERSE_PROXY_PORT);
+                    servers.add(f.toString());
+                    mLog.debug("Route Lookup: Added server " + sn);
+                }
+            }
+        } else {
+            List<Server> allServers = mProv.getAllServers();
+           
+            for (Server s : allServers)
+            {
+                String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
+                if (isTarget) {
+                    Formatter f = new Formatter();
+                    f.format("%s:%d", sn, REVERSE_PROXY_PORT);
+                    servers.add(f.toString());
+                    mLog.debug("Route Lookup: Added server " + sn);
+                }
             }
         }
 
