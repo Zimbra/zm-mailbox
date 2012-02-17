@@ -49,8 +49,6 @@ import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.entry.LdapDomain;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.qa.unittest.TestPreAuthServlet;
 import com.zimbra.qa.unittest.TestUtil;
@@ -670,12 +668,8 @@ public class TestAutoProvision extends SoapTest {
          * let the auto prov thread run for a while, until after the 
          * TestDomainLockListener.HOLD_IT_AT_THIS_ENTRYth account is auto provisioned
          */
-        // use LdapProvisioning to count accounts, because countObjects is not yet 
-        // supported in SoapProvisioning
-        LdapProvisioning ldapProv = (LdapProvisioning) Provisioning.getInstance();
-        LdapDomain zimbraDomainLdap = (LdapDomain) ldapProv.get(DomainBy.name, zimbraDomain.getName());
         while (true) {
-            long numAcctsAutoProvisioned = ldapProv.countObjects(CountObjectsType.account, zimbraDomainLdap);
+            long numAcctsAutoProvisioned = prov.countObjects(CountObjectsType.account, zimbraDomain);
             if (numAcctsAutoProvisioned == TestDomainLockListener.HOLD_IT_AT_THIS_ENTRY) {
                 break;
             }

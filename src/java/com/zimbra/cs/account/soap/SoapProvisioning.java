@@ -116,6 +116,7 @@ import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CosCountInfo;
 import com.zimbra.soap.admin.type.CosInfo;
 import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.DistributionListInfo;
@@ -2398,6 +2399,14 @@ public class SoapProvisioning extends Provisioning {
                     cosInfo.getName(), cosInfo.getValue());
         }
         return result;
+    }
+    
+    @Override
+    public long countObjects(CountObjectsType type, Domain domain) 
+    throws ServiceException {
+        CountObjectsResponse resp = invokeJaxb(new CountObjectsRequest(
+                type, getSelector(domain)));
+        return resp.getNum();
     }
 
     @Override

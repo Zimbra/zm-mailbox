@@ -151,6 +151,7 @@ public class TestLdapHelper extends LdapTest {
         expected.add(dit.xmppcomponentBaseDN());
         expected.add(dit.globalGrantDN());
         expected.add(dit.configDN());
+        expected.add(dit.shareLocatorBaseDN());
         
         int numFound = 0;
         while (ne.hasMore()) {
