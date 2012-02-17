@@ -86,6 +86,7 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
     public synchronized static void shutdown() {
         synchronized (THREAD_CONTROL_LOCK) {
             if (autoProvThread != null) {
+                ZimbraLog.autoprov.info("Shutting down auto provision thread");
                 autoProvThread.requestShutdown();
                 autoProvThread.interrupt();
                 autoProvThread = null;
@@ -99,6 +100,7 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
         Server localServer = Provisioning.getInstance().getLocalServer();
         
         long interval = localServer.getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 0);
+        
         Set<String> scheduledDomains = 
             localServer.getMultiAttrSet(Provisioning.A_zimbraAutoProvScheduledDomains);
         
@@ -121,7 +123,7 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
     @Override public void run() {
         // Sleep before doing work, to give the server time to warm up.  Also limits the amount
         // of random effect when determining the next mailbox id.
-        long sleepTime = LC.autpprov_initial_sleep_ms.longValue();
+        long sleepTime = LC.autoprov_initial_sleep_ms.longValue();
         ZimbraLog.autoprov.info("Auto provision thread sleeping for %dms before doing work.", sleepTime);
 
         try {

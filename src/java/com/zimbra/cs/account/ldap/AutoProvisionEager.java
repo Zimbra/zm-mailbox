@@ -25,6 +25,7 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -56,21 +57,44 @@ public class AutoProvisionEager extends AutoProvision {
         ZLdapContext zlc = null;
         
         try {
-            String[] domainNames = getScheduledDomains(prov);
+            // get scheduled domains on this server
+            Server localServer = prov.getLocalServer();
+            String[] scheduledDomains = localServer.getAutoProvScheduledDomains();
             
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.AUTO_PROVISION);
             
-            for (String domainName : domainNames) {
+            for (String domainName : scheduledDomains) {
                 if (scheduler.isShutDownRequested()) {
                     ZimbraLog.autoprov.info("eager auto provision aborted");
                     return;
                 }
                 
-                // provision accounts for the domains
                 try {
                     Domain domain = prov.get(DomainBy.name, domainName);
                     if (domain == null) {
-                        ZimbraLog.autoprov.info("No such domain", domainName);
+                        ZimbraLog.autoprov.info("EAGER auto provision: no such domain " + domainName);
+                        continue;
+                    }
+                    
+                    // refresh the domain from LDAP master so we don't get into a race 
+                    // condition if the domains was just enabled for EAGER mode on other node.
+                    prov.reload(domain, true);
+                    
+                    if (!autoProvisionEnabled(domain)) {
+                        /*
+                         * remove it from the scheduled domains on the local server
+                         */
+                        
+                        ZimbraLog.autoprov.info("Domain %s is scheduled for EAGER auto provision " +
+                                "but EAGER mode is not enabled on the domain.  " +
+                                "Removing domain %s from %s on server %s", 
+                                domain.getName(), domain.getName(), 
+                                Provisioning.A_zimbraAutoProvScheduledDomains, localServer.getName());
+                        
+                        // will trigger callback for AutoProvScheduledDomains.  If scheduled 
+                        // domains become empty, the EAGER auto prov thread will be requested 
+                        // to shutdown.
+                        localServer.removeAutoProvScheduledDomains(domain.getName());
                         continue;
                     }
                     
@@ -93,12 +117,8 @@ public class AutoProvisionEager extends AutoProvision {
         }
     }
     
-    private static String[] getScheduledDomains(LdapProv prov) throws ServiceException {
-        return prov.getLocalServer().getAutoProvScheduledDomains();
-    }
-    
     private void handleBatch(ZLdapContext zlc) throws ServiceException {
-        if (!autoProvisionEnabled()) {
+        if (!autoProvisionEnabled(domain)) {
             throw ServiceException.FAILURE("EAGER auto provision is not enabled on domain " 
                     + domain.getName(), null);
         }
@@ -120,9 +140,8 @@ public class AutoProvisionEager extends AutoProvision {
         throw new UnsupportedOperationException();
     }
     
-    private boolean autoProvisionEnabled() {
-        Set<String> modesEnabled = domain.getMultiAttrSet(Provisioning.A_zimbraAutoProvMode);
-        return modesEnabled.contains(AutoProvMode.EAGER.name());
+    private static boolean autoProvisionEnabled(Domain domain) {
+        return domain.getMultiAttrSet(Provisioning.A_zimbraAutoProvMode).contains(AutoProvMode.EAGER.name());
     }
     
     private void createAccountBatch() throws ServiceException {

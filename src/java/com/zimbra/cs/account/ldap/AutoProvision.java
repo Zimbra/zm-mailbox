@@ -602,6 +602,10 @@ public abstract class AutoProvision {
         String searchFilterTemplate = domain.getAutoProvLdapSearchFilter();
         FilterId filterId = FilterId.AUTO_PROVISION_SEARCH;
 
+        if (url == null) {
+            throw ServiceException.FAILURE(
+                    String.format("missing %s on domain %s", Provisioning.A_zimbraAutoProvLdapURL, domain.getName()), null);
+        }
         if (searchBase == null) {
             searchBase = LdapConstants.DN_ROOT_DSE;
         }

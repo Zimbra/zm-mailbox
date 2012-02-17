@@ -2594,7 +2594,7 @@ Notes:
 
   limit    - the number of accounts to return per page (0 is default and means all)
   offset   - the starting offset (0, 25, etc)
-  domain   - the domain name to limit the search to (do not use if searching for domains)
+  domain   - the Zimbra domain name
   keyAttr  - name of attribute for the key.  Value of the key attribute will appear in the 
              <key> element in the response.  It is recommended to pick a key attribute that 
              is single-valued and can unique identify an entry in the external auto provision 

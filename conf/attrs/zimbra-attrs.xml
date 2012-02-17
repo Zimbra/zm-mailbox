@@ -5818,7 +5818,7 @@ TODO: delete them permanently from here
   <desc>Interval between successive executions of the task that publishes shared item updates to LDAP</desc>
 </attr>
 
-<attr id="1221" name="zimbraAutoProvMode" type="enum" value="EAGER,LAZY,MANUAL" cardinality="multi" optionalIn="domain" callback="AutoProvMode" since="8.0.0">
+<attr id="1221" name="zimbraAutoProvMode" type="enum" value="EAGER,LAZY,MANUAL" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
     Auto provision modes enabled.  Multiple modes can be enabled on a domain.
     

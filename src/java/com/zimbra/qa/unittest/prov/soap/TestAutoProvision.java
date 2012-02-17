@@ -35,6 +35,7 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
@@ -54,12 +55,9 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.qa.unittest.TestPreAuthServlet;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.AutoProvisionTestUtil;
-import com.zimbra.qa.unittest.prov.LocalconfigTestUtil;
 import com.zimbra.qa.unittest.prov.Verify;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest;
 import com.zimbra.soap.admin.message.AutoProvTaskControlResponse;
-import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
-import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
 import com.zimbra.soap.admin.message.AutoProvTaskControlResponse.Status;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -71,17 +69,34 @@ public class TestAutoProvision extends SoapTest {
     private static Domain extDomain;
     private static String extDomainDn;
     
+    private static String DEFAULT_AUTOPROV_INITIAL_SLEEP_MS = String.valueOf(5 * Constants.MILLIS_PER_MINUTE);
+    private static String DEFAULT_AUTOPROV_POLLING_INTERVAL = "15m";
+    
     @BeforeClass
     public static void init() throws Exception {
         provUtil = new SoapProvTestUtil();
         prov = provUtil.getProv();
         extDomain = provUtil.createDomain("external." + baseDomainName());
         extDomainDn = LdapUtil.domainToDN(extDomain.getName());
+        
+        revertAllToDefault();
     }
     
     @AfterClass
     public static void cleanup() throws Exception {
         Cleanup.deleteAll(baseDomainName());
+        revertAllToDefault();
+    }
+    
+    // put everything back, in case the test did not run through previously
+    private static void revertAllToDefault() throws Exception {
+        
+        SoapTransport transport = authZimbraAdmin();
+        modifyLocalconfigAndReload(transport, LC.autoprov_initial_sleep_ms, DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
+        
+        Server localServer = prov.getLocalServer();
+        localServer.setAutoProvPollingInterval(DEFAULT_AUTOPROV_POLLING_INTERVAL);
+        localServer.unsetAutoProvScheduledDomains();
     }
     
     private String getZimbraDomainName(String testName) {
@@ -381,72 +396,6 @@ public class TestAutoProvision extends SoapTest {
     }
     
     @Test
-    public void attributeCallbackAutoProvMode() throws Exception {
-        
-        Domain domain1 = createZimbraDomain(genDomainSegmentName("1"), null);
-        domain1.setAutoProvMode(Provisioning.AutoProvMode.EAGER);
-        
-        Domain domain2 = createZimbraDomain(genDomainSegmentName("2"), null);
-        domain2.setAutoProvMode(Provisioning.AutoProvMode.EAGER);
-        
-        Account admin = provUtil.createGlobalAdmin(genAcctNameLocalPart(), domain1);
-        SoapTransport transport = authAdmin(admin.getName());
-        
-        /*
-         * verify auto prov thread is not running at the beginning
-         */
-        verifyAutoProvTask(transport, Action.status, Status.idle);
-        
-        /*
-         * schedule eager prov for domain1 and domain2 on servers 
-         */
-        Server localServer = prov.getLocalServer();
-        localServer.setAutoProvScheduledDomains(new String[]{domain1.getName(), domain2.getName()});
-        
-        /*
-         * verify auto prov thread is now running, because at last one domain is scheduled
-         */
-        verifyAutoProvTask(transport, Action.status, Status.running);
-        
-        Server otherServer = provUtil.createServer(genServerName("other"));
-        otherServer.setAutoProvScheduledDomains(new String[]{domain1.getName(), domain2.getName()});
-        
-        /*
-         * change zimbraAutoProvMode on domain1 away from EAGER, verify domain1 is 
-         * removed from zimbraAutoProvScheduledDomains on all servers
-         */
-        domain1.setAutoProvMode(Provisioning.AutoProvMode.MANUAL);
-        
-        // refresh server object instances, we are on SOAP
-        prov.reload(localServer);
-        prov.reload(otherServer);
-        
-        Verify.verifyEquals(Sets.newHashSet(domain2.getName()),
-                localServer.getAutoProvScheduledDomains());
-        Verify.verifyEquals(Sets.newHashSet(domain2.getName()),
-                otherServer.getAutoProvScheduledDomains());
-        
-        /*
-         * change zimbraAutoProvMode on domain2 away from EAGER, verify domain2 is 
-         * removed from zimbraAutoProvScheduledDomains on all servers,
-         * since domain2 is the last scheduled domain on the server, verify the 
-         * auto provision thread is idle(i.e. not running).
-         */
-        domain2.setAutoProvMode(Provisioning.AutoProvMode.MANUAL);
-        // refresh server object instances, we are on SOAP
-        prov.reload(localServer);
-        prov.reload(otherServer);
-        
-        Verify.verifyEquals(new HashSet<String>(), 
-                localServer.getAutoProvScheduledDomains());
-        Verify.verifyEquals(new HashSet<String>(),
-                otherServer.getAutoProvScheduledDomains());
-        
-        
-        verifyAutoProvTask(transport, Action.status, Status.idle);
-    }
-    
-    @Test
     public void attributeCallbackAutoProvScheduledDomains() throws Exception {
         Domain domain1 = createZimbraDomain(genDomainSegmentName("1"), null);
         domain1.setAutoProvMode(Provisioning.AutoProvMode.EAGER);
@@ -485,6 +434,94 @@ public class TestAutoProvision extends SoapTest {
          */
         localServer.removeAutoProvScheduledDomains(domain2.getName());
         verifyAutoProvTask(transport, Action.status, Status.idle);
+        
+        /*
+         * try to schedule a domain not in EAGER mode, verify the attempt fails
+         */
+        Domain domain3 = createZimbraDomain(genDomainSegmentName("3"), null);
+        domain3.setAutoProvMode(Provisioning.AutoProvMode.MANUAL);
+        String exceptionCaught = null;
+        try {
+            localServer.addAutoProvScheduledDomains(domain3.getName());
+        } catch (ServiceException e) {
+            exceptionCaught = e.getCode();
+        }
+        assertEquals(ServiceException.INVALID_REQUEST, exceptionCaught);
+    }
+    
+    @Test 
+    public void nonEagerDomainRemovedFromScheduledDomains() throws Exception {
+        Domain domain1 = createZimbraDomain(genDomainSegmentName("1"), null);
+        domain1.setAutoProvMode(Provisioning.AutoProvMode.EAGER);
+        
+        Domain domain2 = createZimbraDomain(genDomainSegmentName("2"), null);
+        domain2.setAutoProvMode(Provisioning.AutoProvMode.EAGER);
+        
+        Account admin = provUtil.createGlobalAdmin(genAcctNameLocalPart(), domain1);
+        SoapTransport transport = authAdmin(admin.getName());
+        
+        /*
+         * verify auto prov thread is not running at the beginning
+         */
+        verifyAutoProvTask(transport, Action.status, Status.idle);
+        
+        /*
+         * change the initial wait and polling interval to short values so we don't have to
+         * wait that long for following tests
+         */
+        modifyLocalconfigAndReload(transport, LC.autoprov_initial_sleep_ms, "0");
+        Server localServer = prov.getLocalServer();
+        long sleepInterval = 3 * Constants.MILLIS_PER_SECOND; // 3 seconds
+        localServer.setAutoProvPollingInterval("3s");
+        
+        /*
+         * schedule eager prov for domain1 and domain2 on server 
+         */
+        localServer.setAutoProvScheduledDomains(new String[]{domain1.getName(), domain2.getName()});
+        Verify.verifyEquals(Sets.newHashSet(domain1.getName(), domain2.getName()), 
+                localServer.getAutoProvScheduledDomains());
+        
+        /*
+         * verify auto prov thread is now running, because at last one domain is scheduled
+         */
+        verifyAutoProvTask(transport, Action.status, Status.running);
+        
+        /*
+         * change domain1 away from EAGER mode, wait for at least two (in case we missed 
+         * the first cycle) sleep cycles, so that the domain is removed from the scheduled 
+         * domains when the eager auto prov thread was at work.
+         */
+        domain1.setAutoProvMode(Provisioning.AutoProvMode.MANUAL);
+        Thread.sleep(2 * sleepInterval);
+        
+        /*
+         * verify domain1 is removed from the scheduled domains
+         */
+        prov.reload(localServer);
+        Verify.verifyEquals(Sets.newHashSet(domain2.getName()), localServer.getAutoProvScheduledDomains());
+        
+        /*
+         * verify the thread is still running
+         */
+        verifyAutoProvTask(transport, Action.status, Status.running);
+        
+        /*
+         * change domain2 away from EAGER mode, wait for at least two (in case we missed 
+         * the first cycle) sleep cycles, so that the domain is removed from the scheduled 
+         * domains when the eager auto thread was at work.  Also verify that sicne there 
+         * is now no scheduled domain, the thread is stopped
+         */
+        domain2.setAutoProvMode(Provisioning.AutoProvMode.MANUAL);
+        Thread.sleep(2 * sleepInterval);
+        prov.reload(localServer);
+        Verify.verifyEquals(new HashSet<String>(), localServer.getAutoProvScheduledDomains());
+        verifyAutoProvTask(transport, Action.status, Status.idle);
+        
+        /*
+         * done test, set the initial wait LC key and polling interval back
+         */
+        modifyLocalconfigAndReload(transport, LC.autoprov_initial_sleep_ms, DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
+        localServer.setAutoProvPollingInterval(DEFAULT_AUTOPROV_POLLING_INTERVAL);
     }
     
     @Test
@@ -616,8 +653,7 @@ public class TestAutoProvision extends SoapTest {
          * change LC key autpprov_initial_sleep_ms to 0, so we don't need to wait that long
          * (default is 5 mins)
          */
-        String cur_autpprov_initial_sleep_ms = LC.autpprov_initial_sleep_ms.value();
-        modifyLocalconfigAndReload(transport, LC.autpprov_initial_sleep_ms, "0");
+        modifyLocalconfigAndReload(transport, LC.autoprov_initial_sleep_ms, "0");
         
                 
         // schedule the domain on local server
@@ -670,7 +706,7 @@ public class TestAutoProvision extends SoapTest {
         /*
          * done test, set the LC key back
          */
-        modifyLocalconfigAndReload(transport, LC.autpprov_initial_sleep_ms, cur_autpprov_initial_sleep_ms);
+        modifyLocalconfigAndReload(transport, LC.autoprov_initial_sleep_ms, DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
         
     }
 }

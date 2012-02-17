@@ -80,14 +80,21 @@ public class SoapTest extends ProvTest {
     }
     
     static SoapTransport authAdmin(String acctName) throws Exception {
-        
+        return authAdmin(acctName, PASSWORD);
+    }
+    
+    static SoapTransport authAdmin(String acctName, String password) throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
         transport.setHttpDebugListener(soapDebugListener);
         
-        com.zimbra.soap.admin.message.AuthRequest req = new com.zimbra.soap.admin.message.AuthRequest(acctName, PASSWORD);
+        com.zimbra.soap.admin.message.AuthRequest req = new com.zimbra.soap.admin.message.AuthRequest(acctName, password);
         com.zimbra.soap.admin.message.AuthResponse resp = invokeJaxb(transport, req);
         transport.setAuthToken(resp.getAuthToken());
         return transport;
+    }
+    
+    static SoapTransport authZimbraAdmin() throws Exception {
+        return authAdmin(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
     
     static void modifyLocalconfigAndReload(SoapTransport transport, KnownKey key, String value) 
