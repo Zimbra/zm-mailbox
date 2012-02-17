@@ -43,25 +43,19 @@ extends TestCase {
         cleanUp();
     }
 
-    /**
-     * When {@code fmt=extended}, the response status is always 200 so that the browser
-     * doesn't try to render the error.  The client parses out the error from the response
-     * payload and handles it.
-     */
     public void testUnauthorizedExtended() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "fmt=extended");
         URI uri = new URI(uriString);
-        postAndVerify(mbox, uri, true, HttpServletResponse.SC_OK, "text/html");
+        String responseContent = postAndVerify(mbox, uri, true);
+        assertTrue(responseContent, responseContent.contains("401,"));
     }
 
-    /**
-     * When {@code fmt=raw}, the http client will get the correct HTTP status back.
-     */
     public void testUnauthorizedRaw() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
-        postAndVerify(mbox, uri, true, HttpServletResponse.SC_UNAUTHORIZED, "text/plain");
+        String responseContent = postAndVerify(mbox, uri, true);
+        assertTrue(responseContent, responseContent.startsWith("401,"));
     }
 
     /**
@@ -91,37 +85,14 @@ extends TestCase {
         post.releaseConnection();
     }
 
-    /**
-     * When {@code fmt=raw}, the response comes back as text/plain.
-     */
-    public void testTextResponse() throws Exception {
+    public void testRaw() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
-        postAndVerify(mbox, uri, false, HttpServletResponse.SC_OK, "text/plain");
+        String responseContent = postAndVerify(mbox, uri, false);
+        assertTrue(responseContent, responseContent.startsWith("200,"));
     }
 
-    /**
-     * When {@code fmt=extended}, the response comes back as JSON embedded in HTML.
-     */
-    public void testJsonResponse() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "fmt=extended");
-        URI uri = new URI(uriString);
-        // Check for text/html instead of application/json.  See bug 70126.
-        postAndVerify(mbox, uri, false, HttpServletResponse.SC_OK, "text/html");
-    }
-
-    /**
-     * When {@code fmt} is not set, the response comes back as HTML.
-     */
-    public void testHtmlResponse() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "");
-        URI uri = new URI(uriString);
-        postAndVerify(mbox, uri, false, HttpServletResponse.SC_OK, "text/html");
-    }
-
-    private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies, int expectedStatus, String expectedContentType)
+    private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies)
     throws IOException {
         HttpClient client = mbox.getHttpClient(uri);
         if (clearCookies) {
@@ -135,12 +106,13 @@ extends TestCase {
         PostMethod post = new PostMethod(uri.toString());
         post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
         int status = HttpClientUtil.executeMethod(client, post);
-        assertEquals(expectedStatus, status);
+        assertEquals(200, status);
 
         String contentType = getHeaderValue(post, "Content-Type");
-        assertTrue(contentType, contentType.startsWith(expectedContentType));
+        assertTrue(contentType, contentType.startsWith("text/html"));
+        String content = post.getResponseBodyAsString();
         post.releaseConnection();
-        return post.getResponseBodyAsString();
+        return content;
     }
 
     private String getHeaderValue(HttpMethod method, String name) {
