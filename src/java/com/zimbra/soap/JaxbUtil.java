@@ -483,6 +483,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CopyCosResponse.class,
             com.zimbra.soap.admin.message.CountAccountRequest.class,
             com.zimbra.soap.admin.message.CountAccountResponse.class,
+            com.zimbra.soap.admin.message.CountObjectsRequest.class,
+            com.zimbra.soap.admin.message.CountObjectsResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
             com.zimbra.soap.admin.message.CreateAccountResponse.class,
             com.zimbra.soap.admin.message.CreateArchiveRequest.class,
