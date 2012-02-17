@@ -91,7 +91,7 @@ public class ThreadPool implements Executor {
         }
     }
 
-    private class ThreadCounter {
+    static class ThreadCounter {
         private int mCount;
 
         public ThreadCounter() {
@@ -118,7 +118,7 @@ public class ThreadPool implements Executor {
      * executes all tasks using this wrapper class to keep track of the number
      * of active worker threads.
      */
-    public class CountedTask implements Runnable {
+    static class CountedTask implements Runnable {
         ThreadCounter mCounter;
         Runnable mTask;
 
@@ -138,7 +138,7 @@ public class ThreadPool implements Executor {
         }
     }
 
-    private static class NamedThreadFactory implements ThreadFactory {
+    static class NamedThreadFactory implements ThreadFactory {
         private String mName;
         private int mPriority;
         private int mThreadNumber;
