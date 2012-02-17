@@ -1213,7 +1213,7 @@ public class Folder extends MailItem {
             }
         }
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
-        delete(mbox, info, null, false);
+        delete(mbox, info, null, false, false);
 
         if (deleteEmptySubfolders) {
             // Iterate folder list in order of decreasing depth.

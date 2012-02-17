@@ -93,8 +93,7 @@ public final class MailboxTest {
 
         // setup: add the root message
         ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int rootId = mbox.addMessage(null, pm, dopt, null).getId();
+        int rootId = mbox.addMessage(null, pm, STANDARD_DELIVERY_OPTIONS, null).getId();
 
         // first draft explicitly references the parent by item ID (how ZWC does it)
         pm = MailboxTestUtil.generateMessage("Re: test subject");
@@ -116,7 +115,7 @@ public final class MailboxTest {
 
         // third draft is like second draft, but goes via Mailbox.addMessage (how IMAP does it)
         pm = MailboxTestUtil.generateMessage("Re: test subject");
-        dopt = new DeliveryOptions().setFlags(Flag.BITMASK_DRAFT).setFolderId(Mailbox.ID_FOLDER_DRAFTS);
+        DeliveryOptions dopt = new DeliveryOptions().setFlags(Flag.BITMASK_DRAFT).setFolderId(Mailbox.ID_FOLDER_DRAFTS);
         draft = mbox.addMessage(null, pm, dopt, null);
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded implicitly [addMessage]", parent.getConversationId(), draft.getConversationId());
@@ -140,8 +139,7 @@ public final class MailboxTest {
 
         // add a message
         int changeId1 = mbox.getLastChangeID();
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("foo"), dopt, null).getId();
+        int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("foo"), STANDARD_DELIVERY_OPTIONS, null).getId();
 
         // turn on sync tracking -- tombstone table should be empty
         mbox.beginTrackingSync();
@@ -258,8 +256,7 @@ public final class MailboxTest {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+        int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
 
         mbox.index.indexDeferredItems();
 
@@ -273,8 +270,7 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
 
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
         Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
 
         mbox.deleteMailbox();
@@ -285,7 +281,7 @@ public final class MailboxTest {
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
 
-        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
         Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
 
         mbox.deleteMailbox(Mailbox.DeleteBlobs.NEVER);
@@ -297,7 +293,7 @@ public final class MailboxTest {
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
 
-        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
         Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
 
         mbox.deleteMailbox(Mailbox.DeleteBlobs.UNLESS_CENTRALIZED);

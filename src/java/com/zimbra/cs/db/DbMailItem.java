@@ -1407,6 +1407,7 @@ public class DbMailItem {
         if (ids == null) {
             return null;
         }
+
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1434,7 +1435,7 @@ public class DbMailItem {
                 }
             } else {
                 stmt = conn.prepareStatement("SELECT parent_id, COUNT(*) FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", ids.size()) + "AND parent_id IS NOT NULL" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", ids.size()) + " AND parent_id IS NOT NULL" +
                         " GROUP BY parent_id");
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
@@ -1525,7 +1526,7 @@ public class DbMailItem {
      * items associated to the deleted item, and their children.
      */
     public static void delete(Mailbox mbox, MailItem item, PendingDelete info, boolean fromDumpster)
-            throws ServiceException {
+    throws ServiceException {
         if (item instanceof Tag)
             return;
         List<Integer> allIds = info.itemIds.getAll();
@@ -2665,6 +2666,8 @@ public class DbMailItem {
         }
     }
 
+    /** Note: In all cases, this method closes the passed-in {@code Statement}.
+     *  The caller must take care not to close it a second time. */
     static PendingDelete accumulateDeletionInfo(Mailbox mbox, PreparedStatement stmt)
     throws ServiceException {
         ResultSet rs = null;
@@ -2707,10 +2710,31 @@ public class DbMailItem {
         public int deleted;
         public long size;
 
-        public LocationCount(int c, int d, long sz)            { count = c;  deleted += d;  size = sz; }
-        public LocationCount(LocationCount lc)                 { count = lc.count;  deleted = lc.deleted;  size = lc.size; }
-        public LocationCount increment(int c, int d, long sz)  { count += c;  deleted += d;  size += sz;  return this; }
-        public LocationCount increment(LocationCount lc)       { count += lc.count;  deleted += lc.deleted;  size += lc.size;  return this; }
+        public LocationCount(int c, int d, long sz) {
+            count = c;
+            deleted = d;
+            size = sz;
+        }
+
+        public LocationCount(LocationCount lc) {
+            this(lc.count, lc.deleted, lc.size);
+        }
+
+        public LocationCount increment(int c, int d, long sz) {
+            count += c;
+            deleted += d;
+            size += sz;
+            return this;
+        }
+
+        public LocationCount increment(LocationCount lc) {
+            return increment(lc.count, lc.deleted, lc.size);
+        }
+
+        @Override
+        public String toString() {
+            return count + (deleted > 0 ? " / -" + deleted : "") + " [" + size + " bytes]";
+        }
     }
 
     /**
@@ -3703,6 +3727,11 @@ public class DbMailItem {
             }
             return "";
         }
+
+        @Override
+        public String toString() {
+            return getWhereClause() + " " + getLimitClause();
+        }
     }
 
     /**
@@ -3737,8 +3766,9 @@ public class DbMailItem {
 
             rs = stmt.executeQuery();
 
-            while (rs.next())
+            while (rs.next()) {
                 ids.add(rs.getInt(1));
+            }
             return ids;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting ids", e);

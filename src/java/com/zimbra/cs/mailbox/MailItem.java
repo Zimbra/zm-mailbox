@@ -2921,10 +2921,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         delete(mMailbox, info, this, writeTombstones, inDumpster());
     }
 
-    static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones) throws ServiceException {
-        delete(mbox, info, item, writeTombstones, false);
-    }
-
     static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones, boolean fromDumpster)
     throws ServiceException {
         // short-circuit now if nothing's actually being deleted
@@ -2976,6 +2972,12 @@ public abstract class MailItem implements Comparable<MailItem> {
                     DbMailItem.LocationCount lcount = entry.getValue();
                     mbox.getTagByName(tag).updateSize(-lcount.count, -lcount.deleted);
                 }
+
+                // we're doing an old-item expunge or the like rather than a single delete/empty op
+                info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
+                if (info.cascadeIds != null) {
+                    info.modifiedIds.removeAll(info.cascadeIds);
+                }
             }
         }
 
@@ -3018,15 +3020,10 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (parent != null) {
                 parent.removeChild(item);
             }
-        } else if (!info.itemIds.isEmpty()) {
-            // we're doing an old-item expunge or the like rather than a single delete/empty op
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
-            if (info.cascadeIds != null) {
-                info.modifiedIds.removeAll(info.cascadeIds);
-            }
+        } else if (!info.modifiedIds.isEmpty()) {
             mbox.purge(Type.CONVERSATION);
             // if there are SOAP listeners, instantiate all modified conversations for notification purposes
-            if (!info.modifiedIds.isEmpty() && mbox.hasListeners(Session.Type.SOAP)) {
+            if (mbox.hasListeners(Session.Type.SOAP)) {
                 for (MailItem conv : mbox.getItemById(info.modifiedIds, Type.CONVERSATION)) {
                     ((Conversation) conv).getSenderList();
                 }

@@ -453,8 +453,8 @@ public class Mailbox {
     }
 
     private static class FolderCache {
-        private Map<Integer, Folder> mapById;
-        private Map<String, Folder> mapByUuid;
+        private final Map<Integer, Folder> mapById;
+        private final Map<String, Folder> mapByUuid;
 
         public FolderCache() {
             mapById = new HashMap<Integer, Folder>();
@@ -506,8 +506,8 @@ public class Mailbox {
     }
 
     private static class ItemCache {
-        private Map<Integer /* id */, MailItem> mapById;
-        private Map<String /* uuid */, Integer /* id */> uuid2id;
+        private final Map<Integer /* id */, MailItem> mapById;
+        private final Map<String /* uuid */, Integer /* id */> uuid2id;
 
         public ItemCache() {
             mapById = new LinkedHashMap<Integer, MailItem>(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
@@ -6468,7 +6468,7 @@ public class Mailbox {
      * @param type item type or {@link MailItem.Type#UNKNOWN}
      * @param tcon target constraint or {@code null} */
     public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
-            throws ServiceException {
+    throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
         boolean success = false;
@@ -6571,16 +6571,17 @@ public class Mailbox {
             lock.lock();
             try {
                 Set<Integer> itemIds = null;
-                DbConnection conn = DbPool.getConnection();
+                // XXX: should we be in a txn and using getOperationConnection() instead?
+                DbConnection conn = DbPool.getConnection(this);
                 try {
                     itemIds = DbMailItem.getIds(this, conn, params, true);
                 } finally {
                     conn.closeQuietly();
                 }
 
-                if (itemIds.isEmpty()) {
+                if (itemIds.isEmpty())
                     break;
-                }
+
                 numDeleted += deleteFromDumpster(octxt, ArrayUtil.toIntArray(itemIds));
             } finally {
                 lock.release();
@@ -6592,22 +6593,12 @@ public class Mailbox {
     private int purgeDumpster(long olderThanMillis, int maxItems) throws ServiceException {
         QueryParams params = new QueryParams();
         params.setChangeDateBefore((int) (olderThanMillis / 1000)).setRowLimit(maxItems);
-        lock.lock();
-        try {
-            Set<Integer> itemIds = null;
-            DbConnection conn = DbPool.getConnection();
-            try {
-                itemIds = DbMailItem.getIds(this, conn, params, true);
-            } finally {
-                DbPool.quietClose(conn);
-            }
-            if (!itemIds.isEmpty()) {
-                return deleteFromDumpster(ArrayUtil.toIntArray(itemIds));
-            } else {
-                return 0;
-            }
-        } finally {
-            lock.release();
+
+        Set<Integer> itemIds = DbMailItem.getIds(this, getOperationConnection(), params, true);
+        if (!itemIds.isEmpty()) {
+            return deleteFromDumpster(ArrayUtil.toIntArray(itemIds));
+        } else {
+            return 0;
         }
     }
 
@@ -7258,8 +7249,9 @@ public class Mailbox {
         // if there's nothing to add, we can short-circuit here
         List<?> items = sdata.getItems();
         if (items.isEmpty()) {
-            if (subscription && isCalendar)
+            if (subscription && isCalendar) {
                 emptyFolder(octxt, folder.getId(), false);  // quicker than deleting appointments one at a time
+            }
             updateRssDataSource(folder);
             return;
         }
@@ -7367,7 +7359,7 @@ public class Mailbox {
     }
 
     public void setSubscriptionData(OperationContext octxt, int folderId, long date, String uuid)
-            throws ServiceException {
+    throws ServiceException {
         SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, uuid);
 
         boolean success = false;
@@ -7413,8 +7405,7 @@ public class Mailbox {
         // the hierarchy.
         for (int id : folderIds) {
             if ((getEffectivePermissions(octxt, id, MailItem.Type.FOLDER) & ACL.RIGHT_DELETE) == 0) {
-               throw ServiceException.PERM_DENIED("not authorized to empty folder " +
-                   getFolderById(octxt, id).getPath());
+               throw ServiceException.PERM_DENIED("not authorized to empty folder " + getFolderById(octxt, id).getPath());
             }
         }
         int lastChangeID = octxt != null && octxt.change != -1 ? octxt.change : getLastChangeID();
@@ -7445,11 +7436,11 @@ public class Mailbox {
                 try {
                     beginTransaction("delete", octxt, redoRecorder);
                     PendingDelete info = DbMailItem.getLeafNodes(this, params);
-                    if (info.itemIds.isEmpty()) {
+                    if (info.itemIds.isEmpty())
                         break;
-                    }
+
                     redoRecorder.setIds(ArrayUtil.toIntArray(info.itemIds.getAll()));
-                    MailItem.delete(this, info, null, true);
+                    MailItem.delete(this, info, null, true, false);
                     success = true;
                 } finally {
                     endTransaction(success);
@@ -7472,12 +7463,14 @@ public class Mailbox {
     }
 
     public SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query,
-            String types, String sort, int flags, byte color) throws ServiceException {
+            String types, String sort, int flags, byte color)
+    throws ServiceException {
         return createSearchFolder(octxt, folderId, name, query, types, sort, flags, new Color(color));
     }
 
     public SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query,
-            String types, String sort, int flags, Color color) throws ServiceException {
+            String types, String sort, int flags, Color color)
+    throws ServiceException {
         CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, flags, color);
 
         boolean success = false;
@@ -7498,7 +7491,7 @@ public class Mailbox {
     }
 
     public void modifySearchFolder(OperationContext octxt, int id, String query, String types, String sort)
-            throws ServiceException {
+    throws ServiceException {
         ModifySavedSearch redoRecorder = new ModifySavedSearch(mId, id, query, types, sort);
 
         boolean success = false;
@@ -7516,15 +7509,15 @@ public class Mailbox {
     }
 
     public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
-            String ownerId, int remoteId, String remoteUuid,
-            MailItem.Type view, int flags, byte color, boolean showReminders) throws ServiceException {
+            String ownerId, int remoteId, String remoteUuid, MailItem.Type view, int flags, byte color, boolean showReminders)
+    throws ServiceException {
         return createMountpoint(octxt, folderId, name, ownerId, remoteId, remoteUuid, view, flags, new Color(color),
                 showReminders);
     }
 
     public Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
-            String ownerId, int remoteId, String remoteUuid,
-            MailItem.Type view, int flags, Color color, boolean showReminders) throws ServiceException {
+            String ownerId, int remoteId, String remoteUuid, MailItem.Type view, int flags, Color color, boolean showReminders)
+    throws ServiceException {
         CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, remoteUuid,
                 view, flags, color, showReminders);
 
@@ -7589,7 +7582,7 @@ public class Mailbox {
     }
 
     public Mountpoint refreshMountpoint(OperationContext octxt, int mountpointId, String ownerId, int remoteId)
-            throws ServiceException {
+    throws ServiceException {
         RefreshMountpoint redoRecorder = new RefreshMountpoint(mId, mountpointId, ownerId, remoteId);
         boolean success = false;
         try {
@@ -7739,8 +7732,7 @@ public class Mailbox {
 
             // Process any folders that have retention policy set.
             for (Folder folder : getFolderList(octxt, SortBy.NONE)) {
-                RetentionPolicy rp =
-                    RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(folder.getRetentionPolicy());
+                RetentionPolicy rp = RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(folder.getRetentionPolicy());
                 for (Policy policy : rp.getPurgePolicy()) {
                     long folderLifetime;
 
@@ -7759,8 +7751,7 @@ public class Mailbox {
 
             // Process any tags that have retention policy set.
             for (Tag tag : getTagList(octxt)) {
-                RetentionPolicy rp =
-                    RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getRetentionPolicy());
+                RetentionPolicy rp = RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getRetentionPolicy());
                 for (Policy policy : rp.getPurgePolicy()) {
                     long tagLifetime;
                     try {
@@ -7772,7 +7763,7 @@ public class Mailbox {
 
                     long tagTimeout = getOperationTimestampMillis() - tagLifetime;
                     PendingDelete info = DbTag.getLeafNodes(this, tag, (int) (tagTimeout / 1000), maxItemsPerFolder);
-                    MailItem.delete(this, info, null, false);
+                    MailItem.delete(this, info, null, false, false);
                     List<Integer> ids = info.itemIds.getIds(Type.MESSAGE);
                     int numPurged = (ids == null ? 0 : ids.size());
                     purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
@@ -7841,7 +7832,7 @@ public class Mailbox {
 
             if (!skipDB) {
                 PendingDelete info = DbTag.getImapDeleted(this, purgeable);
-                MailItem.delete(this, info, null, true);
+                MailItem.delete(this, info, null, true, false);
             }
             success = true;
         } finally {

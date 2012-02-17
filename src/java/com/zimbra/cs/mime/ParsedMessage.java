@@ -107,7 +107,7 @@ public final class ParsedMessage {
     private boolean analyzedBodyParts = false;
     private boolean analyzedNonBodyParts = false;
     private String bodyContent = "";
-    private List<String> filenames = new ArrayList<String>();
+    private final List<String> filenames = new ArrayList<String>();
     private boolean indexAttachments;
     private int numParseErrors = 0;
     private String defaultCharset;
@@ -810,13 +810,14 @@ public final class ParsedMessage {
         return dateHeader;
     }
 
-    public void setReceivedDate(long date) {
+    public ParsedMessage setReceivedDate(long date) {
         // round to nearest second...
         if (date == DATE_HEADER) {
             receivedDate = getDateHeader();
         } else if (date != DATE_UNKNOWN) {
             receivedDate = (Math.max(0, date) / 1000) * 1000;
         }
+        return this;
     }
 
     public long getReceivedDate() {
