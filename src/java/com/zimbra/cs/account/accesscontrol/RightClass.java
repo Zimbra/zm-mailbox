@@ -11,7 +11,7 @@ public enum RightClass {
         try {
             return RightClass.valueOf(s);
         } catch (IllegalArgumentException e) {
-            throw ServiceException.INVALID_REQUEST("unknown right category: " + s, e);
+            throw ServiceException.INVALID_REQUEST("unknown right class: " + s, e);
         }
     }
     
