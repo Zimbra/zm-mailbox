@@ -17,7 +17,7 @@
       <!-- Default queued blocking threadpool -->
       <New id="pool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
         <Set name="minThreads">1</Set>
-        <Set name="maxThreads">25</Set>
+        <Set name="maxThreads">250</Set>
       </New>
     </Set>
     <Call class="com.zimbra.common.jetty.JettyMonitor" name="setThreadPool">
