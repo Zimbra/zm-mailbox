@@ -153,10 +153,8 @@ public class SaveDocument extends WikiDocumentHandler {
                 doc = new Doc(inlineContent, explicitName, explicitCtype, description);
             }
             
-            // set content-type based on file extension if it's application/octet-stream or application/ms-tnef
-            if (doc.name != null &&
-                    (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(doc.contentType) ||
-                    MimeConstants.CT_APPLICATION_TNEF.equals(doc.contentType))) {
+            // set content-type based on file extension.
+            if (doc.name != null) {
                 String guess = MimeDetect.getMimeDetect().detect(doc.name);
                 if (guess != null)
                     doc.contentType = guess;
