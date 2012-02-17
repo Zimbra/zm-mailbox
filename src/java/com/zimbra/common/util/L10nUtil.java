@@ -113,6 +113,10 @@ public class L10nUtil {
         shareNotifBodyText,
         shareNotifBodyHtml,
 
+        shareRevokeSubject,
+        shareRevokeBodyText,
+        shareRevokeBodyHtml,
+
         shareNotifBodyAddedToGroup1,
         shareNotifBodyAddedToGroup2,
 
@@ -445,7 +449,7 @@ public class L10nUtil {
     }
 
     private static class LocaleComparatorByDisplayName implements Comparator<Locale> {
-        private Locale mInLocale;
+        private final Locale mInLocale;
         LocaleComparatorByDisplayName(Locale inLocale) {
             mInLocale = inLocale;
         }

@@ -21,9 +21,10 @@ public final class MailConstants {
 
     public static final class ShareConstants {
         public static final String NAMESPACE_STR = "urn:zimbraShare";
-        public static final String VERSION = "0.1";
+        public static final String VERSION = "0.2";
 
         public static final String E_SHARE = "share";
+        public static final String E_REVOKE = "revoke";
         public static final String E_GRANTEE = "grantee";
         public static final String E_GRANTOR = "grantor";
         public static final String E_LINK = "link";
@@ -40,6 +41,7 @@ public final class MailConstants {
 
         public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
         public static final QName SHARE = QName.get(E_SHARE, NAMESPACE);
+        public static final QName REVOKE = QName.get(E_REVOKE, NAMESPACE);
     }
 
     private MailConstants() {
@@ -1189,4 +1191,6 @@ public final class MailConstants {
 
     public static final String E_FILTER = "filter";
     public static final String A_SESSION = "session";
+
+    public static final String A_ACTION = "action";
 }
