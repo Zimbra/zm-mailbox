@@ -77,39 +77,12 @@ public class LdapTest extends ProvTest {
         
         CliUtil.toolSetup(Log.Level.error.name());
         ZimbraLog.test.setLevel(Log.Level.info);
+        // ZimbraLog.acl.setLevel(Log.Level.debug);
         // ZimbraLog.autoprov.setLevel(Log.Level.debug);
         // ZimbraLog.account.setLevel(Log.Level.debug);
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
 
-        /*
-        if (useInMemoryLdapServerProperty == null) {
-            useInMemoryLdapServerProperty = 
-                System.getProperty("use_in_memory_ldap_server", "false");
-        }
-        
-        boolean useInMemoryLdapServer = 
-            Boolean.parseBoolean(useInMemoryLdapServerProperty);
-        
-        KnownKey key = new KnownKey("debug_use_in_memory_ldap_server", 
-                useInMemoryLdapServerProperty);
-        assert(DebugConfig.useInMemoryLdapServer == useInMemoryLdapServer);
-        useInMemoryLdapServer = InMemoryLdapServer.isOn();
-        
-        ZimbraLog.test.info("useInMemoryLdapServer = " + useInMemoryLdapServer);
-        
-
-        if (useInMemoryLdapServer) {
-            try {
-                InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, 
-                        new InMemoryLdapServer.ServerConfig(
-                        Lists.newArrayList(LdapConstants.ATTR_DC + "=" + LDAP_TEST_BASE_DOMAIN)));
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw e;
-            }
-        }
-        */
         if (useInMemoryLdapServerOverride != null) {
             boolean useInMemoryLdapServer = 
                     Boolean.parseBoolean(useInMemoryLdapServerOverride);

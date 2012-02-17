@@ -423,15 +423,29 @@ public class CheckAttrRight extends CheckRight {
             // some attrs
             if (ace.deny()) {
                 if (attrRightGranted.getRightType() == rightTypeNeeded) {
-                    for (String attrName : attrRightGranted.getAttrs())
-                        denySome.put(attrName, relativity);  // right type granted === right type needed
-                } else
+                    for (String attrName : attrRightGranted.getAttrs()) {
+                        collectAttrRightIfMoreRelevant(attrName, ace.deny(), relativity, allowSome, denySome);
+                    }
+                } else {
                     return null;  // just ignore the grant
+                }
             } else {
-                for (String attrName : attrRightGranted.getAttrs())
-                    allowSome.put(attrName, relativity);
+                for (String attrName : attrRightGranted.getAttrs()) {
+                    collectAttrRightIfMoreRelevant(attrName, ace.deny(), relativity, allowSome, denySome);
+                }
             }
             return CollectAttrsResult.SOME;
+        }
+    }
+    
+    private void collectAttrRightIfMoreRelevant(
+            String attrName, boolean negative, Integer relativity,
+            Map<String, Integer> allowed, Map<String, Integer> denied) {
+        Map<String, Integer> map = negative ? denied : allowed;
+        
+        Integer mostRelevant = map.get(attrName);
+        if (mostRelevant == null || relativity < mostRelevant) {
+            map.put(attrName, relativity);
         }
     }
     

@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,16 +29,22 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 
+import com.zimbra.cs.account.accesscontrol.InlineAttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveAttr;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightsByTargetType;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.qa.QA.Bug;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestACLEffectiveRights extends LdapTest {
@@ -140,15 +147,71 @@ public class TestACLEffectiveRights extends LdapTest {
         assertTrue(found);
     }
     
-    /*
+    @Bug(bug=70206)
     @Test
-    public void getCreateObjectAttrs() {
-        getCreateObjectAttrs(
-                Provisioning prov, String targetType,
-                Key.DomainBy domainBy, String domainStr,
-                Key.CosBy cosBy, String cosStr,
-                Key.GranteeBy granteeBy, String grantee)
+    public void bug70206() throws Exception {
+        Account acct = provUtil.createDelegatedAdmin(genAcctNameLocalPart(), domain);
+        Group group = provUtil.createGroup(genGroupNameLocalPart(), domain, false);
+        
+        Account grantingAccount = globalAdmin;
+        
+        String presetRightUnderTest = Right.RT_deleteDistributionList;
+        
+        String attrUnderTest = Provisioning.A_zimbraHideInGal;
+        String attrRightUnderTest = 
+            InlineAttrRight.composeSetRight(TargetType.dl, attrUnderTest);
+        
+        // grant a combo right on global level
+        RightCommand.grantRight(
+                prov, grantingAccount,
+                TargetType.global.getCode(), null, null,
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, acct.getName(), null,
+                Right.RT_adminConsoleDLRights, null);
+        
+        // deny a preset right (in the combo right) on global level
+        RightCommand.grantRight(
+                prov, grantingAccount,
+                TargetType.global.getCode(), null, null,
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, acct.getName(), null,
+                presetRightUnderTest, RightModifier.RM_DENY);
+        
+        // grant the preset right on the target
+        RightCommand.grantRight(
+                prov, grantingAccount,
+                TargetType.dl.getCode(), TargetBy.name, group.getName(),
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, acct.getName(), null,
+                attrRightUnderTest, null);
+        
+        // deny an attr right (in the combo right) on global level
+        RightCommand.grantRight(
+                prov, grantingAccount,
+                TargetType.global.getCode(), null, null,
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, acct.getName(), null,
+                attrRightUnderTest, RightModifier.RM_DENY);
+        
+        // grant the attr right on the target
+        RightCommand.grantRight(
+                prov, grantingAccount,
+                TargetType.dl.getCode(), TargetBy.name, group.getName(),
+                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, acct.getName(), null,
+                presetRightUnderTest, null);
+        
+        EffectiveRights effRights = RightCommand.getEffectiveRights(
+                prov,
+                TargetType.dl.getCode(), TargetBy.name, group.getName(),
+                Key.GranteeBy.name, acct.getName(),
+                false, false);
+        
+        List<String> presetRights = effRights.presetRights();
+        SortedMap<String, EffectiveAttr> setAttrRights = effRights.canSetAttrs();
+        
+        /*
+        for (String right : presetRights) {
+            System.out.println(right);
+        }
+        */
+        assertTrue(presetRights.contains(Right.RT_deleteDistributionList));
+        assertTrue(setAttrRights.containsKey(attrUnderTest));
     }
     
-    */
 }

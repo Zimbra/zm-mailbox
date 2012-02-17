@@ -299,7 +299,8 @@ public class CollectEffectiveRights {
 
     private void collectAdminPresetRightOnTarget(List<ZimbraACE> acl, TargetType targeType,
             Integer relativity, boolean subDomain,
-            Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
+            Map<Right, Integer> allowed, Map<Right, Integer> denied) 
+    throws ServiceException {
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
         collectAdminPresetRights(acl, targeType, granteeFlags, relativity, 
@@ -339,20 +340,25 @@ public class CollectEffectiveRights {
                 ComboRight comboRight = (ComboRight)right;
                 for (Right r : comboRight.getPresetRights()) {
                     if (r.executableOnTargetType(targetType)) {
-                        if (ace.deny())
-                            denied.put(r, relativity);
-                        else
-                            allowed.put(r, relativity);
+                        collectPresetRightIfMoreRelevant(r, ace.deny(), relativity, allowed, denied);
                     }
                 }
             } else if (right.isPresetRight()) {
                 if (right.executableOnTargetType(targetType)) {
-                    if (ace.deny())
-                        denied.put(right, relativity);
-                    else
-                        allowed.put(right, relativity);
+                    collectPresetRightIfMoreRelevant(right, ace.deny(), relativity, allowed, denied);
                 }
             } 
+        }
+    }
+    
+    private void collectPresetRightIfMoreRelevant(
+            Right right, boolean negative, Integer relativity,
+            Map<Right, Integer> allowed, Map<Right, Integer> denied) {
+        Map<Right, Integer> map = negative ? denied : allowed;
+        
+        Integer mostRelevant = map.get(right);
+        if (mostRelevant == null || relativity < mostRelevant) {
+            map.put(right, relativity);
         }
     }
     
