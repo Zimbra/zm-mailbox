@@ -3,7 +3,7 @@ package com.zimbra.common.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class BoundedCachedThreadPoolTest {
+public class CachedThreadPoolTest {
 
     private static class MyTask implements Runnable {
         private int execTime; //execution time in milliseconds!!
@@ -23,10 +23,10 @@ public class BoundedCachedThreadPoolTest {
     }
     
     private static class StatsThread extends Thread {
-        private BoundedCachedThreadPool pool;
+        private CachedThreadPool pool;
         private int interval; //time interval in milliseconds between two stats
         
-        StatsThread(BoundedCachedThreadPool pool, int interval) {
+        StatsThread(CachedThreadPool pool, int interval) {
             this.pool = pool;
             this.interval = interval;
         }
@@ -46,7 +46,7 @@ public class BoundedCachedThreadPoolTest {
     
     @Test
     public void testPoolSize() throws InterruptedException {
-        BoundedCachedThreadPool pool = new BoundedCachedThreadPool("testPool", 5, 5000, 1000);
+        CachedThreadPool pool = new CachedThreadPool("testPool", 5, 5000, 1000);
         Assert.assertTrue(pool.getNumActiveThreads() == 0);
         Assert.assertEquals(pool.getName(), "testPool");
         
@@ -70,7 +70,7 @@ public class BoundedCachedThreadPoolTest {
     
     @Test
     public void testShutdown() throws InterruptedException {
-        BoundedCachedThreadPool pool = new BoundedCachedThreadPool("testPool", 5, 3000, 1000);
+        CachedThreadPool pool = new CachedThreadPool("testPool", 5, 3000, 1000);
         Assert.assertTrue(pool.getNumActiveThreads() == 0);
         Assert.assertEquals(pool.getName(), "testPool");
         
@@ -89,4 +89,5 @@ public class BoundedCachedThreadPoolTest {
         
         Assert.assertTrue(pool.getNumActiveThreads() > 0);        
     }
+
 }

@@ -33,26 +33,34 @@ import com.zimbra.common.util.ThreadPool.ThreadCounter;
 
 /**
  * com.zimbra.common.util.ThreadPool works in the following way:
- * 1. # of threads < corePoolSize; create a new Thread to run a new task.
- * 2. # of threads >= the corePoolSize, put the task into the queue.
- * 3. If the queue is full, and the number of threads is less than the 
+ * <ul>
+ *  <li> # of threads < corePoolSize; create a new Thread to run a new task.
+ *  <li> # of threads >= the corePoolSize, put the task into the queue.
+ *  <li> If the queue is full, and the number of threads is less than the 
  * maxPoolSize, create a new thread to run tasks in.
- * 4. If the queue is full, and the number of threads is greater than or equal to
+ *  <li> If the queue is full, and the number of threads is greater than or equal to
  * maxPoolSize, reject the task.
+ * </ul>
+ * <p>
  * New threads are only created when the queue fills up. Hence, if we are using an
  * unbounded queue like LinkedBlockingQueue, then # of threads will not exceed
  * corePoolSize which is hard-coded to 1.
+ * <p>
  * 
- * BoundedCachedThreadPool solves the problem in the following way: 
- * 1. Uses a unbounded LinkedBlockingQueue to queue tasks from the caller threads
- * 2. A sweeper thread sweeps tasks from LinkedBlocking Queue and executes them on a CachedThreadPool
- * 3. The sweeper blocks on executor if the # of threads on the CachedThreadPool reaches a threshold
+ * CachedThreadPool uses a cachedThreadPool but sets of a limit on approximate max number 
+ * of threads can be spawned.
+ * CachedThreadPool solves the problem in the following way:
+ * <ul>
+ *  <li> Uses a unbounded LinkedBlockingQueue to queue tasks from the caller threads
+ *  <li> A sweeper thread sweeps tasks from LinkedBlocking Queue and executes them on a CachedThreadPool
+ *  <li> The sweeper blocks on executor if the # of threads on the CachedThreadPool reaches the threshold
+ * </ul>
  * 
  * @author smukhopadhyay
  *
  */
-public class BoundedCachedThreadPool implements Executor {
-    private static Log logger = LogFactory.getLog(BoundedCachedThreadPool.class);
+public class CachedThreadPool implements Executor {
+    private static Log logger = LogFactory.getLog(CachedThreadPool.class);
     private static final int TIMEOUT = 30 * 1000;
     private static final int THROTTLE_TIME = 1 * 1000;
     
@@ -76,11 +84,11 @@ public class BoundedCachedThreadPool implements Executor {
     private AtomicBoolean shutdown = new AtomicBoolean(false);
     private boolean isTerminated = false;
     
-    public BoundedCachedThreadPool(String name, int poolSize) {
+    public CachedThreadPool(String name, int poolSize) {
         this(name, poolSize, TIMEOUT, THROTTLE_TIME);
     }
     
-    public BoundedCachedThreadPool(String name, int poolSize, int timeout, int throttleTime) {
+    public CachedThreadPool(String name, int poolSize, int timeout, int throttleTime) {
         this.name = name;
         this.poolSize = poolSize;
         this.timeout = timeout;
@@ -106,7 +114,7 @@ public class BoundedCachedThreadPool implements Executor {
     
     /**
      * Executes the tasks asynchronously by putting them onto the blocking queue.
-     * Sweeper thread swweps the tasks and executes them on CachedThreadPool.
+     * Sweeper thread sweeps the tasks and executes them on CachedThreadPool.
      * @param task
      * @throws InterruptedException
      */
@@ -206,6 +214,8 @@ public class BoundedCachedThreadPool implements Executor {
                         
                         return;
                     }
+                    
+                    assert false; //this should never happen
                 }
             }
         }
