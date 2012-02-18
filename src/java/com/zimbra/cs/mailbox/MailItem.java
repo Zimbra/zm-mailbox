@@ -3020,12 +3020,19 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (parent != null) {
                 parent.removeChild(item);
             }
-        } else if (!info.modifiedIds.isEmpty()) {
-            mbox.purge(Type.CONVERSATION);
-            // if there are SOAP listeners, instantiate all modified conversations for notification purposes
-            if (mbox.hasListeners(Session.Type.SOAP)) {
-                for (MailItem conv : mbox.getItemById(info.modifiedIds, Type.CONVERSATION)) {
-                    ((Conversation) conv).getSenderList();
+        } else if (!info.itemIds.isEmpty()) {
+            // we're doing an old-item expunge or the like rather than a single delete/empty op
+            for (int itemId : info.itemIds.getAll()) {
+                mbox.uncacheItem(itemId);
+            }
+
+            if (!info.modifiedIds.isEmpty()) {
+                mbox.purge(Type.CONVERSATION);
+                // if there are SOAP listeners, instantiate all modified conversations for notification purposes
+                if (mbox.hasListeners(Session.Type.SOAP)) {
+                    for (MailItem conv : mbox.getItemById(info.modifiedIds, Type.CONVERSATION)) {
+                        ((Conversation) conv).getSenderList();
+                    }
                 }
             }
         }
