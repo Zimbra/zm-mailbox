@@ -25,9 +25,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.BoundedCachedThreadPool;
+import com.zimbra.common.util.CachedThreadPool;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
@@ -105,7 +104,7 @@ class IndexWritersCache {
     private boolean mShutdown = false;
     private Thread mSweeperThread = null;
     private List<CountDownLatch> mWaitingForSlot = new ArrayList<CountDownLatch>();
-    private BoundedCachedThreadPool mPool = new BoundedCachedThreadPool("IndexWriterFlush", mFlushPoolSize);
+    private CachedThreadPool mPool = new CachedThreadPool("IndexWriterFlush", mFlushPoolSize);
 
     private enum WriterState {
         CLOSED,
