@@ -570,10 +570,6 @@ public class ShareInfo {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
                 shareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), sid.getGranteeName());
                 extUserLoginUrl = getExtUserLoginURL(owner);
-                // before sending out email to external user, push the pending ACLs to LDAP now
-                // so that during external user account provisioning we are able to discover shares
-                // accessible to the external user
-                AclPushTask.doWork();
             }
 
             // TEXT part (add me first!)

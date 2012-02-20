@@ -26,6 +26,8 @@ import com.zimbra.cs.datasource.DataSourceListener;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.acl.AclPushListener;
+import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.ZimbraApplication;
@@ -80,7 +82,8 @@ public abstract class MailboxListener {
 
     static void reset() {
         sListeners.clear();
-        if (ZimbraApplication.getInstance().supports(CalItemReminderService.class) && !DebugConfig.disableCalendarReminderEmail) {
+        ZimbraApplication application = ZimbraApplication.getInstance();
+        if (application.supports(CalItemReminderService.class) && !DebugConfig.disableCalendarReminderEmail) {
             register(new CalItemReminderService());
         }
         register(new FilterListener());
@@ -88,6 +91,9 @@ public abstract class MailboxListener {
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
         register(new ShareStartStopListener());
+        if (application.supports(AclPushTask.class)) {
+            register(new AclPushListener());
+        }
     }
 
     public static void register(MailboxListener listener) {

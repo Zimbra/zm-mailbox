@@ -43,7 +43,7 @@ public class AclPushTask extends TimerTask {
     private static boolean supported;
 
     static {
-         supported = ZimbraApplication.getInstance().supports(DbPendingAclPush.class);
+         supported = ZimbraApplication.getInstance().supports(AclPushTask.class);
     }
 
     @Override
@@ -80,8 +80,8 @@ public class AclPushTask extends TimerTask {
                                 itemList.add(mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN));
                             } catch (MailServiceException.NoSuchItemException ignored) {
                             }
-                            items = itemList.toArray(new MailItem[itemList.size()]);
                         }
+                        items = itemList.toArray(new MailItem[itemList.size()]);
                     }
                 }
 

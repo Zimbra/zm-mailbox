@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.soap.account.message.GetShareInfoRequest;
 import com.zimbra.soap.account.message.GetShareInfoResponse;
 import com.zimbra.soap.type.ShareInfo;
@@ -62,9 +61,8 @@ public class TestAclPush extends TestCase {
         // grant access to the created folder to user2
         Account acct2 = Provisioning.getInstance().getAccountByName(TestUtil.getAddress(USER2_NAME));
         mbox1.grantAccess(null, folder.getId(), acct2.getId(), ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
-
-        // push ACLs to LDAP
-        AclPushTask.doWork();
+        // Give some time for AclPushTask to run
+        Thread.sleep(100);
 
         // invoke GetShareInfoRequest from user2 and check that the shared is discovered
         ZMailbox zMailbox2 = TestUtil.getZMailbox(USER2_NAME);
@@ -84,7 +82,7 @@ public class TestAclPush extends TestCase {
 
         // rename folder
         mbox1.rename(null, folder.getId(), MailItem.Type.FOLDER, "/" + NAME_PREFIX + "-folder2");
-        AclPushTask.doWork();
+        Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
         assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
@@ -92,7 +90,7 @@ public class TestAclPush extends TestCase {
         // create another folder and share with DL
         Folder dlFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-dl", (byte) 0, MailItem.Type.DOCUMENT);
         mbox1.grantAccess(null, dlFolder.getId(), dl.getId(), ACL.GRANTEE_GROUP, ACL.stringToRights("rwi"), null);
-        AclPushTask.doWork();
+        Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
         ShareInfo dlShare = getShare(shares, "/" + NAME_PREFIX + "-dl");
@@ -106,7 +104,7 @@ public class TestAclPush extends TestCase {
         // create another folder and share with "public"
         Folder pubFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-public", (byte) 0, MailItem.Type.DOCUMENT);
         mbox1.grantAccess(null, pubFolder.getId(), null, ACL.GRANTEE_PUBLIC, ACL.stringToRights("rw"), null);
-        AclPushTask.doWork();
+        Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
         ShareInfo pubShare = getShare(shares, "/" + NAME_PREFIX + "-public");
@@ -118,7 +116,7 @@ public class TestAclPush extends TestCase {
 
         // revoke access for user2 on the first folder
         mbox1.revokeAccess(null, folder.getId(), acct2.getId());
-        AclPushTask.doWork();
+        Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
         assertNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
@@ -128,7 +126,7 @@ public class TestAclPush extends TestCase {
         // delete dlFolder and pubFolder
         mbox1.delete(null, dlFolder.getId(), MailItem.Type.FOLDER);
         mbox1.delete(null, pubFolder.getId(), MailItem.Type.FOLDER);
-        AclPushTask.doWork();
+        Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
         assertNull(getShare(shares, "/" + NAME_PREFIX + "-dl"));
