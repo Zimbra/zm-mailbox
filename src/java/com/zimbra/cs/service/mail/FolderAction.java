@@ -170,7 +170,7 @@ public class FolderAction extends ItemAction {
             } else if (gtype == ACL.GRANTEE_PUBLIC) {
                 zid = GuestAccount.GUID_PUBLIC;
                 expiry = validateGrantExpiry(grant.getAttribute(MailConstants.A_EXPIRY, null),
-                        AccountUtil.getMaxPublicShareLifetime(mbox.getAccount(), mbox.getFolderById(octxt, iid.getId()).getType()));
+                        AccountUtil.getMaxPublicShareLifetime(mbox.getAccount(), mbox.getFolderById(octxt, iid.getId()).getDefaultView()));
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 if (zid == null || zid.indexOf('@') < 0)
@@ -246,7 +246,7 @@ public class FolderAction extends ItemAction {
             ACL acl = null;
             if (eAcl != null) {
                 acl = parseACL(eAcl,
-                        view == null ? mbox.getFolderById(octxt, iid.getId()).getType() : MailItem.Type.of(view),
+                        view == null ? mbox.getFolderById(octxt, iid.getId()).getDefaultView() : MailItem.Type.of(view),
                         mbox.getAccount());
             }
             if (color >= 0) {

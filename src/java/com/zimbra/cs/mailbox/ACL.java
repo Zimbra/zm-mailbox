@@ -469,7 +469,7 @@ public final class ACL {
             mlist.add(grant.encode());
         meta.put(FN_GRANTS, mlist);
         meta.put(FN_INT_GRANT_EXPIRY, mInternalGrantExpiry);
-        meta.put(FN_INT_GRANT_EXPIRY, mGuestGrantExpiry);
+        meta.put(FN_GST_GRANT_EXPIRY, mGuestGrantExpiry);
         return meta;
     }
 
