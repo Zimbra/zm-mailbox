@@ -49,15 +49,15 @@ public class DefangFactory {
         if(contentType == null) {
             return noopDefang;
         }
-        
-        if(contentType.startsWith(MimeConstants.CT_TEXT_HTML)) {
+        String contentTypeLowerCase = contentType.toLowerCase();
+        if(contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML)) {
             return htmlDefang;
         }
-        
-        if(contentType.startsWith(MimeConstants.CT_TEXT_XML) ||
-           contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
-           contentType.startsWith(MimeConstants.CT_IMAGE_SVG)){
-            return xhtmlDefang;            
+
+        if(contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML) ||
+           contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
+           contentTypeLowerCase.startsWith(MimeConstants.CT_IMAGE_SVG)){
+            return xhtmlDefang;
         }
         return noopDefang;
     }
