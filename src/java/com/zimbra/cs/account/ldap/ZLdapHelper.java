@@ -282,5 +282,22 @@ public class ZLdapHelper extends LdapHelper {
         }
     }
 
+    @Override
+    public long countEntries(String baseDN, ZLdapFilter filter,
+            ZSearchControls searchControls, ZLdapContext initZlc,
+            LdapServerType ldapServerType) throws ServiceException {
+        ZLdapContext zlc = initZlc;
+        try {
+            if (zlc == null) {
+                zlc = LdapClient.getContext(ldapServerType, LdapUsage.SEARCH);
+            }
+            return zlc.countEntries(baseDN, filter, searchControls);
+        } finally {
+            if (initZlc == null) {
+                LdapClient.closeContext(zlc);
+            }
+        }
+    }
+
 
 }

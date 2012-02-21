@@ -102,6 +102,10 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     public abstract ZSearchResultEnumeration searchDir(
             String baseDN, ZLdapFilter filter, ZSearchControls searchControls) 
     throws LdapException;
+    
+    public abstract long countEntries(
+            String baseDN, ZLdapFilter filter, ZSearchControls searchControls) 
+    throws LdapException;
    
     public abstract void deleteEntry(String dn) throws LdapException;
 

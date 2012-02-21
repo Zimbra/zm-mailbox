@@ -1451,28 +1451,15 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException{
         return searchDirectoryInternal(options, null);
     }
-
-    private List<NamedEntry> searchDirectoryInternal(SearchDirectoryOptions options,
-            NamedEntry.Visitor visitor)
+    
+    private String[] getSearchBases(Domain domain, Set<ObjectType> types) 
     throws ServiceException {
-        Set<ObjectType> types = options.getTypes();
-
-        if (types == null) {
-            throw ServiceException.INVALID_REQUEST("missing types", null);
-        }
-
-        int flags = options.getTypesAsFlags();
-
-        /*
-         * base
-         */
         String[] bases;
-        ZLdapFilter dnSubtreeMatchFilter = null;
-
-        Domain domain = options.getDomain();
+        
         if (domain != null) {
             String domainDN = ((LdapDomain) domain).getDN();
 
+            boolean domainsTree = false;
             boolean groupsTree = false;
             boolean peopleTree = false;
 
@@ -1485,33 +1472,66 @@ public class LdapProvisioning extends LdapProv {
                 types.contains(ObjectType.resources)) {
                 peopleTree = true;
             }
+            if (types.contains(ObjectType.domains)) {
+                domainsTree = true;
+            }
 
-            // error if a domain is specified but non of domain-ed object types is specified.
-            if (!groupsTree && !peopleTree) {
+            /*
+             * error if a domain is specified but non of domain-ed object types is specified.
+             */
+            if (!groupsTree && !peopleTree && !domainsTree) {
                 throw ServiceException.INVALID_REQUEST(
                         "domain is specified but non of domain-ed types is specified", null);
             }
-
+            
+            /* 
+             * error if both domain type and one on account/resource/group types are also 
+             * requested.  Because, for domains, we *do* want to return sub-domains; 
+             * but for accounts/resources/groups, we only want entries in the specified 
+             * domain, not sub-domains.
+             * 
+             * e.g. if domains and accounts are requested, the search base would be the 
+             * domains DN, then all accounts in sub-domains will also be returned.   This 
+             * can be worked out by the DN Subtree Match Filter:
+             * (||(objectClass=zimbraDomain)(&(objectClass=zimbraAccount)(DN-Subtree-Match-Filter)))
+             * but it will need some work in the existing code.  This use case is not needed 
+             * for now - just throw.
+             */
+            if (domainsTree && (groupsTree || peopleTree)) {
+                throw ServiceException.FAILURE("specifying domains type and one of " +
+                        "accounts/resources/groups type is not supported by in-memory LDAP server", null);
+            }
+            
             /*
              * InMemoryDirectoryServer does not support EXTENSIBLE-MATCH filter.
              */
             if (InMemoryLdapServer.isOn()) {
                 /*
-                 * unit test path
+                 * unit test path: DN Subtree Match Filter is not supported by InMemoryLdapServer
                  *
-                 * Search twice: once under the people tree, once under the groups tree
+                 * If search for domains, case is the domains DN.
+                 * 
+                 * If search for accounts/resources/groups:
+                 * Search twice: once under the people tree, once under the groups tree,
+                 * so entries under sub-domains are not returned.
+                 * 
                  */
-                List<String> baseList = Lists.newArrayList();
-
-                if (groupsTree) {
-                    baseList.add(mDIT.domainDNToDynamicGroupsBaseDN(domainDN));
+                if (domainsTree) {
+                    bases = new String[]{domainDN};
+                } else {
+                    List<String> baseList = Lists.newArrayList();
+    
+                    if (groupsTree) {
+                        baseList.add(mDIT.domainDNToDynamicGroupsBaseDN(domainDN));
+                    }
+    
+                    if (peopleTree) {
+                        baseList.add(mDIT.domainDNToAccountSearchDN(domainDN));
+                    }
+                    
+                    bases = baseList.toArray(new String[baseList.size()]);
                 }
-
-                if (peopleTree) {
-                    baseList.add(mDIT.domainDNToAccountSearchDN(domainDN));
-                }
-
-                bases = baseList.toArray(new String[baseList.size()]);
+                
             } else {
                 /*
                  * production path
@@ -1520,25 +1540,47 @@ public class LdapProvisioning extends LdapProv {
                  * people tree and groups tree are needed
                  */
                 String searchBase;
-                if (groupsTree && peopleTree) {
-                    dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter();
+                if (domainsTree) {
                     searchBase = domainDN;
-                } else if (groupsTree) {
-                    searchBase = mDIT.domainDNToDynamicGroupsBaseDN(domainDN);
                 } else {
-                    searchBase = mDIT.domainDNToAccountSearchDN(domainDN);
+                    if ((groupsTree && peopleTree)) {
+                        searchBase = domainDN;
+                    } else if (groupsTree) {
+                        searchBase = mDIT.domainDNToDynamicGroupsBaseDN(domainDN);
+                    } else {
+                        searchBase = mDIT.domainDNToAccountSearchDN(domainDN);
+                    }
                 }
                 bases = new String[]{searchBase};
             }
 
         } else {
+            int flags = SearchDirectoryOptions.getTypesAsFlags(types);
             bases = mDIT.getSearchBases(flags);
         }
+        
+        return bases;
+    }
 
+    private List<NamedEntry> searchDirectoryInternal(SearchDirectoryOptions options,
+            NamedEntry.Visitor visitor)
+    throws ServiceException {
+        Set<ObjectType> types = options.getTypes();
 
+        if (types == null) {
+            throw ServiceException.INVALID_REQUEST("missing types", null);
+        }
+
+        /*
+         * base
+         */
+        Domain domain = options.getDomain();
+        String[] bases = getSearchBases(domain, types);
+        
         /*
          * filter
          */
+        int flags = options.getTypesAsFlags();
         ZLdapFilter filter = options.getFilter();
         String filterStr = options.getFilterString();
 
@@ -1572,9 +1614,26 @@ public class LdapProvisioning extends LdapProv {
             filter = filterFactory.fromFilterString(options.getFilterId(), filterStr);
         }
 
-        if (dnSubtreeMatchFilter != null) {
-            filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
+        if (domain != null && !InMemoryLdapServer.isOn()) {
+            boolean groupsTree = false;
+            boolean peopleTree = false;
+            
+            if (types.contains(ObjectType.dynamicgroups)) {
+                groupsTree = true;
+            }
+            if (types.contains(ObjectType.accounts) ||
+                types.contains(ObjectType.aliases) ||
+                types.contains(ObjectType.distributionlists) ||
+                types.contains(ObjectType.resources)) {
+                peopleTree = true;
+            }
+            
+            if (groupsTree && peopleTree) {
+                ZLdapFilter dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter();
+                filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
+            }
         }
+        
 
         /*
          * return attrs
@@ -7652,19 +7711,26 @@ public class LdapProvisioning extends LdapProv {
         return visitor.getResult();
     }
 
+    /*
     @Override
     public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
 
+        LdapDomain ldapDomain = null;
+        if (domain != null) {
+            if (domain instanceof LdapDomain) {
+                ldapDomain = (LdapDomain) domain;
+            }
+        }
+        
         String[] bases = null;
         ZLdapFilter filter = null;
-        String[] attrs = new String[] {"zimbraId"};
 
         // figure out bases, query, and attrs for each supported counting type
         switch (type) {
         case userAccount:
         case account:
-            if (domain instanceof LdapDomain) {
-                String base = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
+            if (ldapDomain != null) {
+                String base = mDIT.domainDNToAccountSearchDN(ldapDomain.getDN());
                 bases = new String[]{base};
             } else {
                 bases = mDIT.getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
@@ -7677,8 +7743,8 @@ public class LdapProvisioning extends LdapProv {
             }
             break;
         case alias:
-            if (domain instanceof LdapDomain) {
-                String base = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
+            if (ldapDomain != null) {
+                String base = mDIT.domainDNToAccountSearchDN(ldapDomain.getDN());
                 bases = new String[]{base};
             } else {
                 bases = mDIT.getSearchBases(Provisioning.SD_ALIAS_FLAG);
@@ -7686,25 +7752,131 @@ public class LdapProvisioning extends LdapProv {
             filter = filterFactory.allAliases();
             break;
         case dl:
+            // distribution lists and dynamic groups
+            if (ldapDomain != null) {
+                String base = mDIT.domainDNToGroupSearchDN(ldapDomain.getDN());
+                bases = new String[]{base};
+            } else {
+                bases = mDIT.getSearchBases(Provisioning.SD_DISTRIBUTION_LIST_FLAG);
+            }
+            filter = filterFactory.allGroups();
+            break;
         case domain:
+            if (ldapDomain != null) {
+                // count sub domains of the specified domain
+                bases = new String[]{ldapDomain.getDN()};
+            } else {
+                mDIT.getSearchBases(Provisioning.SD_DOMAIN_FLAG);
+            }
+            filter = filterFactory.allDomains();
+            break;
         case cos:
-        case server:
-            if (domain != null) {
+            if (ldapDomain != null) {
                 throw ServiceException.INVALID_REQUEST(
                         "domain cannot be specified for counting type: " + type.toString(), null);
             }
+            bases = mDIT.getSearchBases(Provisioning.SD_COS_FLAG);
+            filter = filterFactory.allCoses();
+            break;
+        case server:
+            if (ldapDomain != null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "domain cannot be specified for counting type: " + type.toString(), null);
+            }
+            bases = mDIT.getSearchBases(Provisioning.SD_SERVER_FLAG);
+            filter = filterFactory.allServers();
+            break;
         default:
             throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
         }
 
         long num = 0;
         for (String base : bases) {
-            num += countObjects(base, filter, attrs);
+            num += countObjects(base, filter);
         }
 
         return num;
     }
+    */
+    
+    @Override
+    public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
+        
+        ZLdapFilter filter;
+        
+        // setup types for finding bases
+        Set<ObjectType> types = Sets.newHashSet(); 
+        
+        switch (type) {
+            case userAccount:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.allNonSystemAccounts();
+                break;
+            case account: 
+                types.add(ObjectType.accounts);
+                types.add(ObjectType.resources);
+                filter = filterFactory.allAccounts();
+                break;
+            case alias:
+                types.add(ObjectType.aliases);
+                filter = filterFactory.allAliases();
+                break;
+            case dl:
+                types.add(ObjectType.distributionlists);
+                types.add(ObjectType.dynamicgroups);
+                filter = mDIT.filterGroupsByDomain(domain);
+                if (domain != null && !InMemoryLdapServer.isOn()) {
+                    ZLdapFilter dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter();
+                    filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
+                }
+                break;
+            case domain:
+                types.add(ObjectType.domains);
+                filter = filterFactory.allDomains();
+                break;
+            case cos:
+                if (domain != null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "domain cannot be specified for counting type: " + type.toString(), null);
+                }
+                types.add(ObjectType.coses);
+                filter = filterFactory.allCoses();
+                break;
+            case server:
+                if (domain != null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "domain cannot be specified for counting type: " + type.toString(), null);
+                }
+                types.add(ObjectType.servers);
+                filter = filterFactory.allServers();
+                break;
+            default:
+                throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
+        }
+        
+        String[] bases = getSearchBases(domain, types);
+    
+        long num = 0;
+        for (String base : bases) {
+            num += countObjects(base, filter);
+        }
 
+        return num;
+    }
+    
+    private long countObjects(String base, ZLdapFilter filter)
+    throws ServiceException {
+        if (InMemoryLdapServer.isOn()) {
+            CountObjectsVisitor visitor = new CountObjectsVisitor();
+            searchLdapOnReplica(base, filter, null, visitor);
+            return visitor.getCount();
+        } else {
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, null);
+            return helper.countEntries(base, filter, searchControls);
+        }
+    }
+    
     private class CountObjectsVisitor extends SearchLdapVisitor {
         long count = 0;
 
@@ -7720,13 +7892,6 @@ public class LdapProvisioning extends LdapProv {
         long getCount() {
             return count;
         }
-    }
-
-    private long countObjects(String base, ZLdapFilter filter, String[] attrs)
-    throws ServiceException {
-        CountObjectsVisitor visitor = new CountObjectsVisitor();
-        searchLdapOnReplica(base, filter, attrs, visitor);
-        return visitor.getCount();
     }
 
     @Override
@@ -8075,9 +8240,6 @@ public class LdapProvisioning extends LdapProv {
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
         searchOpts.setFilter(mDIT.filterGroupsByDomain(domain));
 
-        // this will cause searchDirectoryInternal to do 2 searches,
-        // once under groups, once under people
-        // not optimized, but this is only called from admin console and zmprov gadl
         searchOpts.setTypes(ObjectType.distributionlists, ObjectType.dynamicgroups);
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);

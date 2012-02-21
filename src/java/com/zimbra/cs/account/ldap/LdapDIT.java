@@ -726,18 +726,27 @@ public class LdapDIT {
         boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
         boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
+        boolean servers = (flags & Provisioning.SD_SERVER_FLAG) != 0;
 
-        if (accounts || aliases || lists || calendarResources)
+        if (accounts || aliases || lists || calendarResources) {
             addBase(bases, mailBranchBaseDN());
+        }
 
-        if (accounts)
+        if (accounts) {
             addBase(bases, adminBaseDN());
+        }
 
-        if (domains)
+        if (domains) {
             addBase(bases, domainBaseDN());
+        }
 
-        if (coses)
+        if (coses) {
             addBase(bases, cosBaseDN());
+        }
+        
+        if (servers) {
+            addBase(bases, serverBaseDN());
+        }
 
         return bases.toArray(new String[bases.size()]);
     }

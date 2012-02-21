@@ -32,6 +32,7 @@ public class LdapException extends ServiceException {
     public static final String INVALID_ATTR_VALUE       = "ldap.INVALID_ATTR_VALUE";
     public static final String INVALID_NAME             = "ldap.INVALID_NAME";
     public static final String INVALID_SEARCH_FILTER    = "ldap.INVALID_SEARCH_FILTER";
+    public static final String INVALID_REQUEST          = "ldap.INVALID_REQUEST";
     public static final String MULTIPLE_ENTRIES_MATCHED = "ldap.MULTIPLE_ENTRIES_MATCHED";
     public static final String OBJECT_CLASS_VIOLATION   = "ldap.OBJECT_CLASS_VIOLATION";
     public static final String SIZE_LIMIT_EXCEEDED      = "ldap.SIZE_LIMIT_EXCEEDED";
@@ -94,6 +95,14 @@ public class LdapException extends ServiceException {
         return new LdapContextNotEmptyException(message, cause);
     }
     
+    public static LdapException INVALID_ATTR_NAME(String message, Throwable cause) {
+        return new LdapInvalidAttrNameException(message, cause);
+    }
+    
+    public static LdapException INVALID_ATTR_VALUE(String message, Throwable cause) {
+        return new LdapInvalidAttrValueException(message, cause);
+    }
+    
     public static LdapException INVALID_NAME(String message, Throwable cause) {
         return new LdapInvalidNameException(message, cause);
     }
@@ -102,12 +111,8 @@ public class LdapException extends ServiceException {
         return new LdapInvalidSearchFilterException(message, cause);
     }
     
-    public static LdapException INVALID_ATTR_NAME(String message, Throwable cause) {
-        return new LdapInvalidAttrNameException(message, cause);
-    }
-    
-    public static LdapException INVALID_ATTR_VALUE(String message, Throwable cause) {
-        return new LdapInvalidAttrValueException(message, cause);
+    public static LdapException INVALID_REQUEST(String message, Throwable cause) {
+        return new LdapInvalidRequestException(message, cause);
     }
     
     public static LdapException ENTRY_ALREADY_EXIST(String message, Throwable cause) {
@@ -175,6 +180,12 @@ public class LdapException extends ServiceException {
     public static class LdapInvalidSearchFilterException extends LdapException {
         private LdapInvalidSearchFilterException(String message, Throwable cause) {
             super(format("invalid search filter", message, cause), INVALID_SEARCH_FILTER, cause);
+        }
+    }
+    
+    public static class LdapInvalidRequestException extends LdapException {
+        private LdapInvalidRequestException(String message, Throwable cause) {
+            super(format("invalid API usage", message, cause), INVALID_REQUEST, cause);
         }
     }
     

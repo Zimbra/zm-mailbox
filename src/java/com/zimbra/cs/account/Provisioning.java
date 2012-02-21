@@ -828,15 +828,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** return coses from searchDirectory */
     public static final int SD_COS_FLAG = 0x20;
+    
+    public static final int SD_SERVER_FLAG = 0x40;
 
     /** return coses from searchDirectory */
-    public static final int SD_DYNAMIC_GROUP_FLAG = 0x40;
+    public static final int SD_DYNAMIC_GROUP_FLAG = 0x80;
 
     /** do not fixup objectclass in query for searchObject, only used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x80;
+    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x100;
 
     /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_RETURNATTRS = 0x100;
+    public static final int SO_NO_FIXUP_RETURNATTRS = 0x200;
 
     /**
      *  do not set account defaults in makeAccount

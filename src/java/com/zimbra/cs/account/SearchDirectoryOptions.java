@@ -55,7 +55,8 @@ public class SearchDirectoryOptions {
         dynamicgroups(Provisioning.SD_DYNAMIC_GROUP_FLAG),
         resources(Provisioning.SD_CALENDAR_RESOURCE_FLAG),
         domains(Provisioning.SD_DOMAIN_FLAG),
-        coses(Provisioning.SD_COS_FLAG);
+        coses(Provisioning.SD_COS_FLAG),
+        servers(Provisioning.SD_SERVER_FLAG);
         
         private int flag;
         private ObjectType(int flag) {
@@ -154,7 +155,7 @@ public class SearchDirectoryOptions {
      * - computing objectClass filters to be prepended to filterStr
      *   
      */
-    private Set<SearchDirectoryOptions.ObjectType> types;
+    private Set<ObjectType> types;
     
     private String[] returnAttrs = ALL_ATTRS;
     private SearchDirectoryOptions.MakeObjectOpt makeObjOpt = MakeObjectOpt.ALL_DEFAULTS;
@@ -381,6 +382,10 @@ public class SearchDirectoryOptions {
     }
     
     public int getTypesAsFlags() {
+        return getTypesAsFlags(types);
+    }
+    
+    public static int getTypesAsFlags(Set<ObjectType> types) {
         if (types == null) {
             return 0;
         } else {

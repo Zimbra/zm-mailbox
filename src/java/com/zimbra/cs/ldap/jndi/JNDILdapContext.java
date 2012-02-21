@@ -282,6 +282,14 @@ public class JNDILdapContext extends ZLdapContext {
         } 
     }
     
+
+    @Override
+    public long countEntries(String baseDN, ZLdapFilter filter,
+            ZSearchControls searchControls) throws LdapException {
+        throw new UnsupportedOperationException();
+    }
+    
+    
     @Override
     public void deleteEntry(String dn) throws LdapException {
         try {
@@ -316,6 +324,7 @@ public class JNDILdapContext extends ZLdapContext {
             throw JNDILdapException.mapToLdapException(e); // TODO
         }
     }
+
 
 
 }

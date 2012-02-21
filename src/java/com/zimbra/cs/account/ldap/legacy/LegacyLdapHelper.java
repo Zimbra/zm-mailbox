@@ -129,4 +129,11 @@ public class LegacyLdapHelper extends LdapHelper {
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public long countEntries(String baseDN, ZLdapFilter filter,
+            ZSearchControls searchControls, ZLdapContext initZlc,
+            LdapServerType ldapServerType) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -547,6 +547,42 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
+    public long countEntries(String baseDN, ZLdapFilter filter, 
+            ZSearchControls searchControls) throws LdapException {
+        
+        UBIDSearchControls sc = (UBIDSearchControls)searchControls;
+        
+        try {
+            SearchRequest searchRequest = new SearchRequest(baseDN, 
+                    sc.getSearchScope(),
+                    derefAliasPolicy,
+                    sc.getSizeLimit(),
+                    sc.getTimeLimit(),
+                    sc.getTypesOnly(),
+                    ((UBIDLdapFilter) filter).getNative());
+            
+            NoopSearchControl noopSearchCtl = new NoopSearchControl();
+            searchRequest.addControl(noopSearchCtl);
+            
+            // searchRequest.setAttributes(sc.getReturnAttrs());
+            // no point to request attributes
+            if (sc.getReturnAttrs() != null) {
+                throw LdapException.INVALID_REQUEST("return attributes are not allowed for countEntries", null);
+            }
+            
+            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
+            
+            NoopSearchControl control = NoopSearchControl.get(result);
+            if (control == null) {
+                throw LdapException.LDAP_ERROR("Noop search control is not present in response", null);
+            }
+            return control.getCount();
+        } catch (LDAPException e) {
+            throw mapToLdapException("unable to search ldap", e);
+        }
+    }
+    
+    @Override
     public void deleteEntry(String dn) throws LdapException {
         try {
             UBIDLdapOperation.DELETE_ENTRY.execute(this, dn);

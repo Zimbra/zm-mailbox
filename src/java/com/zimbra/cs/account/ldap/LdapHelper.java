@@ -212,4 +212,25 @@ public abstract class LdapHelper {
         return searchDir(baseDN, filter, searchControls, null, LdapServerType.REPLICA);
     }
     
+    /**
+     * Counts entries a search would return.
+     * 
+     * @param baseDN
+     * @param filter
+     * @param searchControls
+     * @param initZlc
+     * @param ldapServerType
+     * @return
+     * @throws ServiceException
+     */
+    public abstract long countEntries(String baseDN, ZLdapFilter filter, 
+            ZSearchControls searchControls, ZLdapContext initZlc, LdapServerType ldapServerType) 
+    throws ServiceException;
+    
+    public long countEntries(String baseDN, ZLdapFilter filter, 
+            ZSearchControls searchControls) 
+    throws ServiceException {
+        return countEntries(baseDN, filter, searchControls, null, LdapServerType.REPLICA);
+    }
+    
 }

@@ -16,6 +16,8 @@ package com.zimbra.qa.unittest.prov.ldap;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -68,6 +70,8 @@ public class TestLdapProvCountObjects extends LdapTest {
         provUtil.deleteAccount(userAcct);
         provUtil.deleteAccount(systemAcct);
         provUtil.deleteAccount(systemResource);
+        provUtil.deleteAccount(userAcctOtherDomain);
+        provUtil.deleteDomain(otherDomain);
     }
     
     @Test
@@ -88,19 +92,46 @@ public class TestLdapProvCountObjects extends LdapTest {
         Group staticGroup = provUtil.createGroup(genGroupNameLocalPart("static"), domain, false);
         Group dynamicGroup = provUtil.createGroup(genGroupNameLocalPart("dynamic"), domain, true);
         
-        long num = prov.countObjects(CountObjectsType.dl, domain);
-        assertEquals(2, num);
+        Domain subDomain = provUtil.createDomain(genDomainName(domain.getName()));
+        Group staticGroup1Sub = provUtil.createGroup(genGroupNameLocalPart("static-1"), subDomain, false);
+        Group dynamicGroup1Sub = provUtil.createGroup(genGroupNameLocalPart("dynamic-1"), subDomain, true);
+        Group staticGroup2Sub = provUtil.createGroup(genGroupNameLocalPart("static-2"), subDomain, false);
+        Group dynamicGroup2Sub = provUtil.createGroup(genGroupNameLocalPart("dynamic-2"), subDomain, true);
+        
+        long num;
+        
+        num = prov.countObjects(CountObjectsType.dl, domain);
+        assertEquals(2, num);  // groups in sub domains should not be counted
         
         provUtil.deleteGroup(staticGroup);
         provUtil.deleteGroup(dynamicGroup);
+        provUtil.deleteGroup(staticGroup1Sub);
+        provUtil.deleteGroup(dynamicGroup1Sub);
+        provUtil.deleteGroup(staticGroup2Sub);
+        provUtil.deleteGroup(dynamicGroup2Sub);
+        
+        provUtil.deleteDomain(subDomain);
     }
     
     @Test 
     public void countDomain() throws Exception {
-        long num = prov.countObjects(CountObjectsType.domain, null);
         
-        // fragile verification, assuming there are only the two domains created by r-t-w
-        assertEquals(2, num); 
+        Domain subDomain = provUtil.createDomain(genDomainName(domain.getName()));
+        Domain subSubDomain = provUtil.createDomain(genDomainName(subDomain.getName()));
+        long num = prov.countObjects(CountObjectsType.domain, domain);
+        
+        // count sub domains of a domain, the domain itself should be included in the count.
+        assertEquals(3, num); // domain, subDomain, subSubDomain
+        
+        // count all domains
+        num = prov.countObjects(CountObjectsType.domain, null);
+        
+        // fragile verification, assuming there are the two domains created by r-t-w 
+        // and the domains created by this test.
+        assertEquals(2+3, num); // example.com, phoebe.mbp + domain, subDomain, subSubDomain
+        
+        provUtil.deleteDomain(subSubDomain);
+        provUtil.deleteDomain(subDomain);
     }
     
     @Test
