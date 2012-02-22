@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120215-1239 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120216-0012 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5905,6 +5905,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailLastPurgedMailboxId = "zimbraMailLastPurgedMailboxId";
 
     /**
+     * Specifies whether the http server should bound to localhost or not.
+     * This is an immutable property and is generated based on zimbraMailMode
+     * and zimbraMailBindAddress.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1380)
+    public static final String A_zimbraMailLocalBind = "zimbraMailLocalBind";
+
+    /**
      * lifetime of a mail message regardless of location. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
@@ -9443,6 +9453,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyAuthWaitInterval = "zimbraReverseProxyAuthWaitInterval";
 
     /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public static final String A_zimbraReverseProxyAvailableLookupTargets = "zimbraReverseProxyAvailableLookupTargets";
+
+    /**
      * time interval that an entry cached by NGINX will remain in the cache.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
@@ -9928,6 +9949,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1336)
     public static final String A_zimbraReverseProxyUpstreamSendTimeout = "zimbraReverseProxyUpstreamSendTimeout";
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public static final String A_zimbraReverseProxyUpstreamServers = "zimbraReverseProxyUpstreamServers";
 
     /**
      * There is a deployment scenario for migrations where all of the
