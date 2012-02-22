@@ -251,8 +251,16 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
     }
 
     public synchronized void traverse(Function<ImapMessage, Void> func) {
-        for (ImapMessage i4msg : mSequence) {
-            func.apply(i4msg);
+        int prevUid = -1;
+        for (Iterator<ImapMessage> it = mSequence.iterator(); it.hasNext();) {
+            ImapMessage i4msg = it.next();
+            if (i4msg.imapUid == prevUid) {
+                ZimbraLog.imap.warn("duplicate UID %d in cached folder %d", prevUid, mFolderId);
+                it.remove();
+            } else {
+                prevUid = i4msg.imapUid;
+                func.apply(i4msg);
+            }
         }
     }
 
@@ -387,7 +395,12 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
                 sdata.mRecentCount++;
         }
         // update the folder information
-        mSequence.add(i4msg);
+        if (mSequence.size() > 0 && mSequence.get(mSequence.size() - 1).imapUid == i4msg.imapUid) {
+            ZimbraLog.imap.error("duplicate UID %d will be replaced", i4msg.imapUid, new Exception());
+            mSequence.set(mSequence.size() - 1, i4msg);
+        } else {
+            mSequence.add(i4msg);
+        }
         setIndex(i4msg, mSequence.size());
         return i4msg;
     }
