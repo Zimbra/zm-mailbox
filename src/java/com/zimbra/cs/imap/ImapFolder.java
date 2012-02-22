@@ -261,8 +261,16 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     public synchronized void traverse(Function<ImapMessage, Void> func) {
-        for (ImapMessage i4msg : sequence) {
-            func.apply(i4msg);
+        int prevUid = -1;
+        for (Iterator<ImapMessage> it = sequence.iterator(); it.hasNext();) {
+            ImapMessage i4msg = it.next();
+            if (i4msg.imapUid == prevUid) {
+                ZimbraLog.imap.warn("duplicate UID %d in cached folder %d", prevUid, folderId);
+                it.remove();
+            } else {
+                prevUid = i4msg.imapUid;
+                func.apply(i4msg);
+            }
         }
     }
 
@@ -402,7 +410,12 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             }
         }
         // update the folder information
-        sequence.add(i4msg);
+        if (sequence.size() > 0 && sequence.get(sequence.size() - 1).imapUid == i4msg.imapUid) {
+            ZimbraLog.imap.error("duplicate UID %d will be replaced", i4msg.imapUid, new Exception());
+            sequence.set(sequence.size() - 1, i4msg);
+        } else {
+            sequence.add(i4msg);
+        }
         setIndex(i4msg, sequence.size());
         // update the tag cache to include only the tags in the folder
         updateTagCache(i4msg);
