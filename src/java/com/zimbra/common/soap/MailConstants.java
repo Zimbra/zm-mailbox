@@ -923,6 +923,7 @@ public final class MailConstants {
     public static final String E_CAL_CATEGORY = "category";
     public static final String E_CAL_COMMENT = "comment";
     public static final String E_CAL_CONTACT = "contact";
+    public static final String E_CAL_CONTENT = "content";
     public static final String E_CAL_GEO = "geo";
 
     public static final String E_CAL_XPROP = "xprop";
@@ -939,6 +940,7 @@ public final class MailConstants {
     public static final String A_CAL_INCLUDE_CONTENT = "includeContent";
     public static final String A_NEED_CALENDAR_SENTBY_FIXUP = "needCalendarSentByFixup";
     public static final String A_UID = "uid";
+    public static final String A_SUMMARY = "summary";
     public static final String A_CAL_ID = "calItemId";
     public static final String A_CAL_ITEM_FOLDER = "ciFolder";
     public static final String A_DEFAULT = "default";
