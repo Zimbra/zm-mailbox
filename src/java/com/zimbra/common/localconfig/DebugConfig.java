@@ -188,7 +188,10 @@ public final class DebugConfig {
     
     public static boolean useInMemoryLdapServer = 
         value("debug_use_in_memory_ldap_server", false);
-    
+
+    public static final boolean disableShareExpirationListener =
+            value("debug_disable_share_expiration_listener", false);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
