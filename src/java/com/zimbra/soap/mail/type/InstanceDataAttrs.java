@@ -25,6 +25,10 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class InstanceDataAttrs extends CommonInstanceDataAttrs {
 
+    /**
+     * @zm-api-field-tag duration
+     * @zm-api-field-description Duration
+     */
     @XmlAttribute(name=MailConstants.A_CAL_NEW_DURATION /* dur */, required=false)
     private Long duration;
 
@@ -36,8 +40,7 @@ public class InstanceDataAttrs extends CommonInstanceDataAttrs {
     }
     public Long getDuration() { return duration; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("duration", duration);
@@ -45,7 +48,6 @@ public class InstanceDataAttrs extends CommonInstanceDataAttrs {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

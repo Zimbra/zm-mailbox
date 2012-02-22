@@ -209,8 +209,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
         return Collections.unmodifiableList(xNames);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("frequency", frequency)
             .add("until", until)
@@ -231,8 +230,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
     @Override

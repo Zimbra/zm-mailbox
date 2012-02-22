@@ -29,10 +29,16 @@ public class ExceptionRuleInfo
 extends RecurIdInfo
 implements RecurRuleBase, ExceptionRuleInfoInterface {
 
-    @XmlElement(name=MailConstants.E_CAL_ADD, required=false)
+    /**
+     * @zm-api-field-description Dates or rules which ADD instances.  ADDs are evaluated before EXCLUDEs
+     */
+    @XmlElement(name=MailConstants.E_CAL_ADD /* add */, required=false)
     private RecurrenceInfo add;
 
-    @XmlElement(name=MailConstants.E_CAL_EXCLUDE, required=false)
+    /**
+     * @zm-api-field-description Dates or rules which EXCLUDE instances
+     */
+    @XmlElement(name=MailConstants.E_CAL_EXCLUDE /* exclude */, required=false)
     private RecurrenceInfo exclude;
 
     public ExceptionRuleInfo() {
@@ -64,8 +70,7 @@ implements RecurRuleBase, ExceptionRuleInfoInterface {
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("add", add)
@@ -74,7 +79,6 @@ implements RecurRuleBase, ExceptionRuleInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

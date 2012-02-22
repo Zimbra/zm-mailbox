@@ -26,7 +26,11 @@ import com.zimbra.soap.base.BySecondRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class BySecondRule implements BySecondRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYSECOND_SECLIST, required=true)
+    /**
+     * @zm-api-field-tag second-list
+     * @zm-api-field-description Comma separated list of seconds where second is a number between 0 and 59
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYSECOND_SECLIST /* seclist */, required=true)
     private final String list;
 
     /**

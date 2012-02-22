@@ -32,12 +32,21 @@ import com.zimbra.soap.base.DurationInfoInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DtVal implements DtValInterface {
 
+    /**
+     * @zm-api-field-description Start DATE-TIME
+     */
     @XmlElement(name=MailConstants.E_CAL_START_TIME /* s */, required=false)
     private DtTimeInfo startTime;
 
+    /**
+     * @zm-api-field-description Start DATE-TIME
+     */
     @XmlElement(name=MailConstants.E_CAL_END_TIME /* e */, required=false)
     private DtTimeInfo endTime;
 
+    /**
+     * @zm-api-field-description Duration information
+     */
     @XmlElement(name=MailConstants.E_CAL_DURATION /* dur */, required=false)
     private DurationInfo duration;
 

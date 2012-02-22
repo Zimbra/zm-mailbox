@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class IdsAttr {
 
+    /**
+     * @zm-api-field-tag ids
+     * @zm-api-field-description IDs
+     */
     @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
     private final String ids;
 
@@ -42,15 +46,13 @@ public class IdsAttr {
 
     public String getIds() { return ids; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("ids", ids);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

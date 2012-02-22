@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
- * 
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,19 +22,35 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class NewNoteSpec {
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=true)
+    /**
+     * @zm-api-field-tag parent-folder-id
+     * @zm-api-field-description Parent Folder ID
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=true)
     private final String folder;
 
-    @XmlAttribute(name=MailConstants.E_CONTENT, required=true)
+    /**
+     * @zm-api-field-tag content
+     * @zm-api-field-description Content
+     */
+    @XmlAttribute(name=MailConstants.E_CONTENT /* content */, required=true)
     private final String content;
 
-    @XmlAttribute(name=MailConstants.A_COLOR, required=false)
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+     */
+    @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Byte color;
 
-    @XmlAttribute(name=MailConstants.A_BOUNDS, required=false)
+    /**
+     * @zm-api-field-tag bounds-x,y[width,height]
+     * @zm-api-field-description Bounds - <b>x,y[width,height]</b> where x,y,width and height are all integers
+     */
+    @XmlAttribute(name=MailConstants.A_BOUNDS /* pos */, required=false)
     private String bounds;
 
     /**
@@ -57,13 +73,16 @@ public class NewNoteSpec {
     public Byte getColor() { return color; }
     public String getBounds() { return bounds; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
             .add("folder", folder)
             .add("content", content)
             .add("color", color)
-            .add("bounds", bounds)
-            .toString();
+            .add("bounds", bounds);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

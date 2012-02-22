@@ -26,7 +26,13 @@ import com.zimbra.soap.base.BySetPosRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class BySetPosRule implements BySetPosRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYSETPOS_POSLIST, required=true)
+    /**
+     * @zm-api-field-tag bysetpos-list
+     * @zm-api-field-description Format <b>[[+]|-]num[,...]</b> where num is from 1 to 366
+     * <br />
+     * <b>&lt;bysetpos></b> MUST only be used in conjunction with another <b>&lt;byXXX></b> element.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYSETPOS_POSLIST /* poslist */, required=true)
     private final String list;
 
     /**

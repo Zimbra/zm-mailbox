@@ -38,67 +38,149 @@ public class CommonDocumentInfo {
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag uuid
+     * @zm-api-field-description Item's UUID - a globally unique identifier
+     */
     @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=false)
     private String uuid;
 
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag size
+     * @zm-api-field-description Size
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
+    /**
+     * @zm-api-field-tag modified-sequence
+     * @zm-api-field-description Modified sequence
+     */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Modified date in seconds
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
+    /**
+     * @zm-api-field-tag revision
+     * @zm-api-field-description Revision
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag description
+     * @zm-api-field-description Description
+     */
     @XmlAttribute(name=MailConstants.A_DESC /* desc */, required=false)
     private String description;
 
+    /**
+     * @zm-api-field-tag content-type
+     * @zm-api-field-description Content type
+     */
     @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
+    /**
+     * @zm-api-field-tag is-description-enabled
+     * @zm-api-field-description Flags whether description is enabled or not
+     */
     @XmlAttribute(name=MailConstants.A_DESC_ENABLED /* descEnabled */, required=false)
     private ZmBoolean descEnabled;
 
+    /**
+     * @zm-api-field-tag version
+     * @zm-api-field-description Version
+     */
     @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=false)
     private Integer version;
 
+    /**
+     * @zm-api-field-tag last-edited-by
+     * @zm-api-field-description Last edited by
+     */
     @XmlAttribute(name=MailConstants.A_LAST_EDITED_BY /* leb */, required=false)
     private String lastEditedBy;
 
+    /**
+     * @zm-api-field-tag revision-creator
+     * @zm-api-field-description Revision creator
+     */
     @XmlAttribute(name=MailConstants.A_CREATOR /* cr */, required=false)
     private String creator;
 
+    /**
+     * @zm-api-field-tag revision-create-date
+     * @zm-api-field-description Revision creation date
+     */
     @XmlAttribute(name=MailConstants.A_CREATED_DATE /* cd */, required=false)
     private Long createdDate;
 
+    /**
+     * @zm-api-field-description Metadata
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag fragment
+     * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+     */
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
+    /**
+     * @zm-api-field-description Grants
+     */
     @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private List<Grant> grants = Lists.newArrayList();
@@ -194,8 +276,7 @@ public class CommonDocumentInfo {
         return Collections.unmodifiableList(grants);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("uuid", uuid)
@@ -223,7 +304,6 @@ public class CommonDocumentInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

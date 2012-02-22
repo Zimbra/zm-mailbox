@@ -365,8 +365,7 @@ implements DataSource {
         this.mdsConnectionType = MdsConnectionType.CT_TO_MCT.apply(connectionType);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("name", name)
@@ -395,7 +394,6 @@ implements DataSource {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

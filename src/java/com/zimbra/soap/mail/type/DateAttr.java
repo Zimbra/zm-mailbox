@@ -26,6 +26,10 @@ import com.zimbra.soap.base.DateAttrInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DateAttr implements DateAttrInterface {
 
+    /**
+     * @zm-api-field-tag YYYYMMDDThhmmssZ
+     * @zm-api-field-description Date in format : <b>YYYYMMDDThhmmssZ</b>
+     */
     @XmlAttribute(name=MailConstants.A_DATE, required=true)
     private final String date;
 

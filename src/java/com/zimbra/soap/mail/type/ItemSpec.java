@@ -22,18 +22,34 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ItemSpec {
 
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description Item ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag fully-qualified-path
+     * @zm-api-field-description Fully qualified path
+     */
     @XmlAttribute(name=MailConstants.A_PATH /* path */, required=false)
     private String path;
 
@@ -49,8 +65,7 @@ public class ItemSpec {
     public String getName() { return name; }
     public String getPath() { return path; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("folder", folder)
@@ -60,7 +75,6 @@ public class ItemSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

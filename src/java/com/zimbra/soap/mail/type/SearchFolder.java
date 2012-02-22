@@ -37,13 +37,28 @@ import com.zimbra.soap.type.SearchSortBy;
 @XmlRootElement(name=MailConstants.E_SEARCH)
 public final class SearchFolder extends Folder {
 
-    @XmlAttribute(name=MailConstants.A_QUERY, required=false)
+    /**
+     * @zm-api-field-tag query
+     * @zm-api-field-description Query
+     */
+    @XmlAttribute(name=MailConstants.A_QUERY /* query */, required=false)
     private String query;
 
-    @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Sort by
+     */
+    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private SearchSortBy sortBy;
 
-    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES, required=false)
+    /**
+     * @zm-api-field-tag comma-sep-search-types
+     * @zm-api-field-description Comma-separated list.  Legal values in list are:
+     * <br />
+     * <b>appointment|chat|contact|conversation|document|message|tag|task|wiki</b>
+     * (default is &quot;conversation&quot;)
+     */
+    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
     @XmlJavaTypeAdapter(ItemType.CSVAdapter.class)
     private final Set<ItemType> types = EnumSet.noneOf(ItemType.class);
 
@@ -75,5 +90,4 @@ public final class SearchFolder extends Folder {
     public void addType(ItemType type) {
         types.add(type);
     }
-
 }

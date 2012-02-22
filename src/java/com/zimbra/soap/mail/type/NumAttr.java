@@ -27,7 +27,11 @@ import com.zimbra.soap.base.NumAttrInterface;
 public class NumAttr
 implements NumAttrInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_COUNT_NUM, required=true)
+    /**
+     * @zm-api-field-tag num
+     * @zm-api-field-description Number
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_COUNT_NUM /* num */, required=true)
     private final int num;
 
     /**

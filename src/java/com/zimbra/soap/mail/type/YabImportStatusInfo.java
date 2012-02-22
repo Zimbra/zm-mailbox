@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class YabImportStatusInfo extends ImportStatusInfo {
 
     public YabImportStatusInfo() {

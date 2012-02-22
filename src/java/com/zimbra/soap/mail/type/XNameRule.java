@@ -32,10 +32,18 @@ import com.zimbra.soap.base.XNameRuleInterface;
 public class XNameRule
 implements XNameRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_NAME, required=false)
+    /**
+     * @zm-api-field-tag xname-name
+     * @zm-api-field-description XNAME Name
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_NAME /* name */, required=false)
     private final String name;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_VALUE, required=false)
+    /**
+     * @zm-api-field-tag xname-value
+     * @zm-api-field-description XNAME Value
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_XNAME_VALUE /* value */, required=false)
     private final String value;
 
     /**
@@ -61,13 +69,6 @@ implements XNameRuleInterface {
     @Override
     public String getValue() { return value; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("name", name)
-            .add("value", value);
-    }
-
     public static Iterable <XNameRule> fromInterfaces(
                     Iterable <XNameRuleInterface> ifs) {
         if (ifs == null)
@@ -88,9 +89,14 @@ implements XNameRuleInterface {
         return newList;
     }
 
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("name", name)
+            .add("value", value);
+    }
+
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

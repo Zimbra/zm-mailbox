@@ -31,7 +31,11 @@ import com.zimbra.soap.json.jackson.ContentSerializer;
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterAction {
 
-    @XmlAttribute(name=MailConstants.A_INDEX, required=false)
+    /**
+     * @zm-api-field-tag index
+     * @zm-api-field-description Index - specifies a guaranteed order for the action elements
+     */
+    @XmlAttribute(name=MailConstants.A_INDEX /* index */, required=false)
     private int index = 0;
 
     public void setIndex(int index) {
@@ -62,6 +66,10 @@ public class FilterAction {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class FileIntoAction extends FilterAction {
 
+        /**
+         * @zm-api-field-tag folder-path
+         * @zm-api-field-description Folder path
+         */
         @XmlAttribute(name=MailConstants.A_FOLDER_PATH, required=false)
         private final String folder;
 
@@ -88,6 +96,10 @@ public class FilterAction {
     @JsonPropertyOrder({ "flagName", "index" })
     public static final class FlagAction extends FilterAction {
 
+        /**
+         * @zm-api-field-tag flag-name-flagged|read|priority
+         * @zm-api-field-description Flag name - <b>flagged|read|priority</b>
+         */
         @XmlAttribute(name=MailConstants.A_FLAG_NAME, required=false)
         private final String flag;
 
@@ -113,6 +125,10 @@ public class FilterAction {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class RedirectAction extends FilterAction {
 
+        /**
+         * @zm-api-field-tag email-address
+         * @zm-api-field-description Email address
+         */
         @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
         private final String address;
 
@@ -138,19 +154,45 @@ public class FilterAction {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class NotifyAction extends FilterAction {
 
+        /**
+         * @zm-api-field-tag email-address
+         * @zm-api-field-description Email address
+         */
         @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
         private String address;
 
+        /**
+         * @zm-api-field-tag subject-template
+         * @zm-api-field-description Subject template
+         * <br />
+         * Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
+         * (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
+         */
         @XmlAttribute(name=MailConstants.A_SUBJECT, required=false)
         private String subject;
 
+        /**
+         * @zm-api-field-tag max-body-size-bytes
+         * @zm-api-field-description Maximum body size in bytes
+         */
         @XmlAttribute(name=MailConstants.A_MAX_BODY_SIZE, required=false)
         private Integer maxBodySize;
 
+        /**
+         * @zm-api-field-tag body-template
+         * @zm-api-field-description Body template
+         * <br />
+         * Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
+         * (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
+         */
         @JsonSerialize(using=ContentSerializer.class)
         @XmlElement(name=MailConstants.E_CONTENT, required=false)
         private String content;
 
+        /**
+         * @zm-api-field-tag comma-sep-header-names|*
+         * @zm-api-field-description Optional - Either "*" or a comma-separated list of header names.
+         */
         @XmlAttribute(name=MailConstants.A_ORIG_HEADERS, required=false)
         private String origHeaders;
 
@@ -209,6 +251,10 @@ public class FilterAction {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class TagAction extends FilterAction {
 
+        /**
+         * @zm-api-field-tag tag-name
+         * @zm-api-field-description Tag name
+         */
         @XmlAttribute(name=MailConstants.A_TAG_NAME, required=true)
         private final String tag;
 
@@ -234,6 +280,13 @@ public class FilterAction {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class ReplyAction extends FilterAction {
 
+        /**
+         * @zm-api-field-tag body-template
+         * @zm-api-field-description Body template
+         * <br />
+         * Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
+         * (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
+         */
         @JsonSerialize(using=ContentSerializer.class)
         @XmlElement(name=MailConstants.E_CONTENT, required=false)
         private final String content;

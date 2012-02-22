@@ -38,6 +38,13 @@ implements CustomMetadataInterface {
 
     // Normally present but sometimes an empty element is created to show that
     // CustomMetadata info is present but there are no sections to report on.
+    /**
+     * @zm-api-field-tag section
+     * @zm-api-field-description Section.
+     * <br />
+     * Normally present.  If absent this indicates that CustomMetadata info is present but there are no sections to
+     * report on.
+     */
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=false)
     private String section;
 
@@ -68,8 +75,7 @@ implements CustomMetadataInterface {
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("section", section);
@@ -77,7 +83,6 @@ implements CustomMetadataInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

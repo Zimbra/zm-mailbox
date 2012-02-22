@@ -19,7 +19,6 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmTriggerInfoInterface;
@@ -27,13 +26,18 @@ import com.zimbra.soap.base.DateAttrInterface;
 import com.zimbra.soap.base.DurationInfoInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class AlarmTriggerInfo implements AlarmTriggerInfoInterface {
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_ABSOLUTE, required=false)
+    /**
+     * @zm-api-field-description Absolute trigger information
+     */
+    @XmlElement(name=MailConstants.E_CAL_ALARM_ABSOLUTE /* abs */, required=false)
     private DateAttr absolute;
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_RELATIVE, required=false)
+    /**
+     * @zm-api-field-description Relative trigger information
+     */
+    @XmlElement(name=MailConstants.E_CAL_ALARM_RELATIVE /* rel */, required=false)
     private DurationInfo relative;
 
     public AlarmTriggerInfo() {

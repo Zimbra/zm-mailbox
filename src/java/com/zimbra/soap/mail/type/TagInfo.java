@@ -32,39 +32,85 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class TagInfo {
 
+    /**
+     * @zm-api-field-tag tag-id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag tag-name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+     */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Byte color;
 
+    /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
     private String rgb;
 
+    /**
+     * @zm-api-field-tag unread-count
+     * @zm-api-field-description Unread count.  Only present iff value > 0
+     */
     @XmlAttribute(name=MailConstants.A_UNREAD /* u */, required=false)
     private Integer unread;
 
+    /**
+     * @zm-api-field-tag item-count
+     * @zm-api-field-description Item count.  Only present iff value > 0
+     */
     @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer count;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag revision
+     * @zm-api-field-description Revision
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Modified date in seconds
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
+    /**
+     * @zm-api-field-tag modified-sequence
+     * @zm-api-field-description Modified sequence
+     */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-description Custom metadata
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Retention policy
+     */
     @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
     private RetentionPolicy retentionPolicy;
 
@@ -116,8 +162,7 @@ public class TagInfo {
     }
     public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("name", name)
@@ -135,7 +180,6 @@ public class TagInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

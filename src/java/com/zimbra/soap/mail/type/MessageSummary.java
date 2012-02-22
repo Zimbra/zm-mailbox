@@ -30,26 +30,49 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+// see mail.ToXML.encodeMessageSummary
+
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"emails", "subject", "fragment", "invite"})
 public class MessageSummary extends MessageCommon {
 
+    /**
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */,
-                            required=false)
+    /**
+     * @zm-api-field-tag auto-send-time
+     * @zm-api-field-description Auto send time
+     */
+    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */, required=false)
     private Long autoSendTime;
 
+    /**
+     * @zm-api-field-description Email address information
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag subject
+     * @zm-api-field-description Subject
+     */
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
+    /**
+     * @zm-api-field-tag fragment
+     * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+     */
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
+    /**
+     * @zm-api-field-description Invite information
+     */
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private InviteInfo invite;
 
@@ -93,8 +116,7 @@ public class MessageSummary extends MessageCommon {
     public String getFragment() { return fragment; }
     public InviteInfo getInvite() { return invite; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
@@ -107,7 +129,6 @@ public class MessageSummary extends MessageCommon {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

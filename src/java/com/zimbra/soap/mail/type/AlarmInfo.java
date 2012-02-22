@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
@@ -37,31 +36,79 @@ import com.zimbra.soap.base.DurationInfoInterface;
 import com.zimbra.soap.base.XPropInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"action", "trigger", "repeat", "description", "attach",
-                        "summary", "attendees", "xProps"})
 public class AlarmInfo implements AlarmInfoInterface {
 
+    /**
+     * @zm-api-field-tag alarm-action
+     * @zm-api-field-description Alarm action
+     * <br />
+     * Possible values:
+     * <br />
+     * <b>DISPLAY|AUDIO|EMAIL|PROCEDURE|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE</b>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ALARM_ACTION /* action */, required=true)
     private final String action;
 
+    /**
+     * @zm-api-field-description Alarm trigger information
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM_TRIGGER /* trigger */, required=false)
     private AlarmTriggerInfo trigger;
 
+    /**
+     * @zm-api-field-description Alarm repeat information
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM_REPEAT /* repeat */, required=false)
     private DurationInfo repeat;
 
+    /**
+     * @zm-api-field-tag alarm-reminder-text
+     * @zm-api-field-description Alarm description
+     * <table>
+     * <tr> <td> <b>action=DISPLAY</b> </td> <td> Reminder text to display</td> </tr>
+     * <tr> <td> <b>action=EMAIL|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE</b> </td>
+     *      <td> EMail body </td> </tr>
+     * <tr> <td> <b>action=PROCEDURE</b> </td> <td> Description text </td> </tr>
+     * </table>
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM_DESCRIPTION /* desc */, required=false)
     private String description;
 
+    /**
+     * @zm-api-field-description Information on attachment
+     */
     @XmlElement(name=MailConstants.E_CAL_ATTACH /* attach */, required=false)
     private CalendarAttach attach;
 
+    /**
+     * @zm-api-field-tag alarm-summary
+     * @zm-api-field-description Alarm summary
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM_SUMMARY /* summary */, required=false)
     private String summary;
 
+    /**
+     * @zm-api-field-description Attendee information
+     */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
     private List<CalendarAttendee> attendees = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Non-standard properties (see RFC2445 section 4.8.8.1)
+     * <br />
+     * e.g.
+     * <br />
+     * iCalendar:
+     * <pre>
+     *     X-FOO-HELLO;X-FOO-WORLD=world:hello
+     * </pre>
+     * SOAP:
+     * <pre>
+     *     &lt;xprop name="X-FOO-HELLO" value="hello">
+     *         &lt;xparam name="X-FOO-WORLD" value="world"/>
+     *     &lt;/xprop>
+     * </pre>
+     */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
     private List<XProp> xProps = Lists.newArrayList();
 
@@ -212,7 +259,7 @@ public class AlarmInfo implements AlarmInfoInterface {
     public List<XPropInterface> getXPropInterfaces() {
         return XProp.toInterfaces(xProps);
     }
-    
+
     public static Iterable <AlarmInfo> fromInterfaces(Iterable <AlarmInfoInterface> params) {
         if (params == null)
             return null;

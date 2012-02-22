@@ -22,20 +22,36 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ConversationMsgHitInfo {
 
+    /**
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag size
+     * @zm-api-field-description Size
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private Integer folderId;
 
-    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */,
-                                    required=false)
+    /**
+     * @zm-api-field-tag auto-send-time
+     * @zm-api-field-description Can optionally set autoSendTime to specify the time at which the draft should be
+     * automatically sent by the server
+     */
+    @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */, required=false)
     private Long autoSendTime;
 
     /**
@@ -60,8 +76,7 @@ public class ConversationMsgHitInfo {
     public Integer getFolderId() { return folderId; }
     public Long getAutoSendTime() { return autoSendTime; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("size", size)
@@ -71,7 +86,6 @@ public class ConversationMsgHitInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -25,9 +25,17 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class SnoozeAlarm {
 
+    /**
+     * @zm-api-field-tag cal-item-id
+     * @zm-api-field-description Calendar item ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag new-alarm-time-millis
+     * @zm-api-field-description When to show the alarm again in milliseconds since the epoch
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ALARM_SNOOZE_UNTIL /* until */, required=true)
     private final long snoozeUntil;
 
@@ -47,8 +55,7 @@ public class SnoozeAlarm {
     public String getId() { return id; }
     public long getSnoozeUntil() { return snoozeUntil; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("snoozeUntil", snoozeUntil);
@@ -56,7 +63,6 @@ public class SnoozeAlarm {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

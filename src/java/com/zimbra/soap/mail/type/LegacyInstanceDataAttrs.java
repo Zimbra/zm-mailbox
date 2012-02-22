@@ -22,12 +22,17 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class LegacyInstanceDataAttrs extends CommonInstanceDataAttrs {
+@XmlAccessorType(XmlAccessType.NONE)
+public class LegacyInstanceDataAttrs
+extends CommonInstanceDataAttrs {
 
     // MailConstants.A_CAL_DURATION == "d" == MailConstants.A_DATE.
     // This eclipses the date setting - hence the existence of
     // InstanceDataAttrs which uses A_CAL_NEW_DURATION
+    /**
+     * @zm-api-field-tag duration
+     * @zm-api-field-description Duration
+     */
     @XmlAttribute(name=MailConstants.A_CAL_DURATION /* "d" */, required=false)
     private Long duration;
 
@@ -39,8 +44,7 @@ public class LegacyInstanceDataAttrs extends CommonInstanceDataAttrs {
     }
     public Long getDuration() { return duration; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("duration", duration);
@@ -48,7 +52,6 @@ public class LegacyInstanceDataAttrs extends CommonInstanceDataAttrs {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

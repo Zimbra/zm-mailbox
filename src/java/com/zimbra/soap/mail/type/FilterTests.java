@@ -33,9 +33,16 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public final class FilterTests {
 
+    /**
+     * @zm-api-field-tag condition-allof|anyof
+     * @zm-api-field-description Condition - <b>allof|anyof</b>
+     */
     @XmlAttribute(name=MailConstants.A_CONDITION, required=true)
     private final String condition;
 
+    /**
+     * @zm-api-field-description Tests
+     */
     @XmlElements({
         @XmlElement(name=MailConstants.E_ADDRESS_BOOK_TEST, type=FilterTest.AddressBookTest.class),
         @XmlElement(name=MailConstants.E_ADDRESS_TEST, type=FilterTest.AddressTest.class),

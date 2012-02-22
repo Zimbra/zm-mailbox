@@ -39,15 +39,29 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 @JsonPropertyOrder({ "name", "active", "tests", "actions" })
 public final class FilterRule {
 
+    /**
+     * @zm-api-field-tag rule-name
+     * @zm-api-field-description Rule name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag active-flag
+     * @zm-api-field-description Active flag.  Set by default.
+     */
     @XmlAttribute(name=MailConstants.A_ACTIVE /* active */, required=true)
     private final ZmBoolean active;
 
+    /**
+     * @zm-api-field-description Filter tests
+     */
     @XmlElement(name=MailConstants.E_FILTER_TESTS /* filterTests */, required=true)
     private FilterTests tests;
 
+    /**
+     * @zm-api-field-description Filter actions
+     */
     @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS /* filterActions */, required=false)
     @XmlElements({
         @XmlElement(name=MailConstants.E_ACTION_KEEP /* actionKeep */, type=FilterAction.KeepAction.class),

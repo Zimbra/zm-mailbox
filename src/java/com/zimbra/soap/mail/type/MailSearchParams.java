@@ -420,8 +420,7 @@ public class MailSearchParams implements SearchParameters {
     @Override
     public CursorInfo getCursor() { return cursor; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
             .add("allowableTaskStatus", allowableTaskStatus)
@@ -452,8 +451,7 @@ public class MailSearchParams implements SearchParameters {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
     @Override

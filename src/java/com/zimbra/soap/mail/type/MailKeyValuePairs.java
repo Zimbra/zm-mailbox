@@ -44,6 +44,9 @@ import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailKeyValuePairs implements KeyValuePairs {
 
+    /**
+     * @zm-api-field-description Key value pairs
+     */
     @JsonSerialize(using=KeyAndValueListSerializer.class)
     @JsonProperty("_attrs")
     @XmlElement(name=MailConstants.E_A)
@@ -142,8 +145,7 @@ public class MailKeyValuePairs implements KeyValuePairs {
         return Collections.unmodifiableList(values);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("keyValuePairs", keyValuePairs);
     }

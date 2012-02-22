@@ -33,21 +33,62 @@ import com.zimbra.soap.type.ZmBoolean;
 public class EmailInfo
 implements EmailInfoInterface {
 
+    /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description the user@domain part of an email address
+     */
     @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=true)
     private final String address;
 
+    /**
+     * @zm-api-field-tag display-name
+     * @zm-api-field-description Display name. If we have personal name, first word in "word1 word2" format, or last
+     * word in "word1, word2" format.  If no personal name, take string before "@" in email-address.
+     */
     @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=true)
     private final String display;
 
+    /**
+     * @zm-api-field-tag personal name
+     * @zm-api-field-description The comment/name part of an address
+     */
     @XmlAttribute(name=MailConstants.A_PERSONAL /* p */, required=true)
     private final String personal;
 
+    /**
+     * @zm-api-field-tag address-type
+     * @zm-api-field-description Address type.
+     * <br />
+     * <b>{address-type}</b> = (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification,
+     * (rf) resent-from
+     * <br />
+     * <br />
+     * Type is only sent when an individual message is returned. In the list of conversations, all the email
+     * addresseses returned for a conversation are a subset of the participants. In the list of messages in a
+     * converstation, the email addressses are the senders.
+     * <br />
+     * <br />
+     * Note that "rf" addresses can only be <b>returned</b> on a message; when sending a message, "rf" is ignored
+     */
     @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE /* t */, required=true)
     private final String addressType;
 
+    /**
+     * @zm-api-field-tag email-addr-is-group
+     * @zm-api-field-description Set if the email address is a group
+     */
     @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
     private ZmBoolean group;
 
+    /**
+     * @zm-api-field-tag can-expand-group-members
+     * @zm-api-field-description Flags whether can expand group members
+     * <table>
+     * <tr> <td> <b>1 (true)</b> </td> <td> authed user can (has permission to) expand members in this group </td> </tr>
+     * <tr> <td> <b>0 (false)</b> </td> <td> authed user does not have permission to expand group members </td> </tr>
+     * </table>
+     * Note: Present only when <b>{email-addr-is-group}</b> is set.
+     */
     @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
     private ZmBoolean canExpandGroupMembers;
 
@@ -111,8 +152,7 @@ implements EmailInfoInterface {
         return newList;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("address", address)
             .add("display", display)
@@ -124,7 +164,6 @@ implements EmailInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

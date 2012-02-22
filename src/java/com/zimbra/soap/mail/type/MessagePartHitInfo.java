@@ -20,45 +20,87 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class MessagePartHitInfo implements SearchHit {
 
+    /**
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag sort-field-value
+     * @zm-api-field-description Sort field value
+     */
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
+    /**
+     * @zm-api-field-tag size
+     * @zm-api-field-description Size in bytes
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Secs since epoch, from date header in message
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag conv-id
+     * @zm-api-field-description Converstation id. only present if <b>&lt;m></b> is not enclosed within a
+     * <b>&lt;c></b> element
+     */
     @XmlAttribute(name=MailConstants.A_CONV_ID /* cid */, required=false)
     private Integer conversationId;
 
+    /**
+     * @zm-api-field-tag message-item-id
+     * @zm-api-field-description Message item ID
+     */
     @XmlAttribute(name=MailConstants.A_MESSAGE_ID /* mid */, required=false)
     private Integer messageId;
 
+    /**
+     * @zm-api-field-tag content-type
+     * @zm-api-field-description Content type
+     */
     @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
+    /**
+     * @zm-api-field-tag filename
+     * @zm-api-field-description Filename
+     */
     @XmlAttribute(name=MailConstants.A_CONTENT_NAME /* name */, required=false)
     private String contentName;
 
+    /**
+     * @zm-api-field-tag mime-part-name
+     * @zm-api-field-description MIME part name
+     */
     @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
 
+    /**
+     * @zm-api-field-description Email address information
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private EmailInfo email;
 
+    /**
+     * @zm-api-field-tag subject
+     * @zm-api-field-description Subject
+     */
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
@@ -94,8 +136,7 @@ public class MessagePartHitInfo implements SearchHit {
     public EmailInfo getEmail() { return email; }
     public String getSubject() { return subject; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("sortField", sortField)
@@ -112,7 +153,6 @@ public class MessagePartHitInfo implements SearchHit {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

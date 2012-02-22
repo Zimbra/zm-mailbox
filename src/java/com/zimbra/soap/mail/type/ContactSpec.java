@@ -33,26 +33,51 @@ import com.zimbra.common.soap.MailConstants;
 public class ContactSpec {
 
     // Used when modifying a contact
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID - specified when modifying a contact
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private Integer id;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description ID of folder to create contact in. Un-specified means use the default Contacts folder.
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
-    // Either a vcard or attributes can be specified but not both.
+    /**
+     * @zm-api-field-description Either a vcard or attributes can be specified but not both.
+     */
     @XmlElement(name=MailConstants.E_VCARD /* vcard */, required=false)
     private VCardInfo vcard;
 
+    /**
+     * @zm-api-field-description Contact attributes.  Cannot specify <b>&lt;vcard></b> as well as these
+     */
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<NewContactAttr> attrs = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Contact group members.  Valid only if the contact being created is a contact group
+     * (has attribute type="group")
+     */
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
     private List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
 

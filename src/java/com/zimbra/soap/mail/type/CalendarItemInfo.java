@@ -32,57 +32,120 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+// see mail.ToXML.encodeCalendarItemSummary
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"invites", "calendarReplies", "metadatas"})
 public class CalendarItemInfo {
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag icalendar-uid
+     * @zm-api-field-description iCalendar UID
+     */
     @XmlAttribute(name=MailConstants.A_UID /* uid */, required=false)
     private String uid;
 
+    /**
+     * @zm-api-field-tag appointment-id
+     * @zm-api-field-description Appointment ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag revision-number
+     * @zm-api-field-description Revision number
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
+    /**
+     * @zm-api-field-tag size
+     * @zm-api-field-description Size
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Modified date in seconds
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
+    /**
+     * @zm-api-field-tag modified-sequence
+     * @zm-api-field-description Modified sequence
+     */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-tag next-alarm
+     * @zm-api-field-description Next alarm time
+     */
     @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
+    /**
+     * @zm-api-field-tag orphan
+     * @zm-api-field-description Has exceptions but no series
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ORPHAN /* orphan */, required=false)
     private ZmBoolean orphan;
 
+    /**
+     * @zm-api-field-description Invites
+     */
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private List<Invitation> invites = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Replies
+     */
     @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Metadata
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
@@ -162,8 +225,7 @@ public class CalendarItemInfo {
         return Collections.unmodifiableList(metadatas);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("flags", flags)
             .add("tags", tags)
@@ -185,7 +247,6 @@ public class CalendarItemInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

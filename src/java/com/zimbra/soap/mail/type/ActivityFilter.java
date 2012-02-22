@@ -23,15 +23,28 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ActivityFilter {
 
+    /**
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description Account ID
+     */
     @XmlAttribute(name=MailConstants.A_ACCOUNT /* account */, required=false)
     private String accountIds;
 
+    // Values in list from enum com.zimbra.cs.mailbox.MailboxOperation which contains LOTS of operations
+    /**
+     * @zm-api-field-tag comma-sep-ops
+     * @zm-api-field-description Comma separated list of Mailbox operations
+     */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=false)
     private String ops;
 
+    /**
+     * @zm-api-field-tag session-id
+     * @zm-api-field-description Session ID
+     */
     @XmlAttribute(name=MailConstants.A_SESSION /* session */, required=false)
     private String sessionId;
 
@@ -57,8 +70,7 @@ public class ActivityFilter {
     public String getOp() { return ops; }
     public String getSession() { return sessionId; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("account", accountIds)
             .add("op", ops)
@@ -67,7 +79,6 @@ public class ActivityFilter {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

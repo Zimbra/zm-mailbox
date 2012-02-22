@@ -20,35 +20,57 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class AlarmDataInfo {
 
-    @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */,
-            required=false)
+    /**
+     * @zm-api-field-tag next-alarm
+     * @zm-api-field-description Time in millis to show the alarm
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALARM_INSTANCE_START
-            /* alarmInstStart */, required=false)
+    /**
+     * @zm-api-field-tag instance-start-time
+     * @zm-api-field-description Start time of the meeting instance the alarm is reminding about
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_ALARM_INSTANCE_START /* alarmInstStart */, required=false)
     private Long alarmInstanceStart;
 
+    /**
+     * @zm-api-field-tag invite-mail-item-id
+     * @zm-api-field-description Mail Item ID of the invite message with detailed information
+     */
     @XmlAttribute(name=MailConstants.A_CAL_INV_ID /* invId */, required=false)
     private Integer invId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */,
-            required=false)
+    /**
+     * @zm-api-field-tag component-num
+     * @zm-api-field-description Component number
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */, required=false)
     private Integer componentNum;
 
-    @XmlAttribute(name=MailConstants.A_NAME, required=false)
+    /**
+     * @zm-api-field-tag meeting-subject
+     * @zm-api-field-description Meeting subject
+     */
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag meeting-location
+     * @zm-api-field-description Meeting location
+     */
     @XmlAttribute(name=MailConstants.A_CAL_LOCATION, required=false)
     private String location;
 
+    /**
+     * @zm-api-field-description Details of the alarm
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM /* alarm */, required=false)
     private AlarmInfo alarm;
 
@@ -74,8 +96,7 @@ public class AlarmDataInfo {
     public String getLocation() { return location; }
     public AlarmInfo getAlarm() { return alarm; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("nextAlarm", nextAlarm)
             .add("alarmInstanceStart", alarmInstanceStart)
@@ -88,7 +109,6 @@ public class AlarmDataInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -29,6 +29,10 @@ public class MailPop3DataSource
 extends MailDataSource
 implements Pop3DataSource {
 
+    /**
+     * @zm-api-field-tag leave-on-server
+     * @zm-api-field-description Leave messages on the server
+     */
     @XmlAttribute(name=MailConstants.A_DS_LEAVE_ON_SERVER /* leaveOnServer */, required=false)
     private ZmBoolean leaveOnServer;
 
@@ -49,8 +53,7 @@ implements Pop3DataSource {
     public Boolean isLeaveOnServer() { return ZmBoolean.toBool(leaveOnServer); }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("leaveOnServer", leaveOnServer);
@@ -58,7 +61,6 @@ implements Pop3DataSource {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

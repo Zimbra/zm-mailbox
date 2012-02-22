@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,20 +32,26 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlRootElement(name=MailConstants.E_RETENTION_POLICY, namespace=MailConstants.NAMESPACE_STR)
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class RetentionPolicy {
-    
+
+    /**
+     * @zm-api-field-description "Keep" retention policies
+     */
     @XmlElementWrapper(name=MailConstants.E_KEEP, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
     private List<Policy> keep = Lists.newArrayList();
-    
+
+    /**
+     * @zm-api-field-description "Purge" retention policies
+     */
     @XmlElementWrapper(name=MailConstants.E_PURGE, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
     private List<Policy> purge = Lists.newArrayList();
-    
+
     public RetentionPolicy() {
     }
-    
+
     public RetentionPolicy(Element e)
     throws ServiceException {
         Element keepEl = e.getOptionalElement(MailConstants.E_KEEP);
@@ -61,7 +67,7 @@ public class RetentionPolicy {
             }
         }
     }
-    
+
     public RetentionPolicy(Iterable<Policy> keep, Iterable<Policy> purge) {
         this.keep.clear();
         this.purge.clear();
@@ -72,15 +78,15 @@ public class RetentionPolicy {
             Iterables.addAll(this.purge, purge);
         }
     }
-    
+
     public List<Policy> getKeepPolicy() {
         return Collections.unmodifiableList(keep);
     }
-    
+
     public List<Policy> getPurgePolicy() {
         return Collections.unmodifiableList(purge);
     }
-    
+
     public Policy getPolicyById(String id) {
         for (Policy p : keep) {
             if (Objects.equal(p.getId(), id)) {
@@ -94,18 +100,18 @@ public class RetentionPolicy {
         }
         return null;
     }
-    
+
     public boolean isSet() {
         return !(keep.isEmpty() && purge.isEmpty());
     }
-    
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
             .add("keep", keep)
             .add("purge", purge).toString();
     }
-    
+
     public boolean equals(Object o) {
         if (o == null || !(o instanceof RetentionPolicy)) {
             return false;

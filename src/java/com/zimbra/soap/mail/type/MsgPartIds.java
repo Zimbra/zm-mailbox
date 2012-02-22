@@ -22,13 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class MsgPartIds {
 
+    /**
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    // Comma separated list of partIds
+    /**
+     * @zm-api-field-tag comma-sep-list-of-part-ids
+     * @zm-api-field-description Comma separated list of part IDs to remove
+     */
     @XmlAttribute(name=MailConstants.A_PART /* part */, required=true)
     private final String partIds;
 
@@ -48,8 +55,7 @@ public class MsgPartIds {
     public String getId() { return id; }
     public String getPartIds() { return partIds; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("partIds", partIds);
@@ -57,7 +63,6 @@ public class MsgPartIds {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

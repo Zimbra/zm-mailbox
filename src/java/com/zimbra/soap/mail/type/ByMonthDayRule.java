@@ -26,8 +26,16 @@ import com.zimbra.soap.base.ByMonthDayRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByMonthDayRule implements ByMonthDayRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTHDAY_MODAYLIST,
-                        required=true)
+    /**
+     * @zm-api-field-tag modaylist
+     * @zm-api-field-description Comma separated list of day numbers from either the start (positive) or the
+     * end (negative) of the month - format : <b>[[+]|-]num[,...]</b>   where num between 1 to 31
+     * <br />
+     * e.g. <b>modaylist="1,+2,-7"</b>
+     * <br />
+     * means first day of the month, plus the 2nd day of the month, plus the 7th from last day of the month.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTHDAY_MODAYLIST /* modaylist */, required=true)
     private final String list;
 
     /**

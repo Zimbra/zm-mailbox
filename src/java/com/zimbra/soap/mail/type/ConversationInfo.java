@@ -31,40 +31,73 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "metadatas", "subject", "messages"})
 public class ConversationInfo {
 
+    /**
+     * @zm-api-field-tag conv-id
+     * @zm-api-field-description Conversation ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag num-msgs
+     * @zm-api-field-description Number of (nondeleted) messages
+     */
     @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer num;
 
+    /**
+     * @zm-api-field-tag all-msgs
+     * @zm-api-field-description Total number of messages (including deleted messages).  Only included if value
+     * differs from <b>{num-msgs}</b>
+     */
     @XmlAttribute(name=MailConstants.A_TOTAL_SIZE /* total */, required=false)
     private Integer totalSize;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-description Custom metadata information
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag subject
+     * @zm-api-field-description Subject
+     */
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
+    /**
+     * @zm-api-field-description Messages
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatMessageInfo.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageInfo.class)
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatMessageInfo.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageInfo.class)
     })
     private List<MessageInfo> messages = Lists.newArrayList();
 
@@ -121,8 +154,7 @@ public class ConversationInfo {
         return Collections.unmodifiableList(messages);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("num", num)
@@ -137,7 +169,6 @@ public class ConversationInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

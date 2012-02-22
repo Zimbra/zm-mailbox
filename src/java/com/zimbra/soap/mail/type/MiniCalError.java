@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,15 +23,28 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class MiniCalError {
 
+    /**
+     * @zm-api-field-tag calendar-folder-id
+     * @zm-api-field-description ID for calendar folder that couldn't be accessed
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag ServiceException-error-code
+     * @zm-api-field-description ServiceException error code - service.PERM_DENIED, mail.NO_SUCH_FOLDER,
+     * account.NO_SUCH_ACCOUNT, etc.
+     */
     @XmlAttribute(name=MailConstants.A_CAL_CODE /* code */, required=true)
     private final String code;
 
+    /**
+     * @zm-api-field-tag error-msg-from-exception
+     * @zm-api-field-description Error message from the exception (but no stack trace)
+     */
     @XmlValue
     private String errorMessage;
 
@@ -55,8 +68,7 @@ public class MiniCalError {
     public String getCode() { return code; }
     public String getErrorMessage() { return errorMessage; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("code", code)
@@ -65,7 +77,6 @@ public class MiniCalError {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

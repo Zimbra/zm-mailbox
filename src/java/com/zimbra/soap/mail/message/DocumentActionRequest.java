@@ -34,6 +34,8 @@ public class DocumentActionRequest {
 
     /**
      * @zm-api-field-description Document action selector
+     * <br />
+     * Document specific operations : <b>watch|!watch|grant|!grant</b>
      */
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private DocumentActionSelector action;

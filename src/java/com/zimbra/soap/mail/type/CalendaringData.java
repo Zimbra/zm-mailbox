@@ -30,31 +30,54 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"organizer", "categories", "geo",
-                        "fragment", "instances", "alarmData"})
-public class CalendaringData
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(propOrder = {"organizer", "categories", "geo", "fragment", "instances", "alarmData"})
+public abstract class CalendaringData
 extends CommonCalendaringData
 implements CalendaringDataInterface {
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-description Organizer
+     */
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
 
+    /**
+     * @zm-api-field-tag categories
+     * @zm-api-field-description Categories
+     */
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
     private List<String> categories = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Information for iCalendar GEO property
+     */
     @XmlElement(name=MailConstants.E_CAL_GEO /* geo */, required=false)
     private GeoInfo geo;
 
+    /**
+     * @zm-api-field-tag fragment
+     * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+     */
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
+    /**
+     * @zm-api-field-description Instances
+     */
     @XmlElement(name=MailConstants.E_INSTANCE /* inst */, required=false)
     private List<InstanceDataInfo> instances = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Alarm information
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM_DATA /* alarmData */, required=false)
     private AlarmDataInfo alarmData;
 
@@ -129,8 +152,7 @@ implements CalendaringDataInterface {
     public AlarmDataInfo getAlarmData() { return alarmData; }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("date", date)
@@ -144,8 +166,7 @@ implements CalendaringDataInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
     // Non-JAXB method needed by CalendaringDataInterface

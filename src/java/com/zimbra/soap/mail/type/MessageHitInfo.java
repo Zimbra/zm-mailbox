@@ -26,22 +26,33 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
-public class MessageHitInfo extends MessageInfo implements SearchHit {
+@XmlAccessorType(XmlAccessType.NONE)
+public class MessageHitInfo
+extends MessageInfo
+implements SearchHit {
 
+    /**
+     * @zm-api-field-tag sort-field-value
+     * @zm-api-field-description Sort field value
+     */
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
+    /**
+     * @zm-api-field-tag message-matched-query
+     * @zm-api-field-description If the message matched the specified query string
+     */
     @XmlAttribute(name=MailConstants.A_CONTENTMATCHED /* cm */, required=false)
     private ZmBoolean contentMatched;
 
+    /**
+     * @zm-api-field-description Hit Parts -- indicators that the named parts matched the search string
+     */
     @XmlElement(name=MailConstants.E_HIT_MIMEPART /* hp */, required=false)
     private List<Part> messagePartHits = Lists.newArrayList();
 
@@ -76,8 +87,7 @@ public class MessageHitInfo extends MessageInfo implements SearchHit {
         return Collections.unmodifiableList(messagePartHits);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("sortField", sortField)
@@ -87,7 +97,6 @@ public class MessageHitInfo extends MessageInfo implements SearchHit {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

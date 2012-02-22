@@ -33,7 +33,10 @@ import com.zimbra.soap.base.WkDayInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByDayRule implements ByDayRuleInterface {
 
-    @XmlElement(name=MailConstants.E_CAL_RULE_BYDAY_WKDAY, required=false)
+    /**
+     * @zm-api-field-description By day weekday rule specification
+     */
+    @XmlElement(name=MailConstants.E_CAL_RULE_BYDAY_WKDAY /* wkday */, required=false)
     private List<WkDay> days = Lists.newArrayList();
 
     public ByDayRule() {

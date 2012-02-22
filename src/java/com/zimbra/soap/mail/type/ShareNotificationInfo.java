@@ -20,26 +20,43 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class ShareNotificationInfo {
 
+    /**
+     * @zm-api-field-tag status-new|seen
+     * @zm-api-field-description Status - "new" if the message is unread or "seen" if the message is read.
+     */
     @XmlAttribute(name=MailConstants.A_STATUS /* status */, required=true)
     private final String status;
 
+    /**
+     * @zm-api-field-tag notification-item-id
+     * @zm-api-field-description The item ID of the share notification message.
+     * The message must be in the Inbox folder.
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=true)
     private final long date;
 
+    /**
+     * @zm-api-field-description Grantor information
+     */
     @XmlElement(name=MailConstants.E_GRANTOR /* grantor */, required=true)
     private final Grantor grantor;
 
+    /**
+     * @zm-api-field-description Link information
+     */
     @XmlElement(name=MailConstants.E_MOUNT /* link */, required=true)
     private final LinkInfo link;
 
@@ -48,12 +65,10 @@ public class ShareNotificationInfo {
      */
     @SuppressWarnings("unused")
     private ShareNotificationInfo() {
-        this((String) null, (String) null, -1L, (Grantor) null,
-                (LinkInfo) null);
+        this((String) null, (String) null, -1L, (Grantor) null, (LinkInfo) null);
     }
 
-    public ShareNotificationInfo(String status, String id, long date,
-                    Grantor grantor, LinkInfo link) {
+    public ShareNotificationInfo(String status, String id, long date, Grantor grantor, LinkInfo link) {
         this.status = status;
         this.id = id;
         this.date = date;
@@ -67,8 +82,7 @@ public class ShareNotificationInfo {
     public Grantor getGrantor() { return grantor; }
     public LinkInfo getLink() { return link; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("status", status)
             .add("id", id)
@@ -79,7 +93,6 @@ public class ShareNotificationInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -22,12 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class IdStatus {
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description Status
+     */
     @XmlAttribute(name=MailConstants.A_STATUS /* status */, required=false)
     private String status;
 
@@ -46,8 +54,7 @@ public class IdStatus {
     public String getId() { return id; }
     public String getStatus() { return status; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("status", status);
@@ -55,7 +62,6 @@ public class IdStatus {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

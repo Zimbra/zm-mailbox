@@ -27,44 +27,37 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class SyncDeletedInfo {
 
+    /**
+     * @zm-api-field-tag deleted-ids
+     * @zm-api-field-description IDs of deleted items
+     */
     @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
     private final String ids;
 
+    /**
+     * @zm-api-field-description Details of deletes broken down by item type (present if "typed" was specified
+     * in the request)
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FOLDER /* folder */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_SEARCH /* search */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_MOUNT /* link */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_TAG /* tag */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_CONV /* c */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_TASK /* task */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_NOTES /* notes */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
-            type=IdsAttr.class),
-        @XmlElement(name=MailConstants.E_DOC /* doc */,
-            type=IdsAttr.class)
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_SEARCH /* search */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_MOUNT /* link */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_TAG /* tag */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_CONV /* c */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_NOTES /* notes */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */, type=IdsAttr.class),
+        @XmlElement(name=MailConstants.E_DOC /* doc */, type=IdsAttr.class)
     })
     private List<IdsAttr> types = Lists.newArrayList();
 
@@ -97,8 +90,7 @@ public class SyncDeletedInfo {
         return Collections.unmodifiableList(types);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("ids", ids)
             .add("types", types);
@@ -106,7 +98,6 @@ public class SyncDeletedInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)) .toString();
     }
 }

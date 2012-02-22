@@ -22,21 +22,41 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class DeviceInfo {
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description Device ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag device-name
+     * @zm-api-field-description Device name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag status-enabled|disabled|locked|wiped
+     * @zm-api-field-description Status - <b>enabled|disabled|locked|wiped</b>
+     */
     @XmlAttribute(name=MailConstants.A_STATUS /* status */, required=false)
     private String status;
 
+    /**
+     * @zm-api-field-tag created-timestamp
+     * @zm-api-field-description Created timestamp
+     */
     @XmlAttribute(name=MailConstants.A_CREATED /* created */, required=false)
     private Long created;
 
+    /**
+     * @zm-api-field-tag accessed-timestamp
+     * @zm-api-field-description Accessed timestamp
+     */
     @XmlAttribute(name=MailConstants.A_ACCESSED /* accessed */, required=false)
     private Long accessed;
 
@@ -54,8 +74,7 @@ public class DeviceInfo {
     public Long getCreated() { return created; }
     public Long getAccessed() { return accessed; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("name", name)
@@ -66,7 +85,6 @@ public class DeviceInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -32,15 +32,30 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class WatcherInfo {
 
+    /**
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description Account ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
 
+    /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description Email address
+     */
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=true)
     private String email;
 
+    /**
+     * @zm-api-field-tag display-name
+     * @zm-api-field-description Display name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-description List of items in the user's mailbox currently being watched by other users
+     */
     @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
     private List<IntegerIdAttr> items = Lists.newArrayList();
 
@@ -78,8 +93,7 @@ public class WatcherInfo {
         return Collections.unmodifiableList(items);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("email", email)
@@ -89,7 +103,6 @@ public class WatcherInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

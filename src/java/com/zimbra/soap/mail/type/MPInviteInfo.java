@@ -35,17 +35,29 @@ import com.zimbra.common.soap.MailConstants;
 @XmlType(propOrder = {"timezones", "calendarReplies", "inviteComponents"})
 public class MPInviteInfo {
 
-    // Valid values - "appt" and "task"
+    /**
+     * @zm-api-field-tag type-appt|task
+     * @zm-api-field-description Calendar item type - <b>appt|task</b>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
     private final String calItemType;
 
+    /**
+     * @zm-api-field-description Timezones
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Replies
+     */
     @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Invite components
+     */
     @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
     private List<InviteComponent> inviteComponents = Lists.newArrayList();
 
@@ -106,8 +118,7 @@ public class MPInviteInfo {
         return Collections.unmodifiableList(inviteComponents);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("calItemType", calItemType)
             .add("timezones", timezones)
@@ -117,7 +128,6 @@ public class MPInviteInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

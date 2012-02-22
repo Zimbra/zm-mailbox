@@ -26,7 +26,11 @@ import com.zimbra.soap.base.ByHourRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByHourRule implements ByHourRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYHOUR_HRLIST, required=true)
+    /**
+     * @zm-api-field-tag hour-list
+     * @zm-api-field-description Comma separated list of hours where hour is a number between 0 and 23
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYHOUR_HRLIST /* hrlist */, required=true)
     private final String list;
 
     /**

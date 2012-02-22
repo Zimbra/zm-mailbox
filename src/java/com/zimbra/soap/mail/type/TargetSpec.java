@@ -25,15 +25,27 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AccountBy;
 import com.zimbra.soap.type.TargetType;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class TargetSpec {
 
+    /**
+     * @zm-api-field-tag target-type
+     * @zm-api-field-description Target type
+     */
     @XmlAttribute(name=MailConstants.A_TARGET_TYPE /* type */, required=true)
     private final TargetType targetType;
 
+    /**
+     * @zm-api-field-tag target-selector-by
+     * @zm-api-field-description Select the meaning of <b>{target-selector-key}</b>
+     */
     @XmlAttribute(name=MailConstants.A_TARGET_BY /* by */, required=true)
     private final AccountBy accountBy;
 
+    /**
+     * @zm-api-field-tag target-selector-key
+     * @zm-api-field-description The key used to identify the target. Meaning determined by <b>{target-selector-by}</b>
+     */
     @XmlValue
     private String value;
 
@@ -55,8 +67,7 @@ public class TargetSpec {
     public AccountBy getAccountBy() { return accountBy; }
     public String getValue() { return value; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("targetType", targetType)
             .add("accountBy", accountBy)
@@ -65,7 +76,6 @@ public class TargetSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

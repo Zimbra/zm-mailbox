@@ -27,6 +27,10 @@ import com.zimbra.soap.base.WkstRuleInterface;
 public class WkstRule
 implements WkstRuleInterface {
 
+    /**
+     * @zm-api-field-tag weekday
+     * @zm-api-field-description Weekday -  <b>SU|MO|TU|WE|TH|FR|SA</b>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_DAY, required=true)
     private final String day;
 
@@ -52,8 +56,6 @@ implements WkstRuleInterface {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("day", day)
-            .toString();
+        return Objects.toStringHelper(this).add("day", day).toString();
     }
 }

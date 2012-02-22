@@ -24,7 +24,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlMixed;
-import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -32,45 +31,86 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class CommentInfo {
 
+    /**
+     * @zm-api-field-tag item-id-of-parent
+     * @zm-api-field-description Item ID of parent
+     */
     @XmlAttribute(name=MailConstants.A_PARENT_ID /* parentId */, required=false)
     private String parentId;
 
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description Item ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag uuid
+     * @zm-api-field-description Item's UUID - a globally unique identifier
+     */
     @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=false)
     private String uuid;
 
+    /**
+     * @zm-api-field-tag creator-email-address
+     * @zm-api-field-description Creator email address
+     */
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
     private String creatorEmail;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+     */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Byte color;
 
+    /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
     private String rgb;
 
+    /**
+     * @zm-api-field-tag timestamp
+     * @zm-api-field-description Timestamp
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
     // Need for @XmlMixed is forced because allow text content (used for
     // the Subject text) as well as sub-elements
+    /**
+     * @zm-api-field-description metadata and the subject as text
+     */
     @XmlElementRefs({
-        @XmlElementRef(name=MailConstants.E_METADATA /* meta */,
-            type=MailCustomMetadata.class)
+        @XmlElementRef(name=MailConstants.E_METADATA /* meta */, type=MailCustomMetadata.class)
     })
     @XmlMixed
     private List<Object> elements = Lists.newArrayList();
@@ -170,8 +210,7 @@ public class CommentInfo {
         return Collections.unmodifiableList(metadatas);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("parentId", parentId)
             .add("id", id)
@@ -188,7 +227,6 @@ public class CommentInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

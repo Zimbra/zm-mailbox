@@ -37,37 +37,81 @@ import com.zimbra.soap.type.ZmBoolean;
 public class PartInfo
 implements PartInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_PART, required=true)
+    /**
+     * @zm-api-field-tag mime-part-name
+     * @zm-api-field-description MIME part name. "" means top-level part, 1 first part, 1.1 first part of a multipart
+     * inside of 1.
+     */
+    @XmlAttribute(name=MailConstants.A_PART /* part */, required=true)
     private final String part;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE, required=true)
+    /**
+     * @zm-api-field-tag content-type
+     * @zm-api-field-description MIME Content-Type. The mime type is the content of the element.
+     */
+    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=true)
     private final String contentType;
 
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+    /**
+     * @zm-api-field-tag size-in-bytes
+     * @zm-api-field-description Size in bytes
+     */
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Integer size;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_DISPOSTION, required=false)
+    /**
+     * @zm-api-field-tag content-disp
+     * @zm-api-field-description MIME Content-Disposition
+     */
+    @XmlAttribute(name=MailConstants.A_CONTENT_DISPOSTION /* cd */, required=false)
     private String contentDisposition;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_FILENAME, required=false)
+    /**
+     * @zm-api-field-tag filename
+     * @zm-api-field-description Filename attribute from the Content-Disposition param list
+     */
+    @XmlAttribute(name=MailConstants.A_CONTENT_FILENAME /* filename */, required=false)
     private String contentFilename;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_ID, required=false)
+    /**
+     * @zm-api-field-tag content-id
+     * @zm-api-field-description MIME Content-ID (for display of embedded images)
+     */
+    @XmlAttribute(name=MailConstants.A_CONTENT_ID /* ci */, required=false)
     private String contentId;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_LOCATION, required=false)
+    /**
+     * @zm-api-field-tag content-location
+     * @zm-api-field-description MIME/Microsoft Content-Location (for display of embedded images)
+     */
+    @XmlAttribute(name=MailConstants.A_CONTENT_LOCATION /* cl */, required=false)
     private String location;
 
-    @XmlAttribute(name=MailConstants.A_BODY, required=false)
+    /**
+     * @zm-api-field-tag is-body
+     * @zm-api-field-description Set if this part is considered to be the "body" of the message for display purposes.
+     */
+    @XmlAttribute(name=MailConstants.A_BODY /* body */, required=false)
     private ZmBoolean body;
 
-    @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT, required=false)
+    /**
+     * @zm-api-field-tag truncated-content
+     * @zm-api-field-description Set if the content for the part is truncated
+     */
+    @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT /* truncated */, required=false)
     private ZmBoolean truncatedContent;
 
-    @XmlElement(name=MailConstants.E_CONTENT, required=false)
+    /**
+     * @zm-api-field-tag content
+     * @zm-api-field-description The content of the part, if requested
+     */
+    @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private String content;
 
-    @XmlElement(name=MailConstants.E_MIMEPART, required=false)
+    /**
+     * @zm-api-field-description Mime parts
+     */
+    @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
     private List<PartInfo> mimeParts = Lists.newArrayList();
 
     /**
@@ -150,7 +194,7 @@ implements PartInfoInterface {
     @Override
     public void setMimePartInterfaces(Iterable<PartInfoInterface> mimeParts) {
         setMimeParts(PartInfo.fromInterfaces(mimeParts));
-        
+
     }
 
     @Override

@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class FolderSpec {
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=true)
     private final String folder;
 
@@ -42,15 +46,13 @@ public class FolderSpec {
 
     public String getFolder() { return folder; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("folder", folder);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

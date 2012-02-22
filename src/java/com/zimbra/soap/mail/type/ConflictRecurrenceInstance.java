@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,14 +25,15 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class ConflictRecurrenceInstance extends ExpandedRecurrenceInstance {
 
+    /**
+     * @zm-api-field-description Free/Busy user status
+     */
     @XmlElement(name=MailConstants.E_FREEBUSY_USER /* usr */, required=false)
     private List<FreeBusyUserStatus> freebusyUsers = Lists.newArrayList();
 
@@ -46,8 +47,7 @@ public class ConflictRecurrenceInstance extends ExpandedRecurrenceInstance {
         }
     }
 
-    public ConflictRecurrenceInstance addFreebusyUser(
-                    FreeBusyUserStatus freebusyUser) {
+    public ConflictRecurrenceInstance addFreebusyUser(FreeBusyUserStatus freebusyUser) {
         this.freebusyUsers.add(freebusyUser);
         return this;
     }
@@ -56,8 +56,7 @@ public class ConflictRecurrenceInstance extends ExpandedRecurrenceInstance {
         return Collections.unmodifiableList(freebusyUsers);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("freebusyUsers", freebusyUsers);
@@ -65,7 +64,6 @@ public class ConflictRecurrenceInstance extends ExpandedRecurrenceInstance {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

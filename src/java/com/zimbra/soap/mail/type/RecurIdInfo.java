@@ -26,15 +26,33 @@ import com.zimbra.soap.base.RecurIdInfoInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class RecurIdInfo implements RecurIdInfoInterface {
 
+    /**
+     * @zm-api-field-tag range-type
+     * @zm-api-field-description Recurrence range type
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE /* rangeType */, required=true)
     private int recurrenceRangeType;
 
+    /**
+     * @zm-api-field-tag YYMMDD[THHMMSS[Z]]
+     * @zm-api-field-description Recurrence ID in format : YYMMDD[THHMMSS[Z]]
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID /* recurId */, required=true)
     private String recurrenceId;
 
+    /**
+     * @zm-api-field-tag timezone-name
+     * @zm-api-field-description Timezone name
+     */
     @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
+    /**
+     * @zm-api-field-tag YYMMDDTHHMMSSZ
+     * @zm-api-field-description Recurrence-id in UTC time zone; used in non-all-day appointments only
+     * <br />
+     * Format: YYMMDDTHHMMSSZ
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */, required=false)
     private String recurIdZ;
 
@@ -77,8 +95,7 @@ public class RecurIdInfo implements RecurIdInfoInterface {
     @Override
     public String getRecurIdZ() { return recurIdZ; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("recurrenceRangeType", getRecurrenceRangeType())
             .add("recurrenceId", getRecurrenceId())
@@ -88,7 +105,6 @@ public class RecurIdInfo implements RecurIdInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

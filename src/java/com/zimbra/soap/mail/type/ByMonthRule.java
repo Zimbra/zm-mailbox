@@ -26,7 +26,11 @@ import com.zimbra.soap.base.ByMonthRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByMonthRule implements ByMonthRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTH_MOLIST, required=true)
+    /**
+     * @zm-api-field-tag month-list
+     * @zm-api-field-description Comma separated list of months where month is a number between 1 and 12
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTH_MOLIST /* molist */, required=true)
     private final String list;
 
     /**

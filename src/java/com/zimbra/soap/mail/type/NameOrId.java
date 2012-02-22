@@ -22,16 +22,43 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class NameOrId {
 
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
     public NameOrId() {
+    }
+
+    public static NameOrId createForName(String name) {
+        NameOrId obj = new NameOrId();
+        obj.setName(name);
+        return obj;
+    }
+
+    public static NameOrId createForId(String id) {
+        NameOrId obj = new NameOrId();
+        obj.setId(id);
+        return obj;
+    }
+
+    public static NameOrId createForNameAndId(String name, String id) {
+        NameOrId obj = new NameOrId();
+        obj.setName(name);
+        obj.setId(id);
+        return obj;
     }
 
     public void setName(String name) { this.name = name; }
@@ -39,8 +66,7 @@ public class NameOrId {
     public String getName() { return name; }
     public String getId() { return id; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("id", id);
@@ -48,7 +74,6 @@ public class NameOrId {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

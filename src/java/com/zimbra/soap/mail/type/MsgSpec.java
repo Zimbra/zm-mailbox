@@ -26,43 +26,91 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class MsgSpec {
 
+    /**
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID.  Can contain a subpart identifier (e.g. "775-778") to return a message
+     * stored as a subpart of some other mail-item, specifically for Messages stored as part of Appointments
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag msg-part
+     * @zm-api-field-description Supply a "part" and the retrieved data will be on the specified message/rfc822
+     * subpart.  If the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART MailServiceException
+     * will be thrown
+     */
     @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
 
+    /**
+     * @zm-api-field-tag want-raw-msg-content
+     * @zm-api-field-description Set to return the raw message content rather than a parsed mime structure;
+     * (default is unset.  if message is too big or not ASCII, a content servlet URL is returned)
+     */
     @XmlAttribute(name=MailConstants.A_RAW /* raw */, required=false)
     private ZmBoolean raw;
 
+    /**
+     * @zm-api-field-tag mark-read
+     * @zm-api-field-description Set to mark the message as read, unset to leave the read status unchanged.
+     * By default, the read status is left unchanged.
+     */
     @XmlAttribute(name=MailConstants.A_MARK_READ /* read */, required=false)
     private ZmBoolean markRead;
 
+    /**
+     * @zm-api-field-tag max-inlined-length
+     * @zm-api-field-description Use <b>{max-inlined-length}</b> to limit the length of the text inlined into body
+     * <b>&lt;content></b> when raw is set.  (default is unset, meaning no limit.)
+     */
     @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxInlinedLength;
 
+    /**
+     * @zm-api-field-tag want-defanged-html
+     * @zm-api-field-description Set to return defanged HTML content by default.  (default is unset.)
+     */
     @XmlAttribute(name=MailConstants.A_WANT_HTML /* html */, required=false)
     private ZmBoolean wantHtml;
 
+    /**
+     * @zm-api-field-tag neuter-img-tags
+     * @zm-api-field-description Set to "neuter" <b>&lt;IMG></b> tags returned in HTML content; this involves
+     * switching the <b>"src"</b> attribute to <b>"dfsrc"</b> so that images don't display by default (default is set.)
+     */
     @XmlAttribute(name=MailConstants.A_NEUTER /* neuter */, required=false)
     private ZmBoolean neuter;
 
+    /**
+     * @zm-api-field-tag recurrence-id-YYYYMMDD[ThhmmssZ]
+     * @zm-api-field-description Recurrence ID in format <b>YYYYMMDD[ThhmmssZ]</b>.  Used only when making GetMsg call
+     * to open an instance of a recurring appointment.  The value specified is the date/time data of the
+     * RECURRENCE-ID of the instance being requested.
+     */
     @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */, required=false)
     private String recurIdZ;
 
+    /**
+     * @zm-api-field-tag need-can-expand
+     * @zm-api-field-description Set to return group info (isGroup and exp flags) on <b>&lt;e></b> elements in the
+     * response (default is unset.)
+     */
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
     private ZmBoolean needCanExpand;
 
+    /**
+     * @zm-api-field-description if <b>&lt;header></b>s are requested, any matching headers are inlined into the
+     * response (not available when raw is set)
+     */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
     private List<AttributeName> headers = Lists.newArrayList();
 
@@ -112,8 +160,7 @@ public class MsgSpec {
         return Collections.unmodifiableList(headers);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("part", part)
@@ -129,7 +176,6 @@ public class MsgSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

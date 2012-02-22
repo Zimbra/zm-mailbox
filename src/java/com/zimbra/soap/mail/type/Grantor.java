@@ -22,15 +22,27 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Grantor {
 
+    /**
+     * @zm-api-field-tag grantor-zimbra-id
+     * @zm-api-field-description Zimbra ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag grantor-email-address
+     * @zm-api-field-description Email address
+     */
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=true)
     private final String email;
 
+    /**
+     * @zm-api-field-tag grantor-display-name
+     * @zm-api-field-description Grantor display name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private final String name;
 
@@ -52,8 +64,7 @@ public class Grantor {
     public String getEmail() { return email; }
     public String getName() { return name; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("email", email)
@@ -62,7 +73,6 @@ public class Grantor {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -22,16 +22,27 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class DocumentInfo extends CommonDocumentInfo {
 
+    /**
+     * @zm-api-field-tag lock-owner-account-id
+     * @zm-api-field-description Lock owner account ID
+     */
     @XmlAttribute(name=MailConstants.A_LOCKOWNER_ID /* loid */, required=false)
     private String lockOwnerId;
 
-    @XmlAttribute(name=MailConstants.A_LOCKOWNER_EMAIL /* loe */,
-                                    required=false)
+    /**
+     * @zm-api-field-tag lock-owner-account-email
+     * @zm-api-field-description Lock owner account email address
+     */
+    @XmlAttribute(name=MailConstants.A_LOCKOWNER_EMAIL /* loe */, required=false)
     private String lockOwnerEmail;
 
+    /**
+     * @zm-api-field-tag lock-timestamp
+     * @zm-api-field-description Lock timestamp
+     */
     @XmlAttribute(name=MailConstants.A_LOCKTIMESTAMP /* lt */, required=false)
     private String lockOwnerTimestamp;
 
@@ -56,8 +67,7 @@ public class DocumentInfo extends CommonDocumentInfo {
     public String getLockOwnerEmail() { return lockOwnerEmail; }
     public String getLockOwnerTimestamp() { return lockOwnerTimestamp; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("lockOwnerId", lockOwnerId)
             .add("lockOwnerEmail", lockOwnerEmail)
@@ -66,7 +76,6 @@ public class DocumentInfo extends CommonDocumentInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

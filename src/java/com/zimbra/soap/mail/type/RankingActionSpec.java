@@ -22,14 +22,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class RankingActionSpec {
 
     // Valid values are "reset" and "delete" (case insensitive)
+    /**
+     * @zm-api-field-tag action-reset|delete
+     * @zm-api-field-description Action to perform - <b>reset|delete</b>.
+     * <table>
+     * <tr> <td> <b>reset</b> </td> <td> resets the contact ranking table for the account </td> </tr>
+     * <tr> <td> <b>delete</b> </td> <td> delete - delete the ranking information for the email address </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
     private final String operation;
 
-    // required if action is "delete"
+    /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description Email address.  Required if action is "delete"
+     */
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
     private String email;
 
@@ -49,8 +60,7 @@ public class RankingActionSpec {
     public String getOperation() { return operation; }
     public String getEmail() { return email; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("operation", operation)
             .add("email", email);
@@ -58,7 +68,6 @@ public class RankingActionSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

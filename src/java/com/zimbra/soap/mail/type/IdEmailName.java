@@ -22,15 +22,27 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class IdEmailName {
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag email
+     * @zm-api-field-description Email
+     */
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
     private String email;
 
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
@@ -50,8 +62,7 @@ public class IdEmailName {
     public String getEmail() { return email; }
     public String getName() { return name; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("email", email)
@@ -60,7 +71,6 @@ public class IdEmailName {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

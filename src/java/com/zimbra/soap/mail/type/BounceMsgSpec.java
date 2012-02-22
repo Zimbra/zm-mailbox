@@ -26,17 +26,22 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class BounceMsgSpec {
 
+    /**
+     * @zm-api-field-tag id-of-msg-to-resend
+     * @zm-api-field-description ID of message to resend
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-description Email addresses
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
@@ -68,8 +73,7 @@ public class BounceMsgSpec {
         return Collections.unmodifiableList(emailAddresses);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("emailAddresses", emailAddresses);
@@ -77,7 +81,6 @@ public class BounceMsgSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

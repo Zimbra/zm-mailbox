@@ -33,46 +33,88 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"organizer", "categories", "geo", "fragment",
                     "instances", "alarmData", "invites", "replies"})
-public class CalendarItemHitInfo
+public abstract class CalendarItemHitInfo
     extends CommonCalendaringData
     implements SearchHit {
 
+    /**
+     * @zm-api-field-tag sort-field-value
+     * @zm-api-field-description Sort field value
+     */
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private long date;
 
+    /**
+     * @zm-api-field-tag content-matched
+     * @zm-api-field-description Set if the message matched the specified query string
+     */
     @XmlAttribute(name=MailConstants.A_CONTENTMATCHED /* cm */, required=false)
     private ZmBoolean contentMatched;
 
+    /**
+     * @zm-api-field-tag next-alarm-millis
+     * @zm-api-field-description Time in millis to show the alarm
+     */
     @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
+    /**
+     * @zm-api-field-description Organizer
+     */
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
 
+    /**
+     * @zm-api-field-tag categories
+     * @zm-api-field-description Categories
+     */
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
     private List<String> categories = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Information for iCalendar GEO property
+     */
     @XmlElement(name=MailConstants.E_CAL_GEO /* geo */, required=false)
     private GeoInfo geo;
 
+    /**
+     * @zm-api-field-tag fragment
+     * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+     */
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
+    /**
+     * @zm-api-field-description Data for instances
+     */
     @XmlElement(name=MailConstants.E_INSTANCE /* inst */, required=false)
     private List<InstanceDataInfo> instances = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Alarm information
+     */
     @XmlElement(name=MailConstants.E_CAL_ALARM_DATA /* alarmData */, required=false)
     private AlarmDataInfo alarmData;
 
+    /**
+     * @zm-api-field-description Invites
+     */
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private List<Invitation> invites = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Replies
+     */
     @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalReply> replies = Lists.newArrayList();
@@ -163,8 +205,7 @@ public class CalendarItemHitInfo
         return Collections.unmodifiableList(replies);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("sortField", sortField)
@@ -183,7 +224,6 @@ public class CalendarItemHitInfo
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

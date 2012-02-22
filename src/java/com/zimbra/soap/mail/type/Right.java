@@ -26,9 +26,13 @@ import com.zimbra.common.soap.MailConstants;
  * Delete this class in bug 66989
  */
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Right {
 
+    /**
+     * @zm-api-field-tag right-name
+     * @zm-api-field-description Name for right
+     */
     @XmlAttribute(name=MailConstants.A_RIGHT /* right */, required=true)
     private final String right;
 
@@ -46,15 +50,12 @@ public class Right {
 
     public String getRight() { return right; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("right", right);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("right", right);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -37,37 +37,83 @@ import com.zimbra.soap.base.MessageCommonInterface;
 public class MessageCommon
 implements MessageCommonInterface {
 
+    /**
+     * @zm-api-field-tag msg-size
+     * @zm-api-field-description Size in bytes
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
 
+    /**
+     * @zm-api-field-tag msg-date
+     * @zm-api-field-description Date Seconds since the epoch, from the date header in the message
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
+    /**
+     * @zm-api-field-tag conversation-id
+     * @zm-api-field-description Converstation ID. only present if <b>&lt;m></b> is not enclosed within a
+     * <b>&lt;c></b> element
+     */
     @XmlAttribute(name=MailConstants.A_CONV_ID /* cid */, required=false)
     private String conversationId;
 
+    /**
+     * @zm-api-field-tag msg-flags
+     * @zm-api-field-description Flags.  (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me,
+     * for(w)arded, calendar in(v)ite, (d)raft, IMAP-\Deleted (x), (n)otification sent, urgent (!),
+     * low-priority (?), priority (+)
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag msg-tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag msg-tag-names
+     * @zm-api-field-description Comma separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag revision
+     * @zm-api-field-description Revision
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
+    /**
+     * @zm-api-field-tag msg-date-metadata-changed
+     * @zm-api-field-description Date metadata changed
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
+    /**
+     * @zm-api-field-tag change-sequence
+     * @zm-api-field-description Change sequence
+     */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-description Custom metadata information
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
@@ -133,8 +179,7 @@ implements MessageCommonInterface {
         return Collections.unmodifiableList(metadatas);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("size", size)
             .add("date", date)
@@ -151,8 +196,7 @@ implements MessageCommonInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
     @Override

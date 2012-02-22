@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,56 +25,65 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DocumentActionGrant {
 
+    /**
+     * @zm-api-field-tag rights-rwd
+     * @zm-api-field-description Permissions - (r)ead, (w)rite, (d)elete
+     */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
     private String rights;
 
+    /**
+     * @zm-api-field-tag grant-type-all|pub
+     * @zm-api-field-description Grant type - <b>all|pub</b>
+     */
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
     private String grantType;
 
-    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
-    private String zimbraId;
+    /**
+     * @zm-api-field-tag expiry-millis
+     * @zm-api-field-description (Optional) Time when this grant expires in milliseconds since the Epoch
+     */
+    @XmlAttribute(name=MailConstants.A_EXPIRY /* expiry */, required=false)
+    private Long expiry;
 
     public DocumentActionGrant() {
-        this((String)null, (String)null, (String)null);
+        this((String)null, (String)null, (Long)null);
     }
 
     private DocumentActionGrant(String rights, String grantType) {
-        this(rights, grantType, (String)null);
+        this(rights, grantType, (Long)null);
     }
 
-    private DocumentActionGrant(String rights, String grantType, String zimbraId) {
+    private DocumentActionGrant(String rights, String grantType, Long expiry) {
         setRights(rights);
         setGrantType(grantType);
-        setZimbraId(zimbraId);
+        setExpiry(expiry);
     }
 
     public static DocumentActionGrant createForRightsAndGrantType(String rights, String grantType) {
         return new DocumentActionGrant(rights, grantType);
     }
 
-    public static DocumentActionGrant createForRightsGrantTypeAndZimbraId(
-            String rights, String grantType, String zimbraId) {
-        return new DocumentActionGrant(rights, grantType, zimbraId);
+    public static DocumentActionGrant createForRightsGrantTypeAndExpiry(String rights, String grantType, Long expiry) {
+        return new DocumentActionGrant(rights, grantType, expiry);
     }
 
     public void setRights(String rights) { this.rights = rights; }
     public void setGrantType(String grantType) { this.grantType = grantType; }
-    public void setZimbraId(String zimbraId) { this.zimbraId = zimbraId; }
+    public void setExpiry(Long expiry) { this.expiry = expiry; }
     public String getRights() { return rights; }
     public String getGrantType() { return grantType; }
-    public String getZimbraId() { return zimbraId; }
+    public Long getExpiry() { return expiry; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("rights", rights)
             .add("grantType", grantType)
-            .add("zimbraId", zimbraId);
+            .add("expiry", expiry);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

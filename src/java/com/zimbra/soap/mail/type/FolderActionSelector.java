@@ -34,32 +34,67 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class FolderActionSelector extends ActionSelector {
 
+    /**
+     * @zm-api-field-tag delete-subfolders
+     * @zm-api-field-description  For op="empty" - hard-delete all items in the folder (and all the folder's
+     * subfolders if "recursive" is set)
+     */
     @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
     private ZmBoolean recursive;
 
+    /**
+     * @zm-api-field-tag target-url
+     * @zm-api-field-description Target URL
+     */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
+    /**
+     * @zm-api-field-tag exclude-free-busy-boolean
+     * @zm-api-field-description For <b>op="fb"</b> - set the excludeFreeBusy boolean for this folder (must specify
+     * <b>{exclude-free-busy-boolean}</b> for op="fb")
+     */
     @XmlAttribute(name=MailConstants.A_EXCLUDE_FREEBUSY /* excludeFreeBusy */, required=false)
     private ZmBoolean excludeFreebusy;
 
+    /**
+     * @zm-api-field-tag grantee-zimbra-id
+     * @zm-api-field-description Grantee Zimbra ID
+     */
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
+    /**
+     * @zm-api-field-tag grantee-type
+     * @zm-api-field-description Grantee Type
+     */
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=false)
     private String grantType;
 
-    // Use to change folder's default view (useful for migration)
+    /**
+     * @zm-api-field-tag default-view
+     * @zm-api-field-description Use with <b>op="update"</b> to change folder's default view (useful for migration)
+     */
     @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
     private String view;
 
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description
+     */
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private ActionGrantSelector grant;
 
+    /**
+     * @zm-api-field-description Grants (used with <b>op="grant"</b> and <b>op="!grant"</b>
+     */
     @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private List<ActionGrantSelector> grants = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Retention policy
+     */
     @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
     private RetentionPolicy retentionPolicy;
 
@@ -106,8 +141,7 @@ public class FolderActionSelector extends ActionSelector {
     }
     public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("recursive", recursive)
@@ -123,7 +157,6 @@ public class FolderActionSelector extends ActionSelector {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

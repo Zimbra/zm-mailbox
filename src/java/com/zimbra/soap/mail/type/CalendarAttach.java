@@ -85,8 +85,7 @@ public class CalendarAttach implements CalendarAttachInterface {
     @Override
     public String getBinaryB64Data() { return binaryB64Data; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("uri", uri)
             .add("contentType", contentType)
@@ -95,7 +94,6 @@ public class CalendarAttach implements CalendarAttachInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

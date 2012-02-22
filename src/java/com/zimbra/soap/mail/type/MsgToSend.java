@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,8 +23,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class MsgToSend extends Msg {
+public class MsgToSend
+extends Msg {
 
+    /**
+     * @zm-api-field-tag saved-draft-id
+     * @zm-api-field-description Saved draft ID
+     */
     @XmlAttribute(name=MailConstants.A_DRAFT_ID /* did */, required=false)
     private String draftId;
 
@@ -34,8 +39,7 @@ public class MsgToSend extends Msg {
     public void setDraftId(String draftId) { this.draftId = draftId; }
     public String getDraftId() { return draftId; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("draftId", draftId);
@@ -43,7 +47,6 @@ public class MsgToSend extends Msg {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

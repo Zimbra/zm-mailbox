@@ -26,7 +26,13 @@ import com.zimbra.soap.base.ByWeekNoRuleInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ByWeekNoRule implements ByWeekNoRuleInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYWEEKNO_WKLIST, required=true)
+    /**
+     * @zm-api-field-tag byweekno-wklist
+     * @zm-api-field-description BYWEEKNO Week list.  Format : <b>[[+]|-]num[,...]</b> where num is between 1 and 53
+     * <br />
+     * e.g. <b>&lt;byweekno wklist="1,+2,-1"/></b> means first week, 2nd week, and last week of the year.
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RULE_BYWEEKNO_WKLIST /* wklist */, required=true)
     private final String list;
 
     /**

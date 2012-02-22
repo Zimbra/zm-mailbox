@@ -23,11 +23,15 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class NoteHitInfo
 extends NoteInfo
 implements SearchHit {
 
+    /**
+     * @zm-api-field-tag sort-field-value
+     * @zm-api-field-description Sort field value
+     */
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
@@ -46,8 +50,7 @@ implements SearchHit {
     public void setSortField(String sortField) { this.sortField = sortField; }
     public String getSortField() { return sortField; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("sortField", sortField);
@@ -55,7 +58,6 @@ implements SearchHit {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

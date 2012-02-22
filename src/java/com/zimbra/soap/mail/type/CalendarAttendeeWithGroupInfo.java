@@ -23,12 +23,22 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class CalendarAttendeeWithGroupInfo extends CalendarAttendee {
+@XmlAccessorType(XmlAccessType.NONE)
+public class CalendarAttendeeWithGroupInfo
+extends CalendarAttendee {
 
+    /**
+     * @zm-api-field-tag is-group
+     * @zm-api-field-description Set if the entry is a group
+     */
     @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
     private ZmBoolean group;
 
+    /**
+     * @zm-api-field-tag can-expand-group-members
+     * @zm-api-field-description Set if the user has the right to expand group members.  Returned only if
+     * needExp is set in the request and only on group entries (isGroup is set).
+     */
     @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
     private ZmBoolean canExpandGroupMembers;
 
@@ -42,8 +52,7 @@ public class CalendarAttendeeWithGroupInfo extends CalendarAttendee {
     public Boolean getGroup() { return ZmBoolean.toBool(group); }
     public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("group", group)
@@ -52,7 +61,6 @@ public class CalendarAttendeeWithGroupInfo extends CalendarAttendee {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

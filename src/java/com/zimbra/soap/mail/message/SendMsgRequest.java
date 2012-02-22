@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Msg;
+import com.zimbra.soap.mail.type.MsgToSend;
 import com.zimbra.soap.type.ZmBoolean;
 
 // TODO: indicate whether to save in SentMail (or some other folder)
@@ -84,7 +85,7 @@ public class SendMsgRequest {
      * @zm-api-field-description Message
      */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
-    private Msg msg;
+    private MsgToSend msg;
 
     public SendMsgRequest() {
     }
@@ -96,11 +97,11 @@ public class SendMsgRequest {
         this.noSaveToSent = ZmBoolean.fromBool(noSaveToSent);
     }
     public void setSendUid(String sendUid) { this.sendUid = sendUid; }
-    public void setMsg(Msg msg) { this.msg = msg; }
+    public void setMsg(MsgToSend msg) { this.msg = msg; }
     public Boolean getNeedCalendarSentbyFixup() { return ZmBoolean.toBool(needCalendarSentbyFixup); }
     public Boolean getNoSaveToSent() { return ZmBoolean.toBool(noSaveToSent); }
     public String getSendUid() { return sendUid; }
-    public Msg getMsg() { return msg; }
+    public MsgToSend getMsg() { return msg; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper

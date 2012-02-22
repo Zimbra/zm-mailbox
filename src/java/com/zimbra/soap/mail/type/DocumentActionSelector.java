@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,10 +28,16 @@ public class DocumentActionSelector
 extends ActionSelector {
 
     // Used for "!grant" operation
+    /**
+     * @zm-api-field-tag zimbra-id-of-grant-to-revoke
+     * @zm-api-field-description Zimbra ID of the grant to revoke (Used for "!grant" operation)
+     */
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
-    // Used for "grant" operation
+    /**
+     * @zm-api-field-description Used for "grant" operation
+     */
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private DocumentActionGrant grant;
 
@@ -52,8 +58,7 @@ extends ActionSelector {
     public String getZimbraId() { return zimbraId; }
     public DocumentActionGrant getGrant() { return grant; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("zimbraId", zimbraId)
@@ -62,7 +67,6 @@ extends ActionSelector {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

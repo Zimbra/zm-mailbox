@@ -23,18 +23,48 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ExceptionRecurIdInfoInterface;
 
+// See ToXML.encodeRecurId
+
 @XmlAccessorType(XmlAccessType.NONE)
-public class ExceptionRecurIdInfo 
+public class ExceptionRecurIdInfo
 implements ExceptionRecurIdInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_DATETIME, required=true)
+    /**
+     * @zm-api-field-tag DATETIME-YYYYMMDD['T'HHMMSS[Z]]
+     * @zm-api-field-description Date and/or time.  Format is : <b>YYYYMMDD['T'HHMMSS[Z]]</b>
+     * <br />
+     * where:
+     * <pre>
+     *     YYYY - 4 digit year
+     *     MM   - 2 digit month
+     *     DD   - 2 digit day
+     * Optionally:
+     *     'T' the literal char "T" then 
+     *     HH - 2 digit hour (00-23)
+     *     MM - 2 digit minute (00-59)
+     *     SS - 2 digit second (00-59)
+     *     ...and finally an optional "Z" meaning that the time is UTC,
+     *     otherwise the tz="TIMEZONE" param MUST be specified with the DATETIME
+     *     e.g:
+     *         20050612  June 12, 2005
+     *         20050315T18302305Z  March 15, 2005 6:30:23.05 PM UTC
+     * </pre>
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_DATETIME /* d */, required=true)
     private final String dateTime;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)
+    /**
+     * @zm-api-field-tag timezone-identifier
+     * @zm-api-field-description Java timezone identifier
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE,
-                        required=false)
+    /**
+     * @zm-api-field-tag range-type
+     * @zm-api-field-description Range type - 1 means NONE, 2 means THISANDFUTURE, 3 means THISANDPRIOR
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE /* rangeType */, required=false)
     private Integer recurrenceRangeType;
 
     /**

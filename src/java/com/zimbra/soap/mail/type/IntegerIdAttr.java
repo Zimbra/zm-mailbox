@@ -25,6 +25,10 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class IntegerIdAttr {
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private int id;
 
@@ -42,15 +46,13 @@ public class IntegerIdAttr {
     private void setId(int id) { this.id = id; }
     public int getId() { return id; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

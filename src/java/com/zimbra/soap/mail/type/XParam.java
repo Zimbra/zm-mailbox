@@ -31,9 +31,17 @@ import com.zimbra.soap.base.XParamInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class XParam implements XParamInterface {
 
+    /**
+     * @zm-api-field-tag xparam-name
+     * @zm-api-field-description XPARAM Name
+     */
     @XmlAttribute(name=MailConstants.A_NAME, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag xparam-value
+     * @zm-api-field-description XPARAM value
+     */
     @XmlAttribute(name=MailConstants.A_VALUE, required=true)
     private final String value;
 

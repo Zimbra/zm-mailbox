@@ -34,47 +34,101 @@ import com.zimbra.common.soap.MailConstants;
 @XmlType(propOrder = { "content", "metadatas" })
 public class NoteInfo {
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description id
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag revision
+     * @zm-api-field-description Revision
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag bounds-x,y[width,height]
+     * @zm-api-field-description Bounds - <b>x,y[width,height]</b> where x,y,width and height are all integers
+     */
     @XmlAttribute(name=MailConstants.A_BOUNDS /* pos */, required=false)
     private String bounds;
 
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+     */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Byte color;
 
+    /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
     private String rgb;
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Modified date in seconds
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */,
-                            required=false)
+    /**
+     * @zm-api-field-tag modified-sequence
+     * @zm-api-field-description Modified sequence
+     */
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-tag content
+     * @zm-api-field-description Content
+     */
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private String content;
 
+    /**
+     * @zm-api-field-description Custom metadata information
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
@@ -131,8 +185,7 @@ public class NoteInfo {
         return Collections.unmodifiableList(metadatas);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("revision", revision)
@@ -152,7 +205,6 @@ public class NoteInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

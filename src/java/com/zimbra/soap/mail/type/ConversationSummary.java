@@ -35,47 +35,104 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
 public class ConversationSummary {
 
+    /**
+     * @zm-api-field-tag conv-id
+     * @zm-api-field-description Conversation ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag num-msgs
+     * @zm-api-field-description Number of messages in conversation without IMAP \Deleted flag set
+     */
     @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer num;
 
+    /**
+     * @zm-api-field-tag all-msgs
+     * @zm-api-field-description Total number of messages in conversation including those with the IMAP \Deleted flag
+     * set
+     */
     @XmlAttribute(name=MailConstants.A_TOTAL_SIZE /* total */, required=false)
     private Integer totalSize;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Same flags as on <b>&lt;m></b> ("sarwfdxnu!?"), aggregated from all the
+     * conversation's messages
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag date-of-most-recent
+     * @zm-api-field-description Date (secs since epoch) of most recent message in the converstation
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag elided
+     * @zm-api-field-description If elided is set, some participants are missing before the first returned
+     * <b>&lt;e></b> element
+     */
     @XmlAttribute(name=MailConstants.A_ELIDED /* elided */, required=false)
     private ZmBoolean elided;
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Modified date in seconds
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */,
-                                            required=false)
+    /**
+     * @zm-api-field-tag modified-sequence
+     * @zm-api-field-description Modified sequence
+     */
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-description Custom metadata
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag conversation-subject
+     * @zm-api-field-description Subject of conversation
+     */
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
+    /**
+     * @zm-api-field-tag fragment
+     * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+     */
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
+    /**
+     * @zm-api-field-description Email information for conversation participants if available (elided will be set
+     * if information for some participants is missing)
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
 
@@ -143,8 +200,7 @@ public class ConversationSummary {
         return Collections.unmodifiableList(emails);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("num", num)
@@ -164,7 +220,6 @@ public class ConversationSummary {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

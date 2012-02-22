@@ -40,10 +40,18 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterTest {
 
-    @XmlAttribute(name=MailConstants.A_INDEX, required=false)
+    /**
+     * @zm-api-field-tag index
+     * @zm-api-field-description Index - specifies a guaranteed order for the test elements
+     */
+    @XmlAttribute(name=MailConstants.A_INDEX /* index */, required=false)
     private int index = 0;
 
-    @XmlAttribute(name=MailConstants.A_NEGATIVE, required=false)
+    /**
+     * @zm-api-field-tag not-condition
+     * @zm-api-field-description Specifies a "not" condition for the test
+     */
+    @XmlAttribute(name=MailConstants.A_NEGATIVE /* negative */, required=false)
     private ZmBoolean negative;
 
     protected FilterTest() {
@@ -82,19 +90,39 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class AddressTest extends FilterTest {
 
-        @XmlAttribute(name = MailConstants.A_HEADER, required = true)
+        /**
+         * @zm-api-field-tag comma-sep-header-names
+         * @zm-api-field-description Comma separated list of header names
+         */
+        @XmlAttribute(name = MailConstants.A_HEADER /* header */, required = true)
         private String header;
 
-        @XmlAttribute(name = MailConstants.A_PART, required = true)
+        /**
+         * @zm-api-field-tag part-all|localpart|domain
+         * @zm-api-field-description Part of address to affect - <b>all|localpart|domain</b>
+         */
+        @XmlAttribute(name = MailConstants.A_PART /* part */, required = true)
         private String part;
 
-        @XmlAttribute(name = MailConstants.A_STRING_COMPARISON, required = true)
+        /**
+         * @zm-api-field-tag string-comparison-type
+         * @zm-api-field-description String comparison type - <b>is|contains|matches</b>
+         */
+        @XmlAttribute(name = MailConstants.A_STRING_COMPARISON /* stringComparison */, required = true)
         private String comparison;
 
-        @XmlAttribute(name = MailConstants.A_CASE_SENSITIVE, required = false)
+        /**
+         * @zm-api-field-tag case-sensitive-setting
+         * @zm-api-field-description Case sensitive setting
+         */
+        @XmlAttribute(name = MailConstants.A_CASE_SENSITIVE /* caseSensitive */, required = false)
         private ZmBoolean caseSensitive;
 
-        @XmlAttribute(name = MailConstants.A_VALUE, required = true)
+        /**
+         * @zm-api-field-tag value
+         * @zm-api-field-description Value
+         */
+        @XmlAttribute(name = MailConstants.A_VALUE /* value */, required = true)
         private String value;
 
 
@@ -157,7 +185,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class AddressBookTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_HEADER, required=true)
+        /**
+         * @zm-api-field-tag header-name
+         * @zm-api-field-description Header name
+         */
+        @XmlAttribute(name=MailConstants.A_HEADER /* header */, required=true)
         private final String header;
 
         @SuppressWarnings("unused")
@@ -186,10 +218,18 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class BodyTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_VALUE, required=false)
+        /**
+         * @zm-api-field-tag value
+         * @zm-api-field-description Value
+         */
+        @XmlAttribute(name=MailConstants.A_VALUE /* value */, required=false)
         private String value;
 
-        @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
+        /**
+         * @zm-api-field-tag case-sensitive-setting
+         * @zm-api-field-description Case sensitive setting
+         */
+        @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE /* caseSensitive */, required=false)
         private ZmBoolean caseSensitive;
 
         public Boolean getCaseSensitive() {
@@ -226,7 +266,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class ContactRankingTest extends FilterTest {
 
-        @XmlAttribute(name = MailConstants.A_HEADER, required = true)
+        /**
+         * @zm-api-field-tag header-name
+         * @zm-api-field-description Header name
+         */
+        @XmlAttribute(name = MailConstants.A_HEADER /* header */, required = true)
         private final String header;
 
         @SuppressWarnings("unused")
@@ -252,7 +296,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class ConversationTest extends FilterTest {
 
-        @XmlAttribute(name = MailConstants.A_WHERE, required = false)
+        /**
+         * @zm-api-field-tag where-setting
+         * @zm-api-field-description Where setting - <b>started|participated</b>
+         */
+        @XmlAttribute(name = MailConstants.A_WHERE /* where */, required = false)
         private String where;
 
         public String getWhere() {
@@ -272,8 +320,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class CurrentDayOfWeekTest extends FilterTest {
 
-        // Comma separated list
-        @XmlAttribute(name=MailConstants.A_VALUE, required=false)
+        /**
+         * @zm-api-field-tag comma-separated-day-of-week-indices
+         * @zm-api-field-description Comma separated day of week indices
+         */
+        @XmlAttribute(name=MailConstants.A_VALUE /* value */, required=false)
         private String values;
 
         public void setValues(String values) {
@@ -293,10 +344,18 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class CurrentTimeTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_DATE_COMPARISON, required=false)
+        /**
+         * @zm-api-field-tag date-comparison-setting
+         * @zm-api-field-description Date comparison setting - <b>before|after</b>
+         */
+        @XmlAttribute(name=MailConstants.A_DATE_COMPARISON /* dateComparison */, required=false)
         private String dateComparison;
 
-        @XmlAttribute(name=MailConstants.A_TIME, required=false)
+        /**
+         * @zm-api-field-tag time-in-HHmm-format
+         * @zm-api-field-description Time in HHmm format
+         */
+        @XmlAttribute(name=MailConstants.A_TIME /* time */, required=false)
         private String time;
 
         public void setDateComparison(String dateComparison) {
@@ -324,10 +383,18 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class DateTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_DATE_COMPARISON, required=false)
+        /**
+         * @zm-api-field-tag date-comparison
+         * @zm-api-field-description Date comparison - <b>before|after</b>
+         */
+        @XmlAttribute(name=MailConstants.A_DATE_COMPARISON /* dateComparison */, required=false)
         private String dateComparison;
 
-        @XmlAttribute(name=MailConstants.A_DATE, required=false)
+        /**
+         * @zm-api-field-tag date
+         * @zm-api-field-description Date
+         */
+        @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
         private Long date;
 
         public void setDateComparison(String dateComparison) {
@@ -359,7 +426,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class FlaggedTest extends FilterTest {
 
-        @XmlAttribute(name = MailConstants.A_FLAG_NAME, required = true)
+        /**
+         * @zm-api-field-tag flagged|read|priority
+         * @zm-api-field-description <b>flagged|read|priority</b>
+         */
+        @XmlAttribute(name = MailConstants.A_FLAG_NAME /* flagName */, required = true)
         private final String flag;
 
         @SuppressWarnings("unused")
@@ -384,7 +455,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class HeaderExistsTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_HEADER, required=true)
+        /**
+         * @zm-api-field-tag header-name
+         * @zm-api-field-description Header name
+         */
+        @XmlAttribute(name=MailConstants.A_HEADER /* header */, required=true)
         private final String header;
 
         @SuppressWarnings("unused")
@@ -411,16 +486,32 @@ public class FilterTest {
     public static final class HeaderTest extends FilterTest {
 
         // Comma separated list
-        @XmlAttribute(name=MailConstants.A_HEADER, required=false)
+        /**
+         * @zm-api-field-tag comma-sep-header-names
+         * @zm-api-field-description Comma separated list of header names
+         */
+        @XmlAttribute(name=MailConstants.A_HEADER /* header */, required=false)
         private String headers;
 
-        @XmlAttribute(name=MailConstants.A_STRING_COMPARISON, required=false)
+        /**
+         * @zm-api-field-tag string-comparison-type
+         * @zm-api-field-description String comparison type - <b>is|contains|matches</b>
+         */
+        @XmlAttribute(name=MailConstants.A_STRING_COMPARISON /* stringComparison */, required=false)
         private String stringComparison;
 
-        @XmlAttribute(name=MailConstants.A_VALUE, required=false)
+        /**
+         * @zm-api-field-tag value
+         * @zm-api-field-description Value
+         */
+        @XmlAttribute(name=MailConstants.A_VALUE /* value */, required=false)
         private String value;
 
-        @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
+        /**
+         * @zm-api-field-tag case-sensitive-setting
+         * @zm-api-field-description Case sensitive setting
+         */
+        @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE /* caseSensitive */, required=false)
         private ZmBoolean caseSensitive;
 
         public HeaderTest() {
@@ -501,7 +592,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class ImportanceTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_IMP, required=true)
+        /**
+         * @zm-api-field-tag importance-high|normal|low
+         * @zm-api-field-description Importance - <b>high|normal|low</b>
+         */
+        @XmlAttribute(name=MailConstants.A_IMP /* imp */, required=true)
         private Importance importance;
 
         /**
@@ -528,8 +623,12 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class InviteTest extends FilterTest {
 
+        /**
+         * @zm-api-field-tag methods
+         * @zm-api-field-description Methods
+         */
         @JsonSerialize(using=ContentListSerializer.class)
-        @XmlElement(name=MailConstants.E_METHOD, required=false)
+        @XmlElement(name=MailConstants.E_METHOD /* method */, required=false)
         private final List<String> methods = Lists.newArrayList();
 
         public void setMethods(Collection<String> list) {
@@ -568,7 +667,11 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class MeTest extends FilterTest {
 
-        @XmlAttribute(name = MailConstants.A_HEADER, required = true)
+        /**
+         * @zm-api-field-tag header-name
+         * @zm-api-field-description Header name
+         */
+        @XmlAttribute(name = MailConstants.A_HEADER /* header */, required = true)
         private final String header;
 
         @SuppressWarnings("unused")
@@ -594,17 +697,32 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class MimeHeaderTest extends FilterTest {
 
-        // Comma separated list
-        @XmlAttribute(name=MailConstants.A_HEADER, required=false)
+        /**
+         * @zm-api-field-tag comma-sep-header-names
+         * @zm-api-field-description Comma separated list of header names
+         */
+        @XmlAttribute(name=MailConstants.A_HEADER /* header */, required=false)
         private String headers;
 
-        @XmlAttribute(name=MailConstants.A_STRING_COMPARISON, required=false)
+        /**
+         * @zm-api-field-tag string-comparison-type
+         * @zm-api-field-description String comparison type - <b>is|contains|matches</b>
+         */
+        @XmlAttribute(name=MailConstants.A_STRING_COMPARISON /* stringComparison */, required=false)
         private String stringComparison;
 
-        @XmlAttribute(name=MailConstants.A_VALUE, required=false)
+        /**
+         * @zm-api-field-tag value
+         * @zm-api-field-description Value
+         */
+        @XmlAttribute(name=MailConstants.A_VALUE /* value */, required=false)
         private String value;
 
-        @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
+        /**
+         * @zm-api-field-tag case-sensitive-setting
+         * @zm-api-field-description Case sensitive setting
+         */
+        @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE /* caseSensitive */, required=false)
         private ZmBoolean caseSensitive;
 
         public String getHeaders() {
@@ -657,10 +775,19 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class SizeTest extends FilterTest {
 
-        @XmlAttribute(name=MailConstants.A_NUMBER_COMPARISON, required=false)
+        /**
+         * @zm-api-field-tag number-comparison-setting
+         * @zm-api-field-description Number comparison setting - <b>over|under</b>
+         */
+        @XmlAttribute(name=MailConstants.A_NUMBER_COMPARISON /* numberComparison */, required=false)
         private String numberComparison;
 
-        @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+        /**
+         * @zm-api-field-tag size
+         * @zm-api-field-description size value.  Value can be specified in bytes (no suffix), kilobytes (50K),
+         * megabytes (50M) or gigabytes (2G)
+         */
+        @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
         private String size;
 
         public void setNumberComparison(String numberComparison) {

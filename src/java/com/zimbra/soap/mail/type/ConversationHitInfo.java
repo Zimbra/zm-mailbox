@@ -26,20 +26,25 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class ConversationHitInfo
 extends ConversationSummary
 implements SearchHit {
 
+    /**
+     * @zm-api-field-tag sort-field
+     * @zm-api-field-description Sort field value
+     */
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
+    /**
+     * @zm-api-field-description Hits
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private List<ConversationMsgHitInfo> messageHits = Lists.newArrayList();
 
@@ -59,8 +64,7 @@ implements SearchHit {
         }
     }
 
-    public ConversationHitInfo addMessageHit(
-                        ConversationMsgHitInfo messageHit) {
+    public ConversationHitInfo addMessageHit(ConversationMsgHitInfo messageHit) {
         this.messageHits.add(messageHit);
         return this;
     }
@@ -70,8 +74,7 @@ implements SearchHit {
         return Collections.unmodifiableList(messageHits);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("sortField", sortField)
@@ -80,7 +83,6 @@ implements SearchHit {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

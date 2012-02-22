@@ -93,79 +93,186 @@ public class Folder {
         }
     };
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
 
+    /**
+     * @zm-api-field-tag uuid
+     * @zm-api-field-description Item's UUID - a globally unique identifier
+     */
     @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=true)
     private String uuid;
 
+    /**
+     * @zm-api-field-tag folder-name
+     * @zm-api-field-description Name of folder; max length 128; whitespace is trimmed by server;
+     * Cannot contain ':', '"', '/', or any character below 0x20
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag parent-id
+     * @zm-api-field-description ID of parent folder (absent for root folder)
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String parentId;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags - checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*),
+     * does not (i)nherit rights from parent, is a s(y)nc folder with external data source,
+     * sync is turned on(~), folder does n(o)t allow inferiors / children
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+     */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Integer color;
 
+    /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
     private String rgb;
 
+    /**
+     * @zm-api-field-tag unread-count
+     * @zm-api-field-description Number of unread messages in folder
+     */
     @XmlAttribute(name=MailConstants.A_UNREAD /* u */, required=false)
     private Integer unreadCount;
 
+    /**
+     * @zm-api-field-tag imap-unread
+     * @zm-api-field-description Number of unread messages with this tag, <b>including</b> those with the
+     * <b>IMAP \Deleted</b> flag set
+     */
     @XmlAttribute(name=MailConstants.A_IMAP_UNREAD /* i4u */, required=false)
     private Integer imapUnreadCount;
 
+    /**
+     * @zm-api-field-tag default-type
+     * @zm-api-field-description (optional) Default type for the folder; used by web client to decide which view to use;
+     * <br />
+     * possible values are the same as <b>&lt;SearchRequest></b>'s {types}: <b>conversation|message|contact|etc</b>
+     */
     @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
     private View view = View.UNKNOWN;
 
+    /**
+     * @zm-api-field-tag revision
+     * @zm-api-field-description Revision
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
+    /**
+     * @zm-api-field-tag modified-sequence
+     * @zm-api-field-description Modified sequence
+     */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
+    /**
+     * @zm-api-field-tag change-date
+     * @zm-api-field-description Modified date in seconds
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
+    /**
+     * @zm-api-field-tag msg-count
+     * @zm-api-field-description Number of non-subfolder items in folder
+     */
     @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer itemCount;
 
+    /**
+     * @zm-api-field-tag imap-count
+     * @zm-api-field-description Number of non-subfolder items in folder, <b>including</b> those with the
+     * <b>IMAP \Deleted</b> flag set
+     */
     @XmlAttribute(name=MailConstants.A_IMAP_NUM /* i4n */, required=false)
     private Integer imapItemCount;
 
+    /**
+     * @zm-api-field-tag total-size
+     * @zm-api-field-description Total size of all of non-subfolder items in folder
+     */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long totalSize;
 
+    /**
+     * @zm-api-field-tag imap-modified-seq
+     * @zm-api-field-description Imap modified sequence
+     */
     @XmlAttribute(name=MailConstants.A_IMAP_MODSEQ /* i4ms */, required=false)
     private Integer imapModifiedSequence;
 
+    /**
+     * @zm-api-field-tag imap-uidnext
+     * @zm-api-field-description IMAP UIDNEXT
+     */
     @XmlAttribute(name=MailConstants.A_IMAP_UIDNEXT /* i4next */, required=false)
     private Integer imapUidNext;
 
+    /**
+     * @zm-api-field-tag remote-url
+     * @zm-api-field-description URL (RSS, iCal, etc.) this folder syncs its contents to
+     */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
+    /**
+     * @zm-api-field-tag effective-perms
+     * @zm-api-field-description Foor remote folders, the access rights the authenticated user has on the folder -
+     * will contain the calculated (c)reate folder permission if the user has both (i)nsert and (r)ead access on the
+     * folder
+     */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=false)
     private String perm;
 
+    /**
+     * @zm-api-field-tag recursive
+     * @zm-api-field-description Recursive
+     */
     @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
     private ZmBoolean recursive;
 
+    /**
+     * @zm-api-field-tag rest-url
+     * @zm-api-field-description URL to the folder in the REST interface for rest-enabled apps (such as notebook)
+     */
     @XmlAttribute(name=MailConstants.A_REST_URL /* rest */, required=false)
     private String restUrl;
 
+    /**
+     * @zm-api-field-tag metadata
+     * @zm-api-field-description Custom metadata
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Grants
+     */
     @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private List<Grant> grants = new ArrayList<Grant>();
 
+    /**
+     * @zm-api-field-description Subfolders
+     */
     @XmlElements({
         @XmlElement(name="folder", type=Folder.class),
         @XmlElement(name="link", type=Mountpoint.class),
@@ -173,6 +280,9 @@ public class Folder {
     })
     private List<Folder> subfolders = new ArrayList<Folder>();
 
+    /**
+     * @zm-api-field-description Retention policy
+     */
     @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
     private RetentionPolicy retentionPolicy;
 

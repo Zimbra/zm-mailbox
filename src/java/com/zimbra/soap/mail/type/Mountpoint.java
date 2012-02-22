@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,24 +31,39 @@ import com.zimbra.soap.type.ZmBoolean;
 public class Mountpoint
 extends Folder {
 
-    // MailConstants.A_OWNER_NAME == "owner"
-    @XmlAttribute(name=MailConstants.A_OWNER_NAME, required=false)
+    /**
+     * @zm-api-field-tag owner-email-addr
+     * @zm-api-field-description Primary email address of the owner of the linked-to resource
+     */
+    @XmlAttribute(name=MailConstants.A_OWNER_NAME /* owner */, required=false)
     private String ownerEmail;
 
-    // MailConstants.A_ZIMBRA_ID == "zid"
-    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID, required=false)
+    /**
+     * @zm-api-field-tag owner-zimbra-id
+     * @zm-api-field-description Zimbra ID (guid) of the owner of the linked-to resource
+     */
+    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String ownerAccountId;
 
-    // MailConstants.A_REMOTE_ID == "rid"
-    @XmlAttribute(name=MailConstants.A_REMOTE_ID, required=false)
+    /**
+     * @zm-api-field-tag id-of-shared-item
+     * @zm-api-field-description Item ID of the linked-to resource in the remote mailbox
+     */
+    @XmlAttribute(name=MailConstants.A_REMOTE_ID /* rid */, required=false)
     private int remoteFolderId;
 
-    // MailConstants.A_OWNER_FOLDER_NAME == "oname"
-    @XmlAttribute(name=MailConstants.A_OWNER_FOLDER_NAME, required=false)
+    /**
+     * @zm-api-field-tag owner-name-for-item
+     * @zm-api-field-description The name presently used for the item by the owner
+     */
+    @XmlAttribute(name=MailConstants.A_OWNER_FOLDER_NAME /* oname */, required=false)
     private String remoteFolderName;
 
-    // MailConstants.A_REMINDER == "reminder"
-    @XmlAttribute(name=MailConstants.A_REMINDER, required=false)
+    /**
+     * @zm-api-field-tag display-reminders
+     * @zm-api-field-description If set, client should display reminders for shared appointments/tasks
+     */
+    @XmlAttribute(name=MailConstants.A_REMINDER /* reminder */, required=false)
     private ZmBoolean reminderEnabled;
 
     public Mountpoint() {

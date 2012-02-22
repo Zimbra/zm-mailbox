@@ -20,6 +20,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class TaskHitInfo extends CalendarItemHitInfo {
 }

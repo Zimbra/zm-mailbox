@@ -34,12 +34,37 @@ import com.zimbra.soap.base.ContactInterface;
 public class ContactGroupMember
 implements ContactGroupMemberInterface {
 
+    /**
+     * @zm-api-field-tag member-type
+     * @zm-api-field-description Member type
+     * <table>
+     * <tr> <td> <b>C</b> </td> <td> reference to another contact </td> </tr>
+     * <tr> <td> <b>G</b> </td> <td> reference to a GAL entry </td> </tr>
+     * <tr> <td> <b>I</b> </td>
+     *      <td> inlined member (member name and email address is embeded in the contact group)</td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_TYPE /* type */, required=true)
     private String type;
 
+    /**
+     * @zm-api-field-tag member-value
+     * @zm-api-field-description Member value
+     * <table>
+     * <tr> <td> <b>type="C"</b> </td> 
+     *      <td> Item ID of another contact.  If the referenced contact is in a shared folder, the item ID must be
+     *           qualified by zimbraId of the owner.  e.g. {zimbraId}:{itemId} </td> </tr>
+     * <tr> <td> <b>type="G"</b> </td> <td> GAL entry reference (returned in SearchGalResponse) </td> </tr>
+     * <tr> <td> <b>type="I"</b> </td>
+     *      <td> name and email address in the form of: <b>"{name}" &lt;{email}></b> </td> </tr>
+     * </table>
+     */
     @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_VALUE /* value */, required=true)
     private String value;
 
+    /**
+     * @zm-api-field-description Contact information for dereferenced member.
+     */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private ContactInfo contact;
 
@@ -91,8 +116,7 @@ implements ContactGroupMemberInterface {
         return newList;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("type", type)
             .add("value", value)
@@ -101,7 +125,6 @@ implements ContactGroupMemberInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

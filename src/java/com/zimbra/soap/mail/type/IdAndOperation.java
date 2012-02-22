@@ -25,9 +25,17 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class IdAndOperation {
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
+    /**
+     * @zm-api-field-tag operation
+     * @zm-api-field-description Operation
+     */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
     private final String operation;
 
@@ -47,8 +55,7 @@ public class IdAndOperation {
     public String getId() { return id; }
     public String getOperation() { return operation; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("operation", operation);
@@ -56,7 +63,6 @@ public class IdAndOperation {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

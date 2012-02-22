@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,25 +32,31 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"attachments", "extraElements"})
 public class AttachmentsInfo {
 
-    @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID, required=false)
+    /**
+     * @zm-api-field-tag attach-upload-id
+     * @zm-api-field-description Attachment upload ID
+     */
+    @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachmentId;
 
+    /**
+     * @zm-api-field-description Attachment details
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_MIMEPART,
-            type=MimePartAttachSpec.class),
-        @XmlElement(name=MailConstants.E_MSG,
-            type=MsgAttachSpec.class),
-        @XmlElement(name=MailConstants.E_CONTACT,
-            type=ContactAttachSpec.class),
-        @XmlElement(name=MailConstants.E_DOC,
-            type=DocAttachSpec.class)
+        @XmlElement(name=MailConstants.E_MIMEPART /* mp */, type=MimePartAttachSpec.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MsgAttachSpec.class),
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=ContactAttachSpec.class),
+        @XmlElement(name=MailConstants.E_DOC /* doc */, type=DocAttachSpec.class)
     })
     private List<AttachSpec> attachments = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Other elements
+     */
     @XmlAnyElement
     private List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
@@ -92,8 +98,7 @@ public class AttachmentsInfo {
         return Collections.unmodifiableList(extraElements);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("attachmentId", attachmentId)
             .add("attachments", attachments)
@@ -102,7 +107,6 @@ public class AttachmentsInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

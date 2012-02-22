@@ -22,12 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class NameId {
 
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
     @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
     private final String name;
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final String id;
 
@@ -47,8 +55,7 @@ public class NameId {
     public String getName() { return name; }
     public String getId() { return id; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("id", id);
@@ -56,7 +63,6 @@ public class NameId {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

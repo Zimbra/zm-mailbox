@@ -19,14 +19,15 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class CalEcho {
 
+    /**
+     * @zm-api-field-description Invite
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private InviteAsMP invite;
 
@@ -36,15 +37,13 @@ public class CalEcho {
     public void setInvite(InviteAsMP invite) { this.invite = invite; }
     public InviteAsMP getInvite() { return invite; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("invite", invite);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

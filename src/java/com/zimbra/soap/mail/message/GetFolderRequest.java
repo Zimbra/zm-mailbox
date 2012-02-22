@@ -32,9 +32,12 @@ import com.zimbra.soap.type.ZmBoolean;
 /**
  * @zm-api-command-description Get Folder
  * <br />
- * Either a {base-folder-id} or a {fully-qualified-path} can optionally be specified; if neither is present, the
- * descent of the folder hierarchy begins at the mailbox's root folder (id 1).
- * If both are present, the path is treated as relative to the folder that was specified by id
+ * A {base-folder-id}, a {base-folder-uuid} or a {fully-qualified-path} can optionally be specified in the folder
+ * element; if none is present, the descent of the folder hierarchy begins at the mailbox's root folder (id 1).
+ * <br />
+ * If {fully-qualified-path} is present and {base-folder-id} or {base-folder-uuid} is also present, the path is
+ * treated as relative to the folder that was specified by id/uuid.  {base-folder-id} is ignored if {base-folder-uuid}
+ * is present.
  */
 @XmlRootElement(name=MailConstants.E_GET_FOLDER_REQUEST)
 public class GetFolderRequest {

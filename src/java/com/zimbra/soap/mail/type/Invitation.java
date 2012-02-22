@@ -31,42 +31,66 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+// see mail.ToXML.encodeInvite
+
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "timezones", "inviteComponent", "contentElems" })
 public class Invitation {
 
-    // Valid values - "appt" and "task"
+    /**
+     * @zm-api-field-tag type-appt|task
+     * @zm-api-field-description Calendar item type - <b>appt|task</b>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
     private final String calItemType;
 
+    /**
+     * @zm-api-field-tag sequence-number
+     * @zm-api-field-description Sequence number
+     */
     @XmlAttribute(name=MailConstants.A_CAL_SEQUENCE /* seq */, required=true)
     private final Integer sequence;
 
+    /**
+     * @zm-api-field-tag invite-original-mail-item-id
+     * @zm-api-field-description Original mail item ID for invite
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final Integer id;
 
-    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */,
-                                            required=true)
+    /**
+     * @zm-api-field-tag component-number
+     * @zm-api-field-description Component number
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */, required=true)
     private final Integer componentNum;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID /* recurId */,
-                                            required=false)
+    /**
+     * @zm-api-field-tag YYMMDD[THHMMSS[Z]]
+     * @zm-api-field-description Recurrence ID in format : YYMMDD[THHMMSS[Z]]
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID /* recurId */, required=false)
     private String recurrenceId;
 
+    /**
+     * @zm-api-field-description Timezones
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */,
-                                            required=false)
+    /**
+     * @zm-api-field-description Invite component
+     */
+    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
     private InviteComponent inviteComponent;
 
+    /**
+     * @zm-api-field-description Mime parts, share notifications and distribution list subscription notifications
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_MIMEPART /* mp */,
-            type=PartInfo.class),
-        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */,
-            type=ShareNotification.class),
-        @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */,
-            type=DLSubscriptionNotification.class)    
+        @XmlElement(name=MailConstants.E_MIMEPART /* mp */, type=PartInfo.class),
+        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */, type=ShareNotification.class),
+        @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */, type=DLSubscriptionNotification.class)
     })
     private List<Object> contentElems = Lists.newArrayList();
 
@@ -78,8 +102,7 @@ public class Invitation {
         this((String) null, (Integer) null, (Integer) null, (Integer) null);
     }
 
-    public Invitation(String calItemType, Integer sequence, Integer id,
-                        Integer componentNum) {
+    public Invitation(String calItemType, Integer sequence, Integer id, Integer componentNum) {
         this.calItemType = calItemType;
         this.sequence = sequence;
         this.id = id;
@@ -129,8 +152,7 @@ public class Invitation {
         return Collections.unmodifiableList(contentElems);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("calItemType", calItemType)
             .add("sequence", sequence)
@@ -144,7 +166,6 @@ public class Invitation {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

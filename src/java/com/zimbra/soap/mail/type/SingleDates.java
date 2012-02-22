@@ -35,9 +35,16 @@ import com.zimbra.soap.base.SingleDatesInterface;
 public class SingleDates
 implements RecurRuleBase, SingleDatesInterface {
 
+    /**
+     * @zm-api-field-tag TZID
+     * @zm-api-field-description TZID
+     */
     @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
+    /**
+     * @zm-api-field-description Information on start date/time and end date/time or duration
+     */
     @XmlElement(name=MailConstants.E_CAL_DATE_VAL /* dtval */, required=false)
     private List<DtVal> dtVals = Lists.newArrayList();
 

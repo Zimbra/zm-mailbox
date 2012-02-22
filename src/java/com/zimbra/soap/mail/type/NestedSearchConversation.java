@@ -39,26 +39,54 @@ import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 @XmlType(propOrder = {"messages", "queryInfos"})
 public class NestedSearchConversation {
 
+    /**
+     * @zm-api-field-tag conv-id
+     * @zm-api-field-description Conversation ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag num-msgs
+     * @zm-api-field-description Number of messages in conversation without IMAP <b>\Deleted</b> flag set
+     */
     @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer num;
 
+    /**
+     * @zm-api-field-tag all-msgs
+     * @zm-api-field-description Total number of messages in conversation
+     */
     @XmlAttribute(name=MailConstants.A_TOTAL_SIZE /* total */, required=false)
     private Integer totalSize;
 
+    /**
+     * @zm-api-field-tag conversation-flags
+     * @zm-api-field-description Same flags as on <b>&lt;m></b> ("sarwfdxnu!?"), aggregated from all the
+     * conversation's messages
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag tags
+     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma-separated list of tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
     // Assumed that the only type of hit is a Message hit
+    /**
+     * @zm-api-field-description Message hits
+     */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private List<MessageHitInfo> messages = Lists.newArrayList();
 
@@ -122,8 +150,7 @@ public class NestedSearchConversation {
         return Collections.unmodifiableList(queryInfos);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("num", num)
@@ -137,7 +164,6 @@ public class NestedSearchConversation {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

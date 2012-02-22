@@ -27,6 +27,10 @@ import com.zimbra.soap.base.DateTimeStringAttrInterface;
 public class DateTimeStringAttr
 implements DateTimeStringAttrInterface {
 
+    /**
+     * @zm-api-field-tag YYYYMMDD[ThhmmssZ]
+     * @zm-api-field-description Date in format : YYYYMMDD[ThhmmssZ]
+     */
     @XmlAttribute(name=MailConstants.A_CAL_DATETIME, required=true)
     private final String dateTime;
 

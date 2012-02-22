@@ -30,32 +30,59 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"content", "inviteComponent", "timezones",
-                        "mimeParts", "attachments"})
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(propOrder = {"content", "inviteComponent", "timezones", "mimeParts", "attachments"})
 public class InvitationInfo extends InviteComponent {
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag content-type
+     * @zm-api-field-description MIME Content-Type
+     */
     @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
+    /**
+     * @zm-api-field-tag content-id
+     * @zm-api-field-description MIME Content-Id
+     */
     @XmlAttribute(name=MailConstants.A_CONTENT_ID /* ci */, required=false)
     private String contentId;
 
+    /**
+     * @zm-api-field-tag raw-rfc822-msg
+     * @zm-api-field-description RAW RFC822 MESSAGE (XML-encoded) <b>MUST CONTAIN A text/calendar PART</b>
+     */
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private RawInvite content;
 
+    /**
+     * @zm-api-field-description Invite component
+     */
     @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
     private InviteComponent inviteComponent;
 
+    /**
+     * @zm-api-field-description Timezones
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Meeting notes parts
+     */
     @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
     private List<MimePartInfo> mimeParts = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Attachments
+     */
     @XmlElement(name=MailConstants.E_ATTACH /* attach */, required=false)
     private AttachmentsInfo attachments;
 
@@ -116,8 +143,7 @@ public class InvitationInfo extends InviteComponent {
     }
     public AttachmentsInfo getAttachments() { return attachments; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
@@ -132,7 +158,6 @@ public class InvitationInfo extends InviteComponent {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -26,6 +26,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.zimbra.soap.mail.message.SendMsgRequest;
 import com.zimbra.soap.mail.type.Msg;
+import com.zimbra.soap.mail.type.MsgToSend;
 
 /**
  * Unit test for {@link SendMsgRequest}.
@@ -45,7 +46,7 @@ public final class SendMsgRequestTest {
     @Test
     public void marshal() throws Exception {
         SendMsgRequest req = new SendMsgRequest();
-        Msg msg = new Msg();
+        MsgToSend msg = new MsgToSend();
         msg.setHeaders(ImmutableList.of(
                 new Msg.Header("name1", "value1"),
                 new Msg.Header("name2", "value2")));

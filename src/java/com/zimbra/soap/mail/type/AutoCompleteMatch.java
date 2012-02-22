@@ -23,30 +23,63 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class AutoCompleteMatch {
 
+    /**
+     * @zm-api-field-tag email-addresses-for-group
+     * @zm-api-field-description Comma-separated email addresses in case of group
+     */
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
     private String email;
 
+    /**
+     * @zm-api-field-tag match-type-gal|contact|rankingTable
+     * @zm-api-field-description Match type - <b>gal|contact|rankingTable</b>
+     */
     @XmlAttribute(name=MailConstants.A_MATCH_TYPE /* type */, required=false)
     private String matchType;
 
+    /**
+     * @zm-api-field-tag ranking
+     * @zm-api-field-description Ranking
+     */
     @XmlAttribute(name=MailConstants.A_RANKING /* ranking */, required=false)
     private Integer ranking;
 
+    /**
+     * @zm-api-field-tag is-group
+     * @zm-api-field-description Set if the entry is a group
+     */
     @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
     private ZmBoolean group;
 
+    /**
+     * @zm-api-field-tag can-expand-group-members
+     * @zm-api-field-description Set if the user has the right to expand group members.  Returned only if
+     * needExp is set in the request and only on group entries (isGroup is set).
+     */
     @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
     private ZmBoolean canExpandGroupMembers;
 
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private Integer folder;
 
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description String that should be displayed by the client
+     */
     @XmlAttribute(name=MailConstants.A_DISPLAYNAME /* display */, required=false)
     private String displayName;
 
@@ -74,8 +107,7 @@ public class AutoCompleteMatch {
     public Integer getFolder() { return folder; }
     public String getDisplayName() { return displayName; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("email", email)
             .add("matchType", matchType)
@@ -89,7 +121,6 @@ public class AutoCompleteMatch {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

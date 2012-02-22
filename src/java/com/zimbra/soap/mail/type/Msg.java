@@ -37,57 +37,120 @@ import com.zimbra.common.soap.MailConstants;
            "emailAddresses", "timezones", "fragment", "extraElements"})
 public class Msg {
 
+    /**
+     * @zm-api-field-tag uploaded-MIME-body-ID
+     * @zm-api-field-description Uploaded MIME body ID
+     */
     @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachmentId;
 
+    /**
+     * @zm-api-field-tag orig-id
+     * @zm-api-field-description Original ID
+     */
     @XmlAttribute(name=MailConstants.A_ORIG_ID /* origid */, required=false)
     private String origId;
 
+    /**
+     * @zm-api-field-tag reply-type-r|w
+     * @zm-api-field-description Reply type - <b>r|w</b>.  (r)eplied or for(w)arded.
+     */
     @XmlAttribute(name=MailConstants.A_REPLY_TYPE /* rt */, required=false)
     private String replyType;
 
+    /**
+     * @zm-api-field-tag identity-id
+     * @zm-api-field-description Identity ID.  The identity referenced by <b>{identity-id}</b> specifies the folder
+     * where the sent message is saved.
+     */
     @XmlAttribute(name=MailConstants.A_IDENTITY_ID /* idnt */, required=false)
     private String identityId;
 
+    /**
+     * @zm-api-field-tag subject
+     * @zm-api-field-description Subject
+     */
     @XmlAttribute(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
+    /**
+     * @zm-api-field-description Headers
+     */
     @XmlElement(name=MailConstants.E_HEADER /* header */, required=false)
     private List<Header> headers;
 
+    /**
+     * @zm-api-field-tag in-reply-to-message-id-hdr
+     * @zm-api-field-description Message-ID header for message being replied to
+     */
     @XmlAttribute(name=MailConstants.E_IN_REPLY_TO /* irt */, required=false)
     private String inReplyTo;
 
+    /**
+     * @zm-api-field-tag folder-id
+     * @zm-api-field-description Folder ID
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-tag content
+     * @zm-api-field-description Content
+     */
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private String content;
 
+    /**
+     * @zm-api-field-description Mime part information
+     */
     @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
     private MimePartInfo mimePart;
 
+    /**
+     * @zm-api-field-description Attachments information
+     */
     @XmlElement(name=MailConstants.E_ATTACH /* attach */, required=false)
     private AttachmentsInfo attachments;
 
+    /**
+     * @zm-api-field-description Invite information
+     */
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private InvitationInfo invite;
 
+    /**
+     * @zm-api-field-description Email address information
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
-    // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.  CalendarUtils.parseInviteElementCommon looks for timezones in parent element
+    // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.
+    // CalendarUtils.parseInviteElementCommon looks for timezones in parent element
+    /**
+     * @zm-api-field-description Timezones
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_FRAG but does nothing with it.
+    /**
+     * @zm-api-field-tag fragment
+     * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
+     */
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
     // ParseMimeMessage.parseMimeMsgSoap loops over all children.
+    /**
+     * @zm-api-field-description Other elements
+     */
     @XmlAnyElement
     private List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
@@ -197,9 +260,17 @@ public class Msg {
     }
 
     public static final class Header {
+        /**
+         * @zm-api-field-tag header-name
+         * @zm-api-field-description Header name
+         */
         @XmlAttribute(name=MailConstants.A_NAME)
         private String name;
 
+        /**
+         * @zm-api-field-tag header-value
+         * @zm-api-field-description Header value
+         */
         @XmlValue
         private String value;
 

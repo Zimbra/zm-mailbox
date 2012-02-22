@@ -31,24 +31,33 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"timezones", "inviteComponents", "calendarReplies"})
 public class InviteWithGroupInfo {
 
-    // Valid values - "appt" and "task"
+    /**
+     * @zm-api-field-tag appt-or-task
+     * @zm-api-field-description Invite type - <b>appt|task</b>
+     */
     @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
     private final String calItemType;
 
+    /**
+     * @zm-api-field-description Timezones
+     */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */,
-                    required=false)
-    private List<InviteComponentWithGroupInfo> inviteComponents =
-                    Lists.newArrayList();
+    /**
+     * @zm-api-field-description Invite components
+     */
+    @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, required=false)
+    private List<InviteComponentWithGroupInfo> inviteComponents = Lists.newArrayList();
 
-    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */,
-            required=false)
+    /**
+     * @zm-api-field-description Replies
+     */
+    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();
 
@@ -110,8 +119,7 @@ public class InviteWithGroupInfo {
         return Collections.unmodifiableList(calendarReplies);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("calItemType", calItemType)
             .add("timezones", timezones)
@@ -121,7 +129,6 @@ public class InviteWithGroupInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

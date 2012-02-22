@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
- * 
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,28 +22,56 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class NewSearchFolderSpec {
 
-    @XmlAttribute(name=MailConstants.A_NAME, required=true)
+    /**
+     * @zm-api-field-tag name
+     * @zm-api-field-description Name
+     */
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     private final String name;
 
-    @XmlAttribute(name=MailConstants.A_QUERY, required=true)
+    /**
+     * @zm-api-field-tag query
+     * @zm-api-field-description query
+     */
+    @XmlAttribute(name=MailConstants.A_QUERY /* query */, required=true)
     private final String query;
 
-    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES, required=false)
+    /**
+     * @zm-api-field-tag search-types
+     * @zm-api-field-description Search types
+     */
+    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
     private String searchTypes;
 
-    @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Sort by
+     */
+    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_COLOR, required=false)
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+     */
+    @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Byte color;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    /**
+     * @zm-api-field-tag parent-folder-id
+     * @zm-api-field-description Parent folder ID
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String parentFolderId;
 
     /**
@@ -59,15 +87,11 @@ public class NewSearchFolderSpec {
         this.query = query;
     }
 
-    public void setSearchTypes(String searchTypes) {
-        this.searchTypes = searchTypes;
-    }
+    public void setSearchTypes(String searchTypes) { this.searchTypes = searchTypes; }
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setFlags(String flags) { this.flags = flags; }
     public void setColor(Byte color) { this.color = color; }
-    public void setParentFolderId(String parentFolderId) {
-        this.parentFolderId = parentFolderId;
-    }
+    public void setParentFolderId(String parentFolderId) { this.parentFolderId = parentFolderId; }
     public String getName() { return name; }
     public String getQuery() { return query; }
     public String getSearchTypes() { return searchTypes; }
@@ -76,16 +100,19 @@ public class NewSearchFolderSpec {
     public Byte getColor() { return color; }
     public String getParentFolderId() { return parentFolderId; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
             .add("name", name)
             .add("query", query)
             .add("searchTypes", searchTypes)
             .add("sortBy", sortBy)
             .add("flags", flags)
             .add("color", color)
-            .add("parentFolderId", parentFolderId)
-            .toString();
+            .add("parentFolderId", parentFolderId);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

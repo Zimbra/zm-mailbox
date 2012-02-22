@@ -32,42 +32,74 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.KeyValuePair;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"id", "part", "sentDate", "emails", "subject",
-                "messageIdHeader", "invite", "headers", "contentElems"})
+// See mail.ToXML.encodeInviteAsMP
+
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(propOrder = {"emails", "subject", "messageIdHeader", "invite", "headers", "contentElems"})
 public class InviteAsMP extends MessageCommon {
 
+    /**
+     * @zm-api-field-tag sub-part-id
+     * @zm-api-field-description Sub-part ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description If non-null, this message/rfc822 subpart of the specified Message is serialized
+     * instead of the Message itself.
+     * 
+     */
     @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
 
+    /**
+     * @zm-api-field-tag sent-date
+     * @zm-api-field-description Sent date
+     */
     @XmlAttribute(name=MailConstants.A_SENT_DATE /* sd */, required=false)
     private Long sentDate;
 
+    /**
+     * @zm-api-field-description Email addresses
+     */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailInfo> emails = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag subject
+     * @zm-api-field-description Subject
+     */
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
+    /**
+     * @zm-api-field-tag msg-id-header
+     * @zm-api-field-description Message ID header
+     */
     @XmlElement(name=MailConstants.E_MSG_ID_HDR /* mid */, required=false)
     private String messageIdHeader;
 
+    /**
+     * @zm-api-field-description Invite
+     */
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private MPInviteInfo invite;
 
+    /**
+     * @zm-api-field-description Headers
+     */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
     private List<KeyValuePair> headers = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Mime parts, share notifications and distribution list subscription notifications
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_MIMEPART /* mp */,
-            type=PartInfo.class),
-        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */,
-            type=ShareNotification.class),
-        @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */,
-            type=DLSubscriptionNotification.class)              
+        @XmlElement(name=MailConstants.E_MIMEPART /* mp */, type=PartInfo.class),
+        @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */, type=ShareNotification.class),
+        @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */, type=DLSubscriptionNotification.class)
     })
     private List<Object> contentElems = Lists.newArrayList();
 
@@ -131,8 +163,7 @@ public class InviteAsMP extends MessageCommon {
         return Collections.unmodifiableList(contentElems);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
@@ -148,7 +179,6 @@ public class InviteAsMP extends MessageCommon {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
