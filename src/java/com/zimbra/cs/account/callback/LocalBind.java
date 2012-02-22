@@ -86,19 +86,13 @@ public class LocalBind extends AttributeCallback {
                 attrName.equals(Provisioning.A_zimbraMailBindAddress) ||
                 attrName.equals(Provisioning.A_zimbraMailSSLBindAddress)) {
             for (Server server : serverList) {
-                MailMode mailMode = server.getMailMode();
                 try {
+                    MailMode mailMode = server.getMailMode();
                     if (mailMode == null)
                         mailMode = Provisioning.getInstance().getConfig().getMailMode();
-                    
-                    if (mailMode == null) {
-                        server.setMailLocalBind(false);
-                        continue;
-                    }
-
-                    if (!mailMode.isHttps()) {
+                    if (mailMode == null || !mailMode.isHttps()) {
                         // http is enabled. Check if bindaddress conflicts with localhost.
-                        String address = server.getAttr(Provisioning.A_zimbraMailAddress, true);
+                        String address = server.getAttr(Provisioning.A_zimbraMailBindAddress, true);
                         if ((address == null) || (address.isEmpty())) {
                             server.setMailLocalBind(false);
                         } else {
@@ -119,6 +113,7 @@ public class LocalBind extends AttributeCallback {
                         server.setMailLocalBind(true);
                     }
                 } catch (ServiceException e) {
+                    ZimbraLog.misc.warn("Unable to set zimbraMailLocalBind " + e);
                     continue;
                 }
             }
