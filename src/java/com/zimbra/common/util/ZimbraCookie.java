@@ -58,15 +58,7 @@ public class ZimbraCookie {
     
     private static void addCookie(HttpServletResponse response, String name, String value, 
             String path, Integer maxAge, boolean httpOnly, boolean secure) {
-        Cookie cookie;
-        
-        if (httpOnly) {
-            // httpOnly code will be activated after bug 64052 is fixed
-            // see jetty-7.5 code below
-            cookie = new Cookie(name, value);
-        } else {
-            cookie = new Cookie(name, value);
-        }
+        Cookie cookie = new Cookie(name, value);
 
         if (maxAge != null) {
             cookie.setMaxAge(maxAge.intValue());
@@ -74,38 +66,21 @@ public class ZimbraCookie {
         ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
 
         cookie.setSecure(secure);
-        // httpOnly code will be activated after bug 64052 is fixed
-        // jetty 7.6 https://bugs.eclipse.org/bugs/show_bug.cgi?id=364657
-        /*
+        
         if (httpOnly) {
+            /*
+             * jetty specific workaround before Servlet-3.0 is supported in jetty.
+             * see https://bugzilla.zimbra.com/show_bug.cgi?id=67078#c2
+             * 
+             * When we upgrade to jetty-8 and Servlet-3.0 is supporte in jettyd, 
+             * change the following line to:
+             * cookie.setHttpOnly(boolean isHttpOnly)
+             */
+            // jetty 7.6 https://bugs.eclipse.org/bugs/show_bug.cgi?id=364657
             cookie.setComment("__HTTP_ONLY__");
         }
-        */
+
         response.addCookie(cookie);
     }
-    
-    // httpOnly code will be activated after bug 64052 is fixed
-    /*
-     * jetty 7.5
-     *  
-    org.eclipse.jetty.http.HttpCookie cookie = 
-        new org.eclipse.jetty.http.HttpCookie(
-            ck.getKey(),                             // name
-            ck.getValue(),                           // value
-            null,                                    // domain
-            ZimbraCookie.PATH_ROOT,                  // path
-            maxAge == null ? -1 : maxAge.intValue(), // maxAge
-            true,                                    // httpOnly
-            secure                                   // secure
-            );
-    
-    if (response instanceof javax.servlet.ServletResponseWrapper) {
-        javax.servlet.ServletResponse servletResp = ((javax.servlet.ServletResponseWrapper) response).getResponse();
-        if (servletResp instanceof org.eclipse.jetty.server.Response) {
-            org.eclipse.jetty.server.Response resp = (org.eclipse.jetty.server.Response) servletResp;
-            resp.addCookie(authTokenCookie);
-        }
-    }
-    */
 
 }
