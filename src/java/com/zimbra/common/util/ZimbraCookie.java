@@ -63,8 +63,8 @@ public class ZimbraCookie {
         Cookie cookie;
         
         if (httpOnly) {
-            // httpOnly code will be activated after bug 64052 is fixed
-            cookie = new Cookie(name, value);  // new HttpOnlyCookie(name, value); 
+            // jetty-6 only: jetty specific HttpOnlyCookie class that extends Cookie.
+            cookie = new HttpOnlyCookie(name, value); 
         } else {
             cookie = new Cookie(name, value);
         }
