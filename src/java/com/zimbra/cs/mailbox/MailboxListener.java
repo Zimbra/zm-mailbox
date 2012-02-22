@@ -27,7 +27,7 @@ import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.acl.AclPushListener;
-import com.zimbra.cs.mailbox.acl.AclPushTask;
+import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.ZimbraApplication;
@@ -91,8 +91,11 @@ public abstract class MailboxListener {
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
         register(new ShareStartStopListener());
-        if (application.supports(AclPushTask.class)) {
+        if (application.supports(AclPushListener.class)) {
             register(new AclPushListener());
+        }
+        if (application.supports(ShareExpirationListener.class) && !DebugConfig.disableShareExpirationListener) {
+            register(new ShareExpirationListener());
         }
     }
 

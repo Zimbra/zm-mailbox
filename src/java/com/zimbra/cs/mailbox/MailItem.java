@@ -68,7 +68,7 @@ import com.zimbra.cs.volume.Volume;
 /**
  * @since Aug 12, 2004
  */
-public abstract class MailItem implements Comparable<MailItem> {
+public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskResult {
 
     public enum Type {
         UNKNOWN(-1),

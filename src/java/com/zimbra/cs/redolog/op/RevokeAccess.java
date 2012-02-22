@@ -28,40 +28,49 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class RevokeAccess extends RedoableOp {
 
-    private int mFolderId;
-    private String mGrantee;
+    private int folderId;
+    private String grantee;
+    boolean dueToExpiry = false;
 
     public RevokeAccess() {
         super(MailboxOperation.RevokeAccess);
-        mFolderId = UNKNOWN_ID;
-        mGrantee = "";
+        folderId = UNKNOWN_ID;
+        grantee = "";
     }
 
     public RevokeAccess(int mailboxId, int folderId, String grantee) {
+        this(false, mailboxId, folderId, grantee);
+    }
+
+    public RevokeAccess(boolean dueToExpiry, int mailboxId, int folderId, String grantee) {
         this();
+        if (dueToExpiry) {
+            this.dueToExpiry = dueToExpiry;
+            mOperation = MailboxOperation.ExpireAccess;
+        }
         setMailboxId(mailboxId);
-        mFolderId = folderId;
-        mGrantee = grantee == null ? "" : grantee;
+        this.folderId = folderId;
+        this.grantee = grantee == null ? "" : grantee;
     }
 
     @Override protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=").append(mFolderId);
-        sb.append(", grantee=").append(mGrantee);
+        StringBuffer sb = new StringBuffer("id=").append(folderId);
+        sb.append(", grantee=").append(grantee);
         return sb.toString();
     }
 
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mFolderId);
-        out.writeUTF(mGrantee);
+        out.writeInt(folderId);
+        out.writeUTF(grantee);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
-        mFolderId = in.readInt();
-        mGrantee = in.readUTF();
+        folderId = in.readInt();
+        grantee = in.readUTF();
     }
 
     @Override public void redo() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.revokeAccess(getOperationContext(), mFolderId, mGrantee);
+        mbox.revokeAccess(getOperationContext(), dueToExpiry, folderId, grantee);
     }
 }

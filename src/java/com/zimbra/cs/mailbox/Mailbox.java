@@ -7038,11 +7038,16 @@ public class Mailbox {
     }
 
     public void revokeAccess(OperationContext octxt, int itemId, String grantee) throws ServiceException {
-        RevokeAccess redoPlayer = new RevokeAccess(mId, itemId, grantee);
+        revokeAccess(octxt, false, itemId, grantee);
+    }
+
+    public void revokeAccess(OperationContext octxt, boolean dueToExpiry, int itemId, String grantee)
+            throws ServiceException {
+        RevokeAccess redoPlayer = new RevokeAccess(dueToExpiry, mId, itemId, grantee);
 
         boolean success = false;
         try {
-            beginTransaction("revokeAccess", octxt, redoPlayer);
+            beginTransaction(dueToExpiry ? "expireAccess" : "revokeAccess", octxt, redoPlayer);
 
             MailItem item = getItemById(itemId, Type.UNKNOWN);
             checkItemChangeID(item);

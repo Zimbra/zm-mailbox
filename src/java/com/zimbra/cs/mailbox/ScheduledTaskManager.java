@@ -22,10 +22,10 @@ import com.zimbra.common.util.ScheduledTaskCallback;
 import com.zimbra.common.util.TaskScheduler;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.acl.ExpireGrantsTaskCallback;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderTaskCallback;
 
 /**
@@ -52,6 +52,7 @@ public class ScheduledTaskManager {
         sScheduler = new TaskScheduler<ScheduledTaskResult>(null, minThreads, numThreads);
         sScheduler.addCallback(new TaskCleanup());
         sScheduler.addCallback(new CalItemReminderTaskCallback());
+        sScheduler.addCallback(new ExpireGrantsTaskCallback());
 
         for (ScheduledTask task : DbScheduledTask.getTasks(null, 0)) {
             try {

@@ -4,4 +4,7 @@
   <key name="zimbra_mailbox_groups">
     <value>1</value>
   </key>
+  <key name="debug_disable_share_expiration_listener">
+    <value>true</value>
+  </key>
 </localconfig>

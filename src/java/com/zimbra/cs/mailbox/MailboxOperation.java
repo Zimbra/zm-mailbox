@@ -104,7 +104,8 @@ public enum MailboxOperation {
     SetRetentionPolicy(86),
     Watch(87),       // Octopus item watch / follow
     Unwatch(88),
-    RefreshMountpoint(89);
+    RefreshMountpoint(89),
+    ExpireAccess(90);
 
     private MailboxOperation(int c) {
         code = c;
