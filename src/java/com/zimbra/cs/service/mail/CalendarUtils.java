@@ -87,9 +87,9 @@ public class CalendarUtils {
             Element inviteElem) throws ServiceException {
         ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
 
-        Element content = inviteElem.getElement("content");
-        toRet.mUid = content.getAttribute("uid");
-        toRet.mSummary = content.getAttribute("summary");
+        Element content = inviteElem.getElement(MailConstants.E_CONTENT /* content */);
+        toRet.mUid = content.getAttribute(MailConstants.A_UID /* uid */);
+        toRet.mSummary = content.getAttribute(MailConstants.A_SUMMARY /* summary */);
         toRet.mCal = ZCalendarBuilder.build(content.getText());
 
         List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary,
