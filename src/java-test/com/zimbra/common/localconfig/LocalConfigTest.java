@@ -16,9 +16,23 @@
 package com.zimbra.common.localconfig;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 public class LocalConfigTest {
+    
+    
+    @Rule
+    public TestName TEST_NAME = new TestName();
+    
+    private String getTestName() {
+        return TEST_NAME.getMethodName();
+    }
+    
+    private String keyName(String suffix) {
+        return getTestName() + "-" + suffix;
+    }
     
     private String get(String key) throws ConfigException {
         return LocalConfig.getInstance().get(key);
@@ -60,21 +74,20 @@ public class LocalConfigTest {
         Assert.assertTrue(caught);
     }
     
-    
     @Test
     public void multipleSimple() throws Exception {
-        KnownKey a = new KnownKey("a", "${b} ${b}");
-        KnownKey b = new KnownKey("b", "123");
+        KnownKey a = new KnownKey(keyName("a"), String.format("${%s} ${%s}", keyName("b"), keyName("b")));
+        KnownKey b = new KnownKey(keyName("b"), "123");
         
         assertEquals("123 123", a);
     }
     
     @Test
     public void multipleDeep() throws Exception {
-        KnownKey a = new KnownKey("a", "${b} ${b}");
-        KnownKey b = new KnownKey("b", "${c} ${d}");
-        KnownKey c = new KnownKey("c", "${d} ${d}");
-        KnownKey d = new KnownKey("d", "123");
+        KnownKey a = new KnownKey(keyName("a"), String.format("${%s} ${%s}", keyName("b"), keyName("b")));
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s} ${%s}", keyName("c"), keyName("d")));
+        KnownKey c = new KnownKey(keyName("c"), String.format("${%s} ${%s}", keyName("d"), keyName("d")));
+        KnownKey d = new KnownKey(keyName("d"), "123");
         
         assertEquals("123 123 123 123 123 123", a);
         assertEquals("123 123 123", b);
@@ -84,15 +97,15 @@ public class LocalConfigTest {
     
     @Test
     public void recursiveContainsSelf() {
-        KnownKey a = new KnownKey("a", "${a}");
+        KnownKey a = new KnownKey(keyName("a"), String.format("${%s}", keyName("a")));
         
         assertRecursive(a);
     }
     
     @Test
     public void recursiveContainsMutual() {
-        KnownKey a = new KnownKey("a", "${b}");
-        KnownKey b = new KnownKey("b", "${a}");
+        KnownKey a = new KnownKey(keyName("a"), String.format("${%s}", keyName("b")));
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}", keyName("a")));
         
         assertRecursive(a);
         assertRecursive(b);
@@ -100,9 +113,9 @@ public class LocalConfigTest {
     
     @Test
     public void recursiveContainsLoop() {
-        KnownKey a = new KnownKey("a", "${b}");
-        KnownKey b = new KnownKey("b", "${c}");
-        KnownKey c = new KnownKey("c", "${a}");
+        KnownKey a = new KnownKey(keyName("a"), String.format("${%s}", keyName("b")));
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}", keyName("c")));
+        KnownKey c = new KnownKey(keyName("c"), String.format("${%s}", keyName("a")));
         
         assertRecursive(a);
         assertRecursive(b);
@@ -111,10 +124,10 @@ public class LocalConfigTest {
     
     @Test
     public void recursiveContainsSubLoop() {
-        KnownKey a = new KnownKey("a", "${b}");
-        KnownKey b = new KnownKey("b", "${c}");
-        KnownKey c = new KnownKey("c", "${d}");
-        KnownKey d = new KnownKey("d", "hello ${b}");
+        KnownKey a = new KnownKey(keyName("a"), String.format("${%s}", keyName("b")));
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}", keyName("c")));
+        KnownKey c = new KnownKey(keyName("c"), String.format("${%s}", keyName("d")));
+        KnownKey d = new KnownKey(keyName("d"), String.format("hello ${%s}", keyName("b")));
         
         assertRecursive(a);
         assertRecursive(b);
@@ -125,30 +138,30 @@ public class LocalConfigTest {
     
     @Test
     public void indirect() throws Exception {
-        KnownKey a = new KnownKey("a", "$");
-        KnownKey b = new KnownKey("b", "${a}{a}");
+        KnownKey a = new KnownKey(keyName("a"), "$");
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}{%s}", keyName("a"), keyName("a")));
         
         assertEquals("$", a);
         assertEquals("$", b);
         
-        KnownKey c = new KnownKey("c", "${");
-        KnownKey d = new KnownKey("d", "${c}c}");
+        KnownKey c = new KnownKey(keyName("c"), "${");
+        KnownKey d = new KnownKey(keyName("d"), String.format("${%s}%s}", keyName("c"), keyName("c")));
         
         assertEquals("${", c);
         assertEquals("${", d);
         
-        KnownKey e = new KnownKey("e", "${e");
-        KnownKey f = new KnownKey("f", "${e}}");
+        KnownKey e = new KnownKey(keyName("e"), String.format("${%s", keyName("e")));
+        KnownKey f = new KnownKey(keyName("f"), String.format("${%s}}", keyName("e")));
         
-        assertEquals("${e", e);
-        assertEquals("${e", f);
+        assertEquals(String.format("${%s", keyName("e")), e);
+        assertEquals(String.format("${%s", keyName("e")), f);
     }
     
     @Test
     public void indirectBad() throws Exception {
-        KnownKey a = new KnownKey("a", "${");
-        KnownKey b = new KnownKey("b", "${a}a${c}");
-        KnownKey c = new KnownKey("c", "}");
+        KnownKey a = new KnownKey(keyName("a"), "${");
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}%s${%s}", keyName("a"), keyName("a"), keyName("c")));
+        KnownKey c = new KnownKey(keyName("c"), "}");
         
         assertEquals("${", a);
         assertNullKey(b);
@@ -157,8 +170,8 @@ public class LocalConfigTest {
 
     @Test
     public void indirectRecursiveContainsSelf() throws Exception {
-        KnownKey a = new KnownKey("a", "${");
-        KnownKey b = new KnownKey("b", "${a}b}");
+        KnownKey a = new KnownKey(keyName("a"), "${");
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}%s}", keyName("a"), keyName("b")));
         
         assertEquals("${", a);
         assertRecursive(b);
@@ -166,9 +179,9 @@ public class LocalConfigTest {
     
     @Test
     public void indirectRecursiveContainsMutual() throws Exception {
-        KnownKey a = new KnownKey("a", "${");
-        KnownKey b = new KnownKey("b", "${a}c}");
-        KnownKey c = new KnownKey("c", "${b}");
+        KnownKey a = new KnownKey(keyName("a"), "${");
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}%s}", keyName("a"), keyName("c")));
+        KnownKey c = new KnownKey(keyName("c"), String.format("${%s}", keyName("b")));
         
         assertEquals("${", a);
         assertRecursive(b);
@@ -177,10 +190,10 @@ public class LocalConfigTest {
     
     @Test
     public void indirectRecursiveContainsLoop() throws Exception {
-        KnownKey a = new KnownKey("a", "${");
-        KnownKey b = new KnownKey("b", "${a}c}");
-        KnownKey c = new KnownKey("c", "${a}d}");
-        KnownKey d = new KnownKey("d", "${a}b}");
+        KnownKey a = new KnownKey(keyName("a"), "${");
+        KnownKey b = new KnownKey(keyName("b"), String.format("${%s}%s}", keyName("a"), keyName("c")));
+        KnownKey c = new KnownKey(keyName("c"), String.format("${%s}%s}", keyName("a"), keyName("d")));
+        KnownKey d = new KnownKey(keyName("d"), String.format("${%s}%s}", keyName("a"), keyName("b")));
         
         assertEquals("${", a);
         assertRecursive(b);
