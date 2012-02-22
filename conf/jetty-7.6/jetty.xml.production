@@ -48,6 +48,23 @@
     </Call>
     %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
     
+	<!-- HTTPLOCALBEGIN %%comment VAR:zimbraMailLocalBind,-->%%
+    <Call name="addConnector">
+      <Arg>
+        <New id="http_local" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+          <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="Acceptors">1</Set> 
+          <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+          <Set name="Host">localhost</Set>
+	  	  <Set name="Forwarded">true</Set>
+        </New>
+      </Arg>
+    </Call>
+	%%comment VAR:zimbraMailLocalBind,<!--%% HTTPLOCALEND -->
+    
     <!-- user services connector, SSL -->
     <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
     <Call name="addConnector">
@@ -582,6 +599,12 @@
       <Call name="open"/>
     </Ref>
     %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
+    
+	<!-- HTTPLOCALBEGIN %%comment VAR:zimbraMailLocalBind,-->%%
+    <Ref id="http_local">
+      <Call name="open"/>
+    </Ref>
+	%%comment VAR:zimbraMailLocalBind,<!--%% HTTPLOCALEND -->
     
     <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
     <Ref id="ssl">

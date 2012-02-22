@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120215-1239 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120216-0012 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8395,6 +8395,88 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailLastPurgedMailboxId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailLastPurgedMailboxId, "");
+        return attrs;
+    }
+
+    /**
+     * Specifies whether the http server should bound to localhost or not.
+     * This is an immutable property and is generated based on zimbraMailMode
+     * and zimbraMailBindAddress.
+     *
+     * @return zimbraMailLocalBind, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1380)
+    public boolean isMailLocalBind() {
+        return getBooleanAttr(Provisioning.A_zimbraMailLocalBind, false);
+    }
+
+    /**
+     * Specifies whether the http server should bound to localhost or not.
+     * This is an immutable property and is generated based on zimbraMailMode
+     * and zimbraMailBindAddress.
+     *
+     * @param zimbraMailLocalBind new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1380)
+    public void setMailLocalBind(boolean zimbraMailLocalBind) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailLocalBind, zimbraMailLocalBind ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies whether the http server should bound to localhost or not.
+     * This is an immutable property and is generated based on zimbraMailMode
+     * and zimbraMailBindAddress.
+     *
+     * @param zimbraMailLocalBind new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1380)
+    public Map<String,Object> setMailLocalBind(boolean zimbraMailLocalBind, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailLocalBind, zimbraMailLocalBind ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Specifies whether the http server should bound to localhost or not.
+     * This is an immutable property and is generated based on zimbraMailMode
+     * and zimbraMailBindAddress.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1380)
+    public void unsetMailLocalBind() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailLocalBind, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies whether the http server should bound to localhost or not.
+     * This is an immutable property and is generated based on zimbraMailMode
+     * and zimbraMailBindAddress.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1380)
+    public Map<String,Object> unsetMailLocalBind(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailLocalBind, "");
         return attrs;
     }
 
@@ -17002,6 +17084,167 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @return zimbraReverseProxyAvailableLookupTargets, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public String[] getReverseProxyAvailableLookupTargets() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyAvailableLookupTargets);
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param zimbraReverseProxyAvailableLookupTargets new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public void setReverseProxyAvailableLookupTargets(String[] zimbraReverseProxyAvailableLookupTargets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAvailableLookupTargets, zimbraReverseProxyAvailableLookupTargets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param zimbraReverseProxyAvailableLookupTargets new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public Map<String,Object> setReverseProxyAvailableLookupTargets(String[] zimbraReverseProxyAvailableLookupTargets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAvailableLookupTargets, zimbraReverseProxyAvailableLookupTargets);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param zimbraReverseProxyAvailableLookupTargets new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public void addReverseProxyAvailableLookupTargets(String zimbraReverseProxyAvailableLookupTargets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyAvailableLookupTargets, zimbraReverseProxyAvailableLookupTargets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param zimbraReverseProxyAvailableLookupTargets new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public Map<String,Object> addReverseProxyAvailableLookupTargets(String zimbraReverseProxyAvailableLookupTargets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyAvailableLookupTargets, zimbraReverseProxyAvailableLookupTargets);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param zimbraReverseProxyAvailableLookupTargets existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public void removeReverseProxyAvailableLookupTargets(String zimbraReverseProxyAvailableLookupTargets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyAvailableLookupTargets, zimbraReverseProxyAvailableLookupTargets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param zimbraReverseProxyAvailableLookupTargets existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public Map<String,Object> removeReverseProxyAvailableLookupTargets(String zimbraReverseProxyAvailableLookupTargets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyAvailableLookupTargets, zimbraReverseProxyAvailableLookupTargets);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public void unsetReverseProxyAvailableLookupTargets() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAvailableLookupTargets, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * will only use the servers specified here to do the lookup. Leaving
+     * empty means using all the servers whose zimbraReverseProxyLookupTarget
+     * is TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1379)
+    public Map<String,Object> unsetReverseProxyAvailableLookupTargets(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAvailableLookupTargets, "");
+        return attrs;
+    }
+
+    /**
      * CA certificate for authenticating client certificates in nginx proxy
      * (https only)
      *
@@ -19939,6 +20182,167 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetReverseProxyUpstreamSendTimeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @return zimbraReverseProxyUpstreamServers, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public String[] getReverseProxyUpstreamServers() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamServers);
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param zimbraReverseProxyUpstreamServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public void setReverseProxyUpstreamServers(String[] zimbraReverseProxyUpstreamServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamServers, zimbraReverseProxyUpstreamServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param zimbraReverseProxyUpstreamServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public Map<String,Object> setReverseProxyUpstreamServers(String[] zimbraReverseProxyUpstreamServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamServers, zimbraReverseProxyUpstreamServers);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param zimbraReverseProxyUpstreamServers new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public void addReverseProxyUpstreamServers(String zimbraReverseProxyUpstreamServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyUpstreamServers, zimbraReverseProxyUpstreamServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param zimbraReverseProxyUpstreamServers new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public Map<String,Object> addReverseProxyUpstreamServers(String zimbraReverseProxyUpstreamServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyUpstreamServers, zimbraReverseProxyUpstreamServers);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param zimbraReverseProxyUpstreamServers existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public void removeReverseProxyUpstreamServers(String zimbraReverseProxyUpstreamServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyUpstreamServers, zimbraReverseProxyUpstreamServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param zimbraReverseProxyUpstreamServers existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public Map<String,Object> removeReverseProxyUpstreamServers(String zimbraReverseProxyUpstreamServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyUpstreamServers, zimbraReverseProxyUpstreamServers);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public void unsetReverseProxyUpstreamServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;upstream&quot; block in the
+     * nginx web proxy config file. The servers configured here will only
+     * affect the proxy of pre-login requests. Leaving empty means using all
+     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1378)
+    public Map<String,Object> unsetReverseProxyUpstreamServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamServers, "");
         return attrs;
     }
 

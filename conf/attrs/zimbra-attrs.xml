@@ -1656,7 +1656,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>preauth secret key</desc>
 </attr>
 
-<attr id="308" name="zimbraMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="308" name="zimbraMailMode" type="enum" value="http,https,both,mixed,redirect" callback="LocalBind" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>whether to run HTTP or HTTPS or both/mixed mode or redirect mode.  See also related attributes zimbraMailPort and zimbraMailSSLPort</desc>
 </attr>
 
@@ -6792,11 +6792,11 @@ TODO: delete them permanently from here
   <defaultCOSValue>15d</defaultCOSValue>
 </attr>
 
-<attr id="1365" name="zimbraMailBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+<attr id="1365" name="zimbraMailBindAddress" type="string" max="128" callback="LocalBind" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
   <desc>interface address on which HTTP server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="1366" name="zimbraMailSSLBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+<attr id="1366" name="zimbraMailSSLBindAddress" type="string" max="128" callback="LocalBind" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
   <desc>interface address on which HTTPS server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
@@ -6869,6 +6869,10 @@ TODO: delete them permanently from here
 
 <attr id="1379" name="zimbraReverseProxyAvailableLookupTargets" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
   <desc>The servers to be included in the proxy lookup hanlders list. Proxy will only use the servers specified here to do the lookup. Leaving empty means using all the servers whose zimbraReverseProxyLookupTarget is TRUE.</desc>
+</attr>
+
+<attr id="1380" name="zimbraMailLocalBind" type="boolean" cardinality="single" immutable="1" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+  <desc>Specifies whether the http server should bound to localhost or not. This is an immutable property and is generated based on zimbraMailMode and zimbraMailBindAddress.</desc>
 </attr>
 
 </attrs>
