@@ -68,7 +68,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                     request = null;
                 }
             }
-            if (consecutiveError >= LC.imap_max_consecutive_error.intValue()) {
+            if (LC.imap_max_consecutive_error.intValue() > 0 && consecutiveError >= LC.imap_max_consecutive_error.intValue()) {
                 dropConnection();
             }
         }
