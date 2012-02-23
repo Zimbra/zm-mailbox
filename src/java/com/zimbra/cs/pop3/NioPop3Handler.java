@@ -62,7 +62,13 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
     @Override
     public void exceptionCaught(Throwable e) throws IOException {
         if (e instanceof RecoverableProtocolDecoderException) {
-            sendERR(e.getMessage());
+            RecoverableProtocolDecoderException re = (RecoverableProtocolDecoderException) e;
+            int hexdumpIdx = re.getMessage() != null ? re.getMessage().indexOf("(Hexdump:") : -1;
+            if (hexdumpIdx >= 0) {
+                sendERR(e.getMessage().substring(0, hexdumpIdx));
+            } else {
+                sendERR(e.getMessage());
+            }
         }
     }
 
