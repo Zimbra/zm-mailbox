@@ -28,7 +28,7 @@ public enum CountObjectsType {
 
     public static CountObjectsType fromString(String type) throws ServiceException {
         try {
-            // for backward compatibility
+            // for backward compatibility, installer uses userAccounts
             if ("userAccounts".equals(type)) {
                 return userAccount;
             } else {
