@@ -1,13 +1,11 @@
 package com.zimbra.cs.service.admin;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -22,14 +20,14 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class SearchAutoProvDirectory  extends AdminDocumentHandler {
+public class SearchAutoProvDirectory extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) 
+    throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
@@ -40,12 +38,15 @@ public class SearchAutoProvDirectory  extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("only one of filter or name can be provided", null);
         }
 
-        int maxResults = (int) request.getAttributeLong(AdminConstants.A_MAX_RESULTS, SearchDirectory.MAX_SEARCH_RESULTS);
+        int maxResults = (int) request.getAttributeLong(
+                AdminConstants.A_MAX_RESULTS, SearchDirectory.MAX_SEARCH_RESULTS);
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
         if (limit == 0) {
             limit = Integer.MAX_VALUE;
         }
         int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        boolean refresh = request.getAttributeBool(AdminConstants.A_REFRESH, false);
+        
         String keyAttr = request.getAttribute(AdminConstants.A_KEYATTR);
         
         String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
@@ -77,7 +78,10 @@ public class SearchAutoProvDirectory  extends AdminDocumentHandler {
         if (session != null) {
             Cache.Params params = new Cache.Params(domain, query, name, keyAttr,
                     returnAttrs, maxResults);
-            entryList = Cache.getFromCache(session, params);
+            
+            if (!refresh) {
+                entryList = Cache.getFromCache(session, params);
+            }
             if (entryList == null) {
                 entryList = search(domain, query, name, keyAttr, returnAttrs, maxResults);
                 Cache.putInCache(session, params, entryList);
@@ -205,7 +209,8 @@ public class SearchAutoProvDirectory  extends AdminDocumentHandler {
     };
     
     
-    private void encodeEntries(Element response, List<Entry> entryList, String keyAttr, int offset, int limit) {
+    private void encodeEntries(Element response, List<Entry> entryList, String keyAttr, 
+            int offset, int limit) {
         int totalEntries = entryList.size();
         
         int i, limitMax = offset+limit;

@@ -2570,7 +2570,7 @@ If neither is specified, all attributes will be returned.
 ----------------------------
 
 <SearchAutoProvDirectoryRequest [limit="..."] [offset="..."] [maxResults="..."] 
-    [attrs="a1,a2,a3"] keyAttr="{key-attr}">
+    [attrs="a1,a2,a3"] [refresh="1"] keyAttr="{key-attr}">
   <domain by="name|id">...</domain>  
   [<name>...</name>]  
   [<query>...</query>]
@@ -2602,6 +2602,7 @@ Notes:
              elements will appear in the response. 
              Entries are returned in ascending key order.
   attrs    - comma-seperated list of attrs to return
+  refresh  - whether to always re-search in LDAP even when cached entries are available.  0 is default.
   
   more-flag = true if more entries left to return
   search-total = total number of accounts that matched search (not affected by limit/offset)
