@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-description Search Auto Prov Directory
@@ -84,6 +85,13 @@ public class SearchAutoProvDirectoryRequest extends AttributeSelectorImpl {
     private Integer offset;
 
     /**
+     * @zm-api-field-description Refresh - whether to always re-search in LDAP even when 
+     * cached entries are available.  <b>0 (false)</b> is the default.
+     */
+    @XmlAttribute(name=AdminConstants.A_REFRESH, required=false)
+    private ZmBoolean refresh;
+    
+    /**
      * @zm-api-field-description Domain selector for the domain name to limit the search to (do not use if searching
      * for domains)
      */
@@ -108,6 +116,7 @@ public class SearchAutoProvDirectoryRequest extends AttributeSelectorImpl {
     public void setMaxResults(Integer maxResults) { this.maxResults = maxResults; }
     public void setLimit(Integer limit) { this.limit = limit; }
     public void setOffset(Integer offset) { this.offset = offset; }
+    public void setRefresh(Boolean refresh) { this.refresh = ZmBoolean.fromBool(refresh);}
     public void setDomain(DomainSelector domain) { this.domain = domain; }
     public String getKeyAttr() { return keyAttr; }
     public String getQuery() { return query; }
@@ -115,6 +124,7 @@ public class SearchAutoProvDirectoryRequest extends AttributeSelectorImpl {
     public Integer getMaxResults() { return maxResults; }
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
+    public Boolean isRefresh() { return ZmBoolean.toBool(refresh); }
     public DomainSelector getDomain() { return domain; }
 
     public Objects.ToStringHelper addToStringInfo(
@@ -127,6 +137,7 @@ public class SearchAutoProvDirectoryRequest extends AttributeSelectorImpl {
             .add("maxResults", maxResults)
             .add("limit", limit)
             .add("offset", offset)
+            .add("refresh", refresh)
             .add("domain", domain);
     }
 
