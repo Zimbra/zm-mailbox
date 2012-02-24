@@ -442,7 +442,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="25" name="zimbraLmtpBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox">
-  <desc>interface address(es) on which LMTP server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address on which LMTP server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="26" name="zimbraLmtpNumThreads" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
@@ -658,7 +658,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="95" name="zimbraPop3BindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox">
-  <desc>interface address(es) on which POP3 server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address on which POP3 server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="96" name="zimbraPop3NumThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
@@ -1076,7 +1076,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="179" name="zimbraImapBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" >
-  <desc>interface address(es) on which IMAP server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address on which IMAP server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="180" name="zimbraImapBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox">
@@ -1090,7 +1090,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="182" name="zimbraImapSSLBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox">
-  <desc>interface address(es) on which IMAP server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address on which IMAP server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="183" name="zimbraImapSSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox">
@@ -1109,7 +1109,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="186" name="zimbraPop3SSLBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox">
-  <desc>interface address(es) on which POP3 server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address on which POP3 server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="187" name="zimbraPop3SSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox">
@@ -2954,7 +2954,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="5.0.0">
-  <desc>interface address(es) on which IM server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address on which IM server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="568" name="zimbraFeatureImapDataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
@@ -3025,7 +3025,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="581" name="zimbraMemcachedBindAddress" type="string" max="128" cardinality="multi" optionalIn="server"  requiresRestart="memcached" since="5.0.0">
-  <desc>interface address(es) on which memcached server</desc>
+  <desc>interface address on which memcached server should listen</desc>
 </attr>
 
 <attr id="582" name="zimbraAttachmentsIndexedTextLimit" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
@@ -5124,7 +5124,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1115" name="zimbraMilterBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mta" since="7.0.0">
-  <desc>interface address(es) on which milter server should listen; if not specified, binds to 127.0.0.1</desc>
+  <desc>interface address on which milter server should listen; if not specified, binds to 127.0.0.1</desc>
 </attr>
   
 <attr id="1116" name="zimbraMilterServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="7.0.0">
