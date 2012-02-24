@@ -159,7 +159,7 @@ public final class LuceneIndex implements IndexStore {
     public synchronized void deleteIndex() throws IOException {
         assert(writerRef == null);
         ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
-        Closeables.closeQuietly(SEARCHER_CACHE.asMap().remove(mailbox.getId()));
+        SEARCHER_CACHE.asMap().remove(mailbox.getId());
 
         String[] files;
         try {
@@ -204,7 +204,7 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public void evict() {
-        Closeables.closeQuietly(SEARCHER_CACHE.asMap().remove(mailbox.getId()));
+        SEARCHER_CACHE.asMap().remove(mailbox.getId());
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -327,7 +327,7 @@ public final class LuceneIndex implements IndexStore {
 
         ZimbraLog.search.debug("OpenLuceneSearcher %s,elapsed=%d", searcher, System.currentTimeMillis() - start);
         searcher.inc();
-        Closeables.closeQuietly(SEARCHER_CACHE.asMap().put(mailbox.getId(), searcher));
+        SEARCHER_CACHE.asMap().put(mailbox.getId(), searcher);
         return searcher;
     }
 
@@ -691,9 +691,6 @@ public final class LuceneIndex implements IndexStore {
 
         @Override
         public void destroy() {
-            for (IndexSearcherImpl searcher : SEARCHER_CACHE.asMap().values()) {
-                Closeables.closeQuietly(searcher);
-            }
             SEARCHER_CACHE.asMap().clear();
         }
     }
@@ -718,8 +715,12 @@ public final class LuceneIndex implements IndexStore {
             if (searcher != null) {
                 IndexReader newReader = searcher.getIndexReader().reopen(true);
                 if (newReader != searcher.getIndexReader()) {
-                    Closeables.closeQuietly(SEARCHER_CACHE.asMap().put(writer.getIndex().mailbox.getId(),
-                            new IndexSearcherImpl(newReader)));
+                    // Bug: 69870
+                    // No need to close the previous value associated with the key here.
+                    // CacheBuilder sends a callback using removalListener onRemoval(..)
+                    // which eventually closes IndexSearcher
+                    SEARCHER_CACHE.asMap().put(writer.getIndex().mailbox.getId(),
+                            new IndexSearcherImpl(newReader));
                 }
             }
         }
