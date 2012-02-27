@@ -28,6 +28,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.util.L10nUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.client.ZFolder;
@@ -123,7 +124,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 if (sharedFolderPath == null) {
                     throw new ServletException("share not found");
                 }
-                String mountpointName = getMountpointName(owner, sharedFolderPath);
+                String mountpointName = getMountpointName(owner, grantee, sharedFolderPath);
 
                 ZMailbox.Options options = new ZMailbox.Options();
                 options.setNoSession(true);
@@ -191,13 +192,18 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         }
     }
 
-    private static String getMountpointName(Account owner, String sharedFolderPath) {
-        String pfx = getDisplayName(owner) + "'s";
-        String sfx = sharedFolderPath.replace("/", " ");
-        if (!sfx.startsWith(" ")) {
-            sfx = " " + sfx;
+    private static String getMountpointName(Account owner, Account grantee, String sharedFolderPath)
+            throws ServiceException {
+        if (sharedFolderPath.startsWith("/")) {
+            sharedFolderPath = sharedFolderPath.substring(1);
         }
-        return pfx + sfx;
+        int index = sharedFolderPath.indexOf('/');
+        if (index != -1) {
+            // exclude the top level folder name, such as "Briefcase"
+            sharedFolderPath = sharedFolderPath.substring(index + 1);
+        }
+        return L10nUtil.getMessage(L10nUtil.MsgKey.shareNameDefault, grantee.getLocale(),
+                getDisplayName(owner), sharedFolderPath.replace("/", " "));
     }
 
     private static String getDisplayName(Account owner) {
@@ -291,7 +297,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                         continue;
                     }
                     String sharedFolderPath = shareData.getPath();
-                    String mountpointName = getMountpointName(account, sharedFolderPath);
+                    String mountpointName = getMountpointName(account, grantee, sharedFolderPath);
                     int parent = shareData.getFolderDefaultViewCode() == MailItem.Type.DOCUMENT ?
                             Mailbox.ID_FOLDER_BRIEFCASE : Mailbox.ID_FOLDER_USER_ROOT;
                     Mountpoint mtpt = granteeMbox.createMountpoint(
