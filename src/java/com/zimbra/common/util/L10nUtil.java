@@ -120,6 +120,8 @@ public class L10nUtil {
         shareNotifBodyAddedToGroup1,
         shareNotifBodyAddedToGroup2,
 
+        shareNameDefault,
+
         shareNotifBodyGranteeRoleViewer,
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
