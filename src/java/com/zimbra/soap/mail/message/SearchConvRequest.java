@@ -50,22 +50,6 @@ public class SearchConvRequest extends MailSearchParams {
     private ZmBoolean nestMessages;
 
     /**
-     * @zm-api-field-tag
-     * @zm-api-field-description If 'needExp' is set in the request, and when when the 'fetch' attr is set to a
-     * message ID, two additional flags may be included in <b>&lt;e></b> elements for the message:
-     * <ul>
-     * <li> isGroup - set if the email address is a group
-     * <li> exp - present only when isGroup="1".
-     *      <br />
-     *      Set if the authed user can (has permission to) expand members in this group
-     *      <br />
-     *      Unset if the authed user does not have permission to expand group members
-     * </ul>
-     */
-    @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
-    private ZmBoolean needCanExpand;
-
-    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -78,17 +62,14 @@ public class SearchConvRequest extends MailSearchParams {
     }
 
     public void setNestMessages(Boolean nestMessages) { this.nestMessages = ZmBoolean.fromBool(nestMessages); }
-    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
     public Boolean getNestMessages() { return ZmBoolean.toBool(nestMessages); }
     public String getConversationId() { return conversationId; }
-    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("nestMessages", nestMessages)
-            .add("conversationId", conversationId)
-            .add("needCanExpand", needCanExpand);
+            .add("conversationId", conversationId);
     }
 
     @Override

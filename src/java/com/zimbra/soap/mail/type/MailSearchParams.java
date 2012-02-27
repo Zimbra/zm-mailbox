@@ -195,6 +195,23 @@ public class MailSearchParams implements SearchParameters {
     @XmlAttribute(name=MailConstants.A_WANT_HTML /* html */, required=false)
     private ZmBoolean wantHtml;
 
+
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description If 'needExp' is set in the request, two additional flags 
+     *   may be included in <b>&lt;e></b> elements for messages returned inline.
+     * <ul>
+     * <li> isGroup - set if the email address is a group
+     * <li> exp - present only when isGroup="1".
+     *      <br />
+     *      Set if the authed user can (has permission to) expand members in this group
+     *      <br />
+     *      Unset if the authed user does not have permission to expand group members
+     * </ul>
+     */
+    @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
+    private ZmBoolean needCanExpand;
+    
     /**
      * @zm-api-field-tag neuter-images
      * @zm-api-field-description Set to <b>0 (false)</b> to stop images in inlined HTML parts from being "neutered"
@@ -336,6 +353,8 @@ public class MailSearchParams implements SearchParameters {
     @Override
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     @Override
+    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
+    @Override
     public void setNeuterImages(Boolean neuterImages) { this.neuterImages = ZmBoolean.fromBool(neuterImages); }
     @Override
     public void setWantRecipients(Boolean wantRecipients) { this.wantRecipients = ZmBoolean.fromBool(wantRecipients); }
@@ -396,6 +415,8 @@ public class MailSearchParams implements SearchParameters {
     @Override
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
     @Override
+    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
+    @Override
     public Boolean getNeuterImages() { return ZmBoolean.toBool(neuterImages); }
     @Override
     public Boolean getWantRecipients() { return ZmBoolean.toBool(wantRecipients); }
@@ -436,6 +457,7 @@ public class MailSearchParams implements SearchParameters {
             .add("markRead", markRead)
             .add("maxInlinedLength", maxInlinedLength)
             .add("wantHtml", wantHtml)
+            .add("needCanExpand", needCanExpand)
             .add("neuterImages", neuterImages)
             .add("wantRecipients", wantRecipients)
             .add("prefetch", prefetch)

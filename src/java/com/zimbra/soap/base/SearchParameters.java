@@ -37,6 +37,7 @@ public interface SearchParameters {
     public void setMarkRead(Boolean markRead);
     public void setMaxInlinedLength(Integer maxInlinedLength);
     public void setWantHtml(Boolean wantHtml);
+    public void setNeedCanExpand(Boolean needCanExpand);
     public void setNeuterImages(Boolean neuterImages);
     public void setWantRecipients(Boolean wantRecipients);
     public void setPrefetch(Boolean prefetch);
@@ -64,6 +65,7 @@ public interface SearchParameters {
     public Boolean getMarkRead();
     public Integer getMaxInlinedLength();
     public Boolean getWantHtml();
+    public Boolean getNeedCanExpand();
     public Boolean getNeuterImages();
     public Boolean getWantRecipients();
     public Boolean getPrefetch();

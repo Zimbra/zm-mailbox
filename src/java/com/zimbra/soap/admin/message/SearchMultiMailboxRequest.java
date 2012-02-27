@@ -356,6 +356,8 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     @Override
+    public void setNeedCanExpand(Boolean needCanExpand) { throw new UnsupportedOperationException(); }
+    @Override
     public void setNeuterImages(Boolean neuterImages) { this.neuterImages = ZmBoolean.fromBool(neuterImages); }
     @Override
     public void setWantRecipients(Boolean wantRecipients) { this.wantRecipients = ZmBoolean.fromBool(wantRecipients); }
@@ -429,6 +431,8 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
     @Override
+    public Boolean getNeedCanExpand() { throw new UnsupportedOperationException(); }
+    @Override
     public Boolean getNeuterImages() { return ZmBoolean.toBool(neuterImages); }
     @Override
     public Boolean getWantRecipients() { return ZmBoolean.toBool(wantRecipients); }
@@ -492,4 +496,5 @@ public class SearchMultiMailboxRequest implements SearchParameters {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
     }
+
 }
