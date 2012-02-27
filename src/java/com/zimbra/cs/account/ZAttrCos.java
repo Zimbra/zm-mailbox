@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120216-0012 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120226-2220 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6402,6 +6402,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureConversationsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureConversationsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether Crocodoc feature is enabled in the web client
+     *
+     * @return zimbraFeatureCrocodocEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1381)
+    public boolean isFeatureCrocodocEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureCrocodocEnabled, false);
+    }
+
+    /**
+     * whether Crocodoc feature is enabled in the web client
+     *
+     * @param zimbraFeatureCrocodocEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1381)
+    public void setFeatureCrocodocEnabled(boolean zimbraFeatureCrocodocEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCrocodocEnabled, zimbraFeatureCrocodocEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether Crocodoc feature is enabled in the web client
+     *
+     * @param zimbraFeatureCrocodocEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1381)
+    public Map<String,Object> setFeatureCrocodocEnabled(boolean zimbraFeatureCrocodocEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCrocodocEnabled, zimbraFeatureCrocodocEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether Crocodoc feature is enabled in the web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1381)
+    public void unsetFeatureCrocodocEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCrocodocEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether Crocodoc feature is enabled in the web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1381)
+    public Map<String,Object> unsetFeatureCrocodocEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCrocodocEnabled, "");
         return attrs;
     }
 

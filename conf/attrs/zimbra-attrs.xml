@@ -3647,7 +3647,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="701" name="zimbraWebClientAdminReference" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.9">
-  <desc>link for admin users in the web client</desc>
+  <desc>link for admin users in web client</desc>
 </attr>
 
 <attr id="702" name="zimbraPrefCalendarAllowCancelEmailToSelf" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.9">
@@ -6874,5 +6874,11 @@ TODO: delete them permanently from here
 <attr id="1380" name="zimbraMailLocalBind" type="boolean" cardinality="single" immutable="1" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
   <desc>Specifies whether the http server should bound to localhost or not. This is an immutable property and is generated based on zimbraMailMode and zimbraMailBindAddress.</desc>
 </attr>
+
+<attr id="1381" name="zimbraFeatureCrocodocEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether Crocodoc feature is enabled in the web client</desc>
+</attr>
+
 
 </attrs>

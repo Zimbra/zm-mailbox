@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120216-0012 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120226-2220 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4619,8 +4619,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @return zimbraIMBindAddress, or empty array if unset
      *
@@ -4632,8 +4632,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param zimbraIMBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4648,8 +4648,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param zimbraIMBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4665,8 +4665,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param zimbraIMBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4681,8 +4681,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param zimbraIMBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -4698,8 +4698,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param zimbraIMBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4714,8 +4714,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param zimbraIMBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -4731,8 +4731,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4746,8 +4746,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5017,8 +5017,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @return zimbraImapBindAddress, or empty array if unset
      */
@@ -5028,8 +5028,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5042,8 +5042,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5057,8 +5057,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5071,8 +5071,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -5086,8 +5086,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5100,8 +5100,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -5115,8 +5115,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5128,8 +5128,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5890,8 +5890,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @return zimbraImapSSLBindAddress, or empty array if unset
      */
@@ -5901,8 +5901,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapSSLBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5915,8 +5915,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapSSLBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5930,8 +5930,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapSSLBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5944,8 +5944,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapSSLBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -5959,8 +5959,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapSSLBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5973,8 +5973,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraImapSSLBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -5988,8 +5988,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -6001,8 +6001,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -6810,8 +6810,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @return zimbraLmtpBindAddress, or empty array if unset
      */
@@ -6821,8 +6821,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraLmtpBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6835,8 +6835,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraLmtpBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6850,8 +6850,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraLmtpBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6864,8 +6864,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraLmtpBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -6879,8 +6879,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraLmtpBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6893,8 +6893,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraLmtpBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -6908,8 +6908,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -6921,8 +6921,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11093,7 +11093,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @return zimbraMemcachedBindAddress, or empty array if unset
      *
@@ -11105,7 +11105,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param zimbraMemcachedBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11120,7 +11120,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param zimbraMemcachedBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11136,7 +11136,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param zimbraMemcachedBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11151,7 +11151,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param zimbraMemcachedBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -11167,7 +11167,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param zimbraMemcachedBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11182,7 +11182,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param zimbraMemcachedBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -11198,7 +11198,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11212,7 +11212,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11849,7 +11849,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @return zimbraMilterBindAddress, or empty array if unset
@@ -11862,7 +11862,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new value
@@ -11878,7 +11878,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new value
@@ -11895,7 +11895,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new to add to existing values
@@ -11911,7 +11911,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new to add to existing values
@@ -11928,7 +11928,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress existing value to remove
@@ -11944,7 +11944,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress existing value to remove
@@ -11961,7 +11961,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11976,7 +11976,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -14688,8 +14688,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @return zimbraPop3BindAddress, or empty array if unset
      */
@@ -14699,8 +14699,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3BindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14713,8 +14713,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3BindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14728,8 +14728,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3BindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14742,8 +14742,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3BindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -14757,8 +14757,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3BindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14771,8 +14771,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3BindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -14786,8 +14786,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -14799,8 +14799,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15364,8 +15364,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @return zimbraPop3SSLBindAddress, or empty array if unset
      */
@@ -15375,8 +15375,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3SSLBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15389,8 +15389,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3SSLBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15404,8 +15404,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3SSLBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15418,8 +15418,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3SSLBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -15433,8 +15433,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3SSLBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15447,8 +15447,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param zimbraPop3SSLBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -15462,8 +15462,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -15475,8 +15475,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

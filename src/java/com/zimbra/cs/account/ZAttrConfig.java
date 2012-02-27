@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120216-0012 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120226-2220 */
 
     /**
      * RFC2256: descriptive information
@@ -40368,7 +40368,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * link for admin users in the web client
+     * link for admin users in web client
      *
      * @return zimbraWebClientAdminReference, or null if unset
      *
@@ -40380,7 +40380,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * link for admin users in the web client
+     * link for admin users in web client
      *
      * @param zimbraWebClientAdminReference new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40395,7 +40395,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * link for admin users in the web client
+     * link for admin users in web client
      *
      * @param zimbraWebClientAdminReference new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40411,7 +40411,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * link for admin users in the web client
+     * link for admin users in web client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40425,7 +40425,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * link for admin users in the web client
+     * link for admin users in web client
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
