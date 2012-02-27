@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120226-2220 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120224-1645 */
 
     /**
      * RFC2256: descriptive information
@@ -14433,6 +14433,124 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetLastLogonTimestampFrequency(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLastLogonTimestampFrequency, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getLastPurgeMaxDurationAsString to access value as a string.
+     *
+     * @see #getLastPurgeMaxDurationAsString()
+     *
+     * @return zimbraLastPurgeMaxDuration in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public long getLastPurgeMaxDuration() {
+        return getTimeInterval(Provisioning.A_zimbraLastPurgeMaxDuration, 2592000000L);
+    }
+
+    /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraLastPurgeMaxDuration, or "30d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public String getLastPurgeMaxDurationAsString() {
+        return getAttr(Provisioning.A_zimbraLastPurgeMaxDuration, "30d");
+    }
+
+    /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraLastPurgeMaxDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public void setLastPurgeMaxDuration(String zimbraLastPurgeMaxDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLastPurgeMaxDuration, zimbraLastPurgeMaxDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraLastPurgeMaxDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public Map<String,Object> setLastPurgeMaxDuration(String zimbraLastPurgeMaxDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLastPurgeMaxDuration, zimbraLastPurgeMaxDuration);
+        return attrs;
+    }
+
+    /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public void unsetLastPurgeMaxDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLastPurgeMaxDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public Map<String,Object> unsetLastPurgeMaxDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLastPurgeMaxDuration, "");
         return attrs;
     }
 

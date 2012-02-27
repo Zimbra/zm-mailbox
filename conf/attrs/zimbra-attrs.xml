@@ -6880,5 +6880,9 @@ TODO: delete them permanently from here
   <desc>whether Crocodoc feature is enabled in the web client</desc>
 </attr>
 
+<attr id="1382" name="zimbraLastPurgeMaxDuration" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+  <globalConfigValue>30d</globalConfigValue>
+  <desc>Maximum duration beyond which the mailbox must be scheduled for purge irrespective of whether it is loaded into memory or not.</desc>
+</attr>
 
 </attrs>

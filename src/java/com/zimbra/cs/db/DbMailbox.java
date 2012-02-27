@@ -64,6 +64,7 @@ public final class DbMailbox {
     public static final int CI_INDEX_DEFERRED;
     public static final int CI_HIGHEST_INDEXED;
     public static final int CI_VERSION;
+    public static final int CI_LAST_PURGE_AT;
 
     static {
         int pos = 1;
@@ -86,6 +87,7 @@ public final class DbMailbox {
         CI_INDEX_DEFERRED = pos++;
         CI_HIGHEST_INDEXED = pos++;
         CI_VERSION = pos++;
+        CI_LAST_PURGE_AT = pos++;
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
@@ -645,6 +647,23 @@ public final class DbMailbox {
             DbPool.closeStatement(stmt);
         }
     }
+    
+    public static void updateLastPurgeAt(Mailbox mbox, long lastPurgeAt) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
+                    " SET last_purge_at = ? WHERE id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, (int) (lastPurgeAt / 1000));
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos++);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("setting mailbox last_purge_at to '" + (int) (lastPurgeAt / 1000) + "' in mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
 
     /** Returns the zimbra IDs and mailbox IDs for all mailboxes on the
      *  system.  Note that mailboxes are created lazily, so there may be
@@ -734,6 +753,40 @@ public final class DbMailbox {
             return sizes;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching mailboxes", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
+    /** 
+     * Returns IDs of mailboxes on which the last purge was run before the given time.
+     * 
+     * @param conn An open database connection.
+     * @param time Cut-off time in milliseconds.
+     * @return A <code>Set</code> of mailbox IDs.
+     * @throws ServiceException
+     */
+    
+    public static Set<Integer> listPurgePendingMailboxes(DbConnection conn, long time) throws ServiceException {
+        Set<Integer> result = new HashSet<Integer>();
+        if (DebugConfig.externalMailboxDirectory) {
+            return result;
+        }
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE last_purge_at < ?");
+            int pos = 1;
+            stmt.setInt(pos++, (int) (time / 1000));
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getInt(1));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching purge pending mailboxes", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

@@ -7794,6 +7794,10 @@ public class Mailbox {
                     DbMailbox.setSyncCutoff(this, currentChange.sync);
                 }
             }
+            
+            // record the purge time.
+            if (purgedAll)
+                DbMailbox.updateLastPurgeAt(this, System.currentTimeMillis());
 
             success = true;
             ZimbraLog.purge.debug("purgedAll=%b", purgedAll);

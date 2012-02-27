@@ -685,6 +685,16 @@ public class MailboxManager {
         }
     }
 
+    public Set<Integer> getPurgePendingMailboxes(long time) throws ServiceException {
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            return DbMailbox.listPurgePendingMailboxes(conn, time);
+        } finally {
+            DbPool.quietClose(conn);
+        }
+        
+    }
 
     /** Returns an array of the account IDs of all the mailboxes on this host.
      *  Note that <code>Mailbox</code>es are lazily created, so this is not

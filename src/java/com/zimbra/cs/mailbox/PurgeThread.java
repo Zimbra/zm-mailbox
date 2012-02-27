@@ -16,7 +16,9 @@ package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -124,6 +126,7 @@ extends Thread {
             return;
         }
         
+        Set<Integer> purgePendingMailboxes = new HashSet<Integer>();
         while (true) {
             List<Integer> mailboxIds = getMailboxIds();
             boolean slept = false;
@@ -141,7 +144,7 @@ extends Thread {
                 boolean attemptedPurge = false;
                 try {
                     MailboxManager mm = MailboxManager.getInstance();
-                    if (mm.isMailboxLoadedAndAvailable(mailboxId)) {
+                    if (mm.isMailboxLoadedAndAvailable(mailboxId) || purgePendingMailboxes.contains(mailboxId)) {
                         attemptedPurge = true;
                         Mailbox mbox = mm.getMailboxById(mailboxId);
                         Account account = mbox.getAccount();
@@ -180,6 +183,13 @@ extends Thread {
             // If nothing's getting purged, sleep to avoid a tight loop 
             if (!slept) {
                 sleep();
+            }
+            
+            try {
+                long lastPurgeMaxDuration = Provisioning.getInstance().getLocalServer().getLastPurgeMaxDuration();
+                purgePendingMailboxes = MailboxManager.getInstance().getPurgePendingMailboxes(System.currentTimeMillis() - lastPurgeMaxDuration);
+            } catch (ServiceException e) {
+                ZimbraLog.purge.warn("Unable to get purge pending mailboxes ", e);
             }
         }
     }
