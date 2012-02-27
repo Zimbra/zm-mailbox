@@ -344,7 +344,7 @@ public final class LC {
     public static final KnownKey ldap_connect_timeout = KnownKey.newKey(30000);
 
     @Supported
-    public static final KnownKey ldap_read_timeout = KnownKey.newKey(30000);
+    public static final KnownKey ldap_read_timeout = KnownKey.newKey(0);
 
     @Supported
     public static final KnownKey ldap_deref_aliases = KnownKey.newKey("always");
