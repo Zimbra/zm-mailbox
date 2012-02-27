@@ -7617,27 +7617,13 @@ public class Mailbox {
     }
 
     /**
-     * Purges messages in system folders based on user- and admin-level purge settings
-     * on the account.
-     */
-    public boolean purgeMessages(OperationContext octxt) throws ServiceException {
-        // Look up the account outside the synchronized block, so that the mailbox
-        // doesn't get locked due to an unresponsive LDAP server (see bug 33650).
-        int batchSize = Provisioning.getInstance().getLocalServer().getMailPurgeBatchSize();
-        lock.lock();
-        try {
-            return purgeMessages(octxt, getAccount(), batchSize);
-        } finally {
-            lock.release();
-        }
-    }
-
-    /**
+     * Purges messages in system folders based on user- and admin-level purge settings on the account.
      * Returns {@code true} if all messages that meet the purge criteria were purged, {@code false} if the number of
      * messages to purge in any folder exceeded {@code maxItemsPerFolder}.
      */
-    private boolean purgeMessages(OperationContext octxt, Account acct, Integer maxItemsPerFolder) throws ServiceException {
-        assert(lock.isLocked());
+    public boolean purgeMessages(OperationContext octxt) throws ServiceException {
+        Account acct = getAccount();
+        int maxItemsPerFolder = Provisioning.getInstance().getLocalServer().getMailPurgeBatchSize();
         if (ZimbraLog.purge.isDebugEnabled()) {
             ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s, Dumpster=%s",
                 acct.getMailTrashLifetimeAsString(),
