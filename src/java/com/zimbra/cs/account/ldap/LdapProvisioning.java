@@ -691,7 +691,9 @@ public class LdapProvisioning extends LdapProv {
                 return makeAccount(sr.getDN(), sr.getAttributes());
             }
         } catch (LdapMultipleEntriesMatchedException e) {
-            throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: " + e.getMessage());
+            throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED(
+                    String.format("multiple entries are returned by query: base=%s, query=%s",
+                                    e.getQueryBase(), e.getQuery()));
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: " +
                     filter.toFilterString() + " message: "+e.getMessage(), e);
