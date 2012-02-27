@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120226-2220 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120224-1645 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5530,6 +5530,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLastLogonTimestampFrequency = "zimbraLastLogonTimestampFrequency";
 
     /**
+     * Maximum duration beyond which the mailbox must be scheduled for purge
+     * irrespective of whether it is loaded into memory or not.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1382)
+    public static final String A_zimbraLastPurgeMaxDuration = "zimbraLastPurgeMaxDuration";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
@@ -10886,22 +10899,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
