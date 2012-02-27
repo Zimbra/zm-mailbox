@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120216-0012 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120226-2220 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3980,6 +3980,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureConversationsEnabled = "zimbraFeatureConversationsEnabled";
 
     /**
+     * whether Crocodoc feature is enabled in the web client
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1381)
+    public static final String A_zimbraFeatureCrocodocEnabled = "zimbraFeatureCrocodocEnabled";
+
+    /**
      * enable end-user mail discarding defined in mail filters features
      *
      * @since ZCS 6.0.0_BETA1
@@ -5189,8 +5197,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      */
     @ZAttr(id=179)
     public static final String A_zimbraImapBindAddress = "zimbraImapBindAddress";
@@ -5288,8 +5296,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapShutdownGraceSeconds = "zimbraImapShutdownGraceSeconds";
 
     /**
-     * interface address(es) on which IMAP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IMAP server should listen; if empty, binds
+     * to all interfaces
      */
     @ZAttr(id=182)
     public static final String A_zimbraImapSSLBindAddress = "zimbraImapSSLBindAddress";
@@ -5336,8 +5344,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIMAvailableInteropGateways = "zimbraIMAvailableInteropGateways";
 
     /**
-     * interface address(es) on which IM server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which IM server should listen; if empty, binds to
+     * all interfaces
      *
      * @since ZCS 5.0.0
      */
@@ -5528,8 +5536,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLmtpAdvertisedName = "zimbraLmtpAdvertisedName";
 
     /**
-     * interface address(es) on which LMTP server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which LMTP server should listen; if empty, binds
+     * to all interfaces
      */
     @ZAttr(id=25)
     public static final String A_zimbraLmtpBindAddress = "zimbraLmtpBindAddress";
@@ -6355,7 +6363,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMemberOf = "zimbraMemberOf";
 
     /**
-     * interface address(es) on which memcached server
+     * interface address on which memcached server should listen
      *
      * @since ZCS 5.0.0
      */
@@ -6441,7 +6449,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageIdDedupeCacheTimeout = "zimbraMessageIdDedupeCacheTimeout";
 
     /**
-     * interface address(es) on which milter server should listen; if not
+     * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
      * @since ZCS 7.0.0
@@ -7529,8 +7537,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      */
     @ZAttr(id=95)
     public static final String A_zimbraPop3BindAddress = "zimbraPop3BindAddress";
@@ -7613,8 +7621,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPop3ShutdownGraceSeconds = "zimbraPop3ShutdownGraceSeconds";
 
     /**
-     * interface address(es) on which POP3 server should listen; if empty,
-     * binds to all interfaces
+     * interface address on which POP3 server should listen; if empty, binds
+     * to all interfaces
      */
     @ZAttr(id=186)
     public static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
@@ -10880,6 +10888,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
+
+    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      */
     @ZAttr(id=146)
@@ -11040,7 +11064,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVirusWarnRecipient = "zimbraVirusWarnRecipient";
 
     /**
-     * link for admin users in the web client
+     * link for admin users in web client
      *
      * @since ZCS 5.0.9
      */
