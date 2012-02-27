@@ -429,7 +429,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             recurIdZ = inv.getRecurId().getDtZ();
         ItemId iid = new ItemId(calItem, aid.invId);
         Element echoElem = parent.addElement(MailConstants.E_CAL_ECHO);
-        ToXML.encodeInviteAsMP(echoElem, ifmt, octxt, calItem, recurIdZ, iid, null, maxSize, wantHtml, neuter, null, false);
+        ToXML.encodeInviteAsMP(echoElem, ifmt, octxt, calItem, recurIdZ, iid, null, maxSize, wantHtml, neuter, null, false, false);
         return echoElem;
     }
 

@@ -101,7 +101,7 @@ public class RemoveAttachments extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.REMOVE_ATTACHMENTS_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but RemoveAttachments is called rarely)
-        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true);
+        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false);
         return response;
     }
 

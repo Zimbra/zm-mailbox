@@ -70,6 +70,7 @@ public final class SearchParams implements Cloneable {
     private boolean markRead = false;
     private int maxInlinedLength;
     private boolean wantHtml = false;
+    private boolean wantExpandGroupInfo = false;
     private boolean neuterImages = false;
     private Set<String> inlinedHeaders;
     private boolean recipients = false;
@@ -145,6 +146,10 @@ public final class SearchParams implements Cloneable {
 
     public boolean getWantHtml() {
         return wantHtml;
+    }
+    
+    public boolean getWantExpandGroupInfo() {
+        return wantExpandGroupInfo;
     }
 
     public boolean getNeuterImages() {
@@ -327,6 +332,10 @@ public final class SearchParams implements Cloneable {
     public void setWantHtml(boolean value) {
         wantHtml = value;
     }
+    
+    public void setWantExpandGroupInfo(boolean value) {
+        wantExpandGroupInfo = value;
+    }
 
     public void setNeuterImages(boolean value) {
         neuterImages = value;
@@ -398,6 +407,7 @@ public final class SearchParams implements Cloneable {
         el.addAttribute(MailConstants.A_MARK_READ, getMarkRead());
         el.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, getMaxInlinedLength());
         el.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
+        el.addAttribute(MailConstants.A_NEED_EXP, getWantExpandGroupInfo());
         el.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
         if (getInlinedHeaders() != null) {
             for (String name : getInlinedHeaders()) {
@@ -473,6 +483,7 @@ public final class SearchParams implements Cloneable {
             params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
             params.setMaxInlinedLength((int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, -1));
             params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
+            params.setWantExpandGroupInfo(request.getAttributeBool(MailConstants.A_NEED_EXP, false));
             params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
             for (Element elt : request.listElements(MailConstants.A_HEADER)) {
                 params.addInlinedHeader(elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
@@ -608,6 +619,7 @@ public final class SearchParams implements Cloneable {
         result.inlineRule = inlineRule;
         result.maxInlinedLength = maxInlinedLength;
         result.wantHtml = wantHtml;
+        result.wantExpandGroupInfo = wantExpandGroupInfo;
         result.neuterImages = neuterImages;
         result.inlinedHeaders = inlinedHeaders;
         result.recipients = recipients;

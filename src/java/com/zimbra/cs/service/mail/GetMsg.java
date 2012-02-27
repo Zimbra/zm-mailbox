@@ -79,6 +79,8 @@ public class GetMsg extends MailDocumentHandler {
             headers.add(eHdr.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
         }
 
+        boolean needGroupInfo = eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false);
+        
         Element response = zsc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (iid.hasSubpart()) {
             // calendar item
@@ -97,19 +99,18 @@ public class GetMsg extends MailDocumentHandler {
                             recurIdZ = rid.getDtZ();
                     }
                 }
-                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, recurIdZ, iid, part, maxSize, wantHTML, neuter, headers, false);
+                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, recurIdZ, iid, 
+                        part, maxSize, wantHTML, neuter, headers, false, needGroupInfo);
             }
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part, false);
             } else {
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, false);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, 
+                        wantHTML, neuter, headers, false, needGroupInfo);
             }
         }
-
-        if (eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false))
-            ToXML.encodeMsgAddrsWithGroupInfo(response, getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
 
         return response;
     }

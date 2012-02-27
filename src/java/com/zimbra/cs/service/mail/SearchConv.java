@@ -111,10 +111,6 @@ public final class SearchConv extends Search {
                 Closeables.closeQuietly(results);
             }
 
-            if (request.getAttributeBool(MailConstants.A_NEED_EXP, false)) {
-                ToXML.encodeConvAddrsWithGroupInfo(request, response,
-                        getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
-            }
             return response;
 
         } else { // remote
@@ -218,7 +214,7 @@ public final class SearchConv extends Search {
         Element el;
         if (inline) {
             el = ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
-                    params.getWantHtml(), params.getNeuterImages(), null, true);
+                    params.getWantHtml(), params.getNeuterImages(), null, true, params.getWantExpandGroupInfo());
             if (!Strings.isNullOrEmpty(msg.getFragment())) {
                 el.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
             }

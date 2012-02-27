@@ -242,7 +242,8 @@ final class SearchResponse {
         Element el;
         if (inline) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
-                    params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
+                    params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
+                    params.getWantExpandGroupInfo());
         } else {
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(),
                     params.isQuick() ? PendingModifications.Change.CONTENT : ToXML.NOTIFY_FIELDS);

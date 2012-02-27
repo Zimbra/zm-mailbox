@@ -87,6 +87,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
+import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
@@ -965,7 +966,7 @@ public final class ToXML {
             }
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
-                        params.getNeuterImages(), params.getInlinedHeaders(), true);
+                        params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo());
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }
@@ -1142,9 +1143,10 @@ public final class ToXML {
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg,
-            String part, int maxSize, boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
-            throws ServiceException {
+    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, 
+            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML, 
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo)
+    throws ServiceException {
         boolean wholeMessage = part == null || part.trim().isEmpty();
 
         Element m;
@@ -1266,6 +1268,13 @@ public final class ToXML {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
                 addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg));
             }
+            
+            if (wantExpandGroupInfo) {
+                Account authedAcct = octxt.getAuthenticatedUser();
+                Account requestedAcct = msg.getMailbox().getAccount();
+                encodeAddrsWithGroupInfo(m, requestedAcct, authedAcct);
+            }
+            
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
         } catch (MessagingException ex) {
@@ -1474,7 +1483,8 @@ public final class ToXML {
      * @throws ServiceException */
     public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             CalendarItem calItem, String recurIdZ, ItemId iid, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType) throws ServiceException {
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo) 
+    throws ServiceException {
         int invId = iid.getSubpartId();
         Invite[] invites = calItem.getInvites(invId);
         boolean isPublic = calItem.isPublic();
@@ -1570,6 +1580,12 @@ public final class ToXML {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
                     addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem));
                 }
+            }
+            
+            if (wantExpandGroupInfo) {
+                Account authedAcct = octxt.getAuthenticatedUser();
+                Account requestedAcct = calItem.getMailbox().getAccount();
+                encodeAddrsWithGroupInfo(m, requestedAcct, authedAcct);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -1758,9 +1774,10 @@ public final class ToXML {
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
         return calItem.allowPrivateAccess(authAccount, asAdmin);
     }
-
+    
     public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem /* may be null */, Invite invite, int fields, boolean neuter) throws ServiceException {
+            CalendarItem calItem /* may be null */, Invite invite, int fields, boolean neuter) 
+    throws ServiceException {
         boolean allFields = true;
 
         if (fields != NOTIFY_FIELDS) {
@@ -2416,7 +2433,7 @@ public final class ToXML {
             return rep;
         }
     }
-
+    
     private static void addEmails(Element m, InternetAddress[] recipients, EmailType emailType) {
         for (InternetAddress rcpt : recipients) {
             encodeEmail(m, rcpt, emailType);
@@ -2871,39 +2888,41 @@ public final class ToXML {
         }
         return cn;
     }
-
-    private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eParent,
-            String emailElem, Account requestedAcct, Account authedAcct) {
-        GalGroupInfoProvider.getInstance().encodeAddrsWithGroupInfo(prov, eParent, emailElem, requestedAcct, authedAcct);
+    
+    private static void encodeAddrsWithGroupInfo(Element eMsg, Account requestedAcct, Account authedAcct) {
+        encodeAddrsWithGroupInfo(eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
+        Element eInvite = eMsg.getOptionalElement(MailConstants.E_INVITE);
+        if (eInvite != null) {
+            Element eComp = eInvite.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
+            if (eComp != null) {
+                encodeAddrsWithGroupInfo(eComp, MailConstants.E_CAL_ATTENDEE, requestedAcct, authedAcct);
+            }
+        }
     }
+    
+    private static void encodeAddrsWithGroupInfo(Element eParent,
+            String emailElem, Account requestedAcct, Account authedAcct) {
+        GalGroupInfoProvider groupInfoProvider = GalGroupInfoProvider.getInstance();
+        
+        for (Element eEmail : eParent.listElements(emailElem)) { 
+            String addr = eEmail.getAttribute(MailConstants.A_ADDRESS, null);
+            if (addr != null) {
+                // shortcut the check if the email address is the authed or requested account - it cannot be a group
+                if (addr.equalsIgnoreCase(requestedAcct.getName()) || addr.equalsIgnoreCase(authedAcct.getName()))
+                    continue;
 
-    public static void encodeMsgAddrsWithGroupInfo(Element response, Account requestedAcct, Account authedAcct) {
-        Provisioning prov = Provisioning.getInstance();
-        Element eMsg = response.getOptionalElement(MailConstants.E_MSG);
-        if (eMsg != null) {
-            encodeAddrsWithGroupInfo(prov, eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
-            Element eInvite = eMsg.getOptionalElement(MailConstants.E_INVITE);
-            if (eInvite != null) {
-                Element eComp = eInvite.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
-                if (eComp != null) {
-                    encodeAddrsWithGroupInfo(prov, eComp, MailConstants.E_CAL_ATTENDEE, requestedAcct, authedAcct);
+                GroupInfo groupInfo = groupInfoProvider.getGroupInfo(addr, true, requestedAcct, authedAcct);
+                if (GroupInfo.IS_GROUP == groupInfo) {
+                    eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
+                    eEmail.addAttribute(MailConstants.A_EXP, false);
+                } else if (GroupInfo.CAN_EXPAND == groupInfo) {
+                    eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
+                    eEmail.addAttribute(MailConstants.A_EXP, true);
                 }
             }
         }
     }
-
-    public static void encodeConvAddrsWithGroupInfo(Element request, Element response,
-            Account requestedAcct, Account authedAcct) {
-        Provisioning prov = Provisioning.getInstance();
-        String fetch = request.getAttribute(MailConstants.A_FETCH, null);
-        for (Element eMsg : response.listElements(MailConstants.E_MSG)) {
-            String msgId = eMsg.getAttribute(MailConstants.A_ID, null);
-            if (fetch != null && fetch.equals(msgId)) {
-                encodeAddrsWithGroupInfo(prov, eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
-            }
-        }
-    }
-
+    
     public static Element encodeComment(Element response, ItemIdFormatter ifmt, OperationContext octxt, Comment comment)
     throws ServiceException {
         return encodeComment(response, ifmt, octxt, comment, NOTIFY_FIELDS);

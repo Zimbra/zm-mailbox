@@ -1360,7 +1360,7 @@ Tags:
 ----------
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
-    [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]
+    [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [needExp="1|*0"]
     [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
     [allowableTaskStatus="need,inprogress,completed,canceled"] [resultMode="{result-mode}"] [inDumpster="*0|1"]
     [warmup="*0|1"] [quick="*0|1"]>
@@ -1506,6 +1506,13 @@ if recip="1" is specified
    pending messages right before a search. To lower latencies, this option gives a hint to the index system not to
    trigger this catch-up index prior to the search by giving up the freshness of the search results, i.e. recent
    messages may not be included in the search results.
+   
+  If needExp is "1", two additional flags will be included in <e> elements for messages 
+  returned inline:
+    - isGroup: "1" if the email address is a group
+    - exp: present only when isGroup="1"
+           "1" if the authed user can (has permission to) expand members in this group
+           "0" if the authed user does not have permission to expand group members
 
   <cursor> (optional):
   - id, sortVal: These correspond to the last hit on the current page (assuming you're going forward, if you're backing
@@ -1725,8 +1732,8 @@ if nest="1" on the request, response looks like this:
    SEE SearchResponse for more info
 
 
-If needExp is "1" in the request, and when when the 'fetch' attr is set to a
-msg ID, two additional flags will be included in <e> elements for the message:
+If needExp is "1", two additional flags will be included in <e> elements for messages 
+returned inline:
   - isGroup: "1" if the email address is a group
   - exp: present only when isGroup="1"
          "1" if the authed user can (has permission to) expand members in this group
@@ -1863,8 +1870,7 @@ if <header>s are requested, any matching headers are inlined into the response
 
 <GetMsgRequest>
   <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
-     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"]
-  >
+     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"]>
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
