@@ -943,7 +943,7 @@ public class LC {
         ldap_connect_timeout.setDefault("30000");
 
         ldap_read_timeout = new KnownKey("ldap_read_timeout");
-        ldap_read_timeout.setDefault("30000");
+        ldap_read_timeout.setDefault("0");
 
         ldap_deref_aliases = new KnownKey("ldap_deref_aliases");
         ldap_deref_aliases.setDefault("always");
