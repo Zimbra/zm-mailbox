@@ -691,9 +691,11 @@ public class LdapProvisioning extends LdapProv {
                 return makeAccount(sr.getDN(), sr.getAttributes());
             }
         } catch (LdapMultipleEntriesMatchedException e) {
+            // duped entries are not in the exception, log it
+            ZimbraLog.account.debug(e.getMessage());
             throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED(
                     String.format("multiple entries are returned by query: base=%s, query=%s",
-                                    e.getQueryBase(), e.getQuery()));
+                    e.getQueryBase(), e.getQuery()));
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: " +
                     filter.toFilterString() + " message: "+e.getMessage(), e);
