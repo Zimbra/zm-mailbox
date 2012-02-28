@@ -42,12 +42,15 @@ public final class OctopusXmlConstants {
 
     public static final String E_DOCUMENT_ACTION_REQUEST = "DocumentActionRequest";
     public static final String E_DOCUMENT_ACTION_RESPONSE = "DocumentActionResponse";
-    
+
     public static final String E_GET_WATCHERS_REQUEST = "GetWatchersRequest";
     public static final String E_GET_WATCHERS_RESPONSE = "GetWatchersResponse";
 
     public static final String E_GET_WATCHING_ITEMS_REQUEST = "GetWatchingItemsRequest";
     public static final String E_GET_WATCHING_ITEMS_RESPONSE = "GetWatchingItemsResponse";
+
+    public static final String E_GET_NOTIFICATIONS_REQUEST = "GetNotificationsRequest";
+    public static final String E_GET_NOTIFICATIONS_RESPONSE = "GetNotificationsResponse";
 
     public static final QName GET_ACTIVITY_STREAM_REQUEST = QName.get(E_GET_ACTIVITY_STREAM_REQUEST, NAMESPACE);
     public static final QName GET_ACTIVITY_STREAM_RESPONSE = QName.get(E_GET_ACTIVITY_STREAM_RESPONSE, NAMESPACE);
@@ -69,12 +72,18 @@ public final class OctopusXmlConstants {
 
     public static final QName DOCUMENT_ACTION_REQUEST = QName.get(E_DOCUMENT_ACTION_REQUEST, NAMESPACE);
     public static final QName DOCUMENT_ACTION_RESPONSE = QName.get(E_DOCUMENT_ACTION_RESPONSE, NAMESPACE);
-    
+
     public static final QName GET_WATCHERS_REQUEST = QName.get(E_GET_WATCHERS_REQUEST, NAMESPACE);
     public static final QName GET_WATCHERS_RESPONSE = QName.get(E_GET_WATCHERS_RESPONSE, NAMESPACE);
 
     public static final QName GET_WATCHING_ITEMS_REQUEST = QName.get(E_GET_WATCHING_ITEMS_REQUEST, NAMESPACE);
     public static final QName GET_WATCHING_ITEMS_RESPONSE = QName.get(E_GET_WATCHING_ITEMS_RESPONSE, NAMESPACE);
 
+    public static final QName GET_NOTIFICATIONS_REQUEST = QName.get(E_GET_NOTIFICATIONS_REQUEST, NAMESPACE);
+    public static final QName GET_NOTIFICATIONS_RESPONSE = QName.get(E_GET_NOTIFICATIONS_RESPONSE, NAMESPACE);
+
     public static final String E_OPERATION = "op";
+    public static final String A_MARKSEEN = "markSeen";
+    public static final String A_LASTSEEN = "lastSeen";
+    public static final String E_NOTIFICATIONS = "notifications";
 }
