@@ -32,6 +32,8 @@ import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.zclient.ZClientException;
 
+import com.zimbra.common.soap.AdminConstants;
+
 /*
 <attr name="{name}">{value}</attr>
  */
@@ -44,8 +46,19 @@ public class Attr {
         }
     };
 
-    @XmlAttribute private String name;
-    @XmlValue private String value;
+    /**
+     * @zm-api-field-tag attr-name
+     * @zm-api-field-description Attribute name
+     */
+    @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
+    private String name;
+
+    /**
+     * @zm-api-field-tag attr-value
+     * @zm-api-field-description Attribute Value
+     */
+    @XmlValue
+    private String value;
 
     public Attr() {
     }

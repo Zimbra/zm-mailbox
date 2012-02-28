@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,15 +22,21 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ReplicationMasterCatchupStatus {
 
-    @XmlAttribute(name=ReplicationConstants.A_REMAINING_FILES
-                /* remainingFiles */, required=true)
+    /**
+     * @zm-api-field-tag num-remaining-files
+     * @zm-api-field-description Number of remaining files
+     */
+    @XmlAttribute(name=ReplicationConstants.A_REMAINING_FILES /* remainingFiles */, required=true)
     private final int remaingingFiles;
 
-    @XmlAttribute(name=ReplicationConstants.A_REMAINING_BYTES
-                /* remainingBytes */, required=true)
+    /**
+     * @zm-api-field-tag num-remaining-bytes
+     * @zm-api-field-description Number of remaining bytes
+     */
+    @XmlAttribute(name=ReplicationConstants.A_REMAINING_BYTES /* remainingBytes */, required=true)
     private final long remaingingBytes;
 
     /**
@@ -41,8 +47,7 @@ public class ReplicationMasterCatchupStatus {
         this(-1, -1L);
     }
 
-    public ReplicationMasterCatchupStatus(int remaingingFiles,
-                long remaingingBytes) {
+    public ReplicationMasterCatchupStatus(int remaingingFiles, long remaingingBytes) {
         this.remaingingFiles = remaingingFiles;
         this.remaingingBytes = remaingingBytes;
     }
@@ -50,8 +55,7 @@ public class ReplicationMasterCatchupStatus {
     public int getRemaingingFiles() { return remaingingFiles; }
     public long getRemaingingBytes() { return remaingingBytes; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("remaingingFiles", remaingingFiles)
             .add("remaingingBytes", remaingingBytes);
@@ -59,7 +63,6 @@ public class ReplicationMasterCatchupStatus {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

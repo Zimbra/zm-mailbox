@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,32 +21,48 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.soap.replication.type.ReplicationMasterStatus;
 import com.zimbra.soap.replication.type.ReplicationSlaveStatus;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ReplicationConstants.E_REPLICATION_STATUS_RESPONSE)
-@XmlType(propOrder = {})
 public class ReplicationStatusResponse {
 
+    /**
+     * @zm-api-field-tag replication-enabled-flag
+     * @zm-api-field-description Flags whether replication is enabled
+     */
     @XmlAttribute(name=ReplicationConstants.A_REPLICATION_ENABLED /* replicationEnabled */, required=true)
     private final ZmBoolean replicationEnabled;
 
+    /**
+     * @zm-api-field-tag current-role-master|slave
+     * @zm-api-field-description Current role - <b>master|slave</b>
+     */
     @XmlAttribute(name=ReplicationConstants.A_CURRENT_ROLE /* currentRole */, required=false)
     private String currentRole;
 
+    /**
+     * @zm-api-field-tag original-role-master|slave
+     * @zm-api-field-description Original role - <b>master|slave</b>
+     */
     @XmlAttribute(name=ReplicationConstants.A_ORIGINAL_ROLE /* originalRole */, required=false)
     private String originalRole;
 
     // Only one of masterStatus and slaveStatus can be present
 
+    /**
+     * @zm-api-field-description Master replication status.  Only one of masterStatus and slaveStatus can be present
+     */
     @XmlElement(name=ReplicationConstants.E_MASTER_STATUS /* masterStatus */, required=false)
     private ReplicationMasterStatus masterStatus;
 
+    /**
+     * @zm-api-field-description Slave replication status
+     */
     @XmlElement(name=ReplicationConstants.E_SLAVE_STATUS /* slaveStatus */, required=false)
     private ReplicationSlaveStatus slaveStatus;
 
@@ -62,26 +78,17 @@ public class ReplicationStatusResponse {
         this.replicationEnabled = ZmBoolean.fromBool(replicationEnabled);
     }
 
-    public void setCurrentRole(String currentRole) {
-        this.currentRole = currentRole;
-    }
-    public void setOriginalRole(String originalRole) {
-        this.originalRole = originalRole;
-    }
-    public void setMasterStatus(ReplicationMasterStatus masterStatus) {
-        this.masterStatus = masterStatus;
-    }
-    public void setSlaveStatus(ReplicationSlaveStatus slaveStatus) {
-        this.slaveStatus = slaveStatus;
-    }
+    public void setCurrentRole(String currentRole) { this.currentRole = currentRole; }
+    public void setOriginalRole(String originalRole) { this.originalRole = originalRole; }
+    public void setMasterStatus(ReplicationMasterStatus masterStatus) { this.masterStatus = masterStatus; }
+    public void setSlaveStatus(ReplicationSlaveStatus slaveStatus) { this.slaveStatus = slaveStatus; }
     public boolean getReplicationEnabled() { return ZmBoolean.toBool(replicationEnabled); }
     public String getCurrentRole() { return currentRole; }
     public String getOriginalRole() { return originalRole; }
     public ReplicationMasterStatus getMasterStatus() { return masterStatus; }
     public ReplicationSlaveStatus getSlaveStatus() { return slaveStatus; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("replicationEnabled", replicationEnabled)
             .add("currentRole", currentRole)
@@ -92,7 +99,6 @@ public class ReplicationStatusResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -25,10 +25,16 @@ import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 
+/**
+ * @zm-api-command-description Finish Edit
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AppBlastConstants.E_FINISH_EDIT_REQUEST)
 public class FinishEditDocumentRequest {
 
+    /**
+     * @zm-api-field-description Document specification
+     */
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=true)
     private Id doc;
 
@@ -50,15 +56,12 @@ public class FinishEditDocumentRequest {
     public void setDoc(Id doc) { this.doc = doc; }
     public Id getDoc() { return doc; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("doc", doc);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("doc", doc);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

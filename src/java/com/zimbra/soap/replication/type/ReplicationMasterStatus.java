@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,20 +20,23 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class ReplicationMasterStatus {
 
-    @XmlAttribute(name=ReplicationConstants.A_MASTER_OPERATING_MODE
-                /* masterOperatingMode */, required=true)
+    /**
+     * @zm-api-field-tag master-operating-mode-invalid|normal|slaveless|catchup
+     * @zm-api-field-description Master's operating mode - <b>invalid|normal|slaveless|catchup</b>
+     */
+    @XmlAttribute(name=ReplicationConstants.A_MASTER_OPERATING_MODE /* masterOperatingMode */, required=true)
     private final String masterOperatingMode;
 
-    @XmlElement(name=ReplicationConstants.E_CATCHUP_STATUS
-                /* catchupStatus */, required=false)
+    /**
+     * @zm-api-field-description Catchup status
+     */
+    @XmlElement(name=ReplicationConstants.E_CATCHUP_STATUS /* catchupStatus */, required=false)
     private ReplicationMasterCatchupStatus catchupStatus;
 
     /**
@@ -52,12 +55,9 @@ public class ReplicationMasterStatus {
         this.catchupStatus = catchupStatus;
     }
     public String getMasterOperatingMode() { return masterOperatingMode; }
-    public ReplicationMasterCatchupStatus getCatchupStatus() {
-        return catchupStatus;
-    }
+    public ReplicationMasterCatchupStatus getCatchupStatus() { return catchupStatus; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("masterOperatingMode", masterOperatingMode)
             .add("catchupStatus", catchupStatus);
@@ -65,7 +65,6 @@ public class ReplicationMasterStatus {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

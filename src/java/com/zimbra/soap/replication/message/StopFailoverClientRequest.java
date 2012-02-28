@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
+/**
+ * @zm-api-command-description Stop Failover client on replication slave
+ */
 @XmlRootElement(name=ReplicationConstants.E_STOP_HA_CLIENT_REQUEST)
 public class StopFailoverClientRequest {
 }

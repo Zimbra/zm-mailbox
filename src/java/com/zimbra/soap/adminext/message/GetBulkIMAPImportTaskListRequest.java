@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminExtConstants;
 
+/**
+ * @zm-api-command-description Get Task list for bulk IMAP Imports
+ */
 @XmlRootElement(name=AdminExtConstants.E_GET_BULK_IMAP_IMPORT_TASKLIST_REQUEST)
 public class GetBulkIMAPImportTaskListRequest {
 }

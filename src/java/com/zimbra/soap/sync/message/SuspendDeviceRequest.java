@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Suspend a device from further sync actions
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncConstants.E_SUSPEND_DEVICE_REQUEST)
 public class SuspendDeviceRequest {
 
+    /**
+     * @zm-api-field-description Device selector
+     */
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=true)
     private final DeviceId device;
 
@@ -45,15 +51,12 @@ public class SuspendDeviceRequest {
 
     public DeviceId getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("device", device);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

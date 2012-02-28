@@ -25,10 +25,16 @@ import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.IdVersion;
 
+/**
+ * @zm-api-command-description Edit a document
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AppBlastConstants.E_EDIT_REQUEST)
 public class EditDocumentRequest {
 
+    /**
+     * @zm-api-field-description Specifies the document to edit
+     */
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=true)
     private final IdVersion doc;
 
@@ -46,15 +52,12 @@ public class EditDocumentRequest {
 
     public IdVersion getDoc() { return doc; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("doc", doc);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("doc", doc);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

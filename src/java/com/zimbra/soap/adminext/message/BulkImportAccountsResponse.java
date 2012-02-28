@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,75 +20,88 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminExtConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminExtConstants.E_BULK_IMPORT_ACCOUNTS_RESPONSE)
-@XmlType(propOrder = {})
 public class BulkImportAccountsResponse {
 
-    @XmlElement(name=AdminExtConstants.E_totalCount
-                /* totalCount */, required=false)
+    /**
+     * @zm-api-field-tag total-count
+     * @zm-api-field-description Total count
+     */
+    @XmlElement(name=AdminExtConstants.E_totalCount /* totalCount */, required=false)
     private Integer totalCount;
 
-    @XmlElement(name=AdminExtConstants.E_skippedAccountCount
-                /* skippedAccountCount */, required=false)
+    /**
+     * @zm-api-field-tag skipped-acct-count
+     * @zm-api-field-description Count of number of skipped accounts
+     */
+    @XmlElement(name=AdminExtConstants.E_skippedAccountCount /* skippedAccountCount */, required=false)
     private Integer skippedAccountCount;
 
-    @XmlElement(name=AdminExtConstants.E_SMTPHost
-                /* SMTPHost */, required=false)
+    /**
+     * @zm-api-field-tag SMTP-host
+     * @zm-api-field-description SMTP host
+     */
+    @XmlElement(name=AdminExtConstants.E_SMTPHost /* SMTPHost */, required=false)
     private String SMTPHost;
 
-    @XmlElement(name=AdminExtConstants.E_SMTPPort
-                /* SMTPPort */, required=false)
+    /**
+     * @zm-api-field-tag SMTP-port
+     * @zm-api-field-description SMTP port
+     */
+    @XmlElement(name=AdminExtConstants.E_SMTPPort /* SMTPPort */, required=false)
     private String SMTPPort;
 
-    @XmlElement(name=AdminExtConstants.E_status
-                /* status */, required=false)
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description Status
+     */
+    @XmlElement(name=AdminExtConstants.E_status /* status */, required=false)
     private Integer status;
 
-    @XmlElement(name=AdminExtConstants.E_provisionedCount
-                /* provisionedCount */, required=false)
+    /**
+     * @zm-api-field-tag provisioned-count
+     * @zm-api-field-description Provisioned count
+     */
+    @XmlElement(name=AdminExtConstants.E_provisionedCount /* provisionedCount */, required=false)
     private Integer provisionedCount;
 
-    @XmlElement(name=AdminExtConstants.E_skippedCount
-                /* skippedCount */, required=false)
+    /**
+     * @zm-api-field-tag skipped-count
+     * @zm-api-field-description Skipped count
+     */
+    @XmlElement(name=AdminExtConstants.E_skippedCount /* skippedCount */, required=false)
     private Integer skippedCount;
 
-    @XmlElement(name=AdminExtConstants.E_errorCount
-                /* errorCount */, required=false)
+    /**
+     * @zm-api-field-tag error-count
+     * @zm-api-field-description Error count
+     */
+    @XmlElement(name=AdminExtConstants.E_errorCount /* errorCount */, required=false)
     private Integer errorCount;
 
-    @XmlElement(name=AdminExtConstants.E_reportFileToken
-                /* fileToken */, required=false)
+    /**
+     * @zm-api-field-tag report-file-token
+     * @zm-api-field-description Report file token
+     */
+    @XmlElement(name=AdminExtConstants.E_reportFileToken /* fileToken */, required=false)
     private String reportFileToken;
 
     public BulkImportAccountsResponse() {
     }
 
-    public void setTotalCount(Integer totalCount) {
-        this.totalCount = totalCount;
-    }
-    public void setSkippedAccountCount(Integer skippedAccountCount) {
-        this.skippedAccountCount = skippedAccountCount;
-    }
+    public void setTotalCount(Integer totalCount) { this.totalCount = totalCount; }
+    public void setSkippedAccountCount(Integer skippedAccountCount) { this.skippedAccountCount = skippedAccountCount; }
     public void setSMTPHost(String SMTPHost) { this.SMTPHost = SMTPHost; }
     public void setSMTPPort(String SMTPPort) { this.SMTPPort = SMTPPort; }
     public void setStatus(Integer status) { this.status = status; }
-    public void setProvisionedCount(Integer provisionedCount) {
-        this.provisionedCount = provisionedCount;
-    }
-    public void setSkippedCount(Integer skippedCount) {
-        this.skippedCount = skippedCount;
-    }
-    public void setErrorCount(Integer errorCount) {
-        this.errorCount = errorCount;
-    }
-    public void setReportFileToken(String reportFileToken) {
-        this.reportFileToken = reportFileToken;
-    }
+    public void setProvisionedCount(Integer provisionedCount) { this.provisionedCount = provisionedCount; }
+    public void setSkippedCount(Integer skippedCount) { this.skippedCount = skippedCount; }
+    public void setErrorCount(Integer errorCount) { this.errorCount = errorCount; }
+    public void setReportFileToken(String reportFileToken) { this.reportFileToken = reportFileToken; }
     public Integer getTotalCount() { return totalCount; }
     public Integer getSkippedAccountCount() { return skippedAccountCount; }
     public String getSMTPHost() { return SMTPHost; }
@@ -99,8 +112,7 @@ public class BulkImportAccountsResponse {
     public Integer getErrorCount() { return errorCount; }
     public String getReportFileToken() { return reportFileToken; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("totalCount", totalCount)
             .add("skippedAccountCount", skippedAccountCount)
@@ -115,7 +127,6 @@ public class BulkImportAccountsResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

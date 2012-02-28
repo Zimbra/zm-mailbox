@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
+/**
+ * @zm-api-command-description Stop Failover daemon on replication master
+ */
 @XmlRootElement(name=ReplicationConstants.E_STOP_HA_DAEMON_REQUEST)
 public class StopFailoverDaemonRequest {
 }

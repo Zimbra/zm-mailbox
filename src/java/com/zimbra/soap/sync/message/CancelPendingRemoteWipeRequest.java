@@ -24,10 +24,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Cancel a pending Remote Wipe request.  Remote Wipe can't be canceled once the device
+ * confirms the wipe.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncConstants.E_CANCEL_PENDING_REMOTE_WIPE_REQUEST)
 public class CancelPendingRemoteWipeRequest {
 
+    /**
+     * @zm-api-field-description Device specification
+     */
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=true)
     private final DeviceId device;
 
@@ -45,15 +52,12 @@ public class CancelPendingRemoteWipeRequest {
 
     public DeviceId getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("device", device);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

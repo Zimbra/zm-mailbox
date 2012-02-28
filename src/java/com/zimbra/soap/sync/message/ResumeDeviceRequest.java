@@ -24,10 +24,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Resume a device
+ * @zm-api-command-description Resume sync with a device if currently suspended.
+ * This will cause a policy reset, but will not reset sync data.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncConstants.E_RESUME_DEVICE_REQUEST)
 public class ResumeDeviceRequest {
 
+    /**
+     * @zm-api-field-description Specify the device to resume
+     */
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=true)
     private final DeviceId device;
 
@@ -45,15 +53,12 @@ public class ResumeDeviceRequest {
 
     public DeviceId getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("device", device);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

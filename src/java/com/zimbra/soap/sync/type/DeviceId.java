@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.SyncConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class DeviceId {
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description device ID
+     */
     @XmlAttribute(name=SyncConstants.A_ID /* id */, required=true)
     private final String id;
 
@@ -42,15 +46,12 @@ public class DeviceId {
 
     public String getId() { return id; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("id", id);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("id", id);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

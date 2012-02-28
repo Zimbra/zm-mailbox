@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -27,65 +27,98 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.soap.adminext.type.NameId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminExtConstants.E_BULK_IMAP_DATA_IMPORT_RESPONSE)
-@XmlType(propOrder = {})
 public class BulkIMAPDataImportResponse {
 
-    @XmlElementWrapper(name=AdminExtConstants.E_runningAccounts
-                /* runningAccounts */, required=false)
+    /**
+     * @zm-api-field-description Running accounts
+     */
+    @XmlElementWrapper(name=AdminExtConstants.E_runningAccounts /* runningAccounts */, required=false)
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
     private List<NameId> runningAccounts = Lists.newArrayList();
 
-    @XmlElement(name=AdminExtConstants.E_totalCount
-                /* totalCount */, required=false)
+    /**
+     * @zm-api-field-tag total-count
+     * @zm-api-field-description Total count
+     */
+    @XmlElement(name=AdminExtConstants.E_totalCount /* totalCount */, required=false)
     private Integer totalCount;
 
-    @XmlElement(name=AdminExtConstants.E_idleCount
-                /* idleCount */, required=false)
+    /**
+     * @zm-api-field-tag idle-count
+     * @zm-api-field-description Idle count
+     */
+    @XmlElement(name=AdminExtConstants.E_idleCount /* idleCount */, required=false)
     private Integer idleCount;
 
-    @XmlElement(name=AdminExtConstants.E_runningCount
-                /* runningCount */, required=false)
+    /**
+     * @zm-api-field-tag running-count
+     * @zm-api-field-description Running count
+     */
+    @XmlElement(name=AdminExtConstants.E_runningCount /* runningCount */, required=false)
     private Integer runningCount;
 
-    @XmlElement(name=AdminExtConstants.E_finishedCount
-                /* finishedCount */, required=false)
+    /**
+     * @zm-api-field-tag finished-count
+     * @zm-api-field-description Finished count
+     */
+    @XmlElement(name=AdminExtConstants.E_finishedCount /* finishedCount */, required=false)
     private Integer finishedCount;
 
-    @XmlElement(name=AdminExtConstants.E_connectionType
-                /* ConnectionType */, required=false)
+    /**
+     * @zm-api-field-tag connection-type
+     * @zm-api-field-description Connection type
+     */
+    @XmlElement(name=AdminExtConstants.E_connectionType /* ConnectionType */, required=false)
     private String connectionType;
 
-    @XmlElement(name=AdminExtConstants.E_IMAPHost
-                /* IMAPHost */, required=false)
+    /**
+     * @zm-api-field-tag imap-hostname
+     * @zm-api-field-description IMAP hostname
+     */
+    @XmlElement(name=AdminExtConstants.E_IMAPHost /* IMAPHost */, required=false)
     private String IMAPHost;
 
-    @XmlElement(name=AdminExtConstants.E_IMAPPort
-                /* IMAPPort */, required=false)
+    /**
+     * @zm-api-field-tag imap-port
+     * @zm-api-field-description IMAP port
+     */
+    @XmlElement(name=AdminExtConstants.E_IMAPPort /* IMAPPort */, required=false)
     private String IMAPPort;
 
-    @XmlElement(name=AdminExtConstants.E_indexBatchSize
-                /* indexBatchSize */, required=false)
+    /**
+     * @zm-api-field-tag index-batch-size
+     * @zm-api-field-description Index batch size
+     */
+    @XmlElement(name=AdminExtConstants.E_indexBatchSize /* indexBatchSize */, required=false)
     private String indexBatchSize;
 
     // 1 means true and 0 means false
-    @XmlElement(name=AdminExtConstants.E_useAdminLogin
-                /* UseAdminLogin */, required=false)
+    /**
+     * @zm-api-field-tag use-admin-login-flag
+     * @zm-api-field-description Whether Admin login is in use or not.  "1" means true, "0" means false
+     */
+    @XmlElement(name=AdminExtConstants.E_useAdminLogin /* UseAdminLogin */, required=false)
     private Integer useAdminLogin;
 
-    @XmlElement(name=AdminExtConstants.E_IMAPAdminLogin
-                /* IMAPAdminLogin */, required=false)
+    /**
+     * @zm-api-field-tag imap-admin-login
+     * @zm-api-field-description IMAP Admin login name
+     */
+    @XmlElement(name=AdminExtConstants.E_IMAPAdminLogin /* IMAPAdminLogin */, required=false)
     private String IMAPAdminLogin;
 
-    @XmlElement(name=AdminExtConstants.E_IMAPAdminPassword
-                /* IMAPAdminPassword */, required=false)
+    /**
+     * @zm-api-field-tag imap-admin-password
+     * @zm-api-field-description IMAP Admin password
+     */
+    @XmlElement(name=AdminExtConstants.E_IMAPAdminPassword /* IMAPAdminPassword */, required=false)
     private String IMAPAdminPassword;
 
     public BulkIMAPDataImportResponse() {
@@ -102,37 +135,19 @@ public class BulkIMAPDataImportResponse {
         this.runningAccounts.add(runningAccount);
     }
 
-    public void setTotalCount(Integer totalCount) {
-        this.totalCount = totalCount;
-    }
-    public void setIdleCount(Integer idleCount) {
-        this.idleCount = idleCount;
-    }
-    public void setRunningCount(Integer runningCount) {
-        this.runningCount = runningCount;
-    }
-    public void setFinishedCount(Integer finishedCount) {
-        this.finishedCount = finishedCount;
-    }
-    public void setConnectionType(String connectionType) {
-        this.connectionType = connectionType;
-    }
+    public void setTotalCount(Integer totalCount) { this.totalCount = totalCount; }
+    public void setIdleCount(Integer idleCount) { this.idleCount = idleCount; }
+    public void setRunningCount(Integer runningCount) { this.runningCount = runningCount; }
+    public void setFinishedCount(Integer finishedCount) { this.finishedCount = finishedCount; }
+    public void setConnectionType(String connectionType) { this.connectionType = connectionType; }
     public void setIMAPHost(String IMAPHost) { this.IMAPHost = IMAPHost; }
     public void setIMAPPort(String IMAPPort) { this.IMAPPort = IMAPPort; }
-    public void setIndexBatchSize(String indexBatchSize) {
-        this.indexBatchSize = indexBatchSize;
-    }
-    public void setUseAdminLogin(Integer useAdminLogin) {
-        this.useAdminLogin = useAdminLogin;
-    }
-    public void setIMAPAdminLogin(String IMAPAdminLogin) {
-        this.IMAPAdminLogin = IMAPAdminLogin;
-    }
-    public void setIMAPAdminPassword(String IMAPAdminPassword) {
-        this.IMAPAdminPassword = IMAPAdminPassword;
-    }
+    public void setIndexBatchSize(String indexBatchSize) { this.indexBatchSize = indexBatchSize; }
+    public void setUseAdminLogin(Integer useAdminLogin) { this.useAdminLogin = useAdminLogin; }
+    public void setIMAPAdminLogin(String IMAPAdminLogin) { this.IMAPAdminLogin = IMAPAdminLogin; }
+    public void setIMAPAdminPassword(String IMAPAdminPassword) { this.IMAPAdminPassword = IMAPAdminPassword; }
     public List<NameId> getRunningAccounts() {
-        return Collections.unmodifiableList(runningAccounts);
+        return runningAccounts;
     }
     public Integer getTotalCount() { return totalCount; }
     public Integer getIdleCount() { return idleCount; }
@@ -146,8 +161,7 @@ public class BulkIMAPDataImportResponse {
     public String getIMAPAdminLogin() { return IMAPAdminLogin; }
     public String getIMAPAdminPassword() { return IMAPAdminPassword; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("runningAccounts", runningAccounts)
             .add("totalCount", totalCount)
@@ -165,7 +179,6 @@ public class BulkIMAPDataImportResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

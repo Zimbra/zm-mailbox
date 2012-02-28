@@ -28,6 +28,10 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name=AppBlastConstants.E_FINISH_EDIT_RESPONSE)
 public class FinishEditDocumentResponse {
 
+    /**
+     * @zm-api-field-tag edit-url
+     * @zm-api-field-description Edit URL
+     */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=true)
     private String url;
 
@@ -50,15 +54,12 @@ public class FinishEditDocumentResponse {
     public void setUrl(String url) { this.url = url; }
     public String getUrl() { return url; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("url", url);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("url", url);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

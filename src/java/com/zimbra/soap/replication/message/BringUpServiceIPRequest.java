@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
+/**
+ * @zm-api-command-description Bring up the configured service IP address
+ */
 @XmlRootElement(name=ReplicationConstants.E_BRING_UP_SERVICE_IP_REQUEST)
 public class BringUpServiceIPRequest {
 }

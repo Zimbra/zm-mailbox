@@ -18,7 +18,7 @@ package com.zimbra.soap.adminext.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class BulkIMAPImportTaskInfo extends AttrsImpl {
 
     public BulkIMAPImportTaskInfo() {

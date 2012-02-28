@@ -52,7 +52,7 @@ Service ${service.name}
 </p>
 
 <p>
-Copyright 2011 Zimbra, Inc. All rights reserved.
+Copyright 2012 Zimbra, Inc. All rights reserved.
 </p>
 
 </body>

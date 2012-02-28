@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,67 +33,107 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.soap.adminext.type.Name;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Import data for multiple accounts via IMAP
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminExtConstants.E_BULK_IMAP_DATA_IMPORT_REQUEST)
 @XmlType(propOrder = {"sourceType", "attachmentID", "accounts",
     "connectionType", "sourceServerType", "IMAPHost", "IMAPPort",
     "indexBatchSize", "useAdminLogin", "IMAPAdminLogin", "IMAPAdminPassword"})
 public class BulkIMAPDataImportRequest {
 
+    // Other operations exist but aren't used (yet?) - see ZimbraBulkProvisionExt
+    /**
+     * @zm-api-field-tag operation
+     * @zm-api-field-description Operation - <b>preview|startImport|dismissImport</b>
+     */
     @XmlAttribute(name=AdminExtConstants.A_op /* op */, required=false)
     private String op;
 
-    @XmlElement(name=AdminExtConstants.A_sourceType
-                /* sourceType */, required=false)
+    /**
+     * @zm-api-field-tag source-type
+     * @zm-api-field-description Source type - <b>bulkxml|zimbra</b>
+     */
+    @XmlElement(name=AdminExtConstants.A_sourceType /* sourceType */, required=false)
     private String sourceType;
 
+    /**
+     * @zm-api-field-tag attachment-id
+     * @zm-api-field-description Uploaded attachment ID
+     */
     @XmlElement(name=AdminExtConstants.E_attachmentID /* aid */, required=false)
     private String attachmentID;
 
+    /**
+     * @zm-api-field-description Account specification - where name attributes are email addresses
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 
-    @XmlElement(name=AdminExtConstants.E_connectionType
-                /* ConnectionType */, required=false)
+    /**
+     * @zm-api-field-tag connection-type
+     * @zm-api-field-description Connection type
+     */
+    @XmlElement(name=AdminExtConstants.E_connectionType /* ConnectionType */, required=false)
     private String connectionType;
 
-    @XmlElement(name=AdminExtConstants.E_sourceServerType
-                /* sourceServerType */, required=false)
+    /**
+     * @zm-api-field-tag source-svr-type
+     * @zm-api-field-description Source server type
+     */
+    @XmlElement(name=AdminExtConstants.E_sourceServerType /* sourceServerType */, required=false)
     private String sourceServerType;
 
+    /**
+     * @zm-api-field-tag imap-hostname
+     * @zm-api-field-description IMAP hostname
+     */
     @XmlElement(name=AdminExtConstants.E_IMAPHost /* IMAPHost */, required=false)
     private String IMAPHost;
 
+    /**
+     * @zm-api-field-tag imap-port
+     * @zm-api-field-description IMAP port
+     */
     @XmlElement(name=AdminExtConstants.E_IMAPPort /* IMAPPort */, required=false)
     private String IMAPPort;
 
-    @XmlElement(name=AdminExtConstants.E_indexBatchSize
-                /* indexBatchSize */, required=false)
+    /**
+     * @zm-api-field-tag index-batch-size
+     * @zm-api-field-description Index batch size
+     */
+    @XmlElement(name=AdminExtConstants.E_indexBatchSize /* indexBatchSize */, required=false)
     private String indexBatchSize;
 
-    // 1 means true
-    @XmlElement(name=AdminExtConstants.E_useAdminLogin
-                /* UseAdminLogin */, required=false)
+    /**
+     * @zm-api-field-tag use-admin-login-flag
+     * @zm-api-field-description Flag to choose whether to use Admin login or not.  Set to "1" to set.
+     * Default is false
+     */
+    @XmlElement(name=AdminExtConstants.E_useAdminLogin /* UseAdminLogin */, required=false)
     private String useAdminLogin;
 
-    @XmlElement(name=AdminExtConstants.E_IMAPAdminLogin
-                /* IMAPAdminLogin */, required=false)
+    /**
+     * @zm-api-field-tag imap-admin-login
+     * @zm-api-field-description IMAP Admin login name
+     */
+    @XmlElement(name=AdminExtConstants.E_IMAPAdminLogin /* IMAPAdminLogin */, required=false)
     private String IMAPAdminLogin;
 
-    @XmlElement(name=AdminExtConstants.E_IMAPAdminPassword
-                /* IMAPAdminPassword */, required=false)
+    /**
+     * @zm-api-field-tag imap-admin-password
+     * @zm-api-field-description IMAP Admin password
+     */
+    @XmlElement(name=AdminExtConstants.E_IMAPAdminPassword /* IMAPAdminPassword */, required=false)
     private String IMAPAdminPassword;
 
     public BulkIMAPDataImportRequest() {
     }
 
     public void setOp(String op) { this.op = op; }
-    public void setSourceType(String sourceType) {
-        this.sourceType = sourceType;
-    }
-    public void setAttachmentID(String attachmentID) {
-        this.attachmentID = attachmentID;
-    }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
+    public void setAttachmentID(String attachmentID) { this.attachmentID = attachmentID; }
     public void setAccounts(Iterable <Name> accounts) {
         this.accounts.clear();
         if (accounts != null) {
@@ -105,31 +145,19 @@ public class BulkIMAPDataImportRequest {
         this.accounts.add(account);
     }
 
-    public void setConnectionType(String connectionType) {
-        this.connectionType = connectionType;
-    }
-    public void setSourceServerType(String sourceServerType) {
-        this.sourceServerType = sourceServerType;
-    }
+    public void setConnectionType(String connectionType) { this.connectionType = connectionType; }
+    public void setSourceServerType(String sourceServerType) { this.sourceServerType = sourceServerType; }
     public void setIMAPHost(String IMAPHost) { this.IMAPHost = IMAPHost; }
     public void setIMAPPort(String IMAPPort) { this.IMAPPort = IMAPPort; }
-    public void setIndexBatchSize(String indexBatchSize) {
-        this.indexBatchSize = indexBatchSize;
-    }
-    public void setUseAdminLogin(String useAdminLogin) {
-        this.useAdminLogin = useAdminLogin;
-    }
-    public void setIMAPAdminLogin(String IMAPAdminLogin) {
-        this.IMAPAdminLogin = IMAPAdminLogin;
-    }
-    public void setIMAPAdminPassword(String IMAPAdminPassword) {
-        this.IMAPAdminPassword = IMAPAdminPassword;
-    }
+    public void setIndexBatchSize(String indexBatchSize) { this.indexBatchSize = indexBatchSize; }
+    public void setUseAdminLogin(String useAdminLogin) { this.useAdminLogin = useAdminLogin; }
+    public void setIMAPAdminLogin(String IMAPAdminLogin) { this.IMAPAdminLogin = IMAPAdminLogin; }
+    public void setIMAPAdminPassword(String IMAPAdminPassword) { this.IMAPAdminPassword = IMAPAdminPassword; }
     public String getOp() { return op; }
     public String getSourceType() { return sourceType; }
     public String getAttachmentID() { return attachmentID; }
     public List<Name> getAccounts() {
-        return Collections.unmodifiableList(accounts);
+        return accounts;
     }
     public String getConnectionType() { return connectionType; }
     public String getSourceServerType() { return sourceServerType; }
@@ -140,8 +168,7 @@ public class BulkIMAPDataImportRequest {
     public String getIMAPAdminLogin() { return IMAPAdminLogin; }
     public String getIMAPAdminPassword() { return IMAPAdminPassword; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("op", op)
             .add("sourceType", sourceType)
@@ -159,7 +186,6 @@ public class BulkIMAPDataImportRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

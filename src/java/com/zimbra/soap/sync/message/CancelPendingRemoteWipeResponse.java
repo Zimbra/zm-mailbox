@@ -20,16 +20,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceStatusInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncConstants.E_CANCEL_PENDING_REMOTE_WIPE_RESPONSE)
-@XmlType(propOrder = {})
 public class CancelPendingRemoteWipeResponse {
 
+    /**
+     * @zm-api-field-description Device status information
+     */
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
     private DeviceStatusInfo device;
 
@@ -39,15 +40,12 @@ public class CancelPendingRemoteWipeResponse {
     public void setDevice(DeviceStatusInfo device) { this.device = device; }
     public DeviceStatusInfo getDevice() { return device; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("device", device);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("device", device);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

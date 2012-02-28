@@ -25,8 +25,8 @@
   <property name="soapdocs.templates.dir" location="soapdocs/templates" />
   <property name="soapdocs.output.dir" location="${build.dir}/docs/soap" />
   <property name="soapdocs.src.dir" location="soapdocs/src"/>
-  <!-- TODO: use this? -->
   <property name="soapdocs.classes.dir" location="${build.dir}/wsdl-doc-classes"/>
+  <property name="soapdocs.jar" location="soapdocs/jars/ZmApiDoclet.jar"/>
   <!-- END   ZimbraSoapDocs Properties -->
 
   <path id="all.java.path">
@@ -73,6 +73,25 @@
     </fileset>
   </path>
 
+  <path id="soapdocs.doclet.class.path">
+    <path refid="jaxws.classpath"/>
+    <fileset file="soapdocs.jar"/>
+    <fileset dir="soapdocs/jars">
+        <include name="**/*.jar"/>
+    </fileset>
+    <pathelement location="${build.classes.dir}" />
+    <pathelement location="${common.classes.dir}" />
+    <fileset dir="${common.jars.dir}">
+        <include name="log4j*.jar"/>
+        <include name="dom4j*.jar"/>
+        <include name="jackson*.jar"/>
+        <include name="guava*.jar"/>
+        <include name="**/commons-lang-*.jar"/>
+    </fileset>
+    <fileset dir="${server.dir}/soapdocs/jars">
+        <include name="**/freemarker*.jar"/>
+    </fileset>
+  </path>
   <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
     <classpath refid="jaxws.classpath"/>
   </taskdef>
@@ -239,21 +258,44 @@
     <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
+  <!-- Use Mac OS X (Snow Leopard/Lion) or, if using another platform, resolve classpath issues related to
+       usage of the doclet API.
+       Doclet API classes are normally packaged in tools.jar - but Mac OS X does it differently. -->
   <target name="soap-api-doc-compile" depends="compile">
     <mkdir dir="${soapdocs.classes.dir}"/>
     <javac srcdir="${soapdocs.src.dir}" destdir="${soapdocs.classes.dir}"
       debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
+    <echo>"If soap-api-doc source has changed, execute task 'soap-api-doc-jar' and checkin the new jar"</echo>
   </target>
 
-  <target name="generate-soap-api-doc" depends="soap-api-doc-compile">
+  <!-- Packages up a jar for use from generate-soap-api-doc -->
+  <target name="soap-api-doc-jar" depends="soap-api-doc-compile">
+    <delete file="${soapdocs.jar}" quiet="true"/>
+    <jar destfile="${soapdocs.jar}" basedir="${soapdocs.classes.dir}"/>
+  </target>
+
+  <!-- The javadoc task must have resolved any doclet API usage classpath related issues in order to run.
+       so this task should execute successfully on any platform  -->
+  <target name="generate-soap-api-doc" depends="compile">
     <delete dir="${soapdocs.output.dir}" quiet="true"/>
     <mkdir dir="${soapdocs.output.dir}" />
-    <java classname="com.zimbra.doc.soap.WsdlDocGenerator" classpathref="soapdocs.class.path" fork="true" failonerror="true">
-      <arg line="-jaxb.src.dir ${src.java.dir}"/>
-      <arg line="-templates.dir ${soapdocs.templates.dir}"/>
-      <arg line="-output.dir ${soapdocs.output.dir}"/>
-      <arg line="-build.version ${zimbra.buildinfo.version}"/>
-      <arg line="-build.date ${zimbra.buildinfo.date}"/>
-    </java>
+    <javadoc doclet="com.zimbra.doc.soap.doclet.ZmApiDoclet"
+        access="private"
+        docletpathref="soapdocs.doclet.class.path"
+        classpathref="soapdocs.doclet.class.path">
+        <doclet name="com.zimbra.doc.soap.doclet.ZmApiDoclet">
+            <param name="--templates-dir" value="${soapdocs.templates.dir}"/>
+            <param name="--output-dir" value="${soapdocs.output.dir}"/>
+            <param name="--build-version" value="${zimbra.buildinfo.version}"/>
+            <param name="--build-date" value="${zimbra.buildinfo.date}"/>
+        </doclet>
+        <packageset dir="${src.java.dir}" defaultexcludes="yes">
+            <include name="com/zimbra/soap/*/message/**"/>
+            <include name="com/zimbra/soap/*/type/**"/>
+            <include name="com/zimbra/soap/base/**"/>
+            <include name="com/zimbra/soap/header/**"/>
+            <include name="com/zimbra/soap/type/**"/>
+        </packageset>
+  </javadoc>
   </target>
 </project>

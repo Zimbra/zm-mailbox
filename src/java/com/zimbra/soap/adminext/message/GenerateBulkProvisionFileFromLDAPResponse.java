@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,62 +20,72 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminExtConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminExtConstants.E_GENERATE_BULK_PROV_FROM_LDAP_RESPONSE)
-@XmlType(propOrder = {})
 public class GenerateBulkProvisionFileFromLDAPResponse {
 
-    @XmlElement(name=AdminExtConstants.E_totalCount
-                /* totalCount */, required=false)
+    /**
+     * @zm-api-field-tag total-count
+     * @zm-api-field-description Total count
+     */
+    @XmlElement(name=AdminExtConstants.E_totalCount /* totalCount */, required=false)
     private Integer totalCount;
 
-    @XmlElement(name=AdminExtConstants.E_domainCount
-                /* domainCount */, required=false)
+    /**
+     * @zm-api-field-tag domain-count
+     * @zm-api-field-description Domain count
+     */
+    @XmlElement(name=AdminExtConstants.E_domainCount /* domainCount */, required=false)
     private Integer domainCount;
 
-    @XmlElement(name=AdminExtConstants.E_skippedAccountCount
-                /* skippedAccountCount */, required=false)
+    /**
+     * @zm-api-field-tag skipped-account-count
+     * @zm-api-field-description Count of number of skipped accounts
+     */
+    @XmlElement(name=AdminExtConstants.E_skippedAccountCount /* skippedAccountCount */, required=false)
     private Integer skippedAccountCount;
 
-    @XmlElement(name=AdminExtConstants.E_skippedDomainCount
-                /* skippedDomainCount */, required=false)
+    /**
+     * @zm-api-field-tag skipped-domain-count
+     * @zm-api-field-description Count of number of skipped domains
+     */
+    @XmlElement(name=AdminExtConstants.E_skippedDomainCount /* skippedDomainCount */, required=false)
     private Integer skippedDomainCount;
 
-    @XmlElement(name=AdminExtConstants.E_SMTPHost
-                /* SMTPHost */, required=false)
+    /**
+     * @zm-api-field-tag SMTP-host
+     * @zm-api-field-description SMTP host
+     */
+    @XmlElement(name=AdminExtConstants.E_SMTPHost /* SMTPHost */, required=false)
     private String SMTPHost;
 
-    @XmlElement(name=AdminExtConstants.E_SMTPPort
-                /* SMTPPort */, required=false)
+    /**
+     * @zm-api-field-tag SMTP-port
+     * @zm-api-field-description SMTP port
+     */
+    @XmlElement(name=AdminExtConstants.E_SMTPPort /* SMTPPort */, required=false)
     private String SMTPPort;
 
-    @XmlElement(name=AdminExtConstants.E_fileToken
-                /* fileToken */, required=false)
+    /**
+     * @zm-api-field-tag file-token
+     * @zm-api-field-description File token
+     */
+    @XmlElement(name=AdminExtConstants.E_fileToken /* fileToken */, required=false)
     private String fileToken;
 
     public GenerateBulkProvisionFileFromLDAPResponse() {
     }
 
-    public void setTotalCount(Integer totalCount) {
-        this.totalCount = totalCount;
-    }
-    public void setDomainCount(Integer domainCount) {
-        this.domainCount = domainCount;
-    }
-    public void setSkippedAccountCount(Integer skippedAccountCount) {
-        this.skippedAccountCount = skippedAccountCount;
-    }
-    public void setSkippedDomainCount(Integer skippedDomainCount) {
-        this.skippedDomainCount = skippedDomainCount;
-    }
+    public void setTotalCount(Integer totalCount) { this.totalCount = totalCount; }
+    public void setDomainCount(Integer domainCount) { this.domainCount = domainCount; }
+    public void setSkippedAccountCount(Integer skippedAccountCount) { this.skippedAccountCount = skippedAccountCount; }
+    public void setSkippedDomainCount(Integer skippedDomainCount) { this.skippedDomainCount = skippedDomainCount; }
     public void setSMTPHost(String SMTPHost) { this.SMTPHost = SMTPHost; }
     public void setSMTPPort(String SMTPPort) { this.SMTPPort = SMTPPort; }
     public void setFileToken(String fileToken) { this.fileToken = fileToken; }
-
     public Integer getTotalCount() { return totalCount; }
     public Integer getDomainCount() { return domainCount; }
     public Integer getSkippedAccountCount() { return skippedAccountCount; }
@@ -84,8 +94,7 @@ public class GenerateBulkProvisionFileFromLDAPResponse {
     public String getSMTPPort() { return SMTPPort; }
     public String getFileToken() { return fileToken; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("totalCount", totalCount)
             .add("domainCount", domainCount)
@@ -98,7 +107,6 @@ public class GenerateBulkProvisionFileFromLDAPResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

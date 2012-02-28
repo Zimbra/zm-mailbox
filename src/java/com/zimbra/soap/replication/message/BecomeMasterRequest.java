@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
+/**
+ * @zm-api-command-description Tell slave host to failover and become master
+ */
 @XmlRootElement(name=ReplicationConstants.E_BECOME_MASTER_REQUEST)
 public class BecomeMasterRequest {
 }

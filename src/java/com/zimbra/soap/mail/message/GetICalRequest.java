@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
- * @zm-api-command-description Retrieve the unparsed (but XML-encoded (&quot) iCalendar data for an Invite
+ * @zm-api-command-description Retrieve the unparsed (but XML-encoded (&amp;quot)) iCalendar data for an Invite
  * <br />
  * This is intended for interfacing with 3rd party programs
  * <br />

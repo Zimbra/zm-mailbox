@@ -26,16 +26,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceStatusInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SyncConstants.E_GET_DEVICE_STATUS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetDeviceStatusResponse {
 
+    /**
+     * @zm-api-field-description Device status information
+     */
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
     private List<DeviceStatusInfo> devices = Lists.newArrayList();
 
@@ -57,15 +58,12 @@ public class GetDeviceStatusResponse {
         return Collections.unmodifiableList(devices);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("devices", devices);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("devices", devices);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

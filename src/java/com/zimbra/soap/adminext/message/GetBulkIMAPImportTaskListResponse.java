@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,16 +26,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.soap.adminext.type.BulkIMAPImportTaskInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminExtConstants.E_GET_BULK_IMAP_IMPORT_TASKLIST_RESPONSE)
-@XmlType(propOrder = {})
 public class GetBulkIMAPImportTaskListResponse {
 
+    /**
+     * @zm-api-field-description Information on inport tasks
+     */
     @XmlElement(name=AdminExtConstants.E_Task /* task */, required=false)
     private List<BulkIMAPImportTaskInfo> tasks = Lists.newArrayList();
 
@@ -54,18 +55,16 @@ public class GetBulkIMAPImportTaskListResponse {
     }
 
     public List<BulkIMAPImportTaskInfo> getTasks() {
-        return Collections.unmodifiableList(tasks);
+        return tasks;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("tasks", tasks);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

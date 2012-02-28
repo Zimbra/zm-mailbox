@@ -19,6 +19,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
+/**
+ * @zm-api-command-description Report on replication status
+ */
 @XmlRootElement(name=ReplicationConstants.E_REPLICATION_STATUS_REQUEST)
 public class ReplicationStatusRequest {
 }

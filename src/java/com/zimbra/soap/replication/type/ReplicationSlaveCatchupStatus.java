@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,19 +22,28 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ReplicationSlaveCatchupStatus {
 
-    @XmlAttribute(name=ReplicationConstants.A_REMAINING_OPS
-                /* remainingOps */, required=true)
+    /**
+     * @zm-api-field-tag num-pending-redo-operations
+     * @zm-api-field-description Number of pending redo operations
+     */
+    @XmlAttribute(name=ReplicationConstants.A_REMAINING_OPS /* remainingOps */, required=true)
     private final int remaingingOps;
 
-    @XmlAttribute(name=ReplicationConstants.A_REMAINING_FILES
-                /* remainingFiles */, required=true)
+    /**
+     * @zm-api-field-tag num-remaining-files
+     * @zm-api-field-description Number of remaining files
+     */
+    @XmlAttribute(name=ReplicationConstants.A_REMAINING_FILES /* remainingFiles */, required=true)
     private final int remaingingFiles;
 
-    @XmlAttribute(name=ReplicationConstants.A_REMAINING_BYTES
-                /* remainingBytes */, required=true)
+    /**
+     * @zm-api-field-tag num-remaining-bytes
+     * @zm-api-field-description Number of remaining bytes
+     */
+    @XmlAttribute(name=ReplicationConstants.A_REMAINING_BYTES /* remainingBytes */, required=true)
     private final long remaingingBytes;
 
     /**
@@ -45,8 +54,7 @@ public class ReplicationSlaveCatchupStatus {
         this(-1, -1, -1L);
     }
 
-    public ReplicationSlaveCatchupStatus(int remaingingOps,
-                    int remaingingFiles, long remaingingBytes) {
+    public ReplicationSlaveCatchupStatus(int remaingingOps, int remaingingFiles, long remaingingBytes) {
         this.remaingingOps = remaingingOps;
         this.remaingingFiles = remaingingFiles;
         this.remaingingBytes = remaingingBytes;
@@ -56,8 +64,7 @@ public class ReplicationSlaveCatchupStatus {
     public int getRemaingingFiles() { return remaingingFiles; }
     public long getRemaingingBytes() { return remaingingBytes; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("remaingingOps", remaingingOps)
             .add("remaingingFiles", remaingingFiles)
@@ -66,7 +73,6 @@ public class ReplicationSlaveCatchupStatus {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

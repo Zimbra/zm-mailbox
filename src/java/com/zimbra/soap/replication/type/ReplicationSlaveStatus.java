@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,16 +19,16 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ReplicationConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class ReplicationSlaveStatus {
 
-    @XmlElement(name=ReplicationConstants.E_CATCHUP_STATUS
-                /* catchupStatus */, required=false)
+    /**
+     * @zm-api-field-description Catchup status
+     */
+    @XmlElement(name=ReplicationConstants.E_CATCHUP_STATUS /* catchupStatus */, required=false)
     private ReplicationSlaveCatchupStatus catchupStatus;
 
     public ReplicationSlaveStatus() {
@@ -37,19 +37,15 @@ public class ReplicationSlaveStatus {
     public void setCatchupStatus(ReplicationSlaveCatchupStatus catchupStatus) {
         this.catchupStatus = catchupStatus;
     }
-    public ReplicationSlaveCatchupStatus getCatchupStatus() {
-        return catchupStatus;
-    }
+    public ReplicationSlaveCatchupStatus getCatchupStatus() { return catchupStatus; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("catchupStatus", catchupStatus);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
