@@ -569,7 +569,7 @@ public class GalSearchControl {
 
             Element req = mParams.getRequest();
             if (req == null) {
-                req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
+                req = Element.create(mParams.getProxyProtocol(), AccountConstants.SEARCH_GAL_REQUEST);
                 req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
                 req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
                 req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());

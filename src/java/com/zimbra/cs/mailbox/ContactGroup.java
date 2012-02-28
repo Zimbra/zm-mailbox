@@ -202,10 +202,14 @@ public class ContactGroup {
      *  for CONTACT_REF: the value
      */
     public void derefAllMembers(Mailbox mbox, OperationContext octxt) {
+        derefAllMembers(mbox, octxt, SoapProtocol.Soap12);
+    }
+    
+    public void derefAllMembers(Mailbox mbox, OperationContext octxt, SoapProtocol proxyProtocol) {
         derefedMembers = TreeMultimap.create();
         
         for (Member member : members) {
-            member.derefMember(mbox, octxt);
+            member.derefMember(mbox, octxt, proxyProtocol);
             if (member.derefed()) {
                 String key = member.getDerefedKey();
                 derefedMembers.put(key, member);
@@ -399,7 +403,8 @@ public class ContactGroup {
 
         
         // load the actual entry
-        protected abstract void deref(Mailbox mbox, OperationContext octxt) throws ServiceException;  
+        protected abstract void deref(Mailbox mbox, OperationContext octxt, 
+                SoapProtocol proxyProtocol) throws ServiceException;  
         
         protected Member(String value) throws ServiceException {
             setValue(value);
@@ -468,13 +473,13 @@ public class ContactGroup {
         }
         
         protected boolean derefed() {
-            return getDerefedObj() != null;
+            return derefedObject != null;
         }
         
-        private void derefMember(Mailbox mbox, OperationContext octxt) {
+        private void derefMember(Mailbox mbox, OperationContext octxt, SoapProtocol proxyProtocol) {
             if (!derefed()) {
                 try {
-                    deref(mbox, octxt);
+                    deref(mbox, octxt, proxyProtocol);
                 } catch (ServiceException e) {
                     // log and continue
                     ZimbraLog.contact.warn("unable to deref contact group member: " + value, e);
@@ -575,7 +580,7 @@ public class ContactGroup {
         }
 
         @Override
-        protected void deref(Mailbox requestedMbox, OperationContext octxt) 
+        protected void deref(Mailbox requestedMbox, OperationContext octxt, SoapProtocol proxyProtocol) 
         throws ServiceException {
             Object obj = null;
             String key = null;
@@ -598,7 +603,7 @@ public class ContactGroup {
                     emailAddrs = genDerefedEmailAddrs(ownerAcct, contact);
                 }
             } else {
-                Element eContact = fetchRemoteContact(octxt.getAuthToken(), ownerAcct, itemId);
+                Element eContact = fetchRemoteContact(octxt.getAuthToken(), ownerAcct, itemId, proxyProtocol);
                 if (eContact != null) {
                     obj = eContact;
                     key = genDerefedKey(eContact);
@@ -609,7 +614,8 @@ public class ContactGroup {
             setDerefedObject(obj, key, emailAddrs);
         }
         
-        private Element fetchRemoteContact(AuthToken authToken, Account ownerAcct, ItemId contactId)
+        private Element fetchRemoteContact(AuthToken authToken, Account ownerAcct, 
+                ItemId contactId, SoapProtocol proxyProtocol)
         throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
             
@@ -618,7 +624,7 @@ public class ContactGroup {
             transport.setAuthToken(authToken.toZAuthToken());
             transport.setTargetAcctId(ownerAcct.getId());
             
-            Element request = Element.create(SoapProtocol.Soap12, MailConstants.GET_CONTACTS_REQUEST);
+            Element request = Element.create(proxyProtocol, MailConstants.GET_CONTACTS_REQUEST);
             Element eContact = request.addElement(MailConstants.E_CONTACT);
             eContact.addAttribute(MailConstants.A_ID, contactId.toString());
             
@@ -728,13 +734,14 @@ public class ContactGroup {
         }
 
         @Override
-        protected void deref(Mailbox mbox, OperationContext octxt) 
+        protected void deref(Mailbox mbox, OperationContext octxt, SoapProtocol proxyProtocol) 
         throws ServiceException {
             // search GAL by DN
             GalSearchParams params = new GalSearchParams(mbox.getAccount(), null);
             params.setSearchEntryByDn(value);
             params.setType(GalSearchType.all);
             params.setLimit(1);
+            params.setProxyProtocol(proxyProtocol);
             
             // params.setExtraQueryCallback(new ContactGroupExtraQueryCallback(value));
             ContactGroupResultCallback callback = new ContactGroupResultCallback(params);
@@ -808,7 +815,7 @@ public class ContactGroup {
         }
 
         @Override
-        protected void deref(Mailbox mbox, OperationContext octxt) {
+        protected void deref(Mailbox mbox, OperationContext octxt, SoapProtocol proxyProtocol) {
             // value is the derefed obj, the key, and the email
             List<String> emailAddrs = new ArrayList<String>();
             emailAddrs.add(value);

@@ -34,7 +34,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.qa.unittest.prov.Verify;
-import com.zimbra.qa.unittest.prov.ProvTest.SkipTestReason;
 import com.zimbra.soap.account.message.SearchGalRequest;
 import com.zimbra.soap.account.message.SearchGalResponse;
 import com.zimbra.soap.account.type.ContactInfo;

@@ -159,7 +159,8 @@ public final class GetContacts extends MailDocumentHandler  {
                             } else if (derefContactGroupMember) {
                                 contactGroup = ContactGroup.init(con, false);
                                 if (contactGroup != null) {
-                                    contactGroup.derefAllMembers(con.getMailbox(), octxt);
+                                    contactGroup.derefAllMembers(con.getMailbox(), octxt, 
+                                            zsc.getResponseProtocol());
                                 }
                             }
                             ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,

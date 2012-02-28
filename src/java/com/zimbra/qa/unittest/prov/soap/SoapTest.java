@@ -108,7 +108,12 @@ public class SoapTest extends ProvTest {
     
     static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
     throws ServiceException, IOException {
-        SoapProtocol proto = JSON ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
+        return invokeJaxb(transport, jaxbObject,
+                JSON ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
+    }
+    
+    static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject, SoapProtocol proto)
+    throws ServiceException, IOException {
         Element req = JaxbUtil.jaxbToElement(jaxbObject, proto.getFactory());
         
         Element res = transport.invoke(req);

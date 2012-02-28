@@ -805,7 +805,8 @@ public final class ToXML {
     }
 
     private static void encodeContactGroup(Element elem, ContactGroup contactGroup,
-            Collection<String> memberAttrFilter, ItemIdFormatter ifmt, OperationContext octxt, boolean summary, int fields)
+            Collection<String> memberAttrFilter, ItemIdFormatter ifmt, 
+            OperationContext octxt, boolean summary, int fields)
     throws ServiceException {
         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
             Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
@@ -816,7 +817,7 @@ public final class ToXML {
                     // inline member, do nothing
                 } else if (derefedMember instanceof Contact) {
                     // only expand one level for now.
-                    // If this member is a group, do not create/apss down a ContactGroup object from the member.
+                    // If this member is a group, do not create/pass down a ContactGroup object from the member.
                     encodeContact(eMember, ifmt, octxt, (Contact) derefedMember, summary, memberAttrFilter, fields);
                 } else if (derefedMember instanceof GalContact) {
                     encodeGalContact(eMember, (GalContact) derefedMember, memberAttrFilter);
@@ -2869,7 +2870,8 @@ public final class ToXML {
         return encodeGalContact(response, contact, null);
     }
 
-    public static Element encodeGalContact(Element response, GalContact contact, Collection<String> returnAttrs) {
+    public static Element encodeGalContact(Element response, GalContact contact, 
+            Collection<String> returnAttrs) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();

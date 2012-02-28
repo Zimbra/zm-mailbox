@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
@@ -58,6 +59,7 @@ public class GalSearchParams {
     private GalSearchResultCallback mResultCallback;
     private GalSearchQueryCallback mExtraQueryCallback;
     private Element mRequest;
+    private SoapProtocol mProxyProtocol;
     private QName mResponse;
     private DataSource mDataSource;
     private boolean mIdOnly;
@@ -194,6 +196,10 @@ public class GalSearchParams {
         return mRequest;
     }
 
+    public SoapProtocol getProxyProtocol() {
+        return mProxyProtocol == null ? SoapProtocol.Soap12 : mProxyProtocol;
+    }
+    
     public QName getResponseName() {
         return mResponse;
     }
@@ -300,6 +306,11 @@ public class GalSearchParams {
     public void setRequest(Element req) {
         mRequest = req;
     }
+    
+    public void setProxyProtocol(SoapProtocol proxyProtocol) {
+        mProxyProtocol = proxyProtocol;
+    }
+    
     public void setResponseName(QName response) {
         mResponse = response;
     }
