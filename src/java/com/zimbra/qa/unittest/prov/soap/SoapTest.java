@@ -108,7 +108,7 @@ public class SoapTest extends ProvTest {
     
     static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
     throws ServiceException, IOException {
-        return invokeJaxb(transport, jaxbObject,
+        return (T) invokeJaxb(transport, jaxbObject,
                 JSON ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
     }
     

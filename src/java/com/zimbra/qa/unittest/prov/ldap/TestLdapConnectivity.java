@@ -356,7 +356,6 @@ public class TestLdapConnectivity {
      * 
      * A simple junixsocket demo server
      * 
-     * @author Christian Kohlschütter
      * @see SimpleTestClient
      */
     public static class SimpleTestServer {
