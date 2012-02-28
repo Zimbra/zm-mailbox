@@ -809,28 +809,28 @@ public class ProvUtil implements HttpDebugListener {
                 doCountObjects(args);
                 break;
             case CREATE_ACCOUNT:
-                console.println(prov.createAccount(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
+                console.println(prov.createAccount(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3, true)).getId());
                 break;
             case CREATE_ALIAS_DOMAIN:
-                console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3)).getId());
+                console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3, true)).getId());
                 break;
             case CREATE_COS:
-                console.println(prov.createCos(args[1], getMapAndCheck(args, 2)).getId());
+                console.println(prov.createCos(args[1], getMapAndCheck(args, 2, true)).getId());
                 break;
             case CREATE_DOMAIN:
-                console.println(prov.createDomain(args[1], getMapAndCheck(args, 2)).getId());
+                console.println(prov.createDomain(args[1], getMapAndCheck(args, 2, true)).getId());
                 break;
             case CREATE_IDENTITY:
-                prov.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3));
+                prov.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true));
                 break;
             case CREATE_SIGNATURE:
-                console.println(prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3)).getId());
+                console.println(prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true)).getId());
                 break;
             case CREATE_DATA_SOURCE:
-                console.println(prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3], getMapAndCheck(args, 4)).getId());
+                console.println(prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3], getMapAndCheck(args, 4, true)).getId());
                 break;
             case CREATE_SERVER:
-                console.println(prov.createServer(args[1], getMapAndCheck(args, 2)).getId());
+                console.println(prov.createServer(args[1], getMapAndCheck(args, 2, true)).getId());
                 break;
             case CREATE_XMPP_COMPONENT:
                 doCreateXMPPComponent(args);
@@ -966,28 +966,28 @@ public class ProvUtil implements HttpDebugListener {
                 doHelp(args);
                 break;
             case MODIFY_ACCOUNT:
-                prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args,2), true);
+                prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args,2, false), true);
                 break;
             case MODIFY_DATA_SOURCE:
                 account = lookupAccount(args[1]);
-                prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args,3));
+                prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args,3, false));
                 break;
             case MODIFY_IDENTITY:
                 account = lookupAccount(args[1]);
-                prov.modifyIdentity(account, args[2], getMapAndCheck(args,3));
+                prov.modifyIdentity(account, args[2], getMapAndCheck(args,3, false));
                 break;
             case MODIFY_SIGNATURE:
                 account = lookupAccount(args[1]);
-                prov.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args,3));
+                prov.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args,3, false));
                 break;
             case MODIFY_COS:
-                prov.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2), true);
+                prov.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2, false), true);
                 break;
             case MODIFY_CONFIG:
-                prov.modifyAttrs(prov.getConfig(), getMapAndCheck(args, 1), true);
+                prov.modifyAttrs(prov.getConfig(), getMapAndCheck(args, 1, false), true);
                 break;
             case MODIFY_DOMAIN:
-                prov.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2), true);
+                prov.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2, false), true);
                 break;
             case MODIFY_CONFIG_SMIME_CONFIG:
                 doModifyConfigSMIMEConfig(args);
@@ -996,7 +996,7 @@ public class ProvUtil implements HttpDebugListener {
                 doModifyDomainSMIMEConfig(args);
                 break;
             case MODIFY_SERVER:
-                prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2), true);
+                prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2, false), true);
                 break;
             case DELETE_ACCOUNT:
                 doDeleteAccount(args);
@@ -1091,10 +1091,10 @@ public class ProvUtil implements HttpDebugListener {
                 console.println("Password passed strength check.");
                 break;
             case CREATE_DISTRIBUTION_LIST:
-                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2), false).getId());
+                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), false).getId());
                 break;
             case CREATE_DYNAMIC_DISTRIBUTION_LIST:
-                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2), true).getId());
+                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), true).getId());
                 break;
             case CREATE_DISTRIBUTION_LISTS_BULK:
                 doCreateDistributionListsBulk(args);
@@ -1109,7 +1109,7 @@ public class ProvUtil implements HttpDebugListener {
                 doGetAllXMPPComponents();
                 break;
             case MODIFY_DISTRIBUTION_LIST:
-                prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2), true);
+                prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
                 break;
             case DELETE_DISTRIBUTION_LIST:
                 prov.deleteGroup(lookupGroup(args[1]).getId());
@@ -1155,13 +1155,13 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case CREATE_CALENDAR_RESOURCE:
                 console.println(prov.createCalendarResource(args[1], args[2].isEmpty() ? null : args[2],
-                        getMapAndCheck(args, 3)).getId());
+                        getMapAndCheck(args, 3, true)).getId());
                 break;
             case DELETE_CALENDAR_RESOURCE:
                 prov.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
                 break;
             case MODIFY_CALENDAR_RESOURCE:
-                prov.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2), true);
+                prov.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2, false), true);
                 break;
             case RENAME_CALENDAR_RESOURCE:
                 prov.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
@@ -3043,8 +3043,9 @@ public class ProvUtil implements HttpDebugListener {
     /**
      * get map and check/warn deprecated attrs.
      */
-    private Map<String, Object> getMapAndCheck(String[] args, int offset) throws ArgException, ServiceException {
-        Map<String, Object> attrs = getAttrMap(args, offset);
+    private Map<String, Object> getMapAndCheck(String[] args, int offset, boolean isCreateCmd)
+            throws ArgException, ServiceException {
+        Map<String, Object> attrs = getAttrMap(args, offset, isCreateCmd);
         checkDeprecatedAttrs(attrs);
         return attrs;
     }
@@ -3064,7 +3065,7 @@ public class ProvUtil implements HttpDebugListener {
      * file path and value for the attribute will be the base64 encoded string of the content
      * of the file.
      */
-    private Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset)
+    private Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset, boolean isCreateCmd)
             throws IOException, ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
 
@@ -3078,7 +3079,7 @@ public class ProvUtil implements HttpDebugListener {
             String attrName = n;
             if (n.charAt(0) == '+' || n.charAt(0) == '-') {
                 attrName = attrName.substring(1);
-            } else if (isMultiValued(attrMgr, attrName) && !allowMultiValuedAttrReplacement) {
+            } else if (!isCreateCmd && isMultiValued(attrMgr, attrName) && !allowMultiValuedAttrReplacement) {
                 printError("error: cannot replace multi-valued attr value unless -r is specified");
                 System.exit(2);
             }
@@ -3096,9 +3097,10 @@ public class ProvUtil implements HttpDebugListener {
         return attrMgr.getAttributeInfo(attrName).getCardinality() == AttributeCardinality.multi;
     }
 
-    private Map<String, Object> getAttrMap(String[] args, int offset) throws ArgException, ServiceException {
+    private Map<String, Object> getAttrMap(String[] args, int offset, boolean isCreateCmd)
+            throws ArgException, ServiceException {
         try {
-            return keyValueArrayToMultiMap(args, offset);
+            return keyValueArrayToMultiMap(args, offset, isCreateCmd);
         } catch (IllegalArgumentException iae) {
             throw new ArgException("not enough arguments");
         } catch (IOException ioe) {
@@ -4184,7 +4186,7 @@ public class ProvUtil implements HttpDebugListener {
         //4 = class
         //5 = category
         //6 = type
-        Map<String,Object> map = getMapAndCheck(args, 7);
+        Map<String,Object> map = getMapAndCheck(args, 7, true);
         map.put(Provisioning.A_zimbraXMPPComponentClassName, args[4]);
         map.put(Provisioning.A_zimbraXMPPComponentCategory, args[5]);
         map.put(Provisioning.A_zimbraXMPPComponentType, args[6]);
@@ -4734,7 +4736,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doModifyConfigSMIMEConfig(String[] args) throws ServiceException, ArgException {
         String configName = args[1];
-        prov.modifyConfigSMIMEConfig(configName, getMapAndCheck(args, 2));
+        prov.modifyConfigSMIMEConfig(configName, getMapAndCheck(args, 2, false));
     }
 
     private void doModifyDomainSMIMEConfig(String[] args) throws ServiceException, ArgException {
@@ -4742,7 +4744,7 @@ public class ProvUtil implements HttpDebugListener {
         Domain domain = lookupDomain(domainName);
 
         String configName = args[2];
-        prov.modifyDomainSMIMEConfig(domain, configName, getMapAndCheck(args, 3));
+        prov.modifyDomainSMIMEConfig(domain, configName, getMapAndCheck(args, 3, false));
     }
 
     private void doRemoveConfigSMIMEConfig(String[] args) throws ServiceException {
