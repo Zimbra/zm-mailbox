@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +25,9 @@ import java.util.Set;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -45,9 +49,6 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -66,6 +67,18 @@ import com.zimbra.soap.account.type.Prop;
  * @author schemers
  */
 public class GetInfo extends AccountDocumentHandler  {
+
+    public interface GetInfoExt {
+        public void handle(ZimbraSoapContext zsc, Element getInfoResponse);
+    }
+
+    private static ArrayList<GetInfoExt> extensions = new ArrayList<GetInfoExt>();
+
+    public static void addExtension(GetInfoExt extension) {
+        synchronized (extensions) {
+            extensions.add(extension);
+        }
+    }
 
     private enum Section {
         MBOX, PREFS, ATTRS, ZIMLETS, PROPS, IDENTS, SIGS, DSRCS, CHILDREN;
@@ -109,7 +122,7 @@ public class GetInfo extends AccountDocumentHandler  {
                 rights.add(rightMgr.getUserRight(right));
             }
         }
-        
+
 
         Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
@@ -214,13 +227,17 @@ public class GetInfo extends AccountDocumentHandler  {
             Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
             doChildAccounts(ca, account, zsc.getAuthToken());
         }
-        
+
         if (rights != null && !rights.isEmpty()) {
             Element eRights = response.addUniqueElement(AccountConstants.E_RIGHTS);
             doDiscoverRights(eRights, account, rights);
         }
 
         GetAccountInfo.addUrls(response, account);
+
+        for (GetInfoExt extension : extensions) {
+            extension.handle(zsc, response);
+        }
         return response;
     }
 
@@ -412,7 +429,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
         return elem;
     }
-    
+
     private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights);
     }
