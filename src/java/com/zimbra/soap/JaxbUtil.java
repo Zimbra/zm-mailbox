@@ -17,7 +17,6 @@ package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-
 import java.util.Iterator;
 import java.util.Map;
 
@@ -295,6 +294,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetMsgResponse.class,
             com.zimbra.soap.mail.message.GetNoteRequest.class,
             com.zimbra.soap.mail.message.GetNoteResponse.class,
+            com.zimbra.soap.mail.message.GetNotificationsRequest.class,
+            com.zimbra.soap.mail.message.GetNotificationsResponse.class,
             com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest.class,
             com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse.class,
             com.zimbra.soap.mail.message.GetPermissionRequest.class,
