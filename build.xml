@@ -1445,9 +1445,9 @@
                defaultdomain.name
         -->
         <echo file="${build.zmprov}">
-            ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
+            ModifyConfig +zimbraLogHostname ${zimbra.server.hostname}
             ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
-            ModifyConfig zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain.name}&gt;'
+            ModifyConfig +zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain.name}&gt;'
             ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain.name}&gt;'
             CreateServer ${zimbra.server.hostname} \
             zimbraSmtpHostname ${zimbra.smtp.host} \
@@ -1461,13 +1461,13 @@
             zimbraPop3CleartextLoginEnabled TRUE \
         	zimbraSoapExposeVersion TRUE
             ModifyServer ${zimbra.server.hostname} \
-            zimbraServiceInstalled ldap \
-            zimbraServiceInstalled mta \
-            zimbraServiceInstalled mailbox
+            +zimbraServiceInstalled ldap \
+            +zimbraServiceInstalled mta \
+            +zimbraServiceInstalled mailbox
             ModifyServer ${zimbra.server.hostname} \
-            zimbraServiceEnabled ldap \
-            zimbraServiceEnabled mta \
-            zimbraServiceEnabled mailbox
+            +zimbraServiceEnabled ldap \
+            +zimbraServiceEnabled mta \
+            +zimbraServiceEnabled mailbox
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name} \
             zimbraGalInternalSearchBase ROOT
