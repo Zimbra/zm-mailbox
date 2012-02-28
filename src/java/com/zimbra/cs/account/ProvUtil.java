@@ -155,7 +155,7 @@ public class ProvUtil implements HttpDebugListener {
     private Provisioning prov;
     private BufferedReader cliReader;
     private boolean outputBinaryToFile;
-    private boolean allowMultiValuedAttrReplacement;
+    private boolean allowMultiValuedAttrReplacement = true;
     private long sendStart;
 
     private boolean errorOccursDuringInteraction = false; // bug 58554
@@ -192,10 +192,12 @@ public class ProvUtil implements HttpDebugListener {
         outputBinaryToFile = value;
     }
 
+    /*
     private void setAllowMultiValuedAttrReplacement(boolean value) {
         allowMultiValuedAttrReplacement = value;
     }
-
+    */
+    
     private boolean outputBinaryToFile() {
         return outputBinaryToFile;
     }
@@ -260,7 +262,7 @@ public class ProvUtil implements HttpDebugListener {
         console.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
         console.println("  -d/--debug                            debug mode (dumps SOAP messages)");
         console.println("  -m/--master                           use LDAP master (only valid with -l)");
-        console.println("  -r/--replace                          allow replacement of multi-valued attr value");
+        // console.println("  -r/--replace                          allow replacement of multi-valued attr value");
         console.println("");
         doHelp(null);
         System.exit(1);
@@ -3356,10 +3358,12 @@ public class ProvUtil implements HttpDebugListener {
             pu.setOutputBinaryToFile(true);
         }
 
+        /*
         if (cl.hasOption('r')) {
             pu.setAllowMultiValuedAttrReplacement(true);
         }
-
+        */
+        
         args = cl.getArgs();
 
         try {
