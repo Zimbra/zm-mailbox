@@ -155,6 +155,7 @@ public class ProvUtil implements HttpDebugListener {
     private Provisioning prov;
     private BufferedReader cliReader;
     private boolean outputBinaryToFile;
+    private boolean allowMultiValuedAttrReplacement;
     private long sendStart;
 
     private boolean errorOccursDuringInteraction = false; // bug 58554
@@ -189,6 +190,10 @@ public class ProvUtil implements HttpDebugListener {
 
     private void setOutputBinaryToFile(boolean value) {
         outputBinaryToFile = value;
+    }
+
+    private void setAllowMultiValuedAttrReplacement(boolean value) {
+        allowMultiValuedAttrReplacement = value;
     }
 
     private boolean outputBinaryToFile() {
@@ -255,6 +260,7 @@ public class ProvUtil implements HttpDebugListener {
         console.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
         console.println("  -d/--debug                            debug mode (dumps SOAP messages)");
         console.println("  -m/--master                           use LDAP master (only valid with -l)");
+        console.println("  -r/--replace                          allow replacement of multi-valued attr value");
         console.println("");
         doHelp(null);
         System.exit(1);
@@ -3058,8 +3064,8 @@ public class ProvUtil implements HttpDebugListener {
      * file path and value for the attribute will be the base64 encoded string of the content
      * of the file.
      */
-    private static Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset)
-            throws IOException, ServiceException  {
+    private Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset)
+            throws IOException, ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
 
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -3072,6 +3078,9 @@ public class ProvUtil implements HttpDebugListener {
             String attrName = n;
             if (n.charAt(0) == '+' || n.charAt(0) == '-') {
                 attrName = attrName.substring(1);
+            } else if (isMultiValued(attrMgr, attrName) && !allowMultiValuedAttrReplacement) {
+                printError("error: cannot replace multi-valued attr value unless -r is specified");
+                System.exit(2);
             }
             if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
                 File file = new File(v);
@@ -3081,6 +3090,10 @@ public class ProvUtil implements HttpDebugListener {
             StringUtil.addToMultiMap(attrs, n, v);
         }
         return attrs;
+    }
+
+    private static boolean isMultiValued(AttributeManager attrMgr, String attrName) {
+        return attrMgr.getAttributeInfo(attrName).getCardinality() == AttributeCardinality.multi;
     }
 
     private Map<String, Object> getAttrMap(String[] args, int offset) throws ArgException, ServiceException {
@@ -3253,6 +3266,7 @@ public class ProvUtil implements HttpDebugListener {
         options.addOption("D", "debughigh", false, "debug mode (SOAP req/resp payload and http headers)");
         options.addOption("m", "master", false, "use LDAP master (has to be used with --ldap)");
         options.addOption("t", "temp", false, "write binary values to files in temporary directory specified in localconfig key zmprov_tmp_directory");
+        options.addOption("r", "replace", false, "allow replacement of multi-valued attr value");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
 
@@ -3338,6 +3352,10 @@ public class ProvUtil implements HttpDebugListener {
 
         if (cl.hasOption('t')) {
             pu.setOutputBinaryToFile(true);
+        }
+
+        if (cl.hasOption('r')) {
+            pu.setAllowMultiValuedAttrReplacement(true);
         }
 
         args = cl.getArgs();
