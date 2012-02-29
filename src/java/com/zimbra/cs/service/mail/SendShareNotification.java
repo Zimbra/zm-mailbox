@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMultipart;
 
 import com.ibm.icu.text.MessageFormat;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -549,7 +550,7 @@ public class SendShareNotification extends MailDocumentHandler {
         // but the java generate-getters is having trouble with
         // escaping multi line html.  we'll store the template
         // as a separate file until we sort that out.
-        String templateFile = "/opt/zimbra/conf/notification-template.html";
+        String templateFile = LC.octopus_share_notification_template.value();
         File f = new File(templateFile);
         if (!f.exists()) {
             sLog.warn("template file %s doesn't exist", templateFile);

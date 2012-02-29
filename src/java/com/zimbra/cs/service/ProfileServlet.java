@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,6 +17,7 @@ package com.zimbra.cs.service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -38,9 +39,24 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class ProfileServlet extends ZimbraServlet {
 
+    public static final String SERVLET_PATH = "/profile";
+
+    public interface ProfileServletExt {
+        public String getUri();
+        public void handle(HttpServletRequest req, HttpServletResponse resp, String pathInfo) throws ServletException, IOException;
+    }
+
+    public static void addExtension(ProfileServletExt ext) {
+        synchronized (extensions) {
+            extensions.put(ext.getUri(), ext);
+        }
+    }
+
+    private static final HashMap<String,ProfileServletExt> extensions = new HashMap<String,ProfileServletExt>();
+
     private static final long serialVersionUID = -5209313273034536159L;
-    private static final Log log = LogFactory.getLog(ProfileServlet.class); 
-    
+    private static final Log log = LogFactory.getLog(ProfileServlet.class);
+
     public static String IMAGE_URI = "image";
 
     @Override
@@ -65,7 +81,20 @@ public class ProfileServlet extends ZimbraServlet {
             pathInfo = pathInfo.substring(1);
         }
         String[] tokens = pathInfo.split("/");
-        String emailAddress = tokens[0];
+        ProfileServletExt ext = extensions.get(tokens[0]);
+        if (ext != null) {
+            pathInfo = tokens.length > 1 ? tokens[1] : null;
+            ext.handle(req, resp, pathInfo);
+            return;
+        }
+        if (tokens.length == 2 && IMAGE_URI.compareTo(tokens[1]) == 0) { // /{email-addr}/image
+            handleImage(req, resp, tokens[0]);
+            return;
+        }
+        resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+    }
+
+    private void handleImage(HttpServletRequest req, HttpServletResponse resp, String emailAddress) throws IOException, ServletException {
         Provisioning prov = Provisioning.getInstance();
         try {
             Account account = prov.getAccountByName(emailAddress);
