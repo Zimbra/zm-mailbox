@@ -1622,7 +1622,7 @@ public abstract class Element implements Cloneable {
                         "cannot add children to element containing text - <" +
                         this.getName() + ">, trying to add <" + elt.getName() + ">");
             }
-            assert(elt instanceof XMLElement);
+            assert(elt instanceof XMLElement || elt instanceof FileBackedElement);
             if (mChildren == null) {
                 mChildren = new ArrayList<Element>();
             }
