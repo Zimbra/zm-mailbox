@@ -38,6 +38,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -88,7 +89,7 @@ public abstract class AutoProvision {
     abstract Account handle() throws ServiceException;
 
     protected Account createAccount(String acctZimbraName, ExternalEntry externalEntry,
-            String password)
+            String password, AutoProvMode mode)
     throws ServiceException {
         ZAttributes externalAttrs = externalEntry.getAttrs();
 
@@ -113,8 +114,16 @@ public abstract class AutoProvision {
             acct = prov.createAccount(acctZimbraName, zimbraPassword, zimbraAttrs);
         } catch (ServiceException e) {
             if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode())) {
+                ZimbraLog.autoprov.debug("account %s already exists", acctZimbraName);
                 // the account already exists, that's fine, just return null
-                return null;
+                switch (mode) {
+                    case EAGER:
+                        return null; // that's fine, just return null
+                    case LAZY:
+                    case MANUAL:
+                    default:
+                        throw e;
+                }
             } else {
                 throw e;
             }
@@ -368,6 +377,9 @@ public abstract class AutoProvision {
                         searchBase, ZLdapFilterFactory.getInstance().fromFilterString(
                                 FilterId.AUTO_PROVISION_SEARCH, searchFilter),
                         zlc, attrs);
+                if (entry == null) {
+                    throw AccountServiceException.NO_SUCH_EXTERNAL_ENTRY(loginName);
+                }
                 return new ExternalEntry(entry.getDN(), entry.getAttributes());
             }
 

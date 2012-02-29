@@ -69,7 +69,7 @@ public class AutoProvisionManual extends AutoProvision {
         }
 
         ZimbraLog.autoprov.info("auto creating account in MANUAL mode: " + acctZimbraName);
-        return createAccount(acctZimbraName, externalEntry, password);
+        return createAccount(acctZimbraName, externalEntry, password, AutoProvMode.MANUAL);
     }
 
 }

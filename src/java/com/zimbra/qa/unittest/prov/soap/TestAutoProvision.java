@@ -29,10 +29,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -43,22 +44,31 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestPreAuthServlet;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.AutoProvisionTestUtil;
 import com.zimbra.qa.unittest.prov.Verify;
+import com.zimbra.soap.admin.message.AutoProvAccountRequest;
+import com.zimbra.soap.admin.message.AutoProvAccountResponse;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest;
 import com.zimbra.soap.admin.message.AutoProvTaskControlResponse;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
 import com.zimbra.soap.admin.message.AutoProvTaskControlResponse.Status;
+import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
+import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.PrincipalSelector;
+import com.zimbra.soap.type.AutoProvPrincipalBy;
 
 public class TestAutoProvision extends SoapTest {
     
@@ -66,6 +76,8 @@ public class TestAutoProvision extends SoapTest {
     private static Provisioning prov;
     private static Domain extDomain;
     private static String extDomainDn;
+    private static String extDomainAdminBindDn = LC.zimbra_ldap_userdn.value();
+    private static String extDomainAdminBindPassword = LC.zimbra_ldap_password.value();
     
     private static String DEFAULT_AUTOPROV_INITIAL_SLEEP_MS = String.valueOf(5 * Constants.MILLIS_PER_MINUTE);
     private static String DEFAULT_AUTOPROV_POLLING_INTERVAL = "15m";
@@ -701,6 +713,119 @@ public class TestAutoProvision extends SoapTest {
          * done test, set the LC key back
          */
         modifyLocalconfigAndReload(transport, LC.autoprov_initial_sleep_ms, DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
+    }
+    
+    @Test
+    @Bug(bug=70720)
+    public void errorHandling() throws Exception {
+        /*
+         * create and setup zimbra domain
+         */
+        Map<String, Object> domainAttrs = Maps.newHashMap();
+        domainAttrs.put(Provisioning.A_zimbraAutoProvLdapURL, "ldap://localhost:389");
+        domainAttrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, extDomainAdminBindDn);
+        domainAttrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, extDomainAdminBindPassword);
+        StringUtil.addToMultiMap(domainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.LAZY.name());
+        StringUtil.addToMultiMap(domainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.MANUAL.name());
+        domainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(cn=auth*)");
+        // domainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(cn=%n)");
+        domainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
+        domainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, "cn");
+        domainAttrs.put(Provisioning.A_zimbraAutoProvAttrMap, "userPassword=userPassword");
+        Domain domain = createZimbraDomain(genDomainSegmentName(), domainAttrs);
         
+        /*
+         * create external accounts
+         */
+        Map<String, Object> extAcct1Attrs = Maps.newHashMap();
+        extAcct1Attrs.put("cn", "authaccount01");
+        createExternalAcctEntry("acct1", "test123", extAcct1Attrs);
+          
+        Map<String, Object> extAcct2Attrs = Maps.newHashMap();
+        extAcct2Attrs.put("cn", "authaccount02");
+        createExternalAcctEntry("acct2", "test123", extAcct2Attrs);
+        
+        Map<String, Object> extAcct3Attrs = Maps.newHashMap();
+        extAcct3Attrs.put("cn", "authaccount03");
+        createExternalAcctEntry("acct3", "test123", extAcct3Attrs);
+        
+        Map<String, Object> extAcct4Attrs = Maps.newHashMap();
+        extAcct4Attrs.put("cn", "authaccount04");
+        createExternalAcctEntry("acct4", "test123", extAcct4Attrs);
+        
+        /*
+         * do a manual auto provision
+         */
+        SoapTransport transport = authZimbraAdmin();
+        DomainSelector domainSel = new DomainSelector(DomainSelector.DomainBy.name, domain.getName());
+        PrincipalSelector principalSel = PrincipalSelector.create(AutoProvPrincipalBy.name, "authaccount04");
+        AutoProvAccountRequest req = AutoProvAccountRequest.create(domainSel, principalSel);
+        
+        boolean caughtException = false;
+        try {
+            invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            String msg = e.getMessage();
+            
+            if (e.getCode().equals(LdapException.MULTIPLE_ENTRIES_MATCHED) &&
+                    msg.contains(String.format("uid=acct1,ou=people,%s", extDomainDn)) && 
+                    msg.contains(String.format("uid=acct2,ou=people,%s", extDomainDn)) &&
+                    msg.contains(String.format("uid=acct3,ou=people,%s", extDomainDn)) && 
+                    msg.contains(String.format("uid=acct4,ou=people,%s", extDomainDn))) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        /*
+         * modify domain to have the correct search filter
+         */
+        domain.setAutoProvLdapSearchFilter("(cn=%n)");
+        
+        /*
+         * do the manual provision, should succeed this time
+         */
+        AutoProvAccountResponse resp = invokeJaxb(transport, req);
+        AccountInfo acctInfo = resp.getAccount();
+        assertEquals(TestUtil.getAddress("authaccount04", domain.getName()), acctInfo.getName());
+        
+        /*
+         * do the same manual provision again, should fail with 
+         */
+        caughtException = false;
+        try {
+            invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            String msg = e.getMessage();
+            
+            if (e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS)) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        /*
+        <CreateDomainRequest xmlns="urn:zimbraAdmin">
+            <name>autoprov44.1330496906457.com</name>
+            <a n="zimbraAutoProvLdapURL">ldap://zqa-003.eng.vmware.com:389/</a>
+            <a n="zimbraAutoProvLdapAdminBindDn">administrator@zimbraqa.com</a>
+            <a n="zimbraAutoProvLdapAdminBindPassword">liquidsys</a>
+            <a n="zimbraAutoProvMode">LAZY</a>
+            <a n="zimbraAutoProvMode">MANUAL</a>
+            <a n="zimbraAutoProvLdapSearchFilter">(cn=auth*)</a>
+            <a n="zimbraAutoProvLdapSearchBase">OU=CommonUsers,DC=zimbraqa,DC=com</a>
+            <a n="zimbraAutoProvAccountNameMap">cn</a>
+            <a n="zimbraAutoProvAttrMap">userPassword=userPassword</a>
+        </CreateDomainRequest>
+        
+        zmsoap  -z AutoProvAccountRequest domain=bug70720.com.zimbra.qa.unittest.prov.soap.testautoprovision.soaptest.unittest @by=name ../principal=authaccount04 @by=name          
+        
+        this zmsoap yields the following soap:
+        
+        <AutoProvAccountRequest xmlns="urn:zimbraAdmin">
+            <domain by="name">bug70720.com.zimbra.qa.unittest.prov.soap.testautoprovision.soaptest.unittest</domain>
+            <principal by="name">authaccount04</principal>
+        </AutoProvAccountRequest>
+        */
     }
 }

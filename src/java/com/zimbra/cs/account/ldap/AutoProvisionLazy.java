@@ -82,7 +82,7 @@ class AutoProvisionLazy extends AutoProvision {
         String acctZimbraName = mapName(externalEntry.getAttrs(), loginName);
         
         ZimbraLog.autoprov.info("auto creating account in LAZY mode: " + acctZimbraName);
-        return createAccount(acctZimbraName, externalEntry, null);
+        return createAccount(acctZimbraName, externalEntry, null, AutoProvMode.LAZY);
     }
     
     private AutoProvAuthMech auth() {
