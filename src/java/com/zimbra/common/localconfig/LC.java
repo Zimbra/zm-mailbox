@@ -326,7 +326,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_url = KnownKey.newKey("");
-    
+
     @Supported
     public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/openldap/var/run/ldapi");
 
@@ -1064,7 +1064,7 @@ public final class LC {
     public static final KnownKey zimbra_activesync_metadata_cache_max_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_activesync_heartbeat_interval_min = KnownKey.newKey(60); //60 Seconds = 1 min
     //make sure it's less than nginx's zimbraReverseProxyUpstreamPollingTimeout, which is now 3600 seconds
-    public static final KnownKey zimbra_activesync_heartbeat_interval_max = KnownKey.newKey(3540); //3540 Seconds = 59 mins, 
+    public static final KnownKey zimbra_activesync_heartbeat_interval_max = KnownKey.newKey(3540); //3540 Seconds = 59 mins,
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
@@ -1184,6 +1184,9 @@ public final class LC {
     public static final KnownKey uncompressed_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
+
+    public static final KnownKey octopus_public_static_folder = KnownKey.newKey("${zimbra_home}/jetty/static");
+    public static final KnownKey octopus_share_notification_template = KnownKey.newKey("${zimbra_home}/conf/notification-template.html");
 
     static {
         // Automatically set the key name with the variable name.

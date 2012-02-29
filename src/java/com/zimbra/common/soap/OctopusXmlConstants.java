@@ -86,4 +86,6 @@ public final class OctopusXmlConstants {
     public static final String A_MARKSEEN = "markSeen";
     public static final String A_LASTSEEN = "lastSeen";
     public static final String E_NOTIFICATIONS = "notifications";
+    public static final String E_FILES = "files";
+    public static final String E_FILE = "file";
 }
