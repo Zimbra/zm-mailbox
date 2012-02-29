@@ -119,7 +119,6 @@ SECTION mta DEPENDS amavis
 	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
 	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
 	POSTCONF notify_classes                       LOCAL postfix_notify_classes
-	POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	POSTCONF queue_directory					            LOCAL postfix_queue_directory
 	POSTCONF smtpd_sasl_authenticated_header			LOCAL postfix_smtpd_sasl_authenticated_header
 	POSTCONF sender_canonical_maps				        LOCAL postfix_sender_canonical_maps
@@ -307,6 +306,7 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_module_checkspf
 	LOCAL cbpolicyd_module_quotas
 	if SERVICE cbpolicyd
+		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
 	fi
 	if SERVICE !cbpolicyd
