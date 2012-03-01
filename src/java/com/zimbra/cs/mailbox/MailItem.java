@@ -1127,14 +1127,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (rightsNeeded == 0) {
             return true;
         }
-        if (GuestAccount.ANONYMOUS_ACCT.equals(authuser) && !getAccount().isPublicSharingEnabled()) {
-            return false;
-        }
-        if (authuser != null && authuser.isIsExternalVirtualAccount() &&
-                (!getAccount().isExternalSharingEnabled() ||
-                        !isAllowedExternalDomain(authuser.getExternalUserMailAddress()))) {
-            return false;
-        }
         return checkRights(rightsNeeded, authuser, asAdmin) == rightsNeeded;
     }
 
@@ -1175,6 +1167,16 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // authuser has full permission
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
             return rightsNeeded;
+        // if it is an anonymous user, check is public sharing is enabled
+        if (GuestAccount.ANONYMOUS_ACCT.equals(authuser) && !getAccount().isPublicSharingEnabled()) {
+            return 0;
+        }
+        // if it is an external/guest user, do necessary checks
+        if (authuser.isIsExternalVirtualAccount() &&
+                (!getAccount().isExternalSharingEnabled() ||
+                        !isAllowedExternalDomain(authuser.getExternalUserMailAddress()))) {
+            return 0;
+        }
         // check to see what access has been granted on the enclosing folder
         Folder folder = !inDumpster() ? getFolder() : getMailbox().getFolderById(Mailbox.ID_FOLDER_TRASH);
         short granted = 0;
