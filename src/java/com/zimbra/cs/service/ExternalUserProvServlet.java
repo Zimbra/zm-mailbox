@@ -39,7 +39,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -218,11 +217,6 @@ public class ExternalUserProvServlet extends ZimbraServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String displayName = req.getParameter("displayname");
         String password = req.getParameter("password");
-        String password2 = req.getParameter("password2");
-        if (!StringUtil.equal(password, password2)) {
-            resp.sendRedirect("/zimbra/public/extuserprov.jsp");
-            return;
-        }
 
         String prelimToken = null;
         javax.servlet.http.Cookie cookies[] = req.getCookies();
