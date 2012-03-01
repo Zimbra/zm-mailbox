@@ -26,7 +26,6 @@ import org.apache.commons.cli.ParseException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.cs.ldap.LdapClient;
 
 public class LdapUpgrade {
 
@@ -176,11 +175,6 @@ public class LdapUpgrade {
      * zmldapupgrade -b <bug number>
      */
     public static void main(String[] args) throws ServiceException {
-        if (LdapClient.isLegacy()) {
-            // delegate to the legacy package
-            com.zimbra.cs.account.ldap.upgrade.legacy.LegacyLdapUpgrade.legacyMain(args);
-        } else {
-            upgrade(args);
-        }
+        upgrade(args);
     }
 }
