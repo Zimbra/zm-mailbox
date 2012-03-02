@@ -10859,6 +10859,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
 
     /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1383)
+    public static final String A_zimbraThrottleSafeHosts = "zimbraThrottleSafeHosts";
+
+    /**
      * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Start
      * date for daylight time
      */
