@@ -19,10 +19,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
-import com.zimbra.cs.ldap.jndi.JNDILdapClient;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapClient;
 import com.zimbra.cs.util.Zimbra;
@@ -55,7 +53,7 @@ public abstract class LdapClient {
                 }
             }
             if (ldapClient == null) {
-                ldapClient = new JNDILdapClient();
+                ldapClient = new UBIDLdapClient();
             }
             
             try {
@@ -91,46 +89,8 @@ public abstract class LdapClient {
         unsetInstance();
     }
     
-    public static boolean isLegacy() {
-        return isLegacy(Provisioning.getInstance());
-    }
-    
-    private static boolean isLegacy(Provisioning prov) {
-        return (prov.getClass().equals(com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning.class) ||
-                prov.getClass().equals(com.zimbra.cs.account.ldap.legacy.LegacyCustomLdapProvisioning.class));
-    }
-    
-    /* 
-     * Bridging the legacy ZimbraLdapContext and the new ZLdapContext classes.
-     */
-    public static LegacyZimbraLdapContext toLegacyZimbraLdapContext(
-            com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
-        if (!isLegacy(prov)) {
-            Zimbra.halt("Provisioning instance is not LdapProvisioning", 
-                    ServiceException.FAILURE("internal error, wrong ldap context instance", null));
-        }
-        
-        if (!(getInstance() instanceof JNDILdapClient)) {
-            Zimbra.halt("LdapClient instance is not JNDILdapClient", 
-                    ServiceException.FAILURE("internal error, wrong ldap context instance", null));
-        }
-        
-        // just a safety check, this should really not happen at thin point
-        if (ldapContext != null && !(ldapContext instanceof LegacyZimbraLdapContext)) {
-            Zimbra.halt("ILdapContext instance is not ZimbraLdapContext", 
-                    ServiceException.FAILURE("internal error, wrong ldap context instance", null));
-        }
-        
-        return (LegacyZimbraLdapContext)ldapContext;
-    }
-    
     public static ZLdapContext toZLdapContext(
             com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
-        if (isLegacy(prov)) {
-            Zimbra.halt("Provisioning instance is not " + 
-                    com.zimbra.cs.account.ldap.LdapProvisioning.class.getCanonicalName(),
-                    ServiceException.FAILURE("internal error, wrong ldap context instance", null));
-        }
         
         if (!(getInstance() instanceof UBIDLdapClient)) {
             Zimbra.halt("LdapClient instance is not UBIDLdapClient", 

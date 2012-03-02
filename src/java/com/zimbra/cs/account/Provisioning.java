@@ -254,7 +254,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 }
             }
             if (sProvisioning == null) {
-                sProvisioning = new com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning();
+                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning();
                 ZimbraLog.account.error("defaulting to " + sProvisioning.getClass().getCanonicalName());
             }
         }

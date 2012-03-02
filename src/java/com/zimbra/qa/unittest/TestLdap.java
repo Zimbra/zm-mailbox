@@ -144,9 +144,7 @@ public class TestLdap {
     }
 
     enum TestConfig {
-        UBID(com.zimbra.cs.ldap.unboundid.UBIDLdapClient.class, com.zimbra.cs.account.ldap.LdapProvisioning.class),
-        JNDI(com.zimbra.cs.ldap.jndi.JNDILdapClient.class, com.zimbra.cs.account.ldap.LdapProvisioning.class),
-        LEGACY(null, com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning.class);
+        UBID(com.zimbra.cs.ldap.unboundid.UBIDLdapClient.class, com.zimbra.cs.account.ldap.LdapProvisioning.class);
         
         static private TestConfig currentTestConfig = null;
         
