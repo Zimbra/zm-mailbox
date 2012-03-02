@@ -156,7 +156,19 @@ public class DefangFilterTest {
         Assert.assertTrue(!result.contains("dfsrc=\"image001.gif\""));
         Assert.assertTrue(result.contains("src=\"image001.gif\""));
     }
-    
+
+    /**
+     * Tests to make sure we properly defang images that are neither inline/internal nor external images.
+     * @throws Exception
+     */
+    @Test
+    public void testBug64903() throws Exception {
+        String fileName = "bug_60769.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("pnsrc=\"image001.gif\""));
+    }
+
     /**
      * Tests to make sure we can handle inline image data embeded with a data: protocol 
      * without tying up the system

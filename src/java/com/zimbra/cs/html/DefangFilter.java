@@ -86,7 +86,8 @@ public class DefangFilter extends DefaultFilter {
     
     // regex for URLs href. TODO: beef this up
     private static final Pattern VALID_EXT_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern VALID_INT_IMG = Pattern.compile("^data:|^cid:|\\.(jpg|jpeg|png|gif)$");
+    private static final Pattern VALID_INT_IMG = Pattern.compile("^data:|^cid:");
+    private static final Pattern VALID_IMG_FILE = Pattern.compile("\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
@@ -550,17 +551,18 @@ public class DefangFilter extends DefaultFilter {
             }
             if (mNeuterImages) {
                 String srcValue = Strings.nullToEmpty(attributes.getValue("src"));
-                if ((eName.equals("img") || eName.equals("input")) &&
-                   (VALID_EXT_URL.matcher(srcValue).find() ||
-                   !VALID_INT_IMG.matcher(srcValue).find())) {
-                        neuterTag(attributes, "src", "df");
-                } else if (!VALID_EXT_URL.matcher(srcValue).find() &&
-                        !VALID_INT_IMG.matcher(srcValue).find()) {
-                    neuterTag(attributes, "src", "pn");
+                if (eName.equals("img") || eName.equals("input")) {
+                    if (VALID_EXT_URL.matcher(srcValue).find() ||
+                       (!VALID_INT_IMG.matcher(srcValue).find() &&
+                       !VALID_IMG_FILE.matcher(srcValue).find())) {
+                            neuterTag(attributes, "src", "df");
+                        } else if (!VALID_INT_IMG.matcher(srcValue).find() &&
+                                VALID_IMG_FILE.matcher(srcValue).find()) {
+                            neuterTag(attributes, "src", "pn");
+                        }
                 }
                 neuterTag(attributes, "background", "df");
             }
-
             return true;
         } else if (elementRemoved(element.rawname)) {
             mRemovalElementName = element.rawname;
@@ -654,7 +656,8 @@ public class DefangFilter extends DefaultFilter {
         // case that its an inline image
         if(aName.equals("src")) {
             if (!(VALID_EXT_URL.matcher(value).find() ||
-                VALID_INT_IMG.matcher(value).find())) {
+                VALID_INT_IMG.matcher(value).find() ||
+                VALID_IMG_FILE.matcher(value).find())) {
                 attributes.setValue(i, "#");
                 return false;
             }
