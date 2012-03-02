@@ -308,6 +308,76 @@ final class ImapURL {
         }
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((mHostname == null) ? 0 : mHostname.hashCode());
+        result = prime * result + ((mPart == null) ? 0 : mPart.hashCode());
+        result = prime * result + ((mPath == null) ? 0 : mPath.hashCode());
+        result = prime * result + mPort;
+        result = prime * result + ((mURL == null) ? 0 : mURL.hashCode());
+        result = prime * result + mUid;
+        result = prime * result + ((mUsername == null) ? 0 : mUsername.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ImapURL other = (ImapURL) obj;
+        if (mHostname == null) {
+            if (other.mHostname != null) {
+                return false;
+            }
+        } else if (!mHostname.equals(other.mHostname)) {
+            return false;
+        }
+        if (mPart == null) {
+            if (other.mPart != null) {
+                return false;
+            }
+        } else if (!mPart.equals(other.mPart)) {
+            return false;
+        }
+        if (mPath == null) {
+            if (other.mPath != null) {
+                return false;
+            }
+        } else if (!mPath.equals(other.mPath)) {
+            return false;
+        }
+        if (mPort != other.mPort) {
+            return false;
+        }
+        if (mURL == null) {
+            if (other.mURL != null) {
+                return false;
+            }
+        } else if (!mURL.equals(other.mURL)) {
+            return false;
+        }
+        if (mUid != other.mUid) {
+            return false;
+        }
+        if (mUsername == null) {
+            if (other.mUsername != null) {
+                return false;
+            }
+        } else if (!mUsername.equals(other.mUsername)) {
+            return false;
+        }
+        return true;
+    }
+
     public static void main(String[] args) throws ImapParseException, ServiceException, IOException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
         ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);

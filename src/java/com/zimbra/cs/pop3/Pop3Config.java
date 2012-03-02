@@ -16,6 +16,7 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ServerConfig;
@@ -101,5 +102,9 @@ public class Pop3Config extends ServerConfig {
 
     public boolean isSaslGssapiEnabled() {
         return getBooleanAttr(A_zimbraPop3SaslGssapiEnabled, false);
+    }
+
+    public String[] getIgnoredHosts() throws ServiceException {
+        return getLocalServer().getMultiAttr(A_zimbraThrottleSafeHosts);
     }
 }

@@ -23350,6 +23350,158 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @return zimbraThrottleSafeHosts, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1383)
+    public String[] getThrottleSafeHosts() {
+        return getMultiAttr(Provisioning.A_zimbraThrottleSafeHosts);
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param zimbraThrottleSafeHosts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1383)
+    public void setThrottleSafeHosts(String[] zimbraThrottleSafeHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param zimbraThrottleSafeHosts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1383)
+    public Map<String,Object> setThrottleSafeHosts(String[] zimbraThrottleSafeHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
+        return attrs;
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param zimbraThrottleSafeHosts new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public void addThrottleSafeHosts(String zimbraThrottleSafeHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param zimbraThrottleSafeHosts new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public Map<String,Object> addThrottleSafeHosts(String zimbraThrottleSafeHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
+        return attrs;
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param zimbraThrottleSafeHosts existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public void removeThrottleSafeHosts(String zimbraThrottleSafeHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param zimbraThrottleSafeHosts existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public Map<String,Object> removeThrottleSafeHosts(String zimbraThrottleSafeHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
+        return attrs;
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public void unsetThrottleSafeHosts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleSafeHosts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to ignore during IP based throttling. Typically should list
+     * nginx hostname and any other mailbox servers which can proxy to this
+     * server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1375)
+    public Map<String,Object> unsetThrottleSafeHosts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleSafeHosts, "");
+        return attrs;
+    }
+
+    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      *
      * @return zimbraUserServicesEnabled, or false if unset

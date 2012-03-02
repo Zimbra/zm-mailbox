@@ -14,7 +14,9 @@
  */
 package com.zimbra.cs.imap;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -22,13 +24,17 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
+import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 public final class NioImapServer extends NioServer implements ImapServer, RealtimeStatsCallback {
@@ -42,6 +48,14 @@ public final class NioImapServer extends NioServer implements ImapServer, Realti
         decoder.setMaxLiteralSize(config.getMaxMessageSize());
         registerMBean(getName());
         ZimbraPerf.addStatsCallback(this);
+        Set<String> safeHosts = new HashSet<String>();
+        for (Server server : Provisioning.getInstance().getAllServers()) {
+            safeHosts.add(server.getServiceHostname());
+        }
+        for (String ignoredHost : config.getIgnoredHosts()) {
+            safeHosts.add(ignoredHost);
+        }
+        ServerThrottle.configureThrottle(config.getProtocol(), LC.imap_throttle_ip_limit.intValue(), LC.imap_throttle_acct_limit.intValue(), safeHosts);
     }
 
     @Override

@@ -117,6 +117,9 @@ final class ImapProxy {
         id.put(IDInfo.NAME, "ZCS");
         id.put(IDInfo.VERSION, BuildInfo.VERSION);
         id.put(IDInfo.X_VIA, handler.getNextVia());
+        if (handler.getOrigRemoteIp() != null) {
+            id.put(IDInfo.X_ORIGINATING_IP, handler.getOrigRemoteIp());
+        }
         return id;
     }
 
@@ -143,7 +146,7 @@ final class ImapProxy {
      * @return whether the SELECT was successful (i.e. it returned a tagged {@code OK} response)
      * @throws ImapProxyException network error with the remote IMAP server
      */
-    boolean select(final String tag, final byte params, final ImapHandler.QResyncInfo qri)
+    boolean select(final String tag, final byte params, final QResyncInfo qri)
             throws ImapProxyException, ServiceException {
         // FIXME: may need to send an ENABLE before the SELECT
 

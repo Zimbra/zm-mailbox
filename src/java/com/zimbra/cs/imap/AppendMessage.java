@@ -29,6 +29,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MailDateFormat;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -62,9 +63,29 @@ final class AppendMessage {
     private List<Part> parts;
     private Blob content;
     private List<String> flagNames;
+    private List<String> persistentFlagNames; //flagNames is nulled out in checkFlags; this holds the original constructed list of names
     private int flags = Flag.BITMASK_UNREAD;
     private final Set<String> tags = Sets.newHashSetWithExpectedSize(3);
     private short sflags;
+
+    Blob getContent() throws IOException, ImapException, ServiceException {
+        if (content == null) {
+            content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
+        }
+        return content;
+    }
+
+    Date getDate() {
+        return date;
+    }
+
+    List<String> getPersistentFlagNames() {
+        return persistentFlagNames;
+    }
+
+    List<Part> getParts() {
+        return parts;
+    }
 
     static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
             throws ImapParseException, IOException {
@@ -80,7 +101,7 @@ final class AppendMessage {
 
     private void parse(ImapRequest req) throws ImapParseException, IOException {
         if (req.peekChar() == '(') {
-            flagNames = req.readFlags();
+            persistentFlagNames = flagNames = req.readFlags();
             req.skipSpace();
         }
         if (req.peekChar() == '"') {
@@ -111,6 +132,15 @@ final class AppendMessage {
         } else {
             parts = Arrays.asList(new Part(req.readLiteral8()));
         }
+    }
+
+    @VisibleForTesting
+    public AppendMessage(List<String> flagNames, Date date, List<Part> parts) {
+        this.flagNames = persistentFlagNames = flagNames;
+        this.date = date;
+        this.parts = parts;
+        this.tag = null;
+        this.handler = null;
     }
 
     void checkFlags(Mailbox mbox, ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
@@ -196,7 +226,7 @@ final class AppendMessage {
     }
 
     void checkContent() throws IOException, ImapException, ServiceException {
-        content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
+        getContent();
         long size = content.getRawSize();
         if (size > handler.getConfig().getMaxMessageSize()) {
             cleanup();
@@ -285,7 +315,7 @@ final class AppendMessage {
     }
 
     /** APPEND message part, either literal data or IMAP URL. */
-    private final class Part {
+    final class Part {
         Literal literal;
         ImapURL url;
 
@@ -309,6 +339,14 @@ final class AppendMessage {
             if (literal != null) {
                 literal.cleanup();
             }
+        }
+
+        Literal getLiteral() {
+            return literal;
+        }
+
+        ImapURL getUrl() {
+            return url;
         }
     }
 }

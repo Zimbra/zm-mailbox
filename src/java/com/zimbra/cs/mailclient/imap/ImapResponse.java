@@ -82,14 +82,14 @@ public final class ImapResponse {
             is.skipChar(' ');
             data = Flags.read(is);
             break;
-        case LIST: case LSUB:
+        case LIST: case LSUB: case XLIST:
             // "LIST" SP mailbox-list / "LSUB" SP mailbox-list
             // mailbox-list    = "(" [mbx-list-flags] ")" SP
             //                   (DQUOTE QUOTED-CHAR DQUOTE / nil) SP mailbox
             is.skipChar(' ');
             data = ListData.read(is);
             break;
-        case SEARCH:
+        case SEARCH: case SORT:
             // "SEARCH" *(SP nz-number)
             data = readSearchData(is);
             break;

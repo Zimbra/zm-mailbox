@@ -15,7 +15,9 @@
 
 package com.zimbra.cs.pop3;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -26,11 +28,15 @@ import org.apache.mina.filter.codec.textline.TextLineDecoder;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
+import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 public final class NioPop3Server extends NioServer implements Pop3Server, RealtimeStatsCallback {
@@ -40,6 +46,14 @@ public final class NioPop3Server extends NioServer implements Pop3Server, Realti
         super(config);
         registerMBean(getName());
         ZimbraPerf.addStatsCallback(this);
+        Set<String> safeHosts = new HashSet<String>();
+        for (Server server : Provisioning.getInstance().getAllServers()) {
+            safeHosts.add(server.getServiceHostname());
+        }
+        for (String ignoredHost : config.getIgnoredHosts()) {
+            safeHosts.add(ignoredHost);
+        }
+        ServerThrottle.configureThrottle(config.getProtocol(), LC.pop3_throttle_ip_limit.intValue(), LC.pop3_throttle_acct_limit.intValue(), safeHosts);
     }
 
     @Override

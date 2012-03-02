@@ -15,19 +15,35 @@
 
 package com.zimbra.cs.pop3;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
+import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.server.TcpServer;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class TcpPop3Server extends TcpServer implements Pop3Server, RealtimeStatsCallback {
+
     public TcpPop3Server(Pop3Config config) throws ServiceException {
         super(config);
         ZimbraPerf.addStatsCallback(this);
+
+        Set<String> safeHosts = new HashSet<String>();
+        for (Server server : Provisioning.getInstance().getAllServers()) {
+            safeHosts.add(server.getServiceHostname());
+        }
+        for (String ignoredHost : config.getIgnoredHosts()) {
+            safeHosts.add(ignoredHost);
+        }
+        ServerThrottle.configureThrottle(config.getProtocol(), LC.pop3_throttle_ip_limit.intValue(), LC.pop3_throttle_acct_limit.intValue(), safeHosts);
     }
 
     @Override

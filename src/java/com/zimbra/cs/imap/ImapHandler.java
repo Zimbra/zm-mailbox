@@ -14,63 +14,6 @@
  */
 package com.zimbra.cs.imap;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
-import com.zimbra.common.calendar.WellKnownTimeZones;
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.GuestAccount;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
-import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
-import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailclient.imap.IDInfo;
-import com.zimbra.cs.security.sasl.Authenticator;
-import com.zimbra.cs.security.sasl.AuthenticatorUser;
-import com.zimbra.cs.security.sasl.PlainAuthenticator;
-import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
-import com.zimbra.cs.service.mail.FolderAction;
-import com.zimbra.cs.service.mail.ItemActionHelper;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZGrant;
-import com.zimbra.client.ZMailbox;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -94,6 +37,67 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.io.Closeables;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGrant;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailclient.imap.IDInfo;
+import com.zimbra.cs.security.sasl.Authenticator;
+import com.zimbra.cs.security.sasl.AuthenticatorUser;
+import com.zimbra.cs.security.sasl.PlainAuthenticator;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
+import com.zimbra.cs.server.ServerThrottle;
+import com.zimbra.cs.service.mail.FolderAction;
+import com.zimbra.cs.service.mail.ItemActionHelper;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.BuildInfo;
 
 abstract class ImapHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
@@ -124,10 +128,18 @@ abstract class ImapHandler {
     private String userAgent;
     boolean goodbyeSent;
     private Set<ImapExtension> activeExtensions;
+    private final ServerThrottle reqThrottle;
+    private final ImapCommandThrottle commandThrottle;
+
+    private static final Set<String> THROTTLED_COMMANDS = ImmutableSet.of(
+            "APPEND", "COPY", "CREATE", "EXAMINE", "FETCH", "LIST",
+            "LSUB", "UID", "SEARCH", "SELECT", "SORT", "STORE", "XLIST");
 
     ImapHandler(ImapConfig config) {
         this.config = config;
         startedTLS = config.isSslEnabled();
+        reqThrottle = ServerThrottle.getThrottle(config.getProtocol());
+        commandThrottle = new ImapCommandThrottle(LC.imap_throttle_command_limit.intValue());
     }
 
     abstract void sendLine(String line, boolean flush) throws IOException;
@@ -326,6 +338,20 @@ abstract class ImapHandler {
     boolean executeRequest(ImapRequest req) throws IOException, ImapException {
         boolean isProxied = imapProxy != null;
 
+        if (getCredentials() != null) {
+            if (reqThrottle.isAccountThrottled(getCredentials().getAccountId())) {
+                ZimbraLog.imap.warn("too many IMAP requests from account %s dropping connection",getCredentials().getAccountId());
+                throw new ImapThrottledException("too many requests for acct");
+            }
+        }
+        if (reqThrottle.isIpThrottled(getOrigRemoteIp())) {
+            ZimbraLog.imap.warn("too many IMAP requests from original remote ip %s dropping connection",getOrigRemoteIp());
+            throw new ImapThrottledException("too many requests from original ip");
+        } else if (reqThrottle.isIpThrottled(getRemoteIp())) {
+            ZimbraLog.imap.warn("too many IMAP requests from remote ip %s dropping connection",getRemoteIp());
+            throw new ImapThrottledException("too many requests from remote ip");
+        }
+
         if (isIdle()) {
             boolean clean = false;
             try {
@@ -340,6 +366,9 @@ abstract class ImapHandler {
         req.skipSpace();
         String command = lastCommand = req.readATOM();
         do {
+            if (!THROTTLED_COMMANDS.contains(command)) {
+                commandThrottle.reset(); //we received a command that isn't throttle-aware; reset throttle counter for next pass
+            }
             switch (command.charAt(0)) {
             case 'A':
                 if (command.equals("AUTHENTICATE")) {
@@ -1417,19 +1446,13 @@ abstract class ImapHandler {
         return credentials;
     }
 
-    static class QResyncInfo {
-        int uvv;
-        int modseq;
-        String knownUIDs;
-        String seqMilestones;
-        String uidMilestones;
-    }
-
     boolean doSELECT(String tag, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapException {
+        checkCommandThrottle(new SelectCommand(path, params, qri));
         return selectFolder(tag, "SELECT", path, params, qri);
     }
 
     boolean doEXAMINE(String tag, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapException {
+        checkCommandThrottle(new ExamineCommand(path, params, qri));
         return selectFolder(tag, "EXAMINE", path, (byte) (params | ImapFolder.SELECT_READONLY), qri);
     }
 
@@ -1545,7 +1568,8 @@ abstract class ImapHandler {
         return true;
     }
 
-    boolean doCREATE(String tag, ImapPath path) throws IOException {
+    boolean doCREATE(String tag, ImapPath path) throws IOException, ImapThrottledException {
+        checkCommandThrottle(new CreateCommand(path));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -1815,6 +1839,7 @@ abstract class ImapHandler {
 
     boolean doLIST(String tag, String referenceName, Set<String> mailboxNames, byte selectOptions, byte returnOptions,
             byte status) throws ImapException, IOException {
+        checkCommandThrottle(new ListCommand(referenceName, mailboxNames, selectOptions, returnOptions, status));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -2149,7 +2174,8 @@ abstract class ImapHandler {
         return false;
     }
 
-    boolean doLSUB(String tag, String referenceName, String mailboxName) throws IOException {
+    boolean doLSUB(String tag, String referenceName, String mailboxName) throws ImapException, IOException {
+        checkCommandThrottle(new LsubCommand(referenceName, mailboxName));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -2347,6 +2373,7 @@ abstract class ImapHandler {
     }
 
     boolean doAPPEND(String tag, ImapPath path, List<AppendMessage> appends) throws IOException, ImapException {
+        checkCommandThrottle(new AppendCommand(path, appends));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -3158,11 +3185,13 @@ abstract class ImapHandler {
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options)
             throws IOException, ImapException {
+        checkCommandThrottle(new SearchCommand(i4search, options));
         return search(tag, "SEARCH", i4search, byUID, options, null);
     }
 
     boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, List<SortBy> order)
             throws IOException, ImapException {
+        checkCommandThrottle(new SortCommand(i4search, options));
         return search(tag, "SORT", i4search, byUID, options, order);
     }
 
@@ -3445,8 +3474,8 @@ abstract class ImapHandler {
     static final int FETCH_VANISHED      = 0x0200;
     static final int FETCH_MARK_READ     = 0x1000;
 
-    private static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
-    private static final int FETCH_FROM_MIME  = FETCH_BODY | FETCH_BODYSTRUCTURE | FETCH_ENVELOPE;
+    static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
+    static final int FETCH_FROM_MIME  = FETCH_BODY | FETCH_BODYSTRUCTURE | FETCH_ENVELOPE;
 
     static final int FETCH_FAST = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE;
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
@@ -3454,6 +3483,7 @@ abstract class ImapHandler {
 
     boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID,
             int changedSince) throws IOException, ImapException {
+        checkCommandThrottle(new FetchCommand(sequenceSet, attributes, parts));
         return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, true);
     }
 
@@ -3581,12 +3611,6 @@ abstract class ImapHandler {
             }
         } finally {
             mbox.lock.release();
-        }
-        if ((attributes & FETCH_FROM_MIME) == 0 && parts != null && parts.size() == 1) {
-            if (parts.get(0).isIgnoredExchangeHeader()) {
-                ZimbraLog.imap.warn("possible misconfigured client; requested ignored header in part %s",parts.get(0));
-                parts = null;
-            }
         }
         for (ImapMessage i4msg : i4set) {
             PrintStream result = new PrintStream(output, false, Charsets.UTF_8.name());
@@ -3785,12 +3809,13 @@ abstract class ImapHandler {
         i4folder.undirtyMessage(i4msg);
     }
 
-    private enum StoreAction { REPLACE, ADD, REMOVE }
+    enum StoreAction { REPLACE, ADD, REMOVE }
 
     private final int SUGGESTED_BATCH_SIZE = 100;
 
     boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent,
             int modseq, boolean byUID) throws IOException, ImapException {
+        checkCommandThrottle(new StoreCommand(sequenceSet, flagNames, operation, modseq));
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -4002,6 +4027,7 @@ abstract class ImapHandler {
     private final int SUGGESTED_COPY_BATCH_SIZE = 50;
 
     boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException, ImapException {
+        checkCommandThrottle(new CopyCommand(sequenceSet, path));
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -4156,6 +4182,13 @@ abstract class ImapHandler {
         sendNotifications(true, false);
         sendOK(tag, copyuid + command + " completed");
         return true;
+    }
+
+    private void checkCommandThrottle(ImapCommand command) throws ImapThrottledException {
+        if (commandThrottle.isCommandThrottled(command)) {
+            ZimbraLog.imap.warn("too many repeated %s requests dropping connection", command.getClass().getSimpleName().toUpperCase());
+            throw new ImapThrottledException("too many repeated "+command.getClass().getSimpleName()+" requests");
+        }
     }
 
     public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {

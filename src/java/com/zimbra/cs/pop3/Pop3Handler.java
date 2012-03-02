@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
+import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 
@@ -79,9 +80,12 @@ abstract class Pop3Handler {
     private String currentCommandLine;
     private int expire;
 
+    private final ServerThrottle throttle;
+
     Pop3Handler(Pop3Config config) {
         this.config = config;
         startedTLS = config.isSslEnabled();
+        throttle = ServerThrottle.getThrottle(config.getProtocol());
     }
 
     abstract void startTLS() throws IOException;
@@ -194,8 +198,24 @@ abstract class Pop3Handler {
                 if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     return false;
             } catch (ServiceException e) {
+                ZimbraLog.pop.warn("ServiceException checking account status",e);
                 return false;
             }
+            if (throttle.isAccountThrottled(accountId)) {
+                ZimbraLog.pop.warn("throttling POP3 connection for account %s due to too many requests", accountId);
+                dropConnection = true;
+                return false;
+            }
+        }
+
+        if (throttle.isIpThrottled(origRemoteAddress)) {
+            ZimbraLog.pop.warn("throttling POP3 connection for original remote IP %s", origRemoteAddress);
+            dropConnection = true;
+            return false;
+        } else if (throttle.isIpThrottled(clientAddress)) {
+            ZimbraLog.pop.warn("throttling POP3 connection for remote IP %s", clientAddress);
+            dropConnection = true;
+            return false;
         }
 
         int ch = command.charAt(0);
