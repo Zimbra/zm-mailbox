@@ -36,6 +36,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 /**
