@@ -108,16 +108,17 @@ public class AddMsg extends MailDocumentHandler {
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
 
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
-        MimeMessage mm;
-        if (attachment != null) {
-            mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
-        } else {
-            mm = ParseMimeMessage.importMsgSoap(msgElem);
-        }
-
         Message msg;
-        int flagsBitMask = Flag.toBitmask(flagsStr);
         try {
+            MimeMessage mm;
+            if (attachment != null) {
+                mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
+            } else {
+                mm = ParseMimeMessage.importMsgSoap(msgElem);
+            }
+
+            int flagsBitMask = Flag.toBitmask(flagsStr);
+
             ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
             if (filterSent && !DebugConfig.disableOutgoingFilter && folderId == MailSender.getSentFolderId(mbox) &&
                     (flagsBitMask & Flag.BITMASK_FROM_ME) != 0) {
@@ -131,6 +132,11 @@ public class AddMsg extends MailDocumentHandler {
             }
         } catch(IOException ioe) {
             throw ServiceException.FAILURE("Error While Delivering Message", ioe);
+        } finally {
+            // purge the messages fetched from other servers.
+            if (mimeData.fetches != null) {
+                FileUploadServlet.deleteUploads(mimeData.fetches);
+            }
         }
 
         // we can now purge the uploaded attachments

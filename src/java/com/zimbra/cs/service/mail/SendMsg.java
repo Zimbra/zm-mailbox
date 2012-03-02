@@ -156,9 +156,9 @@ public final class SendMsg extends MailDocumentHandler {
             // tired of waiting for another thread to complete the send
             throw MailServiceException.TRY_AGAIN("message send already in progress: " + sendUid);
         } else if (state == SendState.NEW) {
+            MimeMessageData mimeData = new MimeMessageData();
             try {
                 // holds return data about the MimeMessage
-                MimeMessageData mimeData = new MimeMessageData();
                 MimeMessage mm;
                 if (attachId != null) {
                     mm = parseUploadedMessage(zsc, attachId, mimeData, needCalendarSentByFixup);
@@ -185,6 +185,11 @@ public final class SendMsg extends MailDocumentHandler {
             } catch (RuntimeException re) {
                 clearPendingSend(mbox.getId(), sendRecord);
                 throw re;
+            } finally {
+                // purge the messages fetched from other servers.
+                if (mimeData.fetches != null) {
+                    FileUploadServlet.deleteUploads(mimeData.fetches);
+                }
             }
         }
 

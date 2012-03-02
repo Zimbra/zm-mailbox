@@ -96,50 +96,54 @@ public class SaveDraft extends MailDocumentHandler {
 
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-
-        ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
-        MimeMessage mm;
-        if (attachment != null)
-            mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
-        else
-            mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
-
-        long date = System.currentTimeMillis();
-        try {
-            Date d = new Date();
-            mm.setSentDate(d);
-            date = d.getTime();
-        } catch (Exception e) { }
-
-        try {
-            mm.saveChanges();
-        } catch (MessagingException me) {
-            throw ServiceException.FAILURE("completing MIME message object", me);
-        }
-
-        ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-
         long autoSendTime = new Long(msgElem.getAttribute(MailConstants.A_AUTO_SEND_TIME, "0"));
-
-        Account acct = mbox.getAccount();
-        long acctQuota = AccountUtil.getEffectiveQuota(acct);
-        if (autoSendTime != 0 && acct.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
-            throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
-        }
-        Domain domain = Provisioning.getInstance().getDomain(acct);
-        if (domain != null &&
-                AccountUtil.isOverAggregateQuota(domain) && !AccountUtil.isSendAllowedOverAggregateQuota(domain)) {
-            throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
-        }
-
+        
+        ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         Message msg;
         try {
+            MimeMessage mm;
+            if (attachment != null)
+                mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
+            else
+                mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+
+            long date = System.currentTimeMillis();
+            try {
+                Date d = new Date();
+                mm.setSentDate(d);
+                date = d.getTime();
+            } catch (Exception e) { }
+
+            try {
+                mm.saveChanges();
+            } catch (MessagingException me) {
+                throw ServiceException.FAILURE("completing MIME message object", me);
+            }
+
+            ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
+
+            Account acct = mbox.getAccount();
+            long acctQuota = AccountUtil.getEffectiveQuota(acct);
+            if (autoSendTime != 0 && acct.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
+                throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
+            }
+            Domain domain = Provisioning.getInstance().getDomain(acct);
+            if (domain != null &&
+                    AccountUtil.isOverAggregateQuota(domain) && !AccountUtil.isSendAllowedOverAggregateQuota(domain)) {
+                throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
+            }
+
             String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ?
                 mbox.getAccountId() : account);
 
             msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
+        } finally {
+            // purge the messages fetched from other servers.
+            if (mimeData.fetches != null) {
+                FileUploadServlet.deleteUploads(mimeData.fetches);
+            }
         }
 
         // we can now purge the uploaded attachments
