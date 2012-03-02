@@ -232,6 +232,53 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
     e.g. 
     zmprov md zimbra.com zimbraAuthKerberos5Realm VMWARE.COM
     
+    Principal mapping:
+    ------------------
+    The SPNEGO token carries a user's kerberos principal.  After a user's SPNEGO token 
+    is authenticated, ZCS servers need to identify the user in Zimbra's LDAP.   
+    A kerberos principal is mapped to a Zimbra account by the following mechanism:
+    
+    Method 1. domain basis
+         
+              Requires the localpart of the kerberos principal be identical to the localpart 
+              of one the user's Zimbra email address (primary or alaises).
+            
+              A kerberos principal: 
+                   {localpart-of-kerberos-principal}@{kerberos-realm}
+              is mapped to Zimbra account: 
+                   {localpart-of-kerberos-principal}@{zimbra-domain-with-zimbraAuthKerberos5Realm-set-to-the-kerberos-realm}
+              
+              For example, 
+              The setting: zmprov md zimbra.com zimbraAuthKerberos5Realm VMWARE.COM
+              will map kerberos princiapl: user1@VMWARE.COM 
+              to Zimbra account: user1@zimbra.com
+              
+              It is a config error if multiple domains have zimbraAuthKerberos5Realm set to 
+              the same realm.  In that case a MULTIPLE_ENTRIES_MATCHED exception will be thrown.
+              
+    or
+    
+    Method 2. account basis
+              If method1 cannot fulfill all possible mappings, per-account basis mapping 
+              is also supported.   This can map a Zimbra user to any kerberos principal, it 
+              also allows uzers in the same Zimbra domain to be mapped to different kerberos 
+              realms.
+              
+              Account level mapping is configured by setting zimbraForeignPrincipal to 
+              "kerberos5:{kerberos-principal}"
+              
+              For example, 
+              zmrpov ma user1@zimbra.com zimbraForeignPrincipal kerberos5:foo@REALM1.COM
+              zmrpov ma user2@zimbra.com zimbraForeignPrincipal kerberos5:bar@REALM2.COM
+              
+              It is a config error if multple accounts have he same zimbraForeignPrincipal.
+              In that case a MULTIPLE_ENTRIES_MATCHED exception will be thrown.
+              
+              
+    Method 1 and 2 can co-exist.  The lookup will first try to find the account by 
+    zimbraForeignPrincipal (method 2).  If no account is found, it will fallback to use 
+    domain based mapping (method 1).
+    
     
 (B) Setup virtual host for the domain
     zmprov md {domain} +zimbraVirtualHostname {virtual-hostname-1} +zimbraVirtualHostname {virtual-hostname-2} ...
