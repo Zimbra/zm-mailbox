@@ -1193,19 +1193,20 @@ abstract class ImapHandler {
         }
 
         String xvia = fields.get(IDInfo.X_VIA);
-        if (via == null) {
-            via = xvia;
-            ZimbraLog.addViaToContext(via);
-        } else {
-            if (xvia.equals(via)) {
-                ZimbraLog.imap.warn("IMAP ID with %s is allowed only once per session, command ignored", IDInfo.X_VIA);
+        if (xvia != null) {
+            if (via == null) {
+                via = xvia;
+                ZimbraLog.addViaToContext(via);
             } else {
-                ZimbraLog.imap.error("IMAP ID with %s is allowed only once per session, received different value: %s, command ignored",
-                        IDInfo.X_VIA, xvia);
+                if (via.equals(xvia)) {
+                    ZimbraLog.imap.warn("IMAP ID with %s is allowed only once per session, command ignored", IDInfo.X_VIA);
+                } else {
+                    ZimbraLog.imap.error("IMAP ID with %s is allowed only once per session, received different value: %s, command ignored",
+                            IDInfo.X_VIA, xvia);
+                }
+                return;
             }
-            return;
         }
-
         String ua = fields.get(IDInfo.NAME);
         if (ua != null) {
             String version = fields.get(IDInfo.VERSION);
