@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
@@ -33,19 +35,17 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class AuthUtil {
     private static Log mLog = LogFactory.getLog(AuthUtil.class);
 
     public static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-   
-    
+
+
     /**
      * Checks to see if this is an admin request
      * @param req
@@ -81,10 +81,10 @@ public class AuthUtil {
             authToken = AuthProvider.getAuthToken(req, isAdminReq);
             if (authToken == null)
                 return null;
-            
+
             if (authToken.isExpired())
                 return null;
-    
+
             return authToken;
         } catch (AuthTokenException e) {
             return null;
@@ -103,7 +103,7 @@ public class AuthUtil {
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
                 return null;
             }
-    
+
             if (authToken.isExpired()) {
                 if (!doNotSendHttpError)
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
@@ -131,41 +131,55 @@ public class AuthUtil {
         return getAuthTokenFromHttpReq(req, resp, true, doNotSendHttpError);
     }
 
-    public static Account basicAuthRequest(HttpServletRequest req, 
+    public static Account basicAuthRequest(HttpServletRequest req,
                                            HttpServletResponse resp,
                                            ZimbraServlet servlet,
-                                           boolean sendChallenge)
-    throws IOException, ServiceException {
-    
+                                           boolean sendChallenge) throws IOException, ServiceException
+    {
         if (!AuthProvider.allowBasicAuth(req, servlet))
             return null;
-    
+
+        return basicAuthRequest(req, resp, sendChallenge);
+    }
+
+    public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
+            throws IOException, ServiceException
+    {
+        try {
+            return basicAuthRequest(req, !sendChallenge);
+        } catch (UserServletException e) {
+            if (sendChallenge && e.getHttpStatusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            }
+            resp.sendError(e.getHttpStatusCode(), e.getMessage());
+            return null;
+        }
+    }
+
+    public static Account basicAuthRequest(HttpServletRequest req, boolean allowGuest)
+        throws IOException, ServiceException, UserServletException
+    {
         String auth = req.getHeader("Authorization");
-    
+
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
-            if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));            
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
-            }
-            return null;
+            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
         }
-    
+
         // 6 comes from "Basic ".length();
         String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()), "UTF-8");
-    
-        int loc = userPass.indexOf(":"); 
+
+        int loc = userPass.indexOf(":");
         if (loc == -1) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid basic auth credentials");
-            return null;
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid basic auth credentials");
         }
-    
+
         String userPassedIn = userPass.substring(0, loc);
         String user = userPassedIn;
         String pass = userPass.substring(loc + 1);
-    
+
         Provisioning prov = Provisioning.getInstance();
-    
+
         if (user.indexOf('@') == -1) {
             String host = HttpUtil.getVirtualHost(req);
             if (host != null) {
@@ -173,14 +187,15 @@ public class AuthUtil {
                 if (d != null) user += "@" + d.getName();
             }
         }
-    
+
         Account acct = prov.get(AccountBy.name, user);
+
         if (acct == null) {
-            if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+            if (allowGuest) {
+                return new GuestAccount(user, pass);
             }
-            return new GuestAccount(user, pass);
+
+            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
         }
         try {
             Map<String, Object> authCtxt = new HashMap<String, Object>();
@@ -189,24 +204,21 @@ public class AuthUtil {
             authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
             prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);
         } catch (ServiceException se) {
-            if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, prov.getDomain(acct)));
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-            }
-            return null;
+            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
         }
+
         return acct;
     }
 
-    public AuthToken cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp) 
+    public AuthToken cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp)
     throws IOException, ServiceException {
         AuthToken at = AuthUtil.isAdminRequest(req) ? AuthUtil.getAdminAuthTokenFromCookie(req, resp, true) : AuthUtil.getAuthTokenFromCookie(req, resp, true);
         return at;
     }
 
-    public static String getRealmHeader(HttpServletRequest req, Domain domain)  { 
+    public static String getRealmHeader(HttpServletRequest req, Domain domain)  {
         String realm = null;
-        
+
         if (domain == null) {
             // get domain by virtual host
             String host = HttpUtil.getVirtualHost(req);
@@ -219,17 +231,17 @@ public class AuthUtil {
                 }
             }
         }
-        
+
         if (domain != null)
             realm = domain.getBasicAuthRealm();
-    
+
         return getRealmHeader(realm);
     }
 
-    public static String getRealmHeader(String realm)  { 
+    public static String getRealmHeader(String realm)  {
         if (realm == null)
             realm = "Zimbra";
-        return "BASIC realm=\"" + realm + "\""; 
+        return "BASIC realm=\"" + realm + "\"";
     }
 
 }

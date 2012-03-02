@@ -514,6 +514,10 @@
           <include name="hbase-*.jar"/>
           <include name="zookeeper-*.jar"/>
           <include name="ehcache-*.jar"/>
+          <include name="jersey-*.jar"/>
+          <include name="asm-*.jar"/>
+          <include name="jackson-*.jar"/>
+          <include name="jsr*.jar"/>
         </lib>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>

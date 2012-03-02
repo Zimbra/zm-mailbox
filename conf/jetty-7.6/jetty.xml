@@ -215,6 +215,14 @@
 	    </Arg>
         </Call>
         <Call name="addRule">
+        <Arg>
+        <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+            <Set name="pattern">/octopus/*</Set>
+            <Set name="replacement">/service/octopus/</Set>
+        </New>
+        </Arg>
+        </Call>        
+        <Call name="addRule">
 	    <Arg>
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/user/*</Set>

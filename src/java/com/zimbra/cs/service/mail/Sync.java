@@ -22,23 +22,23 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -258,6 +258,8 @@ public class Sync extends MailDocumentHandler {
             }
         } else {
             for (Folder folder : mbox.getModifiedFolders(begin)) {
+                // targetIds is null when we are syncing the whole hierarchy, so there is
+                // no case of "synthetic tombstone" (item falling out of the tree being synced)
                 if (targetIds == null || targetIds.contains(folder.getId())) {
                     ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
                 } else {
