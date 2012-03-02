@@ -1336,7 +1336,7 @@ Access: domain admin sufficient
 <AddDistributionListMemberRequest>
   <id>{value-of-zimbraId}</id>
   <dlm>{member}</dlm>+
-</AddDistributionListMemeberRequest>
+</AddDistributionListMemberRequest>
 
 <AddDistributionListMemberResponse>
 </AddDistributionListMemeberResponse>
