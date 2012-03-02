@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,6 +22,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.util.AccountUtil;
 
 public class RenameMailbox extends RedoableOp {
 
@@ -46,7 +47,7 @@ public class RenameMailbox extends RedoableOp {
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mNewName = in.readUTF();
-        if (getVersion().atLeast(1,25)) 
+        if (getVersion().atLeast(1,25))
             mOldName = in.readUTF();
     }
 
@@ -56,7 +57,10 @@ public class RenameMailbox extends RedoableOp {
 
     @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        if (mNewName != null)
+        // Redo the rename only if the current account name matches mOldName.  This prevents renaming an account
+        // that is restored as a copy. (-ca option of zmrestore)
+        if (mNewName != null && AccountUtil.addressMatchesAccount(mbox.getAccount(), mOldName)) {
             mbox.renameMailbox(mOldName, mNewName);
+        }
     }
 }
