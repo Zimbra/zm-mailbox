@@ -50,10 +50,10 @@ import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public abstract class DistributionListDocumentHandler extends AccountDocumentHandler {
 

@@ -33,7 +33,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
@@ -47,6 +46,7 @@ import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestLdapProvDomain extends LdapTest {
     private static LdapProvTestUtil provUtil;

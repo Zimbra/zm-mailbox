@@ -26,9 +26,9 @@ import static org.junit.Assert.*;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestLdapProvServer extends LdapTest {
     private static LdapProvTestUtil provUtil;

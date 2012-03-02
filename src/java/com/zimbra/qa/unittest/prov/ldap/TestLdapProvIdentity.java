@@ -36,8 +36,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestLdapProvIdentity extends LdapTest {
     private static LdapProvTestUtil provUtil;

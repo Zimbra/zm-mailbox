@@ -35,11 +35,11 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
 import com.zimbra.qa.unittest.prov.Verify;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestLdapProvDistributionList extends LdapTest {
     private static LdapProvTestUtil provUtil;

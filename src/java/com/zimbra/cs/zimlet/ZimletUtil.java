@@ -55,7 +55,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.account.Key;
@@ -72,6 +71,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
 import com.zimbra.common.soap.*;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * 

@@ -34,7 +34,6 @@ import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -45,6 +44,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class FlushCache extends AdminDocumentHandler {
 

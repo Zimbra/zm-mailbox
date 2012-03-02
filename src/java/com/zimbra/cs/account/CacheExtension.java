@@ -19,8 +19,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public abstract class CacheExtension {
 

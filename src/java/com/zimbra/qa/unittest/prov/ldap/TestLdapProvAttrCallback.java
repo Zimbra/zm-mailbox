@@ -30,9 +30,9 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 import static org.junit.Assert.*;
 

@@ -40,7 +40,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
@@ -48,6 +47,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 
 public class RenameDomain {

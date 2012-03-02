@@ -33,9 +33,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public abstract class ProvTestUtil {

@@ -22,6 +22,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class PermissionCache {
     
@@ -69,7 +70,7 @@ public class PermissionCache {
     	// clear all LDAP entry caches
         Provisioning prov = Provisioning.getInstance();
         try {
-            prov.flushCache(Provisioning.CacheEntryType.all, null);
+            prov.flushCache(CacheEntryType.all, null);
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("unable to flush cache", e);
         }

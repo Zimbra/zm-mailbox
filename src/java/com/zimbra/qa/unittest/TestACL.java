@@ -40,7 +40,6 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.CheckAttrRight;
@@ -58,6 +57,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.qa.unittest.prov.ldap.ACLTestUtil;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.type.TargetBy;
 
 

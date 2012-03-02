@@ -33,9 +33,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestLdapProvCos extends LdapTest {
 

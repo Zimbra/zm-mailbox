@@ -46,6 +46,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -1841,45 +1842,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return createShareLocator(id, attrs);
     }
 
-    public static enum CacheEntryType {
-        // non ldap entries
-        acl,
-        locale,
-        skin,
-        uistrings,
-        license,
-
-        // ldap entries
-        all,  // all ldap entries
-        account,
-        config,
-        globalgrant,
-        cos,
-        domain,
-        galgroup,
-        group,
-        mime,
-        server,
-        zimlet;
-
-        public static CacheEntryType fromString(String s) throws ServiceException {
-            try {
-                return CacheEntryType.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown cache type: "+s, e);
-            }
-        }
-
-        public static String names() {
-            StringBuilder str = new StringBuilder();
-            int i = 0;
-            for (CacheEntryType type : CacheEntryType.values()) {
-                if (i++ > 0) str.append('|');
-                str.append(type.name());
-            }
-            return str.toString();
-        }
-    }
 
     public static class CacheEntry {
         public CacheEntry(Key.CacheEntryBy entryBy, String entryIdentity) {

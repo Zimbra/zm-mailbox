@@ -22,10 +22,10 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.qa.unittest.prov.ldap.ACLTestUtil;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public abstract class TestProv extends TestLdap {
 

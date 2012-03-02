@@ -40,8 +40,8 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.DataSourceType;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class TestLdapProvAccount extends LdapTest {

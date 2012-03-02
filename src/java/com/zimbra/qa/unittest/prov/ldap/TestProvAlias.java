@@ -36,7 +36,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
@@ -44,6 +43,7 @@ import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.qa.QA.Bug;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestProvAlias extends LdapTest {
     private static String PASSWORD = "test123";

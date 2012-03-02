@@ -109,6 +109,7 @@ import com.zimbra.soap.admin.type.AdminObjectInfo;
 import com.zimbra.soap.admin.type.AliasInfo;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CacheSelector;
 import com.zimbra.soap.admin.type.CalendarResourceInfo;
 import com.zimbra.soap.admin.type.CalendarResourceSelector;

@@ -27,10 +27,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.BinaryLdapData;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class TestLdapProvModifyAttrs extends LdapTest {
     private static LdapProvTestUtil provUtil;

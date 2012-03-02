@@ -14,9 +14,9 @@
  */
 package com.zimbra.qa.unittest.prov.soap;
 
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class Cleanup {
     static void deleteAll(String... domainNames) throws Exception {
