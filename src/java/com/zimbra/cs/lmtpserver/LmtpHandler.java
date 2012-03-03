@@ -29,6 +29,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
+import com.zimbra.cs.server.ServerThrottle;
 
 public abstract class LmtpHandler extends ProtocolHandler {
     // Connection specific data
@@ -41,10 +42,13 @@ public abstract class LmtpHandler extends ProtocolHandler {
     // Message specific data
     protected LmtpEnvelope mEnvelope;
     private String mCurrentCommandLine;
+    
+    private final ServerThrottle throttle;
 
     LmtpHandler(LmtpServer server) {
         super(server instanceof TcpLmtpServer ? (TcpLmtpServer) server : null);
         config = server.getConfig();
+        throttle = ServerThrottle.getThrottle(config.getProtocol());
     }
 
     protected boolean setupConnection(InetAddress remoteAddr) {
@@ -94,6 +98,12 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
         if (!config.isServiceEnabled()) {
             sendReply(LmtpReply.SERVICE_DISABLED);
+            dropConnection();
+            return false;
+        }
+        
+        if (throttle.isIpThrottled(mRemoteAddress)) {
+            ZimbraLog.lmtp.warn("throttling LMTP connection for remote IP %s", mRemoteAddress);
             dropConnection();
             return false;
         }

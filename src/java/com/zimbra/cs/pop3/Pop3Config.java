@@ -103,8 +103,4 @@ public class Pop3Config extends ServerConfig {
     public boolean isSaslGssapiEnabled() {
         return getBooleanAttr(A_zimbraPop3SaslGssapiEnabled, false);
     }
-
-    public String[] getIgnoredHosts() throws ServiceException {
-        return getLocalServer().getMultiAttr(A_zimbraThrottleSafeHosts);
-    }
 }

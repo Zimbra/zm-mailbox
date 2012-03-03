@@ -20,8 +20,10 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -31,6 +33,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 
@@ -255,5 +258,17 @@ public abstract class TcpServer implements Runnable, Server {
     }
 
     protected abstract ProtocolHandler newProtocolHandler();
+    
+    protected Set<String> getThrottleSafeHosts() throws ServiceException {
+
+        Set<String> safeHosts = new HashSet<String>();
+        for (com.zimbra.cs.account.Server server : Provisioning.getInstance().getAllServers()) {
+            safeHosts.add(server.getServiceHostname());
+        }
+        for (String ignoredHost : config.getIgnoredHosts()) {
+            safeHosts.add(ignoredHost);
+        }
+        return safeHosts;
+    }
 
 }

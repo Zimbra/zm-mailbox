@@ -142,8 +142,4 @@ public class ImapConfig extends ServerConfig {
     public long getMaxMessageSize() throws ServiceException {
         return Provisioning.getInstance().getConfig().getLongAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
     }
-
-    public String[] getIgnoredHosts() throws ServiceException {
-        return getLocalServer().getMultiAttr(A_zimbraThrottleSafeHosts);
-    }
 }

@@ -33,14 +33,7 @@ public final class TcpImapServer extends TcpServer implements ImapServer, Realti
     public TcpImapServer(ImapConfig config) throws ServiceException {
         super(config);
         ZimbraPerf.addStatsCallback(this);
-        Set<String> safeHosts = new HashSet<String>();
-        for (Server server : Provisioning.getInstance().getAllServers()) {
-            safeHosts.add(server.getServiceHostname());
-        }
-        for (String ignoredHost : config.getIgnoredHosts()) {
-            safeHosts.add(ignoredHost);
-        }
-        ServerThrottle.configureThrottle(config.getProtocol(), LC.imap_throttle_ip_limit.intValue(), LC.imap_throttle_acct_limit.intValue(), safeHosts);
+        ServerThrottle.configureThrottle(config.getProtocol(), LC.imap_throttle_ip_limit.intValue(), LC.imap_throttle_acct_limit.intValue(), getThrottleSafeHosts());
     }
 
     @Override

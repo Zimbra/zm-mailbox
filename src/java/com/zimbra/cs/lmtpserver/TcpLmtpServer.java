@@ -17,16 +17,19 @@ package com.zimbra.cs.lmtpserver;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
+import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.server.TcpServer;
 
 public final class TcpLmtpServer extends TcpServer implements LmtpServer, RealtimeStatsCallback {
     public TcpLmtpServer(LmtpConfig config) throws ServiceException {
         super(config);
         ZimbraPerf.addStatsCallback(this);
+        ServerThrottle.configureThrottle(config.getProtocol(), LC.lmtp_throttle_ip_limit.intValue(), 0, getThrottleSafeHosts());
     }
 
     @Override

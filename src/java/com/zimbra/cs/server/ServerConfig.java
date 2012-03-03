@@ -202,5 +202,8 @@ public abstract class ServerConfig {
         }
     }
 
+    public String[] getIgnoredHosts() throws ServiceException {
+        return getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleSafeHosts);
+    }
 }
 
