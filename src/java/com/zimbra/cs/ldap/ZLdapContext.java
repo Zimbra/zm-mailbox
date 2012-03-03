@@ -97,7 +97,7 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
      *   - the unboundid implementation throws LdapSizeLimitExceededException
      *     on the searchDir() call.  
      * 
-     *   The legacy behavior should NOT be replied on.
+     *   The legacy behavior should NOT be relied on.
      */
     public abstract ZSearchResultEnumeration searchDir(
             String baseDN, ZLdapFilter filter, ZSearchControls searchControls) 

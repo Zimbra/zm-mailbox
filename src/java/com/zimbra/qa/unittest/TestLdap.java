@@ -611,8 +611,6 @@ public class TestLdap {
         }
         
         TestConfig testConfig = TestConfig.UBID;
-        // TestConfig testConfig = TestConfig.JNDI;
-        // TestConfig testConfig = TestConfig.LEGACY;
         
         initPerJVM(testConfig);
     }
@@ -639,12 +637,9 @@ public class TestLdap {
         // junit.addListener(new ConsoleListener());
         junit.addListener(new TestLogger());
         
-        // TestConfig.useConfig(TestConfig.LEGACY);
         TestConfig.useConfig(TestConfig.UBID);
         
         // runTests(junit, TestConfig.UBID);
-        // runTests(junit, TestConfig.JNDI);
-        // runTests(junit, TestConfig.LEGACY);
         
         System.out.println();
         System.out.println("=== Finished ===");

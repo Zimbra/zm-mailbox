@@ -38,7 +38,7 @@ public enum LdapConnType {
     }
 
     /*
-     * for external LDAP, only called from legacy code
+     * for external LDAP, only called from legacy external GAL code
      */
     public static boolean requireStartTLS(String[] urls, boolean wantStartTLS) {
         if (wantStartTLS) {
