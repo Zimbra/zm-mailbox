@@ -122,17 +122,7 @@ public class CalDavProperty extends ResourceProperty {
             super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET);
             ArrayList<CalComponent> comps = new ArrayList<CalComponent>();
             Collections.addAll(comps, sSUPPORTED_COMPONENTS);
-            Provisioning prov = Provisioning.getInstance();
-            boolean useDistinctCollectionType = false;
-            try {
-                useDistinctCollectionType = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection, false);
-            } catch (ServiceException se) {
-                ZimbraLog.dav.warn("can't get zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection in globalConfig", se);
-            }
-            if (!useDistinctCollectionType) {
-                comps.add(CalComponent.VEVENT);
-                comps.add(CalComponent.VTODO);
-            } else if (view == MailItem.Type.APPOINTMENT) {
+            if (view == MailItem.Type.APPOINTMENT) {
                 comps.add(CalComponent.VEVENT);
             } else if (view == MailItem.Type.TASK) {
                 comps.add(CalComponent.VTODO);

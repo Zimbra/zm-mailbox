@@ -32,6 +32,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.util.SyncToken;
 
 import java.sql.PreparedStatement;
@@ -337,6 +338,20 @@ public final class MailboxUpgrade {
      */
     public static void upgradeTo2_5(Mailbox mbox) throws ServiceException {
         DbMailItem.assignUuids(mbox, false);
+    }
+    
+    /**
+     * Move appointments from Tasks folder to Calendar folder. Also move todo items from Calendar folder to Tasks folder.
+     * @param mbox
+     * @throws ServiceException
+     */
+    public static void upgradeTo2_6(Mailbox mbox) throws ServiceException {
+        // bug 69886
+        try {
+            CalendarUtils.migrateAppointmentsAndTasks(mbox);
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("appointments/tasks migration failed", e);
+        }
     }
 
     private static void migrateFlagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {

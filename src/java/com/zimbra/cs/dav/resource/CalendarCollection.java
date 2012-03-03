@@ -239,6 +239,7 @@ public class CalendarCollection extends Collection {
 
     private String findEventUid(List<Invite> invites) throws DavException {
         String uid = null;
+        MailItem.Type itemType = null;
         LinkedList<Invite> inviteList = new LinkedList<Invite>();
         for (Invite i : invites) {
             MailItem.Type type = i.getItemType();
@@ -247,6 +248,12 @@ public class CalendarCollection extends Collection {
                     throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_OBJECT_RESOURCE, "too many components");
                 uid = i.getUid();
             }
+
+            if (itemType != null && itemType != type)
+                throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_OBJECT_RESOURCE, "different types of components in the same resource");
+            else
+                itemType = type;
+            
             if (i.isRecurrence())
                 inviteList.addFirst(i);
             else
@@ -254,6 +261,10 @@ public class CalendarCollection extends Collection {
         }
         if (uid == null)
             throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_COMPONENT, "no event in the request");
+        
+        if ((getDefaultView() == MailItem.Type.APPOINTMENT || getDefaultView() == MailItem.Type.TASK) && (itemType != getDefaultView()))
+            throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_COMPONENT, "resource type not supported in this collection");
+        
         invites.clear();
         invites.addAll(inviteList);
         return uid;
