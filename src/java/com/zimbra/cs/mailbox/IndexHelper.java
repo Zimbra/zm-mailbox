@@ -38,6 +38,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.BatchedIndexStatus;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.service.util.SyncToken;
@@ -108,7 +109,7 @@ public class IndexHelper {
     }
 
     final MailboxIndex getMailboxIndex() {
-        assert(mailboxIndex != null);
+        assert(mailboxIndex != null || DebugConfig.disableIndexing);
         return mailboxIndex;
     }
 
@@ -191,20 +192,36 @@ public class IndexHelper {
             if (mInIndexImmediatelyMode > 0) {
                 return 0;
             }
-            return getMailboxIndex().getBatchedIndexingCount();
+            MailboxIndex mi = getMailboxIndex();
+            if (mi != null) {
+                return mi.getBatchedIndexingCount();
+            } else {
+                return 0;
+            }
         }
     }
 
     void flush() {
-        getMailboxIndex().flush();
+        MailboxIndex mi = getMailboxIndex();
+        if (mi != null) {
+            mi.flush();
+        }
     }
 
     void deleteIndex() throws IOException {
-        getMailboxIndex().deleteIndex();
+        MailboxIndex mi = getMailboxIndex();
+        if (mi != null) {
+            mi.deleteIndex();
+        }
     }
 
     List<Integer> deleteDocuments(List<Integer> indexIds) throws IOException {
-        return getMailboxIndex().deleteDocuments(indexIds);
+        MailboxIndex mi = getMailboxIndex();
+        if (mi != null) {
+            return mi.deleteDocuments(indexIds);
+        } else {
+            return new ArrayList<Integer>(0);
+        }
     }
 
     /**
@@ -213,6 +230,10 @@ public class IndexHelper {
     void maybeIndexDeferredItems() {
         if (Thread.holdsLock(getMailbox())) // don't attempt if we're holding the mailbox lock
             return;
+
+        if (DebugConfig.disableIndexing) {
+            return;
+        }
 
         boolean shouldIndexDeferred = false;
         synchronized (getMailbox()) {
@@ -446,6 +467,10 @@ public class IndexHelper {
          * @throws ServiceException
          */
         void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, boolean skipDelete) throws ServiceException {
+            MailboxIndex mi = getMailboxIndex();
+            if (mi == null) {
+                return;
+            }
 
             if (typesOrNull==null && itemIdsOrNull==null) {
                 // special case for reindexing WHOLE mailbox.  We do this differently so that we lean
@@ -459,7 +484,7 @@ public class IndexHelper {
                             getMailbox().beginTransaction("reIndex_all", octxt, null);
                             mFullReindexInProgress = true;
                             // reindexing everything, just delete the index
-                            getMailboxIndex().deleteIndex();
+                            mi.deleteIndex();
 
                             // index has been deleted, cancel pending indexes
                             mNumIndexingInProgress = 0;
@@ -484,7 +509,7 @@ public class IndexHelper {
                 }
                 if (ZimbraLog.index.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
-                    getMailboxIndex().flush();
+                    mi.flush();
                     ZimbraLog.index.info("Re-Indexing: Mailbox %d COMPLETED in %d ms",
                             getMailbox().getId(), end - start);
                 }
@@ -535,8 +560,7 @@ public class IndexHelper {
                             for (SearchResult s : msgs)
                                 toDelete.add(s.indexId);
 
-                            if (getMailboxIndex() != null)
-                                getMailboxIndex().deleteDocuments(toDelete);
+                            mi.deleteDocuments(toDelete);
                         }
 
                         success = true;
@@ -558,16 +582,13 @@ public class IndexHelper {
                         avg = (end - start) / mStatus.mNumProcessed;
                         mps = avg > 0 ? 1000 / avg : 0;
                     }
-                    if (getMailboxIndex() != null) {
-                        getMailboxIndex().flush();
-                    }
+                    mi.flush();
                     ZimbraLog.index.info("Re-Indexing: Mailbox " + getMailbox().getId() + " COMPLETED.  Re-indexed "+
                             mStatus.mNumProcessed + " items in " + (end-start) + "ms.  (avg " + avg + "ms/item= " +
                             mps + " items/sec) (" + mStatus.mNumFailed + " failed)");
                 }
             } finally {
-                if (getMailboxIndex() != null)
-                    getMailboxIndex().flush();
+                mi.flush();
             }
         }
     }
@@ -939,10 +960,13 @@ public class IndexHelper {
     private static final int NO_CHANGE = -1;
 
     void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, List<IndexDocument> docList) {
-        try {
-            getMailboxIndex().indexMailItem(getMailbox(), deleteFirst, docList, item, NO_CHANGE);
-        } catch (Exception e) {
-            ZimbraLog.index.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
+        MailboxIndex mi = getMailboxIndex();
+        if (mi != null) {
+            try {
+                mi.indexMailItem(getMailbox(), deleteFirst, docList, item, NO_CHANGE);
+            } catch (Exception e) {
+                ZimbraLog.index.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
+            }
         }
     }
 
@@ -953,16 +977,21 @@ public class IndexHelper {
             return;
         }
 
+        MailboxIndex mi = getMailboxIndex();
+        if (mi == null) {
+            return;
+        }
+
         if (itemsToDelete != null && !itemsToDelete.isEmpty()) {
             try {
-                getMailboxIndex().deleteDocuments(itemsToDelete);
+                mi.deleteDocuments(itemsToDelete);
             } catch (IOException e) {
                 ZimbraLog.index.warn("Failed to delete index entries", e);
             }
         }
 
         try {
-            getMailboxIndex().beginWriteOperation();
+            mi.beginWriteOperation();
         } catch (IOException e) {
             ZimbraLog.index.warn("Failed to open IndexWriter", e);
             mLastIndexingFailureTimestamp = System.currentTimeMillis();
@@ -993,7 +1022,7 @@ public class IndexHelper {
                         mNumIndexingInProgress++;
                         mHighestSubmittedToIndex = new SyncToken(entry.mModContent, item.getId());
                     }
-                    getMailboxIndex().indexMailItem(getMailbox(),
+                    mi.indexMailItem(getMailbox(),
                             entry.mDeleteFirst, entry.mDocuments, item, entry.mModContent);
                 } catch (ServiceException e) {
                     if (entry.mModContent != NO_CHANGE) {
@@ -1013,7 +1042,7 @@ public class IndexHelper {
                     lastMailItemId, e);
             mLastIndexingFailureTimestamp = System.currentTimeMillis();
         } finally {
-            getMailboxIndex().endWriteOperation();
+            mi.endWriteOperation();
         }
     }
 

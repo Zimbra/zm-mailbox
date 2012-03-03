@@ -110,10 +110,12 @@ public class TextQuery extends Query {
                 List<String> expandedTokens = new ArrayList<String>(100);
                 if (mailbox != null) {
                     MailboxIndex mbidx = mbox.getMailboxIndex();
-                    expandedAllTokens = mbidx.expandWildcardToken(
-                            expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
-                    queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
-                            expandedTokens.size(), expandedAllTokens));
+                    if (mbidx != null) {
+                        expandedAllTokens = mbidx.expandWildcardToken(
+                                expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
+                        queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
+                                expandedTokens.size(), expandedAllTokens));
+                    }
                 }
 
                 //

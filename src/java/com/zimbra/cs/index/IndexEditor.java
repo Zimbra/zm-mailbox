@@ -71,10 +71,12 @@ public class IndexEditor {
     public void deleteIndex(int mailboxId) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
         MailboxIndex mi = mbox.getMailboxIndex();
-        try {
-            mi.deleteIndex();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException", e);
+        if (mi != null) {
+            try {
+                mi.deleteIndex();
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Caught IOException", e);
+            }
         }
     }
 

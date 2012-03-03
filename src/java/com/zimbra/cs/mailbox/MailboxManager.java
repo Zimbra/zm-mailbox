@@ -662,8 +662,9 @@ public class MailboxManager {
                         // cache and eventually get GC'd.  Some immediate
                         // cleanup is necessary though.
                         MailboxIndex mi = mbox.getMailboxIndex();
-                        if (mi != null)
+                        if (mi != null) {
                             mi.flush();
+                        }
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);
