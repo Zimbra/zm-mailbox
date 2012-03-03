@@ -286,7 +286,7 @@ public final class ResultsPager {
 
         @Override
         public String getName() {
-            return (String) sortValue;
+            return sortValue.toString();
         }
 
         @Override

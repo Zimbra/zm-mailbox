@@ -39,7 +39,7 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
     private boolean filterTagDeleted = false;
     private Set<TaskHit.Status> allowedTaskStatuses = null;
     
-    //enable cursor filtering
+    //enable cursor filtering for remote Contact sorting!!
     private ZimbraHit firstHit = null;
     private ZimbraHit endHit = null;
     private Comparator<ZimbraHit> comp = null;
@@ -49,7 +49,22 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
         results = other;
         searchParams = params;
         
-        if (searchParams != null && searchParams.getCursor() != null) {
+        boolean isContactSearch = false;
+        if (searchParams.getTypes() != null && searchParams.getTypes().size() == 1 &&
+                searchParams.getTypes().contains(MailItem.Type.CONTACT)) {
+            if (results.getSortBy() != null) {
+                switch (results.getSortBy()) {
+                    case NAME_ASC:
+                    case NAME_DESC:
+                        isContactSearch = true; //localized sort will be taken care by ReSortingQueryResults!!
+                        break;
+                    default:
+                        break;
+                }   
+            }
+        }
+        
+        if (isContactSearch && searchParams != null && searchParams.getCursor() != null) {
             if (searchParams.getCursor().getSortValue() != null) {
                 firstHit = new ResultsPager.CursorHit(results, searchParams.getCursor().getSortValue(),
                         searchParams.getCursor().getItemId().getId());
