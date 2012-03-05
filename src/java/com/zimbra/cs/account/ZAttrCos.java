@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20111212-1232 */
+    /* build: 7.0.0_BETA1_1111 pshao 20120305-1300 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -20493,9 +20493,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @return zimbraPrefForwardReplyInOriginalFormat, or false if unset
      */
@@ -20505,9 +20504,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @param zimbraPrefForwardReplyInOriginalFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20520,9 +20518,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @param zimbraPrefForwardReplyInOriginalFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20536,9 +20533,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -20550,9 +20546,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

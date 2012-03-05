@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20111212-1232 */
+    /* build: 7.0.0_BETA1_1111 pshao 20120305-1300 */
 
     /**
      * RFC2256: descriptive information
@@ -7164,33 +7164,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7205,33 +7197,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7246,33 +7230,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7290,33 +7266,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7335,33 +7303,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7379,33 +7339,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7424,33 +7376,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -7467,33 +7411,25 @@ public class ZAttrConfig extends Entry {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
@@ -25456,6 +25392,98 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyDomainNameSearchBase(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyDomainNameSearchBase, "");
+        return attrs;
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or false if unset
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public boolean isReverseProxyGenConfigPerVirtualHostname() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, false);
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @param zimbraReverseProxyGenConfigPerVirtualHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public void setReverseProxyGenConfigPerVirtualHostname(boolean zimbraReverseProxyGenConfigPerVirtualHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, zimbraReverseProxyGenConfigPerVirtualHostname ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @param zimbraReverseProxyGenConfigPerVirtualHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public Map<String,Object> setReverseProxyGenConfigPerVirtualHostname(boolean zimbraReverseProxyGenConfigPerVirtualHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, zimbraReverseProxyGenConfigPerVirtualHostname ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public void unsetReverseProxyGenConfigPerVirtualHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public Map<String,Object> unsetReverseProxyGenConfigPerVirtualHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, "");
         return attrs;
     }
 

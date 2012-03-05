@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20111212-1232 */
+    /* build: 7.0.0_BETA1_1111 pshao 20120305-1300 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -15778,6 +15778,98 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetReverseProxyDefaultRealm(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyDefaultRealm, "");
+        return attrs;
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or false if unset
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public boolean isReverseProxyGenConfigPerVirtualHostname() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, false);
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @param zimbraReverseProxyGenConfigPerVirtualHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public void setReverseProxyGenConfigPerVirtualHostname(boolean zimbraReverseProxyGenConfigPerVirtualHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, zimbraReverseProxyGenConfigPerVirtualHostname ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @param zimbraReverseProxyGenConfigPerVirtualHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public Map<String,Object> setReverseProxyGenConfigPerVirtualHostname(boolean zimbraReverseProxyGenConfigPerVirtualHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, zimbraReverseProxyGenConfigPerVirtualHostname ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public void unsetReverseProxyGenConfigPerVirtualHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether to generate per virtual hostname nginx configuration.
+     * This would be helpful when multiple virtual host names are defined,
+     * but they are actually share the same configuration (like ssl cert,
+     * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
+     * the features like cert per domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1374)
+    public Map<String,Object> unsetReverseProxyGenConfigPerVirtualHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, "");
         return attrs;
     }
 

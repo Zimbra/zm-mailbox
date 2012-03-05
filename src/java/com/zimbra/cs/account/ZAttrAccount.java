@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20111212-1232 */
+    /* build: 7.0.0_BETA1_1111 pshao 20120305-1300 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -2717,7 +2717,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2729,7 +2740,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2741,7 +2763,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2756,7 +2789,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2772,7 +2816,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2787,7 +2842,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2803,7 +2869,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -2817,7 +2894,18 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      *
      * <p>Valid values: [active, closed, locked, lockout, maintenance, pending]
      *
@@ -27866,9 +27954,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @return zimbraPrefForwardReplyInOriginalFormat, or false if unset
      */
@@ -27878,9 +27965,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @param zimbraPrefForwardReplyInOriginalFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27893,9 +27979,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @param zimbraPrefForwardReplyInOriginalFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27909,9 +27994,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -27923,9 +28007,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
