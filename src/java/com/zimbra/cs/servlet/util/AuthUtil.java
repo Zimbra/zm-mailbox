@@ -148,10 +148,14 @@ public class AuthUtil {
         try {
             return basicAuthRequest(req, !sendChallenge);
         } catch (UserServletException e) {
-            if (sendChallenge && e.getHttpStatusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            if (e.getHttpStatusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+                if (sendChallenge) {
+                    resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+                    resp.sendError(e.getHttpStatusCode(), e.getMessage());
+                }
+            } else {
+                resp.sendError(e.getHttpStatusCode(), e.getMessage());
             }
-            resp.sendError(e.getHttpStatusCode(), e.getMessage());
             return null;
         }
     }
