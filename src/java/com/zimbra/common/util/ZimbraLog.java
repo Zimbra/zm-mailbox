@@ -407,6 +407,11 @@ public final class ZimbraLog {
      */
     public static final Log share = LogFactory.getLog("zimbra.share");
 
+    /**
+     * the "zimbra.activity" logger. For ACTIVITY-related events
+     */
+    public static final Log activity = LogFactory.getLog("zimbra.activity");
+
 
     /**
      * Maps the log category name to its description.
@@ -495,6 +500,7 @@ public final class ZimbraLog {
         descriptions.put(purge.getCategory(), "Mailbox purge operations");
         descriptions.put(datasource.getCategory(), "Data Source operations");
         descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
+        descriptions.put(activity.getCategory(), "Document operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
