@@ -6890,4 +6890,9 @@ TODO: delete them permanently from here
   <desc>Hosts to ignore during IP based throttling. Typically should list nginx hostname and any other mailbox servers which can proxy to this server</desc>
 </attr>
 
+<attr id="1384" name="zimbraReverseProxyDnsLookupInServerEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+  <desc>Control whether force the server side do the DNS lookup and send the result IP back to proxy. If set false, the raw address configured (e.g. zimbraMailHost) is directly sent to proxy.</desc>
+  <globalConfigValue>TRUE</globalConfigValue>
+</attr>
+
 </attrs>
