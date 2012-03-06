@@ -9560,6 +9560,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=703)
     public static final String A_zimbraReverseProxyDefaultRealm = "zimbraReverseProxyDefaultRealm";
+    
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public static final String A_zimbraReverseProxyDnsLookupInServerEnabled = "zimbraReverseProxyDnsLookupInServerEnabled";
 
     /**
      * LDAP attribute that contains domain name for the domain
