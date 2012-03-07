@@ -116,7 +116,7 @@ final class TcpImapHandler extends ProtocolHandler {
             if (delegate.lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(delegate.lastCommand.toUpperCase(), start);
             }
-            return keepGoing && LC.imap_max_consecutive_error.intValue() > 0 && delegate.consecutiveError < LC.imap_max_consecutive_error.intValue();
+            return keepGoing && (LC.imap_max_consecutive_error.intValue() <= 0 || delegate.consecutiveError < LC.imap_max_consecutive_error.intValue());
         } catch (TcpImapRequest.ImapContinuationException e) {
             request.rewind();
             complete = false; // skip clearRequest()
@@ -128,7 +128,7 @@ final class TcpImapHandler extends ProtocolHandler {
             return false;
         } catch (ImapParseException e) {
             delegate.handleParseException(e);
-            return LC.imap_max_consecutive_error.intValue() > 0 && delegate.consecutiveError < LC.imap_max_consecutive_error.intValue();
+            return LC.imap_max_consecutive_error.intValue() <= 0 || delegate.consecutiveError < LC.imap_max_consecutive_error.intValue();
         } catch (ImapException e) { // session closed
             ZimbraLog.imap.debug("stop processing", e);
             return false;
