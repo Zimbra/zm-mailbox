@@ -207,14 +207,6 @@ public final class MailConstants {
     public static final String E_CHECK_SPELLING_RESPONSE = "CheckSpellingResponse";
     public static final String E_SAVE_DOCUMENT_REQUEST = "SaveDocumentRequest";
     public static final String E_SAVE_DOCUMENT_RESPONSE = "SaveDocumentResponse";
-    public static final String E_SAVE_WIKI_REQUEST = "SaveWikiRequest";
-    public static final String E_SAVE_WIKI_RESPONSE = "SaveWikiResponse";
-    public static final String E_LIST_WIKI_REQUEST = "ListWikiRequest";
-    public static final String E_LIST_WIKI_RESPONSE = "ListWikiResponse";
-    public static final String E_GET_WIKI_REQUEST = "GetWikiRequest";
-    public static final String E_GET_WIKI_RESPONSE = "GetWikiResponse";
-    public static final String E_WIKI_ACTION_REQUEST = "WikiActionRequest";
-    public static final String E_WIKI_ACTION_RESPONSE = "WikiActionResponse";
     public static final String E_DIFF_DOCUMENT_REQUEST = "DiffDocumentRequest";
     public static final String E_DIFF_DOCUMENT_RESPONSE = "DiffDocumentResponse";
     public static final String E_LIST_DOCUMENT_REVISIONS_REQUEST = "ListDocumentRevisionsRequest";
@@ -465,17 +457,9 @@ public final class MailConstants {
     public static final QName CHECK_SPELLING_REQUEST = QName.get(E_CHECK_SPELLING_REQUEST, NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get(E_CHECK_SPELLING_RESPONSE, NAMESPACE);
 
-    // documents and wiki
+    // documents
     public static final QName SAVE_DOCUMENT_REQUEST = QName.get(E_SAVE_DOCUMENT_REQUEST, NAMESPACE);
     public static final QName SAVE_DOCUMENT_RESPONSE = QName.get(E_SAVE_DOCUMENT_RESPONSE, NAMESPACE);
-    public static final QName SAVE_WIKI_REQUEST = QName.get(E_SAVE_WIKI_REQUEST, NAMESPACE);
-    public static final QName SAVE_WIKI_RESPONSE = QName.get(E_SAVE_WIKI_RESPONSE, NAMESPACE);
-    public static final QName LIST_WIKI_REQUEST = QName.get(E_LIST_WIKI_REQUEST, NAMESPACE);
-    public static final QName LIST_WIKI_RESPONSE = QName.get(E_LIST_WIKI_RESPONSE, NAMESPACE);
-    public static final QName GET_WIKI_REQUEST = QName.get(E_GET_WIKI_REQUEST, NAMESPACE);
-    public static final QName GET_WIKI_RESPONSE = QName.get(E_GET_WIKI_RESPONSE, NAMESPACE);
-    public static final QName WIKI_ACTION_REQUEST = QName.get(E_WIKI_ACTION_REQUEST, NAMESPACE);
-    public static final QName WIKI_ACTION_RESPONSE = QName.get(E_WIKI_ACTION_RESPONSE, NAMESPACE);
     public static final QName DIFF_DOCUMENT_REQUEST = QName.get(E_DIFF_DOCUMENT_REQUEST, NAMESPACE);
     public static final QName DIFF_DOCUMENT_RESPONSE = QName.get(E_DIFF_DOCUMENT_RESPONSE, NAMESPACE);
     public static final QName LIST_DOCUMENT_REVISIONS_REQUEST = QName.get(E_LIST_DOCUMENT_REVISIONS_REQUEST, NAMESPACE);
@@ -1107,9 +1091,6 @@ public final class MailConstants {
     public static final String A_DS_IMPORT_CLASS = "importClass";
     public static final String A_DS_FAILING_SINCE = "failingSince";
 
-    // TODO: move to a different service.
-    // wiki
-    public static final String A_WIKIWORD = "w";
     public static final String A_CREATOR = "cr";
     public static final String A_TYPE = "t";
     public static final String E_WIKIWORD = "w";

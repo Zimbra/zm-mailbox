@@ -281,9 +281,6 @@ public final class AdminConstants {
     public static final String E_GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST = "GetDistributionListMembershipRequest";
     public static final String E_GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE = "GetDistributionListMembershipResponse";
 
-    public static final String E_INIT_NOTEBOOK_REQUEST = "InitNotebookRequest";
-    public static final String E_INIT_NOTEBOOK_RESPONSE = "InitNotebookResponse";
-
     // data sources
     public static final String E_CREATE_DATA_SOURCE_REQUEST = "CreateDataSourceRequest";
     public static final String E_CREATE_DATA_SOURCE_RESPONSE = "CreateDataSourceResponse";
@@ -723,9 +720,6 @@ public final class AdminConstants {
 
     public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST = QName.get(E_GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, NAMESPACE);
     public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE = QName.get(E_GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE, NAMESPACE);
-
-    public static final QName INIT_NOTEBOOK_REQUEST = QName.get(E_INIT_NOTEBOOK_REQUEST, NAMESPACE);
-    public static final QName INIT_NOTEBOOK_RESPONSE = QName.get(E_INIT_NOTEBOOK_RESPONSE, NAMESPACE);
 
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get(E_CREATE_DATA_SOURCE_REQUEST, NAMESPACE);
