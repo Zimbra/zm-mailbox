@@ -416,8 +416,6 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.VerifyCodeResponse.class,
             com.zimbra.soap.mail.message.WaitSetRequest.class,
             com.zimbra.soap.mail.message.WaitSetResponse.class,
-            com.zimbra.soap.mail.message.WikiActionRequest.class,
-            com.zimbra.soap.mail.message.WikiActionResponse.class,
 
             // zimbraAdmin
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
