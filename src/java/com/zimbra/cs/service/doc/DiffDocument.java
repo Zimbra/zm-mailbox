@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.wiki;
+package com.zimbra.cs.service.doc;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -23,15 +23,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.wiki.Diff;
-import com.zimbra.cs.wiki.Diff.Chunk;
+import com.zimbra.cs.doc.Diff;
+import com.zimbra.cs.doc.Diff.Chunk;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class DiffDocument extends WikiDocumentHandler {
+public class DiffDocument extends DocDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -48,15 +48,6 @@ public class DiffDocument extends WikiDocumentHandler {
         Document r1 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.Type.UNKNOWN, v1);
         Document r2 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.Type.UNKNOWN, v2);
 
-        MailItem.Type view = mbox.getFolderById(octxt, r1.getFolderId()).getDefaultView();
-        switch (view) {
-        case WIKI:
-            checkNotebookEnabled(zsc);
-            break;
-        case DOCUMENT:
-            checkBriefcaseEnabled(zsc);
-            break;
-        }
         Element response = zsc.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
 
         try {

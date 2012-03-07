@@ -170,12 +170,10 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CHECK_SPELLING_REQUEST, new CheckSpelling());
         dispatcher.registerHandler(MailConstants.GET_SPELL_DICTIONARIES_REQUEST, new GetSpellDictionaries());
 
-        // TODO: move to a different service.
-        // wiki
-        dispatcher.registerHandler(MailConstants.SAVE_DOCUMENT_REQUEST, new com.zimbra.cs.service.wiki.SaveDocument());
-        dispatcher.registerHandler(MailConstants.WIKI_ACTION_REQUEST, new com.zimbra.cs.service.wiki.WikiAction());
-        dispatcher.registerHandler(MailConstants.DIFF_DOCUMENT_REQUEST, new com.zimbra.cs.service.wiki.DiffDocument());
-        dispatcher.registerHandler(MailConstants.LIST_DOCUMENT_REVISIONS_REQUEST, new com.zimbra.cs.service.wiki.ListDocumentRevisions());
+        // Documents
+        dispatcher.registerHandler(MailConstants.SAVE_DOCUMENT_REQUEST, new com.zimbra.cs.service.doc.SaveDocument());
+        dispatcher.registerHandler(MailConstants.DIFF_DOCUMENT_REQUEST, new com.zimbra.cs.service.doc.DiffDocument());
+        dispatcher.registerHandler(MailConstants.LIST_DOCUMENT_REVISIONS_REQUEST, new com.zimbra.cs.service.doc.ListDocumentRevisions());
         dispatcher.registerHandler(MailConstants.PURGE_REVISION_REQUEST, new com.zimbra.cs.service.mail.PurgeRevision());
 
         // data source

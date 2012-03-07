@@ -38,12 +38,14 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.service.doc.DocServiceException;
 import com.zimbra.cs.wiki.WikiPage.WikiContext;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
 /**
+ * Wikis are now obsolete but this class has been retained to aid migrating legacy data.
+ *
  * WikiTemplate is a parsed Wiki page.  Each parsed tokens represent either
  * a block of text, or a wiklet.  A wiklet can refer to another document
  * stored in someone else's mailbox.  To render a wiki page, it will go through
@@ -55,9 +57,6 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
  */
 public class WikiTemplate implements Comparable<WikiTemplate> {
 
-    public static WikiTemplate getDefaultTOC() {
-        return new WikiTemplate("{{TOC}}");
-    }
     public WikiTemplate(String item, String id, String key, String name) {
         this(item);
         StringBuilder buf = new StringBuilder();
@@ -118,26 +117,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 
     public long getModifiedTime() {
         return mModifiedTime;
-    }
-
-    public String getComposedPage(WikiPage.WikiContext wctxt, MailItem item, String chrome)
-    throws ServiceException, IOException {
-        Context ctxt = new Context(wctxt, item, this);
-        WikiPage chromePage = WikiPage.findTemplate(ctxt.wctxt, item.getAccount().getId(), chrome);
-        if (chromePage == null)
-            chromePage = WikiPage.missingPage(chrome);
-        WikiTemplate chromeTemplate = chromePage.getTemplate(ctxt.wctxt);
-        String templateVal;
-
-        if (ctxt.item instanceof WikiItem)
-            templateVal = chromeTemplate.toString(ctxt);
-        else {
-            String inner = toString(ctxt);
-            ctxt.content = inner;
-            templateVal = chromeTemplate.toString(ctxt);
-        }
-
-        return templateVal;
     }
 
     public void parse() {
@@ -1290,7 +1269,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         public String getPath(WikiContext ctxt, Account acct) throws ServiceException {
             // sanity check
             if (!isAbsolute() && mId < 1) {
-                throw WikiServiceException.INVALID_PATH(mUrl);
+                throw DocServiceException.INVALID_PATH(mUrl);
             }
 
             StringBuilder p = new StringBuilder();
@@ -1307,7 +1286,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                 // from the remote folder.  we can do something like getFolder
                 // and then calculate REST from the result.  for now treat
                 // this case as unreachable.
-                throw WikiServiceException.INVALID_PATH(mUrl);
+                throw DocServiceException.INVALID_PATH(mUrl);
             }
             return normalizePath(p.toString());
         }
@@ -1333,7 +1312,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                     continue;
                 else if (token.equals("..")) {
                     if (tokens.isEmpty()) {
-                        throw WikiServiceException.INVALID_PATH(path);
+                        throw DocServiceException.INVALID_PATH(path);
                     }
                     tokens.remove(tokens.size() - 1);
                 } else

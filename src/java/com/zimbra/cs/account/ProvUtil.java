@@ -114,7 +114,6 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
-import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -280,7 +279,6 @@ public class ProvUtil implements HttpDebugListener {
         LOG("help on logging commands"),
         MISC("help on misc commands"),
         MAILBOX("help on mailbox-related commands"),
-        NOTEBOOK("help on notebook-related commands"),
         REVERSEPROXY("help on reverse proxy related commands"),
         RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"),
@@ -453,7 +451,6 @@ public class ProvUtil implements HttpDebugListener {
             console.println("    note");
             // console.println("    tag");
             console.println("    task");
-            console.println("    wiki");
             console.println();
         }
     }
@@ -544,9 +541,6 @@ public class ProvUtil implements HttpDebugListener {
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
         GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {[-]right}", Category.RIGHT, 3, 6, null, new RightCommandHelp()),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
-        IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
-        INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
-        INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{domain} [{name@domain}]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"),
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
@@ -595,7 +589,6 @@ public class ProvUtil implements HttpDebugListener {
         GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
-        UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2);
 
         private String mName;
@@ -626,13 +619,9 @@ public class ProvUtil implements HttpDebugListener {
         public boolean needsSchemaExtension() {
             return mNeedsSchemaExtension || (mCat == Category.RIGHT);
         }
+
         public boolean isDeprecated() {
-            switch (mCat) {
-            case NOTEBOOK:
-                return true;
-            default:
-                return false;
-            }
+            return false;  // Used to return true if mCat was Category.NOTEBOOK - which has now been removed
         }
 
         private Command(String name, String alias) {
@@ -1182,18 +1171,6 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case GET_SPNEGO_DOMAIN:
                 doGetSpnegoDomain();
-                break;
-            case INIT_NOTEBOOK:
-                initNotebook(args);
-                break;
-            case INIT_DOMAIN_NOTEBOOK:
-                initDomainNotebook(args);
-                break;
-            case IMPORT_NOTEBOOK:
-                importNotebook(args);
-                break;
-            case UPDATE_TEMPLATES:
-                updateTemplates(args);
                 break;
             case GET_QUOTA_USAGE:
                 doGetQuotaUsage(args);
@@ -2744,62 +2721,6 @@ public class ProvUtil implements HttpDebugListener {
                 console.println(resource.getName());
             }
         }
-    }
-
-    private void initNotebook(String[] args) throws ServiceException {
-        if (args.length > 2) {
-            usage();
-            return;
-        }
-        String username = null;
-
-        if (args.length == 2) {
-            username = args[1];
-        }
-        WikiUtil wu = WikiUtil.getInstance(prov);
-        wu.initDefaultWiki(username);
-    }
-
-    private void initDomainNotebook(String[] args) throws ServiceException {
-        if (args.length < 2 || args.length > 3) {
-            usage(); return;
-        }
-        String domain = args[1];
-        String username = null;
-        if (args.length == 3) {
-            username = args[2];
-        }
-        if (prov.get(AccountBy.name, username) == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(username);
-        }
-        WikiUtil wu = WikiUtil.getInstance(prov);
-        wu.initDomainWiki(domain, username);
-    }
-
-    private void importNotebook(String[] args) throws ServiceException, IOException {
-        if (args.length != 4) {
-            usage();
-            return;
-        }
-        WikiUtil wu = WikiUtil.getInstance(prov);
-        wu.startImport(args[1], args[3], new java.io.File(args[2]));
-    }
-
-    private void updateTemplates(String[] args) throws ServiceException, IOException {
-        if (args.length != 2 && args.length != 4) {usage(); return; }
-
-        String dir = args[1];
-        Server server = null;
-
-        if (args.length == 4 && args[1].equals("-h")) {
-            server = prov.get(Key.ServerBy.name, args[2]);
-            if (server == null) {
-                throw AccountServiceException.NO_SUCH_SERVER(args[2]);
-            }
-            dir = args[3];
-        }
-        WikiUtil wu = WikiUtil.getInstance(prov);
-        wu.updateTemplates(server, new java.io.File(dir));
     }
 
     private Account lookupAccount(String key, boolean mustFind, boolean applyDefault) throws ServiceException {

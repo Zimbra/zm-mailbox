@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.wiki;
+package com.zimbra.cs.doc;
 
 import java.io.InputStream;
 import java.io.IOException;

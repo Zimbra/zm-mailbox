@@ -22,7 +22,6 @@ import com.zimbra.common.util.MapUtil;
 import org.apache.commons.httpclient.Header;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -34,11 +33,14 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.service.doc.DocServiceException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 
+/*
+ * Wikis are now obsolete but this class has been retained to aid migrating legacy data.
+ */
 public abstract class WikiPage {
 
     public static class WikiContext {
@@ -131,22 +133,6 @@ public abstract class WikiPage {
 
     public String getFragment() {
         return mFragment;
-    }
-
-    public static WikiPage findPage(WikiPage.WikiContext ctxt, String accountId, int id) throws ServiceException {
-        Account account = Provisioning.getInstance().get(Key.AccountBy.id, accountId, ctxt.auth);
-        if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-
-        if (!Provisioning.onLocalServer(account)) {
-            throw new WikiServiceException.NoSuchWikiException("not on local host");
-        }
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        MailItem item = mbox.getItemById(ctxt.octxt, id, MailItem.Type.UNKNOWN);
-        if (item.getType() != MailItem.Type.DOCUMENT && item.getType() != MailItem.Type.WIKI) {
-            throw WikiServiceException.NOT_WIKI_ITEM("not a wiki item");
-        }
-        return create((Document)item);
     }
 
     private static Map<String, WikiPage> sPageCache = MapUtil.newLruMap(1024);
@@ -265,7 +251,7 @@ public abstract class WikiPage {
                     byte[] raw = getWikiRevision(ctxt, mVersion).getContent();
                     mContents = new String(raw, "UTF-8");
                 } catch (IOException ioe) {
-                    throw WikiServiceException.ERROR("can't get contents", ioe);
+                    throw DocServiceException.ERROR("can't get contents", ioe);
                 }
             }
             return mContents;

@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.wiki;
+package com.zimbra.cs.service.doc;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -32,7 +32,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ListDocumentRevisions extends WikiDocumentHandler {
+public class ListDocumentRevisions extends DocDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -52,16 +52,6 @@ public class ListDocumentRevisions extends WikiDocumentHandler {
 
         ItemId iid = new ItemId(id, zsc);
         item = mbox.getDocumentById(octxt, iid.getId());
-
-        MailItem.Type view = mbox.getFolderById(octxt, item.getFolderId()).getDefaultView();
-        switch (view) {
-        case WIKI:
-            checkNotebookEnabled(zsc);
-            break;
-        case DOCUMENT:
-            checkBriefcaseEnabled(zsc);
-            break;
-        }
 
         if (version < 0) {
             version = item.getVersion();

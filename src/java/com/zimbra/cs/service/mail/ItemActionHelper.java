@@ -619,10 +619,6 @@ public class ItemActionHelper {
                 }
                 mCreatedIds.add(createdId);
                 break;
-            case WIKI:
-                createdId = zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getContent(), "utf-8"));
-                mCreatedIds.add(createdId);
-                break;
             case APPOINTMENT:
             case TASK:
                 CalendarItem cal = (CalendarItem) item;
