@@ -174,10 +174,15 @@ public abstract class MailItemResource extends DavResource {
 	    return mbox.getItemById(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN);
 	}
 	
-	/* Deletes this resource by moving to Trash folder. */
+	/* Deletes this resource by moving to Trash folder. Hard deletes if the item is in Trash folder.*/
 	public void delete(DavContext ctxt) throws DavException {
 		if (mId == 0) 
 			throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
+        // hard delete if the item is in Trash.
+        if (mFolderId == Mailbox.ID_FOLDER_TRASH) {
+            hardDelete(ctxt);
+            return;
+        }
 		try {
 			Mailbox mbox = getMailbox(ctxt);
 			mbox.move(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, Mailbox.ID_FOLDER_TRASH);
