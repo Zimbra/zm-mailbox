@@ -45,6 +45,7 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.cs.account.Config;
 
 public class FlushCache extends AdminDocumentHandler {
 
@@ -101,35 +102,37 @@ public class FlushCache extends AdminDocumentHandler {
 
     private void doFlush(Map<String, Object> context, CacheEntryType cacheType, Element eCache) throws ServiceException {
 
-        switch (cacheType) {
-        case acl:
-            PermissionCache.invalidateCache();
-            break;
-        case galgroup:
-            GalGroup.flushCache(getCacheEntries(eCache));
-            break;
-        case uistrings:
-            FlushCache.sendFlushRequest(context, "/zimbra", "/res/AjxMsg.js");
-            FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
-            break;
-        case skin:
-            SkinUtil.flushSkinCache();
-            FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
-            break;
-        case locale:
-            L10nUtil.flushLocaleCache();
-            break;
-        case license:
-            flushLdapCache(CacheEntryType.config, eCache); // refresh global config for parsed license
-            Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
-            break;
-        case zimlet:
-            FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
-            // fall through to also flush ldap entries
-        default:
-            flushLdapCache(cacheType, eCache);
-        }
-    }
+		Config config = Provisioning.getInstance().getConfig();
+		String mailURL = config.getMailURL();
+		switch (cacheType) {
+			case acl:
+				PermissionCache.invalidateCache();
+				break;
+			case galgroup:
+				GalGroup.flushCache(getCacheEntries(eCache));
+				break;
+			case uistrings:
+				FlushCache.sendFlushRequest(context, mailURL, "/res/AjxMsg.js");
+				FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
+				break;
+			case skin:
+				SkinUtil.flushSkinCache();
+				FlushCache.sendFlushRequest(context, mailURL, "/js/skin.js");
+				break;
+			case locale:
+				L10nUtil.flushLocaleCache();
+				break;
+			case license:
+				flushLdapCache(CacheEntryType.config, eCache); // refresh global config for parsed license
+				Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
+				break;
+			case zimlet:
+				FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+				// fall through to also flush ldap entries
+			default:
+				flushLdapCache(cacheType, eCache);
+		}
+	}
 
     private CacheEntry[] getCacheEntries(Element eCache) throws ServiceException {
         List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
