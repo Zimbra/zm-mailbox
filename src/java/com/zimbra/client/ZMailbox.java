@@ -3881,15 +3881,6 @@ public class ZMailbox implements ToZJSONObject {
         return new ZDocument(e);
     }
 
-    public String createWiki(String folderId, String name, String contents) throws ServiceException {
-        Element req = newRequestElement(MailConstants.SAVE_WIKI_REQUEST);
-        Element doc = req.addUniqueElement(MailConstants.E_WIKIWORD);
-        doc.addAttribute(MailConstants.A_NAME, name);
-        doc.addAttribute(MailConstants.A_FOLDER, folderId);
-        doc.setText(contents);
-        return invoke(req).getElement(MailConstants.E_WIKIWORD).getAttribute(MailConstants.A_ID);
-    }
-
     /**
      * modify prefs. The key in the map is the pref name, and the value should be a String[],
      * a Collection of String objects, or a single String/Object.toString.
