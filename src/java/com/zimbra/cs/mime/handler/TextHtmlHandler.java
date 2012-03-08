@@ -55,14 +55,16 @@ public class TextHtmlHandler extends MimeHandler {
     protected String getContentImpl() throws MimeHandlerException {
         if (content == null) {
             DataSource source = getDataSource();
-            InputStream is = null;
-            try {
-                Reader reader = getReader(is = source.getInputStream(), source.getContentType());
-                content = HtmlTextExtractor.extract(reader, MimeHandlerManager.getIndexedTextLimit());
-            } catch (Exception e) {
-                throw new MimeHandlerException(e);
-            } finally {
-                ByteUtil.closeStream(is);
+            if (source != null) {
+                InputStream is = null;
+                try {
+                    Reader reader = getReader(is = source.getInputStream(), source.getContentType());
+                    content = HtmlTextExtractor.extract(reader, MimeHandlerManager.getIndexedTextLimit());
+                } catch (Exception e) {
+                    throw new MimeHandlerException(e);
+                } finally {
+                    ByteUtil.closeStream(is);
+                }
             }
         }
         if (content == null) {

@@ -20,6 +20,7 @@ package com.zimbra.cs.mime.handler;
 
 import java.io.InputStream;
 
+import javax.activation.DataSource;
 import javax.mail.internet.InternetHeaders;
 
 import org.apache.lucene.document.Document;
@@ -51,10 +52,14 @@ public class MessageRFC822Handler extends MimeHandler {
      */
     @Override
     protected String getContentImpl() throws MimeHandlerException {
+        DataSource ds = getDataSource();
+        if (ds == null) {
+            return null;
+        }
         InputStream is = null;
         String content = null;
         try {
-            is = getDataSource().getInputStream();
+            is = ds.getInputStream();
             if (is == null) {
                 return null;
             }

@@ -158,10 +158,10 @@ public abstract class MimeHandler {
             else
                 return toRet;
         } else {
-            if (!mDrainedContent) {
+            if (dataSource != null && !mDrainedContent) {
                 InputStream is = null;
                 try {
-                    is = getDataSource().getInputStream();
+                    is = dataSource.getInputStream();
                     // Read all bytes from the input stream and discard them.
                     // This is useful for testing MIME parser performance, as
                     // the parser may not fully parse the message unless the

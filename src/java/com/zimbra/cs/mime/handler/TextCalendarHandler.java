@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,13 +25,6 @@ import net.fortuna.ical4j.data.ParserException;
 
 import org.apache.lucene.document.Document;
 
-import com.zimbra.cs.convert.AttachmentInfo;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.MimeHandler;
-import com.zimbra.cs.mime.MimeHandlerException;
-import com.zimbra.cs.mime.MimeHandlerManager;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -39,6 +32,13 @@ import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.convert.AttachmentInfo;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeHandler;
+import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.cs.mime.MimeHandlerManager;
 
 public class TextCalendarHandler extends MimeHandler {
     private String mContent;
@@ -63,6 +63,10 @@ public class TextCalendarHandler extends MimeHandler {
             return;
 
         DataSource source = getDataSource();
+        if (source == null) {
+            mContent = "";
+            return;
+        }
         InputStream is = null;
         try {
             is = source.getInputStream();
@@ -155,40 +159,50 @@ public class TextCalendarHandler extends MimeHandler {
             }
         }
 
+        @Override
         public void startCalendar() throws ParserException {
             mInZCalendar = true;
         }
 
+        @Override
         public void endCalendar() throws ParserException {
             mInZCalendar = false;
             mNumCals++;
         }
 
+        @Override
         public boolean inZCalendar() { return mInZCalendar; }
+        @Override
         public int getNumCals() { return mNumCals; }
 
+        @Override
         public void startComponent(String name) {
             // nothing to do
         }
 
+        @Override
         public void endComponent(String name) throws ParserException {
             // nothing to do
         }
 
+        @Override
         public void startProperty(String name) {
             mCurProp = name != null ? name.toUpperCase() : null;
         }
 
+        @Override
         public void propertyValue(String value) throws ParserException {
             if (!mMaxedOut && sIndexedProps.contains(mCurProp)) {
                 appendContent(value);
             }
         }
 
+        @Override
         public void endProperty(String name) {
             mCurProp = null;
         }
 
+        @Override
         public void parameter(String name, String value) {
             // nothing to do
         }

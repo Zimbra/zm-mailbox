@@ -52,12 +52,14 @@ public class TextPlainHandler extends MimeHandler {
     protected String getContentImpl() throws MimeHandlerException {
         if (content == null) {
             DataSource source = getDataSource();
-            String ctype = source.getContentType();
-            try {
-                Reader reader = Mime.getTextReader(source.getInputStream(), ctype, getDefaultCharset());
-                content = ByteUtil.getContent(reader, MimeHandlerManager.getIndexedTextLimit(), true);
-            } catch (IOException e) {
-                throw new MimeHandlerException(e);
+            if (source != null) {
+                String ctype = source.getContentType();
+                try {
+                    Reader reader = Mime.getTextReader(source.getInputStream(), ctype, getDefaultCharset());
+                    content = ByteUtil.getContent(reader, MimeHandlerManager.getIndexedTextLimit(), true);
+                } catch (IOException e) {
+                    throw new MimeHandlerException(e);
+                }
             }
         }
         if (content == null) {
