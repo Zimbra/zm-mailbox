@@ -14,11 +14,15 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +43,9 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * Unit test for {@link Contact}.
@@ -182,6 +188,26 @@ public final class ContactTest {
                 attach.getContent();
             }
         }
+    }
+    
+    /**
+     * Modify Contact having an attachment (bug 70488).
+     */
+    @Test
+    public void modifyContactHavingAttachment()
+    throws Exception {
+        // Create a contact with an attachment.
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put("fullName", "Contact Initial Content");
+        byte[] attachData = "attachment 1".getBytes();
+        Attachment textAttachment = new Attachment(attachData, "image/png", "customField", "image.png");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact = mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(textAttachment)), Mailbox.ID_FOLDER_CONTACTS, null);
+        
+        ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), new ArrayList<Attachment>());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), pc.getContentStream());
+        MimePart mp = Mime.getMimePart(mm, "1");
+        Assert.assertEquals("image/png", mp.getContentType());
     }
 
 }

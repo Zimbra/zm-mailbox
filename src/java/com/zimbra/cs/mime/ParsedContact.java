@@ -215,10 +215,12 @@ public final class ParsedContact {
             cdisp.setParameter("filename", attach.getFilename()).setParameter("field", attach.getName());
 
             MimeBodyPart bp = new ZMimeBodyPart();
+            // MimeBodyPart.setDataHandler() invalidates Content-Type and CTE if there is any, so make sure
+            // it gets called before setting Content-Type and CTE headers.
+            bp.setDataHandler(attach.getDataHandler());
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
             bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
-            bp.setDataHandler(attach.getDataHandler());
             multi.addBodyPart(bp);
 
             attach.setPartName(Integer.toString(part++));
