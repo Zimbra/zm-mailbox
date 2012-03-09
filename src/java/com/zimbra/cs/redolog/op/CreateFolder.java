@@ -36,18 +36,14 @@ public class CreateFolder extends RedoableOp {
     private String mUrl;
     private int mFolderId;
     private String mFolderUuid;
+    private Integer mDate;
 
     public CreateFolder() {
         super(MailboxOperation.CreateFolder);
     }
 
-    public CreateFolder(int mailboxId, String name, int parentId, MailItem.Type view, int flags,
-            Color color, String url) {
-        this(mailboxId, name, parentId, (byte) 0, view, flags, color, url);
-    }
-
     public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
-            Color color, String url) {
+        Color color, String url, Integer date) {
         this();
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
@@ -57,6 +53,7 @@ public class CreateFolder extends RedoableOp {
         mFlags = flags;
         mColor = color.getValue();
         mUrl = url == null ? "" : url;
+        mDate = date;
     }
 
     public int getFolderId() {
@@ -79,7 +76,9 @@ public class CreateFolder extends RedoableOp {
         sb.append(", attrs=").append(mAttrs);
         sb.append(", view=").append(defaultView);
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
-        sb.append(", url=").append(mUrl).append(", id=").append(mFolderId).append(", uuid=").append(mFolderUuid);
+        sb.append(", url=").append(mUrl).append(", id=").append(mFolderId);
+        sb.append(", uuid=").append(mFolderUuid);
+        sb.append(", date=").append(mDate);
         return sb.toString();
     }
 
@@ -96,6 +95,12 @@ public class CreateFolder extends RedoableOp {
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 37)) {
             out.writeUTF(mFolderUuid);
+        }
+        if (getVersion().atLeast(1, 39)) {
+            out.writeBoolean(mDate != null);
+            if (mDate != null) {
+                out.writeInt(mDate.intValue());
+            }
         }
     }
 
@@ -118,6 +123,12 @@ public class CreateFolder extends RedoableOp {
         if (getVersion().atLeast(1, 37)) {
             mFolderUuid = in.readUTF();
         }
+        if (getVersion().atLeast(1, 39)) {
+            boolean hasDate = in.readBoolean();
+            if (hasDate) {
+                mDate = new Integer(in.readInt());
+            }
+        }
     }
 
     @Override
@@ -127,7 +138,7 @@ public class CreateFolder extends RedoableOp {
 
         try {
             mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, defaultView, mFlags,
-                    Color.fromMetadata(mColor), mUrl);
+                    Color.fromMetadata(mColor), mUrl, mDate);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

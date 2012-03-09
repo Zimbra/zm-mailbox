@@ -737,8 +737,8 @@ public class Mailbox {
                     MailboxUpgrade.upgradeTo2_5(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 5));
                 }
-                
-                // Move appointments from non-appointment folders to Calendar folder and tasks from non-todo folders to Tasks folder. 
+
+                // Move appointments from non-appointment folders to Calendar folder and tasks from non-todo folders to Tasks folder.
                 if (!mData.version.atLeast(2, 6)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.6", getVersion());
                     MailboxUpgrade.upgradeTo2_6(this);
@@ -6909,7 +6909,13 @@ public class Mailbox {
     public Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, MailItem.Type defaultView,
             int flags, Color color, String url)
     throws ServiceException {
-        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url);
+        return createFolder(octxt, name, parentId, attrs, defaultView, flags, color, url, null);
+    }
+
+    public Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, MailItem.Type defaultView,
+            int flags, Color color, String url, Integer date)
+    throws ServiceException {
+        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url, date);
 
         boolean success = false;
         try {
@@ -6918,7 +6924,10 @@ public class Mailbox {
 
             int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
             String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getFolderUuid();
-            Folder folder = Folder.create(folderId, uuid, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url, null);
+
+            Folder folder = Folder.create(folderId, uuid, this, getFolderById(parentId), name, attrs,
+                    defaultView, flags, color, date, url, null);
+
             redoRecorder.setFolderIdAndUuid(folder.getId(), folder.getUuid());
             success = true;
             updateRssDataSource(folder);
@@ -7787,7 +7796,7 @@ public class Mailbox {
                     DbMailbox.setSyncCutoff(this, currentChange.sync);
                 }
             }
-            
+
             // record the purge time.
             if (purgedAll)
                 DbMailbox.updateLastPurgeAt(this, System.currentTimeMillis());

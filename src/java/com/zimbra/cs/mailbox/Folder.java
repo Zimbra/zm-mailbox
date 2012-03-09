@@ -712,10 +712,48 @@ public class Folder extends MailItem {
      * @see #validateItemName(String)
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
-     * @see #FOLDER_DONT_TRACK_COUNTS */
-    @SuppressWarnings("deprecation")
+     * @see #FOLDER_DONT_TRACK_COUNTS
+     */
     public static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
             Color color, String url, CustomMetadata custom) throws ServiceException {
+
+        return create(id, uuid, mbox, parent, name, attributes, view, flags, color, null, url, custom);
+    }
+
+    /** Creates a new Folder with optional attributes and persists it
+     *  to the database.  A real nonnegative item ID must be supplied
+     *  from a previous call to {@link Mailbox#getNextItemId(int)}.
+     *
+     * @param id          The id for the new folder.
+     * @param mbox        The {@link Mailbox} to create the folder in.
+     * @param parent      The parent folder to place the new folder in.
+     * @param name        The new folder's name.
+     * @param attributes  Any extra constraints on the folder.
+     * @param view        The (optional) default object type for the folder.
+     * @param flags       Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
+     * @param color       The new folder's color.
+     * @param date        Date (timestamp) for the new folder (in seconds since Unix epoch).
+     *                    If null, current time will be used.
+     * @param url         The (optional) url to sync folder contents to.
+     * @param custom      An optional extra set of client-defined metadata.
+     * @perms {@link ACL#RIGHT_INSERT} on the parent folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't have
+     *        subfolders
+     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a folder by that name already
+     *        exists in the parent folder
+     *    <li><tt>mail.INVALID_NAME</tt> - if the new folder's name is invalid
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
+     * @see #validateItemName(String)
+     * @see #canContain(byte)
+     * @see #FOLDER_IS_IMMUTABLE
+     * @see #FOLDER_DONT_TRACK_COUNTS
+     */
+    @SuppressWarnings("deprecation")
+    static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
+            Color color, Integer date, String url, CustomMetadata custom) throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(Type.FOLDER)) {
                 throw MailServiceException.CANNOT_CONTAIN(parent, Type.FOLDER);
@@ -736,7 +774,7 @@ public class Folder extends MailItem {
         data.type = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
-        data.date = mbox.getOperationTimestamp();
+        data.date = date == null ?  mbox.getOperationTimestamp() : date;
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
@@ -977,7 +1015,7 @@ public class Folder extends MailItem {
         if (!renamed && target == parent)
             return;
         String oldName = mData.name;
-        Folder oldParent = (target == parent ? parent : null); 
+        Folder oldParent = (target == parent ? parent : null);
         super.rename(name, target);
         if (oldParent != null) { //null if moved; super.rename() already removed it from old
             oldParent.subfolderRenamed(oldName, name);
@@ -990,7 +1028,7 @@ public class Folder extends MailItem {
         mData.date = mMailbox.getOperationTimestamp();
         contentChanged();
     }
-    
+
     private void subfolderRenamed(String oldName, String name) {
         Folder child = subfolders.remove(oldName.toLowerCase());
         subfolders.put(name.toLowerCase(), child);
@@ -1084,7 +1122,7 @@ public class Folder extends MailItem {
         }
     }
 
-    @Override 
+    @Override
     void removeChild(MailItem child) throws ServiceException {
         if (child == null) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -1209,7 +1247,7 @@ public class Folder extends MailItem {
                 if  (f.getChangeDate() >= beforeDate) {
                     ZimbraLog.purge.info("Skipping the recently modified/moved folder %s", f.getPath());
                     iter.remove();
-                }    
+                }
             }
         }
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
