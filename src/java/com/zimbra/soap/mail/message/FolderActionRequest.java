@@ -86,6 +86,10 @@ import com.zimbra.soap.mail.type.FolderActionSelector;
  *
  *   &lt;action op="[!]syncon" id="{list}"/>
  *     - set or unset the "sync" flag of the folder to sync a local folder with a remote source
+ *     
+ *   &lt;action op="[!]disableactivesync" id="{list}"/>
+ *     - If set, disable access to the folder via activesync.
+ *       Note: Only works for user folders, doesn't have any effect on system folders.
  *
  *   &lt;action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"]
  *                          [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>

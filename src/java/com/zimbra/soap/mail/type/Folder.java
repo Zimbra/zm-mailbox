@@ -232,6 +232,9 @@ public class Folder {
      */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
+    
+    @XmlAttribute(name=MailConstants.A_ACTIVESYNC_DISABLED /* activesyncdisabled */, required=false)
+    private ZmBoolean activeSyncDisabled;
 
     /**
      * @zm-api-field-tag effective-perms
@@ -311,6 +314,7 @@ public class Folder {
     }
 
     public String getUrl() { return url; }
+    public Boolean isActiveSyncDisabled() { return ZmBoolean.toBool(activeSyncDisabled); }
     public String getPerm() { return perm; }
     public List<Folder> getSubfolders() {
         return Collections.unmodifiableList(subfolders);
@@ -350,6 +354,7 @@ public class Folder {
     public void setTotalSize(Long totalSize) { this.totalSize = totalSize; }
     public void setView(View view) { this.view = view; }
     public void setUrl(String url) { this.url = url; }
+    public void setDisableActiveSync(Boolean disableActiveSync) { this.recursive = ZmBoolean.fromBool(disableActiveSync); }
     public void setPerm(String perm) { this.perm = perm; }
     public void setRestUrl(String restUrl) { this.restUrl = restUrl; }
 
