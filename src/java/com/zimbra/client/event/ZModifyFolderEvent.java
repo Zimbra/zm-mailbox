@@ -185,6 +185,10 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
     public String getRemoteURL(String defaultValue) {
         return mFolderEl.getAttribute(MailConstants.A_URL, defaultValue);
     }
+    
+    public boolean isActiveSyncDisabled(boolean defaultValue) throws ServiceException {
+        return mFolderEl.getAttributeBool(MailConstants.A_ACTIVESYNC_DISABLED, defaultValue);
+    }
 
     /**
      * @param defaultValue value to return if unchanged
@@ -239,6 +243,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
             if (getImapUIDNEXT(-1) != -1) zjo.put("imapUIDNEXT", getImapUIDNEXT(-1));
             if (getImapMODSEQ(-1) != -1) zjo.put("imapMODSEQ", getImapMODSEQ(-1));
             if (getRemoteURL(null) != null) zjo.put("url", getRemoteURL(null));
+            zjo.put("activeSyncDisabled", isActiveSyncDisabled(false));
             if (getEffectivePerm(null) != null) zjo.put("effectivePermissions", getEffectivePerm(null));
             List<ZGrant> grants = getGrants(null);
             if (grants != null) zjo.put("grants", grants);

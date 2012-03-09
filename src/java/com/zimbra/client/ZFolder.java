@@ -83,6 +83,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private boolean mIsPlaceholder;
     private ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
+    private boolean mActiveSyncDisabled;
 
     @Override
     public int compareTo(Object obj) {
@@ -238,6 +239,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
+        mActiveSyncDisabled = e.getAttributeBool(MailConstants.A_ACTIVESYNC_DISABLED, false);
 
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
@@ -300,6 +302,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mRemoteURL = f.getUrl();
         mEffectivePerms = f.getPerm();
         mSize = SystemUtil.coalesce(f.getTotalSize(), 0L);
+        mActiveSyncDisabled = SystemUtil.coalesce(f.isActiveSyncDisabled());
 
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
@@ -366,6 +369,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mImapUIDNEXT = fevent.getImapUIDNEXT(mImapUIDNEXT);
             mImapMODSEQ = fevent.getImapMODSEQ(mImapMODSEQ);
             mRemoteURL = fevent.getRemoteURL(mRemoteURL);
+            mActiveSyncDisabled = fevent.isActiveSyncDisabled(mActiveSyncDisabled);
             mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
             mGrants = fevent.getGrants(mGrants);
             mSize = fevent.getSize(mSize);
@@ -628,6 +632,10 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public String getRemoteURL() {
         return mRemoteURL;
     }
+    
+    public boolean isActiveSyncDisabled() {
+        return mActiveSyncDisabled;
+    }
 
     /**
      * for remote folders, the access rights the authenticated user has on the folder.
@@ -703,6 +711,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         jo.put("imapMODSEQ", mImapMODSEQ);
         jo.put("defaultView", mDefaultView.name());
         jo.put("remoteUrl", mRemoteURL);
+        jo.put("activeSyncDisabled", mActiveSyncDisabled);
         jo.put("effectivePermissions", mEffectivePerms);
         jo.put("grants", mGrants);
         jo.put("size", mSize);
