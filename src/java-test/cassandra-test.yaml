@@ -25,8 +25,16 @@ saved_caches_directory: build/test/cassandra/cache
 commitlog_rotation_threshold_in_mb: 128
 commitlog_sync: periodic
 commitlog_sync_period_in_ms: 10000
-seeds:
-  - 127.0.0.1
+seed_provider:
+    # Addresses of hosts that are deemed contact points.
+    # Cassandra nodes use this list of hosts to find each other and learn
+    # the topology of the ring.  You must change this if you are running
+    # multiple nodes!
+    - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+      parameters:
+          # seeds is actually a comma-delimited list of addresses.
+          # Ex: "<ip1>,<ip2>,<ip3>"
+          - seeds: "127.0.0.1"
 disk_access_mode: standard
 concurrent_reads: 4
 concurrent_writes: 8
