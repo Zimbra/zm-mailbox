@@ -576,6 +576,14 @@ final class ImapSessionManager {
             return folder;
         }
     }
+    
+    void updateAccessTime(String key) {
+        if (!isActiveKey(key)) {
+            inactiveSessionCache.updateAccessTime(key);
+        } else {
+            activeSessionCache.updateAccessTime(key);
+        }
+    }
 
     public static boolean isActiveKey(String key) {
         return key.contains("_");
@@ -590,5 +598,8 @@ final class ImapSessionManager {
 
         /** Removes the folder from the cache. */
         void remove(String key);
+        
+        /** Update the last access time without necessarily loading the underlying object **/
+        void updateAccessTime(String key);
     }
 }

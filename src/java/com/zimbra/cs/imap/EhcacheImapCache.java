@@ -155,4 +155,19 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
     public void remove(String key) {
         remove(key, false);
     }
+
+    @Override
+    public void updateAccessTime(String key) {
+        if (active) {
+            synchronized (activeCacheUpdateTimes) {
+                if (activeCacheUpdateTimes.containsKey(key)) {
+                    activeCacheUpdateTimes.put(key, System.currentTimeMillis());
+                } else {
+                    ZimbraLog.imap.warn("active cache needed update but not found: %s",key);
+                }
+            }
+        } else {
+            //inactive expiration not time-based
+        }
+    }
 }
