@@ -42,6 +42,16 @@ public class CreateFolder extends RedoableOp {
         super(MailboxOperation.CreateFolder);
     }
 
+    public CreateFolder(int mailboxId, String name, int parentId, MailItem.Type view, int flags,
+            Color color, String url) {
+        this(mailboxId, name, parentId, (byte) 0, view, flags, color, url, null);
+    }
+
+    public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
+            Color color, String url) {
+        this(mailboxId, name, parentId, attrs, view, flags, color, url, null);
+
+    }
     public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
         Color color, String url, Integer date) {
         this();
