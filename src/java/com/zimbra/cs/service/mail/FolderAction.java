@@ -85,10 +85,14 @@ public class FolderAction extends ItemAction {
     public static final String OP_SYNCON   = "syncon";
     public static final String OP_SYNCOFF  = '!' + OP_SYNCON;
     public static final String OP_RETENTIONPOLICY = "retentionpolicy";
+    public static final String OP_DISABLE_ACTIVESYNC = "disableactivesync";
+    public static final String OP_ENABLE_ACTIVESYNC = '!' + OP_DISABLE_ACTIVESYNC;
+    
 
     private static final Set<String> FOLDER_OPS = ImmutableSet.of(
         OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT,
-        OP_REVOKE, OP_REVOKEORPHANGRANTS, OP_UPDATE, OP_SYNCON, OP_SYNCOFF, OP_RETENTIONPOLICY
+        OP_REVOKE, OP_REVOKEORPHANGRANTS, OP_UPDATE, OP_SYNCON, OP_SYNCOFF, OP_RETENTIONPOLICY,
+        OP_DISABLE_ACTIVESYNC, OP_ENABLE_ACTIVESYNC
     );
 
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -280,6 +284,8 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_RETENTIONPOLICY)) {
             mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.FOLDER,
                 new RetentionPolicy(action.getElement(MailConstants.E_RETENTION_POLICY)));
+        } else if (operation.equals(OP_DISABLE_ACTIVESYNC) || operation.equals(OP_ENABLE_ACTIVESYNC)) {
+            mbox.setActiveSyncDisabled(octxt, iid.getId(), operation.equals(OP_DISABLE_ACTIVESYNC));
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }

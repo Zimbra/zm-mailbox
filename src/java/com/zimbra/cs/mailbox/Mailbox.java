@@ -191,6 +191,7 @@ import com.zimbra.cs.redolog.op.SaveDraft;
 import com.zimbra.cs.redolog.op.SetCalendarItem;
 import com.zimbra.cs.redolog.op.SetConfig;
 import com.zimbra.cs.redolog.op.SetCustomData;
+import com.zimbra.cs.redolog.op.SetActiveSyncDisabled;
 import com.zimbra.cs.redolog.op.SetFolderDefaultView;
 import com.zimbra.cs.redolog.op.SetFolderUrl;
 import com.zimbra.cs.redolog.op.SetImapUid;
@@ -7400,6 +7401,19 @@ public class Mailbox {
         try {
             beginTransaction("setSyncDate", octxt, redoRecorder);
             getFolderById(folderId).setSyncDate(date);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
+    public void setActiveSyncDisabled(OperationContext octxt, int folderId, boolean disableActiveSync) throws ServiceException {
+        SetActiveSyncDisabled redoRecorder = new SetActiveSyncDisabled(mId, folderId, disableActiveSync);
+        
+        boolean success = false;
+        try {
+            beginTransaction("setActiveSyncDisabled", octxt, redoRecorder);
+            getFolderById(folderId).setActiveSyncDisabled(disableActiveSync);
             success = true;
         } finally {
             endTransaction(success);

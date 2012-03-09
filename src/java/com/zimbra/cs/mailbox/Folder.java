@@ -93,6 +93,7 @@ public class Folder extends MailItem {
     private int       deletedCount;
     private int       deletedUnreadCount;
     private RetentionPolicy retentionPolicy;
+    private boolean   activeSyncDisabled;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -779,7 +780,7 @@ public class Folder extends MailItem {
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
-                mbox.getOperationChangeID(), -1, 0, 0, 0, null);
+                mbox.getOperationChangeID(), -1, 0, 0, 0, null, false);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
@@ -887,6 +888,25 @@ public class Folder extends MailItem {
         } else {
             syncData.lastDate = date;
         }
+        saveMetadata();
+    }
+    
+    public boolean isActiveSyncDisabled() {
+        return activeSyncDisabled;
+    }
+
+    public void setActiveSyncDisabled(boolean disableActiveSync) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_WRITE)) {
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+        }
+        //doesn't work on system folders!!
+        if (mId < Mailbox.FIRST_USER_ID) {
+            ZimbraLog.mailop.warn("Cannot disable activesync access for system folder " + mId);
+            return;
+        }
+        
+        markItemModified(Change.DISABLE_ACTIVESYNC);
+        this.activeSyncDisabled = disableActiveSync;
         saveMetadata();
     }
 
@@ -1334,27 +1354,29 @@ public class Folder extends MailItem {
         } else {
             retentionPolicy = new RetentionPolicy();
         }
+        
+        activeSyncDisabled = meta.getBool(Metadata.FN_DISABLE_ACTIVESYNC, false);  
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
         Metadata m = encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, rights, syncData,
                 imapUIDNEXT, totalSize, imapMODSEQ, imapRECENT, imapRECENTCutoff, deletedCount,
-                deletedUnreadCount, retentionPolicy);
+                deletedUnreadCount, retentionPolicy, activeSyncDisabled);
         return m;
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, byte attributes, Type view,
             ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff,
-            int deleted, int deletedUnread, RetentionPolicy rp) {
+            int deleted, int deletedUnread, RetentionPolicy rp, boolean disableActiveSync) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, attributes, view, rights, fsd, uidnext,
-                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread, rp).toString();
+                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread, rp, disableActiveSync).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
             byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
-            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp) {
+            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp, boolean disableActiveSync) {
         if (view != null && view != Type.UNKNOWN) {
             meta.put(Metadata.FN_VIEW, view.toByte());
         }
@@ -1392,6 +1414,7 @@ public class Folder extends MailItem {
         if (rp != null && rp.isSet()) {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }
+        meta.put(Metadata.FN_DISABLE_ACTIVESYNC, disableActiveSync);
 
         return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, extended);
     }

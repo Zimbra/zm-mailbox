@@ -1237,7 +1237,7 @@ Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
        u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
-       [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
+       [url="{remote-url}"] [activesyncdisabled="0|1"] [perm="{effective-perms}"] [rest="{rest-url}"]>
     <acl [internalGrantExpiry="{millis-since-epoch}"] [guestGrantExpiry="{millis-since-epoch}"]>
       <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [pw="{password-for-guest}"] [key=="{access-key}"]/>*
     </acl>?
@@ -2063,7 +2063,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon|retentionpolicy" [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon|retentionpolicy|[!]disableactivesync" [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [rgb="{rgb-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." zid="..." [expiry="{millis-since-epoch}"] [d="..."] [key="..."]/>]
@@ -2133,6 +2133,10 @@ Actions:
 
   <action op="[!]syncon" id="{list}"/>
     - set or unset the "sync" flag of the folder to sync a local folder with a remote source
+    
+  <action op="[!]disableactivesync" id="{list}"/>
+    - If set, disable access to the folder via activesync.
+      Note: Only works for user folders, doesn't have any effect on system folders.
 
   <action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"] [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>
     [<acl><grant .../>*</acl>]
@@ -2144,6 +2148,7 @@ Actions:
           view="{new-view}"        to change folder's default view (useful for migration)
           f="{new-flags}"          to change the folder's exclude free/(b)usy, checked (#), and IMAP subscribed (*) state
           <acl><grant ...>*</acl>  to replace the folder's existing ACL with a new ACL
+          
 
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;

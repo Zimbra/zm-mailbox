@@ -487,6 +487,9 @@ public final class ToXML {
         if (needToOutput(fields, Change.METADATA)) {
             encodeAllCustomMetadata(elem, folder, fields);
         }
+        if (needToOutput(fields, Change.DISABLE_ACTIVESYNC)) {
+            elem.addAttribute(MailConstants.A_ACTIVESYNC_DISABLED, folder.isActiveSyncDisabled());
+        }
         return elem;
     }
 

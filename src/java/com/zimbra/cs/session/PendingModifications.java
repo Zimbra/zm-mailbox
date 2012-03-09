@@ -62,6 +62,7 @@ public final class PendingModifications {
         public static final int LOCK             = 0x00800000;
         public static final int SHAREDREM        = 0x01000000;
         public static final int RETENTION_POLICY = 0x02000000;
+        public static final int DISABLE_ACTIVESYNC = 0x04000000;
         public static final int INTERNAL_ONLY    = 0x10000000;
         public static final int ALL_FIELDS       = ~0;
 
@@ -116,6 +117,7 @@ public final class PendingModifications {
             if ((why & LOCK) != 0)      sb.append(" LOCK");
             if ((why & SHAREDREM) != 0) sb.append(" SHAREDREM");
             if ((why & RETENTION_POLICY) != 0) sb.append(" RETENTION_POLICY");
+            if ((why & DISABLE_ACTIVESYNC) != 0) sb.append(" DISABLE_ACTIVESYNC");
             if ((why & INTERNAL_ONLY) != 0)    sb.append(" **INTERNAL**");
 
             return sb.toString();

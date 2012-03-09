@@ -105,7 +105,8 @@ public enum MailboxOperation {
     Watch(87),       // Octopus item watch / follow
     Unwatch(88),
     RefreshMountpoint(89),
-    ExpireAccess(90);
+    ExpireAccess(90),
+    SetDisableActiveSync(91);
 
     private MailboxOperation(int c) {
         code = c;
