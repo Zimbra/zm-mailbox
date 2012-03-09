@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120224-1645 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120309-1334 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2558,7 +2558,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarCalDavSyncStart = "zimbraCalendarCalDavSyncStart";
 
     /**
-     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * Deprecated since: 8.0.0. Deprecated per bug 69886.. Orig desc: When
+     * set to TRUE, Calendar folders and Todo folders in Zimbra will be
      * advertised as Calendar only and Todo only via CalDAV. When set to
      * FALSE, Calendar folders will be able to store both appointments and
      * tasks, and Todo folders will not be advertised as CalDAV enabled.
@@ -4417,6 +4418,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
+
+    /**
+     * whether crash reporting is enabled in the Octopus Android client
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1385)
+    public static final String A_zimbraFileAndroidCrashReportingEnabled = "zimbraFileAndroidCrashReportingEnabled";
 
     /**
      * template for constructing the body of a file deletion warning message
@@ -9560,7 +9569,7 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=703)
     public static final String A_zimbraReverseProxyDefaultRealm = "zimbraReverseProxyDefaultRealm";
-    
+
     /**
      * Control whether force the server side do the DNS lookup and send the
      * result IP back to proxy. If set false, the raw address configured
@@ -10919,6 +10928,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
