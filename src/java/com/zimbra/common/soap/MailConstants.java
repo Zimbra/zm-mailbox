@@ -731,6 +731,7 @@ public final class MailConstants {
     public static final String A_RETURN_HIDDEN_ATTRS = "returnHiddenAttrs";
     public static final String A_MAX_MEMBERS = "maxMembers";
     public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
+    public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
