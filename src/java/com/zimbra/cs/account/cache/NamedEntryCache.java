@@ -19,7 +19,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.zimbra.cs.account;
+package com.zimbra.cs.account.cache;
 
 import java.util.List;
 import java.util.Map;
@@ -27,11 +27,12 @@ import java.util.Map;
 import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.stats.Counter;
+import com.zimbra.cs.account.NamedEntry;
 
 /**
  * @author schemers
  **/
-public class NamedEntryCache<E extends NamedEntry> {
+public class NamedEntryCache<E extends NamedEntry> implements INamedEntryCache<E> {
     
     private Map mNameCache;
     private Map mIdCache;
@@ -62,16 +63,19 @@ public class NamedEntryCache<E extends NamedEntry> {
         mRefreshTTL = refreshTTL;
     }
 
+    @Override
     public synchronized void clear() {
         mNameCache.clear();
         mIdCache.clear();
     }
 
+    @Override
     public synchronized void remove(String name, String id) {
         mNameCache.remove(name);
         mIdCache.remove(id);
     }
     
+    @Override
     public synchronized void remove(E entry) {
         if (entry != null) {
             mNameCache.remove(entry.getName());
@@ -79,6 +83,7 @@ public class NamedEntryCache<E extends NamedEntry> {
         }
     }
     
+    @Override
     public synchronized void put(E entry) {
         if (entry != null) {
             CacheEntry<E> cacheEntry = new CacheEntry<E>(entry, mRefreshTTL);
@@ -87,11 +92,13 @@ public class NamedEntryCache<E extends NamedEntry> {
         }
     }
     
+    @Override
     public synchronized void replace(E entry) {
         remove(entry);
         put(entry);
     }
 
+    @Override
     public synchronized void put(List<E> entries, boolean clear) {
         if (entries != null) {
             if (clear) clear();
@@ -118,14 +125,17 @@ public class NamedEntryCache<E extends NamedEntry> {
         }
     }
     
+    @Override
     public synchronized E getById(String key) {
         return get(key, mIdCache);
     }
     
+    @Override
     public synchronized E getByName(String key) {
         return get(key.toLowerCase(), mNameCache);
     }
     
+    @Override
     public synchronized int getSize() {
         return mIdCache.size();
     }
@@ -133,6 +143,7 @@ public class NamedEntryCache<E extends NamedEntry> {
     /**
      * Returns the cache hit rate as a value between 0 and 100.
      */
+    @Override
     public synchronized double getHitRate() {
         return mHitRate.getAverage();
     }

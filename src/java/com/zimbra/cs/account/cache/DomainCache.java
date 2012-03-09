@@ -19,19 +19,21 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.zimbra.cs.account;
+package com.zimbra.cs.account.cache;
 
 import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.stats.Counter;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 
 /**
  * @author schemers
  **/
-public class DomainCache {
+public class DomainCache implements IDomainCache {
     
     private Map mNameCache;
     private Map mIdCache;
@@ -209,6 +211,7 @@ public class DomainCache {
         mNegativeCache = new NegativeCache(maxItemsNegative, refreshTTLNegative);
     }
 
+    @Override
     public synchronized void clear() {
         mNameCache.clear();
         mIdCache.clear();
@@ -219,6 +222,7 @@ public class DomainCache {
         mNegativeCache.clear();
     }
 
+    @Override
     public synchronized void remove(Domain entry) {
         if (entry != null) {
             mNameCache.remove(entry.getName());
@@ -238,15 +242,18 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized void replace(Domain entry) {
         remove(entry);
         put(DomainBy.id, entry.getId(), entry);
     }
     
+    @Override
     public synchronized void removeFromNegativeCache(DomainBy domainBy, String key) {
         mNegativeCache.remove(domainBy, key);
     }
     
+    @Override
     public synchronized void put(DomainBy domainBy, String key, Domain entry) {
         if (entry != null) {
             // clean it from the non-existing cache first
@@ -289,6 +296,7 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized Domain getById(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
@@ -306,6 +314,7 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized Domain getByName(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
@@ -323,6 +332,7 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized Domain getByVirtualHostname(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
@@ -340,6 +350,7 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized Domain getByForeignName(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
@@ -357,6 +368,7 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized Domain getByKrb5Realm(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
@@ -374,6 +386,7 @@ public class DomainCache {
         }
     }
 
+    @Override
     public synchronized int getSize() {
         return mIdCache.size();
     }
@@ -381,6 +394,7 @@ public class DomainCache {
     /**
      * Returns the cache hit rate as a value between 0 and 100.
      */
+    @Override
     public synchronized double getHitRate() {
         return mHitRate.getAverage();
     }

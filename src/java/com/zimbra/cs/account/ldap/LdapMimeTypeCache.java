@@ -23,9 +23,10 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.cache.IMimeTypeCache;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
-public class LdapMimeTypeCache {
+class LdapMimeTypeCache implements IMimeTypeCache {
 	
 	private List<MimeTypeInfo> mAllMimeTypes;
 	private Map<String, List<MimeTypeInfo>> mMapByMimeType;
@@ -36,20 +37,28 @@ public class LdapMimeTypeCache {
 		mRefreshTTL = LC.ldap_cache_mime_maxage.intValue() * Constants.MILLIS_PER_MINUTE;
 	}
 	
-	synchronized void flushCache(LdapProvisioning prov) throws ServiceException {
-		refresh(prov);
+	@Override
+	public synchronized void flushCache(Provisioning prov) throws ServiceException {
+		refresh((LdapProvisioning)prov);
 	}
 	
-	synchronized List<MimeTypeInfo> getAllMimeTypes(LdapProvisioning prov) throws ServiceException {
-		refreshIfNecessary(prov);
+	@Override
+	public synchronized List<MimeTypeInfo> getAllMimeTypes(Provisioning prov) 
+	throws ServiceException {
+		refreshIfNecessary((LdapProvisioning)prov);
 		return mAllMimeTypes;
 	}
 	
-	synchronized List<MimeTypeInfo> getMimeTypes(LdapProvisioning prov, String mimeType) throws ServiceException {
-		refreshIfNecessary(prov);
+	@Override
+	public synchronized List<MimeTypeInfo> getMimeTypes(Provisioning prov, String mimeType)
+	throws ServiceException {
+	    
+	    LdapProvisioning ldapProv = (LdapProvisioning) prov;
+	    
+		refreshIfNecessary(ldapProv);
 		List<MimeTypeInfo> mimeTypes = mMapByMimeType.get(mimeType);
 		if (mimeTypes == null) {
-			mimeTypes = Collections.unmodifiableList(prov.getMimeTypesByQuery(mimeType));
+			mimeTypes = Collections.unmodifiableList(ldapProv.getMimeTypesByQuery(mimeType));
 			mMapByMimeType.put(mimeType, mimeTypes);
 		}
 		return mimeTypes;
