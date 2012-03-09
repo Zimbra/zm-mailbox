@@ -57,7 +57,6 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
-          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -88,7 +87,6 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
-          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -127,7 +125,6 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
-          <Set name="responseBufferSize">16384</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
