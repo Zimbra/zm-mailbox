@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,7 +29,7 @@ import com.zimbra.common.stats.Counter;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 
-public class AccountCache {
+public class AccountCache implements IAccountCache {
     
     private Map<String, CacheEntry> mNameCache;
     private Map<String, CacheEntry> mIdCache;
@@ -65,6 +65,7 @@ public class AccountCache {
         mRefreshTTL = refreshTTL;
     }
 
+    @Override
     public synchronized void clear() {
         mNameCache.clear();
         mIdCache.clear();
@@ -72,6 +73,7 @@ public class AccountCache {
         mForeignPrincipalCache.clear();
     }
 
+    @Override
     public synchronized void remove(Account entry) {
         if (entry != null) {
             mNameCache.remove(entry.getName());
@@ -89,6 +91,7 @@ public class AccountCache {
         }
     }
     
+    @Override
     public synchronized void put(Account entry) {
         if (entry != null) {
             CacheEntry cacheEntry = new CacheEntry(entry, mRefreshTTL);
@@ -107,6 +110,7 @@ public class AccountCache {
         }
     }
     
+    @Override
     public synchronized void replace(Account entry) {
         remove(entry);
         put(entry);
@@ -129,10 +133,12 @@ public class AccountCache {
         }
     }
     
+    @Override
     public synchronized Account getById(String key) {
         return get(key, mIdCache);
     }
     
+    @Override
     public synchronized Account getByName(String key) {
         Account acct = get(key.toLowerCase(), mNameCache);
         if (acct != null) {
@@ -142,10 +148,12 @@ public class AccountCache {
         }
     }
     
+    @Override
     public synchronized Account getByForeignPrincipal(String key) {
         return get(key, mForeignPrincipalCache);
     }
     
+    @Override
     public synchronized int getSize() {
         return mIdCache.size();
     }
@@ -153,6 +161,7 @@ public class AccountCache {
     /**
      * Returns the cache hit rate as a value between 0 and 100.
      */
+    @Override
     public synchronized double getHitRate() {
         return mHitRate.getAverage();
     }

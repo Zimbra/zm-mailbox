@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,7 +25,6 @@ import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.cs.account.Domain;
@@ -34,7 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 /**
  * @author schemers
  **/
-public class DomainCache {
+public class DomainCache implements IDomainCache {
     
     private Map mNameCache;
     private Map mIdCache;
@@ -103,7 +102,7 @@ public class DomainCache {
             mNERefreshTTL = refreshTTL;
         }
         
-        private void put(Key.DomainBy domainBy, String key) {
+        private void put(DomainBy domainBy, String key) {
             if (!mEnabled)
                 return;
             
@@ -128,7 +127,7 @@ public class DomainCache {
             }
         }
         
-        private NonExistingDomain get(Key.DomainBy domainBy, String key) {
+        private NonExistingDomain get(DomainBy domainBy, String key) {
             if (!mEnabled)
                 return null;
             
@@ -147,7 +146,7 @@ public class DomainCache {
             return null;
         }
         
-        private void remove(Key.DomainBy domainBy, String key) {
+        private void remove(DomainBy domainBy, String key) {
             if (!mEnabled)
                 return;
             
@@ -170,7 +169,7 @@ public class DomainCache {
             }
         }
         
-        private void clean(Key.DomainBy domainBy, String key, Domain entry) {
+        private void clean(DomainBy domainBy, String key, Domain entry) {
             mNegativeNameCache.remove(entry.getName());
             mNegativeIdCache.remove(entry.getId());
             
@@ -212,6 +211,7 @@ public class DomainCache {
         mNegativeCache = new NegativeCache(maxItemsNegative, refreshTTLNegative);
     }
 
+    @Override
     public synchronized void clear() {
         mNameCache.clear();
         mIdCache.clear();
@@ -222,6 +222,7 @@ public class DomainCache {
         mNegativeCache.clear();
     }
 
+    @Override
     public synchronized void remove(Domain entry) {
         if (entry != null) {
             mNameCache.remove(entry.getName());
@@ -241,16 +242,19 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized void replace(Domain entry) {
         remove(entry);
-        put(Key.DomainBy.id, entry.getId(), entry);
+        put(DomainBy.id, entry.getId(), entry);
     }
     
-    public synchronized void removeFromNegativeCache(Key.DomainBy domainBy, String key) {
+    @Override
+    public synchronized void removeFromNegativeCache(DomainBy domainBy, String key) {
         mNegativeCache.remove(domainBy, key);
     }
     
-    public synchronized void put(Key.DomainBy domainBy, String key, Domain entry) {
+    @Override
+    public synchronized void put(DomainBy domainBy, String key, Domain entry) {
         if (entry != null) {
             // clean it from the non-existing cache first
             mNegativeCache.clean(domainBy, key, entry);
@@ -292,91 +296,97 @@ public class DomainCache {
         }
     }
     
+    @Override
     public synchronized Domain getById(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
         case POSITIVE:
             return get(key, mIdCache);
         case NEGATIVE:
-            return mNegativeCache.get(Key.DomainBy.id, key);
+            return mNegativeCache.get(DomainBy.id, key);
         case BOTH:
             Domain d = get(key, mIdCache);
             if (d == null)
-                d = mNegativeCache.get(Key.DomainBy.id, key);
+                d = mNegativeCache.get(DomainBy.id, key);
             return d;
         default:
             return null;
         }
     }
     
+    @Override
     public synchronized Domain getByName(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mNameCache);
         case NEGATIVE:
-            return mNegativeCache.get(Key.DomainBy.name, key);
+            return mNegativeCache.get(DomainBy.name, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mNameCache);
             if (d == null)
-                d = mNegativeCache.get(Key.DomainBy.name, key);
+                d = mNegativeCache.get(DomainBy.name, key);
             return d;
         default:
             return null;
         }
     }
     
+    @Override
     public synchronized Domain getByVirtualHostname(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mVirtualHostnameCache);
         case NEGATIVE:
-            return mNegativeCache.get(Key.DomainBy.virtualHostname, key);
+            return mNegativeCache.get(DomainBy.virtualHostname, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mVirtualHostnameCache);
             if (d == null)
-                d = mNegativeCache.get(Key.DomainBy.virtualHostname, key);
+                d = mNegativeCache.get(DomainBy.virtualHostname, key);
             return d;
         default:
             return null;
         }
     }
     
+    @Override
     public synchronized Domain getByForeignName(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mForeignNameCache);
         case NEGATIVE:
-            return mNegativeCache.get(Key.DomainBy.foreignName, key);
+            return mNegativeCache.get(DomainBy.foreignName, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mForeignNameCache);
             if (d == null)
-                d = mNegativeCache.get(Key.DomainBy.foreignName, key);
+                d = mNegativeCache.get(DomainBy.foreignName, key);
             return d;
         default:
             return null;
         }
     }
     
+    @Override
     public synchronized Domain getByKrb5Realm(String key, GetFromDomainCacheOption option) {
         
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mKrb5RealmCache);
         case NEGATIVE:
-            return mNegativeCache.get(Key.DomainBy.krb5Realm, key);
+            return mNegativeCache.get(DomainBy.krb5Realm, key);
         case BOTH:
             Domain d = get(key.toLowerCase(), mKrb5RealmCache);
             if (d == null)
-                d = mNegativeCache.get(Key.DomainBy.krb5Realm, key);
+                d = mNegativeCache.get(DomainBy.krb5Realm, key);
             return d;
         default:
             return null;
         }
     }
 
+    @Override
     public synchronized int getSize() {
         return mIdCache.size();
     }
@@ -384,6 +394,7 @@ public class DomainCache {
     /**
      * Returns the cache hit rate as a value between 0 and 100.
      */
+    @Override
     public synchronized double getHitRate() {
         return mHitRate.getAverage();
     }
