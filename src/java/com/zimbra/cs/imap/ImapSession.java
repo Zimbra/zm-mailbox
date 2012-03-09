@@ -474,6 +474,23 @@ public class ImapSession extends Session {
         }
     }
 
+    @Override
+    public void updateAccessTime() {
+        super.updateAccessTime();
+        Mailbox mbox = mailbox;
+        if (mbox == null) {
+            return;
+        }
+        synchronized (mbox) { 
+            synchronized (this) {
+                PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
+                if (paged != null) { // if the data's already paged in, we can short-circuit
+                    MANAGER.updateAccessTime(paged.getCacheKey());
+                }
+            }
+        }
+    }
+
     /** Number of queued notifications beyond which we deserialize the session,
      *  apply the changes, and reserialize the session.  This both constrains
      *  the memory footprint of the paged data and helps keep the persisted

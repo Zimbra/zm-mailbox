@@ -69,6 +69,10 @@ final class MemcachedImapCache implements ImapSessionManager.Cache {
         }
     }
 
+    @Override
+    public void updateAccessTime(String key) {
+    }
+
     private static final class ImapMemcachedKey implements MemcachedKey {
         private final String key;
 

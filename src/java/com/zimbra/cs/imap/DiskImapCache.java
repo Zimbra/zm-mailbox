@@ -132,4 +132,9 @@ final class DiskImapCache implements ImapSessionManager.Cache {
         File pagefile = new File(CACHE_DIR, key + IMAP_CACHEFILE_SUFFIX);
         pagefile.delete();
     }
+    
+    @Override
+    public void updateAccessTime(String key) {
+        //nothing to do; disk cache never expires
+    }
 }
