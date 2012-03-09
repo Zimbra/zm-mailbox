@@ -19,7 +19,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.zimbra.cs.account;
+package com.zimbra.cs.account.cache;
 
 import java.util.Map;
 
@@ -28,6 +28,8 @@ import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.stats.Counter;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * @author schemers

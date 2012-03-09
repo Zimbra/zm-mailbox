@@ -19,13 +19,15 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.zimbra.cs.account;
+package com.zimbra.cs.account.cache;
 
 import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.stats.Counter;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 
 public class AccountCache {
     
