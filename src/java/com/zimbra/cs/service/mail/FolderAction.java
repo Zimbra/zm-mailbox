@@ -199,20 +199,29 @@ public class FolderAction extends ItemAction {
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 // unlike guest, we do not require the display name to be an email address
-//                if (zid == null || zid.indexOf('@') < 0)
-//                    throw ServiceException.INVALID_REQUEST("invalid guest id or key", null);
                 // unlike guest, we do not fixup grantee type for key grantees if they specify an internal user
-
                 // get the optional accesskey
                 secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
             } else if (zid != null) {
                 nentry = lookupGranteeByZimbraId(zid, gtype);
             } else {
-                nentry = lookupGranteeByName(grant.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
-                zid = nentry.getId();
-                // make sure they didn't accidentally specify "usr" instead of "grp"
-                if (gtype == ACL.GRANTEE_USER && nentry instanceof Group)
-                    gtype = ACL.GRANTEE_GROUP;
+                try {
+                    nentry = lookupGranteeByName(grant.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
+                    zid = nentry.getId();
+                    // make sure they didn't accidentally specify "usr" instead of "grp"
+                    if (gtype == ACL.GRANTEE_USER && nentry instanceof Group) {
+                        gtype = ACL.GRANTEE_GROUP;
+                    }
+                } catch (ServiceException e) {
+                    if (AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode())) {
+                        // looks like the case of an internal user not provisioned yet
+                        // we'll treat it as external sharing
+                        gtype = ACL.GRANTEE_GUEST;
+                        zid = grant.getAttribute(MailConstants.A_DISPLAY);
+                    } else {
+                        throw e;
+                    }
+                }
             }
 
             ACL.Grant g =  mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret, expiry);
