@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120224-1645 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120309-1334 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -17774,6 +17774,88 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @return zimbraReverseProxyDnsLookupInServerEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public boolean isReverseProxyDnsLookupInServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, true);
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @param zimbraReverseProxyDnsLookupInServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public void setReverseProxyDnsLookupInServerEnabled(boolean zimbraReverseProxyDnsLookupInServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, zimbraReverseProxyDnsLookupInServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @param zimbraReverseProxyDnsLookupInServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public Map<String,Object> setReverseProxyDnsLookupInServerEnabled(boolean zimbraReverseProxyDnsLookupInServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, zimbraReverseProxyDnsLookupInServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public void unsetReverseProxyDnsLookupInServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public Map<String,Object> unsetReverseProxyDnsLookupInServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, "");
+        return attrs;
+    }
+
+    /**
      * the URL of customized proxy error handler. If set, when errors happen
      * in proxy, proxy will redirect to this URL with two paras - err: error
      * code; up: the addr of upstream server connecting to which the error
@@ -23408,7 +23490,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1375)
+    @ZAttr(id=1383)
     public void addThrottleSafeHosts(String zimbraThrottleSafeHosts) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
@@ -23426,7 +23508,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1375)
+    @ZAttr(id=1383)
     public Map<String,Object> addThrottleSafeHosts(String zimbraThrottleSafeHosts, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
@@ -23443,7 +23525,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1375)
+    @ZAttr(id=1383)
     public void removeThrottleSafeHosts(String zimbraThrottleSafeHosts) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
@@ -23461,7 +23543,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1375)
+    @ZAttr(id=1383)
     public Map<String,Object> removeThrottleSafeHosts(String zimbraThrottleSafeHosts, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraThrottleSafeHosts, zimbraThrottleSafeHosts);
@@ -23477,7 +23559,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1375)
+    @ZAttr(id=1383)
     public void unsetThrottleSafeHosts() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraThrottleSafeHosts, "");
@@ -23494,7 +23576,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1375)
+    @ZAttr(id=1383)
     public Map<String,Object> unsetThrottleSafeHosts(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraThrottleSafeHosts, "");

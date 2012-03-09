@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120224-1645 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120309-1334 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -10562,6 +10562,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureZimbraAssistantEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus Android client
+     *
+     * @return zimbraFileAndroidCrashReportingEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1385)
+    public boolean isFileAndroidCrashReportingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFileAndroidCrashReportingEnabled, true);
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus Android client
+     *
+     * @param zimbraFileAndroidCrashReportingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1385)
+    public void setFileAndroidCrashReportingEnabled(boolean zimbraFileAndroidCrashReportingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileAndroidCrashReportingEnabled, zimbraFileAndroidCrashReportingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus Android client
+     *
+     * @param zimbraFileAndroidCrashReportingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1385)
+    public Map<String,Object> setFileAndroidCrashReportingEnabled(boolean zimbraFileAndroidCrashReportingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileAndroidCrashReportingEnabled, zimbraFileAndroidCrashReportingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus Android client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1385)
+    public void unsetFileAndroidCrashReportingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileAndroidCrashReportingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus Android client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1385)
+    public Map<String,Object> unsetFileAndroidCrashReportingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileAndroidCrashReportingEnabled, "");
         return attrs;
     }
 

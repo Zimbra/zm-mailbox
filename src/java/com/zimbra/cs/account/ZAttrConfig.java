@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120224-1645 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120309-1334 */
 
     /**
      * RFC2256: descriptive information
@@ -4537,7 +4537,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * Deprecated since: 8.0.0. Deprecated per bug 69886.. Orig desc: When
+     * set to TRUE, Calendar folders and Todo folders in Zimbra will be
      * advertised as Calendar only and Todo only via CalDAV. When set to
      * FALSE, Calendar folders will be able to store both appointments and
      * tasks, and Todo folders will not be advertised as CalDAV enabled.
@@ -4552,7 +4553,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * Deprecated since: 8.0.0. Deprecated per bug 69886.. Orig desc: When
+     * set to TRUE, Calendar folders and Todo folders in Zimbra will be
      * advertised as Calendar only and Todo only via CalDAV. When set to
      * FALSE, Calendar folders will be able to store both appointments and
      * tasks, and Todo folders will not be advertised as CalDAV enabled.
@@ -4570,7 +4572,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * Deprecated since: 8.0.0. Deprecated per bug 69886.. Orig desc: When
+     * set to TRUE, Calendar folders and Todo folders in Zimbra will be
      * advertised as Calendar only and Todo only via CalDAV. When set to
      * FALSE, Calendar folders will be able to store both appointments and
      * tasks, and Todo folders will not be advertised as CalDAV enabled.
@@ -4589,7 +4592,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * Deprecated since: 8.0.0. Deprecated per bug 69886.. Orig desc: When
+     * set to TRUE, Calendar folders and Todo folders in Zimbra will be
      * advertised as Calendar only and Todo only via CalDAV. When set to
      * FALSE, Calendar folders will be able to store both appointments and
      * tasks, and Todo folders will not be advertised as CalDAV enabled.
@@ -4606,7 +4610,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * When set to TRUE, Calendar folders and Todo folders in Zimbra will be
+     * Deprecated since: 8.0.0. Deprecated per bug 69886.. Orig desc: When
+     * set to TRUE, Calendar folders and Todo folders in Zimbra will be
      * advertised as Calendar only and Todo only via CalDAV. When set to
      * FALSE, Calendar folders will be able to store both appointments and
      * tasks, and Todo folders will not be advertised as CalDAV enabled.
@@ -27694,6 +27699,88 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyDefaultRealm(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyDefaultRealm, "");
+        return attrs;
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @return zimbraReverseProxyDnsLookupInServerEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public boolean isReverseProxyDnsLookupInServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, true);
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @param zimbraReverseProxyDnsLookupInServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public void setReverseProxyDnsLookupInServerEnabled(boolean zimbraReverseProxyDnsLookupInServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, zimbraReverseProxyDnsLookupInServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @param zimbraReverseProxyDnsLookupInServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public Map<String,Object> setReverseProxyDnsLookupInServerEnabled(boolean zimbraReverseProxyDnsLookupInServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, zimbraReverseProxyDnsLookupInServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public void unsetReverseProxyDnsLookupInServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Control whether force the server side do the DNS lookup and send the
+     * result IP back to proxy. If set false, the raw address configured
+     * (e.g. zimbraMailHost) is directly sent to proxy.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1384)
+    public Map<String,Object> unsetReverseProxyDnsLookupInServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDnsLookupInServerEnabled, "");
         return attrs;
     }
 

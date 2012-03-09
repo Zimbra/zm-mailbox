@@ -6895,4 +6895,9 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
 </attr>
 
+<attr id="1385" name="zimbraFileAndroidCrashReportingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether crash reporting is enabled in the Octopus Android client</desc>
+</attr>
+
 </attrs>
