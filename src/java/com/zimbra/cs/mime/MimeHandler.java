@@ -247,13 +247,15 @@ public abstract class MimeHandler {
 
         doc.addPartName(partName);
 
-        String name = dataSource.getName();
-        if (name != null) {
-            try {
-                name = MimeUtility.decodeText(name);
-            } catch (UnsupportedEncodingException ignore) {
+        if (dataSource != null) {
+            String name = dataSource.getName();
+            if (name != null) {
+                try {
+                    name = MimeUtility.decodeText(name);
+                } catch (UnsupportedEncodingException ignore) {
+                }
+                doc.addFilename(name);
             }
-            doc.addFilename(name);
         }
         return doc.toDocument();
     }
