@@ -106,6 +106,10 @@ import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.cache.AccountCache;
 import com.zimbra.cs.account.cache.DomainCache;
+import com.zimbra.cs.account.cache.IAccountCache;
+import com.zimbra.cs.account.cache.IDomainCache;
+import com.zimbra.cs.account.cache.IMimeTypeCache;
+import com.zimbra.cs.account.cache.INamedEntryCache;
 import com.zimbra.cs.account.cache.NamedEntryCache;
 import com.zimbra.cs.account.cache.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.callback.CallbackContext;
@@ -195,103 +199,29 @@ import com.zimbra.soap.type.TargetBy;
 public class LdapProvisioning extends LdapProv {
 
     private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
-
-    private AccountCache sAccountCache =
-        new AccountCache(
-                LC.ldap_cache_account_maxsize.intValue(),
-                LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private NamedEntryCache<LdapCos> sCosCache =
-        new NamedEntryCache<LdapCos>(
-                LC.ldap_cache_cos_maxsize.intValue(),
-                LC.ldap_cache_cos_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private NamedEntryCache<ShareLocator> sShareLocatorCache =
-            new NamedEntryCache<ShareLocator>(
-                    LC.ldap_cache_share_locator_maxsize.intValue(),
-                    LC.ldap_cache_share_locator_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private DomainCache sDomainCache =
-        new DomainCache(
-                LC.ldap_cache_domain_maxsize.intValue(),
-                LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
-                LC.ldap_cache_external_domain_maxsize.intValue(),
-                LC.ldap_cache_external_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private LdapMimeTypeCache sMimeTypeCache = new LdapMimeTypeCache();
-
-    private NamedEntryCache<Server> sServerCache =
-        new NamedEntryCache<Server>(
-                LC.ldap_cache_server_maxsize.intValue(),
-                LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private NamedEntryCache<LdapZimlet> sZimletCache =
-        new NamedEntryCache<LdapZimlet>(
-                LC.ldap_cache_zimlet_maxsize.intValue(),
-                LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-
-    private NamedEntryCache<Group> sGroupCache =
-        new NamedEntryCache<Group>(
-                LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private NamedEntryCache<XMPPComponent> sXMPPComponentCache =
-        new NamedEntryCache<XMPPComponent>(
-                LC.ldap_cache_xmppcomponent_maxsize.intValue(),
-                LC.ldap_cache_xmppcomponent_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-
+    
     private static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_uid,
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
     };
 
-    @Override
-    public int getAccountCacheSize() { return sAccountCache.getSize(); }
+    
+    private boolean useCache;
+    private LdapCache cache;
+    
+    private IAccountCache accountCache;
+    private INamedEntryCache<LdapCos> cosCache;
+    private IDomainCache domainCache;
+    private INamedEntryCache<Group> groupCache;
+    private IMimeTypeCache mimeTypeCache;
+    private INamedEntryCache<Server> serverCache;
+    private INamedEntryCache<ShareLocator> shareLocatorCache;
+    private INamedEntryCache<XMPPComponent> xmppComponentCache;
+    private INamedEntryCache<LdapZimlet> zimletCache;
 
-    @Override
-    public double getAccountCacheHitRate() { return sAccountCache.getHitRate(); }
-
-    @Override
-    public int getCosCacheSize() { return sCosCache.getSize(); }
-
-    @Override
-    public double getCosCacheHitRate() { return sCosCache.getHitRate(); }
-
-    @Override
-    public int getDomainCacheSize() { return sDomainCache.getSize(); }
-
-    @Override
-    public double getDomainCacheHitRate() { return sDomainCache.getHitRate(); }
-
-    @Override
-    public int getServerCacheSize() { return sServerCache.getSize(); }
-
-    @Override
-    public double getServerCacheHitRate() { return sServerCache.getHitRate(); }
-
-    @Override
-    public int getZimletCacheSize() { return sZimletCache.getSize(); }
-
-    @Override
-    public double getZimletCacheHitRate() { return sZimletCache.getHitRate(); }
-
-    @Override
-    public int getGroupCacheSize() { return sGroupCache.getSize(); }
-
-    @Override
-    public double getGroupCacheHitRate() { return sGroupCache.getHitRate(); }
-
-    @Override
-    public int getXMPPCacheSize() { return sXMPPComponentCache.getSize(); }
-
-    @Override
-    public double getXMPPCacheHitRate() { return sXMPPComponentCache.getHitRate(); }
-
-    private static LdapConfig sConfig = null;
-    private static GlobalGrant sGlobalGrant = null;
+    private LdapConfig cachedGlobalConfig = null;
+    private GlobalGrant cachedGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
     private Groups allDLs; // email addresses of all distribution lists on the system
     private ZLdapFilterFactory filterFactory;
@@ -310,9 +240,30 @@ public class LdapProvisioning extends LdapProv {
         }
         SINGLETON = prov;
     }
-
+    
     public LdapProvisioning() {
+        this(null);
+    }
+
+    public LdapProvisioning(Boolean useCache) {
         ensureSingleton(this);
+        
+        this.useCache = useCache == null ? true : Boolean.valueOf(useCache);
+        if (this.useCache) {
+            cache = new LdapCache.LRUMapCache();
+        } else {
+            cache = new LdapCache.NoopCache();
+        }
+        
+        accountCache = cache.accountCache();
+        cosCache = cache.cosCache();
+        domainCache = cache.domainCache();
+        groupCache = cache.groupCache();
+        mimeTypeCache = cache.mimeTypeCache();
+        serverCache = cache.serverCache();
+        shareLocatorCache = cache.shareLocatorCache();
+        xmppComponentCache = cache.xmppComponentCache();
+        zimletCache = cache.zimletCache();
 
         setDIT();
         setHelper(new ZLdapHelper(this));
@@ -331,6 +282,49 @@ public class LdapProvisioning extends LdapProv {
         register(new Validators.DomainAccountValidator());
         register(new Validators.DomainMaxAccountsValidator());
     }
+    
+
+    @Override
+    public int getAccountCacheSize() { return accountCache.getSize(); }
+
+    @Override
+    public double getAccountCacheHitRate() { return accountCache.getHitRate(); }
+
+    @Override
+    public int getCosCacheSize() { return cosCache.getSize(); }
+
+    @Override
+    public double getCosCacheHitRate() { return cosCache.getHitRate(); }
+
+    @Override
+    public int getDomainCacheSize() { return domainCache.getSize(); }
+
+    @Override
+    public double getDomainCacheHitRate() { return domainCache.getHitRate(); }
+
+    @Override
+    public int getServerCacheSize() { return serverCache.getSize(); }
+
+    @Override
+    public double getServerCacheHitRate() { return serverCache.getHitRate(); }
+
+    @Override
+    public int getZimletCacheSize() { return zimletCache.getSize(); }
+
+    @Override
+    public double getZimletCacheHitRate() { return zimletCache.getHitRate(); }
+
+    @Override
+    public int getGroupCacheSize() { return groupCache.getSize(); }
+
+    @Override
+    public double getGroupCacheHitRate() { return groupCache.getHitRate(); }
+
+    @Override
+    public int getXMPPCacheSize() { return xmppComponentCache.getSize(); }
+
+    @Override
+    public double getXMPPCacheHitRate() { return xmppComponentCache.getHitRate(); }
 
     private String[] getBasicDLAttrs() throws ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
@@ -552,17 +546,17 @@ public class LdapProvisioning extends LdapProv {
 
     public void extendLifeInCacheOrFlush(Entry entry) {
         if (entry instanceof Account) {
-            sAccountCache.replace((Account)entry);
+            accountCache.replace((Account)entry);
         } else if (entry instanceof LdapCos) {
-            sCosCache.replace((LdapCos)entry);
+            cosCache.replace((LdapCos)entry);
         } else if (entry instanceof Domain) {
-            sDomainCache.replace((Domain)entry);
+            domainCache.replace((Domain)entry);
         } else if (entry instanceof Server) {
-            sServerCache.replace((Server)entry);
+            serverCache.replace((Server)entry);
         } else if (entry instanceof XMPPComponent) {
-            sXMPPComponentCache.replace((XMPPComponent)entry);
+            xmppComponentCache.replace((XMPPComponent)entry);
         } else if (entry instanceof LdapZimlet) {
-            sZimletCache.replace((LdapZimlet)entry);
+            zimletCache.replace((LdapZimlet)entry);
         } else if (entry instanceof Group) {
             /*
              * DLs returned by Provisioning.get(DistributionListBy) and
@@ -579,7 +573,7 @@ public class LdapProvisioning extends LdapProv {
             Group modifiedInstance = (Group) entry;
             Group cachedInstance = getGroupFromCache(DistributionListBy.id, modifiedInstance.getId());
             if (cachedInstance != null && modifiedInstance != cachedInstance) {
-                sGroupCache.remove(cachedInstance);
+                groupCache.remove(cachedInstance);
             }
         }
     }
@@ -603,44 +597,56 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public Config getConfig() throws ServiceException
     {
-        if (sConfig == null) {
+        if (cachedGlobalConfig == null) {
             synchronized(LdapProvisioning.class) {
-                if (sConfig == null) {
+                if (cachedGlobalConfig == null) {
                     String configDn = mDIT.configDN();
                     try {
                         ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALCONFIG, configDn);
-                        sConfig = new LdapConfig(configDn, attrs, this);
+                        LdapConfig config = new LdapConfig(configDn, attrs, this);
+                        
+                        if (useCache) {
+                            cachedGlobalConfig = config;
+                        } else {
+                            return config;
+                        }
                     } catch (ServiceException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
                     }
                 }
             }
         }
-        return sConfig;
+        return cachedGlobalConfig;
     }
 
     @Override
     public GlobalGrant getGlobalGrant() throws ServiceException
     {
-        if (sGlobalGrant == null) {
+        if (cachedGlobalGrant == null) {
             synchronized(LdapProvisioning.class) {
-                if (sGlobalGrant == null) {
+                if (cachedGlobalGrant == null) {
                     String globalGrantDn = mDIT.globalGrantDN();
                     try {
                         ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALGRANT, globalGrantDn);
-                        sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
+                        LdapGlobalGrant globalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
+                        
+                        if (useCache) {
+                            cachedGlobalGrant = globalGrant;
+                        } else {
+                            return globalGrant;
+                        }
                     } catch (ServiceException e) {
                         throw ServiceException.FAILURE("unable to get globalgrant", e);
                     }
                 }
             }
         }
-        return sGlobalGrant;
+        return cachedGlobalGrant;
     }
 
     @Override
     public List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
-        return sMimeTypeCache.getMimeTypes(this, mimeType);
+        return mimeTypeCache.getMimeTypes(this, mimeType);
     }
 
     @Override
@@ -663,7 +669,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public List<MimeTypeInfo> getAllMimeTypes() throws ServiceException {
-        return sMimeTypeCache.getAllMimeTypes(this);
+        return mimeTypeCache.getAllMimeTypes(this);
     }
 
     @Override
@@ -707,7 +713,7 @@ public class LdapProvisioning extends LdapProv {
     private Account getAccountById(String zimbraId, ZLdapContext zlc, boolean loadFromMaster) throws ServiceException {
         if (zimbraId == null)
             return null;
-        Account a = sAccountCache.getById(zimbraId);
+        Account a = accountCache.getById(zimbraId);
         if (a == null) {
             ZLdapFilter filter = filterFactory.accountById(zimbraId);
 
@@ -717,7 +723,7 @@ public class LdapProvisioning extends LdapProv {
             if (a == null && !mDIT.isUnder(mDIT.mailBranchBaseDN(), mDIT.adminBaseDN()))
                 a = getAccountByQuery(mDIT.adminBaseDN(), filter, zlc, loadFromMaster);
 
-            sAccountCache.put(a);
+            accountCache.put(a);
         }
         return a;
     }
@@ -751,13 +757,13 @@ public class LdapProvisioning extends LdapProv {
     public Account getFromCache(AccountBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case adminName:
-            return sAccountCache.getByName(key);
+            return accountCache.getByName(key);
         case id:
-            return sAccountCache.getById(key);
+            return accountCache.getById(key);
         case foreignPrincipal:
-            return sAccountCache.getByForeignPrincipal(key);
+            return accountCache.getByForeignPrincipal(key);
         case name:
-            return sAccountCache.getByName(key);
+            return accountCache.getByName(key);
         case krb5Principal:
             throw ServiceException.FAILURE("key type krb5Principal is not supported by getFromCache", null);
         default:
@@ -767,7 +773,7 @@ public class LdapProvisioning extends LdapProv {
 
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster)
     throws ServiceException {
-        Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
+        Account a = accountCache.getByForeignPrincipal(foreignPrincipal);
 
         // bug 27966, always do a search so dup entries can be thrown
         Account acct = getAccountByQuery(
@@ -780,33 +786,33 @@ public class LdapProvisioning extends LdapProv {
         // before bug 23372 was fixed.
         if (a == null) {
             a = acct;
-            sAccountCache.put(a);
+            accountCache.put(a);
         }
         return a;
     }
 
     private Account getAdminAccountByName(String name, boolean loadFromMaster)
     throws ServiceException {
-        Account a = sAccountCache.getByName(name);
+        Account a = accountCache.getByName(name);
         if (a == null) {
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
                     filterFactory.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
-            sAccountCache.put(a);
+            accountCache.put(a);
         }
         return a;
     }
 
     private Account getAppAdminAccountByName(String name, boolean loadFromMaster)
     throws ServiceException {
-        Account a = sAccountCache.getByName(name);
+        Account a = accountCache.getByName(name);
         if (a == null) {
             a = getAccountByQuery(
                     mDIT.appAdminBaseDN(),
                     filterFactory.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
-            sAccountCache.put(a);
+            accountCache.put(a);
         }
         return a;
     }
@@ -856,13 +862,13 @@ public class LdapProvisioning extends LdapProv {
 
         emailAddress = fixupAccountName(emailAddress);
 
-        Account account = sAccountCache.getByName(emailAddress);
+        Account account = accountCache.getByName(emailAddress);
         if (account == null) {
             account = getAccountByQuery(
                     mDIT.mailBranchBaseDN(),
                     filterFactory.accountByName(emailAddress),
                     null, loadFromMaster);
-            sAccountCache.put(account);
+            accountCache.put(account);
         }
         return account;
     }
@@ -1997,7 +2003,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {
-        sAccountCache.remove(acct);
+        accountCache.remove(acct);
         removeAliasInternal(acct, alias);
     }
 
@@ -2009,7 +2015,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
-        sGroupCache.remove(dl);
+        groupCache.remove(dl);
         removeAliasInternal(dl, alias);
         allDLs.removeGroup(alias);
     }
@@ -2454,13 +2460,13 @@ public class LdapProvisioning extends LdapProv {
         switch(keyType) {
             case name:
                 String asciiName = IDNUtil.toAsciiDomainName(key);
-                return sDomainCache.getByName(asciiName, option);
+                return domainCache.getByName(asciiName, option);
             case id:
-                return sDomainCache.getById(key, option);
+                return domainCache.getById(key, option);
             case virtualHostname:
-                return sDomainCache.getByVirtualHostname(key, option);
+                return domainCache.getByVirtualHostname(key, option);
             case krb5Realm:
-                return sDomainCache.getByKrb5Realm(key, option);
+                return domainCache.getByKrb5Realm(key, option);
             default:
                 return null;
         }
@@ -2476,14 +2482,14 @@ public class LdapProvisioning extends LdapProv {
         if (zimbraId == null)
             return null;
 
-        Domain d = sDomainCache.getById(zimbraId, option);
+        Domain d = domainCache.getById(zimbraId, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainById(zimbraId), zlc);
-            sDomainCache.put(Key.DomainBy.id, zimbraId, domain);
+            domainCache.put(Key.DomainBy.id, zimbraId, domain);
         }
         return domain;
     }
@@ -2502,14 +2508,14 @@ public class LdapProvisioning extends LdapProv {
     private Domain getDomainByAsciiNameInternal(String name, ZLdapContext zlc,
             GetFromDomainCacheOption option)
     throws ServiceException {
-        Domain d = sDomainCache.getByName(name, option);
+        Domain d = domainCache.getByName(name, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByName(name), zlc);
-            sDomainCache.put(Key.DomainBy.name, name, domain);
+            domainCache.put(Key.DomainBy.name, name, domain);
         }
         return domain;
     }
@@ -2517,14 +2523,14 @@ public class LdapProvisioning extends LdapProv {
     private Domain getDomainByVirtualHostnameInternal(String virtualHostname,
             GetFromDomainCacheOption option)
     throws ServiceException {
-        Domain d = sDomainCache.getByVirtualHostname(virtualHostname, option);
+        Domain d = domainCache.getByVirtualHostname(virtualHostname, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByVirtualHostame(virtualHostname), null);
-            sDomainCache.put(Key.DomainBy.virtualHostname, virtualHostname, domain);
+            domainCache.put(Key.DomainBy.virtualHostname, virtualHostname, domain);
         }
         return domain;
     }
@@ -2532,14 +2538,14 @@ public class LdapProvisioning extends LdapProv {
     private Domain getDomainByForeignNameInternal(String foreignName,
             GetFromDomainCacheOption option)
     throws ServiceException {
-        Domain d = sDomainCache.getByForeignName(foreignName, option);
+        Domain d = domainCache.getByForeignName(foreignName, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByForeignName(foreignName), null);
-            sDomainCache.put(Key.DomainBy.foreignName, foreignName, domain);
+            domainCache.put(Key.DomainBy.foreignName, foreignName, domain);
         }
         return domain;
     }
@@ -2547,14 +2553,14 @@ public class LdapProvisioning extends LdapProv {
     private Domain getDomainByKrb5RealmInternal(String krb5Realm,
             GetFromDomainCacheOption option)
     throws ServiceException {
-        Domain d = sDomainCache.getByKrb5Realm(krb5Realm, option);
+        Domain d = domainCache.getByKrb5Realm(krb5Realm, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainByKrb5Realm(krb5Realm), null);
-            sDomainCache.put(Key.DomainBy.krb5Realm, krb5Realm, domain);
+            domainCache.put(Key.DomainBy.krb5Realm, krb5Realm, domain);
         }
         return domain;
     }
@@ -2699,7 +2705,7 @@ public class LdapProvisioning extends LdapProv {
             String newDn = mDIT.cosNametoDN(newName);
             zlc.renameEntry(cos.getDN(), newDn);
             // remove old cos from cache
-            sCosCache.remove(cos);
+            cosCache.remove(cos);
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.COS_EXISTS(newName);
         } catch (LdapException e) {
@@ -2733,10 +2739,10 @@ public class LdapProvisioning extends LdapProv {
         if (zimbraId == null)
             return null;
 
-        LdapCos cos = sCosCache.getById(zimbraId);
+        LdapCos cos = cosCache.getById(zimbraId);
         if (cos == null) {
             cos = getCOSByQuery(filterFactory.cosById(zimbraId), zlc);
-            sCosCache.put(cos);
+            cosCache.put(cos);
         }
         return cos;
     }
@@ -2756,16 +2762,16 @@ public class LdapProvisioning extends LdapProv {
     private Cos getFromCache(Key.CosBy keyType, String key) {
         switch(keyType) {
             case name:
-                return sCosCache.getByName(key);
+                return cosCache.getByName(key);
             case id:
-                return sCosCache.getById(key);
+                return cosCache.getById(key);
             default:
                 return null;
         }
     }
 
     private Cos getCosByName(String name, ZLdapContext initZlc) throws ServiceException {
-        LdapCos cos = sCosCache.getByName(name);
+        LdapCos cos = cosCache.getByName(name);
         if (cos != null)
             return cos;
 
@@ -2774,7 +2780,7 @@ public class LdapProvisioning extends LdapProv {
             ZAttributes attrs = helper.getAttributes(
                     initZlc, LdapServerType.REPLICA, LdapUsage.GET_COS, dn, null);
             cos = new LdapCos(dn, attrs, this);
-            sCosCache.put(cos);
+            cosCache.put(cos);
             return cos;
         } catch (LdapEntryNotFoundException e) {
             return null;
@@ -2834,7 +2840,7 @@ public class LdapProvisioning extends LdapProv {
 
             zlc.deleteChildren(entry.getDN());
             zlc.deleteEntry(entry.getDN());
-            sAccountCache.remove(acc);
+            accountCache.remove(acc);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
         } finally {
@@ -2853,7 +2859,7 @@ public class LdapProvisioning extends LdapProv {
         Account acct = getAccountById(zimbraId, zlc, true);
 
         // prune cache
-        sAccountCache.remove(acct);
+        accountCache.remove(acct);
 
         LdapEntry entry = (LdapEntry) acct;
         if (acct == null)
@@ -2987,7 +2993,7 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             LdapClient.closeContext(zlc);
             // prune cache
-            sAccountCache.remove(acct);
+            accountCache.remove(acct);
         }
 
         // reload it to cache using the master, bug 45736
@@ -3037,10 +3043,10 @@ public class LdapProvisioning extends LdapProv {
 
             try {
                 zlc.deleteEntry(d.getDN());
-                sDomainCache.remove(d);
+                domainCache.remove(d);
             } catch (LdapContextNotEmptyException e) {
                 // remove from cache before nuking all attrs
-                sDomainCache.remove(d);
+                domainCache.remove(d);
                 // assume subdomains exist and turn into plain dc object
                 Map<String, String> attrs = new HashMap<String, String>();
                 attrs.put("-"+A_objectClass, "zimbraDomain");
@@ -3224,7 +3230,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_COS);
             zlc.deleteEntry(c.getDN());
-            sCosCache.remove(c);
+            cosCache.remove(c);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
         } finally {
@@ -3290,7 +3296,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_SHARELOCATOR);
             zlc.deleteEntry(shloc.getDN());
-            sShareLocatorCache.remove(shloc);
+            shareLocatorCache.remove(shloc);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to delete share locator: "+id, e);
         } finally {
@@ -3373,10 +3379,10 @@ public class LdapProvisioning extends LdapProv {
             return null;
         Server s = null;
         if (!nocache)
-            s = sServerCache.getById(zimbraId);
+            s = serverCache.getById(zimbraId);
         if (s == null) {
             s = getServerByQuery(filterFactory.serverById(zimbraId), zlc);
-            sServerCache.put(s);
+            serverCache.put(s);
         }
         return s;
     }
@@ -3403,10 +3409,10 @@ public class LdapProvisioning extends LdapProv {
             return null;
         ShareLocator shloc = null;
         if (!nocache)
-            shloc = sShareLocatorCache.getById(id);
+            shloc = shareLocatorCache.getById(id);
         if (shloc == null) {
             shloc = getShareLocatorByQuery(filterFactory.shareLocatorById(id), zlc);
-            sShareLocatorCache.put(shloc);
+            shareLocatorCache.put(shloc);
         }
         return shloc;
     }
@@ -3442,7 +3448,7 @@ public class LdapProvisioning extends LdapProv {
 
     private Server getServerByName(String name, boolean nocache) throws ServiceException {
         if (!nocache) {
-            Server s = sServerCache.getByName(name);
+            Server s = serverCache.getByName(name);
             if (s != null)
                 return s;
         }
@@ -3451,7 +3457,7 @@ public class LdapProvisioning extends LdapProv {
             String dn = mDIT.serverNameToDN(name);
             ZAttributes attrs = helper.getAttributes(LdapUsage.GET_SERVER, dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
-            sServerCache.put(s);
+            serverCache.put(s);
             return s;
         } catch (LdapEntryNotFoundException e) {
             return null;
@@ -3491,7 +3497,7 @@ public class LdapProvisioning extends LdapProv {
         }
 
         if (result.size() > 0)
-            sServerCache.put(result, true);
+            serverCache.put(result, true);
         Collections.sort(result);
         return result;
     }
@@ -3525,7 +3531,7 @@ public class LdapProvisioning extends LdapProv {
                         serverId + "(" + serverName + ") from cos " + cos.getName());
                 modifyAttrs(cos, attrs);
                 // invalidate cached cos
-                sCosCache.remove((LdapCos)cos);
+                cosCache.remove((LdapCos)cos);
             }
         } catch (ServiceException se) {
             ZimbraLog.account.warn("unable to remove "+serverId+" from all COSes ", se);
@@ -3581,7 +3587,7 @@ public class LdapProvisioning extends LdapProv {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_SERVER);
             removeServerFromAllCOSes(zimbraId, server.getName(), zlc);
             zlc.deleteEntry(server.getDN());
-            sServerCache.remove(server);
+            serverCache.remove(server);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge server: "+zimbraId, e);
         } finally {
@@ -3739,7 +3745,7 @@ public class LdapProvisioning extends LdapProv {
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
             }
 
-            sGroupCache.remove(dl);
+            groupCache.remove(dl);
 
             String oldEmail = dl.getName();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
@@ -3924,7 +3930,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DISTRIBUTIONLIST);
             zlc.deleteEntry(dl.getDN());
-            sGroupCache.remove(dl);
+            groupCache.remove(dl);
             allDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
@@ -3951,16 +3957,16 @@ public class LdapProvisioning extends LdapProv {
     private Group getGroupFromCache(Key.DistributionListBy keyType, String key) {
         switch(keyType) {
         case id:
-            return sGroupCache.getById(key);
+            return groupCache.getById(key);
         case name:
-            return sGroupCache.getByName(key);
+            return groupCache.getByName(key);
         default:
             return null;
         }
     }
 
     private void putInGroupCache(Group group) {
-        sGroupCache.put(group);
+        groupCache.put(group);
     }
 
     private DistributionList getDLFromCache(Key.DistributionListBy keyType, String key) {
@@ -5081,9 +5087,9 @@ public class LdapProvisioning extends LdapProv {
     private Zimlet getFromCache(Key.ZimletBy keyType, String key) {
         switch(keyType) {
         case name:
-            return sZimletCache.getByName(key);
+            return zimletCache.getByName(key);
         case id:
-            return sZimletCache.getById(key);
+            return zimletCache.getById(key);
         default:
             return null;
         }
@@ -5098,7 +5104,7 @@ public class LdapProvisioning extends LdapProv {
 
         LdapZimlet zimlet = null;
         if (useCache) {
-            zimlet = sZimletCache.getByName(name);
+            zimlet = zimletCache.getByName(name);
         }
 
         if (zimlet != null) {
@@ -5112,7 +5118,7 @@ public class LdapProvisioning extends LdapProv {
             zimlet = new LdapZimlet(dn, attrs, this);
             if (useCache) {
                 ZimletUtil.reloadZimlet(name);
-                sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
+                zimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
             }
             return zimlet;
         } catch (LdapEntryNotFoundException e) {
@@ -5196,7 +5202,7 @@ public class LdapProvisioning extends LdapProv {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_ZIMLET);
             LdapZimlet zimlet = (LdapZimlet)getZimlet(name, zlc, true);
             if (zimlet != null) {
-                sZimletCache.remove(zimlet);
+                zimletCache.remove(zimlet);
                 zlc.deleteEntry(zimlet.getDN());
             }
         } catch (ServiceException e) {
@@ -5267,7 +5273,7 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         if (zimbraId == null)
             return null;
-        Account acct = sAccountCache.getById(zimbraId);
+        Account acct = accountCache.getById(zimbraId);
         if (acct != null) {
             if (acct instanceof LdapCalendarResource) {
                 return (LdapCalendarResource) acct;
@@ -5280,14 +5286,14 @@ public class LdapProvisioning extends LdapProv {
             mDIT.mailBranchBaseDN(),
             filterFactory.calendarResourceById(zimbraId),
             null, loadFromMaster);
-        sAccountCache.put(resource);
+        accountCache.put(resource);
         return resource;
     }
 
     private CalendarResource getCalendarResourceByName(String emailAddress, boolean loadFromMaster)
     throws ServiceException {
         emailAddress = fixupAccountName(emailAddress);
-        Account acct = sAccountCache.getByName(emailAddress);
+        Account acct = accountCache.getByName(emailAddress);
         if (acct != null) {
             if (acct instanceof LdapCalendarResource) {
                 return (LdapCalendarResource) acct;
@@ -5300,7 +5306,7 @@ public class LdapProvisioning extends LdapProv {
             mDIT.mailBranchBaseDN(),
             filterFactory.calendarResourceByName(emailAddress),
             null, loadFromMaster);
-        sAccountCache.put(resource);
+        accountCache.put(resource);
         return resource;
     }
 
@@ -5311,7 +5317,7 @@ public class LdapProvisioning extends LdapProv {
                 mDIT.mailBranchBaseDN(),
                 filterFactory.calendarResourceByForeignPrincipal(foreignPrincipal),
                 null, loadFromMaster);
-        sAccountCache.put(resource);
+        accountCache.put(resource);
         return resource;
     }
 
@@ -7239,7 +7245,7 @@ public class LdapProvisioning extends LdapProv {
     private XMPPComponent getXMPPComponentByName(String name, boolean nocache)
     throws ServiceException {
         if (!nocache) {
-            XMPPComponent x = sXMPPComponentCache.getByName(name);
+            XMPPComponent x = xmppComponentCache.getByName(name);
             if (x != null)
                 return x;
         }
@@ -7248,7 +7254,7 @@ public class LdapProvisioning extends LdapProv {
             String dn = mDIT.xmppcomponentNameToDN(name);
             ZAttributes attrs = helper.getAttributes(LdapUsage.GET_XMPPCOMPONENT, dn);
             XMPPComponent x = new LdapXMPPComponent(dn, attrs, this);
-            sXMPPComponentCache.put(x);
+            xmppComponentCache.put(x);
             return x;
         } catch (LdapEntryNotFoundException e) {
             return null;
@@ -7263,10 +7269,10 @@ public class LdapProvisioning extends LdapProv {
             return null;
         XMPPComponent x = null;
         if (!nocache)
-            x = sXMPPComponentCache.getById(zimbraId);
+            x = xmppComponentCache.getById(zimbraId);
         if (x == null) {
             x = getXMPPComponentByQuery(filterFactory.xmppComponentById(zimbraId), zlc);
-            sXMPPComponentCache.put(x);
+            xmppComponentCache.put(x);
         }
         return x;
     }
@@ -7291,7 +7297,7 @@ public class LdapProvisioning extends LdapProv {
         }
 
         if (result.size() > 0) {
-            sXMPPComponentCache.put(result, true);
+            xmppComponentCache.put(result, true);
         }
         Collections.sort(result);
         return result;
@@ -7364,7 +7370,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_XMPPCOMPONENT);
             zlc.deleteEntry(l.getDN());
-            sXMPPComponentCache.remove(l);
+            xmppComponentCache.remove(l);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge XMPPComponent : "+zimbraId, e);
         } finally {
@@ -7385,7 +7391,7 @@ public class LdapProvisioning extends LdapProv {
             String newDn = mDIT.xmppcomponentNameToDN(newName);
             zlc.renameEntry(comp.getDN(), newDn);
             // remove old comp from cache
-            sXMPPComponentCache.remove(comp);
+            xmppComponentCache.remove(comp);
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.IM_COMPONENT_EXISTS(newName);
         } catch (LdapException e) {
@@ -7558,7 +7564,7 @@ public class LdapProvisioning extends LdapProv {
                         removeFromCache(account);
                 }
             } else {
-                sAccountCache.clear();
+                accountCache.clear();
             }
             return;
         case group:
@@ -7569,7 +7575,7 @@ public class LdapProvisioning extends LdapProv {
                     removeGroupFromCache(dlBy, entry.mEntryIdentity);
                 }
             } else {
-                sGroupCache.clear();
+                groupCache.clear();
             }
             return;
         case config:
@@ -7595,7 +7601,7 @@ public class LdapProvisioning extends LdapProv {
                         reload(cos, false);
                 }
             } else
-                sCosCache.clear();
+                cosCache.clear();
             return;
         case domain:
             if (entries != null) {
@@ -7604,16 +7610,16 @@ public class LdapProvisioning extends LdapProv {
                     Domain domain = getFromCache(domainBy, entry.mEntryIdentity, GetFromDomainCacheOption.BOTH);
                     if (domain != null) {
                         if (domain instanceof DomainCache.NonExistingDomain)
-                            sDomainCache.removeFromNegativeCache(domainBy, entry.mEntryIdentity);
+                            domainCache.removeFromNegativeCache(domainBy, entry.mEntryIdentity);
                         else
                             reload(domain, false);
                     }
                 }
             } else
-                sDomainCache.clear();
+                domainCache.clear();
             return;
         case mime:
-            sMimeTypeCache.flushCache(this);
+            mimeTypeCache.flushCache(this);
             return;
         case server:
             if (entries != null) {
@@ -7624,7 +7630,7 @@ public class LdapProvisioning extends LdapProv {
                         reload(server, false);
                 }
             } else
-                sServerCache.clear();
+                serverCache.clear();
             return;
         case zimlet:
             if (entries != null) {
@@ -7635,7 +7641,7 @@ public class LdapProvisioning extends LdapProv {
                         reload(zimlet, false);
                 }
             } else
-                sZimletCache.clear();
+                zimletCache.clear();
             return;
         default:
             throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
@@ -7646,9 +7652,9 @@ public class LdapProvisioning extends LdapProv {
     @Override // LdapProv
     public void removeFromCache(Entry entry) {
         if (entry instanceof Account) {
-            sAccountCache.remove((Account)entry);
+            accountCache.remove((Account)entry);
         } else if (entry instanceof DistributionList) {
-            sGroupCache.remove((DistributionList)entry);
+            groupCache.remove((DistributionList)entry);
         } else {
             throw new UnsupportedOperationException();
         }
@@ -7915,7 +7921,7 @@ public class LdapProvisioning extends LdapProv {
         case account:
             unresolvedIds = new HashSet<String>();
             for (String id : ids) {
-                entry = sAccountCache.getById(id);
+                entry = accountCache.getById(id);
                 if (entry != null)
                     result.put(id, entry.getName());
                 else
@@ -7934,7 +7940,7 @@ public class LdapProvisioning extends LdapProv {
         case cos:
             unresolvedIds = new HashSet<String>();
             for (String id : ids) {
-                entry = sCosCache.getById(id);
+                entry = cosCache.getById(id);
                 if (entry != null)
                     result.put(id, entry.getName());
                 else
@@ -8278,7 +8284,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void removeGroupAlias(Group group, String alias) throws ServiceException {
-        sGroupCache.remove(group);
+        groupCache.remove(group);
         removeAliasInternal(group, alias);
         allDLs.removeGroup(alias);
     }
@@ -8585,7 +8591,7 @@ public class LdapProvisioning extends LdapProv {
 
             // remove zimbraMemberOf if this group from all accounts
             deleteMemberOfOnAccounts(zlc, zimbraId);
-            sGroupCache.remove(group);
+            groupCache.remove(group);
             allDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge group: "+zimbraId, e);
@@ -8652,7 +8658,7 @@ public class LdapProvisioning extends LdapProv {
             }
 
             // prune cache
-            sGroupCache.remove(dl);
+            groupCache.remove(dl);
 
             String oldEmail = dl.getName();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);

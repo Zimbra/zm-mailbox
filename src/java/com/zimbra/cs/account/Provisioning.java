@@ -239,23 +239,58 @@ public abstract class Provisioning extends ZAttrProvisioning {
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
+        return getInstance(null);
+    }
+    
+    /**
+     * This signature allows callsites to specify whether cache should be used in the 
+     * Provisioning instance returned.  If useCache is null, it has no effect to the 
+     * cache scheme used by the returned Provisioning instance.
+     * 
+     * If useCache is not null, but the configured zimbra_class_provisioning class does 
+     * not support a constructor with Boolean parameter, then it (follows the same logic 
+     * as if the specified class is not foind) falls back to return 
+     * a LdapProvisiong(Boolean useCache) instance.
+     * 
+     * !!!Note!!!: setting useCache to false will hurt performance badly, as ***nothing*** 
+     * is cached.  For LdapProvisionig, each LDAP related method will cost one or more LDAP 
+     * trips.  The only usage for useCache=false is zmconfigd. (bug 70975 and 71267)
+     * 
+     * @param useCache 
+     * @return
+     */
+    public synchronized static Provisioning getInstance(Boolean useCache) {
         if (sProvisioning == null) {
             String className = LC.zimbra_class_provisioning.value();
+            
             if (className != null && !className.equals("")) {
+                Class<?> klass = null;
                 try {
                     try {
-                        sProvisioning = (Provisioning) Class.forName(className).newInstance();
+                        klass = Class.forName(className);
                     } catch (ClassNotFoundException cnfe) {
                         // ignore and look in extensions
-                        sProvisioning = (Provisioning) ExtensionUtil.findClass(className).newInstance();
+                        klass = ExtensionUtil.findClass(className);
+                    }
+                    
+                    if (useCache != null) {
+                        try {
+                            sProvisioning = (Provisioning) klass.getConstructor(Boolean.class).newInstance(useCache);
+                        } catch (NoSuchMethodException e) {
+                            ZimbraLog.account.error("could not find constructor with Boolean parameter '" + 
+                                    className + "'; defaulting to LdapProvisioning", e);
+                        }
+                    } else {
+                        sProvisioning = (Provisioning) klass.newInstance();
                     }
                 } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" +
-                            className + "'", e);
+                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + 
+                            className + "'; defaulting to LdapProvisioning", e);
                 }
             }
+            
             if (sProvisioning == null) {
-                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning();
+                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning(useCache);
                 ZimbraLog.account.error("defaulting to " + sProvisioning.getClass().getCanonicalName());
             }
         }
