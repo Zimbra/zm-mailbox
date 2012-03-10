@@ -15,10 +15,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -27,6 +23,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.admin.type.CalTZInfo;
@@ -54,10 +53,17 @@ public class SearchMultiMailboxRequest implements SearchParameters {
 
     /**
      * @zm-api-field-tag include-items-tagged-for-delete
-     * @zm-api-field-description Set to <b>1 (true)</b> to include items with the /Deleted tag set in results
+     * @zm-api-field-description Set to <b>1 (true)</b> to include items with the \Deleted tag set in results
      */
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
     private ZmBoolean includeTagDeleted;
+
+    /**
+     * @zm-api-field-tag include-items-marked-muted
+     * @zm-api-field-description Set to <b>1 (true)</b> to include items with the \Muted tag set in results
+     */
+    @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_MUTED /* includeTagMuted */, required=false)
+    private ZmBoolean includeTagMuted;
 
     // Values are from TaskHit.Status enum but case insensitive
     // soap.txt documentation on SearchRequest implies values : need,inprogress,completed,canceled
@@ -280,7 +286,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
      * message hits
      */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
-    private List<AttributeName> headers = Lists.newArrayList();
+    private final List<AttributeName> headers = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Timezone specification
@@ -320,7 +326,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
      * @zm-api-field-description Mailbox specification
      */
     @XmlElement(name=MailConstants.E_MAILBOX /* mbx */, required=false)
-    private List<NameOrId> mailboxes = Lists.newArrayList();
+    private final List<NameOrId> mailboxes = Lists.newArrayList();
 
     public SearchMultiMailboxRequest() {
     }
@@ -328,6 +334,10 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public void setIncludeTagDeleted(Boolean includeTagDeleted) {
         this.includeTagDeleted = ZmBoolean.fromBool(includeTagDeleted);
+    }
+    @Override
+    public void setIncludeTagMuted(Boolean includeTagMuted) {
+        this.includeTagMuted = ZmBoolean.fromBool(includeTagMuted);
     }
     @Override
     public void setAllowableTaskStatus(String allowableTaskStatus) { this.allowableTaskStatus = allowableTaskStatus; }
@@ -405,6 +415,8 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public Boolean getIncludeTagDeleted() { return ZmBoolean.toBool(includeTagDeleted); }
     @Override
+    public Boolean getIncludeTagMuted() { return ZmBoolean.toBool(includeTagMuted); }
+    @Override
     public String getAllowableTaskStatus() { return allowableTaskStatus; }
     @Override
     public Long getCalItemExpandStart() { return calItemExpandStart; }
@@ -464,6 +476,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
                 Objects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
+            .add("includeTagMuted", includeTagMuted)
             .add("allowableTaskStatus", allowableTaskStatus)
             .add("calItemExpandStart", calItemExpandStart)
             .add("calItemExpandEnd", calItemExpandEnd)

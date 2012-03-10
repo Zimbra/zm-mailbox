@@ -24,6 +24,7 @@ public interface SearchParameters {
 
     // Used for requests which use attributes and elements processed by SearchParams.parse
     public void setIncludeTagDeleted(Boolean includeTagDeleted);
+    public void setIncludeTagMuted(Boolean includeTagMuted);
     public void setAllowableTaskStatus(String allowableTaskStatus);
     public void setCalItemExpandStart(Long calItemExpandStart);
     public void setCalItemExpandEnd(Long calItemExpandEnd);
@@ -52,6 +53,7 @@ public interface SearchParameters {
     public void setCursor(CursorInfo cursor);
 
     public Boolean getIncludeTagDeleted();
+    public Boolean getIncludeTagMuted();
     public String getAllowableTaskStatus();
     public Long getCalItemExpandStart();
     public Long getCalItemExpandEnd();

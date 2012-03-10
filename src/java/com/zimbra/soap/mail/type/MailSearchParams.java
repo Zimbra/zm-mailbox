@@ -15,10 +15,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -27,6 +23,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.base.SearchParameters;
@@ -41,10 +40,17 @@ public class MailSearchParams implements SearchParameters {
 
     /**
      * @zm-api-field-tag include-items-tagged-for-delete
-     * @zm-api-field-description Set to <b>1 (true)</b> to include items with the /Deleted tag set in results
+     * @zm-api-field-description Set to <b>1 (true)</b> to include items with the \Deleted tag set in results
      */
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
     private ZmBoolean includeTagDeleted;
+
+    /**
+     * @zm-api-field-tag include-items-tagged-for-delete
+     * @zm-api-field-description Set to <b>1 (true)</b> to include items with the \Muted tag set in results
+     */
+    @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_MUTED /* includeTagMuted */, required=false)
+    private ZmBoolean includeTagMuted;
 
     // Values are from TaskHit.Status enum but case insensitive
     // soap.txt documentation on SearchRequest implies values : need,inprogress,completed,canceled
@@ -198,7 +204,7 @@ public class MailSearchParams implements SearchParameters {
 
     /**
      * @zm-api-field-tag
-     * @zm-api-field-description If 'needExp' is set in the request, two additional flags 
+     * @zm-api-field-description If 'needExp' is set in the request, two additional flags
      *   may be included in <b>&lt;e></b> elements for messages returned inline.
      * <ul>
      * <li> isGroup - set if the email address is a group
@@ -211,7 +217,7 @@ public class MailSearchParams implements SearchParameters {
      */
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
     private ZmBoolean needCanExpand;
-    
+
     /**
      * @zm-api-field-tag neuter-images
      * @zm-api-field-description Set to <b>0 (false)</b> to stop images in inlined HTML parts from being "neutered"
@@ -283,7 +289,7 @@ public class MailSearchParams implements SearchParameters {
      * message hits
      */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
-    private List<AttributeName> headers = Lists.newArrayList();
+    private final List<AttributeName> headers = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Timezone specification
@@ -325,6 +331,10 @@ public class MailSearchParams implements SearchParameters {
     @Override
     public void setIncludeTagDeleted(Boolean includeTagDeleted) {
         this.includeTagDeleted = ZmBoolean.fromBool(includeTagDeleted);
+    }
+    @Override
+    public void setIncludeTagMuted(Boolean includeTagMuted) {
+        this.includeTagMuted = ZmBoolean.fromBool(includeTagMuted);
     }
     @Override
     public void setAllowableTaskStatus(String allowableTaskStatus) { this.allowableTaskStatus = allowableTaskStatus; }
@@ -389,6 +399,8 @@ public class MailSearchParams implements SearchParameters {
     @Override
     public Boolean getIncludeTagDeleted() { return ZmBoolean.toBool(includeTagDeleted); }
     @Override
+    public Boolean getIncludeTagMuted() { return ZmBoolean.toBool(includeTagMuted); }
+    @Override
     public String getAllowableTaskStatus() { return allowableTaskStatus; }
     @Override
     public Long getCalItemExpandStart() { return calItemExpandStart; }
@@ -444,6 +456,7 @@ public class MailSearchParams implements SearchParameters {
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
+            .add("includeTagMuted", includeTagMuted)
             .add("allowableTaskStatus", allowableTaskStatus)
             .add("calItemExpandStart", calItemExpandStart)
             .add("calItemExpandEnd", calItemExpandEnd)
