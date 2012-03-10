@@ -15,6 +15,8 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -120,4 +122,14 @@ public final class FlagTest {
         Assert.assertEquals(Flag.FlagInfo.UNREAD.toFlag(mbox).hashCode(), Flag.FlagInfo.UNREAD.toFlag(mbox).hashCode());
     }
 
+    @Test
+    public void unique() throws Exception {
+        Set<Character> seen = new HashSet<Character>();
+        for (Flag.FlagInfo finfo : Flag.FlagInfo.values()) {
+            if (!finfo.isHidden()) {
+                Assert.assertFalse("have not yet seen " + finfo.ch, seen.contains(finfo.ch));
+                seen.add(finfo.ch);
+            }
+        }
+    }
 }

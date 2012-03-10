@@ -187,4 +187,56 @@ public class ItemActionTest {
         }
         Assert.assertNotNull(ex);
     }
+
+    @Test
+    public void mute() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // setup: add a message
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+        Message msg = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), dopt, null);
+        Assert.assertTrue("root unread", msg.isUnread());
+        Assert.assertFalse("root not muted", msg.isTagged(Flag.FlagInfo.MUTED));
+
+        // mute virtual conv
+        Element request = new Element.XMLElement(MailConstants.CONV_ACTION_REQUEST);
+        Element action = request.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MUTE).addAttribute(MailConstants.A_ID, msg.getConversationId());
+        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+
+        msg = mbox.getMessageById(null, msg.getId());
+        Assert.assertFalse("root now read", msg.isUnread());
+        Assert.assertTrue("root now muted", msg.isTagged(Flag.FlagInfo.MUTED));
+
+        // unmute virtual conv
+        action.addAttribute(MailConstants.A_OPERATION, "!" + ItemAction.OP_MUTE);
+        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+
+        msg = mbox.getMessageById(null, msg.getId());
+        Assert.assertFalse("root still read", msg.isUnread());
+        Assert.assertFalse("root now unmuted", msg.isTagged(Flag.FlagInfo.MUTED));
+
+        // add another message to create a real conv
+        dopt.setConversationId(msg.getConversationId());
+        Message msg2 = mbox.addMessage(null, MailboxTestUtil.generateMessage("Re: test subject"), dopt, null);
+        Assert.assertTrue("reply unread", msg2.isUnread());
+        Assert.assertFalse("reply not muted", msg2.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertFalse("reply in real conv", msg2.getConversationId() < 0);
+
+        // mute real conv
+        action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MUTE).addAttribute(MailConstants.A_ID, msg2.getConversationId());;
+        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+
+        msg2 = mbox.getMessageById(null, msg2.getId());
+        Assert.assertFalse("reply now read", msg2.isUnread());
+        Assert.assertTrue("reply now muted", msg2.isTagged(Flag.FlagInfo.MUTED));
+
+        // unmute real conv
+        action.addAttribute(MailConstants.A_OPERATION, "!" + ItemAction.OP_MUTE);
+        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+
+        msg2 = mbox.getMessageById(null, msg2.getId());
+        Assert.assertFalse("reply still read", msg2.isUnread());
+        Assert.assertFalse("reply now unmuted", msg2.isTagged(Flag.FlagInfo.MUTED));
+    }
 }

@@ -301,4 +301,53 @@ public final class MailboxTest {
         Assert.assertEquals("end with " + expected + " blob(s) in the store", expected, MockStoreManager.size());
         MockStoreManager.purge();
     }
+
+    @Test
+    public void muted() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        // root message
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+        Message msg = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), dopt, null);
+        Assert.assertTrue("root unread", msg.isUnread());
+        Assert.assertFalse("root not muted", msg.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertTrue("root in virtual conv", msg.getConversationId() < 0);
+
+        // mark root muted
+        mbox.alterTag(null, msg.getId(), MailItem.Type.MESSAGE, Flag.FlagInfo.MUTED, true, null);
+        msg = mbox.getMessageById(null, msg.getId());
+        Assert.assertTrue("root unread", msg.isUnread());
+        Assert.assertTrue("root muted", msg.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertTrue("root in virtual conv", msg.getConversationId() < 0);
+        Assert.assertTrue("virtual conv muted", mbox.getConversationById(null, msg.getConversationId()).isTagged(Flag.FlagInfo.MUTED));
+
+        // add a reply to the muted virtual conversation
+        dopt.setConversationId(msg.getConversationId());
+        Message msg2 = mbox.addMessage(null, MailboxTestUtil.generateMessage("Re: test subject"), dopt, null);
+        Assert.assertFalse("reply read", msg2.isUnread());
+        Assert.assertTrue("reply muted", msg2.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertFalse("reply in real conv", msg2.getConversationId() < 0);
+        Assert.assertTrue("real conversation muted", mbox.getConversationById(null, msg2.getConversationId()).isTagged(Flag.FlagInfo.MUTED));
+
+        // add another reply to the now-real still-muted conversation
+        dopt.setConversationId(msg2.getConversationId());
+        Message msg3 = mbox.addMessage(null, MailboxTestUtil.generateMessage("Re: test subject"), dopt, null);
+        Assert.assertFalse("second reply read", msg3.isUnread());
+        Assert.assertTrue("second reply muted", msg3.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertFalse("second reply in real conv", msg3.getConversationId() < 0);
+        Assert.assertTrue("real conversation muted", mbox.getConversationById(null, msg3.getConversationId()).isTagged(Flag.FlagInfo.MUTED));
+
+        // unmute conversation
+        mbox.alterTag(null, msg3.getConversationId(), MailItem.Type.CONVERSATION, Flag.FlagInfo.MUTED, false, null);
+        msg3 = mbox.getMessageById(null, msg3.getId());
+        Assert.assertFalse("second reply not muted", msg3.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertFalse("real conversation not muted", mbox.getConversationById(null, msg3.getConversationId()).isTagged(Flag.FlagInfo.MUTED));
+
+        // add a last reply to the now-unmuted conversation
+        Message msg4 = mbox.addMessage(null, MailboxTestUtil.generateMessage("Re: test subject"), dopt, null);
+        Assert.assertTrue("third reply unread", msg4.isUnread());
+        Assert.assertFalse("third reply not muted", msg4.isTagged(Flag.FlagInfo.MUTED));
+        Assert.assertFalse("third reply in real conv", msg4.getConversationId() < 0);
+        Assert.assertFalse("real conversation not muted", mbox.getConversationById(null, msg4.getConversationId()).isTagged(Flag.FlagInfo.MUTED));
+    }
 }

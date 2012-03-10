@@ -78,10 +78,10 @@ public final class SearchParams implements Cloneable {
     private long calItemExpandEnd = -1;
     private boolean inDumpster = false;  // search live data or dumpster data
 
-    /**
-     * if FALSE, then items with the /Deleted tag set are not returned.
-     */
+    /** If FALSE, then items with the \Deleted tag set are not returned. */
     private boolean includeTagDeleted = false;
+    /** If FALSE, then items with the \Muted tag set are not returned. */
+    private boolean includeTagMuted = true;
     private Set<TaskHit.Status> allowableTaskStatuses; // if NULL, allow all
 
     /**
@@ -147,7 +147,7 @@ public final class SearchParams implements Cloneable {
     public boolean getWantHtml() {
         return wantHtml;
     }
-    
+
     public boolean getWantExpandGroupInfo() {
         return wantExpandGroupInfo;
     }
@@ -186,6 +186,10 @@ public final class SearchParams implements Cloneable {
 
     public final boolean getIncludeTagDeleted() {
         return includeTagDeleted;
+    }
+
+    public final boolean getIncludeTagMuted() {
+        return includeTagMuted;
     }
 
     public Set<TaskHit.Status> getAllowableTaskStatuses() {
@@ -233,6 +237,10 @@ public final class SearchParams implements Cloneable {
 
     public final void setIncludeTagDeleted(boolean value) {
         includeTagDeleted = value;
+    }
+
+    public final void setIncludeTagMuted(boolean value) {
+        includeTagMuted = value;
     }
 
     public void setAllowableTaskStatuses(Set<TaskHit.Status> value) {
@@ -332,7 +340,7 @@ public final class SearchParams implements Cloneable {
     public void setWantHtml(boolean value) {
         wantHtml = value;
     }
-    
+
     public void setWantExpandGroupInfo(boolean value) {
         wantExpandGroupInfo = value;
     }
@@ -394,6 +402,7 @@ public final class SearchParams implements Cloneable {
             el.addAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, Joiner.on(',').join(allowableTaskStatuses));
         }
         el.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED, getIncludeTagDeleted());
+        el.addAttribute(MailConstants.A_INCLUDE_TAG_MUTED, getIncludeTagMuted());
         el.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
         el.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
         el.addAttribute(MailConstants.E_QUERY, getQueryString(), Element.Disposition.CONTENT);
@@ -447,7 +456,25 @@ public final class SearchParams implements Cloneable {
 
         params.requestContext = zsc;
         params.setHopCount(zsc.getHopCount());
+        params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
+        params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
+        String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
+        if (query == null) {
+            throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
+        }
+        params.setQueryString(query);
+        params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
+        params.setQuick(request.getAttributeBool(MailConstants.A_QUICK, false));
+        String types = request.getAttribute(MailConstants.A_SEARCH_TYPES, request.getAttribute(MailConstants.A_GROUPBY, null));
+        if (Strings.isNullOrEmpty(types)) {
+            params.setTypes(EnumSet.of(params.isQuick() ? MailItem.Type.MESSAGE : MailItem.Type.CONVERSATION));
+        } else {
+            params.setTypes(types);
+        }
+        params.setSortBy(request.getAttribute(MailConstants.A_SORTBY, null));
+
         params.setIncludeTagDeleted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_DELETED, false));
+        params.setIncludeTagMuted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_MUTED, true));
         String allowableTasks = request.getAttribute(MailConstants.A_ALLOWABLE_TASK_STATUS, null);
         if (allowableTasks != null) {
             params.allowableTaskStatuses = new HashSet<TaskHit.Status>();
@@ -460,23 +487,6 @@ public final class SearchParams implements Cloneable {
                 }
             }
         }
-        params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
-        params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
-        String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
-        if (query == null) {
-            throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
-        }
-        params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
-        params.setQuick(request.getAttributeBool(MailConstants.A_QUICK, false));
-        params.setQueryString(query);
-        String types = request.getAttribute(MailConstants.A_SEARCH_TYPES,
-                request.getAttribute(MailConstants.A_GROUPBY, null));
-        if (Strings.isNullOrEmpty(types)) {
-            params.setTypes(EnumSet.of(params.isQuick() ? MailItem.Type.MESSAGE : MailItem.Type.CONVERSATION));
-        } else {
-            params.setTypes(types);
-        }
-        params.setSortBy(request.getAttribute(MailConstants.A_SORTBY, null));
 
         params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
@@ -626,6 +636,7 @@ public final class SearchParams implements Cloneable {
         result.calItemExpandStart = calItemExpandStart;
         result.calItemExpandEnd = calItemExpandEnd;
         result.includeTagDeleted = includeTagDeleted;
+        result.includeTagMuted = includeTagMuted;
         result.timezone = timezone;
         result.locale = locale;
         result.sortBy = sortBy;

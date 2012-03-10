@@ -14,10 +14,22 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
@@ -26,22 +38,10 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.util.SyncToken;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Utility class to upgrade mailbox.
@@ -270,26 +270,16 @@ public final class MailboxUpgrade {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbTag.getTagTableName(mbox) +
-                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
-            int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
-            stmt.setInt(pos, Flag.ID_PRIORITY);
-            rs = stmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                ZimbraLog.mailbox.debug("PRIORITY flag already exists");
+            if (flagExists(conn, mbox, Flag.FlagInfo.PRIORITY))
                 return;
-            }
 
             // put PRIORITY flag in the TAG table
             DbTag.createTag(conn, mbox, Flag.FlagInfo.PRIORITY.toFlag(mbox).mData, null, false);
             // get all the different FLAGS column values for the mailbox
             List<Long> flagsets = getTagsets(conn, mbox, "flags");
             // create rows in the TAGGED_ITEM table for flagged items
-            migrateColumnToTaggedItem(conn, mbox, "flags",
-                    Flag.ID_PRIORITY, matchTagsets(flagsets, Flag.BITMASK_PRIORITY));
+            migrateColumnToTaggedItem(conn, mbox, "flags", Flag.ID_PRIORITY, matchTagsets(flagsets, Flag.BITMASK_PRIORITY));
             conn.commit();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to migrate PRIORITY flag", e);
         } catch (ServiceException e) {
             conn.rollback();
             throw e;
@@ -299,37 +289,64 @@ public final class MailboxUpgrade {
             conn.closeQuietly();
         }
     }
-    
-    /**
-     * Create POST flag in TAG table.
-     */
+
+    /** Create POST flag in TAG table. */
     public static void upgradeTo2_4(Mailbox mbox) throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);
+        try {
+            if (flagExists(conn, mbox, Flag.FlagInfo.POST))
+                return;
+
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.POST.toFlag(mbox).mData, null, false);
+            conn.commit();
+        } catch (ServiceException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.closeQuietly();
+        }
+    }
+
+    /** Create MUTED flag in TAG table. */
+    public static void upgradeTo2_7(Mailbox mbox) throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mbox);
+        try {
+            if (flagExists(conn, mbox, Flag.FlagInfo.MUTED))
+                return;
+
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.MUTED.toFlag(mbox).mData, null, false);
+            conn.commit();
+        } catch (ServiceException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.closeQuietly();
+        }
+    }
+
+    /** Check for the existence of a flag in the TAG table. */
+    private static boolean flagExists(DbConnection conn, Mailbox mbox, Flag.FlagInfo finfo) throws ServiceException {
+        assert Mailbox.REIFIED_FLAGS.contains(finfo.id) : "inserting non-reified flag";
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbTag.getTagTableName(mbox) +
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
             int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
-            stmt.setInt(pos, Flag.ID_POST);
+            stmt.setInt(pos, finfo.id);
             rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
-                ZimbraLog.mailbox.debug("POST flag already exists");
-                return;
+                ZimbraLog.mailbox.debug(finfo.name() + " flag already exists");
+                return true;
             }
 
-            // put POST flag in the TAG table
-            DbTag.createTag(conn, mbox, Flag.FlagInfo.POST.toFlag(mbox).mData, null, false);
-            conn.commit();
+            return false;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to create POST flag", e);
-        } catch (ServiceException e) {
-            conn.rollback();
-            throw e;
+            throw ServiceException.FAILURE("Failed to check for " + finfo.name() + " flag", e);
         } finally {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
-            conn.closeQuietly();
         }
     }
 
@@ -339,7 +356,7 @@ public final class MailboxUpgrade {
     public static void upgradeTo2_5(Mailbox mbox) throws ServiceException {
         DbMailItem.assignUuids(mbox, false);
     }
-    
+
     /**
      * Move appointments from Tasks folder to Calendar folder. Also move todo items from Calendar folder to Tasks folder.
      * @param mbox

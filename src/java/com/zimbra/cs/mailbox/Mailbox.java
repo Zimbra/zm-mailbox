@@ -597,8 +597,8 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
-        // version init done in finishInitialization()
-        // index init done in finishInitialization()
+        // version init done in open()
+        // index init done in open()
     }
 
     public void setGalSyncMailbox(boolean isGalSync) {
@@ -744,6 +744,13 @@ public class Mailbox {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.6", getVersion());
                     MailboxUpgrade.upgradeTo2_6(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 6));
+                }
+
+                // MUTED flag
+                if (!mData.version.atLeast(2, 7)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.7", getVersion());
+                    MailboxUpgrade.upgradeTo2_7(this);
+                    updateVersion(new MailboxVersion((short) 2, (short) 7));
                 }
             }
 
@@ -1730,7 +1737,8 @@ public class Mailbox {
             Flag.ID_FROM_ME, Flag.ID_ATTACHED, Flag.ID_REPLIED, Flag.ID_FORWARDED,
             Flag.ID_COPIED, Flag.ID_FLAGGED, Flag.ID_DRAFT, Flag.ID_DELETED,
             Flag.ID_NOTIFIED, Flag.ID_UNREAD, Flag.ID_HIGH_PRIORITY, Flag.ID_LOW_PRIORITY,
-            Flag.ID_VERSIONED, Flag.ID_POPPED, Flag.ID_NOTE, Flag.ID_PRIORITY, Flag.ID_INVITE, Flag.ID_POST
+            Flag.ID_VERSIONED, Flag.ID_POPPED, Flag.ID_NOTE, Flag.ID_PRIORITY,
+            Flag.ID_INVITE, Flag.ID_POST, Flag.ID_MUTED
     );
 
     /** Creates the default set of immutable system folders in a new mailbox.
@@ -5360,6 +5368,11 @@ public class Mailbox {
                         mergeConvs = matches;
                     }
                 }
+            }
+            if (conv != null && conv.isTagged(Flag.FlagInfo.MUTED)) {
+                // adding a message to a muted conversation marks it muted and read
+                unread = false;
+                flags |= Flag.BITMASK_MUTED;
             }
 
             // step 3: create the message and update the cache

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -62,6 +63,7 @@ public final class Flag extends Tag {
         NOTE(-16, "\\Note", 't'),
         PRIORITY(-17, "\\Priority", '+'),
         POST(-18, "\\Post", '^'),
+        MUTED(-19, "\\Muted", '('),
         SUBSCRIBED(-20, "\\Subscribed", '*'),
         EXCLUDE_FREEBUSY(-21, "\\ExcludeFB", 'b'),
         CHECKED(-22, "\\Checked", '#'),
@@ -108,12 +110,22 @@ public final class Flag extends Tag {
             return new Flag(mbox, data, this);
         }
 
+        @VisibleForTesting
+        boolean isHidden() {
+            return ch == HIDDEN;
+        }
+
         public int toId() {
             return id;
         }
 
         public int toBitmask() {
             return bitmask;
+        }
+
+        @Override
+        public String toString() {
+            return flagName;
         }
 
         static FlagInfo of(String fname) {
@@ -145,6 +157,7 @@ public final class Flag extends Tag {
     public static final int ID_NOTE = FlagInfo.NOTE.id;
     public static final int ID_PRIORITY = FlagInfo.PRIORITY.id;
     public static final int ID_POST = FlagInfo.POST.id;
+    public static final int ID_MUTED = FlagInfo.MUTED.id;
     public static final int ID_SUBSCRIBED = FlagInfo.SUBSCRIBED.id;
     public static final int ID_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.id;
     public static final int ID_CHECKED = FlagInfo.CHECKED.id;
@@ -178,6 +191,7 @@ public final class Flag extends Tag {
     public static final int BITMASK_NOTE = FlagInfo.NOTE.bitmask;
     public static final int BITMASK_PRIORITY = FlagInfo.PRIORITY.bitmask;
     public static final int BITMASK_POST = FlagInfo.POST.bitmask;
+    public static final int BITMASK_MUTED = FlagInfo.MUTED.bitmask;
     public static final int BITMASK_SUBSCRIBED = FlagInfo.SUBSCRIBED.bitmask;
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.bitmask;
     public static final int BITMASK_CHECKED = FlagInfo.CHECKED.bitmask;
@@ -203,7 +217,8 @@ public final class Flag extends Tag {
         BITMASK_SYNC | BITMASK_NO_INFERIORS | BITMASK_GLOBAL;
     public static final int FLAGS_MESSAGE =
         BITMASK_FROM_ME | BITMASK_REPLIED | BITMASK_FORWARDED | BITMASK_DRAFT | BITMASK_NOTIFIED | BITMASK_UNREAD |
-        BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY | BITMASK_POPPED | BITMASK_INVITE | BITMASK_PRIORITY | BITMASK_POST;
+        BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY | BITMASK_POPPED | BITMASK_INVITE | BITMASK_PRIORITY |
+        BITMASK_POST | BITMASK_MUTED;
     public static final int FLAGS_CALITEM =
         BITMASK_DRAFT | BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY;
     public static final int FLAGS_GENERIC =

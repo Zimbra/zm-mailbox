@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.mailbox.Color;
@@ -36,20 +39,17 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -78,6 +78,7 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_LOCK = "lock";
     public static final String OP_UNLOCK = "unlock";
     public static final String OP_INHERIT = "inherit";
+    public static final String OP_MUTE = "mute";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -117,8 +118,9 @@ public class ItemAction extends MailDocumentHandler {
         List<Integer> local = new ArrayList<Integer>();
         Map<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
-        if (remote.isEmpty() && local.isEmpty())
+        if (remote.isEmpty() && local.isEmpty()) {
             return "";
+        }
 
         // for moves/copies, make sure that we're going to receive notifications from the target folder
         Account remoteNotify = forceRemoteSession(zsc, context, octxt, opStr, action);
@@ -196,6 +198,13 @@ public class ItemAction extends MailDocumentHandler {
             } else if (opStr.equals(OP_INHERIT)) {
                 mbox.alterTag(octxt, ArrayUtil.toIntArray(local), type, Flag.FlagInfo.NO_INHERIT, false, tcon);
                 localResults = Joiner.on(",").join(local);
+            } else if (opStr.equals(OP_MUTE) && type == MailItem.Type.CONVERSATION) {
+                // note that "mute" ignores the tcon value
+                localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, Flag.FlagInfo.MUTED.toString(), flagValue, null).getResult();
+                if (flagValue) {
+                    // when marking muted, items are also marked read
+                    ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, null).getResult();
+                }
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }
@@ -348,8 +357,8 @@ public class ItemAction extends MailDocumentHandler {
     /**
      * Validates the grant expiry time against the maximum allowed expiry duration and returns the effective expiry
      * time for the grant.
-     * 
-     * @param grantExpiry Grant expiry XML attribute value 
+     *
+     * @param grantExpiry Grant expiry XML attribute value
      * @param maxLifetime Maximum allowed grant expiry duration
      * @return Effective expiry time for the grant. Return value of 0 indicates that grant never expires.
      * @throws ServiceException If the grant expiry time is not valid according to the expiration policy.

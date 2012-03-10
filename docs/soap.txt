@@ -1362,7 +1362,8 @@ Tags:
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
     [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [needExp="1|*0"]
     [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
-    [allowableTaskStatus="need,inprogress,completed,canceled"] [resultMode="{result-mode}"] [inDumpster="*0|1"]
+    [allowableTaskStatus="need,inprogress,completed,canceled"] [includeTagDeleted="{include-imap-deleted}"] [includeTagMuted="{include-muted}"]
+    [resultMode="{result-mode}"] [inDumpster="*0|1"]
     [warmup="*0|1"] [quick="*0|1"]>
 
   *(<header n="{header-name}/>)
@@ -1445,6 +1446,9 @@ if recip="1" is specified
     + returned sent messages will contain the set of "To:" recipients instead of the sender
     + returned conversations whose first hit was sent by the user will contain
       that hit's "To:" recipients instead of the conversation's sender list
+
+unless include-imap-deleted="1", items with the \Deleted flag are omitted from the search results (defaults to "0")
+if include-muted="0", items with the \Muted flag are omitted from the search results (defaults to "1")
 
    {group-by} = DEPRECATED.  Use TYPES instead.
    {types} 	= comma-separated list.  Legal values are:
@@ -2038,7 +2042,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 
 <ConvActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|priority|tag|move|spam|trash"
+  <action id="{list}" op="delete|read|flag|priority|tag|move|spam|trash|mute"
       [tag="{id}"] [l="{folder}"] [tcon="{constraint}"] [tcon="[-]{constraint}"]/>
 </ConvActionRequest>
 
@@ -2057,6 +2061,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
   for op="!spam", can optionally specify a destination folder
+  for op="mute" or "!mute", any {constraint} is ignored
 
   See <ItemActionRequest> for more details.
 

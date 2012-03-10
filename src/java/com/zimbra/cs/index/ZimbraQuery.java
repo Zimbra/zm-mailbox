@@ -24,12 +24,12 @@ import java.util.Set;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
+import com.google.common.base.Joiner;
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
-import com.google.common.base.Joiner;
-import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.query.ConjQuery;
 import com.zimbra.cs.index.query.Query;
@@ -42,9 +42,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Executes a search query.
@@ -221,7 +218,7 @@ public final class ZimbraQuery {
         }
 
         static class ThingNode extends Node {
-            private Query query;
+            private final Query query;
 
             ThingNode(Query query) {
                 this.query = query;
@@ -705,13 +702,16 @@ public final class ZimbraQuery {
         ZimbraQueryResults results = null;
         try {
             results = operation.run(mailbox, params, chunkSize);
-            if ((!params.getIncludeTagDeleted() && params.getFetchMode() != SearchParams.Fetch.IDS)
+            if (((!params.getIncludeTagDeleted() || !params.getIncludeTagMuted()) && params.getFetchMode() != SearchParams.Fetch.IDS)
                     || params.getAllowableTaskStatuses() != null) {
                 // we have to do some filtering of the result set
                 FilteredQueryResults filtered = new FilteredQueryResults(results, params);
 
                 if (!params.getIncludeTagDeleted()) {
                     filtered.setFilterTagDeleted(true);
+                }
+                if (!params.getIncludeTagMuted()) {
+                    filtered.setFilterTagMuted(true);
                 }
                 if (params.getAllowableTaskStatuses() != null) {
                     filtered.setAllowedTaskStatuses(params.getAllowableTaskStatuses());
@@ -780,7 +780,7 @@ public final class ZimbraQuery {
 
                         UnionQueryOperation newUnion = new UnionQueryOperation();
                         intersect.addQueryOp(newUnion);
-                        
+
                         //if one or more target folders are specified, use those which are visible.
                         Set<Folder> targetFolders = null;
                         if (op instanceof DBQueryOperation) {
