@@ -812,6 +812,7 @@ public final class MailConstants {
     public static final String A_ITEM_TYPE = "t";
     public static final String A_FIELD = "field";
     public static final String A_INCLUDE_TAG_DELETED = "includeTagDeleted";
+    public static final String A_INCLUDE_TAG_MUTED = "includeTagMuted";
     public static final String A_ALLOWABLE_TASK_STATUS = "allowableTaskStatus";
     public static final String A_IN_DUMPSTER = "inDumpster";
     public static final String A_WARMUP = "warmup";
