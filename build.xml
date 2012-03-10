@@ -446,7 +446,7 @@
           <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
           <include name="mysql-connector-java*.jar"/>
-          <include name="mail.jar"/>
+          <include name="javamail-1.4.3.jar"/>
           <include name="zimbra-native.jar"/>
           <include name="bcprov-jdk15-146.jar"/>
           <include name="commons-beanutils*.jar"/>
@@ -984,7 +984,7 @@
         <include name="${ziputil.jar}"/>
         <include name="${memcached.jar}"/>
         <include name="${db.driver.jar}"/>
-        <include name="mail.jar"/>
+        <include name="javamail-1.4.3.jar"/>
         <include name="zimbra-native.jar"/>
         <include name="bcprov-jdk15-146.jar"/>
         <include name="commons-cli*.jar"/>

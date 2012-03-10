@@ -118,7 +118,7 @@ public final class Zimbra {
 
     private static void checkForClasses() {
         checkForClass("javax.activation.DataSource", "activation.jar");
-        checkForClass("javax.mail.internet.MimeMessage", "mail.jar");
+        checkForClass("javax.mail.internet.MimeMessage", "javamail-1.4.3.jar");
         checkForClass("com.zimbra.znative.IO", "zimbra-native.jar");
     }
 
