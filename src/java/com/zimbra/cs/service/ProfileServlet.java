@@ -91,7 +91,7 @@ public class ProfileServlet extends ZimbraServlet {
             handleImage(req, resp, tokens[0]);
             return;
         }
-        resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        resp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     private void handleImage(HttpServletRequest req, HttpServletResponse resp, String emailAddress) throws IOException, ServletException {
