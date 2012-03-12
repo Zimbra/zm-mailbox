@@ -202,12 +202,17 @@ public class LdapProvisioning extends Provisioning {
     private Groups mAllDLs; // email addresses of all distribution lists on the system
     
     public LdapProvisioning() {
-        this(null);
+        this(CacheMode.DEFAULT);
     }
     
-    public LdapProvisioning(Boolean useCache) {
-        this.useCache = useCache == null ? true : Boolean.valueOf(useCache);
-        if (this.useCache) {
+    public LdapProvisioning(CacheMode cacheMode) {
+        
+        useCache = true;
+        if (cacheMode == CacheMode.OFF) {
+            useCache = false;
+        }
+
+        if (useCache) {
             cache = new LdapCache.LRUMapCache();
         } else {
             cache = new LdapCache.NoopCache();
@@ -2747,6 +2752,8 @@ public class LdapProvisioning extends Provisioning {
         List<Server> result = new ArrayList<Server>();
         ZimbraLdapContext zlc = null;
         try {
+            Map<String, Object> serverDefaults = getConfig().getServerDefaults();
+            
             zlc = new ZimbraLdapContext();
             String filter;
             if (service != null) {
@@ -2757,7 +2764,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration<SearchResult> ne = zlc.searchDir(mDIT.serverBaseDN(), filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = ne.next();
-                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults(), this);
+                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), serverDefaults, this);
                 result.add(s);
             }
             ne.close();
