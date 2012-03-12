@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120309-1334 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120309-1752 */
 
     /**
      * RFC2256: descriptive information
@@ -14332,6 +14332,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetInstalledSkin(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraInstalledSkin, "");
+        return attrs;
+    }
+
+    /**
+     * whether sharing with accounts and groups of all other domains hosted
+     * on this deployment be considered internal sharing
+     *
+     * @return zimbraInternalSharingCrossDomainEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1386)
+    public boolean isInternalSharingCrossDomainEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, true);
+    }
+
+    /**
+     * whether sharing with accounts and groups of all other domains hosted
+     * on this deployment be considered internal sharing
+     *
+     * @param zimbraInternalSharingCrossDomainEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1386)
+    public void setInternalSharingCrossDomainEnabled(boolean zimbraInternalSharingCrossDomainEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, zimbraInternalSharingCrossDomainEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether sharing with accounts and groups of all other domains hosted
+     * on this deployment be considered internal sharing
+     *
+     * @param zimbraInternalSharingCrossDomainEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1386)
+    public Map<String,Object> setInternalSharingCrossDomainEnabled(boolean zimbraInternalSharingCrossDomainEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, zimbraInternalSharingCrossDomainEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether sharing with accounts and groups of all other domains hosted
+     * on this deployment be considered internal sharing
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1386)
+    public void unsetInternalSharingCrossDomainEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether sharing with accounts and groups of all other domains hosted
+     * on this deployment be considered internal sharing
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1386)
+    public Map<String,Object> unsetInternalSharingCrossDomainEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, "");
         return attrs;
     }
 

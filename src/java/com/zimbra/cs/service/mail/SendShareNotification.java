@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.collect.Sets;
 import com.ibm.icu.text.MessageFormat;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -44,9 +45,9 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
@@ -143,7 +144,7 @@ public class SendShareNotification extends MailDocumentHandler {
             // add the non-existing grantee as type GRANTEE_GUEST for share notification.
             // for revoke notifications return the non-existing grantees only
             Pair<NamedEntry, String> grantee;
-            boolean internalGrantee = true;
+            boolean guestGrantee = false;
             byte granteeType = ACL.GRANTEE_USER;
             String granteeId = null;
             String granteeEmail = email.getAddress();
@@ -151,24 +152,28 @@ public class SendShareNotification extends MailDocumentHandler {
             try {
                 grantee = getGrantee(zsc, granteeType, granteeId, granteeEmail);
                 NamedEntry entry = grantee.getFirst();
-                if (entry instanceof MailTarget &&
-                        StringUtil.equal(((MailTarget) entry).getDomainName(), mbox.getAccount().getDomainName())) {
-                    if (entry instanceof Group) {
-                        granteeType = ACL.GRANTEE_GROUP;
+                if (entry instanceof MailTarget) {
+                    Domain domain = prov.getDomain(account);
+                    String granteeDomainName = ((MailTarget) entry).getDomainName();
+                    if (domain.isInternalSharingCrossDomainEnabled() ||
+                            domain.getName().equals(granteeDomainName) ||
+                            Sets.newHashSet(domain.getInternalSharingDomain()).contains(granteeDomainName)) {
+                        if (entry instanceof Group) {
+                            granteeType = ACL.GRANTEE_GROUP;
+                        }
+                        granteeId = entry.getId();
+                        granteeDisplayName = grantee.getSecond();
+                    } else {
+                        guestGrantee = true;
                     }
-                    granteeId = entry.getId();
-                    granteeDisplayName = grantee.getSecond();
-                } else {
-                    // grantee is not in the same domain as the grantor
-                    internalGrantee = false;
                 }
             } catch (ServiceException e) {
                 if (!e.getCode().equals(MailServiceException.NO_SUCH_GRANTEE)) {
                     throw e;
                 }
-                internalGrantee = false;
+                guestGrantee = true;
             }
-            if (!internalGrantee) {
+            if (guestGrantee) {
                 granteeType = ACL.GRANTEE_GUEST;
                 // if guest, granteeId is the same as granteeEmail
                 granteeId = granteeEmail;

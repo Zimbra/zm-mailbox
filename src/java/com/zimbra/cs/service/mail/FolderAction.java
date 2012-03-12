@@ -19,15 +19,16 @@
 package com.zimbra.cs.service.mail;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.MailTarget;
@@ -180,20 +181,24 @@ public class FolderAction extends ItemAction {
                 if (zid == null || zid.indexOf('@') < 0)
                     throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
                 // first make sure they didn't accidentally specify "guest" instead of "usr"
-                boolean internalGrantee = false;
+                boolean guestGrantee = true;
                 try {
                     nentry = lookupGranteeByName(zid, ACL.GRANTEE_USER, zsc);
-                    if (nentry instanceof MailTarget &&
-                            StringUtil.equal(((MailTarget) nentry).getDomainName(),
-                                    mbox.getAccount().getDomainName())) {
-                        internalGrantee = true;
-                        zid = nentry.getId();
-                        gtype = nentry instanceof Group ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                    if (nentry instanceof MailTarget) {
+                        Domain domain = Provisioning.getInstance().getDomain(mbox.getAccount());
+                        String granteeDomainName = ((MailTarget) nentry).getDomainName();
+                        if (domain.isInternalSharingCrossDomainEnabled() ||
+                                domain.getName().equals(granteeDomainName) || 
+                                Sets.newHashSet(domain.getInternalSharingDomain()).contains(granteeDomainName)) {
+                            guestGrantee = false;
+                            zid = nentry.getId();
+                            gtype = nentry instanceof Group ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                        }
                     }
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
                 }
-                if (!internalGrantee) {
+                if (guestGrantee) {
                     secret = grant.getAttribute(MailConstants.A_ARGS, null);
                     // password is no longer required for external sharing
                     if (secret == null) {

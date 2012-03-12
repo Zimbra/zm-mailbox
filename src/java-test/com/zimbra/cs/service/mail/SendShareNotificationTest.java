@@ -81,6 +81,9 @@ public class SendShareNotificationTest extends SendShareNotification {
         Provisioning prov = Provisioning.getInstance();
 
         Map<String, Object> attrs = Maps.newHashMap();
+        prov.createDomain("zimbra.com", attrs);
+
+        attrs = Maps.newHashMap();
         prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();

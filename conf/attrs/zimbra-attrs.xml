@@ -6900,4 +6900,13 @@ TODO: delete them permanently from here
   <desc>whether crash reporting is enabled in the Octopus Android client</desc>
 </attr>
 
+<attr id="1386" name="zimbraInternalSharingCrossDomainEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether sharing with accounts and groups of all other domains hosted on this deployment be considered internal sharing</desc>
+</attr>
+
+<attr id="1387" name="zimbraInternalSharingDomain" type="string" cardinality="multi" optionalIn="domain" since="8.0.0">
+  <desc>Domains hosted on this deployment, accounts and groups of which are considered internal during sharing.  Applicable when zimbraInternalSharingCrossDomainEnabled is set to FALSE.</desc>
+</attr>
+
 </attrs>
