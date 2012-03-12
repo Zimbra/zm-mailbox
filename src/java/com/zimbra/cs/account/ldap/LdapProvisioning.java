@@ -242,13 +242,17 @@ public class LdapProvisioning extends LdapProv {
     }
     
     public LdapProvisioning() {
-        this(null);
+        this(CachingMode.DEFAULT);
     }
 
-    public LdapProvisioning(Boolean useCache) {
+    public LdapProvisioning(CachingMode cachingMode) {
         ensureSingleton(this);
         
-        this.useCache = useCache == null ? true : Boolean.valueOf(useCache);
+        useCache = true;
+        if (cachingMode == CachingMode.FALSE) {
+            useCache = false;
+        }
+
         if (this.useCache) {
             cache = new LdapCache.LRUMapCache();
         } else {
@@ -3483,12 +3487,14 @@ public class LdapProvisioning extends LdapProv {
         }
 
         try {
+            Map<String, Object> serverDefaults = getConfig().getServerDefaults();
+            
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.serverBaseDN(),
                     filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 LdapServer s = new LdapServer(sr.getDN(), sr.getAttributes(),
-                        getConfig().getServerDefaults(), this);
+                        serverDefaults, this);
                 result.add(s);
             }
             ne.close();

@@ -238,19 +238,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     private static Provisioning sProvisioning;
 
+    
+    public static enum CachingMode {
+        DEFAULT,  // use the Provisioning implementation's default caching mode
+        TRUE,
+        FALSE
+    }
+    
     public synchronized static Provisioning getInstance() {
-        return getInstance(null);
+        return getInstance(CachingMode.DEFAULT);
     }
     
     /**
      * This signature allows callsites to specify whether cache should be used in the 
-     * Provisioning instance returned.  If useCache is null, it has no effect to the 
-     * cache scheme used by the returned Provisioning instance.
-     * 
-     * If useCache is not null, but the configured zimbra_class_provisioning class does 
-     * not support a constructor with Boolean parameter, then it (follows the same logic 
-     * as if the specified class is not foind) falls back to return 
-     * a LdapProvisiong(Boolean useCache) instance.
+     * Provisioning instance returned.  
      * 
      * !!!Note!!!: setting useCache to false will hurt performance badly, as ***nothing*** 
      * is cached.  For LdapProvisionig, each LDAP related method will cost one or more LDAP 
@@ -259,8 +260,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param useCache 
      * @return
      */
-    public synchronized static Provisioning getInstance(Boolean useCache) {
+    public synchronized static Provisioning getInstance(CachingMode cachingMode) {
         if (sProvisioning == null) {
+            if (cachingMode == null) {
+                cachingMode = CachingMode.DEFAULT;
+            }
+            
             String className = LC.zimbra_class_provisioning.value();
             
             if (className != null && !className.equals("")) {
@@ -273,9 +278,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
                         klass = ExtensionUtil.findClass(className);
                     }
                     
-                    if (useCache != null) {
+                    if (cachingMode != CachingMode.DEFAULT) {
                         try {
-                            sProvisioning = (Provisioning) klass.getConstructor(Boolean.class).newInstance(useCache);
+                            sProvisioning = (Provisioning) klass.getConstructor(CachingMode.class).newInstance(cachingMode);
                         } catch (NoSuchMethodException e) {
                             ZimbraLog.account.error("could not find constructor with Boolean parameter '" + 
                                     className + "'; defaulting to LdapProvisioning", e);
@@ -290,7 +295,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
             
             if (sProvisioning == null) {
-                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning(useCache);
+                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning(cachingMode);
                 ZimbraLog.account.error("defaulting to " + sProvisioning.getClass().getCanonicalName());
             }
         }
