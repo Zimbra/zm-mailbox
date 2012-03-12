@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120309-1752 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120312-1135 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4345,6 +4345,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1186)
     public static final String A_zimbraFeatureSMIMEEnabled = "zimbraFeatureSMIMEEnabled";
+
+    /**
+     * whether Socialcast integration is enabled in the web client
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1388)
+    public static final String A_zimbraFeatureSocialcastEnabled = "zimbraFeatureSocialcastEnabled";
 
     /**
      * message social filters enabled in the web client UI
@@ -10598,6 +10606,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSoapRequestMaxSize = "zimbraSoapRequestMaxSize";
 
     /**
+     * URL for Socialcast integration
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1389)
+    public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
+
+    /**
      * If TRUE, spam messages will be affected by user mail filters instead
      * of being automatically filed into the Junk folder. This attribute is
      * deprecated and will be removed in a future release. See bug 23886 for
@@ -10947,6 +10963,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
