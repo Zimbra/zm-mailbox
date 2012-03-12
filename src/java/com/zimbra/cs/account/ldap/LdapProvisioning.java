@@ -242,14 +242,14 @@ public class LdapProvisioning extends LdapProv {
     }
     
     public LdapProvisioning() {
-        this(CachingMode.DEFAULT);
+        this(CacheMode.DEFAULT);
     }
 
-    public LdapProvisioning(CachingMode cachingMode) {
+    public LdapProvisioning(CacheMode cacheMode) {
         ensureSingleton(this);
         
         useCache = true;
-        if (cachingMode == CachingMode.FALSE) {
+        if (cacheMode == CacheMode.OFF) {
             useCache = false;
         }
 
