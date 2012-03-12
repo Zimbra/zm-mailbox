@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120309-1334 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120309-1752 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5427,6 +5427,25 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1319)
     public static final String A_zimbraInternalSendersDomain = "zimbraInternalSendersDomain";
+
+    /**
+     * whether sharing with accounts and groups of all other domains hosted
+     * on this deployment be considered internal sharing
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1386)
+    public static final String A_zimbraInternalSharingCrossDomainEnabled = "zimbraInternalSharingCrossDomainEnabled";
+
+    /**
+     * Domains hosted on this deployment, accounts and groups of which are
+     * considered internal during sharing. Applicable when
+     * zimbraInternalSharingCrossDomainEnabled is set to FALSE.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1387)
+    public static final String A_zimbraInternalSharingDomain = "zimbraInternalSharingDomain";
 
     /**
      * supported IP mode
@@ -10928,22 +10947,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
