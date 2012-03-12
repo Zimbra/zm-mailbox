@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120309-1752 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120312-1135 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9949,6 +9949,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureSocialFiltersEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether Socialcast integration is enabled in the web client
+     *
+     * @return zimbraFeatureSocialcastEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1388)
+    public boolean isFeatureSocialcastEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialcastEnabled, false);
+    }
+
+    /**
+     * whether Socialcast integration is enabled in the web client
+     *
+     * @param zimbraFeatureSocialcastEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1388)
+    public void setFeatureSocialcastEnabled(boolean zimbraFeatureSocialcastEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialcastEnabled, zimbraFeatureSocialcastEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether Socialcast integration is enabled in the web client
+     *
+     * @param zimbraFeatureSocialcastEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1388)
+    public Map<String,Object> setFeatureSocialcastEnabled(boolean zimbraFeatureSocialcastEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialcastEnabled, zimbraFeatureSocialcastEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether Socialcast integration is enabled in the web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1388)
+    public void unsetFeatureSocialcastEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialcastEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether Socialcast integration is enabled in the web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1388)
+    public Map<String,Object> unsetFeatureSocialcastEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialcastEnabled, "");
         return attrs;
     }
 
@@ -35541,6 +35613,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetSmtpRestrictEnvelopeFrom(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpRestrictEnvelopeFrom, "");
+        return attrs;
+    }
+
+    /**
+     * URL for Socialcast integration
+     *
+     * @return zimbraSocialcastURL, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1389)
+    public String getSocialcastURL() {
+        return getAttr(Provisioning.A_zimbraSocialcastURL, null);
+    }
+
+    /**
+     * URL for Socialcast integration
+     *
+     * @param zimbraSocialcastURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1389)
+    public void setSocialcastURL(String zimbraSocialcastURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSocialcastURL, zimbraSocialcastURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for Socialcast integration
+     *
+     * @param zimbraSocialcastURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1389)
+    public Map<String,Object> setSocialcastURL(String zimbraSocialcastURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSocialcastURL, zimbraSocialcastURL);
+        return attrs;
+    }
+
+    /**
+     * URL for Socialcast integration
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1389)
+    public void unsetSocialcastURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSocialcastURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for Socialcast integration
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1389)
+    public Map<String,Object> unsetSocialcastURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSocialcastURL, "");
         return attrs;
     }
 

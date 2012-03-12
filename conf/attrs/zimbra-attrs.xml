@@ -6909,4 +6909,13 @@ TODO: delete them permanently from here
   <desc>Domains hosted on this deployment, accounts and groups of which are considered internal during sharing.  Applicable when zimbraInternalSharingCrossDomainEnabled is set to FALSE.</desc>
 </attr>
 
+<attr id="1388" name="zimbraFeatureSocialcastEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether Socialcast integration is enabled in the web client</desc>
+</attr>
+
+<attr id="1389" name="zimbraSocialcastURL" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
+  <desc>URL for Socialcast integration</desc>
+</attr>
+
 </attrs>
