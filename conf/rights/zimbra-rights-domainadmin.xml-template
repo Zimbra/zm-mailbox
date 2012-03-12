@@ -59,18 +59,19 @@ ${DOMAIN_ATTRS}
   good enough for now
   =========================================================
 -->
-    <right name="domainAdminAccountRights" type="combo">
+
+    <right type="combo" name="domainAdminAccountRights">
       <desc>domain admin account right</desc>
       <rights>
         <r n="addAccountAlias"/>
         <r n="adminLoginAs"/>
-        <r n="checkPasswordStrength"/>
         <r n="deleteAccount"/>
         <r n="getAccount"/>
         <r n="getAccountInfo"/>
         <r n="getAccountMembership"/>
         <r n="getMailboxInfo"/>
         <r n="listAccount"/>
+        <r n="purgeAccountCalendarCache"/>
         <r n="reindexMailbox"/>
         <r n="removeAccountAlias"/>
         <r n="renameAccount"/>
@@ -79,18 +80,19 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="viewAccountAdminUI"/>
         <r n="viewAdminSavedSearch"/>
+        <r n="viewPasswordStrength"/>
       </rights>
     </right>
-    <right name="domainAdminCalendarResourceRights" type="combo">
+    <right type="combo" name="domainAdminCalendarResourceRights">
       <desc>domain admin calresource right</desc>
       <rights>
         <r n="addCalendarResourceAlias"/>
         <r n="adminLoginCalendarResourceAs"/>
-        <r n="checkCalendarResourcePasswordStrength"/>
         <r n="deleteCalendarResource"/>
         <r n="getCalendarResource"/>
         <r n="getCalendarResourceInfo"/>
         <r n="listCalendarResource"/>
+        <r n="purgeCalendarResourceCalendarCache"/>
         <r n="reindexCalendarResourceMailbox"/>
         <r n="removeCalendarResourceAlias"/>
         <r n="renameCalendarResource"/>
@@ -99,17 +101,19 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="setDomainAdminCalendarResourceAttrs"/>
         <r n="viewAdminSavedSearch"/>
+        <r n="viewPasswordStrength"/>
       </rights>
     </right>
-    <right name="domainAdminCosRights" type="combo">
+    <right type="combo" name="domainAdminCosRights">
       <desc>domain admin cos right</desc>
       <rights>
         <r n="assignCos"/>
         <r n="getCos"/>
         <r n="listCos"/>
+        <r n="viewPasswordStrength"/>
       </rights>
     </right>
-    <right name="domainAdminDistributionListRights" type="combo">
+    <right type="combo" name="domainAdminDistributionListRights">
       <desc>domain admin dl right</desc>
       <rights>
         <r n="addDistributionListAlias"/>
@@ -117,7 +121,9 @@ ${DOMAIN_ATTRS}
         <r n="deleteDistributionList"/>
         <r n="getDistributionList"/>
         <r n="getDistributionListMembership"/>
+        <r n="getDistributionListShareInfo"/>
         <r n="listDistributionList"/>
+        <r n="publishDistributionListShareInfo"/>
         <r n="removeDistributionListAlias"/>
         <r n="removeDistributionListMember"/>
         <r n="renameDistributionList"/>
@@ -125,7 +131,7 @@ ${DOMAIN_ATTRS}
         <r n="viewDistributionListAdminUI"/>
       </rights>
     </right>
-    <right name="domainAdminDomainRights" type="combo">
+    <right type="combo" name="domainAdminDomainRights">
       <desc>domain admin domain right</desc>
       <rights>
         <r n="accessGAL"/>
@@ -141,20 +147,20 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminDomainAttrs"/>
       </rights>
     </right>
-    <right name="domainAdminServerRights" type="combo">
+    <right type="combo" name="domainAdminServerRights">
       <desc>domain admin server right</desc>
       <rights>
         <r n="flushCache"/>
       </rights>
     </right>
-    <right name="domainAdminZimletRights" type="combo">
+    <right type="combo" name="domainAdminZimletRights">
       <desc>domain admin zimlet right</desc>
       <rights>
         <r n="getZimlet"/>
         <r n="listZimlet"/>
       </rights>
     </right>
-    
+
 <!--
   =========================================================
                          end generated
