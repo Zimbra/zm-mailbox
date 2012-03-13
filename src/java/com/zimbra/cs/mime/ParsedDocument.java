@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -66,19 +67,9 @@ public final class ParsedDocument {
             String description, boolean descEnabled) throws ServiceException, IOException {
         this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description, descEnabled);
     }
-    
-    public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator,
-            String description, boolean descEnabled, boolean forceParsing) throws ServiceException, IOException {
-        this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description, descEnabled, forceParsing);
-    }
-    
-    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator,
-            String description, boolean descEnabled) throws IOException {
-        this(blob, filename, ctype, createdDate, creator, description, descEnabled, false);
-    }
 
     public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator,
-            String description, boolean descEnabled, boolean forceParsing) throws IOException {
+            String description, boolean descEnabled) throws IOException {
         this.blob = blob;
         this.size = (int) blob.getRawSize();
         this.digest = blob.getDigest();
@@ -88,7 +79,7 @@ public final class ParsedDocument {
         this.creator = creator;
         this.description = description;
         this.descEnabled = descEnabled;
-        if (forceParsing)
+        if (LC.documents_disable_instant_parsing.booleanValue() == false)
             performExtraction();
     }
 
