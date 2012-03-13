@@ -211,13 +211,13 @@ public final class BlobConsistencyChecker {
                 int minId = 0; // Minimum id for the current block
                 int group = 0; // Current group number
                 int maxId = 0;
-                while (minId < mailboxMaxId && group < numGroups) {
+                while (minId <= mailboxMaxId && group < numGroups) {
                     // We used Multimap to make sure we store multiple BlobInfo objects for the same itemId
                     // multiple BlobInfo objects are created when there are multiple revisions of the same file
                     Multimap<Integer, BlobInfo> blobsById = HashMultimap.create();
                     String blobDir = vol.getBlobDir(mbox.getId(), minId);
 
-                    while (minId < mailboxMaxId) {
+                    while (minId <= mailboxMaxId) {
                         maxId = minId + filesPerGroup - 1; // Maximum id for the current block
                         for (BlobInfo blob : DbBlobConsistency.getBlobInfo(conn, mbox, minId, maxId, volumeId)) {
                             blobsById.put(blob.itemId, blob);
