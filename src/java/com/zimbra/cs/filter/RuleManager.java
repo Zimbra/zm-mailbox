@@ -286,7 +286,7 @@ public final class RuleManager {
                     }
                 }
                 if (found) {
-                    buf.append(line).append("\n");
+                    buf.append(line).append("\r\n");
                 }
             }
         } catch (IOException e) {
