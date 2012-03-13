@@ -302,7 +302,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mRemoteURL = f.getUrl();
         mEffectivePerms = f.getPerm();
         mSize = SystemUtil.coalesce(f.getTotalSize(), 0L);
-        mActiveSyncDisabled = SystemUtil.coalesce(f.isActiveSyncDisabled());
+        if (f.isActiveSyncDisabled() != null)
+            mActiveSyncDisabled = f.isActiveSyncDisabled();
 
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
