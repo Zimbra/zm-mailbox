@@ -91,8 +91,8 @@ public class TestFilterExisting extends TestCase {
      * Tests {@link RuleManager#getRuleByName}.
      */
     public void testGetRule() throws Exception {
-        String rule1 = "# Rule 1\nabc\n";
-        String rule2 = "# Rule 2\ndef\n";
+        String rule1 = "# Rule 1\r\nabc\r\n";
+        String rule2 = "# Rule 2\r\ndef\r\n";
         String script = rule1 + rule2;
         assertEquals(rule1, RuleManager.getRuleByName(script, "Rule 1"));
         assertEquals(rule2, RuleManager.getRuleByName(script, "Rule 2"));
