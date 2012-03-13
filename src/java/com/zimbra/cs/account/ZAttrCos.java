@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120312-1229 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120313-1105 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11239,6 +11239,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFileExternalShareLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFileExternalShareLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus IOS client
+     *
+     * @return zimbraFileIOSCrashReportingEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1390)
+    public boolean isFileIOSCrashReportingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFileIOSCrashReportingEnabled, true);
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus IOS client
+     *
+     * @param zimbraFileIOSCrashReportingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1390)
+    public void setFileIOSCrashReportingEnabled(boolean zimbraFileIOSCrashReportingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileIOSCrashReportingEnabled, zimbraFileIOSCrashReportingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus IOS client
+     *
+     * @param zimbraFileIOSCrashReportingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1390)
+    public Map<String,Object> setFileIOSCrashReportingEnabled(boolean zimbraFileIOSCrashReportingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileIOSCrashReportingEnabled, zimbraFileIOSCrashReportingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus IOS client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1390)
+    public void unsetFileIOSCrashReportingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileIOSCrashReportingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether crash reporting is enabled in the Octopus IOS client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1390)
+    public Map<String,Object> unsetFileIOSCrashReportingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileIOSCrashReportingEnabled, "");
         return attrs;
     }
 

@@ -6918,4 +6918,9 @@ TODO: delete them permanently from here
   <desc>URL for Socialcast integration</desc>
 </attr>
 
+<attr id="1390" name="zimbraFileIOSCrashReportingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether crash reporting is enabled in the Octopus IOS client</desc>
+</attr>
+
 </attrs>
