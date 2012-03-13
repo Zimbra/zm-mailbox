@@ -34,6 +34,7 @@ import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.soap.adminext.type.Name;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Import data for multiple accounts via IMAP
  */
 @XmlAccessorType(XmlAccessType.NONE)

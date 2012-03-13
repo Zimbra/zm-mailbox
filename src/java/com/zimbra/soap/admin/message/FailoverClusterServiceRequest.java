@@ -25,6 +25,7 @@ import com.zimbra.common.soap.ClusterConstants;
 import com.zimbra.soap.admin.type.FailoverClusterServiceSpec;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Failover Cluster Service
  */
 @XmlAccessorType(XmlAccessType.NONE)

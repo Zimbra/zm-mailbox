@@ -19,5 +19,5 @@ public interface JaxbNodeInfo {
     public String getName();
     public String getNamespace();
     public boolean isRequired();
-    public boolean isArray();
+    public boolean isMultiElement();
 }

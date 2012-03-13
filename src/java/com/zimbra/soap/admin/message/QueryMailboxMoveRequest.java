@@ -33,6 +33,7 @@ import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Show mailbox moves in progress on this server.  Both move-ins and move-outs are shown.
  * <br />
  * If accounts are given only data for those accounts are returned.  Data for all moves are returned if no accounts

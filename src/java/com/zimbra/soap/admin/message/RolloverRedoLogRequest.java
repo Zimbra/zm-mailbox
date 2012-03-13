@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.BackupConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Rollover Redo Log
  */
 @XmlRootElement(name=BackupConstants.E_ROLLOVER_REDOLOG_REQUEST)

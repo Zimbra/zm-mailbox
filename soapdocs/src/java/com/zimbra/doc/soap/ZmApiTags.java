@@ -19,16 +19,21 @@ public class ZmApiTags {
 
     /**
      * Use for a general description of the SOAP Command.  Use in JAXB class for a Request.
+     * <br />
+     * Note that the first part will be used for a summary of the command, where the first part is considered to
+     * be everything upto an html break of some sort - Current pattern (See Command) used for the split is:
+     *      "<br|<BR|<p>|<P>|<table|<TABLE|<ul|<UL|<ol|<OL|<pre>|<PRE>";
      */
     public static final String TAG_COMMAND_DESCRIPTION = "@zm-api-command-description";
     /**
-     * Use to flag that a command is part of Network Edition
+     * Use to flag that a command is part of Network Edition.  Value doesn't matter, suggest "true" or empty
      */
     public static final String TAG_COMMAND_NETWORK_ONLY = "@zm-api-command-network-edition";
     /**
-     * Use to flag that a command will be deprecated
+     * Use to flag that a command that is or will be deprecated.  Set to text explaining the nature of the
+     * deprecation
      */
-    public static final String TAG_COMMAND_WILL_BE_DEPRECATED = "@zm-api-command-will-be-deprecated";
+    public static final String TAG_COMMAND_DEPRECATION_INFO = "@zm-api-command-deprecation-info";
     /**
      * Use for description of the SOAP Request.  Use in JAXB class for a Request.
      */

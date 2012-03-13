@@ -35,7 +35,7 @@ import com.zimbra.soap.mail.type.Right;
  */
 
 /**
- * @zm-api-command-will-be-deprecated Note: to be deprecated in Zimbra 9.  Use zimbraAccount GetRights instead.
+ * @zm-api-command-deprecation-info Note: to be deprecated in Zimbra 9.  Use zimbraAccount GetRights instead.
  * @zm-api-command-description Get account level permissions
  * <br />
  * If no <b>&lt;ace></b> elements are provided, all ACEs are returned in the response.

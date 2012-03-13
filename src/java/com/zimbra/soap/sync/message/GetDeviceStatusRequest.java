@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.SyncConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Get status for devices
  */
 @XmlRootElement(name=SyncConstants.E_GET_DEVICE_STATUS_REQUEST)

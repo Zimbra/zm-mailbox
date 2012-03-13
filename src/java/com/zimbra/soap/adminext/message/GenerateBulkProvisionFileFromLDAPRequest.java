@@ -25,6 +25,7 @@ import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.soap.adminext.type.AttrsImpl;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Generate bulk provision file from LDAP
  */
 @XmlAccessorType(XmlAccessType.NONE)

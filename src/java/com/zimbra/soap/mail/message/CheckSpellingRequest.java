@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.soap.MailConstants;
 
 /**
- * @zm-api-command-description Check spellint.
+ * @zm-api-command-description Check spelling.
  * <br />
  * Suggested words are listed in decreasing order of their match score.  The "available" attribute specifies whether
  * the server-side spell checking interface is available or not.
@@ -36,7 +36,7 @@ public class CheckSpellingRequest {
 
     /**
      * @zm-api-field-tag aspell-dictionary-name
-     * @zm-api-field-description The optional name of the aspell dictionary that will be used to check spelling.
+     * @zm-api-field-description The optional name of the <b>aspell</b> dictionary that will be used to check spelling.
      * If not specified, the the dictionary will be either <b>zimbraPrefSpellDictionary</b> or the one for the
      * account's locale, in that order.
      */

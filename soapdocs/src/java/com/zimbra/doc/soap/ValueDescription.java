@@ -15,8 +15,14 @@
 
 package com.zimbra.doc.soap;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+
+import javax.xml.bind.annotation.XmlEnumValue;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.zimbra.soap.type.ZmBoolean;
 
 public class ValueDescription {
@@ -48,9 +54,19 @@ public class ValueDescription {
         if (klass.isAssignableFrom(ZmBoolean.class)) {
             value = "0|1";
         } else if (klass.isEnum()) {
-            // TODO: get Jaxb XmlEnumValues
             StringBuilder sb = new StringBuilder();
-            sb.append(PIPE_JOINER.join(klass.getEnumConstants()));
+            ArrayList<String> enumConsts = Lists.newArrayList();
+            for (Field field : klass.getFields()) {
+                if (field.isEnumConstant()) {
+                    XmlEnumValue xmlEnumVal = field.getAnnotation(XmlEnumValue.class);
+                    if (xmlEnumVal == null) {
+                        enumConsts.add(field.getName());
+                    } else {
+                        enumConsts.add(xmlEnumVal.value());
+                    }
+                }
+            }
+            sb.append(PIPE_JOINER.join(enumConsts));
             value = sb.toString();
         } else {
             String className = klass.getName();

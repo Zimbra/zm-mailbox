@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.MailboxMoveSpec;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Register Mailbox move out.
  * <br />
  * This request is invoked by move destination server against move source server to signal the start of a mailbox

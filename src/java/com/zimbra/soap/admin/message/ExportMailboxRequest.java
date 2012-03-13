@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.ExportMailboxSelector;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Export Mailbox (OLD mailbox move mechanism)
  * <br />
  * This request blocks until mailbox move is complete and can take a long time.  Client side should set timeout

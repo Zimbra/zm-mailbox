@@ -23,6 +23,7 @@ import com.zimbra.soap.util.JaxbAttributeInfo;
 import com.zimbra.soap.util.JaxbElementInfo;
 import com.zimbra.soap.util.JaxbInfo;
 import com.zimbra.soap.util.JaxbNodeInfo;
+import com.zimbra.soap.util.JaxbPseudoNodeChoiceInfo;
 import com.zimbra.soap.util.JaxbValueInfo;
 import com.zimbra.soap.util.WrappedElementInfo;
 
@@ -86,7 +87,7 @@ implements DescriptionNode, XmlUnit {
         XmlElementDescription desc = new XmlElementDescription();
         desc.parent = parent;
         desc.minOccurs = nodeInfo.isRequired() ? 1 : 0;
-        desc.isSingleton = ! nodeInfo.isArray();
+        desc.isSingleton = ! nodeInfo.isMultiElement();
         desc.targetNamespace = nodeInfo.getNamespace();
         desc.name = nodeInfo.getName();
         desc.jaxbClass = nodeInfo.getAtomClass();
@@ -116,8 +117,17 @@ implements DescriptionNode, XmlUnit {
         desc.typeIdString = "";
         desc.elementText = "";
         desc.fieldName = null;
-        for (JaxbElementInfo child : nodeInfo.getElements()) {
-            desc.children.add(XmlElementDescription.createForElement(desc, child));
+        for (JaxbNodeInfo child : nodeInfo.getElements()) {
+            if (child instanceof JaxbElementInfo) {
+                desc.children.add(XmlElementDescription.createForElement(desc, (JaxbElementInfo)child));
+            } else if (child instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo jaxbChoice = (JaxbPseudoNodeChoiceInfo) child;
+                ChoiceNode choiceNode = new ChoiceNode(jaxbChoice.isMultiElement());
+                desc.children.add(choiceNode);
+                for (JaxbElementInfo choice : jaxbChoice.getElements()) {
+                    choiceNode.addChild(XmlElementDescription.createForElement(desc, choice));
+                }
+            }
         }
         return desc;
     }
@@ -134,12 +144,19 @@ implements DescriptionNode, XmlUnit {
         for (JaxbAttributeInfo attrInfo : jaxbInfo.getAttributes()) {
             desc.attribs.add(XmlAttributeDescription.create(desc, attrInfo));
         }
-        for (JaxbNodeInfo nodeInfo : jaxbInfo.getElements()) {
+        for (JaxbNodeInfo nodeInfo : jaxbInfo.getJaxbNodeInfos()) {
             if (nodeInfo instanceof WrappedElementInfo) {
                 desc.children.add(XmlElementDescription.createForWrappedElement(desc, (WrappedElementInfo) nodeInfo));
             }
             else if (nodeInfo instanceof JaxbElementInfo) {
                 desc.children.add(XmlElementDescription.createForElement(desc, (JaxbElementInfo) nodeInfo));
+            } else if (nodeInfo instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo jaxbChoice = (JaxbPseudoNodeChoiceInfo) nodeInfo;
+                ChoiceNode choiceNode = new ChoiceNode(jaxbChoice.isMultiElement());
+                desc.children.add(choiceNode);
+                for (JaxbElementInfo choice : jaxbChoice.getElements()) {
+                    choiceNode.addChild(XmlElementDescription.createForElement(desc, choice));
+                }
             }
         }
     }
@@ -412,21 +429,30 @@ implements DescriptionNode, XmlUnit {
                 desc.append("<br />\n").append(description);
             }
             if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
-                desc.append("<br />\n").append(this.valueFieldDescription);
+                desc.append("<br />\n");
+                appendTableTextForValueFieldDescription(desc);
             }
         } else if (!Strings.isNullOrEmpty(description)) {
             desc.append(description);
             if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
-                desc.append("<br />\n").append(this.valueFieldDescription);
+                desc.append("<br />\n");
+                appendTableTextForValueFieldDescription(desc);
             }
         } else if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
-            desc.append(this.valueFieldDescription);
+            appendTableTextForValueFieldDescription(desc);
         }
         return desc.toString();
     }
 
     public String getValueFieldDescription() {
         return Strings.nullToEmpty(this.valueFieldDescription);
+    }
+
+    public StringBuilder appendTableTextForValueFieldDescription(StringBuilder desc) {
+        if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
+            desc.append("<b>Description for element text content</b>:").append(this.valueFieldDescription);
+        }
+        return desc;
     }
 
     public void setFieldTag(String fieldTag) {

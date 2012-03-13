@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminExtConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Purge bulk IMAP import tasks
  */
 @XmlRootElement(name=AdminExtConstants.E_PURGE_BULK_IMAP_IMPORT_TASKS_REQUEST)

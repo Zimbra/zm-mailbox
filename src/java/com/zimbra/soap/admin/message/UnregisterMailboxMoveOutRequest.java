@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.MailboxMoveSpec;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description This request is invoked by move destination server against move source server to
  * indicate the completion of mailbox move.  This request is also invoked to reset the state after a mailbox move that
  * died unexpectedly, such as when the destination server crashed.

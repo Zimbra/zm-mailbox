@@ -24,11 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
- * @zm-api-command-description Search Accounts <b>[DEPRECATED]</b>
- * <br />
- * <br />
- * NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
- * <br />
+ * @zm-api-command-deprecation-info Note: <b>SearchAccountsRequest</b> is deprecated. See <b>SearchDirectoryRequest</b>.
+ * @zm-api-command-description Search Accounts
  * <br />
  * <b>Access</b>: domain admin sufficient (a domain admin can't specify "domains" as a type)
  */

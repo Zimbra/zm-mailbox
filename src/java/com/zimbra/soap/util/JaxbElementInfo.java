@@ -27,7 +27,7 @@ implements JaxbNodeInfo {
     private String name;
     private String namespace;
     private boolean required;
-    private boolean isArray;
+    private boolean canHaveMultipleElements;
     private String fieldName;
     private String stamp;
     private Class<?> atomClass;
@@ -51,7 +51,7 @@ implements JaxbNodeInfo {
         if (atomClass == null) {
             LOG.debug("%s Unable to determine class for element with annotation '%s'", stamp, annot);
         }
-        isArray = JaxbInfo.representsArray(defaultGenericType);
+        canHaveMultipleElements = JaxbInfo.representsMultipleElements(defaultGenericType);
     }
 
     public JaxbElementInfo(XmlElementRef annot, String fieldName, Type defaultGenericType) {
@@ -75,7 +75,7 @@ implements JaxbNodeInfo {
         if (atomClass == null) {
             LOG.debug("%s Unable to determine name for element with annotation '%s'", stamp, annot);
         }
-        isArray = JaxbInfo.representsArray(defaultGenericType);
+        canHaveMultipleElements = JaxbInfo.representsMultipleElements(defaultGenericType);
     }
 
     @Override
@@ -85,7 +85,7 @@ implements JaxbNodeInfo {
     @Override
     public boolean isRequired() { return required; }
     @Override
-    public boolean isArray() { return isArray; }
+    public boolean isMultiElement() { return canHaveMultipleElements; }
 
     public String getFieldName() { return fieldName; }
  

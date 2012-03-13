@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Returns the version info for a mailbox.
  * <br />
  * Mailbox move uses this request to prevent a move to an older server.

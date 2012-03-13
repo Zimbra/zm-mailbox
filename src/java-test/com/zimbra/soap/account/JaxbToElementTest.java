@@ -15,6 +15,8 @@
 package com.zimbra.soap.account;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.io.BufferedReader;
@@ -62,6 +64,7 @@ import com.zimbra.soap.mail.message.ConvActionRequest;
 import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
 import com.zimbra.soap.mail.message.GetContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
+import com.zimbra.soap.mail.message.WaitSetRequest;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactActionSelector;
 import com.zimbra.soap.mail.type.FolderActionSelector;
@@ -70,6 +73,10 @@ import com.zimbra.soap.mail.type.NoteActionSelector;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.type.WaitSetAddSpec;
+import com.zimbra.soap.util.JaxbElementInfo;
+import com.zimbra.soap.util.JaxbInfo;
+import com.zimbra.soap.util.JaxbNodeInfo;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -407,12 +414,15 @@ public class JaxbToElementTest {
      * Check that @{link JaxbUtil.elementToJaxb} will accept XML where
      * JAXB expects various attributes that have been specified as elements.
      * Ensure that attributes in elements of superclasses are handled
+     * In this case:
+     *                  <a><n>attrName1</n></a>
+     * should be recognised as meaning:
+     *                  <a n="attrName1"></a>
      * @throws Exception
      */
     @Test
     public void jaxbSubclassFixupTest() throws Exception {
-        Element rootElem = Element.XMLElement.mFactory.createElement(
-                AdminConstants.CREATE_ACCOUNT_REQUEST);
+        Element rootElem = Element.XMLElement.mFactory.createElement(AdminConstants.CREATE_ACCOUNT_REQUEST);
         // JAXB Attribute E_NAME
         rootElem.addElement(AdminConstants.E_NAME).addText("acctName");
         // JAXB Attribute E_PASSWORD
@@ -425,14 +435,77 @@ public class JaxbToElementTest {
 
         CreateAccountRequest req = JaxbUtil.elementToJaxb(rootElem);
         Assert.assertEquals("Account name", "acctName", req.getName());
-        Assert.assertEquals("Account Password",
-                "AcctPassword", req.getPassword());
+        Assert.assertEquals("Account Password", "AcctPassword", req.getPassword());
         List<Attr> attrs = req.getAttrs();
         Assert.assertEquals("Number of attrs", 1, attrs.size());
-        Assert.assertEquals("attr 1 name", "attrName1",
-                attrs.get(0).getKey());
-        Assert.assertEquals("attr 1 value", "",
-                attrs.get(0).getValue());
+        Assert.assertEquals("attr 1 name", "attrName1", attrs.get(0).getKey());
+        Assert.assertEquals("attr 1 value", "", attrs.get(0).getValue());
+    }
+
+    @Test
+    public void jaxbInfoSuperclassElems() throws Exception {
+        JaxbInfo jaxbInfo = JaxbInfo.getFromCache(CreateAccountRequest.class);
+        Iterable<String> attrNames = jaxbInfo.getAttributeNames();
+        Assert.assertEquals("Number of attributes for CreateAccountRequest", 2, Iterables.size(attrNames));
+        Iterable<String> elemNames = jaxbInfo.getElementNames();
+        Assert.assertEquals("Number of elements for CreateAccountRequest", 1, Iterables.size(elemNames));
+        Assert.assertTrue("Has <a>", -1 != Iterables.indexOf(elemNames, Predicates.equalTo(MailConstants.E_A)));
+        Iterable<JaxbNodeInfo> nodeInfos = jaxbInfo.getJaxbNodeInfos();
+        Assert.assertEquals("Number of nodeInfos for CreateAccountRequest", 1, Iterables.size(nodeInfos));
+        JaxbNodeInfo nodeInfo = Iterables.get(nodeInfos, 0);
+        Assert.assertEquals("NodeInfo name ", MailConstants.E_A, nodeInfo.getName());
+        if (! (nodeInfo instanceof JaxbElementInfo)) {
+            Assert.fail("Expecting JaxbElementInfo but got " + nodeInfo.getClass().getName());
+        } else {
+            JaxbElementInfo elemInfo = (JaxbElementInfo) nodeInfo;
+            Assert.assertEquals("Class associated with <a>", Attr.class, elemInfo.getAtomClass());
+        }
+        JaxbNodeInfo node = jaxbInfo.getElemNodeInfo(MailConstants.E_A);
+        Assert.assertNotNull("has NodeInfo for Element <a>", node);
+        Assert.assertTrue("hasElement <a>", jaxbInfo.hasElement(MailConstants.E_A));
+    }
+
+    @Test
+    public void jaxbInfoWrapperHandling() throws Exception {
+        JaxbInfo jaxbInfo = JaxbInfo.getFromCache(WaitSetRequest.class);
+        Class<?> klass;
+        klass = jaxbInfo.getClassForWrappedElement("notWrapperName", "nonexistent");
+        if (klass != null) {
+            Assert.fail("Class " + klass.getName() + " should be null for non-existent wrapper/wrapped");
+        }
+        klass = jaxbInfo.getClassForWrappedElement(MailConstants.E_WAITSET_ADD /* add */, "nonexistent");
+        if (klass != null) {
+            Assert.fail("Class " + klass.getName() + " should be null for existing wrapper/non-existent wrapped");
+        }
+        klass = jaxbInfo.getClassForWrappedElement(MailConstants.E_WAITSET_ADD /* add */, MailConstants.E_A);
+        Assert.assertNotNull("Class should NOT be null for existing wrapper/non-existent wrapped", klass);
+        Assert.assertEquals("WaitSetAddSpec class", WaitSetAddSpec.class,klass);
+    }
+
+    /**
+     * Ensure that we still find attributes encoded as elements below a wrapped element in the hierarchy
+     * @throws Exception
+     */
+    @Test
+    public void jaxbBelowWrapperFixupTest() throws Exception {
+        Element rootElem = Element.XMLElement.mFactory.createElement(MailConstants.WAIT_SET_REQUEST);
+        // JAXB Attribute - not Element
+        rootElem.addElement(MailConstants.A_WAITSET_ID /* waitSet */).addText("myWaitSet");
+        // JAXB Attribute - not Element
+        rootElem.addElement(MailConstants.A_SEQ /* seq */).addText("lastKnownSeq");
+        // JAXB XmlElementWrapper 
+        Element addElem = rootElem.addElement(MailConstants.E_WAITSET_ADD /* add */);
+        Element aElem = addElem.addElement(MailConstants.E_A /* a */);
+        // JAXB Attribute - not Element
+        aElem.addElement(MailConstants.A_NAME).addText("waitsetName");
+        // JAXB Attribute - not Element
+        aElem.addElement(MailConstants.A_ID).addText("waitsetId");
+        WaitSetRequest req = JaxbUtil.elementToJaxb(rootElem);
+        List<WaitSetAddSpec> adds = req.getAddAccounts();
+        Assert.assertEquals("Waitset add number", 1, adds.size());
+        WaitSetAddSpec wsAdd = adds.get(0);
+        Assert.assertEquals("Waitset name", "waitsetName", wsAdd.getName());
+        Assert.assertEquals("Waitset id", "waitsetId", wsAdd.getId());
     }
 
     /**

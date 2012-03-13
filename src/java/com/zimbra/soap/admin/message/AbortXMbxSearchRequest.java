@@ -27,6 +27,7 @@ import com.zimbra.soap.admin.type.SearchID;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Attempts to abort a running cross mailbox search task
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -23,7 +23,9 @@ public class Command implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String REGEX_DESCRIPTION_SHORT_DELIM = "[.]+";
+    /* Used to separate out the first part of the description for use as a short summary */
+    private static final String REGEX_DESCRIPTION_SHORT_DELIM =
+            "<br|<BR|<p>|<P>|<table|<TABLE|<ul|<UL|<ol|<OL|<pre>|<PRE>";
 
     private XmlElementDescription request = new XmlElementDescription();
     private XmlElementDescription response = new XmlElementDescription();
@@ -73,17 +75,27 @@ public class Command implements java.io.Serializable {
         return Strings.nullToEmpty(this.deprecation);
     }
     /**
-     * Gets the short description. This is the description up to the first
-     * period "." in the description.
+     * Gets the short description. This is the first line of the description.
      */
     public String getShortDescription() {
         String desc = getDescription();
+        StringBuilder sb = new StringBuilder();
 
         String[] tokens = desc.split(REGEX_DESCRIPTION_SHORT_DELIM);
         if (tokens != null && tokens.length > 0 && tokens[0].length() > 0) {
-            return    tokens[0]+"."; // since we split at the period, make it a sentence again
+            String retDesc = tokens[0].trim();
+            sb.append(retDesc);
+            if (!retDesc.endsWith(".")) {
+                sb.append(".");
+            }
         }
-        return    ""; // worst case
+        if (networkEdition) {
+            sb.append(" <font color=\"#dd0000\">[NetworkEdition only]</font>");
+        }
+        if (hasDeprecationDescription()) {
+            sb.append("\n<br /><font color=\"#dd0000\">").append(getDeprecation()).append("</font>");
+        }
+        return sb.toString();
     }
 
     public void setDescription(String description) {

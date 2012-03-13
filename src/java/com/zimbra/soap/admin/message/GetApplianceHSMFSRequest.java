@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.HsmConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Get Appliance HSM Filesystem information
  */
 @XmlRootElement(name=HsmConstants.E_GET_APPLIANCE_HSM_FS_REQUEST)

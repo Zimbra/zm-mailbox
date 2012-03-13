@@ -19,17 +19,17 @@ import java.util.List;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.sun.xml.internal.xsom.XSModelGroup;
 
 public class ChoiceNode
 implements DescriptionNode {
     static final String name = "{CHOICE NODE}";
     private DescriptionNode parent;
-    private int minOccurs;
-    private int maxOccurs;
     private List<DescriptionNode> children = Lists.newArrayList();
-    public ChoiceNode() {
+    private boolean canHaveMultipleChildren;
+    public ChoiceNode(boolean canHaveMultipleChildren) {
+        this.canHaveMultipleChildren = canHaveMultipleChildren;
     }
+
     public String getHtmlDescription() {
         if (Strings.isNullOrEmpty(name)) {
             return "";
@@ -38,14 +38,18 @@ implements DescriptionNode {
         writeDescription(desc, 1);
         return desc.toString();
     }
+    
+    public void addChild(DescriptionNode child) {
+        children.add(child);
+    }
 
     @Override
     public void writeDescription(StringBuilder desc, int depth) {
         XmlElementDescription.writeRequiredIndentation(desc, true, depth);
-        if (maxOccurs == 1) {
-            desc.append("Choose one of");
-        } else {
+        if (canHaveMultipleChildren) {
             desc.append("List of any of");
+        } else {
+            desc.append("Choose one of");
         }
         desc.append(": {<br />\n");
         for (DescriptionNode child : getChildren()) {

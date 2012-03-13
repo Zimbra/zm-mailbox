@@ -25,6 +25,7 @@ import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.soap.admin.type.DateString;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Get the mobile devices count on the server since last used date
  */
 @XmlAccessorType(XmlAccessType.NONE)

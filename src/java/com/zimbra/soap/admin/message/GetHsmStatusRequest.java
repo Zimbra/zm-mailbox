@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.HsmConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Queries the status of the most recent HSM session.  Status information for a given HSM
  * session is available until the next time HSM runs or until the server is restarted.
  * <br />

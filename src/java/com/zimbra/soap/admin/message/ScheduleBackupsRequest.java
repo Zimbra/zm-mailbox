@@ -26,6 +26,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Schedule backups
  */
 @XmlAccessorType(XmlAccessType.NONE)

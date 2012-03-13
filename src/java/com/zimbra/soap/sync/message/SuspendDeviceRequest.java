@@ -25,6 +25,7 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Suspend a device from further sync actions
  */
 @XmlAccessorType(XmlAccessType.NONE)

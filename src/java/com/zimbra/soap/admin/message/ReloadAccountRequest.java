@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Reload Account
  * <br />
  * Called after another server has made changes to the account object, this request tells the server to reload the

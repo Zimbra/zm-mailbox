@@ -25,6 +25,7 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Cancel a pending Remote Wipe request.  Remote Wipe can't be canceled once the device
  * confirms the wipe.
  */

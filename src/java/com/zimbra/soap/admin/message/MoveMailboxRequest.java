@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.MoveMailboxInfo;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Move a mailbox
  * <br />
  * Note: This request should be sent to the move destination server, rather than the source server.

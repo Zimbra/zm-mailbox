@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.ReplicationConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Start catchup
  */
 @XmlRootElement(name=ReplicationConstants.E_START_CATCHUP_REQUEST)

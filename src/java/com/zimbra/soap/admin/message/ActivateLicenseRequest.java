@@ -25,6 +25,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AttachmentIdAttrib;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Activate License
  */
 @XmlAccessorType(XmlAccessType.NONE)

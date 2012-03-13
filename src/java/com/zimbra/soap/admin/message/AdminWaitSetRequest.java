@@ -36,8 +36,8 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
- * @zm-api-command-description WaitSetRequest optionally modifies the wait set and checks for any notifications.
- * If block=1 and there are no notificatins, then this API will BLOCK until there is data.
+ * @zm-api-command-description <b>AdminWaitSetRequest</b> optionally modifies the wait set and checks for any notifications.
+ * If block=1 and there are no notifications, then this API will BLOCK until there is data.
  * <p>
  * Client should always set 'seq' to be the highest known value it has received from the server.  The server will use
  * this information to retransmit lost data.
@@ -48,7 +48,7 @@ import com.zimbra.soap.type.ZmBoolean;
  * If the client does not send a last known sync token, then notification is based on change since last Wait
  * (or change since &lt;add> if this is the first time Wait has been called with the account)
  * </p><p>
- * The client may specifiy a custom timeout-length for their request if they know something about the particular
+ * The client may specify a custom timeout-length for their request if they know something about the particular
  * underlying network.  The server may or may not honor this request (depending on server configured max/min values).
  * See LocalConfig values:
  * </p>

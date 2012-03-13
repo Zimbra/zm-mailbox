@@ -91,13 +91,19 @@ public class JaxbInfo {
     /**
      * names of known attributes that can be associated with the element
      */
-    private List<String> attributeNames = Lists.newArrayList();
+    private final List<String> attributeNames = Lists.newArrayList();
 
-    public static HashMap<String,JaxbInfo> cache = Maps.newHashMap();
+    public static final HashMap<String,JaxbInfo> cache = Maps.newHashMap();
 
-    private HashMap<String,JaxbAttributeInfo> attrInfo = Maps.newHashMap();
-    private HashMap<String,JaxbElementInfo> elemInfo = Maps.newHashMap();
-    private HashMap<String,WrappedElementInfo> wrappedElemInfo = Maps.newHashMap();
+    /* excludes attributes represented in super classes */
+    private final List<JaxbAttributeInfo> attrInfo = Lists.newArrayList();
+
+    /* Note: There isn't quite a one-to-one correspondence between elements in this array and XML sub-elements
+     * as "pseudo" parent entries are added to collect together groups of elements where they are in an
+     * choice group (These pseudo parents represent JAXB XmlElements or XmlElementRefs)
+     * Also excludes elements represented in super classes
+     */
+    private final List<JaxbNodeInfo> jaxbElemNodeInfo = Lists.newArrayList();
     private JaxbValueInfo elementValue = null;
 
     /**
@@ -157,80 +163,85 @@ public class JaxbInfo {
 
     public Iterable<JaxbAttributeInfo> getAttributes() {
         List<JaxbAttributeInfo> attrs = Lists.newArrayList();
-        Iterables.addAll(attrs, this.attrInfo.values());
+        Iterables.addAll(attrs, this.attrInfo);
         JaxbInfo encClassInfo = getSuperClassInfo();
         if (encClassInfo != null)
             Iterables.addAll(attrs, encClassInfo.getAttributes());
         return attrs;
     }
 
+    /**
+     * Get XML names of all possible sub-elements (including those described in superclasses)
+     */
     public Iterable<String> getElementNames() {
         List<String> elemNames = Lists.newArrayList();
-        Iterables.addAll(elemNames, this.elemInfo.keySet());
-        Iterables.addAll(elemNames, this.wrappedElemInfo.keySet());
+        for (JaxbNodeInfo node : jaxbElemNodeInfo) {
+            if (node instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo pseudoNode = (JaxbPseudoNodeChoiceInfo) node;
+                Iterables.addAll(elemNames, pseudoNode.getElementNames());
+            } else {
+                elemNames.add(node.getName());
+            }
+        }
         JaxbInfo encClassInfo = getSuperClassInfo();
         if (encClassInfo != null)
             Iterables.addAll(elemNames, encClassInfo.getElementNames());
         return elemNames;
     }
 
-    public Iterable<JaxbNodeInfo> getElements() {
+    /**
+     * Get information relating to sub-elements (including those described in superclasses)
+     */
+    public Iterable<JaxbNodeInfo> getJaxbNodeInfos() {
         List<JaxbNodeInfo> elems = Lists.newArrayList();
-        Iterables.addAll(elems, this.elemInfo.values());
-        Iterables.addAll(elems, this.wrappedElemInfo.values());
+        Iterables.addAll(elems, this.jaxbElemNodeInfo);
         JaxbInfo encClassInfo = getSuperClassInfo();
         if (encClassInfo != null)
-            Iterables.addAll(elems, encClassInfo.getElements());
+            Iterables.addAll(elems, encClassInfo.getJaxbNodeInfos());
         return elems;
     }
 
     public boolean hasElement(String name) {
-        if (this.elemInfo.containsKey(name))
-            return true;
-        if (this.wrappedElemInfo.containsKey(name))
-            return true;
-        JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
-            return encClassInfo.hasElement(name);
-        return false;
+        return (getElemNodeInfo(name) != null);
     }
 
-    public boolean hasWrappedElement(String name) {
-        if (this.wrappedElemInfo.containsKey(name))
-            return true;
+    public WrappedElementInfo getWrapperInfo(String name) {
+        for (JaxbNodeInfo node : jaxbElemNodeInfo) {
+            if (node instanceof WrappedElementInfo) {
+                if (name.equals(node.getName())) {
+                    return (WrappedElementInfo) node;
+                }
+            }
+        }
         JaxbInfo encClassInfo = getSuperClassInfo();
         if (encClassInfo != null)
-            return encClassInfo.hasWrappedElement(name);
-        return false;
-    }
-
-    public Iterable<String> getWrappedSubElementNames(String wrapperName) {
-        WrappedElementInfo info = this.wrappedElemInfo.get(wrapperName);
-        if (info != null)
-            return info.getElementNames();
-        JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
-            return encClassInfo.getWrappedSubElementNames(wrapperName);
+            return encClassInfo.getWrapperInfo(name);
         return null;
     }
 
-    public Class<?> getClassForWrappedElement(String wrapperName,
-            String elementName) {
-        WrappedElementInfo info = this.wrappedElemInfo.get(wrapperName);
-        if (info == null) {
-            JaxbInfo encClassInfo = getSuperClassInfo();
-            if (encClassInfo != null) {
-                return encClassInfo.getClassForWrappedElement(wrapperName, elementName);
+    public boolean hasWrapperElement(String name) {
+        return (getWrapperInfo(name) != null);
+    }
+
+    public Iterable<String> getWrappedSubElementNames(String wrapperName) {
+        WrappedElementInfo info = getWrapperInfo(wrapperName);
+        if (info != null) {
+            return info.getElementNames();
+        }
+        return null;
+    }
+
+    public Class<?> getClassForWrappedElement(String wrapperName, String elementName) {
+        WrappedElementInfo info = getWrapperInfo(wrapperName);
+        if (info != null) {
+            Class<?> wKlass = info.getClassForElementName(elementName);
+            if (wKlass == null) {
+                LOG.debug("%s No class for wrapper element=%s sub-element=%s", stamp, wrapperName, elementName);
             }
-            LOG.debug(stamp + "Unknown wrapped element wrapperName=" + wrapperName + " element=" + elementName);
-            return null;
+            return wKlass;
         }
-        Class<?> wKlass = info.getClassForElementName(elementName);
-        if (wKlass == null) {
-            LOG.debug(stamp + "No class for wrapperName=" + wrapperName + " element=" + elementName);
-            return null;
-        }
-        return wKlass;
+        LOG.debug("%s Unknown wrapper element=%s (looking for sub-element=%s)", stamp, wrapperName, elementName);
+        return null;
     }
 
     public boolean hasAttribute(String name) {
@@ -270,19 +281,54 @@ public class JaxbInfo {
     }
 
     public Class<?> getClassForElement(String name) {
-        JaxbElementInfo info = elemInfo.get(name);
-        if (info == null) {
-            JaxbInfo encClassInfo = getSuperClassInfo();
-            if (encClassInfo != null) {
-                return encClassInfo.getClassForElement(name);
+        JaxbNodeInfo node = getElemNodeInfo(name);
+        if (node != null) {
+            if (node instanceof JaxbElementInfo) {
+                JaxbElementInfo elemInfo = (JaxbElementInfo) node;
+                return elemInfo.getAtomClass();
             }
+            // note: Can't have got a JaxbPseudoNodeChoiceInfo - there is no name associated with them
+            //       If we have a Wrapper element, then there isn't a class associated with it
             return null;
         }
-        return info.getAtomClass();
+
+        JaxbInfo encClassInfo = getSuperClassInfo();
+        if (encClassInfo != null) {
+            return encClassInfo.getClassForElement(name);
+        }
+        return null;
+    }
+
+    public JaxbNodeInfo getElemNodeInfo(String name) {
+        for (JaxbNodeInfo entry : jaxbElemNodeInfo) {
+            if (entry instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo pseudoNode = (JaxbPseudoNodeChoiceInfo) entry;
+                JaxbElementInfo choiceElem = pseudoNode.getElemInfo(name);
+                if (choiceElem != null) {
+                    return choiceElem;
+                }
+            } else if (name.equals(entry.getName())) {
+                return entry;
+            }
+        }
+        JaxbInfo encClassInfo = getSuperClassInfo();
+        if (encClassInfo != null) {
+            return encClassInfo.getElemNodeInfo(name);
+        }
+        return null;
+    }
+
+    private JaxbAttributeInfo getAttrInfo(String name) {
+        for (JaxbAttributeInfo entry : attrInfo) {
+            if (name.equals(entry.getName())) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     public Class<?> getClassForAttribute(String name) {
-        JaxbAttributeInfo info = attrInfo.get(name);
+        JaxbAttributeInfo info = getAttrInfo(name);
         if (info == null) {
             JaxbInfo encClassInfo = getSuperClassInfo();
             if (encClassInfo != null) {
@@ -297,7 +343,7 @@ public class JaxbInfo {
         String name = info.getName();
         Class<?> atomClass = info.getAtomClass();
         if (atomClass != null && !Strings.isNullOrEmpty(name)) {
-            attrInfo.put(name, info);
+            attrInfo.add(info);
         }
     }
 
@@ -306,7 +352,7 @@ public class JaxbInfo {
         String name = info.getName();
         Class<?> atomClass = info.getAtomClass();
         if (atomClass != null && !Strings.isNullOrEmpty(name)) {
-            elemInfo.put(name, info);
+            jaxbElemNodeInfo.add(info);
         }
     }
 
@@ -315,7 +361,7 @@ public class JaxbInfo {
         String name = info.getName();
         Class<?> atomClass = info.getAtomClass();
         if (atomClass != null && !Strings.isNullOrEmpty(name)) {
-            elemInfo.put(name, info);
+            jaxbElemNodeInfo.add(info);
         }
     }
 
@@ -325,7 +371,7 @@ public class JaxbInfo {
             if (annot instanceof XmlElementWrapper) {
                 XmlElementWrapper wrapper = (XmlElementWrapper) annot;
                 wrappedInfo = new WrappedElementInfo(wrapper, fieldName);
-                this.wrappedElemInfo.put(wrapper.name(), wrappedInfo);
+                jaxbElemNodeInfo.add(wrappedInfo);
                 break;
             }
         }
@@ -355,22 +401,26 @@ public class JaxbInfo {
                     wrappedInfo.add(xmlElemR, null, null);
                 }
             } else if (annot instanceof XmlElements) {
+                JaxbPseudoNodeChoiceInfo choiceNode = new JaxbPseudoNodeChoiceInfo(fieldName, defaultGenericType);
+                if (wrappedInfo == null) {
+                    jaxbElemNodeInfo.add(choiceNode);
+                } else {
+                    wrappedInfo.add(choiceNode);
+                }
                 XmlElements xmlElemsAnnot = (XmlElements) annot;
                 for (XmlElement xmlE : xmlElemsAnnot.value()) {
-                    if (wrappedInfo == null) {
-                        setXmlElementInfo(xmlE, null, null);
-                    } else {
-                        wrappedInfo.add(xmlE, null, null);
-                    }
+                    choiceNode.add(xmlE);
                 }
             } else if (annot instanceof XmlElementRefs) {
+                JaxbPseudoNodeChoiceInfo choiceNode = new JaxbPseudoNodeChoiceInfo(fieldName, defaultGenericType);
+                if (wrappedInfo == null) {
+                    jaxbElemNodeInfo.add(choiceNode);
+                } else {
+                    wrappedInfo.add(choiceNode);
+                }
                 XmlElementRefs elemRefs = (XmlElementRefs) annot;
                 for (XmlElementRef xmlE : elemRefs.value()) {
-                    if (wrappedInfo == null) {
-                        setXmlElementInfo(xmlE, null, null);
-                    } else {
-                        wrappedInfo.add(xmlE, null, null);
-                    }
+                    choiceNode.add(xmlE);
                 }
             }
         }
@@ -442,7 +492,7 @@ public class JaxbInfo {
      * Returns the most elemental class associated with {@link genericType}
      * May return null
      */
-    public static boolean representsArray(Type genericType) {
+    public static boolean representsMultipleElements(Type genericType) {
         Class<?> defKlass = null;
         if (genericType == null)
             return false;

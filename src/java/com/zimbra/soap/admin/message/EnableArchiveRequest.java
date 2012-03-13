@@ -27,6 +27,7 @@ import com.zimbra.soap.admin.type.ArchiveSpec;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Enable Archive
  * <ul>
  * <li> Archive account is created by default based on name templates.  You can suppress this by sending create=0.

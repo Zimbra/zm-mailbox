@@ -18,6 +18,7 @@ package com.zimbra.soap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -43,6 +44,7 @@ import org.w3c.dom.NodeList;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -1126,48 +1128,40 @@ public final class JaxbUtil {
 
         JaxbInfo jaxbInfo = JaxbInfo.getFromCache(klass);
         NodeList list = elem.getChildNodes();
+        List<org.w3c.dom.Element> orphans = null;
         for (int i=0; i < list.getLength(); i++) {
             Node subnode = list.item(i);
             if (subnode.getNodeType() == Node.ELEMENT_NODE) {
                 org.w3c.dom.Element child = (org.w3c.dom.Element) subnode;
                 String childName = child.getLocalName();
-                if (jaxbInfo.hasWrappedElement(childName)) {
+                if (jaxbInfo.hasWrapperElement(childName)) {
                     NodeList wrappedList = child.getChildNodes();
                     for (int j=0; j < wrappedList.getLength(); j++) {
                         Node wSubnode = wrappedList.item(j);
                         if (wSubnode.getNodeType() == Node.ELEMENT_NODE) {
-                            org.w3c.dom.Element wChild =
-                                (org.w3c.dom.Element) wSubnode;
+                            org.w3c.dom.Element wChild = (org.w3c.dom.Element) wSubnode;
                             fixupStructureForJaxb(wChild,
-                                    jaxbInfo.getClassForWrappedElement(
-                                            childName, wChild.getLocalName()));
+                                    jaxbInfo.getClassForWrappedElement(childName, wChild.getLocalName()));
                         }
                     }
                 } else if (jaxbInfo.hasElement(childName))  {
-                    fixupStructureForJaxb(child,
-                            jaxbInfo.getClassForElement(childName));
+                    fixupStructureForJaxb(child, jaxbInfo.getClassForElement(childName));
                 } else if (jaxbInfo.hasAttribute(childName)) {
                     elem.setAttribute(childName, child.getTextContent());
-                    // Don't remove pre-existing child until later pass
-                    // to avoid changing the list of child elements
+                    // Don't remove pre-existing child until later pass to avoid changing the list of child elements
+                    if (orphans == null) {
+                        orphans = Lists.newArrayList();
+                    }
+                    orphans.add(child);
                 } else {
-                    LOG.debug("JAXB class " + klass.getName() +
-                            " does NOT recognise element named:" + childName);
+                    LOG.debug("JAXB class " + klass.getName() + " does NOT recognise element named:" + childName);
                 }
             }
         }
         // Prune the promoted elements from the list of children
-        list = elem.getChildNodes();
-        for (int i=0; i < list.getLength(); i++) {
-            Node subnode = list.item(i);
-            if (subnode.getNodeType() == Node.ELEMENT_NODE) {
-                org.w3c.dom.Element child = (org.w3c.dom.Element) subnode;
-                String childName = child.getLocalName();
-                if  (   (!jaxbInfo.hasWrappedElement(childName)) &&
-                        (!jaxbInfo.hasElement(childName)) &&
-                        (jaxbInfo.hasAttribute(childName))) {
-                    elem.removeChild(child);
-                }
+        if (orphans != null) {
+            for (org.w3c.dom.Element orphan : orphans) {
+                elem.removeChild(orphan);
             }
         }
     }

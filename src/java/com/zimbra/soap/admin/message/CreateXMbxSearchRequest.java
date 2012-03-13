@@ -25,6 +25,7 @@ import com.zimbra.soap.admin.type.AdminKeyValuePairs;
 // Note: ZimbraXMbxSearch/docs/soap.txt documented a non-existent <searchtask> sub-element.
 //       This is not used - the attributes are direct children of <CreateXMbxSearchRequest>
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Creates a search task
  */
 @XmlAccessorType(XmlAccessType.NONE)

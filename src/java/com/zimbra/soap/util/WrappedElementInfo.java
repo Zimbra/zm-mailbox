@@ -16,17 +16,14 @@
 package com.zimbra.soap.util;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Represents an element that wraps other elements (i.e. one defined via {@code @XmlElementWrapper})
@@ -37,46 +34,74 @@ implements JaxbNodeInfo {
     private String namespace;
     private String fieldName;
     private boolean required;
-    private HashMap<String,JaxbElementInfo> wrappedElems;
+    private final List<JaxbNodeInfo> wrappedElems = Lists.newArrayList();
 
     public WrappedElementInfo(XmlElementWrapper annotation, String fieldName) {
         name = annotation.name();
         namespace = annotation.namespace();
         required = annotation.required();
         this.fieldName = fieldName;
-        wrappedElems = Maps.newHashMap();
     }
 
     public Iterable<String> getElementNames() {
-        return this.wrappedElems.keySet();
+        List<String> elemNames = Lists.newArrayList();
+        for (JaxbNodeInfo node : wrappedElems) {
+            if (node instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo pseudoNode = (JaxbPseudoNodeChoiceInfo) node;
+                Iterables.addAll(elemNames, pseudoNode.getElementNames());
+            } else {
+                elemNames.add(node.getName());
+            }
+        }
+        return elemNames;
     }
 
     public Class<?> getClassForElementName(String name) {
-        JaxbElementInfo info = this.wrappedElems.get(name);
-        return info == null ? null : info.getAtomClass();
+        JaxbElementInfo node = getWrappedElem(name);
+        if (node != null) {
+            return node.getAtomClass();
+        }
+        return null;
     }
 
-    public Iterable<JaxbElementInfo> getElements() {
-        List<JaxbElementInfo> elems = Lists.newArrayList();
-        Iterables.addAll(elems, this.wrappedElems.values());
-        return elems;
+    public JaxbElementInfo getWrappedElem(String name) {
+        for (JaxbNodeInfo node : wrappedElems) {
+            if (node instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo pseudoNode = (JaxbPseudoNodeChoiceInfo) node;
+                JaxbElementInfo alternativeNode = pseudoNode.getElemInfo(name);
+                if (alternativeNode != null) {
+                    return alternativeNode;
+                }
+            } else if (node instanceof JaxbElementInfo) {
+                if (name.equals(node.getName())) {
+                    return (JaxbElementInfo) node;
+                }
+            }
+        }
+        return null;
     }
 
+    public Iterable<JaxbNodeInfo> getElements() {
+        return wrappedElems;
+    }
+
+    public void add(JaxbPseudoNodeChoiceInfo choiceNode) {
+        wrappedElems.add(choiceNode);
+    }
+    
     public void add(XmlElement elem, String defaultName, Type defaultGenericType) {
         JaxbElementInfo info = new JaxbElementInfo(elem, fieldName, defaultGenericType);
-        String childName = info.getName();
         Class<?> atomClass = info.getAtomClass();
-        if (atomClass != null && !Strings.isNullOrEmpty(name)) {
-            wrappedElems.put(childName, info);
+        if (atomClass != null) {
+            wrappedElems.add(info);
         }
     }
 
     public void add(XmlElementRef elemRef, String defaultName, Type defaultGenericType) {
         JaxbElementInfo info = new JaxbElementInfo(elemRef, fieldName, defaultGenericType);
-        String childName = info.getName();
         Class<?> atomClass = info.getAtomClass();
-        if (atomClass != null && !Strings.isNullOrEmpty(name)) {
-            wrappedElems.put(childName, info);
+        if (atomClass != null) {
+            wrappedElems.add(info);
         }
     }
 
@@ -87,5 +112,5 @@ implements JaxbNodeInfo {
     @Override
     public boolean isRequired() { return required; }
     @Override
-    public boolean isArray() { return false; }
+    public boolean isMultiElement() { return false; }
 }

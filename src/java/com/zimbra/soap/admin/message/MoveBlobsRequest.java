@@ -26,6 +26,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HsmConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Moves blobs between volumes.  Unlike <b>HsmRequest</b>, this request is synchronous,
  * and reads parameters from the request attributes instead of <b>zimbraHsmPolicy</b>.
  */

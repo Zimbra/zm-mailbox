@@ -21,6 +21,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Get the registered devices count on the server.
  */
 @XmlRootElement(name=SyncAdminConstants.E_GET_DEVICES_COUNT_REQUEST)

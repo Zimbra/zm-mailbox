@@ -20,8 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.HsmConstants;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Aborts a running HSM process
- * @zm-api-request-description Aborts a running HSM process
  */
 @XmlRootElement(name=HsmConstants.E_ABORT_HSM_REQUEST)
 public class AbortHsmRequest {

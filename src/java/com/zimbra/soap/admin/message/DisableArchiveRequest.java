@@ -26,6 +26,7 @@ import com.zimbra.common.soap.ArchiveConstants;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Disable Archiving for an account that already has archiving enabled
  */
 @XmlAccessorType(XmlAccessType.NONE)

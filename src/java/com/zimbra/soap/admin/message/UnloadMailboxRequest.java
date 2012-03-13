@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Forces the mailbox of the specified account to get unloaded from memory.
  */
 @XmlAccessorType(XmlAccessType.NONE)

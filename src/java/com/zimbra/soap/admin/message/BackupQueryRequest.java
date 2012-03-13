@@ -25,6 +25,7 @@ import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupQuerySpec;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Backup Query
  */
 @XmlAccessorType(XmlAccessType.NONE)

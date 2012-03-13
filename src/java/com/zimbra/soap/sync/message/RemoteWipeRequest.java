@@ -25,6 +25,7 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
 /**
+ * @zm-api-command-network-edition
  * @zm-api-command-description Request a device (e.g. a lost device) be wiped of all its data on the next sync.
  */
 @XmlAccessorType(XmlAccessType.NONE)
