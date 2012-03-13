@@ -2600,6 +2600,9 @@
     <r n="moveCalendarResourceMailbox"/>
     <r n="moveMailboxFromServer"/>
     <r n="moveMailboxToServer"/>
+    <r n="modifyZimlet"/>
+    <r n="listZimlet"/>
+    <r n="listServer"/>
   </rights>
 </right>
 
