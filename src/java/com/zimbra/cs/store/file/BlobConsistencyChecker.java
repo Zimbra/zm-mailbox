@@ -206,12 +206,13 @@ public class BlobConsistencyChecker {
                 int minId = 0; // Minimum id for the current block
                 int group = 0; // Current group number
                 
-                while (minId < mailboxMaxId && group < numGroups) {
+                while (minId <= mailboxMaxId && group < numGroups) {
                     Map<Integer, BlobInfo> blobsById = new HashMap<Integer, BlobInfo>();
                     int maxId = minId + filesPerGroup - 1; // Maximum id for the current block
                     String blobDir = vol.getBlobDir(mbox.getId(), minId);
                     
-                    while (minId < mailboxMaxId) {
+                    while (minId <= mailboxMaxId) {
+                        maxId = minId + filesPerGroup - 1; // Maximum id for the current block
                         for (BlobInfo blob : DbBlobConsistency.getBlobInfo(conn, mbox, minId, maxId, volumeId)) {
                             blobsById.put(blob.itemId, blob);
                         }
