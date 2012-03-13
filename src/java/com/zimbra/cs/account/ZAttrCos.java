@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120312-1135 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120312-1229 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11136,13 +11136,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @see #getFileExternalShareLifetimeAsString()
      *
-     * @return zimbraFileExternalShareLifetime in millseconds, or 2592000000 (30d)  if unset
+     * @return zimbraFileExternalShareLifetime in millseconds, or 7776000000 (90d)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1363)
     public long getFileExternalShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraFileExternalShareLifetime, 2592000000L);
+        return getTimeInterval(Provisioning.A_zimbraFileExternalShareLifetime, 7776000000L);
     }
 
     /**
@@ -11153,13 +11153,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @return zimbraFileExternalShareLifetime, or "30d" if unset
+     * @return zimbraFileExternalShareLifetime, or "90d" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1363)
     public String getFileExternalShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraFileExternalShareLifetime, "30d");
+        return getAttr(Provisioning.A_zimbraFileExternalShareLifetime, "90d");
     }
 
     /**
@@ -11366,13 +11366,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @see #getFilePublicShareLifetimeAsString()
      *
-     * @return zimbraFilePublicShareLifetime in millseconds, or 1296000000 (15d)  if unset
+     * @return zimbraFilePublicShareLifetime in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1364)
     public long getFilePublicShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraFilePublicShareLifetime, 1296000000L);
+        return getTimeInterval(Provisioning.A_zimbraFilePublicShareLifetime, 0L);
     }
 
     /**
@@ -11383,13 +11383,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraFilePublicShareLifetime, or "15d" if unset
+     * @return zimbraFilePublicShareLifetime, or "0" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1364)
     public String getFilePublicShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraFilePublicShareLifetime, "15d");
+        return getAttr(Provisioning.A_zimbraFilePublicShareLifetime, "0");
     }
 
     /**
@@ -11484,13 +11484,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @see #getFileShareLifetimeAsString()
      *
-     * @return zimbraFileShareLifetime in millseconds, or 7776000000 (90d)  if unset
+     * @return zimbraFileShareLifetime in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1362)
     public long getFileShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraFileShareLifetime, 7776000000L);
+        return getTimeInterval(Provisioning.A_zimbraFileShareLifetime, 0L);
     }
 
     /**
@@ -11501,13 +11501,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @return zimbraFileShareLifetime, or "90d" if unset
+     * @return zimbraFileShareLifetime, or "0" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1362)
     public String getFileShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraFileShareLifetime, "90d");
+        return getAttr(Provisioning.A_zimbraFileShareLifetime, "0");
     }
 
     /**
