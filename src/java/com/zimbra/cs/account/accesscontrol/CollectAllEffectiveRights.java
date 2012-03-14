@@ -69,6 +69,26 @@ public class CollectAllEffectiveRights {
         Set<String> mGroups = new HashSet<String>();   // groups all entries in mMembers are a member of
         Set<String> mMembers = new HashSet<String>();  // members belongs to all entries of mGroups
         
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (String group : mGroups) {
+                sb.append("group " + group + "\n");
+            }
+            for (String member : mMembers) {
+                sb.append("    member " + member + "\n");
+            }
+            return sb.toString();
+        }
+        
+        private static void debug(String msg, Set<GroupShape> shapes) {
+            if (ZimbraLog.acl.isDebugEnabled()) {
+                for (GroupShape shape : shapes) {
+                    ZimbraLog.acl.debug(msg + "\n" + shape.toString());
+                }
+            }
+        }
+        
         private void addGroups(Set<String> groups) {
             mGroups.addAll(groups);
         }
@@ -105,7 +125,9 @@ public class CollectAllEffectiveRights {
             return !mMembers.isEmpty();
         }
         
-        static void shapeMembers(TargetType targetType, Set<GroupShape> shapes, AllGroupMembers group) throws ServiceException {
+        static void shapeMembers(TargetType targetType, Set<GroupShape> shapes, 
+                AllGroupMembers group) 
+        throws ServiceException {
 
             // Stage newly spawn GroupShape's in a seperate Set so 
             // we don't add entries to shapes while iterating through it.
@@ -304,21 +326,87 @@ public class CollectAllEffectiveRights {
         //
         // first, shape all members in all groups with grants into "shapes"
         //
+        
+        /*
+         * because of bug 68820, we have to also take into accounts all sub groups 
+         * of groupsWithGrants when we build shapes - even if the sub groups don't 
+         * have any grants.
+         * 
+         * Prior to bug 68820, we didn't have to do this(i.e. add in sub groups 
+         * that don't have any grants when shapes are computed), because sub groups  
+         * dont't have grants would never affect how grants are inherited - all grants 
+         * get inherited to sub groups and their member accounts/crs.
+         * 
+         * But bug 68820 introduced a new right modifier - DISINHERIT_SUB_GROUPS, 
+         * that controls whether a grant on a group can be inherited by sub groups and 
+         * their account/cr members.
+         * 
+         * Now the input groups for calculating shapes are:
+         * union of (groups have grants and all their sub groups)
+         * 
+         * This will result in more shares than before if non ofthe sub groups has grants,
+         * but if spawned shapes actually have the same effective rights, they will be 
+         * merged by RightsByTargetType.addAggregation(), in that it checks if ther are 
+         * already an aggregation with the exact the same right.  If there are, then just 
+         * add the targets to the existing aggregation, instead of adding new ones.
+         */
+        Set<String> processedGroups = new HashSet<String>();
+        
         Set<GroupShape> accountShapes = new HashSet<GroupShape>();
         Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
         Set<GroupShape> distributionListShapes = new HashSet<GroupShape>();
         for (DistributionList group : groupsWithGrants) {
-            // group is an AclGroup, which contains only upward membership, not downward membership.
-            // re-get the DistributionList object, which has the downward membership.
+            String groupName = group.getName().toLowerCase();
+            if (processedGroups.contains(groupName)) {
+                continue;
+            } else {
+                processedGroups.add(groupName);
+            }
+            
+            // group is an AclGroup, which contains only upward membership, 
+            // not downward membership. re-get the DistributionList object, 
+            // which has the downward membership.
             DistributionList dl = mProv.get(DistributionListBy.id, group.getId());
+            
             AllGroupMembers allMembers = getAllGroupMembers(dl);
+            
             GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
             GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
             GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembers);
+            processedGroups.add(group.getId());
+            
+            /*
+             * handle sub groups.  allMembers already contains a flat set of all members 
+             * of group that is a DistributionList, just go through the flat set and compute 
+             * shares for each
+             */
+            for (String nestedGoupMember : allMembers.getMembers(TargetType.dl)) {
+                String nestedGoupMemberName = nestedGoupMember.toLowerCase();
+                if (processedGroups.contains(nestedGoupMemberName)) {
+                    continue;
+                } else {
+                    processedGroups.add(nestedGoupMemberName);
+                }
+                
+                DistributionList subDl = mProv.get(DistributionListBy.name, nestedGoupMemberName);
+                // sanity check, shout not be null
+                if (subDl != null) {
+                    AllGroupMembers allMembersOfSubDl = getAllGroupMembers(subDl);
+                    GroupShape.shapeMembers(TargetType.account, accountShapes, allMembersOfSubDl);
+                    GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembersOfSubDl);
+                    GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembersOfSubDl);
+                }
+            }
+        }
+        
+        if (ZimbraLog.acl.isDebugEnabled()) {
+            GroupShape.debug("accountShapes", accountShapes);
+            GroupShape.debug("calendarResourceShapes", calendarResourceShapes);
+            GroupShape.debug("distributionListShapes", distributionListShapes);
         }
         
         //
-        // then, for each group shape, generate a RightAggregation and record in the AllEffectiveRights
+        // then, for each group shape, generate a RightAggregation and record in the AllEffectiveRights.
         // if any of the entries in a shape also have grants as an individual, the effective rigths for 
         // those entries will be replaced in stage 3.
         //
@@ -549,7 +637,7 @@ public class CollectAllEffectiveRights {
      * We do not have a group scope in AllEffectiveRights. 
      * 
      * Reasons:
-     *     1. If we return somethings like: 
+     *     1. If we return something like: 
      *           have effective rights X, Y, Z on members in groups A, B, C
      *           have effective rights P, Q, R on members in groups M, N
      *        then client will have to figure out if an account/cr/dl are in which groups.   
@@ -640,7 +728,7 @@ public class CollectAllEffectiveRights {
             System.out.println("  " + member);
     }
     
-    private static void setupShapeTest() throws ServiceException {
+    private static void setupShapeTest1() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         
         // create test
@@ -690,8 +778,74 @@ public class CollectAllEffectiveRights {
                                        ABCD.getName()});
     }
     
-    private static void shapeTest() throws ServiceException {
-        setupShapeTest();
+    private static void shapeTest1() throws ServiceException {
+        setupShapeTest1();
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        // create test
+        Set<DistributionList> groupsWithGrants = new HashSet<DistributionList>();
+        String domainName = "test.com";
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupA@"+domainName));
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupB@"+domainName));
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupC@"+domainName));
+        groupsWithGrants.add(prov.get(DistributionListBy.name, "groupD@"+domainName));
+        
+        Set<GroupShape> accountShapes = new HashSet<GroupShape>();
+        Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
+        Set<GroupShape> distributionListShapes = new HashSet<GroupShape>();
+        
+        for (DistributionList group : groupsWithGrants) {
+            // group is an AclGroup, which contains only upward membership, not downward membership.
+            // re-get the DistributionList object, which has the downward membership.
+            DistributionList dl = prov.get(DistributionListBy.id, group.getId());
+            AllGroupMembers allMembers = allGroupMembers(dl);
+            GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
+            GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
+            GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembers);
+        }
+        
+        int count = 1;
+        for (GroupShape shape : accountShapes) {
+            System.out.println("\n" + count++);
+            for (String group : shape.getGroups())
+                System.out.println("group " + group);
+            for (String member : shape.getMembers())
+                System.out.println("    " + member);
+        }
+    }
+    
+    private static void setupShapeTest2() throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        
+        // create test
+        String domainName = "test.com";
+        Domain domain = prov.createDomain(domainName, new HashMap<String, Object>());
+        
+        DistributionList groupA = prov.createDistributionList("groupA@"+domainName, new HashMap<String, Object>());
+        DistributionList groupB = prov.createDistributionList("groupB@"+domainName, new HashMap<String, Object>());
+        DistributionList groupC = prov.createDistributionList("groupC@"+domainName, new HashMap<String, Object>());
+        DistributionList groupD = prov.createDistributionList("groupD@"+domainName, new HashMap<String, Object>());
+        
+        String pw = "test123";
+        Account A = prov.createAccount("A@"+domainName, pw, null);
+        Account B = prov.createAccount("B@"+domainName, pw, null);
+        Account C = prov.createAccount("C@"+domainName, pw, null);
+        Account D = prov.createAccount("D@"+domainName, pw, null);
+        
+        
+        groupA.addMembers(new String[]{A.getName(), groupB.getName()});
+        
+        groupB.addMembers(new String[]{B.getName(), groupC.getName()});
+        
+        groupC.addMembers(new String[]{C.getName(), groupD.getName()});
+        
+        groupD.addMembers(new String[]{D.getName()});
+    }
+    
+    
+    private static void shapeTest2() throws ServiceException {
+        setupShapeTest2();
         
         Provisioning prov = Provisioning.getInstance();
         
@@ -728,6 +882,7 @@ public class CollectAllEffectiveRights {
     }
     
     public static void main(String[] args) throws ServiceException {
-        shapeTest();
+        // shapeTest1();
+        shapeTest2();
     }
 }

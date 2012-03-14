@@ -4782,24 +4782,46 @@ public class LdapProvisioning extends Provisioning {
     }
 
     static final String DATA_DL_SET = "DL_SET";
+    static final String DATA_DIRECT_DL_SET = "DIRECT_DL_SET";
 
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
         @SuppressWarnings("unchecked")
         Set<String> dls = (Set<String>) acct.getCachedData(DATA_DL_SET);
-        if (dls != null) return dls;
+        if (dls != null) {
+            return dls;
+        }
 
-        dls = new HashSet<String>();
+        dls = getDistributionListsIds(acct, false);
+        acct.setCachedData(DATA_DL_SET, dls);
+        return dls;
+    }
+    
+    
+    @Override
+    public Set<String> getDirectDistributionLists(Account acct) throws ServiceException {
+        @SuppressWarnings("unchecked")
+        Set<String> dls = (Set<String>) acct.getCachedData(DATA_DIRECT_DL_SET);
+        if (dls != null) {
+            return dls;
+        }
 
-        List<DistributionList> lists = getDistributionLists(acct, false, null);
+        dls = getDistributionListsIds(acct, true);
+        acct.setCachedData(DATA_DIRECT_DL_SET, dls);
+        return dls;
+    }
+    
+    private Set<String> getDistributionListsIds(Account acct, boolean directOnly) 
+    throws ServiceException {
+        Set<String> dls = new HashSet<String>();
+
+        List<DistributionList> lists = getDistributionLists(acct, directOnly, null);
 
         for (DistributionList dl : lists) {
             dls.add(dl.getId());
         }
         dls = Collections.unmodifiableSet(dls);
-        acct.setCachedData(DATA_DL_SET, dls);
         return dls;
-
     }
 
     @Override

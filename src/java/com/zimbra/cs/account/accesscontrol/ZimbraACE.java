@@ -171,7 +171,8 @@ public class ZimbraACE {
     }
     
     
-    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, RightModifier rightModifier, String secret) throws ServiceException {
+    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, 
+            RightModifier rightModifier, String secret) throws ServiceException {
         
         mGranteeType = granteeType;
         
@@ -273,6 +274,10 @@ public class ZimbraACE {
     
     public boolean subDomain() {
         return mRightModifier == RightModifier.RM_SUBDOMAIN;
+    }
+    
+    public boolean disinheritSubGroups() {
+        return mRightModifier == RightModifier.RM_DISINHERIT_SUB_GROUPS;
     }
     
     public boolean canExecuteOnly() {
