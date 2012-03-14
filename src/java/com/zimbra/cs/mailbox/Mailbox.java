@@ -4567,8 +4567,7 @@ public class Mailbox {
             String uid = inv.getUid();
             CalendarItem calItem = getCalendarItemByUid(uid);
             if (calItem == null) {
-                ZimbraLog.calendar.warn(
-                        "Unknown calendar item UID " + uid + " in mailbox " + getId());
+                ZimbraLog.calendar.warn("Unknown calendar item UID " + uid + " in mailbox " + getId());
                 return;
             }
             calItem.snapshotRevision();
@@ -5191,13 +5190,6 @@ public class Mailbox {
     }
 
     /**
-     * Ensures that we don't attempt multiple
-     * SaveDraft operations for the same mailbox at the same time (bug 59287).  We can
-     * remove this synchronization after bug 59512 is fixed.
-     */
-    private final Object saveDraftGuard = new Object();
-
-    /**
      * Saves draft.
      *
      * @param octxt
@@ -5217,17 +5209,11 @@ public class Mailbox {
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id,
                              String origId, String replyType, String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
-        synchronized (saveDraftGuard) {
-            return saveDraftInternal(octxt, pm, id, origId, replyType, identityId, accountId, autoSendTime);
-        }
-    }
-
-    public Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id,
-                             String origId, String replyType, String identityId, String accountId, long autoSendTime)
-    throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
-        if ((replyType != null && origId != null) || identityId != null || accountId != null || autoSendTime != 0)
+        if ((replyType != null && origId != null) || identityId != null || accountId != null || autoSendTime != 0) {
             dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
+        }
+
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
