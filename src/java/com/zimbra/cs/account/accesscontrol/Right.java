@@ -170,6 +170,16 @@ public abstract class Right extends RightConsts {
         return executableOnTargetType(TargetType.domain);
     }
     
+    /**
+     * returns if the disinheritSubGroups modifier can be specified for the right
+     * @return
+     */
+    boolean allowDisinheritSubGroupsModifier() {
+        return executableOnTargetType(TargetType.dl) || 
+               executableOnTargetType(TargetType.account) ||
+               executableOnTargetType(TargetType.calresource);
+    }
+    
     /*
      * overriden only in InlineAttrRight
      */

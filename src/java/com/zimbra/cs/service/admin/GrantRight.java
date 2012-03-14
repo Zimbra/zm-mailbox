@@ -77,19 +77,37 @@ public class GrantRight extends RightDocumentHandler {
     static RightModifier getRightModifier(Element eRight) throws ServiceException {
         boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
         boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+        boolean disinheritSubGroups = eRight.getAttributeBool(AdminConstants.A_DISINHERIT_SUB_GROUPS, false);
         boolean subDomain = eRight.getAttributeBool(AdminConstants.A_SUB_DOMAIN, false);
         
-        if ((deny && canDelegate) || (canDelegate && subDomain) || (subDomain && deny))
+        int numModifiers = 0;
+        if (deny) {
+            numModifiers++;
+        }
+        if (canDelegate) {
+            numModifiers++;
+        }
+        if (disinheritSubGroups) {
+            numModifiers++;
+        }
+        if (subDomain) {
+            numModifiers++;
+        }
+        
+        if (numModifiers > 1) {
             throw ServiceException.INVALID_REQUEST("can only have one modifier", null);
+        }
         
         RightModifier rightModifier = null;
-        if (deny)
+        if (deny) {
             rightModifier = RightModifier.RM_DENY;
-        else if (canDelegate)
+        } else if (canDelegate) {
             rightModifier = RightModifier.RM_CAN_DELEGATE;
-        else if (subDomain)
+        } else if (disinheritSubGroups) {
+            rightModifier = RightModifier.RM_DISINHERIT_SUB_GROUPS;
+        } else if (subDomain) {
             rightModifier = RightModifier.RM_SUBDOMAIN;
-        
+        }
         return rightModifier;
     }
     

@@ -150,6 +150,10 @@ public class Verify {
             assertEquals(expected.size(), actual.size());
             
             for (String entry : expected) {
+                
+                if (!actual.contains(entry)) {
+                    System.out.println("missing entry: " + entry);
+                }
                 assertTrue(actual.contains(entry));
             }
         } catch (AssertionError e) {
@@ -287,7 +291,7 @@ public class Verify {
     }
     
     public static String makeResultStr(Object... objs) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (Object obj : objs) {
             if (sb.length() > 0) {
                 sb.append(":");
@@ -308,5 +312,11 @@ public class Verify {
         }
         return sb.toString();
     }
-
+    
+    public static void appendResultStr(StringBuilder appendTo, Object... objs) {
+        if (appendTo.length() > 0) {
+            appendTo.append(":");
+        }
+        appendTo.append(makeResultStr(objs));
+    }
 }

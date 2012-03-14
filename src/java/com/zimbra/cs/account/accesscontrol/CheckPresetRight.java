@@ -206,9 +206,9 @@ public class CheckPresetRight extends CheckRight {
                 
                 // don't check yet, collect all acls on all target groups
                 if (groupACLs == null) {
-                    groupACLs = new GroupACLs();
+                    groupACLs = new GroupACLs(mTarget);
                 }
-                groupACLs.collectACL(grantedOn, skipPositiveGrants);
+                groupACLs.collectACL((Group)grantedOn, skipPositiveGrants);
                 
             } else {
                 // end of group targets, put all collected denied and allowed grants into one 

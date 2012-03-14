@@ -106,17 +106,20 @@ public class RightCommand {
                 String right = eRight.getText();
                 boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
                 boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+                boolean disinheritSubGroups = eRight.getAttributeBool(AdminConstants.A_DISINHERIT_SUB_GROUPS, false);
                 boolean subDomain = eRight.getAttributeBool(AdminConstants.A_SUB_DOMAIN, false);
                 
                 RightModifier rightModifier = null;
                 
                 /*
-                 * only one of deny/canDelegate can be true
+                 * only one of deny/canDelegate/disinheritSubGroups/subDomain can be true
                  */
                 if (deny)
                     rightModifier = RightModifier.RM_DENY;
                 else if (canDelegate)
                     rightModifier = RightModifier.RM_CAN_DELEGATE;
+                else if (disinheritSubGroups)
+                    rightModifier = RightModifier.RM_DISINHERIT_SUB_GROUPS;
                 else if (subDomain)
                     rightModifier = RightModifier.RM_SUBDOMAIN;
                 
@@ -164,6 +167,7 @@ public class RightCommand {
                 RightModifier rightModifier = ace.rightModifier();
                 boolean deny = (rightModifier == RightModifier.RM_DENY);
                 boolean canDelegate = (rightModifier == RightModifier.RM_CAN_DELEGATE);
+                boolean disinheritSubGroups = (rightModifier == RightModifier.RM_DISINHERIT_SUB_GROUPS);
                 boolean subDomain = (rightModifier == RightModifier.RM_SUBDOMAIN);
                     
                 /*
@@ -188,6 +192,7 @@ public class RightCommand {
                 Element eRight = eGrant.addElement(AdminConstants.E_RIGHT);
                 eRight.addAttribute(AdminConstants.A_DENY, deny);
                 eRight.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
+                eRight.addAttribute(AdminConstants.A_DISINHERIT_SUB_GROUPS, disinheritSubGroups);
                 eRight.addAttribute(AdminConstants.A_SUB_DOMAIN, subDomain);
                 eRight.setText(ace.right());
             }
@@ -1211,6 +1216,17 @@ public class RightCommand {
             if (!right.allowSubDomainModifier()) {
                 throw ServiceException.INVALID_REQUEST("right modifier " + 
                         RightModifier.RM_SUBDOMAIN.getModifier() +
+                        " is not allowed for the right: " + right.getName(), null);
+            }            
+        } else if (RightModifier.RM_DISINHERIT_SUB_GROUPS == rightModifier) {
+            // can only be granted on group targets
+            if (targetType != TargetType.dl) {
+                throw ServiceException.INVALID_REQUEST("right modifier " + RightModifier.RM_DISINHERIT_SUB_GROUPS.getModifier() +
+                        " can only be granted on group targets", null);
+            }
+            
+            if (!right.allowDisinheritSubGroupsModifier()) {
+                throw ServiceException.INVALID_REQUEST("right modifier " + RightModifier.RM_DISINHERIT_SUB_GROUPS.getModifier() +
                         " is not allowed for the right: " + right.getName(), null);
             }
         }

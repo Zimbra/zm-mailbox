@@ -1481,7 +1481,8 @@ public class SoapProvisioning extends Provisioning {
     }
 
     private static final String DATA_DL_SET = "DL_SET";
-
+    private static final String DATA_DIRECT_DL_SET = "DIRECT_DL_SET";
+    
     @SuppressWarnings("unchecked")
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
@@ -1490,15 +1491,34 @@ public class SoapProvisioning extends Provisioning {
             return dls;
         }
 
-        dls = new HashSet<String>();
+        dls = getDistributionLists(acct, false);
+        acct.setCachedData(DATA_DL_SET, dls);
+        return dls;
+    }
 
-       List<DistributionList> lists = getDistributionLists(acct, false, null);
+    @Override
+    public Set<String> getDirectDistributionLists(Account acct)
+            throws ServiceException {
+        Set<String> dls = (Set<String>) acct.getCachedData(DATA_DIRECT_DL_SET);
+        if (dls != null) {
+            return dls;
+        }
+
+        dls = getDistributionLists(acct, true);
+        acct.setCachedData(DATA_DIRECT_DL_SET, dls);
+        return dls;
+    }
+    
+    private Set<String> getDistributionLists(Account acct, boolean directOnly) 
+    throws ServiceException {
+        Set<String> dls = new HashSet<String>();
+
+        List<DistributionList> lists = getDistributionLists(acct, directOnly, null);
 
         for (DistributionList dl : lists) {
             dls.add(dl.getId());
         }
         dls = Collections.unmodifiableSet(dls);
-        acct.setCachedData(DATA_DL_SET, dls);
         return dls;
     }
 

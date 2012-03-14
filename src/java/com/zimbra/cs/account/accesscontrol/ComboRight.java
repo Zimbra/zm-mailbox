@@ -107,6 +107,20 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
+    boolean allowDisinheritSubGroupsModifier() {
+        // true if *any* of the rights in the combo right are 
+        // executable on targetType dl or account or calresource
+        for (Right r : getAllRights()) {
+            if (r.executableOnTargetType(TargetType.dl) ||
+                r.executableOnTargetType(TargetType.account) ||
+                r.executableOnTargetType(TargetType.calresource)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    @Override
     Set<TargetType> getGrantableTargetTypes() {
         // return *intersect* of target types from which *all* of the target types
         // for the right can inherit from

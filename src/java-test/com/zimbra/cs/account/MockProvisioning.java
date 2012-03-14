@@ -176,6 +176,12 @@ public final class MockProvisioning extends Provisioning {
     public Set<String> getDistributionLists(Account acct) {
         throw new UnsupportedOperationException();
     }
+    
+    @Override
+    public Set<String> getDirectDistributionLists(Account acct)
+            throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public List<DistributionList> getDistributionLists(Account acct,

@@ -495,6 +495,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract Set<String> getDistributionLists(Account acct) throws ServiceException;
+    
+    /**
+     * @return set of all the zimbraId's of direct lists this account belongs to
+     * @throws ServiceException
+     */
+    public abstract Set<String> getDirectDistributionLists(Account acct) throws ServiceException;
 
     /**
      *

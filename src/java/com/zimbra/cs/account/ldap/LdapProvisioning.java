@@ -5653,19 +5653,38 @@ public class LdapProvisioning extends LdapProv {
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
         @SuppressWarnings("unchecked")
         Set<String> dls = (Set<String>) acct.getCachedData(EntryCacheDataKey.ACCOUNT_DLS);
-        if (dls != null) return dls;
+        if (dls != null) {
+            return dls;
+        }
+        dls = getDistributionListIds(acct, false);
+        acct.setCachedData(EntryCacheDataKey.ACCOUNT_DLS, dls);
+        return dls;
+    }
 
-        dls = new HashSet<String>();
+    @Override
+    public Set<String> getDirectDistributionLists(Account acct) throws ServiceException {
+        @SuppressWarnings("unchecked")
+        Set<String> dls = (Set<String>) acct.getCachedData(EntryCacheDataKey.ACCOUNT_DIRECT_DLS);
+        if (dls != null) {
+            return dls;
+        }
+        dls = getDistributionListIds(acct, true);
+        acct.setCachedData(EntryCacheDataKey.ACCOUNT_DIRECT_DLS, dls);
+        return dls;
+    }
+    
+    private Set<String> getDistributionListIds(Account acct, boolean directOnly) 
+    throws ServiceException {
 
-        List<DistributionList> lists = getDistributionLists(acct, false, null);
+        Set<String> dls = new HashSet<String>();
+
+        List<DistributionList> lists = getDistributionLists(acct, directOnly, null);
 
         for (DistributionList dl : lists) {
             dls.add(dl.getId());
         }
         dls = Collections.unmodifiableSet(dls);
-        acct.setCachedData(EntryCacheDataKey.ACCOUNT_DLS, dls);
         return dls;
-
     }
 
     @Override
@@ -6249,6 +6268,7 @@ public class LdapProvisioning extends LdapProv {
 
     private void clearUpwardMembershipCache(Account acct) {
         acct.setCachedData(EntryCacheDataKey.ACCOUNT_DLS, null);
+        acct.setCachedData(EntryCacheDataKey.ACCOUNT_DIRECT_DLS, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);

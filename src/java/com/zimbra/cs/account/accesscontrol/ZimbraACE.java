@@ -331,6 +331,10 @@ public class ZimbraACE {
         return mRightModifier == RightModifier.RM_SUBDOMAIN;
     }
     
+    public boolean disinheritSubGroups() {
+        return mRightModifier == RightModifier.RM_DISINHERIT_SUB_GROUPS;
+    }
+    
     public boolean canExecuteOnly() {
         return !canDelegate() && !deny();
     }
