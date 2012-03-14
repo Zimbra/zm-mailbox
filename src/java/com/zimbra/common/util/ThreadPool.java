@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -91,7 +91,7 @@ public class ThreadPool implements Executor {
         }
     }
 
-    static class ThreadCounter {
+    private class ThreadCounter {
         private int mCount;
 
         public ThreadCounter() {
@@ -118,7 +118,7 @@ public class ThreadPool implements Executor {
      * executes all tasks using this wrapper class to keep track of the number
      * of active worker threads.
      */
-    static class CountedTask implements Runnable {
+    public class CountedTask implements Runnable {
         ThreadCounter mCounter;
         Runnable mTask;
 
@@ -138,7 +138,7 @@ public class ThreadPool implements Executor {
         }
     }
 
-    static class NamedThreadFactory implements ThreadFactory {
+    private static class NamedThreadFactory implements ThreadFactory {
         private String mName;
         private int mPriority;
         private int mThreadNumber;
