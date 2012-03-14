@@ -18,8 +18,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -44,6 +46,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -567,7 +570,14 @@ public class ItemActionHelper {
 
             switch (item.getType()) {
             case CONTACT:
-                ZContact contact = zmbx.createContact(folderStr, null, ((Contact) item).getFields());
+                Contact ct = (Contact) item;
+                Map<String, ZMailbox.ZAttachmentInfo> attachments = new HashMap<String, ZMailbox.ZAttachmentInfo>();
+                for (Contact.Attachment att : ct.getAttachments()) {
+                    String attachmentId = zmbx.uploadAttachment(att.getFilename(), att.getContent(), att.getContentType(), 0);
+                    ZMailbox.ZAttachmentInfo info = new ZMailbox.ZAttachmentInfo().setAttachmentId(attachmentId);
+                    attachments.put(att.getName(), info);
+                }
+                ZContact contact = zmbx.createContact(folderStr, null, ct.getFields(), attachments);
                 createdId = contact.getId();
                 mCreatedIds.add(createdId);
                 break;

@@ -32,13 +32,19 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ContactSortBy;
 import com.zimbra.client.ZMailbox.ZAttachmentInfo;
 import com.zimbra.client.ZMailbox.ZImportContactsResult;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 
 public class TestContacts
@@ -202,6 +208,62 @@ extends TestCase {
         data = getAttachmentData(contact, "attachment4");
         assertEquals(attachment4Text, new String(data));
     }
+    
+    public void testMoveContact()
+    throws Exception {
+        String USER2_NAME = "user2";
+        ZMailbox zmbx = TestUtil.getZMailbox(USER_NAME);
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
+
+        
+        // Create a contact with an attachment.
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put("fullName", NAME_PREFIX + " testMoveContact");
+
+        String attachment1Text = "attachment 1";
+        int timeout = (int) Constants.MILLIS_PER_MINUTE;
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
+
+        String attachment1Id = zmbx.uploadAttachment("file.png", attachment1Text.getBytes(), "image/png", timeout);
+        Map<String, ZAttachmentInfo> attachments = new HashMap<String, ZAttachmentInfo>();
+        ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
+        attachments.put("image", info);
+        ZContact contact = zmbx.createContact(folderId, null, attrs, attachments);
+        
+        Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER2_NAME));
+        Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(acct2);
+        Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct);
+        remoteMbox.grantAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct.getId(), ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
+        mbox1.grantAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct2.getId(), ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
+        // move the contact to user2
+        zmbx.moveContact(contact.getId(), acct2.getId() + ":" + Mailbox.ID_FOLDER_CONTACTS);
+        ZMailbox remoteZmbx = TestUtil.getZMailbox(USER2_NAME);
+        String idStr = TestUtil.search(remoteZmbx, "in:Contacts testMoveContact" , ZSearchParams.TYPE_CONTACT).get(0);
+        Contact ct = remoteMbox.getContactById(null, Integer.parseInt(idStr));
+        // make sure contact has attachment
+        List<Attachment> list = ct.getAttachments();
+        Assert.assertFalse(list.isEmpty());
+        Attachment att = list.get(0);
+        Assert.assertEquals("file.png", att.getFilename());
+        Assert.assertEquals("image/png", att.getContentType());
+        Assert.assertEquals("attachment 1", new String(att.getContent()));
+        // move the contact back to user1
+        remoteZmbx.moveContact(String.valueOf(ct.getId()), acct.getId() + ":" + Mailbox.ID_FOLDER_CONTACTS);
+        // reset the access
+        remoteMbox.revokeAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct.getId());
+        mbox1.revokeAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct2.getId());
+        
+        idStr = TestUtil.search(zmbx, "in:Contacts testMoveContact", ZSearchParams.TYPE_CONTACT).get(0);
+        
+        ct = mbox1.getContactById(null, Integer.parseInt(idStr));
+        // make sure contact has attachment
+        list = ct.getAttachments();
+        Assert.assertFalse(list.isEmpty());
+        att = list.get(0);
+        Assert.assertEquals("file.png", att.getFilename());
+        Assert.assertEquals("image/png", att.getContentType());
+        Assert.assertEquals("attachment 1", new String(att.getContent()));
+    }    
 
     private byte[] getAttachmentData(ZContact contact, String attachmentName)
     throws Exception {
