@@ -47,6 +47,7 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZInternetHeader;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -481,7 +482,8 @@ public final class FilterUtil {
         Enumeration enumeration = mimeMessage.getAllHeaders();
         while (enumeration.hasMoreElements()) {
             Header header = (Header) enumeration.nextElement();
-            vars.put(header.getName().toLowerCase(), mimeMessage.getHeader(header.getName(), ","));
+            vars.put(header.getName().toLowerCase(),
+                    ZInternetHeader.decode(mimeMessage.getHeader(header.getName(), ",")));
         }
         // raw subject could be encoded, so get the parsed subject
         vars.put("subject", parsedMessage.getSubject());
