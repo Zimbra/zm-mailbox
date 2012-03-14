@@ -191,6 +191,7 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
 
     private void clearUpwardMembershipCache(Account acct) {
         acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
+        acct.setCachedData(LdapProvisioning.DATA_DIRECT_DL_SET, null);
         acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST, null);
         acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
