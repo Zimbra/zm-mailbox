@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,7 +27,7 @@ import com.zimbra.common.util.LogFactory;
 
 public class BlobInputStream extends InputStream
 implements SharedInputStream, InputStreamSource {
-    
+
     private static final Log sLog = LogFactory.getLog(BlobInputStream.class);
 
     /**
@@ -40,30 +40,30 @@ implements SharedInputStream, InputStreamSource {
     /**
      * Size before any compression
      */
-    private long mRawSize;
+    private final long mRawSize;
 
     // All indexes are relative to the file, not relative to mStart/mEnd.
-    
+
     /**
      * Position of the last call to {@link #mark}.
      */
     private long mMarkPos = Long.MIN_VALUE;
-    
+
     /**
      * Position of the next byte to read.
      */
     private long mPos;
-    
+
     /**
-     * Maximum bytes that can be read before reset() stops working. 
+     * Maximum bytes that can be read before reset() stops working.
      */
     private int mMarkReadLimit;
-    
+
     /**
      * Start index of this stream (inclusive).
      */
     private long mStart;
-    
+
     /**
      * End index of this stream (exclusive).
      */
@@ -72,23 +72,23 @@ implements SharedInputStream, InputStreamSource {
     private BlobInputStream mRoot;
 
     private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
-    
+
     /**
      * Read buffer.
      */
-    private byte[] mBuf = new byte[BUFFER_SIZE];
-    
+    private final byte[] mBuf = new byte[BUFFER_SIZE];
+
     /**
      * Buffer start position, relative to the file on disk, not {@link #mPos}.
      */
     private long mBufPos = 0;
-    
+
     /**
      * Read buffer size (may be less than <tt>mBuf.length</tt>).  A value of
      * 0 means that the buffer is not initialized.
      */
     private int mBufSize = 0;
-    
+
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire blob.
      */
@@ -118,7 +118,7 @@ implements SharedInputStream, InputStreamSource {
     throws IOException {
         this(file, rawSize, start, end, null);
     }
-    
+
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
      * @param file the file.  Only used if <tt>parent</tt> is <tt>null</tt>.
@@ -134,16 +134,19 @@ implements SharedInputStream, InputStreamSource {
             // Top-level stream.
             mFile = file;
             mRoot = this;
+            if (!file.exists()) {
+                throw new IOException(file.getPath() + " does not exist.");
+            }
         } else {
             // New stream.  Get settings from the parent and add this stream to the group.
             mRoot = parent.mRoot;
             file = mRoot.mFile;
+            if (!file.exists() && !getFileDescriptorCache().contains(file.getPath())) {
+                throw new IOException(file.getPath() + " does not exist.");
+            }
         }
         mRawSize = rawSize;
-        
-        if (!file.exists()) {
-            throw new IOException(file.getPath() + " does not exist.");
-        }
+
         if (start != null && end != null && start > end) {
             String msg = String.format("Start index %d for file %s is larger than end index %d", start, file.getPath(), end);
             throw new IOException(msg);
@@ -178,7 +181,7 @@ implements SharedInputStream, InputStreamSource {
     public static FileDescriptorCache getFileDescriptorCache() {
         return mFileDescriptorCache;
     }
-    
+
     /**
      * Closes the file descriptor referenced by this stream.
      */
@@ -197,9 +200,9 @@ implements SharedInputStream, InputStreamSource {
         closeFile();
         mRoot.mFile = newFile;
     }
-    
+
     ////////////// InputStream methods //////////////
-    
+
     @Override
     public int available() {
         return (int) (mEnd - mPos);
@@ -237,7 +240,7 @@ implements SharedInputStream, InputStreamSource {
         mPos++;
         return b & 0xff;
     }
-    
+
     /**
      * Fills the buffer at the given position in the file.
      * @return number of bytes read
@@ -253,7 +256,7 @@ implements SharedInputStream, InputStreamSource {
         }
         return numRead;
     }
-    
+
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (mPos >= mEnd) {
@@ -262,11 +265,11 @@ implements SharedInputStream, InputStreamSource {
         if (len <= 0) {
             return 0;
         }
-        
+
         // Make sure we don't read past the endpoint passed to the constructor.
         len = (int) Math.min(len, mEnd - mPos);
         int numRead = 0;
-        
+
         if (mPos >= mBufPos && mPos < (mBufPos + mBufSize)) {
             // Current position is inside the buffer.  Read from the buffer.
             numRead = (int) Math.min(len, mBufPos + mBufSize - mPos); // Don't read past the end of the buffer.
@@ -320,7 +323,7 @@ implements SharedInputStream, InputStreamSource {
     /**
      * Ensures that the file descriptor gets closed when this object is garbage
      * collected.  We generally don't like finalizers, but we make an exception
-     * in this case because we have no control over how JavaMail uses BlobInputStream. 
+     * in this case because we have no control over how JavaMail uses BlobInputStream.
      */
     protected void finalize() throws Throwable {
         super.finalize();
@@ -352,14 +355,14 @@ implements SharedInputStream, InputStreamSource {
         } else {
             end += mStart;
         }
-        
+
         BlobInputStream newStream = null;
         try {
             newStream = new BlobInputStream(null, mRawSize, start, end, this);
         } catch (IOException e) {
             sLog.warn("Unable to create substream for %s", mRoot.mFile.getPath(), e);
         }
-        
+
         return newStream;
     }
 }

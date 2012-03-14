@@ -40,21 +40,16 @@ public class FileDescriptorCacheTest {
 
     private static final String NAME_PREFIX = FileDescriptorCacheTest.class.getSimpleName();
 
-    private File tmpDir;
     private File uncompressedDir;
-    private List<File> tempFiles = Lists.newArrayList();
+    private final List<File> tempFiles = Lists.newArrayList();
 
     @Before
     public void startUp() {
-        tmpDir = Files.createTempDir();
         uncompressedDir = Files.createTempDir();
     }
 
     @After
     public void tearDown() throws IOException {
-        if (tmpDir != null) {
-            FileUtil.deleteDir(tmpDir);
-        }
         if (uncompressedDir != null) {
             FileUtil.deleteDir(uncompressedDir);
         }

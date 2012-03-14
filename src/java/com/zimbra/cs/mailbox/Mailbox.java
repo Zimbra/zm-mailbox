@@ -188,10 +188,10 @@ import com.zimbra.cs.redolog.op.RevokeAccess;
 import com.zimbra.cs.redolog.op.SaveChat;
 import com.zimbra.cs.redolog.op.SaveDocument;
 import com.zimbra.cs.redolog.op.SaveDraft;
+import com.zimbra.cs.redolog.op.SetActiveSyncDisabled;
 import com.zimbra.cs.redolog.op.SetCalendarItem;
 import com.zimbra.cs.redolog.op.SetConfig;
 import com.zimbra.cs.redolog.op.SetCustomData;
-import com.zimbra.cs.redolog.op.SetActiveSyncDisabled;
 import com.zimbra.cs.redolog.op.SetFolderDefaultView;
 import com.zimbra.cs.redolog.op.SetFolderUrl;
 import com.zimbra.cs.redolog.op.SetImapUid;
@@ -4955,7 +4955,7 @@ public class Mailbox {
             String uid = inv.getUid();
             CalendarItem calItem = getCalendarItemByUid(uid);
             if (calItem == null) {
-                ZimbraLog.calendar.warn("Unknown calendar item UID %d", uid);
+                ZimbraLog.calendar.warn("Unknown calendar item UID %s", uid);
                 return;
             }
             calItem.snapshotRevision();
@@ -5587,13 +5587,6 @@ public class Mailbox {
     }
 
     /**
-     * Ensures that we don't attempt multiple
-     * SaveDraft operations for the same mailbox at the same time (bug 59287).  We can
-     * remove this synchronization after bug 59512 is fixed.
-     */
-    private final Object saveDraftGuard = new Object();
-
-    /**
      * Saves draft.
      *
      * @param autoSendTime time at which the draft needs to be auto-sent. Note that this method does not schedule
@@ -5603,14 +5596,6 @@ public class Mailbox {
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType,
             String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
-        synchronized (saveDraftGuard) {
-            return saveDraftInternal(octxt, pm, id, origId, replyType, identityId, accountId, autoSendTime);
-        }
-    }
-
-    public Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id,
-            String origId, String replyType, String identityId, String accountId, long autoSendTime)
-            throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
         if ((replyType != null && origId != null) || identityId != null || accountId != null || autoSendTime != 0) {
             dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
@@ -7419,10 +7404,10 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     public void setActiveSyncDisabled(OperationContext octxt, int folderId, boolean disableActiveSync) throws ServiceException {
         SetActiveSyncDisabled redoRecorder = new SetActiveSyncDisabled(mId, folderId, disableActiveSync);
-        
+
         boolean success = false;
         try {
             beginTransaction("setActiveSyncDisabled", octxt, redoRecorder);

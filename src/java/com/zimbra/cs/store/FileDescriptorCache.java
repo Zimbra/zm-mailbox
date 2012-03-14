@@ -48,17 +48,17 @@ public class FileDescriptorCache
     private static final Log sLog = LogFactory.getLog(FileDescriptorCache.class);
 
     // Create the file cache with default LinkedHashMap values, but sorted by last access time.
-    private LinkedHashMap<String, SharedFile> mCache = new LinkedHashMap<String, SharedFile>(16, 0.75f, true);
+    private final LinkedHashMap<String, SharedFile> mCache = new LinkedHashMap<String, SharedFile>(16, 0.75f, true);
     // Create a concurrent list for the SharedFies for which the mapping has been removed but is still in use by some threads.
-    private List<SharedFileInfo> mInactiveCache = Collections.synchronizedList(new ArrayList<SharedFileInfo>());
+    private final List<SharedFileInfo> mInactiveCache = Collections.synchronizedList(new ArrayList<SharedFileInfo>());
     private int mMaxSize = 1000;
-    private FileCache<String> mUncompressedFileCache;
-    private Counter mHitRate = new Counter();
-    
+    private final FileCache<String> mUncompressedFileCache;
+    private final Counter mHitRate = new Counter();
+
     private class SharedFileInfo {
         public String path;
         public SharedFile file;
-        
+
         public SharedFileInfo(String path, SharedFile file) {
             this.path = path;
             this.file = file;
@@ -131,6 +131,12 @@ public class FileDescriptorCache
         }
 
         return numRead;
+    }
+
+    boolean contains(String path) {
+        synchronized (this) {
+            return mCache.containsKey(path);
+        }
     }
 
     /**
@@ -210,7 +216,7 @@ public class FileDescriptorCache
         } else {
             sLog.debug("Attempted to remove %s but could not find it in the cache.", path);
         }
-        
+
         // Close if there are any SharedFiles in the inactive cache.
         quietCloseInactiveCache();
     }
@@ -227,11 +233,13 @@ public class FileDescriptorCache
 
             if (file.getNumReaders() == 0) {
                 file.close();
-                synchronized (this) {
-                    if (!mCache.containsKey(path)) {
-                        mUncompressedFileCache.remove(path);
-                    } else {
-                        sLog.debug("Not removing %s from the uncompressed cache.  Another thread reopened it.");
+                if (mUncompressedFileCache != null) {
+                    synchronized (this) {
+                        if (!mCache.containsKey(path)) {
+                            mUncompressedFileCache.remove(path);
+                        } else {
+                            sLog.debug("Not removing %s from the uncompressed cache.  Another thread reopened it.");
+                        }
                     }
                 }
                 return true;
@@ -240,7 +248,7 @@ public class FileDescriptorCache
         }
         return true;
     }
-    
+
     private void quietCloseInactiveCache() {
         synchronized (mInactiveCache) {
             Iterator<SharedFileInfo> iter = mInactiveCache.iterator();
