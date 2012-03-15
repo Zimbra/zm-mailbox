@@ -2681,3 +2681,12 @@ See soap.txt for more details about the <retentionPolicy> element structure.
 </DeleteSystemRetentionPolicyRequest>
 
 <DeleteSystemRetentionPolicyResponse/>
+
+-----------------------------
+<ClearCookieRequest>
+    <cookie name="{cookie-name}"/>+
+</ClearCookieRequest>
+
+<ClearCookieResponse/>
+-----------------------------
+
