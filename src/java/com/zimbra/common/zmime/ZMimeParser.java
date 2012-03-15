@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -56,15 +57,38 @@ class ZMimeParser {
         if (is instanceof SharedInputStream) {
             return (SharedInputStream) is;
         } else {
-            if (!(is instanceof ByteArrayInputStream) && !(is instanceof BufferedInputStream)) {
-                is = new BufferedInputStream(is);
+            InputStream source = is;
+            if (!(source instanceof ByteArrayInputStream) && !(source instanceof BufferedInputStream)) {
+                source = new BufferedInputStream(source);
             }
+
             try {
-                return new SharedByteArrayInputStream(ASCIIUtility.getBytes(is));
+                return new SharedByteArrayInputStream(ASCIIUtility.getBytes(source));
             } catch (IOException ioex) {
                 throw new MessagingException("IOException", ioex);
             }
         }
+    }
+
+    public static ZMimeMessage parse(Session session, SharedInputStream sis) throws IOException {
+        return (ZMimeMessage) new ZMimeParser(ZMimeMessage.newMessage(session, null), session, sis).parse().getPart();
+    }
+
+    public static ZMimeMultipart parseMultipart(ZMimeMultipart mmp, InputStream is) throws MessagingException, IOException {
+        ZMimeParser parser = new ZMimeParser(new ZMimeBodyPart(), Session.getDefaultInstance(new Properties()), is);
+
+        PartInfo proot = parser.parts.get(0);
+        proot.setContentType(new ZContentType(mmp.getContentType()));
+        proot.bodyStart = 0;
+        proot.firstLine = 0;
+        proot.multi = mmp;
+
+        parser.parts.add(parser.new PartInfo(ZMimeBodyPart.newBodyPart(null), PartLocation.PREAMBLE));
+        parser.state = ParserState.BODY_LINESTART;
+        parser.bodyStart(0);
+        parser.parse();
+
+        return mmp;
     }
 
 
@@ -320,10 +344,6 @@ class ZMimeParser {
         return lineNumber;
     }
 
-
-    public static ZMimeMessage parse(Session session, SharedInputStream sis) throws IOException {
-        return (ZMimeMessage) new ZMimeParser(ZMimeMessage.newMessage(session, null), session, sis).parse().getPart();
-    }
 
     ZMimeParser parse() throws IOException {
         InputStream is = (InputStream) sis;
@@ -691,14 +711,19 @@ class ZMimeParser {
         pcurrent.firstLine = lineNumber;
 
         if (ctype.getPrimaryType().equals("multipart")) {
-            // catch encoded multiparts (not legal, but they exist) and defer parsing
             String enc = pcurrent.part.getEncoding();
             if (enc == null || ZMimeBodyPart.RAW_ENCODINGS.contains(enc)) {
-                pcurrent.multi = ZMimeMultipart.newMultipart(ctype, pcurrent.part);
+                pcurrent.multi = ZMimeMultipart.newMultipart(ctype, pcurrent.part, true);
                 // create the preamble, which encloses the lines up to the first boundary in its *body*
                 parts.add(pcurrent = new PartInfo(ZMimeBodyPart.newBodyPart(null), PartLocation.PREAMBLE));
                 bodyStart(pos);
             } else {
+                // catch encoded multiparts (not legal, but they exist) and defer parsing
+                //   In order to make this work, we have to cache an unparsed ZMimeMultipart in the containing
+                //   MimePart with the DataSource set correctly.  Don't cache the ZMimeMultipart and the ensuing
+                //   getContent() goes through the multipart_mixed handler and instantiates a base JavaMail
+                //   MimeMultipart.  Don't set the DataSource and you get an NPE when it's time to parse.
+                ZMimeMultipart.newMultipart(ctype, pcurrent.part, false);
                 pcurrent.boundary = null;
             }
         } else if (ctype.getBaseType().equals(ZContentType.MESSAGE_RFC822)) {

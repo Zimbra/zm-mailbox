@@ -14,10 +14,13 @@
  */
 package com.zimbra.common.zmime;
 
+import java.io.IOException;
+
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePartDataSource;
 
 public class ZMimeMultipart extends MimeMultipart {
     private static final boolean ZPARSER = ZMimeMessage.ZPARSER;
@@ -34,10 +37,7 @@ public class ZMimeMultipart extends MimeMultipart {
     }
 
     public ZMimeMultipart(DataSource ds) throws MessagingException {
-        // FIXME: parse the multipart using our parser, not the superclass'
         super(ds);
-        parse();
-        complete = super.isComplete();
     }
 
     @SuppressWarnings("unchecked")
@@ -59,8 +59,14 @@ public class ZMimeMultipart extends MimeMultipart {
         this.complete = source.isComplete();
     }
 
-    static ZMimeMultipart newMultipart(ZContentType ctype, ZMimePart container) {
-        ZMimeMultipart multi = new ZMimeMultipart();
+    static ZMimeMultipart newMultipart(ZContentType ctype, ZMimePart container, boolean markParsed) {
+        ZMimeMultipart multi;
+        try {
+            multi = markParsed ? new ZMimeMultipart() : new ZMimeMultipart(new MimePartDataSource(container));
+        } catch (MessagingException me) {
+            // can never happen, since MimePartDataSource is not a MultipartDataSource
+            return null;
+        }
         multi.contentType = ZInternetHeader.unfold(ctype.toString());
         multi.complete = false;
 
@@ -71,6 +77,23 @@ public class ZMimeMultipart extends MimeMultipart {
             ((ZMimeBodyPart) container).cacheContent(multi);
         }
         return multi;
+    }
+
+    @Override
+    protected synchronized void parse() throws MessagingException {
+        if (ZPARSER) {
+            if (parsed)
+                return;
+
+            try {
+                ZMimeParser.parseMultipart(this, ds.getInputStream());
+            } catch (IOException e) {
+                throw new MessagingException("No inputstream from datasource", e);
+            }
+            parsed = true;
+        } else {
+            super.parse();
+        }
     }
 
     @SuppressWarnings("unchecked")
