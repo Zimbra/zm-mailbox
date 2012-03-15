@@ -203,11 +203,11 @@ public class ZAuthToken {
      * @param response
      */
     public static void clearCookies(HttpServletResponse response) {
-        clearCookie(response, ZimbraCookie.COOKIE_ZM_AUTH_TOKEN);
-        clearCookie(response, AUTHTOKEN_TYPE_COOKIE);
-        clearCookie(response, YAHOO_T_COOKIE);
-        clearCookie(response, YAHOO_Y_COOKIE);
-        clearCookie(response, YAHOO_ADMIN_COOKIE);
+        ZimbraCookie.clearCookie(response, ZimbraCookie.COOKIE_ZM_AUTH_TOKEN);
+        ZimbraCookie.clearCookie(response, AUTHTOKEN_TYPE_COOKIE);
+        ZimbraCookie.clearCookie(response, YAHOO_T_COOKIE);
+        ZimbraCookie.clearCookie(response, YAHOO_Y_COOKIE);
+        ZimbraCookie.clearCookie(response, YAHOO_ADMIN_COOKIE);
     }
     
     private void fromSoap(com.zimbra.common.soap.Element eAuthToken, boolean isAdmin) throws ServiceException {
@@ -265,13 +265,6 @@ public class ZAuthToken {
         // fall thru, leave the ZAuthToken empty
     } 
    
-    private static void clearCookie(HttpServletResponse response, String cookieName) {
-        javax.servlet.http.Cookie authTokenCookie = new javax.servlet.http.Cookie(cookieName, "");
-        authTokenCookie.setMaxAge(0);
-        ZimbraCookie.setAuthTokenCookieDomainPath(authTokenCookie, ZimbraCookie.PATH_ROOT);
-        response.addCookie(authTokenCookie);
-    }
-    
     private Map<String, String> toZimbraCookieMap(boolean isAdmin) {
         Map<String, String> cookieMap = null;
         if (mValue != null || mProxyAuthToken != null) {

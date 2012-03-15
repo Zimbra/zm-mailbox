@@ -78,4 +78,11 @@ public class ZimbraCookie {
         response.addCookie(cookie);
     }
 
+    public static void clearCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, "");
+        cookie.setMaxAge(0);
+        setAuthTokenCookieDomainPath(cookie, PATH_ROOT);
+        response.addCookie(cookie);
+    }
+
 }
