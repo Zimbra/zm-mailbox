@@ -6886,7 +6886,7 @@ TODO: delete them permanently from here
   <desc>Maximum duration beyond which the mailbox must be scheduled for purge irrespective of whether it is loaded into memory or not.</desc>
 </attr>
 
-<attr id="1383" name="zimbraThrottleSafeHosts" type="string" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
+<attr id="1383" name="zimbraThrottleSafeHosts" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
   <desc>Hosts to ignore during IP based throttling. Typically should list nginx hostname and any other mailbox servers which can proxy to this server</desc>
 </attr>
 
