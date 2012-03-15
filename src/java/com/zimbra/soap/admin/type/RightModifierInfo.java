@@ -41,6 +41,13 @@ public class RightModifierInfo {
     private final ZmBoolean canDelegate;
 
     /**
+     * @zm-api-field-tag disinheritSubGroups-flag
+     * @zm-api-field-description disinheritSubGroups flag - default is <b>0 (false)</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_DISINHERIT_SUB_GROUPS /* disinheritSubGroups */, required=false)
+    private final ZmBoolean disinheritSubGroups;
+    
+    /**
      * @zm-api-field-tag subdomain-flag
      * @zm-api-field-description subDomain flag - default is <b>0 (false)</b>
      */
@@ -67,19 +74,21 @@ public class RightModifierInfo {
      */
     @SuppressWarnings("unused")
     private RightModifierInfo() {
-        this((Boolean) null, (Boolean) null, (Boolean) null, (String) null);
+        this((Boolean) null, (Boolean) null, (Boolean) null, (Boolean) null, (String) null);
     }
 
     public RightModifierInfo(Boolean deny, Boolean canDelegate,
-                Boolean subDomain, String value) {
+                Boolean disInheritSubGroups, Boolean subDomain, String value) {
         this.deny = ZmBoolean.fromBool(deny);
         this.canDelegate = ZmBoolean.fromBool(canDelegate);
+        this.disinheritSubGroups = ZmBoolean.fromBool(disInheritSubGroups);
         this.subDomain = ZmBoolean.fromBool(subDomain);
         this.value = value;
     }
 
     public Boolean getDeny() { return ZmBoolean.toBool(deny); }
     public Boolean getCanDelegate() { return ZmBoolean.toBool(canDelegate); }
+    public Boolean getDisinheritSubGroups() { return ZmBoolean.toBool(disinheritSubGroups); }
     public Boolean getSubDomain() { return ZmBoolean.toBool(subDomain); }
     public String getValue() { return value; }
 }
