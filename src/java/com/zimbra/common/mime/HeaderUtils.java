@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 
 public class HeaderUtils {
@@ -55,7 +56,7 @@ public class HeaderUtils {
             return "";
         }
         if (encoding == 'Q' || encoding == 'q') {
-            decoder = new QP2047Decoder(new ByteArrayInputStream(word, pos + 1, remaining));
+            decoder = new Q2047Decoder(new ByteArrayInputStream(word, pos + 1, remaining));
         } else if (encoding == 'B' || encoding == 'b') {
             decoder = new ContentTransferEncoding.Base64DecoderStream(new ByteArrayInputStream(word, pos + 1, remaining));
         } else {
@@ -75,8 +76,8 @@ public class HeaderUtils {
         }
     }
 
-    private static class QP2047Decoder extends ContentTransferEncoding.QuotedPrintableDecoderStream {
-        QP2047Decoder(ByteArrayInputStream bais) {
+    private static class Q2047Decoder extends ContentTransferEncoding.QuotedPrintableDecoderStream {
+        Q2047Decoder(ByteArrayInputStream bais) {
             super(bais);
             disableTrimming();
         }
@@ -85,6 +86,73 @@ public class HeaderUtils {
         protected int nextByte() throws IOException {
             int c = super.nextByte();
             return c == '_' ? ' ' : c;
+        }
+    }
+
+    static class Q2047Encoder extends ContentTransferEncoding.QuotedPrintableEncoderStream {
+        static final boolean[] FORCE_ENCODE = new boolean[128];
+        static {
+            for (int i = 0; i < FORCE_ENCODE.length; i++) {
+                FORCE_ENCODE[i] = true;
+            }
+            for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes()) {
+                FORCE_ENCODE[c] = false;
+            }
+        }
+
+        Q2047Encoder(final byte[] content) {
+            super(new ByteArrayInputStream(content), null);
+            disableFolding();
+            setForceEncode(FORCE_ENCODE);
+        }
+
+        @Override
+        public int read() throws IOException {
+            int c = super.read();
+            return c == ' ' ? '_' : c;
+        }
+    }
+
+    static class B2047Encoder extends ContentTransferEncoding.Base64EncoderStream {
+        B2047Encoder(byte[] content) {
+            super(new ByteArrayInputStream(content));
+            disableFolding();
+        }
+    }
+
+    public static String encodeQ2047(byte[] content) {
+        InputStream encoder = new Q2047Encoder(content);
+        try {
+            return new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE));
+        } catch (IOException ioe) {     // should *never* happen
+            return "";
+        }
+    }
+
+    public static String encodeB2047(byte[] content) {
+        InputStream encoder = new B2047Encoder(content);
+        try {
+            return new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE));
+        } catch (IOException ioe) {     // should *never* happen
+            return "";
+        }
+    }
+
+    public static byte[] decodeQ2047(String encoded) {
+        InputStream decoder = new Q2047Decoder(new ByteArrayInputStream(encoded.getBytes()));
+        try {
+            return ByteUtil.readInput(decoder, 0, Integer.MAX_VALUE);
+        } catch (IOException ioe) {     // should *never* happen
+            return null;
+        }
+    }
+
+    public static byte[] decodeB2047(String encoded) {
+        InputStream decoder = new ContentTransferEncoding.Base64DecoderStream(new ByteArrayInputStream(encoded.getBytes()));
+        try {
+            return ByteUtil.readInput(decoder, 0, Integer.MAX_VALUE);
+        } catch (IOException ioe) {     // should *never* happen
+            return null;
         }
     }
 

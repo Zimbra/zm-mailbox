@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,7 +33,7 @@ public class CalculatorStream extends InputStream {
     
     public CalculatorStream(InputStream in) {
         try {
-            mDigestCalculator = MessageDigest.getInstance("SHA1");
+            mDigestCalculator = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Unable to initialize " + CalculatorStream.class.getSimpleName(), e);
         }
@@ -42,7 +42,7 @@ public class CalculatorStream extends InputStream {
     }
 
     /**
-     * Returns the SHA1 digest of the bytes read, encoded as base64.
+     * Returns the SHA-256 digest of the bytes read, encoded as base64.
      */
     public String getDigest() {
         return ByteUtil.encodeFSSafeBase64(mDigestCalculator.digest());
