@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,14 +20,9 @@
 package com.zimbra.common.service;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import org.apache.commons.codec.binary.Hex;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import com.zimbra.common.util.HttpUtil;
 
 @SuppressWarnings("serial")
@@ -51,10 +46,9 @@ public class ServiceException extends Exception {
     public static final String INTERRUPTED = "service.INTERRUPTED";
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
     public static final String SAX_READER_ERROR = "service.SAX_READER_ERROR";
-    public static final String UNSUPPORTED = "service.UNSUPPORTED";
     
     protected String mCode;
-    private List<Argument> mArgs;
+    protected Argument[] mArgs = null;
     private String mId;
 
     public static final String HOST            = "host";
@@ -90,48 +84,39 @@ public class ServiceException extends Exception {
 
     public static class Argument {
         public static enum Type {
-            IID,       // mail-item ID or UUID or mailbox-id 
+            IID,       // mail-item ID or mailbox-id 
             ACCTID,    // account ID
             STR,       // opaque string
             NUM        // opaque number
         }
 
-        public Argument(String name, String value, Type type) {
-            this.name = name;
-            this.value = value;
-            this.type = type;
+        public Argument(String name, String value, Type typ) {
+            mName = name;
+            mValue = value;
+            mType = typ;
         }
 
         public Argument(String name, long value, Type type) {
-            this.name = name;
-            this.value = Long.toString(value);
-            this.type = type;
+            mName = name;
+            mValue = Long.toString(value);
+            mType = type;
         }
 
         public boolean externalVisible() {
             return true;
         }
 
-        public final String name;
-        public final String value;
-        public final Type type;
+        public String mName;
+        public String mValue;
+        public Type mType;
 
-        @Override public String toString() {
-            return "(" + name + ", " + type.name() + ", \"" + value + "\")";
-        }
-        
-        @Override
-        public boolean equals(Object obj) {
-            return (obj != null && hashCode() == obj.hashCode());
-        }
-        
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(name, value, type);
+        @Override 
+        public String toString() {
+            return "(" + mName + ", " + mType.name() + ", \"" + mValue + "\")";
         }
         
         public String getName() {
-            return name;
+            return mName;
         }
     }
 
@@ -150,6 +135,37 @@ public class ServiceException extends Exception {
 
         @Override public boolean externalVisible() {
             return false;
+        }
+    }
+
+    /**
+     * Sets the specified argument if it is not already set, updates 
+     * it if it is.
+     * 
+     * @param name
+     * @param value
+     */
+    public void setArgument(String name, String value, Argument.Type type) {
+        if (mArgs == null) {
+            mArgs = new Argument[1];
+            mArgs[0] = new Argument(name, value, type);
+        } else {
+            for (Argument arg : mArgs) {
+                if ((arg.mName.equals(name)) && (arg.mType == type)) {
+                    arg.mValue = value;
+                    return;
+                }
+            }
+
+            // not found -- enlarge array
+            Argument[] newArgs = new Argument[mArgs.length + 1];
+            for (int i = mArgs.length-1; i>=0; i--) {
+                newArgs[i] = mArgs[i];
+            }
+
+            // add new argument
+            newArgs[mArgs.length] = new Argument(name, value, type);
+            mArgs = newArgs;
         }
     }
 
@@ -189,30 +205,24 @@ public class ServiceException extends Exception {
 
     protected void setId(String id) { mId = id; }
 
-    protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments) {
+    protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments)
+    {
         super(message, cause);
-        List<Argument> argList = (arguments == null ? Collections.<Argument>emptyList() : Arrays.asList(arguments));
-        init(message, code, isReceiversFault, cause, argList);
-    }
-    
-    protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, List<Argument> arguments) {
-        super(message, cause);
-        init(message, code, isReceiversFault, cause, arguments);
-    }
-
-    protected ServiceException(String message, String code, boolean isReceiversFault, Argument... arguments) {
-        this(message, code, isReceiversFault, null, arguments);
-    }
-    
-    private void init(String message, String code, boolean isReceiversFault, Throwable cause, List<Argument> arguments) {
         mCode = code;
         mReceiver = isReceiversFault;
 
-        if (arguments == null) {
-            mArgs = Collections.emptyList();
-        } else {
-            mArgs = Collections.unmodifiableList(Lists.newArrayList(arguments));
-        }
+        mArgs = arguments;
+
+        setId();
+    }
+
+    protected ServiceException(String message, String code, boolean isReceiversFault, Argument... arguments)
+    {
+        super(message);
+        mCode = code;
+        mReceiver = isReceiversFault;
+
+        mArgs = arguments;
 
         setId();
     }
@@ -221,20 +231,8 @@ public class ServiceException extends Exception {
         return mCode;
     }
 
-    /**
-     * Returns the arguments, or an empty {@code List}.
-     */
-    public List<Argument> getArgs() {
+    public Argument[] getArgs() {
         return mArgs;
-    }
-    
-    public String getArgumentValue(String name) {
-        for (Argument arg : mArgs) {
-            if (Objects.equal(arg.name, name)) {
-                return arg.value;
-            }
-        }
-        return null;
     }
 
     public String getId() {
@@ -359,9 +357,5 @@ public class ServiceException extends Exception {
     
     public static ServiceException SAX_READER_ERROR(String str, Throwable cause) {
         return new ServiceException("SAX Reader Error: " + (str != null ? str : ""), SAX_READER_ERROR, SENDERS_FAULT, cause);
-    }
-    
-    public static ServiceException UNSUPPORTED() {
-        return new ServiceException("unsupported", UNSUPPORTED, RECEIVERS_FAULT);
     }
 }
