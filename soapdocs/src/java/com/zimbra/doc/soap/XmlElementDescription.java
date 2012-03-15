@@ -16,6 +16,7 @@
 package com.zimbra.doc.soap;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -37,13 +38,14 @@ import org.apache.log4j.Level;
 public class XmlElementDescription
 implements DescriptionNode, XmlUnit {
     private final static int INDENT_CHAR_NUM = 4;
-    private final static int WRAP_COLUMN_GUIDE = 320;
+    private final static int WRAP_COLUMN_GUIDE = 120;
     DescriptionNode parent;
-    private List<XmlAttributeDescription> attribs = Lists.newArrayList();
-    private List<DescriptionNode> children = Lists.newArrayList();
+    private final List<XmlAttributeDescription> attribs = Lists.newArrayList();
+    private final List<DescriptionNode> children = Lists.newArrayList();
     private boolean isOptional;
     private boolean isSingleton;
     private boolean isInnerRecursionElement;
+    private boolean isMasterDescriptionForJaxbClass = false;
     private int minOccurs;
     private String name;
     private String targetNamespace;
@@ -56,6 +58,9 @@ implements DescriptionNode, XmlUnit {
     private String elementText;
     private String description;
     private String fieldTag;
+    // If there is another description we have already seen for the XML being described for the same class,
+    // this will point at that (otherwise, remains null)
+    private XmlElementDescription masterDescriptionForThisJaxbClass = null;
 
     private static final Logger LOG = Logger.getLogger(DescriptionNode.class);
     static {
@@ -184,6 +189,9 @@ implements DescriptionNode, XmlUnit {
         }
     }
 
+    /**
+     * Intended to be called when processing a Freemarker template
+     */
     public String getHtmlDescription() {
         if (Strings.isNullOrEmpty(name)) {
             return "";
@@ -198,29 +206,44 @@ implements DescriptionNode, XmlUnit {
         writeRequiredIndentation(desc, true, depth);
         writeStartOptionalInfo(desc);
         writeStartMultiElementInfo(desc);
-        desc.append("&lt;<span id=\"elementName\">").append(name).append("</span>");
+        if (isMasterDescriptionForJaxbClass) {
+            // Target anchor for master
+            desc.append(String.format("<a name=\"%s\"></a>", xmlLinkTargetName()));
+        }
+        String startElemString = 
+                (parent == null) ? name : String.format("<a href=\"#%s\">%s</a>", tableLinkTargetName(), name);
+        desc.append("&lt;<span id=\"elementName\">").append(startElemString).append("</span>");
         if (isInnerRecursionElement) {
-            desc.append(" />");
-            desc.append(typeIdString);
-            desc.append(" # inside itself");
+            if (attribs.size() > 0) {
+                desc.append(" ... ");
+            }
+            desc.append("> ... ");
+            writeClosingElementTag(desc);
+            writeTypeIdentifierInfo(desc);
+            desc.append(" # [inside itself]");
         } else {
             if (attribs.size() > 0) {
-                int attrIndentSize = name.length() + 4;
-                int fullIndentSize = indentForCurrentElement(depth) + attrIndentSize;
-                int sofar = fullIndentSize;
-                StringBuilder attrSb = new StringBuilder();
-                for (XmlAttributeDescription attrib : attribs) {
-                    attrSb.setLength(0);
-                    attrSb.append(" ");
-                    attrib.writeHtmlDescription(attrSb, depth);
-                    if (sofar + attrSb.length() > WRAP_COLUMN_GUIDE) {
-                        // wrap to next line
-                        desc.append("<br />\n");
-                        writeNbsp(desc, fullIndentSize);
-                        sofar = fullIndentSize;
+                if ((this.masterDescriptionForThisJaxbClass != null) && (attribs.size() > 2)) {
+                    desc.append(" ... ");
+                } else {
+                    int attrIndentSize = name.length() + 4;
+                    int fullIndentSize = indentForCurrentElement(depth) + attrIndentSize;
+                    int sofar = fullIndentSize;
+                    StringBuilder attrSb = new StringBuilder();
+                    for (XmlAttributeDescription attrib : attribs) {
+                        attrSb.setLength(0);
+                        attrSb.append(" ");
+                        sofar++;
+                        int visibleLen = attrib.writeHtmlDescription(attrSb, depth);
+                        if (sofar + visibleLen > WRAP_COLUMN_GUIDE) {
+                            // wrap to next line
+                            desc.append("<br />\n");
+                            writeNbsp(desc, fullIndentSize);
+                            sofar = fullIndentSize;
+                        }
+                        sofar += visibleLen;
+                        desc.append(attrSb);
                     }
-                    sofar += attrSb.length();
-                    desc.append(attrSb);
                 }
             }
             if (getChildren().size() == 0) {
@@ -228,29 +251,47 @@ implements DescriptionNode, XmlUnit {
                     desc.append(">");  // end of opening element tag
                     desc.append("<span id=\"value\">").append(elementText).append("</span>");
                     writeClosingElementTag(desc);
-                    desc.append(typeIdString);
+                    writeTypeIdentifierInfo(desc);
                 } else {
                     /* can use just the opening element tag */
                     desc.append(" />");
-                    desc.append(typeIdString);
+                    writeTypeIdentifierInfo(desc);
                 }
             } else {
-                desc.append(">").append(typeIdString);  // tagged against opening element
-                desc.append("<br />\n");
-                for (DescriptionNode child : getChildren()) {
-                    child.writeDescription(desc, depth+1);
-                }
-                if (!Strings.isNullOrEmpty(elementText)) {
-                    writeIndentForCurrentElement(desc, depth);
-                    desc.append("<span id=\"value\">").append(elementText).append("</span>").append("<br />\n");
+                // Have children
+                if (this.masterDescriptionForThisJaxbClass != null) {
+                    desc.append("> ... ");
+                    writeClosingElementTag(desc);
+                    writeTypeIdentifierInfo(desc);
+                } else {
+                    desc.append(">");
+                    writeTypeIdentifierInfo(desc); // tagged against opening element
+                    desc.append("<br />\n");
+                    for (DescriptionNode child : getChildren()) {
+                        child.writeDescription(desc, depth+1);
+                    }
+                    if (!Strings.isNullOrEmpty(elementText)) {
+                        writeIndentForCurrentElement(desc, depth);
+                        desc.append("<span id=\"value\">").append(elementText).append("</span>").append("<br />\n");
+                        writeIndentedClosingElementTag(desc, depth);
+                    }
                     writeIndentedClosingElementTag(desc, depth);
                 }
-                writeIndentedClosingElementTag(desc, depth);
             }
         }
         writeEndMultiElementInfo(desc);
         writeEndOptionalInfo(desc);
         desc.append("<br />\n");
+    }
+
+    private void writeTypeIdentifierInfo(StringBuilder desc) {
+        if (masterDescriptionForThisJaxbClass != null) {
+            desc.append(String.format(" ## See <a href=\"#%s\">%s [%s]</a>",
+                    masterDescriptionForThisJaxbClass.xmlLinkTargetName(),
+                    masterDescriptionForThisJaxbClass.getXPath(), typeIdString));
+        } else {
+            desc.append(typeIdString);
+        }
     }
 
     private void writeIndentedClosingElementTag(StringBuilder desc, int depth) {
@@ -337,14 +378,71 @@ implements DescriptionNode, XmlUnit {
         return isInnerRecursion(parent.getParent(), testTypeName);
     }
 
+    /**
+     * 
+     * @param primaryDescriptions Map of primary Description elements for nodes that have already been visited.
+     */
+    public void markupDuplicateElements(Map<Class<?>,XmlElementDescription> primaryDescriptions) {
+        if ((jaxbClass != null) && jaxbClass.getName().startsWith("com.zimbra.soap")) {
+            masterDescriptionForThisJaxbClass = primaryDescriptions.get(jaxbClass);
+            if (masterDescriptionForThisJaxbClass != null) {
+                masterDescriptionForThisJaxbClass.isMasterDescriptionForJaxbClass = true;
+            } else {
+                primaryDescriptions.put(jaxbClass, this);
+            }
+        }
+        for (DescriptionNode child : getChildren()) {
+            if (child instanceof XmlElementDescription) {
+                XmlElementDescription xChild = (XmlElementDescription)child;
+                xChild.markupDuplicateElements(primaryDescriptions);
+            } else if (child instanceof ChoiceNode) {
+                ChoiceNode xChild = (ChoiceNode)child;
+                for (DescriptionNode dn : xChild.getChildren()) {
+                    if (dn instanceof XmlElementDescription) {
+                        XmlElementDescription xDn = (XmlElementDescription)dn;
+                        xDn.markupDuplicateElements(primaryDescriptions);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public String getTableKeyColumnContents() {
+        String retval = String.format("<a name=\"%s\">%s</a>", tableLinkTargetName(), getXPath());
+        return retval;
+    }
+
     @Override
     public String getXPath() {
         String retval;
-        if (this.parent == null) {
+        if (parent == null) {
             retval = ""; /* leave out the top level name */
         }
         else {
-            retval = String.format("%s/%s", this.parent.getXPath(), this.name);
+            retval = String.format("%s/%s", parent.getXPath(), name);
+        }
+        return retval;
+    }
+
+    @Override
+    public String xmlLinkTargetName() {
+        String retval;
+        if (parent == null) {
+            retval = String.format("xml-%s", name);
+        } else {
+            retval = String.format("%s-%s", parent.xmlLinkTargetName(), name);
+        }
+        return retval;
+    }
+
+    @Override
+    public String tableLinkTargetName() {
+        String retval;
+        if (parent == null) {
+            retval = String.format("tbl-%s", name);
+        } else {
+            retval = String.format("%s-%s", parent.tableLinkTargetName(), name);
         }
         return retval;
     }
@@ -356,6 +454,9 @@ implements DescriptionNode, XmlUnit {
     @Override
     public List<DescriptionNode> getChildren() { return children; }
 
+    /**
+     * Used in Freemarker templates to produce the tables describing elements of XML
+     */
     public List<XmlUnit> getChildDocumentableXmlUnits() {
         List<XmlUnit> units = Lists.newArrayList();
         units.addAll(this.getAttribs());
@@ -376,9 +477,12 @@ implements DescriptionNode, XmlUnit {
         return units;
     }
 
-    public List<XmlUnit> getDocumentableXmlUnits() {
+    private List<XmlUnit> getDocumentableXmlUnits() {
         List<XmlUnit> units = Lists.newArrayList();
         units.add(this);
+        if (masterDescriptionForThisJaxbClass != null) {
+            return units;
+        }
         units.addAll(this.getAttribs());
         for (DescriptionNode child : this.getChildren()) {
             if (child instanceof XmlElementDescription) {
@@ -418,6 +522,24 @@ implements DescriptionNode, XmlUnit {
 
     public void setValueFieldDescription(String description) {
         this.valueFieldDescription = description;
+    }
+
+    @Override
+    public String getDescriptionForTable() {
+        if (masterDescriptionForThisJaxbClass != null) {
+            String desc = getDescription();
+            if (desc.isEmpty()) {
+                return String.format("See <a href=\"#%s\">%s</a> for more details.",
+                        masterDescriptionForThisJaxbClass.tableLinkTargetName(),
+                        masterDescriptionForThisJaxbClass.getXPath());
+            } else {
+                return String.format("%s\n<br />\nSee <a href=\"#%s\">%s</a> for more details.",
+                        getDescription(),
+                        masterDescriptionForThisJaxbClass.tableLinkTargetName(),
+                        masterDescriptionForThisJaxbClass.getXPath());
+            }
+        }
+        return getDescription();
     }
 
     @Override

@@ -19,7 +19,7 @@ function windowTitle()
 
 </head>
 
-<BODY BGCOLOR="white" onload="windowTitle();">
+<body bgcolor="white" onload="windowTitle();">
 
 <table cellspacing="3" cellpadding="0" border="0" summary="" bgcolor="#eeeeff">
   <tbody>
@@ -31,15 +31,15 @@ function windowTitle()
   </tbody>
 </table>
 
-<HR>
-<CENTER>
-<H1>
+<hr>
+<center>
+<h1>
 Zimbra<sup><font size=-2>TM</font></sup> SOAP API Reference ${build.version}
-</H1>
-</CENTER>
+</h1>
+</center>
 This document is the reference specification for the Zimbra SOAP API.
 
-<P>
+<p>
 
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">

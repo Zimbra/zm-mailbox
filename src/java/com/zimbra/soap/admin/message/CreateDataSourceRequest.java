@@ -33,7 +33,7 @@ import com.zimbra.soap.admin.type.DataSourceSpecifier;
  * <li> Currently the only type supported is <b>pop3</b>.
  * <li> every attribute value is returned except password.
  * <li> this request is by default proxied to the account's home server
- * <ul>
+ * </ul>
  * Example:
  * <pre>
  *     &lt;CreateDataSourceRequest/>

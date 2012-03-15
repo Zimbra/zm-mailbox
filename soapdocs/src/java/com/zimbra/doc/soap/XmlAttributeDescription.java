@@ -52,29 +52,39 @@ implements XmlUnit {
     public String getFieldTag() { return Strings.nullToEmpty(fieldTag); }
 
     public void setDescription(String description) { this.description = description; }
+
     @Override
+    public String getDescriptionForTable() {
+        return getDescription();
+    }
     public String getDescription() {
-    	StringBuilder desc = new StringBuilder();
+        StringBuilder desc = new StringBuilder();
         if (!Strings.isNullOrEmpty(valueRepresentation)) {
-        	desc.append("<b>Type:").append(valueRepresentation).append("</b>");
-	    	if (!Strings.isNullOrEmpty(description)) {
-	        	desc.append("<br />\n").append(description);
-	    	}
+            desc.append("<b>Type:").append(valueRepresentation).append("</b>");
+            if (!Strings.isNullOrEmpty(description)) {
+                desc.append("<br />\n").append(description);
+            }
         } else if (!Strings.isNullOrEmpty(description)) {
-        	desc.append(description);
-    	}
+            desc.append(description);
+        }
         return desc.toString();
     }
-
 
     public void setFieldName(String fieldName) { this.fieldName = fieldName; }
     public String getFieldName() { return Strings.nullToEmpty(fieldName); }
 
-    public void writeHtmlDescription(StringBuilder desc, int depth) {
+    /**
+     * @return Visible length added
+     */
+    public int writeHtmlDescription(StringBuilder desc, int depth) {
+        int visibleLen = 0;
         if (!required) {
             desc.append("[");
+            visibleLen++;
         }
-        desc.append("<span id=\"attrName\">").append(name).append("</span>");
+        String attrName = String.format("<a href=\"#%s\">%s</a>", tableLinkTargetName(), name);
+        visibleLen = visibleLen + name.length();
+        desc.append("<span id=\"attrName\">").append(attrName).append("</span>");
         String valRep = getValueRepresentation();
         String ftag = getFieldTag();
         if ("String".equals(valRep)) {
@@ -90,13 +100,21 @@ implements XmlUnit {
                 valRep = String.format("\"{%s} (%s)\"", ftag, valRep);
             }
         }
+        visibleLen = visibleLen + valRep.length();
         desc.append("=<span id=\"value\">").append(valRep).append("</span>");
         if (!required) {
             desc.append("]");
+            visibleLen++;
         }
+        return visibleLen;
     }
 
     @Override
+    public String getTableKeyColumnContents() {
+        String retval = String.format("<a name=\"%s\">%s</a>", tableLinkTargetName(), getXPath());
+        return retval;
+    }
+
     public String getXPath() {
         if (parent == null) {
             return String.format("@%s", name);
@@ -104,6 +122,17 @@ implements XmlUnit {
             return String.format("%s@%s", parent.getXPath(), name);
         }
     }
+
+    public String tableLinkTargetName() {
+        String retval;
+        if (parent == null) {
+            retval = String.format("tbl-%s", name);
+        } else {
+            retval = String.format("%s-%s", parent.tableLinkTargetName(), name);
+        }
+        return retval;
+    }
+
 
     @Override
     public OccurrenceSpec getOccurrence() {

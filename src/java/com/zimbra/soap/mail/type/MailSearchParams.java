@@ -173,7 +173,7 @@ public class MailSearchParams implements SearchParameters {
      * <br />
      * + if max="{max-inlined-length}" is specified, inlined body content in limited to the given length;
      * <br />
-     * if the part is truncated, truncated="1" is specified on the <mp> in question
+     * if the part is truncated, truncated="1" is specified on the &lt;mp> in question
      */
     @XmlAttribute(name=MailConstants.A_FETCH /* fetch */, required=false)
     private String fetch;
@@ -189,7 +189,7 @@ public class MailSearchParams implements SearchParameters {
      * @zm-api-field-tag max-inlined-length
      * @zm-api-field-description If specified, inlined body content in limited to the given length;
      * <br />
-     * if the part is truncated, truncated="1" is specified on the <mp> in question
+     * if the part is truncated, truncated="1" is specified on the &lt;mp> in question
      */
     @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxInlinedLength;

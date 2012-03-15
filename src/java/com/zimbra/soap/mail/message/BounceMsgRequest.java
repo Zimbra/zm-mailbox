@@ -27,7 +27,7 @@ import com.zimbra.soap.mail.type.BounceMsgSpec;
 /**
  * @zm-api-command-description Resend a message
  * <br />
- * Supports (f)rom, (t)o, (c)c, (b)cc, (s)ender "type" on <e> elements
+ * Supports (f)rom, (t)o, (c)c, (b)cc, (s)ender "type" on &lt;e> elements
  * <br />
  * (these get mapped to Resent-From, Resent-To, Resent-CC, Resent-Bcc, Resent-Sender headers, which are prepended to
  * copy of existing message)
@@ -58,15 +58,12 @@ public class BounceMsgRequest {
 
     public BounceMsgSpec getMsg() { return msg; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("msg", msg);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("msg", msg);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

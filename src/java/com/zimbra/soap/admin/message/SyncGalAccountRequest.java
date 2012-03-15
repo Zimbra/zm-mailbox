@@ -19,7 +19,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -42,6 +41,7 @@ import com.zimbra.soap.admin.type.SyncGalAccountSpec;
  * <li> If reset attribute is set, then all the contacts will be populated again, regardless of the status since last
  *      sync.  Reset needs to be done when there is a significant change in the configuration, such as filter,
  *      attribute map, or search base.
+ * </ul>
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SYNC_GAL_ACCOUNT_REQUEST)
@@ -71,15 +71,12 @@ public class SyncGalAccountRequest {
         return accounts;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("accounts", accounts);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("accounts", accounts);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

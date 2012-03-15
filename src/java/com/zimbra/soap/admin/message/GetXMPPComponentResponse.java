@@ -30,7 +30,7 @@ import com.zimbra.soap.admin.type.XMPPComponentInfo;
  * Attributes that are not allowed to be got by the authenticated admin will be returned as :
  * <pre>
  *     &lt;a n=&quot;{attr-name}&quot; pd=&quot;1&quot;/&gt;
- * <pre>
+ * </pre>
  * To allow an admin to get all attributes, grant the getXMPPComponent right
  */
 @XmlAccessorType(XmlAccessType.NONE)

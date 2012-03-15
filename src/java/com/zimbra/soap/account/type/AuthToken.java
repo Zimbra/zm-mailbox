@@ -34,9 +34,10 @@ public class AuthToken {
     private String value;
 
     /**
-     * @zm-api-field-description * If verifyAccount="1", &lt;account> is required and the account in the auth token is
+     * @zm-api-field-description If verifyAccount="1", &lt;account> is required and the account in the auth token is
      * compared to the named account.
-     * If verifyAccount="0" (default), only the auth token is verified and any <account> element specified is ignored.
+     * If verifyAccount="0" (default), only the auth token is verified and any <b>&lt;account></b> element specified
+     * is ignored.
      */
     @XmlAttribute(name=AccountConstants.A_VERIFY_ACCOUNT /* verifyAccount */, required=false)
     private ZmBoolean verifyAccount;

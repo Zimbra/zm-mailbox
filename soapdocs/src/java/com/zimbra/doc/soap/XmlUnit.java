@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011,2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,14 +15,12 @@
 
 package com.zimbra.doc.soap;
 
-import java.util.List;
-
 /**
  * Used for table entries describing either XML attributes or elements
  */
 public interface XmlUnit {
-    public String getXPath();
+    public String getTableKeyColumnContents();
     public String getName();
     public OccurrenceSpec getOccurrence();
-    public String getDescription();
+    public String getDescriptionForTable();
 }

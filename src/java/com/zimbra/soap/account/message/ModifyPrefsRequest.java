@@ -47,7 +47,7 @@ import com.zimbra.soap.account.type.Pref;
  * <br />
  * You can also add/subtract single values to/from a multi-value pref by prefixing the preference name with 
  * a '+' or '-', respectively in the same way you do when using zmprov. For example:
- * < pre>
+ * <pre>
  *      &lt;ModifyPrefsRequest>
  *          &lt;pref name="+foo">value1&lt;/pref>
  *          &lt;pref name="-foo">value2&lt;/pref>

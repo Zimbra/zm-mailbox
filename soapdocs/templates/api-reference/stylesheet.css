@@ -28,7 +28,10 @@ h1 { font-size: 145% }
 .NavBarCell3    { font-family: Arial, Helvetica, sans-serif; background-color:#FFFFFF;}
 
 /* Xml description */
-#elementName    { color:#006400; } /* Dark Green */
-#attrName       { color:#9400D3; } /* Dark Violet */
-#value          { color:#8B0000; } /* Dark Red */
-
+#elementName           { color:#006400; } /* Dark Green */
+#elementName a:link    { color:#006400; } /* Dark Green */
+#elementName a:visited { color:#00CC00; } /* Green */
+#attrName              { color:#9400D3; } /* Dark Violet */
+#attrName a:link       { color:#9400D3; } /* Dark Violet */
+#attrName a:visited    { color:#DD00FF; } /* Violet */
+#value                 { color:#8B0000; } /* Dark Red */

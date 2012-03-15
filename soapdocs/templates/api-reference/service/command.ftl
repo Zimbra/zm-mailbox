@@ -74,7 +74,7 @@ The following table describes elements and attributes you can define within a
     </tr>
 <#list command.request.childDocumentableXmlUnits as unit>
     <tr>
-        <td><a href="#request-${unit.name}">${unit.XPath}</a></td>
+        <td> ${unit.tableKeyColumnContents} </td>
         <td>
         <#switch unit.occurrence>
               <#case "REQUIRED">
@@ -91,7 +91,7 @@ The following table describes elements and attributes you can define within a
               <#break>
         </#switch>
         </td>
-        <td>${unit.description}</td>
+        <td>${unit.descriptionForTable}</td>
     </tr>
 </#list>
 </tbody>
@@ -121,7 +121,7 @@ The following table describes elements and attributes you can define within a
     </tr>
 <#list command.response.childDocumentableXmlUnits as unit>
     <tr>
-        <td><a href="#response-${unit.name}">${unit.XPath}</a></td>
+        <td> ${unit.tableKeyColumnContents} </td>
         <td>
         <#switch unit.occurrence>
               <#case "REQUIRED">
@@ -138,7 +138,7 @@ The following table describes elements and attributes you can define within a
               <#break>
         </#switch>
         </td>
-        <td>${unit.description}</td>
+        <td>${unit.descriptionForTable}</td>
     </tr>
 </#list>
 </tbody>

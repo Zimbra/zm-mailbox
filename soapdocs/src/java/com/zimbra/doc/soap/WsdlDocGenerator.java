@@ -147,6 +147,15 @@ public class WsdlDocGenerator {
         }
     }
 
+    /**
+     * Traverse description tree, creating pointers from duplicate elements to an original, so that we can
+     * reduce the amount of repetition in document
+     */
+    private static void markupDuplicateElements(XmlElementDescription elemDesc) {
+        Map<Class<?>,XmlElementDescription> primaryDescriptions = Maps.newHashMap();
+        elemDesc.markupDuplicateElements(primaryDescriptions);
+    }
+
     public static Root processJaxbClasses(Map<String,ApiClassDocumentation> javadocInfo) {
         Class<?>[] jaxbClasses = JaxbUtil.getJaxbRequestAndResponseClasses();
         Map<Package,String> pkgToNamespace = Maps.newHashMap();
@@ -176,6 +185,7 @@ public class WsdlDocGenerator {
                     cmd = svc.addCommand(new Command(svc, cmdName, namespace));
                 }
                 desc = XmlElementDescription.createTopLevel(jaxbInfo, namespace, jaxbInfo.getRootElementName());
+                markupDuplicateElements(desc);
                 cmd.setDescription(desc.getDescription());
                 cmd.setRootRequestElement(desc);
                 // getJavaDocInfoForCommand(cmd, jaxbClass);
@@ -186,6 +196,7 @@ public class WsdlDocGenerator {
                     cmd = svc.addCommand(new Command(svc, cmdName, namespace));
                 }
                 desc = XmlElementDescription.createTopLevel(jaxbInfo, namespace, jaxbInfo.getRootElementName());
+                markupDuplicateElements(desc);
                 cmd.setRootResponseElement(desc);
             }
         }

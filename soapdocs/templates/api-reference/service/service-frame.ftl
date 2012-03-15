@@ -24,6 +24,7 @@ ${service.name} (Zimbra SOAP API Reference ${build.version})
 <A HREF="${command.name}.html" title="command in ${command.service.name}" target="commandFrame">${command.name}</A>
 </#list>
 </FONT>
+</TD>
 </TR>
 </TABLE>
 

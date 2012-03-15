@@ -47,7 +47,7 @@ import com.zimbra.soap.type.ZmBoolean;
  * <li> for contact ref (type="C"): the fileAs field of the Contact
  * <li> for GAL ref (type="G"): email address of the GAL entry
  * <li> for inlined member (type="I"): the value
- * <ul>
+ * </ul>
  * Contact group members are returned as sub-elements of &lt;m>.
  * If for any(transient or permanent) reason a member cannot be dereferenced, then there will be no sub-element
  * under &lt;m>.

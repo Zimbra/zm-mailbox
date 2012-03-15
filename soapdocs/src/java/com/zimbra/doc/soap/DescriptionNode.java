@@ -24,4 +24,6 @@ public interface DescriptionNode {
     public String getDescription();
     public String getSummary();
     public String getXPath();
+    public String xmlLinkTargetName();
+    public String tableLinkTargetName();
 }

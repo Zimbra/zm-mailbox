@@ -40,13 +40,12 @@ import com.zimbra.soap.type.ZmBoolean;
  * Migration (ie migrating a mailbox onto this server) and is not used by normal mail clients.
  * <br />
  * <br />
- * Need to specifiy folder for appointment
+ * Need to specify folder for appointment
  * <br />
  * <br />
  * Need way to add message WITHOUT processing it for calendar parts.
  * Need to generate and patch-in the iCalendar for the <b>&lt;inv></b> but w/o actually processing the
  * <b>&lt;inv></b> as a new request
- * </ol>
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SET_APPOINTMENT_REQUEST)

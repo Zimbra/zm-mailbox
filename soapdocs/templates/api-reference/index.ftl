@@ -26,11 +26,13 @@ Zimbra SOAP API Reference ${build.version}
 </FRAMESET>
 <FRAME src="overview-summary.html" name="commandFrame" title="Service and command descriptions" scrolling="yes">
 <NOFRAMES>
+<BODY>
 <H2>Frame Alert</H2>
 
 <P>
 This document is designed to be viewed using the frames feature. If you see this message, you are using a non-frame-capable web client.
 <BR>
+</BODY>
 </NOFRAMES>
 </FRAMESET>
 </HTML>

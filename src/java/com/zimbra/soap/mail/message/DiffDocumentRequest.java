@@ -43,18 +43,18 @@ import com.zimbra.soap.mail.type.DiffDocumentVersionSpec;
  *     line 4
  *     line 5
  *
- *     <DiffDocumentRequest xmlns:ns0="urn:zimbraMail">
- *       <doc v1="3" v2="4" id="641"/>
- *     </DiffDocumentRequest>
+ *     &lt;DiffDocumentRequest xmlns:ns0="urn:zimbraMail">
+ *       &lt;doc v1="3" v2="4" id="641"/>
+ *     &lt;/DiffDocumentRequest>
  *
- *     <DiffDocumentResponse xmlns:ns0="urn:zimbraMail">
- *       <chunk disp="common">line 1
- *     line 2</chunk>
- *       <chunk disp="first">line 3</chunk>
- *       <chunk disp="second">line 3.6</chunk>
- *       <chunk disp="common">line 4
- *     line 5</chunk>
- *     </DiffDocumentResponse>
+ *     &lt;DiffDocumentResponse xmlns:ns0="urn:zimbraMail">
+ *       &lt;chunk disp="common">line 1
+ *     line 2&lt;/chunk>
+ *       &lt;chunk disp="first">line 3&lt;/chunk>
+ *       &lt;chunk disp="second">line 3.6&lt;/chunk>
+ *       &lt;chunk disp="common">line 4
+ *     line 5&lt;/chunk>
+ *     &lt;/DiffDocumentResponse>
  * </pre>
  */
 @XmlAccessorType(XmlAccessType.NONE)
@@ -73,15 +73,12 @@ public class DiffDocumentRequest {
     public void setDoc(DiffDocumentVersionSpec doc) { this.doc = doc; }
     public DiffDocumentVersionSpec getDoc() { return doc; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("doc", doc);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("doc", doc);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

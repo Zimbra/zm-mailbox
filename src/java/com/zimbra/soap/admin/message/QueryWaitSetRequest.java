@@ -64,7 +64,7 @@ import com.zimbra.common.soap.MailConstants;
  *   ]?
  *   [&lt;ready accounts="comma-separated list of account IDs"/>]?
  * &lt;/QueryWaitSetResponse>
- * <pre>
+ * </pre>
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_QUERY_WAIT_SET_REQUEST)

@@ -82,6 +82,16 @@ implements DescriptionNode {
      */
     @Override
     public String getXPath() {
-        return (this.parent == null) ? "" : this.parent.getXPath();
+        return (parent == null) ? "" : parent.getXPath();
+    }
+
+    @Override
+    public String xmlLinkTargetName() {
+        return (parent == null) ? "" : parent.xmlLinkTargetName();
+    }
+
+    @Override
+    public String tableLinkTargetName() {
+        return (parent == null) ? "" : parent.tableLinkTargetName();
     }
 }

@@ -29,7 +29,7 @@ import com.zimbra.soap.admin.type.LimitedQuery;
  * @zm-api-command-description Check Global Addressbook Configuration
  * <br />
  * <pre>
- * <CheckGalConfigRequest>
+ * &lt;CheckGalConfigRequest>
  *     &lt;a n='zimbraGalMode'>ldap&lt;/a>
  *
  *     &lt;a n='zimbraGalLdapURL'>...&lt;/a>

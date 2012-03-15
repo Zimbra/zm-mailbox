@@ -42,19 +42,19 @@ import com.zimbra.soap.admin.type.TargetWithType;
  * <pre>
  * &lt;GetCreateObjectAttrsRequest>
  *   &lt;target type="account"/>
- *   &lt;domain by="name">test.com</domain>
- *   &lt;cos by="name">standard</cos>
+ *   &lt;domain by="name">test.com&lt;/domain>
+ *   &lt;cos by="name">standard&lt;/cos>
  * &lt;/GetCreateObjectAttrsRequest>
  * 
  * &lt;GetCreateObjectAttrsResponse>
  *     &lt;setAttrs>
  *           &lt;a n="zimbraMailQuota"/>
  *               &lt;constraint>
- *                   &lt;min>1</min>
- *                   &lt;max>3</max>
+ *                   &lt;min>1&lt;/min>
+ *                   &lt;max>3&lt;/max>
  *               &lt;/constraint>
  *               &lt;default>
- *                   &lt;v>2</v>
+ *                   &lt;v>2&lt;/v>
  *               &lt;/default>
  *           &lt;a n="zimbraMailStatus"/>
  *           &lt;a n="zimbraFeatureCalendarEnabled"/>
@@ -77,8 +77,8 @@ import com.zimbra.soap.admin.type.TargetWithType;
  *           &lt;a n="zimbraReverseProxyImapEnabledCapability"/>
  *               &lt;constraint>
  *                   &lt;values>
- *                       &lt;v>IMAP4rev1</v>
- *                       &lt;v>BINARY</v>
+ *                       &lt;v>IMAP4rev1&lt;/v>
+ *                       &lt;v>BINARY&lt;/v>
  *                   &lt;/values>
  *               &lt;/constraint>
  *           ...
