@@ -479,6 +479,7 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CheckRightRequest.class,
             com.zimbra.soap.admin.message.CheckRightResponse.class,
             com.zimbra.soap.admin.message.ClearCookieRequest.class,
+            com.zimbra.soap.admin.message.ClearCookieResponse.class,
             com.zimbra.soap.admin.message.ComputeAggregateQuotaUsageRequest.class,
             com.zimbra.soap.admin.message.ComputeAggregateQuotaUsageResponse.class,
             com.zimbra.soap.admin.message.ConfigureZimletRequest.class,

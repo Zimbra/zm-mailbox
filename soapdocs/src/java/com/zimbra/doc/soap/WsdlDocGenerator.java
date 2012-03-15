@@ -129,14 +129,24 @@ public class WsdlDocGenerator {
 
     private static void populateWithJavadocInfo(Root root, Map<String,ApiClassDocumentation> javadocInfo) {
         for (Command cmd : root.getAllCommands()) {
-            String reqClass = cmd.getRequest().getJaxbClass().getName();
+            Class<?> reqKlass = cmd.getRequest().getJaxbClass();
+            if (reqKlass  == null) {
+                throw new RuntimeException("No JAXB Class associated with request for command " + cmd.getName() +
+                        " .  Is JaxbUtil.MESSAGE_CLASSES up to date?");
+            }
+            String reqClass = reqKlass.getName();
             ApiClassDocumentation doc = javadocInfo.get(reqClass);
             if ((doc != null) && (!Strings.isNullOrEmpty(doc.getCommandDescription()))) {
                 cmd.setDescription(doc.getCommandDescription());
                 cmd.setNetworkEdition(doc.isNetworkEdition());
                 cmd.setDeprecation(doc.getDeprecationDescription());
             } else {
-                String respClass = cmd.getResponse().getJaxbClass().getName();
+                Class<?> respKlass = cmd.getResponse().getJaxbClass();
+                if (respKlass  == null) {
+                    throw new RuntimeException("No JAXB Class associated with response for command " + cmd.getName() +
+                            " .  Is JaxbUtil.MESSAGE_CLASSES up to date?");
+                }
+                String respClass = respKlass.getName();
                 doc = javadocInfo.get(respClass);
                 if ((doc != null) && (!Strings.isNullOrEmpty(doc.getCommandDescription()))) {
                     cmd.setDescription(doc.getCommandDescription());
