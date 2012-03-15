@@ -1,0 +1,20 @@
+<GetFolderResponse xmlns="urn:zimbraMail">
+  <folder id="1" rev="1" s="0" i4next="2" i4ms="1" name="USER_ROOT" ms="1" n="0" l="11">
+    <folder id="16" rev="1" s="0" i4next="17" i4ms="1" name="Briefcase" ms="1" n="0" l="1" view="document"/>
+    <folder id="10" f="#" rev="1" s="0" i4next="282" i4ms="515" name="Calendar" ms="1" n="1" l="1" view="appointment"/>
+    <folder id="14" rev="1" s="0" i4next="15" i4ms="1" name="Chats" ms="1" n="0" l="1" view="message"/>
+    <folder id="7" rev="1" s="0" i4next="8" i4ms="1" name="Contacts" ms="1" n="0" l="1" view="contact"/>
+    <folder id="6" rev="1" s="0" i4next="7" i4ms="1" name="Drafts" ms="1" n="0" l="1" view="message"/>
+    <folder id="13" rev="1" s="0" i4next="303" i4ms="1104" name="Emailed Contacts" ms="1" n="1" l="1" view="contact"/>
+    <folder id="2" f="u" u="4" rev="1" s="13540" i4next="282" i4ms="510" name="Inbox" ms="1" n="5" l="1" view="message"/>
+    <folder id="4" rev="1" s="0" i4next="5" i4ms="1" name="Junk" ms="1" n="0" l="1" view="message"/>
+    <folder id="300" f="i" rev="1100" s="0" i4next="301" i4ms="1100" name="NewFolder" ms="1101" n="0" l="1" view="message">
+      <acl>
+        <grant d="wonder@mc.example.net" zid="8d0f48ba-644f-4424-b16e-351f873dff59" perm="rwidx"/>
+      </acl>
+    </folder>
+    <folder id="5" rev="1" s="9681" i4next="302" i4ms="1102" name="Sent" ms="1" n="3" l="1" view="message"/>
+    <folder id="15" f="#" rev="1" s="0" i4next="16" i4ms="1" name="Tasks" ms="1" n="0" l="1" view="task"/>
+    <folder id="3" rev="1" s="5045" i4next="285" i4ms="509" name="Trash" ms="1" n="2" l="1"/>
+  </folder>
+</GetFolderResponse>

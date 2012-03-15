@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
+ * Copyright (C) 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Multimap;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
@@ -41,23 +43,54 @@ import com.zimbra.soap.account.type.Session;
    [<attrs><attr name="{name}">{value}</a>...</attrs>]
    [<skin>{skin-name}</skin>]
  </AuthResponse>
+/**
+ * @zm-api-response-description Response to account authentication request.
  */
-@XmlRootElement(name="AuthResponse")
+@XmlRootElement(name=AccountConstants.E_AUTH_RESPONSE)
 @XmlType(propOrder = {})
 public class AuthResponse {
 
-    @XmlElement(required=true) private String authToken;
-    @XmlElement(required=true) private long lifetime;
-    @XmlElement                private Session session;
-    @XmlElement                private String refer;
-    @XmlElement                private String skin;
+    /**
+     * @zm-api-field-description The authorization token
+     */
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=true)
+    private String authToken;
+    /**
+     * @zm-api-field-description Life time for the authorization
+     */
+    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
+    private long lifetime;
+    /**
+     * @zm-api-field-description Session information
+     */
+    @XmlElement(name=HeaderConstants.E_SESSION)
+    private Session session;
+    /**
+     * @zm-api-field-description host additional SOAP requests should be directed to.
+     * Always returned, might be same as original host request was sent to.
+     */
+    @XmlElement(name=AccountConstants.E_REFERRAL)
+    private String refer;
+    /**
+     * @zm-api-field-description if requestedSkin specified, the name of the skin to use
+     * Always returned, might be same as original host request was sent to.
+     */
+    @XmlElement(name=AccountConstants.E_SKIN)
+    private String skin;
     
-    @XmlElementWrapper(name="prefs")
-    @XmlElement(name="pref")
+    /**
+     * @zm-api-field-description Requested preference settings.
+     */
+    @XmlElementWrapper(name=AccountConstants.E_PREFS)
+    @XmlElement(name=AccountConstants.E_PREF)
     private List<Pref> prefs = new ArrayList<Pref>();
     
-    @XmlElementWrapper(name="attrs")
-    @XmlElement(name="attr")
+    /**
+     * @zm-api-field-description Requested attribute settings.  Only attributes that are allowed to be returned by
+     * GetInfo will be returned by this call
+     */
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
+    @XmlElement(name=AccountConstants.E_ATTR)
     private List<Attr> attrs = new ArrayList<Attr>();
     
     public AuthResponse() {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,6 +20,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import com.google.common.base.Joiner;
@@ -49,6 +50,7 @@ public enum ItemType {
         return name().toLowerCase();
     }
 
+    @XmlTransient
     static final class CSVAdapter extends XmlAdapter<String, Set<ItemType>> {
         @Override
         public String marshal(Set<ItemType> set) throws Exception {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,63 +15,50 @@
 
 package com.zimbra.soap.mail.type;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.SearchSortBy;
 
 /*
   <search id="..." name="..." query="..." [types="..."] [sortBy="..."] l="{folder}"/>+
 
  */
-@XmlRootElement(name="search")
-@XmlType(propOrder = {})
+// Root element name needed to differentiate between types of folder
+// MailConstants.E_SEARCH == "search"
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlRootElement(name=MailConstants.E_SEARCH)
 public final class SearchFolder extends Folder {
 
-    @XmlEnum
-    public enum SortBy {
-        @XmlEnumValue("dateDesc") dateDesc,
-        @XmlEnumValue("dateAsc") dateAsc,
-        @XmlEnumValue("subjDesc") subjDesc,
-        @XmlEnumValue("subjAsc") subjAsc,
-        @XmlEnumValue("nameDesc") nameDesc,
-        @XmlEnumValue("nameAsc") nameAsc,
-        @XmlEnumValue("durDesc") durDesc,
-        @XmlEnumValue("durAsc") durAsc,
-        @XmlEnumValue("none") none,
-        @XmlEnumValue("taskDueAsc") taskDueAsc,
-        @XmlEnumValue("taskStatusDesc") taskDueDesc,
-        @XmlEnumValue("taskStatusAsc") taskStatusAsc,
-        @XmlEnumValue("taskStatusDesc") taskStatusDesc,
-        @XmlEnumValue("taskPercCompletedAsc") taskPercCompletedAsc,
-        @XmlEnumValue("taskPercCompletedDesc") taskPercCompletedDesc;
-
-        public static SortBy fromString(String s) throws ServiceException {
-            try {
-                return SortBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid sortBy: "+s+", valid values: " +
-                    Arrays.asList(SortBy.values()), e);
-            }
-        }
-    }
-
-    @XmlAttribute(name=MailConstants.A_QUERY, required=false)
+    /**
+     * @zm-api-field-tag query
+     * @zm-api-field-description Query
+     */
+    @XmlAttribute(name=MailConstants.A_QUERY /* query */, required=false)
     private String query;
 
-    @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
-    private SortBy sortBy;
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Sort by
+     */
+    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
+    private SearchSortBy sortBy;
 
-    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES, required=false)
+    /**
+     * @zm-api-field-tag comma-sep-search-types
+     * @zm-api-field-description Comma-separated list.  Legal values in list are:
+     * <br />
+     * <b>appointment|chat|contact|conversation|document|message|tag|task|wiki</b>
+     * (default is &quot;conversation&quot;)
+     */
+    @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
     @XmlJavaTypeAdapter(ItemType.CSVAdapter.class)
     private final Set<ItemType> types = EnumSet.noneOf(ItemType.class);
 
@@ -83,11 +70,11 @@ public final class SearchFolder extends Folder {
         this.query = query;
     }
 
-    public SortBy getSortBy() {
+    public SearchSortBy getSortBy() {
         return sortBy;
     }
 
-    public void setSortBy(SortBy sortBy) {
+    public void setSortBy(SearchSortBy sortBy) {
         this.sortBy = sortBy;
     }
 

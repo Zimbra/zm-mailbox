@@ -1,0 +1,6 @@
+<retentionPolicy xmlns="urn:zimbraMail">
+  <keep>
+    <policy id="f948972b-124e-4b2a-aec9-9a61944076e3" lifetime="300d" name="keep1" type="system"/>
+  </keep>
+  <purge/>
+</retentionPolicy>

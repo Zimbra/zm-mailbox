@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,30 +20,30 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Pop3DataSource;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlType(propOrder = {})
 public class AccountPop3DataSource
 extends AccountDataSource
 implements Pop3DataSource {
 
+    /**
+     * @zm-api-field-description Specifies whether imported POP3 messages should be left on the server or deleted.
+     */
     @XmlAttribute(name=MailConstants.A_DS_LEAVE_ON_SERVER)
-    private Boolean leaveOnServer;
-    
+    private ZmBoolean leaveOnServer;
+
     public AccountPop3DataSource() {
     }
-    
+
     public AccountPop3DataSource(Pop3DataSource data) {
         super(data);
-        leaveOnServer = data.isLeaveOnServer();
+        leaveOnServer = ZmBoolean.fromBool(data.isLeaveOnServer());
     }
-    
+
     @Override
-    public Boolean isLeaveOnServer() {
-        return leaveOnServer;
-    }
-    
+    public Boolean isLeaveOnServer() { return ZmBoolean.toBool(leaveOnServer); }
+
     @Override
-    public void setLeaveOnServer(Boolean leaveOnServer) {
-        this.leaveOnServer = leaveOnServer;
-    }
+    public void setLeaveOnServer(Boolean leaveOnServer) { this.leaveOnServer = ZmBoolean.fromBool(leaveOnServer); }
 }
