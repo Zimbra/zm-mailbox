@@ -402,7 +402,7 @@ public class RightCommand {
 
             // getAttrs
             EffectiveAttrsInfo eGetAttrs = eRights.getGetAttrs();
-            Boolean getAll = eSetAttrs.getAll();
+            Boolean getAll = eGetAttrs.getAll();
             er.mCanGetAllAttrs = (getAll != null && getAll);
             er.mCanGetAttrs = from_attrs(eGetAttrs);
             if (eRights instanceof EffectiveRightsTargetInfo) {
