@@ -251,6 +251,9 @@ public class AdminService implements DocumentService {
         
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
+        
+        // clear cookie
+        dispatcher.registerHandler(AdminConstants.CLEAR_COOKIE_REQUEST, new ClearCookie());
     }
 
     /**
