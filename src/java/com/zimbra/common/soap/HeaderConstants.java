@@ -21,8 +21,10 @@ public final class HeaderConstants {
     public static final String E_A          = "a";
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
-    public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_ACCOUNT    = "account";
+    public static final String E_AUTH_TOKEN = "authToken";
+    public static final String E_AUTH_TOKEN_CONTROL = "authTokenControl";
+    public static final String A_VOID_ON_EXPIRED = "voidOnExpired";
     public static final String A_BY         = "by";
     public static final String A_HOPCOUNT   = "hops";
     public static final String A_MOUNTPOINT = "link";
