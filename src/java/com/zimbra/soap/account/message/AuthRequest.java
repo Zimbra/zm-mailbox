@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,6 +32,7 @@ import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 
 /**
@@ -57,6 +59,16 @@ import com.zimbra.soap.type.AccountSelector;
 @XmlRootElement(name=AccountConstants.E_AUTH_REQUEST)
 @XmlType(propOrder = {})
 public class AuthRequest {
+    
+    /**
+     * @zm-api-field-description controls whether the auth token cookie in the response should 
+     * be persisted when the browser exits.<br />
+     * 0: (default)<br />
+     *    the cookie will be deleted when the Web browser exits.<br />
+     * 1: The "Expires" attribute of the cookie will be set per rfc6265.<br />
+     */
+    @XmlAttribute(name=AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE /* persistAuthTokenCookie */, required=false)
+    private ZmBoolean persistAuthTokenCookie;
 
     /**
      * @zm-api-field-description Specifies the account to authenticate against
@@ -129,6 +141,11 @@ public class AuthRequest {
     public AuthRequest(AccountSelector account, String password) {
         setAccount(account);
         setPassword(password);
+    }
+    
+    public Boolean getPersistAuthTokenCookie() { return ZmBoolean.toBool(persistAuthTokenCookie); }
+    public void setPersistAuthTokenCookie(Boolean persistAuthTokenCookie) { 
+        this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie); 
     }
 
     public AccountSelector getAccount() { return account; }

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-description Authenticate for administration
@@ -33,6 +34,16 @@ import com.zimbra.soap.type.AccountSelector;
 @XmlRootElement(name=AdminConstants.E_AUTH_REQUEST)
 @XmlType(propOrder = {})
 public class AuthRequest {
+    
+    /**
+     * @zm-api-field-description controls whether the auth token cookie in the response should 
+     * be persisted when the browser exits.<br />
+     * 0: (default)<br />
+     *    the cookie will be deleted when the Web browser exits.<br />
+     * 1: The "Expires" attribute of the cookie will be set per rfc6265.<br />
+     */
+    @XmlAttribute(name=AdminConstants.A_PERSIST_AUTH_TOKEN_COOKIE /* persistAuthTokenCookie */, required=false)
+    private ZmBoolean persistAuthTokenCookie;
 
     // TODO: authToken can be more complex than this and needs to be extendable.
     /**
@@ -79,6 +90,14 @@ public class AuthRequest {
         this.virtualHost = null;
     }
 
+    public Boolean getPersistAuthTokenCookie() { 
+        return ZmBoolean.toBool(persistAuthTokenCookie); 
+    }
+    
+    public void setPersistAuthTokenCookie(Boolean persistAuthTokenCookie) { 
+        this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie); 
+    }
+    
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
