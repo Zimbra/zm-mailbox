@@ -45,6 +45,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
   <soap:Header>
     <context xmlns="urn:zimbra">
       [<authToken>...</authToken>]
+      [<authTokenControl voidOnExpired="1"/>]
       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
       [<account by="name|id">{account-name-or-id}</account>]
       [<change token="{change-id}" [type="mod|new"]/>]

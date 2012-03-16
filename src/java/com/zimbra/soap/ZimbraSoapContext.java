@@ -258,11 +258,24 @@ public final class ZimbraSoapContext {
         try {
             mAuthToken = AuthProvider.getAuthToken(ctxt, context);
             if (mAuthToken != null) {
-                mRawAuthToken = mAuthToken.toZAuthToken();
-
-                if (mAuthToken.isExpired())
-                    throw ServiceException.AUTH_EXPIRED();
-                mAuthTokenAccountId = mAuthToken.getAccountId();
+                if (mAuthToken.isExpired()) {
+                    boolean voidOnExpired = false;
+                    
+                    Element eAuthTokenControl = ctxt.getOptionalElement(HeaderConstants.E_AUTH_TOKEN_CONTROL);
+                    if (eAuthTokenControl != null) {
+                        voidOnExpired = eAuthTokenControl.getAttributeBool(HeaderConstants.A_VOID_ON_EXPIRED, false);
+                    }
+                    
+                    if (voidOnExpired) {
+                        // erase the auth token and continue
+                        mAuthToken = null;
+                    } else {
+                        throw ServiceException.AUTH_EXPIRED();
+                    }
+                } else {
+                    mRawAuthToken = mAuthToken.toZAuthToken();
+                    mAuthTokenAccountId = mAuthToken.getAccountId();
+                }
             }
         } catch (AuthTokenException e) {
             // ignore and leave null
