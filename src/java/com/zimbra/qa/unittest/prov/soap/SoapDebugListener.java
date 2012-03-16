@@ -14,7 +14,9 @@
  */
 package com.zimbra.qa.unittest.prov.soap;
 
+import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -24,7 +26,7 @@ import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 
 public class SoapDebugListener implements HttpDebugListener {
     
-    private enum Level {
+    enum Level {
         OFF,
         HEADER,
         BODY,
@@ -39,9 +41,13 @@ public class SoapDebugListener implements HttpDebugListener {
         }
     }
     
-    private static Level level = Level.BODY;
+    private Level level = Level.BODY;
     
     SoapDebugListener() {
+    }
+    
+    SoapDebugListener(Level level) {
+        this.level = level;
     }
     
     @Override
@@ -67,7 +73,7 @@ public class SoapDebugListener implements HttpDebugListener {
     }
 
     @Override
-    public void sendSoapMessage(PostMethod postMethod, Element envelope) {
+    public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState) {
         if (level == Level.OFF) {
             return;
         }
@@ -83,9 +89,19 @@ public class SoapDebugListener implements HttpDebugListener {
                 e.printStackTrace();
             }
             
+            // headers
             Header[] headers = postMethod.getRequestHeaders();
             for (Header header : headers) {
                 System.out.println(header.toString().trim()); // trim the ending crlf
+            }
+            System.out.println();
+            
+            //cookies
+            if (httpState != null) {
+                Cookie[] cookies = httpState.getCookies();
+                for (Cookie cookie : cookies) {
+                    System.out.println("Cookie: " + cookie.toString());
+                }
             }
             System.out.println();
         }
