@@ -112,7 +112,8 @@ public class DesktopMailboxTest {
         useMVCC(mbox);
         
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        synchronized (mbox) {
+        mbox.lock.lock();
+        try {
             OperationContext octx = new OperationContext(acct);
             mbox.beginTransaction("outer", octx);
             mbox.beginTransaction("inner1", octx);
@@ -139,6 +140,8 @@ public class DesktopMailboxTest {
 
             //committed
             Assert.assertEquals(2, countInboxMessages(mbox));
+        } finally {
+            mbox.lock.release();
         }
     }
 }
