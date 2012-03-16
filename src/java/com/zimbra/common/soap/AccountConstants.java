@@ -340,6 +340,7 @@ public class AccountConstants {
     public static final String A_NEED_OWNERS = "needOwners";
     public static final String A_NEED_RIGHTS = "needRights";
     public static final String A_OWNER_OF = "ownerOf";
+    public static final String A_PERSIST_AUTH_TOKEN_COOKIE = "persistAuthTokenCookie";
     public static final String A_TOTAL = "total";
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
