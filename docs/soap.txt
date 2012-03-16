@@ -44,7 +44,8 @@ urn:zimbra  -- top-level namespace for global attributes/elements
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Header>
     <context xmlns="urn:zimbra">
-      <authToken>...</authToken>
+      [<authToken>...</authToken>]
+      [<authTokenControl voidOnExpired="1"/>]
       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
       [<account by="name|id">{account-name-or-id}</account>]
       [<change token="{change-id}" [type="mod|new"]/>]
@@ -432,7 +433,7 @@ Note:
 when specifiying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
 
 an authToken can be passed instead of account/password/preauth to validate an existing auth token.
-
+                  
   {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
 
   {virtual-host} = if specified (in conjunction with by="name"), virtual-host is used to determine the domain of the account name, if it
@@ -697,7 +698,7 @@ import and export of addressbook.
 
   needExp: if the "exp" flag is needed in the response for group entries.
            default is 0
-
+           
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
 
@@ -1231,7 +1232,7 @@ Folders:
                         - will contain the calculated (c)reate folder permission if the user has
                           both (i)nsert and (r)ead access on the folder
 
-  folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
+    folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
     user has (a)dminister rights on the folder), an <acl> element will be returned containing
     1 or more <grant> elements, with the following attributes:
 
@@ -1379,7 +1380,7 @@ if recip="1" is specified
         **NOTE: only ONE of message, conversation may be set. If
                 both are set, the first is used.
 
-  {sort-by}  = default is "dateDesc"
+  {sort-by} = default is "dateDesc"
                Valid choices:
                     dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc|none(*)
                     * - If sort-by is "none" then cursors MUST NOT be
@@ -1389,8 +1390,8 @@ if recip="1" is specified
                         IllegalArgumentException if the search is
                         invalid.
 
-               ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
-                        taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
+    ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
+      taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
 
   {more-flag} = 1 if there are more search results remaining.
   {content-matched} = 1 if the content of the message matched
@@ -1440,9 +1441,9 @@ conversation result:
 --------------------
 
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
-  [ <info>
-      [ <wildcard str="foo*" expanded="1|0"/> ]
-   </info> ]
+  [<info>
+    [<wildcard str="foo*" expanded="1|0"/>]
+   </info>]
   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
@@ -1594,14 +1595,14 @@ message-part result:
   <query>{query-string}</query>
 </SearchConvRequest>
 
-   {conversation-id} = the conversation to search within.  REQUIRED.
+  {conversation-id} = the conversation to search within.  REQUIRED.
 
 if fetch="1" (or fetch="first"), the first matching message is expanded inline
 if fetch="hits", all matching messages are expanded inline
 if fetch="all", all messages are expanded inline
 if fetch="{item-id}", only the message with the given {item-id} is expanded inline
 
-   SEE SearchRequest for more info
+  SEE SearchRequest for more info
 
 
 if nest="0" on the request, response looks like this:
@@ -1815,8 +1816,8 @@ if <header>s are requested, any matching headers are inlined into the response
 
 origid/rt/irt are present only on drafts
 cif is set when the message is a calendar invite that was forwarded by another user, whose calendar is being
-managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
-originally intended.
+  managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
+  originally intended.
 
 
 If needExp is "1" in the request, two additional flags will be included in <e> elements for the message:
@@ -2022,7 +2023,7 @@ Actions:
 
   <action op="[!]syncon" id="{list}"/>
     - set or unset the "sync" flag of the folder to sync a local folder with a remote source
-
+    
   <action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"] [l="{target-folder}"] [color="{new-color}"]>
     [<acl><grant .../>*</acl>]
   </action>
@@ -2032,7 +2033,7 @@ Actions:
           color="{new-color}"      to set the folder's color
           f="{new-flags}"          to change the folder's exclude free/(b)usy, checked (#), and IMAP subscribed (*) state
           <acl><grant ...>*</acl>  to replace the folder's existing ACL with a new ACL
-
+          
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;
            list may only have 1 element for action "rename" or "empty"
@@ -2370,20 +2371,20 @@ END:VCARD]
   if replace-mode is 1, all attrs in the specified contact are replaced with specified attrs, otherwise
   the attrs are merged with the existing contact.
 
- {op} = + | -
-        + : add the value
+  {op} = + | -
+         + : add the value
         - : remvoe the value
 
         {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
 
         When replace=0:
-        (1) if op is not present:
-               if {attr-value} is empty, remove the field
-               otherwise, replace the field with this value
+            (1) if op is not present:
+                   if {attr-value} is empty, remove the field
+                   otherwise, replace the field with this value
 
-        (2) if op is present:
-               if {attr-value} is empty, throw INVALID_REQUEST
-               - otherwise, add/remove the specified value.
+            (2) if op is present:
+                   if {attr-value} is empty, throw INVALID_REQUEST
+                   - otherwise, add/remove the specified value.
 
 
 <ModifyContactResponse>
@@ -2401,7 +2402,7 @@ NOTE: should we return modified attrs in response?
 ----------
 
 <GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] 
-                    [returnHiddenAttrs="1"] [maxMembers="{max-members}"]>
+    [returnHiddenAttrs="1"] [maxMembers="{max-members}"]>
   <a n="..."/>*
   <cn id="{contact-id}[,{contact-id}...]"/>*
 </GetContactsRequest>
@@ -2413,11 +2414,11 @@ NOTE: should we return modified attrs in response?
 
 
   returnHiddenAttrs : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
-                      ignored if <a> is present.
+                        ignored if <a> is present.
   {max-members} : numebr of max GAL group members to return.
                   If number of members on a GAL group is greater than the specified max, 
                   do not return any members under <cn> for the entry.  
-                  Instead, return a "tooManyMembers="1" on the <cn>.                    
+                  Instead, return a "tooManyMembers="1" on the <cn>.
 
 <GetContactsResponse>
   <cn [md="{metadata-change-date}"] [tooManyMembers="1"]>...</cn>*
@@ -2740,7 +2741,7 @@ Tests:
   <sizeTest numberComparison="{over|under}" s="{size}" />
   <dateTest dateComparison="{before|after}" d="{date}" />
   <bodyTest [caseSensitive="{0|1}"] value="{value}" />
-  <attachmentTest />
+  <attachmentTest/>
   <addressBookTest header="{header-name}" folderPath="{folder-path}" />
   <inviteTest>
     <method>{method}</method>+
@@ -3515,7 +3516,7 @@ Notes:
 
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
-
+    
 -----------------------------
 
 <PurgeRevisionRequest>
