@@ -32,6 +32,8 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
@@ -49,6 +51,7 @@ import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -368,7 +371,37 @@ public class CalendarUtils {
         Invite inv = new Invite(ICalTok.COUNTER.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(account, itemType, inviteElem, inv, true, true);
-
+        
+        // Get the existing invite to populate X-MS-OLK-ORIGINALSTART and X-MS-OLK-ORIGINALEND
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Invite oldInvite = null;
+        CalendarItem calItem = mbox.getCalendarItemByUid(inv.getUid());
+        if (calItem != null)
+            oldInvite = calItem.getInvite(inv.getRecurId());
+        
+        if (oldInvite != null) {
+            // Add TZIDs from oldInvite to inv
+            inv.getTimeZoneMap().add(oldInvite.getTimeZoneMap());
+            // Add ORIGINALSTART x-prop
+            ParsedDateTime dt = oldInvite.getStartTime();
+            if (dt != null) {
+                ZCalendar.ZProperty prop = new ZCalendar.ZProperty("X-MS-OLK-ORIGINALSTART");
+                prop.setValue(dt.getDateTimePartString());
+                if (dt.getTZName() != null)
+                    prop.addParameter(new ZParameter(ICalTok.TZID, dt.getTZName()));
+                inv.addXProp(prop);
+            }
+            // Add ORIGINALEND x-prop
+            dt = oldInvite.getEffectiveEndTime();
+            if (dt != null) {
+                ZCalendar.ZProperty prop = new ZCalendar.ZProperty("X-MS-OLK-ORIGINALEND");
+                prop.setValue(dt.getDateTimePartString());
+                if (dt.getTZName() != null)
+                    prop.addParameter(new ZParameter(ICalTok.TZID, dt.getTZName()));
+                inv.addXProp(prop);
+            }
+        }
+        
         // UID
         String uid = inv.getUid();
         if (uid == null || uid.length() == 0)
