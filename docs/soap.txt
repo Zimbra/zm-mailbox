@@ -44,7 +44,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Header>
     <context xmlns="urn:zimbra">
-      <authToken>...</authToken>
+      [<authToken>...</authToken>]
       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
       [<account by="name|id">{account-name-or-id}</account>]
       [<change token="{change-id}" [type="mod|new"]/>]
@@ -406,7 +406,7 @@ global soap/system errors used with zimbra:Error/Code:
    account.TOO_MANY_DATA_SOURCES
    account.TOO_MANY_SEARCH_RESULTS
 
- <AuthRequest xmlns="urn:zimbraAccount">
+ <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
@@ -437,6 +437,13 @@ Mismatch results in auth failure.  An external app that relies on ZCS for user i
 test if the auth token provided by the user belongs to that user.
 If verifyAccount="0" (default), only the auth token is verified and any <account> element specified is ignored.
 
+  {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
+                             be persisted when the browser exits.
+                             0: (default)
+                                the cookie will be deleted when the Web browser exits.
+                             1: The "Expires" attribute of the cookie will be set per rfc6265.
+                  
+  
   {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
 
   {virtual-host} = if specified (in conjunction with by="name"), virtual-host is used to determine the domain of the account name, if it

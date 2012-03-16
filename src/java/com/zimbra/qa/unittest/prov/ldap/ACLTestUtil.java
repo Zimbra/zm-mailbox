@@ -296,7 +296,8 @@ public class ACLTestUtil {
         }
     
         @Override
-        public void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie)
+        public void encode(HttpServletResponse resp, boolean isAdminReq, 
+                boolean secureCookie, boolean rememberMe)
                 throws ServiceException {
             // TODO Auto-generated method stub
     

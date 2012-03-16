@@ -13,7 +13,7 @@ Note that name1 appears twice.
 When updating multiple attributes, you need to specify all the old values at the same time you specify new ones.
 
 ----------------------------
- <AuthRequest xmlns="urn:zimbraAdmin">
+ <AuthRequest xmlns="urn:zimbraAdmin" [persistAuthTokenCookie="1"]>
    [<name>...</name>]
    [<account by="name|id|foreignPrincipal">...</account>]
    <password>...</password>
@@ -26,6 +26,12 @@ When updating multiple attributes, you need to specify all the old values at the
    <lifetime>...</lifetime>
  </AuthResponse>
 
+  {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
+                             be persisted when the browser exits.
+                             0: (default)
+                                the cookie will be deleted when the Web browser exits.
+                             1: The "Expires" attribute of the cookie will be set per rfc6265.
+                             
 Note: Only works with admin/domain-admin accounts
 
 Access: domain admin sufficient

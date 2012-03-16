@@ -199,7 +199,8 @@ public class Auth extends AccountDocumentHandler {
         }
     }
 
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, Map<String, Object> context, Account acct)
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, 
+            Map<String, Object> context, Account acct)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
@@ -210,7 +211,8 @@ public class Auth extends AccountDocumentHandler {
          */
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
-        at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq));
+        boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+        at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
         
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);

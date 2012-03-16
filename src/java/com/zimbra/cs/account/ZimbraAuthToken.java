@@ -399,29 +399,42 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     }
 
     @Override
-    public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException {
+    public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) 
+    throws ServiceException {
         String origAuthData = getOrigAuthData();
 
         HttpState state = new HttpState();
         client.setState(state);
 
-        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData, "/", null, false));
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, 
+                ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData, "/", null, false));
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
     }
 
     @Override
     public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {
         String origAuthData = getOrigAuthData();
-        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData, "/", null, false));
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, 
+                ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData, "/", null, false));
     }
 
     @Override
-    public void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie) 
+    public void encode(HttpServletResponse resp, boolean isAdminReq, 
+            boolean secureCookie, boolean rememberMe) 
     throws ServiceException {
         String origAuthData = getOrigAuthData();
+        
+        Integer maxAge;
+        if (rememberMe) {
+            long timeLeft = expires - System.currentTimeMillis();
+            maxAge = Integer.valueOf((int)(timeLeft/1000));
+        } else {
+            maxAge = Integer.valueOf(-1);
+        }
+        
         ZimbraCookie.addHttpOnlyCookie(resp, 
                 ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData, 
-                ZimbraCookie.PATH_ROOT, null, secureCookie);
+                ZimbraCookie.PATH_ROOT, maxAge, secureCookie);
     }
 
     @Override

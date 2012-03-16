@@ -162,7 +162,7 @@ public class Auth extends AdminDocumentHandler {
             }
         }
 
-        return doResponse(at, zsc, context, acct);
+        return doResponse(request, at, zsc, context, acct);
     }
 
     private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl) 
@@ -191,7 +191,8 @@ public class Auth extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("not an admin account");
     }
 
-    private Element doResponse(AuthToken at, ZimbraSoapContext zsc, Map<String, Object> context, Account acct) throws ServiceException {
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, 
+            Map<String, Object> context, Account acct) throws ServiceException {
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
 
@@ -201,7 +202,8 @@ public class Auth extends AdminDocumentHandler {
          */
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
-        at.encode(httpResp, true, ZimbraCookie.secureCookie(httpReq));
+        boolean rememberMe = request.getAttributeBool(AdminConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+        at.encode(httpResp, true, ZimbraCookie.secureCookie(httpReq), rememberMe);
         
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
 

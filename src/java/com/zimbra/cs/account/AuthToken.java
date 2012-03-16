@@ -144,7 +144,14 @@ public abstract class AuthToken {
      * @param resp
      * @param isAdminReq
      */
-    public abstract void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie) throws ServiceException;
+    public void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie) 
+    throws ServiceException {
+        encode(resp, isAdminReq, secureCookie, false);
+    }
+    
+    public abstract void encode(HttpServletResponse resp, boolean isAdminReq, 
+            boolean secureCookie, boolean rememberMe) 
+    throws ServiceException;
 
     public abstract void encodeAuthResp(Element parent, boolean isAdmin) throws ServiceException;
     
