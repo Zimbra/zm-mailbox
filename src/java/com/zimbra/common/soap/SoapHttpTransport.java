@@ -67,7 +67,7 @@ public class SoapHttpTransport extends SoapTransport {
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
 
     public interface HttpDebugListener {
-        public void sendSoapMessage(PostMethod postMethod, Element envelope);
+        public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState);
         public void receiveSoapMessage(PostMethod postMethod, Element envelope);
     }
 
@@ -221,9 +221,6 @@ public class SoapHttpTransport extends SoapTransport {
             String host = method.getURI().getHost();
             HttpState state = HttpClientUtil.newHttpState(getAuthToken(), host, false);
 
-            if (mHttpDebugListener != null)
-                mHttpDebugListener.sendSoapMessage(method, soapReq);
-
             params.setCookiePolicy(state.getCookies().length == 0 ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
             params.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
             params.setSoTimeout(mTimeout);
@@ -233,6 +230,11 @@ public class SoapHttpTransport extends SoapTransport {
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
                 state.setProxyCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword()));
             }
+            
+            if (mHttpDebugListener != null) {
+                mHttpDebugListener.sendSoapMessage(method, soapReq, state);
+            }
+            
             int responseCode = mClient.executeMethod(mHostConfig, method, state);
             // SOAP allows for "200" on success and "500" on failure;
             //   real server issues will probably be "503" or "404"
@@ -252,8 +254,9 @@ public class SoapHttpTransport extends SoapTransport {
                     responseStr = ByteUtil.getContent(reader, (int) method.getResponseContentLength(), false);
                     Element soapResp = parseSoapResponse(responseStr, raw);
 
-                    if (mHttpDebugListener != null)
+                    if (mHttpDebugListener != null) {
                         mHttpDebugListener.receiveSoapMessage(method, soapResp);
+                    }
                     return soapResp;
                 }
             } catch (SoapFaultException x) {
