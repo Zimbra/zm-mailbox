@@ -98,13 +98,21 @@ class IndexWritersCache {
      * the # open file descriptors and amount of buffered index memory is controlled.
      */
     private final int mMaxOpen = LC.zimbra_index_lru_size.intValueWithinRange(10, Integer.MAX_VALUE);   // maximum allowed in the LRU
-    private final int mFlushPoolSize = LC.zimbra_index_flush_pool_size.intValueWithinRange(1, 100);
+    
+    /**
+     * Threshold before we run out of all open slots; Sweeper tries to flush additional idle writers once 
+     * the threshold is met irrespective of idle time. 
+     */
+    private final int mOpenThreshold = LC.zimbra_index_lru_threshold_size.intValueWithinRange(8, Integer.MAX_VALUE);
+  
+    private final int mFlushPoolSize = LC.zimbra_index_flush_pool_size.intValueWithinRange(1, 100);  
+    private final int mFlushQueueSize = LC.zimbra_index_flush_queue_size.intValueWithinRange(10, Integer.MAX_VALUE);
 
     private int mNumFlushing = 0; // number queued or running async flush tasks
     private boolean mShutdown = false;
     private Thread mSweeperThread = null;
     private List<CountDownLatch> mWaitingForSlot = new ArrayList<CountDownLatch>();
-    private CachedThreadPool mPool = new CachedThreadPool("IndexWriterFlush", mFlushPoolSize);
+    private CachedThreadPool mPool = new CachedThreadPool("IndexWriterFlush", mFlushPoolSize, mFlushQueueSize);
 
     private enum WriterState {
         CLOSED,
@@ -330,6 +338,9 @@ class IndexWritersCache {
                     }
 
                     int additionalNeeded = mWaitingForSlot.size() - (mNumFlushing + toFlush.size());
+                    if (mOpenThreshold > 0 && mOpenWriters.size() > mOpenThreshold) {
+                        additionalNeeded += mOpenWriters.size() - mOpenThreshold;
+                    }
                     if (additionalNeeded > 0) {
                         for (CacheEntry writer : mIdleWriters) {
                             assert(writer.getState() == WriterState.IDLE);
