@@ -25,6 +25,15 @@
       </New>
     </Set>
 
+
+     <Call name="setAttribute">
+       <Arg> org.mortbay.jetty.Request.maxFormContentSize</Arg>
+       <Arg> 4000 </Arg>
+    </Call>
+
+
+
+
     <!-- =========================================================== -->
     <!-- Set connectors                                              -->
     <!-- =========================================================== -->
