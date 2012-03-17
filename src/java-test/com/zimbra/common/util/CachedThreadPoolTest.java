@@ -1,5 +1,7 @@
 package com.zimbra.common.util;
 
+import java.util.concurrent.RejectedExecutionException;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,7 +48,7 @@ public class CachedThreadPoolTest {
     
     @Test
     public void testPoolSize() throws InterruptedException {
-        CachedThreadPool pool = new CachedThreadPool("testPool", 5, 5000, 1000);
+        CachedThreadPool pool = new CachedThreadPool("testPool", 5, 10, 5000, 1000);
         Assert.assertTrue(pool.getNumActiveThreads() == 0);
         Assert.assertEquals(pool.getName(), "testPool");
         
@@ -69,8 +71,33 @@ public class CachedThreadPoolTest {
     }
     
     @Test
+    public void testPoolQueueSize() throws InterruptedException {
+        CachedThreadPool pool = new CachedThreadPool("testPool", 1, 5, 10000, 1000);
+        Assert.assertTrue(pool.getNumActiveThreads() == 0);
+        Assert.assertEquals(pool.getName(), "testPool");
+        
+        boolean success = false;
+        
+        //push the tasks
+        for (int i = 0; i < 10; i++) {
+            try {
+                pool.execute(new MyTask(5000));
+            } catch (RejectedExecutionException e) {
+                success = true;
+                break;
+            }
+        }
+        
+        assert success;
+
+        pool.shutdown();
+        
+        Assert.assertTrue(pool.getNumActiveThreads() == 0);
+    }
+    
+    @Test
     public void testShutdown() throws InterruptedException {
-        CachedThreadPool pool = new CachedThreadPool("testPool", 5, 3000, 1000);
+        CachedThreadPool pool = new CachedThreadPool("testPool", 5, 10, 3000, 1000);
         Assert.assertTrue(pool.getNumActiveThreads() == 0);
         Assert.assertEquals(pool.getName(), "testPool");
         

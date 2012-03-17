@@ -189,6 +189,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lru_size = KnownKey.newKey(100);
+    
+    @Supported
+    public static final KnownKey zimbra_index_lru_threshold_size = KnownKey.newKey(80);
 
     @Supported
     public static final KnownKey zimbra_index_idle_flush_time = KnownKey.newKey(600);
@@ -197,7 +200,8 @@ public final class LC {
     public static final KnownKey zimbra_index_sweep_frequency = KnownKey.newKey(30);
 
     public static final KnownKey zimbra_index_completed_pool_size = KnownKey.newKey(5);
-    public static final KnownKey zimbra_index_flush_pool_size = KnownKey.newKey(10);
+    public static final KnownKey zimbra_index_flush_pool_size = KnownKey.newKey(20);
+    public static final KnownKey zimbra_index_flush_queue_size = KnownKey.newKey(100);
     public static final KnownKey zimbra_index_reindex_pool_size = KnownKey.newKey(10);
 
     @Supported

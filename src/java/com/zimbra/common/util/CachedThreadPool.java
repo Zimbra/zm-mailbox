@@ -48,7 +48,7 @@ import com.zimbra.common.util.ThreadPool.ThreadCounter;
  * <p>
  * 
  * CachedThreadPool uses a cachedThreadPool but sets of a limit on approximate max number 
- * of threads can be spawned.
+ * of threads can be spawned. Also, it sets of a limit on max # of tasks can be queued.
  * CachedThreadPool solves the problem in the following way:
  * <ul>
  *  <li> Uses a unbounded LinkedBlockingQueue to queue tasks from the caller threads
@@ -63,9 +63,11 @@ public class CachedThreadPool implements Executor {
     private static Log logger = LogFactory.getLog(CachedThreadPool.class);
     private static final int TIMEOUT = 30 * 1000;
     private static final int THROTTLE_TIME = 1 * 1000;
+    private static final int UNLIMITED = -1;
     
     private String name;
-    private int poolSize;
+    private int maxPoolSize; //approximate max # of threads in the pool
+    private int maxQueueSize = UNLIMITED; //max # of tasks can be queued
     private int timeout; //Timeout (in milliseconds) for terminating thread pool!!
     private int throttleTime; //Time in milliseconds thread pool should wait before 
                               //taking the next sample when # of active threads > maxPoolSize
@@ -84,13 +86,18 @@ public class CachedThreadPool implements Executor {
     private AtomicBoolean shutdown = new AtomicBoolean(false);
     private boolean isTerminated = false;
     
-    public CachedThreadPool(String name, int poolSize) {
-        this(name, poolSize, TIMEOUT, THROTTLE_TIME);
+    public CachedThreadPool(String name, int maxPoolSize) {
+        this(name, maxPoolSize, UNLIMITED, TIMEOUT, THROTTLE_TIME);
     }
     
-    public CachedThreadPool(String name, int poolSize, int timeout, int throttleTime) {
+    public CachedThreadPool(String name, int maxPoolSize, int maxQueueSize) {
+        this(name, maxPoolSize, maxQueueSize, TIMEOUT, THROTTLE_TIME);
+    }
+    
+    public CachedThreadPool(String name, int maxPoolSize, int maxQueueSize, int timeout, int throttleTime) {
         this.name = name;
-        this.poolSize = poolSize;
+        this.maxPoolSize = maxPoolSize;
+        this.maxQueueSize = maxQueueSize;
         this.timeout = timeout;
         this.throttleTime = throttleTime;
         
@@ -121,7 +128,11 @@ public class CachedThreadPool implements Executor {
     public void execute(Runnable task) {
         if (!shutdown.get()) {
             try {
-                queue.put(new CountedTask(task, activeThreadsCounter));
+                if (maxQueueSize == UNLIMITED || (maxQueueSize > 0 && queue.size() < maxQueueSize)) {
+                    queue.put(new CountedTask(task, activeThreadsCounter));
+                } else {
+                    throw new RejectedExecutionException("queue is full");
+                }
             } catch (InterruptedException e) {
                 throw new RejectedExecutionException(e);
             }
@@ -167,7 +178,7 @@ public class CachedThreadPool implements Executor {
         try {
             lock.lock();
             while(true) {
-                if (getNumActiveThreads() > poolSize) {
+                if (getNumActiveThreads() >= maxPoolSize) {
                     //we need to wait for some time and check back again!!
                     cond.await(throttleTime, TimeUnit.MILLISECONDS);
                 } else {
@@ -188,7 +199,7 @@ public class CachedThreadPool implements Executor {
                     throttle(); //make sure the pool size is bounded!!
                     pool.execute(task);
                 } catch (InterruptedException e) {
-                    logger.warn("Sweeper thread interrupted", e);
+                    logger.warn("Sweeper thread interrupted");
                     if (shutdown.get()) {
                         logger.warn("Shutdown has been received by sweeper thread");
                         
