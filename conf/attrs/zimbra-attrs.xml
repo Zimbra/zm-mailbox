@@ -6923,4 +6923,13 @@ TODO: delete them permanently from here
   <desc>whether crash reporting is enabled in the Octopus IOS client</desc>
 </attr>
 
+<attr id="1391" name="zimbraZimletLoadSynchronously" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.2.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>
+    Whether to load zimlets synchronously in the web client.  
+    If set to TRUE, users are not allowed to use the core app before zimlets are loaded.
+    If set to FALSE, zimlets are loaded in the background and users are allowed to use the core app before all zimlets finish loading.
+  </desc>
+</attr>
+
 </attrs>

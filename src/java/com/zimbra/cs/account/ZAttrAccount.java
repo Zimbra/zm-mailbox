@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120313-1647 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120319-1201 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -47932,6 +47932,174 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public byte[] getUnittestBinary() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public String getUnittestBinaryAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public byte[] getUnittestCertificate() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public String getUnittestCertificateAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
+        return attrs;
+    }
+
+    /**
      * account version information
      *
      * @return zimbraVersion, or -1 if unset
@@ -48268,6 +48436,98 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetZimletAvailableZimlets(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletAvailableZimlets, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to load zimlets synchronously in the web client. If set to
+     * TRUE, users are not allowed to use the core app before zimlets are
+     * loaded. If set to FALSE, zimlets are loaded in the background and
+     * users are allowed to use the core app before all zimlets finish
+     * loading.
+     *
+     * @return zimbraZimletLoadSynchronously, or false if unset
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1391)
+    public boolean isZimletLoadSynchronously() {
+        return getBooleanAttr(Provisioning.A_zimbraZimletLoadSynchronously, false);
+    }
+
+    /**
+     * Whether to load zimlets synchronously in the web client. If set to
+     * TRUE, users are not allowed to use the core app before zimlets are
+     * loaded. If set to FALSE, zimlets are loaded in the background and
+     * users are allowed to use the core app before all zimlets finish
+     * loading.
+     *
+     * @param zimbraZimletLoadSynchronously new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1391)
+    public void setZimletLoadSynchronously(boolean zimbraZimletLoadSynchronously) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, zimbraZimletLoadSynchronously ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to load zimlets synchronously in the web client. If set to
+     * TRUE, users are not allowed to use the core app before zimlets are
+     * loaded. If set to FALSE, zimlets are loaded in the background and
+     * users are allowed to use the core app before all zimlets finish
+     * loading.
+     *
+     * @param zimbraZimletLoadSynchronously new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1391)
+    public Map<String,Object> setZimletLoadSynchronously(boolean zimbraZimletLoadSynchronously, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, zimbraZimletLoadSynchronously ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to load zimlets synchronously in the web client. If set to
+     * TRUE, users are not allowed to use the core app before zimlets are
+     * loaded. If set to FALSE, zimlets are loaded in the background and
+     * users are allowed to use the core app before all zimlets finish
+     * loading.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1391)
+    public void unsetZimletLoadSynchronously() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to load zimlets synchronously in the web client. If set to
+     * TRUE, users are not allowed to use the core app before zimlets are
+     * loaded. If set to FALSE, zimlets are loaded in the background and
+     * users are allowed to use the core app before all zimlets finish
+     * loading.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1391)
+    public Map<String,Object> unsetZimletLoadSynchronously(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, "");
         return attrs;
     }
 
