@@ -5727,7 +5727,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1384" name="zimbraZimletLoadSynchronously" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.2.0">
+<attr id="1391" name="zimbraZimletLoadSynchronously" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.2.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
     Whether to load zimlets synchronously in the web client.  

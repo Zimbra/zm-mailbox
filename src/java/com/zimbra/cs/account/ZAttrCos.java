@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20120319-1136 */
+    /* build: 7.0.0_BETA1_1111 pshao 20120319-1235 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -28748,7 +28748,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.2.0
      */
-    @ZAttr(id=1384)
+    @ZAttr(id=1391)
     public boolean isZimletLoadSynchronously() {
         return getBooleanAttr(Provisioning.A_zimbraZimletLoadSynchronously, false);
     }
@@ -28765,7 +28765,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.2.0
      */
-    @ZAttr(id=1384)
+    @ZAttr(id=1391)
     public void setZimletLoadSynchronously(boolean zimbraZimletLoadSynchronously) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, zimbraZimletLoadSynchronously ? Provisioning.TRUE : Provisioning.FALSE);
@@ -28785,7 +28785,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.2.0
      */
-    @ZAttr(id=1384)
+    @ZAttr(id=1391)
     public Map<String,Object> setZimletLoadSynchronously(boolean zimbraZimletLoadSynchronously, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, zimbraZimletLoadSynchronously ? Provisioning.TRUE : Provisioning.FALSE);
@@ -28803,7 +28803,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.2.0
      */
-    @ZAttr(id=1384)
+    @ZAttr(id=1391)
     public void unsetZimletLoadSynchronously() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, "");
@@ -28822,7 +28822,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.2.0
      */
-    @ZAttr(id=1384)
+    @ZAttr(id=1391)
     public Map<String,Object> unsetZimletLoadSynchronously(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletLoadSynchronously, "");

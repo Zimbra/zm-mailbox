@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20120319-1136 */
+    /* build: 7.0.0_BETA1_1111 pshao 20120319-1235 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -9359,7 +9359,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.2.0
      */
-    @ZAttr(id=1384)
+    @ZAttr(id=1391)
     public static final String A_zimbraZimletLoadSynchronously = "zimbraZimletLoadSynchronously";
 
     /**
