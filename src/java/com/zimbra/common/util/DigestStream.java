@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -30,7 +30,7 @@ public class DigestStream extends BufferStream {
     public DigestStream(long sizeHint, int maxBuffer, long maxSize) {
         super(sizeHint, maxBuffer, maxSize);
         try {
-            messageDigest = MessageDigest.getInstance("SHA1");
+            messageDigest = MessageDigest.getInstance("SHA-256");
         } catch (Exception e) {
             throw new RuntimeException("Unable to initialize " +
                 DigestStream.class.getSimpleName(), e);

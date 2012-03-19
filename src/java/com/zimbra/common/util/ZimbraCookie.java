@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -17,8 +17,6 @@ package com.zimbra.common.util;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.mortbay.jetty.HttpOnlyCookie;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -60,21 +58,30 @@ public class ZimbraCookie {
     
     private static void addCookie(HttpServletResponse response, String name, String value, 
             String path, Integer maxAge, boolean httpOnly, boolean secure) {
-        Cookie cookie;
-        
-        if (httpOnly) {
-            // jetty-6 only: jetty specific HttpOnlyCookie class that extends Cookie.
-            cookie = new HttpOnlyCookie(name, value); 
-        } else {
-            cookie = new Cookie(name, value);
-        }
+        Cookie cookie = new Cookie(name, value);
 
         if (maxAge != null) {
+            // jetty actually turns maxAge(lifetime in seconds) into an
+            // Expires directive, not the Max-Age directive.
             cookie.setMaxAge(maxAge.intValue());
         }
         ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
 
         cookie.setSecure(secure);
+        
+        if (httpOnly) {
+            /*
+             * jetty specific workaround before Servlet-3.0 is supported in jetty.
+             * see https://bugzilla.zimbra.com/show_bug.cgi?id=67078#c2
+             * 
+             * When we upgrade to jetty-8 and Servlet-3.0 is supporte in jettyd, 
+             * change the following line to:
+             * cookie.setHttpOnly(boolean isHttpOnly)
+             */
+            // jetty 7.6 https://bugs.eclipse.org/bugs/show_bug.cgi?id=364657
+            cookie.setComment("__HTTP_ONLY__");
+        }
+
         response.addCookie(cookie);
     }
 

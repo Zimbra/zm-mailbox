@@ -1,29 +1,30 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.net;
 
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
+import java.net.ProxySelector;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.net.ProxySelector;
+
+import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
 
 /*
  * Factory class for various SocketFactory types.
@@ -32,7 +33,7 @@ public final class SocketFactories {
     private static NetConfig config = NetConfig.getInstance();
 
     private static boolean registered;
-    
+
     private static final String HTTPS = "https";
     private static final String HTTP = "http";
 
@@ -68,13 +69,13 @@ public final class SocketFactories {
     public static void registerProtocols(boolean allowUntrustedCerts) {
         register(allowUntrustedCerts ? TrustManagers.dummyTrustManager() : null);
     }
-    
+
     private synchronized static void register(X509TrustManager tm) {
         if (registered) return;
 
         // Set default TrustManager
         TrustManagers.setDefaultTrustManager(tm);
-        
+
         // Register Apache Commons HTTP/HTTPS protocol socket factories
         ProtocolSocketFactory psf = defaultProtocolSocketFactory();
         Protocol.registerProtocol(HTTP, new Protocol(HTTP, psf, 80));
@@ -92,6 +93,10 @@ public final class SocketFactories {
         ProxySelector.setDefault(ProxySelectors.defaultProxySelector());
 
         registered = true;
+    }
+
+    public synchronized static void resetRegisteredFlag() {
+        registered = false;
     }
 
     /**
@@ -145,7 +150,7 @@ public final class SocketFactories {
     /**
      * Returns a SocketFactory that uses the specified ProxySelector for
      * new connections.
-     * 
+     *
      * @param ps the ProxySelector to use
      * @return the SocketFactory using the ProtocolSelector
      */
