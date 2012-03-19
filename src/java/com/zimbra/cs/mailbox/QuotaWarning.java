@@ -108,4 +108,9 @@ public class QuotaWarning implements LmtpCallback {
             ZimbraLog.lmtp.warn("Unable to send quota warning message", e);
         }
     }
+
+    @Override
+    public void forwardWithoutDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail, ParsedMessage pm) {
+        // no delivery, so no need to check anything
+    }
 }

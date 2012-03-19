@@ -32,36 +32,32 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.qa.unittest.TestUtil;
 
-
+/**
+ * These tests cause a change in state to the out_of_office table.  This data needs to
+ * be cleaned up after the tests runs, so we categorize these tests as server-only.
+ */
 public class TestNotificationServer
 extends TestCase {
 
     private static String RECIPIENT_NAME = "user1";
     private static String SENDER_NAME = "user2";
 
-    private static String[] ALL_TEST_USERS = { "user1", "user2", "user3" };
+    private static String[] ALL_TEST_USERS = { "user1", "user2" };
 
     private static String NAME_PREFIX = TestNotificationServer.class.getSimpleName();
 
-    private static String NEW_MAIL_SUBJECT =
-        NAME_PREFIX + " \u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b"; // Krokodil
-    private static String NEW_MAIL_BODY =
-        NAME_PREFIX + " \u0427\u0435\u0440\u0435\u043f\u0430\u0445\u0430"; // Cherepaha
-    private static String OUT_OF_OFFICE_SUBJECT =
-        NAME_PREFIX + " \u041e\u0431\u0435\u0437\u044c\u044f\u043d\u0430"; // Obezyana
-    private static String OUT_OF_OFFICE_BODY =
-        NAME_PREFIX + " \u0416\u0438\u0440\u0430\u0444";                   // Jiraf
-
-    private boolean mOriginalReplyEnabled;
-    private String mOriginalReply;
-    private boolean mOriginalNotificationEnabled;
-    private String mOriginalNotificationAddress;
-    private String mOriginalNotificationSubject;
-    private String mOriginalNotificationBody;
-    private String[] mOriginalInterceptAddresses;
-    private String mOriginalInterceptSendHeadersOnly;
-    private String mOriginalSaveToSent;
-    private boolean mIsServerTest = false;
+    private boolean originalReplyEnabled;
+    private String originalReply;
+    private boolean originalNotificationEnabled;
+    private String originalNotificationAddress;
+    private String originalNotificationSubject;
+    private String originalNotificationBody;
+    private String[] originalInterceptAddresses;
+    private String originalInterceptSendHeadersOnly;
+    private String originalSaveToSent;
+    private String originalMailForwardingAddress;
+    private boolean originalLocalDeliveryDisabled;
+    private boolean isServerTest;
 
     protected void setUp() throws Exception
     {
@@ -69,30 +65,37 @@ extends TestCase {
         cleanUp();
 
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
-        mOriginalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
-        mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
-        mOriginalNotificationEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
-        mOriginalNotificationAddress = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress, "");
-        mOriginalNotificationSubject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject, "");
-        mOriginalNotificationBody = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody, "");
-        mOriginalInterceptAddresses = account.getMultiAttr(Provisioning.A_zimbraInterceptAddress);
-        mOriginalInterceptSendHeadersOnly = account.getAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, "");
-        mOriginalSaveToSent = account.getAttr(Provisioning.A_zimbraPrefSaveToSent, "");
+        originalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
+        originalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
+        originalNotificationEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
+        originalNotificationAddress = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress, "");
+        originalNotificationSubject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject, "");
+        originalNotificationBody = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody, "");
+        originalInterceptAddresses = account.getMultiAttr(Provisioning.A_zimbraInterceptAddress);
+        originalInterceptSendHeadersOnly = account.getAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, "");
+        originalSaveToSent = account.getAttr(Provisioning.A_zimbraPrefSaveToSent, "");
+        originalMailForwardingAddress = account.getAttr(Provisioning.A_zimbraPrefMailForwardingAddress, "");
+        originalLocalDeliveryDisabled = account.getBooleanAttr(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled, false);
     }
 
     /**
      * Confirms that the subject and body of the out of office and new mail
      * notification can contain UTF-8 characters.
      *
-     * This test causes a change in state to the out_of_office table.  This data
-     * needs to be cleaned up after the test runs, so we categorize this test
-     * as server-only.
-     *
      * @throws Exception
      */
     public void testUtf8()
     throws Exception {
-        mIsServerTest = true;
+        isServerTest = true;
+
+        String NEW_MAIL_SUBJECT =
+                NAME_PREFIX + " \u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b"; // Krokodil
+        String NEW_MAIL_BODY =
+                NAME_PREFIX + " \u0427\u0435\u0440\u0435\u043f\u0430\u0445\u0430"; // Cherepaha
+        String OUT_OF_OFFICE_SUBJECT =
+                NAME_PREFIX + " \u041e\u0431\u0435\u0437\u044c\u044f\u043d\u0430"; // Obezyana
+        String OUT_OF_OFFICE_BODY =
+                NAME_PREFIX + " \u0416\u0438\u0440\u0430\u0444";                   // Jiraf
 
         // Turn on auto-reply and notification
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
@@ -133,6 +136,37 @@ extends TestCase {
         assertEquals("New mail notification body not found", 1, messages.size());
     }
 
+    /**
+     * Tests fix for bug 26818 (OOO message does not work when "Don't keep a local copy of messages" is checked)
+     * 
+     * @throws Exception
+     */
+    public void testOOOWhenForwardNoDelivery()
+    throws Exception {
+        isServerTest = true;
+
+        Account account = TestUtil.getAccount(RECIPIENT_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, ProvisioningConstants.TRUE);
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, "I am OOO");
+        attrs.put(Provisioning.A_zimbraPrefMailForwardingAddress, "abc@xyz.com");
+        attrs.put(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled, ProvisioningConstants.TRUE);
+        Provisioning.getInstance().modifyAttrs(account, attrs);
+
+        ZMailbox senderMbox = TestUtil.getZMailbox(SENDER_NAME);
+        ZMailbox recipMbox = TestUtil.getZMailbox(RECIPIENT_NAME);
+        
+        String subject = NAME_PREFIX + " testOOOWhenForwardNoDelivery";
+
+        // Send the message
+        TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject, "testing");
+
+        // Make sure message was not delivered since local delivery is disabled
+        assertEquals(0, TestUtil.search(recipMbox, "in:inbox subject:" + subject).size());
+
+        // But check for out-of-office reply
+        TestUtil.waitForMessage(senderMbox, "in:inbox subject:" + subject);
+    }
 
     public void tearDown()
     throws Exception {
@@ -143,20 +177,23 @@ extends TestCase {
 
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled,
-            LdapUtil.getLdapBooleanString(mOriginalReplyEnabled));
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, mOriginalReply);
+            LdapUtil.getLdapBooleanString(originalReplyEnabled));
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, originalReply);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled,
-            LdapUtil.getLdapBooleanString(mOriginalNotificationEnabled));
-        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddress);
-        attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, mOriginalNotificationSubject);
-        attrs.put(Provisioning.A_zimbraNewMailNotificationBody, mOriginalNotificationBody);
-        if (mOriginalInterceptAddresses != null && mOriginalInterceptAddresses.length == 0) {
+            LdapUtil.getLdapBooleanString(originalNotificationEnabled));
+        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, originalNotificationAddress);
+        attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, originalNotificationSubject);
+        attrs.put(Provisioning.A_zimbraNewMailNotificationBody, originalNotificationBody);
+        if (originalInterceptAddresses != null && originalInterceptAddresses.length == 0) {
             attrs.put(Provisioning.A_zimbraInterceptAddress, "");
         } else {
-            attrs.put(Provisioning.A_zimbraInterceptAddress, mOriginalInterceptAddresses);
+            attrs.put(Provisioning.A_zimbraInterceptAddress, originalInterceptAddresses);
         }
-        attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, mOriginalInterceptSendHeadersOnly);
-        attrs.put(Provisioning.A_zimbraPrefSaveToSent, mOriginalSaveToSent);
+        attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, originalInterceptSendHeadersOnly);
+        attrs.put(Provisioning.A_zimbraPrefSaveToSent, originalSaveToSent);
+        attrs.put(Provisioning.A_zimbraPrefMailForwardingAddress, originalMailForwardingAddress);
+        attrs.put(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled,
+                LdapUtil.getLdapBooleanString(originalLocalDeliveryDisabled));
         Provisioning.getInstance().modifyAttrs(account, attrs);
 
         super.tearDown();
@@ -168,7 +205,7 @@ extends TestCase {
      */
     private void cleanUp()
     throws Exception {
-        if (mIsServerTest) {
+        if (isServerTest) {
             DbConnection conn = DbPool.getConnection();
             Mailbox mbox = TestUtil.getMailbox(RECIPIENT_NAME);
             DbOutOfOffice.clear(conn, mbox);

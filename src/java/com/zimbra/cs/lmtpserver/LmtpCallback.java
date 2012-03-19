@@ -17,6 +17,7 @@ package com.zimbra.cs.lmtpserver;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
 
 public interface LmtpCallback {
 
@@ -24,4 +25,9 @@ public interface LmtpCallback {
      * Called after the message is delivered to the given account.
      */
     public void afterDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail, Message newMessage);
+
+    /**
+     * Called when mail forwarding is set up for the account but delivery to mailbox is disabled.
+     */
+    public void forwardWithoutDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail, ParsedMessage pm);
 }

@@ -437,11 +437,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         ZimbraLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
                         continue;
                     }
-                    if (account.isPrefMailLocalDeliveryDisabled()) {
-                        ZimbraLog.lmtp.debug("Local delivery disabled for account %s", rcptEmail);
-                        rcptMap.put(recipient, new RecipientDetail(null, null, null, false, DeliveryAction.discard));
-                        continue;
-                    }
                     mbox = MailboxManager.getInstance().getMailboxByAccount(account);
                     if (mbox == null) {
                         ZimbraLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
@@ -485,6 +480,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
                     msgId = pm.getMessageID();
 
+                    if (account.isPrefMailLocalDeliveryDisabled()) {
+                        ZimbraLog.lmtp.debug("Local delivery disabled for account %s", rcptEmail);
+                        rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, false, DeliveryAction.discard));
+                        continue;
+                    }
+                    
                     // For non-shared delivery (i.e. only one recipient),
                     // always deliver regardless of backup mode.
                     DeliveryAction da = DeliveryAction.deliver;
@@ -534,6 +535,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         case discard:
                             ZimbraLog.lmtp.info("accepted and discarded message from=%s,to=%s: local delivery is disabled",
                                     envSender, rcptEmail);
+                            if (rd.account.getPrefMailForwardingAddress() != null) {
+                                // mail forwarding is set up
+                                for (LmtpCallback callback : callbacks) {
+                                    ZimbraLog.lmtp.debug("Executing callback %s", callback.getClass().getName());
+                                    callback.forwardWithoutDelivery(rd.account, rd.mbox, envSender, rcptEmail, rd.pm);
+                                }
+                            }
                             reply = LmtpReply.DELIVERY_OK;
                             break;
                         case deliver:
