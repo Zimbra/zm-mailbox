@@ -139,7 +139,8 @@ public class CompleteTaskInstance extends CalendarRequest {
     }
 
     private Invite createCompletedInstanceInvite(Invite recur, ParsedDateTime dtStart) throws ServiceException {
-        Invite inst = new Invite(MailItem.Type.TASK, recur.getMethod(), recur.getTimeZoneMap(), recur.isOrganizer());
+        Invite inst = new Invite(MailItem.Type.TASK, recur.getMethod(), (recur.getTimeZoneMap() != null) ?
+                recur.getTimeZoneMap().clone() : null, recur.isOrganizer());
 
         long now = System.currentTimeMillis();
 

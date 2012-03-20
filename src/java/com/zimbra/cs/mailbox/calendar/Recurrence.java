@@ -1571,6 +1571,14 @@ public class Recurrence
                     tzids.add(tz.getID());
             }
         }
+        
+        ParsedDateTime recurStart = recur.getStartTime();
+        if (recurStart != null) {
+            ICalTimeZone tz = recurStart.getTimeZone();
+            if (tz != null)
+                tzids.add(tz.getID());
+        }
+
         return tzids;
     }
 

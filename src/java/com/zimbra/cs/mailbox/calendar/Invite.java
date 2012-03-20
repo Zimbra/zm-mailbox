@@ -2454,9 +2454,9 @@ public class Invite {
             attendees.add(new ZAttendee(at));  // add a copy of attendee
         }
         ZOrganizer org = mOrganizer != null ? new ZOrganizer(mOrganizer) : null;
-        Invite inv = new Invite(type, mMethod != null ? mMethod.toString() : null, mTzMap, mCalItem, mUid, mStatus,
-                mPriority, mPercentComplete, mCompleted, mFreeBusy, mTransparency, mClass, mStart, mEnd, mDuration,
-                mRecurrence, mIsOrganizer, org, attendees, mName, mLocation,
+        Invite inv = new Invite(type, mMethod != null ? mMethod.toString() : null, (mTzMap != null) ? mTzMap.clone() : null,
+                mCalItem, mUid, mStatus, mPriority, mPercentComplete, mCompleted, mFreeBusy, mTransparency, mClass, mStart,
+                mEnd, mDuration, mRecurrence, mIsOrganizer, org, attendees, mName, mLocation,
                 mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mLastModified, mSeqNo,
                 0, // mMailboxId
                 0, // mMailItemId
