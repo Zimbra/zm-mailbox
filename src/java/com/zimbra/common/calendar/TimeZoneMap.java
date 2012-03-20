@@ -23,7 +23,7 @@ import java.util.Set;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.ZimbraLog;
 
-public class TimeZoneMap {
+public class TimeZoneMap implements Cloneable {
 
     static HashMap<ZWeekDay, Integer> sDayWeekDayMap;
     static {
@@ -194,5 +194,12 @@ public class TimeZoneMap {
             if (!tzids.contains(id))
                 iter.remove();
         }
+    }
+    
+    public TimeZoneMap clone() {
+        TimeZoneMap retMap = new TimeZoneMap(mLocalTZ);
+        retMap.mTzMap.putAll(mTzMap);
+        retMap.mAliasMap.putAll(mAliasMap);
+        return retMap;
     }
 }
