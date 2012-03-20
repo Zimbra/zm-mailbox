@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +35,7 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -53,6 +55,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ImageUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.html.BrowserDefang;
@@ -100,7 +103,7 @@ public final class NativeFormatter extends Formatter {
                                                                                 MimeConstants.CT_TEXT_XML,
                                                                                 MimeConstants.CT_IMAGE_SVG);
     /** Used for resumable upload of documents */
-    private StoreManagerBasedTempBlobStore blobStore;
+    private final StoreManagerBasedTempBlobStore blobStore;
 
     /** Constructor */
     public NativeFormatter()
@@ -692,9 +695,18 @@ public final class NativeFormatter extends Formatter {
         resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
         resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
         resp.addHeader("X-Zimbra-ItemType", item.getType().toString());
-        resp.addHeader("X-Zimbra-ItemName", item.getName());
         try {
-            resp.addHeader("X-Zimbra-ItemPath", item.getPath());
+            String val = item.getName();
+            if (!StringUtil.isAsciiString(val)) {
+                val = MimeUtility.encodeText(val, "utf-8", "B");
+            }
+            resp.addHeader("X-Zimbra-ItemName", val);
+            val = item.getPath();
+            if (!StringUtil.isAsciiString(val)) {
+                val = MimeUtility.encodeText(val, "utf-8", "B");
+            }
+            resp.addHeader("X-Zimbra-ItemPath", val);
+        } catch (UnsupportedEncodingException e1) {
         } catch (ServiceException e) {
         }
     }
