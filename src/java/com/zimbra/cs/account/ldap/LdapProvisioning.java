@@ -82,7 +82,9 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ProvisioningExt;
 import com.zimbra.cs.account.SearchAccountsOptions;
+import com.zimbra.cs.account.ProvisioningExt.PostCreateAccountListener;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
@@ -1014,6 +1016,7 @@ public class LdapProvisioning extends LdapProv {
         callbackContext.setCreatingEntryName(emailAddress);
         AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
 
+        Account acct = null;
         String dn = null;
         ZLdapContext zlc = null;
         try {
@@ -1193,7 +1196,7 @@ public class LdapProvisioning extends LdapProv {
             entry.setDN(dn);
 
             zlc.createEntry(entry);
-            Account acct = getAccountById(zimbraIdStr, zlc, true);
+            acct = getAccountById(zimbraIdStr, zlc, true);
             if (acct == null) {
                 throw ServiceException.FAILURE(
                         "unable to get account after creating LDAP account entry: " +
@@ -1215,6 +1218,14 @@ public class LdapProvisioning extends LdapProv {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
             LdapClient.closeContext(zlc);
+            
+            if (!restoring && acct != null) {
+                for (PostCreateAccountListener listener : ProvisioningExt.getPostCreateAccountListeners()) {
+                    if (listener.enabled()) {
+                        listener.handle(acct);
+                    }
+                }
+            }
         }
     }
 
