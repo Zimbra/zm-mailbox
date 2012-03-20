@@ -28,12 +28,18 @@ public final class OctopusAdminConstants {
 
     public static final String E_GET_DEVICES_REQUEST = "GetDevicesRequest";
     public static final String E_GET_DEVICES_RESPONSE = "GetDevicesResponse";
+    
+    public static final String E_INJECT_STATIC_FILES_REQUEST = "InjectStaticFilesRequest";
+    public static final String E_INJECT_STATIC_FILES_RESPONSE = "InjectStaticFilesResponse";
 
     public static final String E_UPDATE_DEVICE_STATUS_REQUEST = "UpdateDeviceStatusRequest";
     public static final String E_UPDATE_DEVICE_STATUS_RESPONSE = "UpdateDeviceStatusResponse";
 
     public static final QName GET_DEVICES_REQUEST = QName.get(E_GET_DEVICES_REQUEST, NAMESPACE);
     public static final QName GET_DEVICES_RESPONSE = QName.get(E_GET_DEVICES_RESPONSE, NAMESPACE);
+    
+    public static final QName INJECT_STATIC_FILES_REQUEST = QName.get(E_INJECT_STATIC_FILES_REQUEST, NAMESPACE);
+    public static final QName INJECT_STATIC_FILES_RESPONSE = QName.get(E_INJECT_STATIC_FILES_RESPONSE, NAMESPACE);
 
     public static final QName UPDATE_DEVICE_STATUS_REQUEST = QName.get(E_UPDATE_DEVICE_STATUS_REQUEST, NAMESPACE);
     public static final QName UPDATE_DEVICE_STATUS_RESPONSE = QName.get(E_UPDATE_DEVICE_STATUS_RESPONSE, NAMESPACE);
