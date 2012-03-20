@@ -20,9 +20,9 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.util.Config;
 
 /**
@@ -39,7 +39,7 @@ public final class Versions {
      *
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
      */
-    public static final int DB_VERSION = 89;
+    public static final int DB_VERSION = 90;
 
     /**
      * The INDEX_VERSION is stored into the config table of the DB when the DB is created.

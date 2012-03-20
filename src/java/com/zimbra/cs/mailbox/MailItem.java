@@ -2552,7 +2552,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** The maximum length for an item name.  This is not the maximum length
      *  of a <u>path</u>, just the maximum length of a single item or folder's
      *  name. */
-    public static final int MAX_NAME_LENGTH = 128;
+    public static final int MAX_NAME_LENGTH = 255;
 
     /** Validates a proposed item name.  Names must be less than
      *  {@link #MAX_NAME_LENGTH} characters long, must contain non-whitespace
