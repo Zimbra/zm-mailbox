@@ -736,6 +736,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GrantRightResponse.class,
             com.zimbra.soap.admin.message.HsmRequest.class,
             com.zimbra.soap.admin.message.HsmResponse.class,
+            com.zimbra.soap.admin.message.InjectStaticFilesRequest.class,
+            com.zimbra.soap.admin.message.InjectStaticFilesResponse.class,
             com.zimbra.soap.admin.message.InstallCertRequest.class,
             com.zimbra.soap.admin.message.InstallCertResponse.class,
             com.zimbra.soap.admin.message.InstallLicenseRequest.class,
