@@ -8401,12 +8401,17 @@ public class Mailbox {
                 }
             }
 
-            if (currentChange.changeId != MailboxChange.NO_CHANGE) {
-                index.maybeIndexDeferredItems();
-            }
+            boolean changeMade = currentChange.changeId != MailboxChange.NO_CHANGE;
             deletes = currentChange.deletes; // keep a reference for cleanup deletes outside the lock
             // We are finally done with database and redo commits. Cache update comes last.
             commitCache(currentChange);
+
+            // Do deferred index check after commitCache to avoid nested db connection acquisitions.  commitCache()
+            // will release the transaction's db connection before index.maybeIndexDeferredItems() acquires a new one
+            // down in its call stack.
+            if (changeMade) {
+                index.maybeIndexDeferredItems();
+            }
         } finally {
             lock.release();
 
