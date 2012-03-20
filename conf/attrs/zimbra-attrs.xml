@@ -4840,7 +4840,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1061" name="zimbraVersionCheckURL" type="string" max="256" cardinality="single" optionalIn="globalConfig" since="6.0.2">
-  <globalConfigValue>http://www.zimbra.com/aus/admin/zimbraAdminVersionCheck.php</globalConfigValue>
+  <globalConfigValue>http://www.zimbra.com/aus/universal/update.php</globalConfigValue>
   <desc>URL of the Zimbra version check script </desc>
 </attr>
 
