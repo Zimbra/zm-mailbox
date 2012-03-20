@@ -395,6 +395,9 @@ public class CalendarUtils {
                     prop.addParameter(new ZParameter(ICalTok.TZID, dt.getTZName()));
                 inv.addXProp(prop);
             }
+            // Add LOCATION if not already exist.
+            if (inv.getLocation() == null || inv.getLocation().isEmpty())
+                inv.setLocation(oldInvite.getLocation());       
         }
         
         // UID
