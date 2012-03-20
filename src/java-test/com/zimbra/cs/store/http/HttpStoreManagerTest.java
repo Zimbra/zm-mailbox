@@ -32,6 +32,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTest;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ThreaderTest;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -144,5 +145,20 @@ public class HttpStoreManagerTest {
 
         mblob1.getLocalBlob();
         mblob2.getLocalBlob();
+    }
+
+    @Test
+    public void mailboxDelete() throws Exception {
+    	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Assert.assertEquals("start with no blobs in the store", 0, MockHttpStore.size());
+
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+        Assert.assertEquals("1 blob in the store", 1, MockHttpStore.size());
+
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+        Assert.assertEquals("2 blobs in the store", 2, MockHttpStore.size());
+
+        mbox.deleteMailbox();
+        Assert.assertEquals("end with no blobs in the store", 0, MockHttpStore.size());
     }
 }

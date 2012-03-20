@@ -27,7 +27,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    imap_id       INTEGER,
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
-   volume_id     TINYINT,
+   volume_id     VARCHAR(64),
    blob_digest   VARCHAR(44),
    unread        INTEGER,
    flags         INTEGER DEFAULT 0 NOT NULL,
@@ -47,8 +47,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    CONSTRAINT i_name_folder_id UNIQUE (mailbox_id, folder_id, name),
    CONSTRAINT fk_mail_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
    CONSTRAINT fk_mail_item_parent_id FOREIGN KEY (mailbox_id, parent_id) REFERENCES mail_item(mailbox_id, id),
-   CONSTRAINT fk_mail_item_folder_id FOREIGN KEY (mailbox_id, folder_id) REFERENCES mail_item(mailbox_id, id),
-   CONSTRAINT fk_mail_item_volume_id FOREIGN KEY (volume_id) REFERENCES zimbra.volume(id)
+   CONSTRAINT fk_mail_item_folder_id FOREIGN KEY (mailbox_id, folder_id) REFERENCES mail_item(mailbox_id, id)
 );
 
 CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
@@ -61,7 +60,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    imap_id       INTEGER,
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
-   volume_id     TINYINT,
+   volume_id     VARCHAR(64),
    blob_digest   VARCHAR(44),
    unread        INTEGER,
    flags         INTEGER DEFAULT 0 NOT NULL,
@@ -78,8 +77,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
 
    CONSTRAINT pk_mail_item_dumpster PRIMARY KEY (mailbox_id, id),
-   CONSTRAINT fk_mail_item_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
-   CONSTRAINT fk_mail_item_dumpster_volume_id FOREIGN KEY (volume_id) REFERENCES zimbra.volume(id)
+   CONSTRAINT fk_mail_item_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
 );
 
 CREATE TABLE *{DATABASE_NAME}.revision (
@@ -88,7 +86,7 @@ CREATE TABLE *{DATABASE_NAME}.revision (
    version       INTEGER NOT NULL,
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
-   volume_id     TINYINT,
+   volume_id     VARCHAR(64),
    blob_digest   VARCHAR(44),
    name          VARCHAR(128),
    metadata      VARCHAR(255),
@@ -108,7 +106,7 @@ CREATE TABLE *{DATABASE_NAME}.revision_dumpster (
    version       INTEGER NOT NULL,
    date          INTEGER NOT NULL,
    size          BIGINT NOT NULL,
-   volume_id     TINYINT,
+   volume_id     VARCHAR(64),
    blob_digest   VARCHAR(44),
    name          VARCHAR(128),
    metadata      VARCHAR(255),

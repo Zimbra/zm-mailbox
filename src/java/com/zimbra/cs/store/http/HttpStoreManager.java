@@ -166,11 +166,12 @@ public abstract class HttpStoreManager extends StoreManager {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getGetUrl(mbox, locator));
         int statusCode = HttpClientUtil.executeMethod(client, get);
-        if (statusCode != HttpStatus.SC_OK) {
+        if (statusCode == HttpStatus.SC_OK) {
+            return new UserServlet.HttpInputStream(get);
+        } else {
             get.releaseConnection();
             throw new IOException("unexpected return code during blob GET: " + get.getStatusText());
         }
-        return new UserServlet.HttpInputStream(get);
     }
 
     Blob getLocalBlob(Mailbox mbox, String locator, long sizeHint) throws IOException {
@@ -244,10 +245,11 @@ public abstract class HttpStoreManager extends StoreManager {
         try {
             HttpClientUtil.addInputStreamToHttpMethod(post, pin, actualSize, "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
-            if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT) {
+            if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED || statusCode == HttpStatus.SC_NO_CONTENT) {
+                return getStagedBlob(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
+            } else {
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
             }
-            return getStagedBlob(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
         } finally {
             post.releaseConnection();
         }
@@ -316,11 +318,12 @@ public abstract class HttpStoreManager extends StoreManager {
         DeleteMethod delete = new DeleteMethod(getDeleteUrl(mbox, locator));
         try {
             int statusCode = HttpClientUtil.executeMethod(client, delete);
-            switch (statusCode) {
-                case HttpStatus.SC_OK:         return true;
-                case HttpStatus.SC_NOT_FOUND:  return false;
-                default:
-                    throw new IOException("unexpected return code during blob DELETE: " + delete.getStatusText());
+            if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NO_CONTENT) {
+            	return true;
+            } else if (statusCode == HttpStatus.SC_NOT_FOUND) {
+            	return false;
+            } else {
+            	throw new IOException("unexpected return code during blob DELETE: " + delete.getStatusText());
             }
         } finally {
             delete.releaseConnection();
