@@ -25,8 +25,8 @@ import java.util.TimerTask;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
@@ -81,7 +81,7 @@ final class ImapSessionManager {
         }
         //inactive preference order memcache, ehcache, diskcache
         inactiveSessionCache = MemcachedConnector.isConnected() ?
-                new MemcachedImapCache() : (LC.imap_use_ehcache.booleanValue() ? 
+                new MemcachedImapCache() : (LC.imap_use_ehcache.booleanValue() ?
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Preconditions.checkState(inactiveSessionCache != null);
@@ -118,73 +118,77 @@ final class ImapSessionManager {
         public void run() {
             ZimbraLog.imap.debug("running IMAP session serializer task");
 
-            long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ?
-                    System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
+            try {
+                long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ?
+                        System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
 
-            List<ImapSession> overflow = new ArrayList<ImapSession>();
-            List<ImapSession> pageable = new ArrayList<ImapSession>();
-            List<ImapSession> droppable = new ArrayList<ImapSession>();
+                List<ImapSession> overflow = new ArrayList<ImapSession>();
+                List<ImapSession> pageable = new ArrayList<ImapSession>();
+                List<ImapSession> droppable = new ArrayList<ImapSession>();
 
-            synchronized (sessions) {
-                // first, figure out the set of sessions that'll need to be brought into memory and reserialized
-                int footprint = 0, maxOverflow = 0, noninteractive = 0;
-                for (ImapSession session : sessions.keySet()) {
-                    if (session.requiresReload()) {
-                        overflow.add(session);
-                        // note that these will add to the memory footprint temporarily, so need the largest size...
-                        maxOverflow = Math.max(maxOverflow, session.getEstimatedSize());
+                synchronized (sessions) {
+                    // first, figure out the set of sessions that'll need to be brought into memory and reserialized
+                    int footprint = 0, maxOverflow = 0, noninteractive = 0;
+                    for (ImapSession session : sessions.keySet()) {
+                        if (session.requiresReload()) {
+                            overflow.add(session);
+                            // note that these will add to the memory footprint temporarily, so need the largest size...
+                            maxOverflow = Math.max(maxOverflow, session.getEstimatedSize());
+                        }
+                    }
+                    footprint += Math.min(maxOverflow, TOTAL_SESSION_FOOTPRINT_LIMIT - 1000);
+
+                    // next, get the set of in-memory sessions that need to get serialized out
+                    for (ImapSession session : sessions.keySet()) {
+                        int size = session.getEstimatedSize();
+                        // want to serialize enough sessions to get below the memory threshold
+                        // also going to serialize anything that's been idle for a while
+                        if (!session.isInteractive() && ++noninteractive > MAX_NONINTERACTIVE_SESSIONS) {
+                            droppable.add(session);
+                        } else if (!session.isSerialized() && session.getLastAccessTime() < cutoff) {
+                            pageable.add(session);
+                        } else if (footprint + size > TOTAL_SESSION_FOOTPRINT_LIMIT) {
+                            pageable.add(session);
+                        } else {
+                            footprint += size;
+                        }
                     }
                 }
-                footprint += Math.min(maxOverflow, TOTAL_SESSION_FOOTPRINT_LIMIT - 1000);
 
-                // next, get the set of in-memory sessions that need to get serialized out
-                for (ImapSession session : sessions.keySet()) {
-                    int size = session.getEstimatedSize();
-                    // want to serialize enough sessions to get below the memory threshold
-                    // also going to serialize anything that's been idle for a while
-                    if (!session.isInteractive() && ++noninteractive > MAX_NONINTERACTIVE_SESSIONS) {
-                        droppable.add(session);
-                    } else if (!session.isSerialized() && session.getLastAccessTime() < cutoff) {
-                        pageable.add(session);
-                    } else if (footprint + size > TOTAL_SESSION_FOOTPRINT_LIMIT) {
-                        pageable.add(session);
-                    } else {
-                        footprint += size;
+                for (ImapSession session : pageable) {
+                    try {
+                        ZimbraLog.imap.debug("Paging out session due to staleness or total memory footprint: %s (sid %s)",
+                                session.getPath(), session.getSessionId());
+                        session.unload(true);
+                    } catch (Exception e) {
+                        ZimbraLog.imap.warn("error serializing session; clearing", e);
+                        // XXX: make sure this doesn't result in a loop
+                        quietRemoveSession(session);
                     }
                 }
-            }
 
-            for (ImapSession session : pageable) {
-                try {
-                    ZimbraLog.imap.debug("Paging out session due to staleness or total memory footprint: %s (sid %s)",
+                for (ImapSession session : overflow) {
+                    try {
+                        ZimbraLog.imap.debug("Loading/unloading paged session due to queued notification overflow: %s (sid %s)",
+                                session.getPath(), session.getSessionId());
+                        session.reload();
+                        session.unload(true);
+                    } catch (ImapSessionClosedException ignore) {
+                    } catch (Exception e) {
+                        ZimbraLog.imap.warn("error deserializing overflowed session; clearing", e);
+                        // XXX: make sure this doesn't result in a loop
+                        quietRemoveSession(session);
+                    }
+                }
+
+                for (ImapSession session : droppable) {
+                    ZimbraLog.imap.debug("Removing session due to having too many noninteractive sessions: %s (sid %s)",
                             session.getPath(), session.getSessionId());
-                    session.unload(true);
-                } catch (Exception e) {
-                    ZimbraLog.imap.warn("error serializing session; clearing", e);
-                    // XXX: make sure this doesn't result in a loop
+                    // only noninteractive sessions get added to droppable list, so this next conditional should never be true
                     quietRemoveSession(session);
                 }
-            }
-
-            for (ImapSession session : overflow) {
-                try {
-                    ZimbraLog.imap.debug("Loading/unloading paged session due to queued notification overflow: %s (sid %s)",
-                            session.getPath(), session.getSessionId());
-                    session.reload();
-                    session.unload(true);
-                } catch (ImapSessionClosedException ignore) {
-                } catch (Exception e) {
-                    ZimbraLog.imap.warn("error deserializing overflowed session; clearing", e);
-                    // XXX: make sure this doesn't result in a loop
-                    quietRemoveSession(session);
-                }
-            }
-
-            for (ImapSession session : droppable) {
-                ZimbraLog.imap.debug("Removing session due to having too many noninteractive sessions: %s (sid %s)",
-                        session.getPath(), session.getSessionId());
-                // only noninteractive sessions get added to droppable list, so this next conditional should never be true
-                quietRemoveSession(session);
+            } catch (Throwable t) {  //don't let exceptions kill the timer
+                ZimbraLog.imap.warn("Error during IMAP session serializer task", t);
             }
         }
 
@@ -588,7 +592,7 @@ final class ImapSessionManager {
             return folder;
         }
     }
-    
+
     void updateAccessTime(String key) {
         if (!isActiveKey(key)) {
             inactiveSessionCache.updateAccessTime(key);
@@ -610,7 +614,7 @@ final class ImapSessionManager {
 
         /** Removes the folder from the cache. */
         void remove(String key);
-        
+
         /** Update the last access time without necessarily loading the underlying object **/
         void updateAccessTime(String key);
     }

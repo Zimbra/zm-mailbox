@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareLocator;
@@ -108,8 +107,8 @@ public class ShareStartStopListener extends MailboxListener {
                             prov.modifyAttrs(shloc, attrs);
                         }
                     }
-                } catch (ServiceException e) {
-                    ZimbraLog.share.warn("error while processing share start notification", e);
+                } catch (Throwable t) {  //don't let exceptions kill the timer
+                    ZimbraLog.share.warn("error while processing share start notification", t);
                 }
             }
         };
@@ -134,8 +133,8 @@ public class ShareStartStopListener extends MailboxListener {
                             prov.deleteShareLocator(uuid);
                         }
                     }
-                } catch (ServiceException e) {
-                    ZimbraLog.share.warn("error while processing share stop notification", e);
+                } catch (Throwable t) {  //don't let exceptions kill the timer
+                    ZimbraLog.share.warn("error while processing share stop notification", t);
                 }
             }
         };

@@ -14,6 +14,12 @@
  */
 package com.zimbra.cs.mailbox.acl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.TimerTask;
+
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -27,12 +33,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.ZimbraApplication;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.TimerTask;
 
 /**
  * This task publishes shared item updates to LDAP to enable centralized discovery of shares, e.g.
@@ -55,8 +55,8 @@ public class AclPushTask extends TimerTask {
         if (!supported)
             return;
         ZimbraLog.misc.debug("Starting pending ACL push");
-        Date now = new Date();
         try {
+            Date now = new Date();
             Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush.getEntries(now);
 
             for (int mboxId : mboxIdToItemIds.keySet()) {
@@ -119,8 +119,8 @@ public class AclPushTask extends TimerTask {
             }
 
             DbPendingAclPush.deleteEntries(now);
-        } catch (ServiceException e) {
-            ZimbraLog.misc.warn("Error during ACL push task", e);
+        } catch (Throwable t) {  //don't let exceptions kill the timer
+            ZimbraLog.misc.warn("Error during ACL push task", t);
         }
         ZimbraLog.misc.debug("Finished pending ACL push");
     }

@@ -463,8 +463,8 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
                     storeManager.quietDelete(b);
                 }
 
-            } catch (Exception e) {
-                log.warn("Exception in " + getClass().getName() + ": " + e);
+            } catch (Throwable t) {  //don't let exceptions kill the timer
+                log.warn("Exception in " + getClass().getName() + ": " + t);
             }
         }
     }
