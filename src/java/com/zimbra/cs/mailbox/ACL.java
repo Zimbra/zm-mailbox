@@ -237,7 +237,8 @@ public final class ACL {
                 return (mType == GRANTEE_PUBLIC);
             else if (zimbraId.equals(GuestAccount.GUID_AUTHUSER))
                 return (mType == GRANTEE_AUTHUSER);
-            return zimbraId.equals(mGrantee);
+            return mType == GRANTEE_GUEST || mType == GRANTEE_KEY ?
+                    zimbraId.equalsIgnoreCase(mGrantee) : zimbraId.equals(mGrantee);
         }
 
         /** Updates the granted rights in the <tt>Grant</tt>.  The old
