@@ -67,7 +67,7 @@ public final class EffectiveACLCache {
                 // first try with old serialization
                 MetadataList meta = new MetadataList((String) obj);
                 return new ACL(meta);
-            } catch (ServiceException e) {
+            } catch (Exception e) {
                 Metadata meta = new Metadata((String) obj);
                 return new ACL(meta);
             }

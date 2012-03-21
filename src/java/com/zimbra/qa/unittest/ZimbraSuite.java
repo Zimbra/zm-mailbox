@@ -53,6 +53,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestTags.class);
         sClasses.add(TestItemCache.class);
         sClasses.add(TestFolders.class);
+        sClasses.add(TestFolderACLCache.class);
         sClasses.add(TestSpellCheck.class);
         sClasses.add(TestAuthentication.class);
         sClasses.add(TestAccount.class);
