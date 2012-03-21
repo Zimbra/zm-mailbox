@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -78,8 +77,12 @@ final public class Validators {
             if (args.length > 2 && args[2] instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> acctAttrs = (Map<String, Object>) args[2];
-                if (isSystemProperty(acctAttrs))
+                if (isSystemProperty(acctAttrs)) {
                     return;
+                }
+                if (isExternalVirtualAccount(acctAttrs)) {
+                    return;
+                }
             }
 
             String emailAddr = (String)args[0];
@@ -150,6 +153,14 @@ final public class Validators {
         return false;
     }
 
+    private static boolean isExternalVirtualAccount(Map<String, Object> attrs) {
+        if (attrs == null) {
+            return false;
+        }
+        Object o = attrs.get(Provisioning.A_zimbraIsExternalVirtualAccount);
+        return o != null && "true".equalsIgnoreCase(o.toString());
+    }
+
 
     /**
      * Validate that we are not exceeding max feature and cos counts for the given domain.
@@ -189,8 +200,12 @@ final public class Validators {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> attrs = (Map<String, Object>) args[1];
-            if (isSystemProperty(attrs))
+            if (isSystemProperty(attrs)) {
                 return;
+            }
+            if (isExternalVirtualAccount(attrs)) {
+                return;
+            }
 
             Account account = null;
             if (args.length == 3)
