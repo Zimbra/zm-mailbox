@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -208,6 +209,46 @@ public final class ContactTest {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), pc.getContentStream());
         MimePart mp = Mime.getMimePart(mm, "1");
         Assert.assertEquals("image/png", mp.getContentType());
+    }
+    
+    /**
+     * Tests Invalid image attachment (bug 71868).
+     */
+    @Test
+    public void createInvalidImageAttachment()
+    throws Exception {
+        // Create a contact with an attachment.
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put("fullName", "Get Attachment Content");
+        byte[] attachData = "attachment 1".getBytes();
+        Attachment attachment = new Attachment(attachData, "image/png", "image", "file1.png");
+        try {
+            ParsedContact pc = new ParsedContact(attrs, Lists.newArrayList(attachment));
+            Assert.fail("Expected INVALID_IMAGE exception");
+        } catch (ServiceException se) {
+            Assert.assertEquals("check the INVALID_IMAGE exception", "mail.INVALID_IMAGE", se.getCode());
+        }
+    }
+    
+    /**
+     * Tests Invalid image attachment (bug 71868).
+     */
+    @Test
+    public void modifyInvalidImageAttachment()
+    throws Exception {
+        // Create a contact with an attachment.
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put("fullName", "Contact Initial Content");
+        byte[] attachData = "attachment 1".getBytes();
+        Attachment attachment1 = new Attachment(attachData, "image/png", "customField", "image.png");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact = mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(attachment1)), Mailbox.ID_FOLDER_CONTACTS, null);
+        Attachment attachment2 = new Attachment(attachData, "image/png", "image", "image2.png");
+        try {
+            ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), Lists.newArrayList(attachment2));
+        } catch (ServiceException se) {
+            Assert.assertEquals("check the INVALID_IMAGE exception", "mail.INVALID_IMAGE", se.getCode());
+        }
     }
 
 }

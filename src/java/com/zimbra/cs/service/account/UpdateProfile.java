@@ -17,6 +17,8 @@ package com.zimbra.cs.service.account;
 import java.io.IOException;
 import java.util.Map;
 
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
@@ -48,6 +50,10 @@ public class UpdateProfile extends AccountDocumentHandler {
             Upload up = null;
             try {
                 up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), imageId, zsc.getAuthToken());
+                // validate the image based on the content.
+                String contentType = MimeDetect.getMimeDetect().detect(up.getInputStream());
+                if (contentType == null || contentType.matches(MimeConstants.CT_IMAGE_WILD) == false)
+                    throw MailServiceException.INVALID_IMAGE("Uploaded image is not a valid image file");
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
                 OperationContext octxt = getOperationContext(zsc, context);
                 ParsedDocument pd = new ParsedDocument(up.getInputStream(), ProfileServlet.IMAGE_URI, up.getContentType(), System.currentTimeMillis(),

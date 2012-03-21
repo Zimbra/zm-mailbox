@@ -96,6 +96,7 @@ public class MailServiceException extends ServiceException {
     public static final String CONTACT_TOO_BIG = "mail.CONTACT_TOO_BIG";
 
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
+    public static final String INVALID_IMAGE = "mail.INVALID_IMAGE";
 
     public static final String TEMPORARY_ANALYSIS_ERROR = "mail.TEMPORARY_ANALYSIS_ERROR";
 
@@ -568,5 +569,9 @@ public class MailServiceException extends ServiceException {
     
     public static ServiceException NO_SUCH_GRANTEE(String message, Throwable cause) {
         return new MailServiceException("no such grantee "+message, NO_SUCH_GRANTEE, SENDERS_FAULT, cause);
+    }
+    
+    public static ServiceException INVALID_IMAGE(String message) {
+        return new MailServiceException(message, INVALID_IMAGE, SENDERS_FAULT);
     }
 }

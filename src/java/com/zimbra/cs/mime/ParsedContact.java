@@ -38,6 +38,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
@@ -105,6 +106,7 @@ public final class ParsedContact {
 
         if (attachments != null && !attachments.isEmpty()) {
             try {
+                validateImageAttachments(attachments);
                 contactAttachments = attachments;
                 mimeMessage = generateMimeMessage(attachments);
                 digest = ByteUtil.getSHA256Digest(Mime.getInputStream(mimeMessage), true);
@@ -120,6 +122,16 @@ public final class ParsedContact {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
             } catch (IOException ioe) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+            }
+        }
+    }
+
+    private static void validateImageAttachments(List<Attachment> attachments) throws ServiceException, IOException {
+        for (Attachment attach : attachments) {
+            if (attach.getName().equals(ContactConstants.A_image)) {
+                String contentType = MimeDetect.getMimeDetect().detect(attach.getInputStream());
+                if (contentType == null || contentType.matches(MimeConstants.CT_IMAGE_WILD) == false)
+                    throw MailServiceException.INVALID_IMAGE("Attached image is not a valid image file");
             }
         }
     }
@@ -408,6 +420,11 @@ public final class ParsedContact {
     public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta)
     throws ServiceException {
         if (attachDelta != null && !attachDelta.isEmpty()) {
+            try {
+                validateImageAttachments(attachDelta);
+            } catch (IOException ioe) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+            }
             for (Attachment attach : attachDelta) {
                 // make sure we don't have anything referenced in both fieldDelta and attachDelta
                 fieldDeltaList.removeAllAttrDeltaByName(attach.getName());
