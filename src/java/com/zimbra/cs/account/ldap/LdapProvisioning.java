@@ -601,50 +601,42 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Config getConfig() throws ServiceException
+    public synchronized Config getConfig() throws ServiceException
     {
         if (cachedGlobalConfig == null) {
-            synchronized(LdapProvisioning.class) {
-                if (cachedGlobalConfig == null) {
-                    String configDn = mDIT.configDN();
-                    try {
-                        ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALCONFIG, configDn);
-                        LdapConfig config = new LdapConfig(configDn, attrs, this);
-                        
-                        if (useCache) {
-                            cachedGlobalConfig = config;
-                        } else {
-                            return config;
-                        }
-                    } catch (ServiceException e) {
-                        throw ServiceException.FAILURE("unable to get config", e);
-                    }
+            String configDn = mDIT.configDN();
+            try {
+                ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALCONFIG, configDn);
+                LdapConfig config = new LdapConfig(configDn, attrs, this);
+                
+                if (useCache) {
+                    cachedGlobalConfig = config;
+                } else {
+                    return config;
                 }
+            } catch (ServiceException e) {
+                throw ServiceException.FAILURE("unable to get config", e);
             }
         }
         return cachedGlobalConfig;
     }
 
     @Override
-    public GlobalGrant getGlobalGrant() throws ServiceException
+    public synchronized GlobalGrant getGlobalGrant() throws ServiceException
     {
         if (cachedGlobalGrant == null) {
-            synchronized(LdapProvisioning.class) {
-                if (cachedGlobalGrant == null) {
-                    String globalGrantDn = mDIT.globalGrantDN();
-                    try {
-                        ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALGRANT, globalGrantDn);
-                        LdapGlobalGrant globalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
-                        
-                        if (useCache) {
-                            cachedGlobalGrant = globalGrant;
-                        } else {
-                            return globalGrant;
-                        }
-                    } catch (ServiceException e) {
-                        throw ServiceException.FAILURE("unable to get globalgrant", e);
-                    }
+            String globalGrantDn = mDIT.globalGrantDN();
+            try {
+                ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALGRANT, globalGrantDn);
+                LdapGlobalGrant globalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
+                
+                if (useCache) {
+                    cachedGlobalGrant = globalGrant;
+                } else {
+                    return globalGrant;
                 }
+            } catch (ServiceException e) {
+                throw ServiceException.FAILURE("unable to get globalgrant", e);
             }
         }
         return cachedGlobalGrant;
