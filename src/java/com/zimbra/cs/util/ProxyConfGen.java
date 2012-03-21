@@ -1168,9 +1168,6 @@ public class ProxyConfGen
                 conf.newLine();
             }
 
-            cache = expandTemplateAndCache(temp, conf);
-            conf.newLine();
-
             while (it.hasNext()) {
                 item = it.next();
                 fillVarsWithDomainAttrs(item);
