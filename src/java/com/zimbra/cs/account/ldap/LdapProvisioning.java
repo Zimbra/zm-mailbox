@@ -490,61 +490,48 @@ public class LdapProvisioning extends Provisioning {
     }
 
     @Override
-    public Config getConfig() throws ServiceException
-    {
-        // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
-        // double-checked-locking is broken
+    public synchronized Config getConfig() throws ServiceException {
         if (cachedGlobalConfig == null) {
-            synchronized(LdapProvisioning.class) {
-                if (cachedGlobalConfig == null) {
-                    ZimbraLdapContext zlc = null;
-                    try {
-                        String configDn = mDIT.configDN();
-                        zlc = new ZimbraLdapContext();
-                        Attributes attrs = zlc.getAttributes(configDn);
-                        LdapConfig config = new LdapConfig(configDn, attrs, this);
-                        
-                        if (useCache) {
-                            cachedGlobalConfig = config;
-                        } else {
-                            return config;
-                        }
-                    } catch (NamingException e) {
-                        throw ServiceException.FAILURE("unable to get config", e);
-                    } finally {
-                        ZimbraLdapContext.closeContext(zlc);
-                    }
+            ZimbraLdapContext zlc = null;
+            try {
+                String configDn = mDIT.configDN();
+                zlc = new ZimbraLdapContext();
+                Attributes attrs = zlc.getAttributes(configDn);
+                LdapConfig config = new LdapConfig(configDn, attrs, this);
+                
+                if (useCache) {
+                    cachedGlobalConfig = config;
+                } else {
+                    return config;
                 }
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE("unable to get config", e);
+            } finally {
+                ZimbraLdapContext.closeContext(zlc);
             }
         }
         return cachedGlobalConfig;
     }
 
     @Override
-    public GlobalGrant getGlobalGrant() throws ServiceException
-    {
-        // TODO: failure scenarios? fallback to static config file or hard-coded defaults?
+    public synchronized GlobalGrant getGlobalGrant() throws ServiceException {
         if (cachedGlobalGrant == null) {
-            synchronized(LdapProvisioning.class) {
-                if (cachedGlobalGrant == null) {
-                    ZimbraLdapContext zlc = null;
-                    try {
-                        String globalGrantDn = mDIT.globalGrantDN();
-                        zlc = new ZimbraLdapContext();
-                        Attributes attrs = zlc.getAttributes(globalGrantDn);
-                        LdapGlobalGrant globalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
-                        
-                        if (useCache) {
-                            cachedGlobalGrant = globalGrant;
-                        } else {
-                            return globalGrant;
-                        }
-                    } catch (NamingException e) {
-                        throw ServiceException.FAILURE("unable to get globalgrant", e);
-                    } finally {
-                        ZimbraLdapContext.closeContext(zlc);
-                    }
+            ZimbraLdapContext zlc = null;
+            try {
+                String globalGrantDn = mDIT.globalGrantDN();
+                zlc = new ZimbraLdapContext();
+                Attributes attrs = zlc.getAttributes(globalGrantDn);
+                LdapGlobalGrant globalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
+                
+                if (useCache) {
+                    cachedGlobalGrant = globalGrant;
+                } else {
+                    return globalGrant;
                 }
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE("unable to get globalgrant", e);
+            } finally {
+                ZimbraLdapContext.closeContext(zlc);
             }
         }
         return cachedGlobalGrant;
