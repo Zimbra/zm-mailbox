@@ -3157,6 +3157,8 @@ public class DbMailItem {
     }
 
     public static SpoolingCache<MailboxBlob> getAllBlobs(Mailbox mbox) throws ServiceException {
+        ZimbraLog.mailbox.info("getting blob list for mailbox %d", mbox.getId());
+
         SpoolingCache<MailboxBlob> blobs = new SpoolingCache<MailboxBlob>(5000);
 
         Connection conn = mbox.getOperationConnection();
