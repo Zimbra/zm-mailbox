@@ -43,7 +43,7 @@ public final class ImapProxyTest {
         }
     }
 
-    @Test(timeout = 3000)
+    @Test(timeout = 30000)
     public void bye() throws Exception {
         server = MockTcpServer.scenario()
             .sendLine("* OK server ready")
