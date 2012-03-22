@@ -333,6 +333,8 @@ public abstract class HttpStoreManager extends StoreManager {
     @Override
     public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException {
         // the default implementation iterates through the mailbox's blobs and deletes them one by one
+        ZimbraLog.store.info("deleting store for mailbox %d by iterating blobs", mbox.getId());
+
         for (MailboxBlob mblob : blobs) {
             delete(mblob);
         }
