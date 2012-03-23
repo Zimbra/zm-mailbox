@@ -995,8 +995,9 @@ public class RenameDomain {
     private void updateSystemAccount(Entry entry, String attrName, Map<String, Object> attrMap) {
         String curAddr = entry.getAttr(attrName);
         String newAddr = getNewAddress(curAddr);
-        if (curAddr != null && newAddr != null)
+        if (curAddr != null && newAddr != null) {
             attrMap.put(attrName, newAddr);
+        }
     }
     
     // TODO: should modify FlushCache to take more than one entry types, so that we 
@@ -1010,6 +1011,7 @@ public class RenameDomain {
             updateSystemAccount(config, Provisioning.A_zimbraNotebookAccount, attrMap);
             updateSystemAccount(config, Provisioning.A_zimbraSpamIsSpamAccount, attrMap);
             updateSystemAccount(config, Provisioning.A_zimbraSpamIsNotSpamAccount, attrMap);
+            updateSystemAccount(config, Provisioning.A_zimbraAmavisQuarantineAccount, attrMap);
             
             String newDomainName = getNewDomain(curDefaultDomainName);
             if (curDefaultDomainName != null && newDomainName != null)
