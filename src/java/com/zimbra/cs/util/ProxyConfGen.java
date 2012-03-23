@@ -1167,7 +1167,8 @@ class DomainAttrExceptionItem extends DomainAttrItem {
 
 public class ProxyConfGen
 {
-    private static final int DEFAULT_SERVER_NAME_HASH_MAX_SIZE = 512;
+    private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
+    private static final int DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE = 64;
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
     private static Options mOptions = new Options();
     private static boolean mDryRun = false;
@@ -1850,7 +1851,8 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.name", new ProxyConfVar("web.upstream.name", null, ZIMBRA_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream cluster"));
         mConfVars.put("web.ssl.upstream.name", new ProxyConfVar("web.ssl.upstream.name", null, ZIMBRA_SSL_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS upstream cluster"));
         mConfVars.put("web.upstream.:servers", new WebUpstreamServersVar());
-        mConfVars.put("web.server_names.size", new ProxyConfVar("web.server_names.size", null, DEFAULT_SERVER_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.NONE, "the server names hash max size, needed to be increased if too many virtual host names are added"));
+        mConfVars.put("web.server_names.max_size", new ProxyConfVar("web.server_names.max_size", "proxy_server_names_hash_max_size", DEFAULT_SERVERS_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash max size, needed to be increased if too many virtual host names are added"));
+        mConfVars.put("web.server_names.bucket_size", new ProxyConfVar("web.server_names.bucket_size", "proxy_server_names_hash_bucket_size", DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash bucket size, needed to be increased if too many virtual host names are added"));
         mConfVars.put("web.ssl.upstream.:servers", new WebSSLUpstreamServersVar());
         /* deprecated */ mConfVars.put("web.:routehandlers", new RouteHandlersVar());
         /* deprecated */ mConfVars.put("web.routetimeout", new ProxyConfVar("web.routetimeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to web route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
@@ -2050,14 +2052,7 @@ public class ProxyConfGen
         mLog.debug("Loading Attrs in Domain Level");
         mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
 
-        //bug 69648, manually set the server name hash size when too many server names are added
-        int size = DEFAULT_SERVER_NAME_HASH_MAX_SIZE;
-        if (mDomainReverseProxyAttrs.size() > DEFAULT_SERVER_NAME_HASH_MAX_SIZE) {
-            size = mDomainReverseProxyAttrs.size() + 100; // add a little more than needed
-        }
 
-        mConfVars.get("web.server_names.size").mValue = size;
-        
         mLog.debug("Updating Default Variable Map");
         updateDefaultVars();
 
