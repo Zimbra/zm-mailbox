@@ -20,8 +20,8 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
-import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
@@ -220,17 +220,28 @@ public class FriendlyCalendaringDescription {
         mHtml.append(StringUtil.escapeHtml(value));
         mHtml.append("</td></tr>\n");
     }
+    
+    private TimeZone getTimeZone(ParsedDateTime date) {
+        if (date.getTimeZone() != null)
+            return date.getTimeZone();
+        else
+            return Util.getAccountTimeZone(mAccount);
+    }
 
     public String getTimeDisplayString(ParsedDateTime start, ParsedDateTime end,
             boolean isRecurrence, boolean isAllDayEvent) throws ServiceException {
         StringBuilder sb = new StringBuilder();
+        TimeZone timeZone = getTimeZone(start);
         if (!isRecurrence) {
-            sb.append(DateFormat.getDateInstance(DateFormat.FULL, mLc).format(start.getDate())).append(", ");
+            DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, mLc);
+            df.setTimeZone(timeZone);
+            sb.append(df.format(start.getDate())).append(", ");
         }
         if (isAllDayEvent) {
             sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsAllDay, mLc));
         } else {
             DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.LONG, mLc);
+            timeFormat.setTimeZone(timeZone);
             sb.append(timeFormat.format(start.getDate())).append(" - ");
             if (!isRecurrence) {
                 Calendar calStart = start.getCalendarCopy();
@@ -239,7 +250,9 @@ public class FriendlyCalendaringDescription {
                                     calStart.get(Calendar.MONTH) == calEnd.get(Calendar.MONTH) &&
                                     calStart.get(Calendar.DATE) == calEnd.get(Calendar.DATE);
                 if (!isSameday) {
-                    sb.append(DateFormat.getDateInstance(DateFormat.FULL, mLc).format(end.getDate())).append(", ");
+                    DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, mLc);
+                    df.setTimeZone(timeZone); // use start date timezone even to format end date.
+                    sb.append(df.format(end.getDate())).append(", ");
                 }
             }
             sb.append(timeFormat.format(end.getDate()));
