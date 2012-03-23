@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120319-1201 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120323-1238 */
 
     /**
      * RFC2256: descriptive information
@@ -25085,6 +25085,137 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @return zimbraProduct, or ZAttrProvisioning.Product.ZCS if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public ZAttrProvisioning.Product getProduct() {
+        try { String v = getAttr(Provisioning.A_zimbraProduct); return v == null ? ZAttrProvisioning.Product.ZCS : ZAttrProvisioning.Product.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.Product.ZCS; }
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @return zimbraProduct, or "ZCS" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public String getProductAsString() {
+        return getAttr(Provisioning.A_zimbraProduct, "ZCS");
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @param zimbraProduct new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public void setProduct(ZAttrProvisioning.Product zimbraProduct) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProduct, zimbraProduct.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @param zimbraProduct new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public Map<String,Object> setProduct(ZAttrProvisioning.Product zimbraProduct, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProduct, zimbraProduct.toString());
+        return attrs;
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @param zimbraProduct new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public void setProductAsString(String zimbraProduct) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProduct, zimbraProduct);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @param zimbraProduct new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public Map<String,Object> setProductAsString(String zimbraProduct, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProduct, zimbraProduct);
+        return attrs;
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public void unsetProduct() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProduct, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * <p>Valid values: [ZCS, OCTOPUS]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public Map<String,Object> unsetProduct(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraProduct, "");
+        return attrs;
+    }
+
+    /**
      * Name to be used in public API such as REST or SOAP proxy.
      *
      * @return zimbraPublicServiceHostname, or null if unset
@@ -28171,13 +28302,13 @@ public abstract class ZAttrConfig extends Entry {
      * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
      * the features like cert per domain.
      *
-     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or false if unset
+     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or true if unset
      *
      * @since ZCS 7.2.0
      */
     @ZAttr(id=1374)
     public boolean isReverseProxyGenConfigPerVirtualHostname() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, true);
     }
 
     /**
@@ -40380,13 +40511,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * URL of the Zimbra version check script
      *
-     * @return zimbraVersionCheckURL, or "http://www.zimbra.com/aus/admin/zimbraAdminVersionCheck.php" if unset
+     * @return zimbraVersionCheckURL, or "http://www.zimbra.com/aus/universal/update.php" if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1061)
     public String getVersionCheckURL() {
-        return getAttr(Provisioning.A_zimbraVersionCheckURL, "http://www.zimbra.com/aus/admin/zimbraAdminVersionCheck.php");
+        return getAttr(Provisioning.A_zimbraVersionCheckURL, "http://www.zimbra.com/aus/universal/update.php");
     }
 
     /**

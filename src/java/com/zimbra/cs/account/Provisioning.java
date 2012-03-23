@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.Product;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
@@ -309,6 +310,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public boolean idIsUUID() {
         return true;
+    }
+    
+    public boolean isOctopus() throws ServiceException {
+        return getConfig().getProduct() == Product.OCTOPUS;
     }
 
     /**

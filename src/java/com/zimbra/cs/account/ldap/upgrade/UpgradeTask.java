@@ -62,7 +62,9 @@ public enum UpgradeTask {
     BUG_66001(BUG_66001.class),
     BUG_68190(BUG_68190.class),
     BUG_68831(BUG_68831.class),
-    BUG_68891(BUG_68891.class);
+    BUG_68891(BUG_68891.class),
+    BUG_72056(BUG_72056.class);  // Octopus only
+    
 
     private static final String NAME_PREFIX = "BUG_";
     

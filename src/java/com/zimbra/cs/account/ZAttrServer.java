@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120319-1201 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120323-1238 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -17949,13 +17949,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
      * the features like cert per domain.
      *
-     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or false if unset
+     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or true if unset
      *
      * @since ZCS 7.2.0
      */
     @ZAttr(id=1374)
     public boolean isReverseProxyGenConfigPerVirtualHostname() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, true);
     }
 
     /**
