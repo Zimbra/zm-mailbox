@@ -26,6 +26,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.ExternalAccountManagerTask;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -71,6 +72,7 @@ public class Zimbra {
         System.setProperty("mail.mime.charset",                 "utf-8");
         System.setProperty("mail.mime.base64.ignoreerrors",     "true");
         System.setProperty("mail.mime.ignoremultipartencoding", "false");
+        System.setProperty("mail.mime.multipart.allowempty",    "true");
     }
 
     private static void checkForClass(String clzName, String jarName) {
