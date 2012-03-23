@@ -59,7 +59,6 @@ ${DOMAIN_ATTRS}
   good enough for now
   =========================================================
 -->
-
     <right name="domainAdminAccountRights" type="combo">
       <desc>domain admin account right</desc>
       <rights>
@@ -118,9 +117,7 @@ ${DOMAIN_ATTRS}
         <r n="deleteDistributionList"/>
         <r n="getDistributionList"/>
         <r n="getDistributionListMembership"/>
-        <r n="getDistributionListShareInfo"/>
         <r n="listDistributionList"/>
-        <r n="publishDistributionListShareInfo"/>
         <r n="removeDistributionListAlias"/>
         <r n="removeDistributionListMember"/>
         <r n="renameDistributionList"/>
