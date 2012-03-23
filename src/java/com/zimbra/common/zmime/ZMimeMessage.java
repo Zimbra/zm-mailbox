@@ -61,7 +61,7 @@ public class ZMimeMessage extends MimeMessage implements ZMimePart {
     }
 
     public ZMimeMessage(MimeMessage source) throws MessagingException {
-        super(source instanceof ZMimeMessage ? ((ZMimeMessage) source).getSession() : Session.getInstance(new Properties()));
+        super(source instanceof ZMimeMessage ? ((ZMimeMessage) source).getSession() : Session.getDefaultInstance(new Properties()));
 
         this.size = -1;
         this.lines = -1;

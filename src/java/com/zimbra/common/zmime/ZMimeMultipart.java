@@ -15,12 +15,15 @@
 package com.zimbra.common.zmime;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimePartDataSource;
+
+import com.sun.mail.util.ASCIIUtility;
+import com.sun.mail.util.LineOutputStream;
 
 public class ZMimeMultipart extends MimeMultipart {
     private static final boolean ZPARSER = ZMimeMessage.ZPARSER;
@@ -59,14 +62,8 @@ public class ZMimeMultipart extends MimeMultipart {
         this.complete = source.isComplete();
     }
 
-    static ZMimeMultipart newMultipart(ZContentType ctype, ZMimePart container, boolean markParsed) {
-        ZMimeMultipart multi;
-        try {
-            multi = markParsed ? new ZMimeMultipart() : new ZMimeMultipart(new MimePartDataSource(container));
-        } catch (MessagingException me) {
-            // can never happen, since MimePartDataSource is not a MultipartDataSource
-            return null;
-        }
+    static ZMimeMultipart newMultipart(ZContentType ctype, ZMimePart container) {
+        ZMimeMultipart multi = new ZMimeMultipart();
         multi.contentType = ZInternetHeader.unfold(ctype.toString());
         multi.complete = false;
 
@@ -77,6 +74,13 @@ public class ZMimeMultipart extends MimeMultipart {
             ((ZMimeBodyPart) container).cacheContent(multi);
         }
         return multi;
+    }
+
+    void setDataSource(DataSource ds) {
+        this.ds = ds;
+        setPreamble(null);
+        parts.clear();
+        this.parsed = false;
     }
 
     @Override
@@ -122,5 +126,48 @@ public class ZMimeMultipart extends MimeMultipart {
 
     String getBoundary() {
         return implicitBoundary != null ? implicitBoundary : new ZContentType(contentType).getParameter("boundary");
+    }
+
+    // JavaMail makes it impossible to set MimeMultipart.allowEmpty if you don't use their parser, and that
+    // means an empty multipart always throws an exception on MimeMultipart.writeTo regardless of what
+    // "mail.mime.multipart.allowempty" is set to.  So we have to copy the whole method from the superclass
+    // just so we can strip that conditional out.
+    @Override
+    public synchronized void writeTo(OutputStream os) throws IOException, MessagingException {
+        if (ZPARSER) {
+            parse();
+
+            String boundary = "--" + getBoundary();
+            LineOutputStream los = new LineOutputStream(os);
+
+            // if there's a preamble, write it out
+            String preamble = getPreamble();
+            if (preamble != null) {
+                byte[] pb = ASCIIUtility.getBytes(preamble);
+                los.write(pb);
+                // make sure it ends with a newline
+                if (pb.length > 0 && !(pb[pb.length-1] == '\r' || pb[pb.length-1] == '\n')) {
+                    los.writeln();
+                }
+                // XXX - could force a blank line before start boundary
+            }
+
+            if (parts.size() == 0) {
+                // write out a single empty body part
+                los.writeln(boundary); // put out boundary
+                los.writeln(); // put out empty line
+            } else {
+                for (int i = 0; i < parts.size(); i++) {
+                    los.writeln(boundary); // put out boundary
+                    ((MimeBodyPart) parts.elementAt(i)).writeTo(os);
+                    los.writeln(); // put out empty line
+                }
+            }
+
+            // put out last boundary
+            los.writeln(boundary + "--");
+        } else {
+            super.writeTo(os);
+        }
     }
 }
