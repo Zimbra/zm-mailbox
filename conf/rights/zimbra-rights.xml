@@ -696,6 +696,10 @@
     <desc>check for Zimbra software updates</desc>
 </right>
 
+<right name="uploadClientSoftware" type="preset" targetType="global">
+    <desc>upload client software via Admin Console</desc>
+</right>
+
 <!-- 
 ========================================================
                     misc rights

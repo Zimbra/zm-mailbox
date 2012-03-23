@@ -2693,6 +2693,15 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleClientUploadRights">
+    <desc>Rights for uploading client software through Admin Console</desc>
+    <rights>
+        <r n="uploadClientSoftware" />
+        <r n="modifyZimlet"/>
+        <r n="listZimlet"/>
+    </rights>
+</right>
+
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
   <rights>
@@ -2715,6 +2724,7 @@
     <r n="adminConsoleSavedSearchRights"/>
     <r n="adminConsoleSoftwareUpdatesRights"/>
     <r n="adminConsoleMigrationRights"/>
+    <r n="adminConsoleClientUploadRights"/>
   </rights>
 </right>
 
