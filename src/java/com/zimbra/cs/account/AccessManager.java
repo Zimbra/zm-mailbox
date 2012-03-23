@@ -32,6 +32,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
 
 public abstract class AccessManager {
 
@@ -85,7 +86,9 @@ public abstract class AccessManager {
             if (sManager == null)
             	sManager = new com.zimbra.cs.account.accesscontrol.GlobalAccessManager();
             
-            ZimbraLog.account.info("Initialized access manager: " + sManager.getClass().getCanonicalName());
+            if (Zimbra.started()) {
+                ZimbraLog.account.info("Initialized access manager: " + sManager.getClass().getCanonicalName());
+            }
         }
         
         return sManager;

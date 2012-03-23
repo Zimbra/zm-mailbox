@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -140,6 +141,7 @@ public class ProvUtil implements HttpDebugListener {
         high;    // SOAP payload and http transport header
     }
 
+    private boolean batchMode = false;
     private boolean interactiveMode = false;
     private boolean verboseMode = false;
     private SoapDebugLevel debugLevel = SoapDebugLevel.none;
@@ -191,6 +193,11 @@ public class ProvUtil implements HttpDebugListener {
     private void setOutputBinaryToFile(boolean value) {
         outputBinaryToFile = value;
     }
+    
+    private void setBatchMode(boolean value) {
+        batchMode = value;
+    }
+    
 
     /*
     private void setAllowMultiValuedAttrReplacement(boolean value) {
@@ -1052,7 +1059,7 @@ public class ProvUtil implements HttpDebugListener {
                 doRemoveDomainSMIMEConfig(args);
                 break;
             case RENAME_ACCOUNT:
-                prov.renameAccount(lookupAccount(args[1]).getId(), args[2]);
+                doRenameAccount(args);
                 break;
             case RENAME_COS:
                 prov.renameCos(lookupCos(args[1]).getId(), args[2]);
@@ -1630,16 +1637,67 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
+    private boolean confirm(String msg) {
+        if (batchMode) {
+            return true;
+        }
+        
+        console.println(msg);
+        console.print("Continue? [Y]es, [N]o: ");
+        
+        BufferedReader in;
+        try {
+            in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
+            String line = StringUtil.readLine(in);
+            if ("y".equalsIgnoreCase(line) || "yes".equalsIgnoreCase(line)) {
+                return true;
+            } 
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+        
+    }
+    
     private void doDeleteAccount(String[] args) throws ServiceException {
+        if (prov instanceof LdapProv) {
+            boolean confirmed = confirm("-l option is specified.  " +
+                    "Only the LDAP entry of the account will be deleted.\n" + 
+                    "DB data of the account and associated blobs will not be deleted.\n");
+            
+            if (!confirmed) {
+                console.println("aborted");
+                return;
+            }
+        }
+        
         String key = args[1];
         Account acct = lookupAccount(key);
         if (key.equalsIgnoreCase(acct.getId()) || key.equalsIgnoreCase(acct.getName()) ||
                 acct.getName().equalsIgnoreCase(key + "@" + acct.getDomainName())) {
             prov.deleteAccount(acct.getId());
         } else {
-            throw ServiceException.INVALID_REQUEST("argument to deleteAccount must be an account id or the account's primary name", null);
+            throw ServiceException.INVALID_REQUEST(
+                    "argument to deleteAccount must be an account id or the account's primary name", null);
         }
-
+    }
+    
+    private void doRenameAccount(String[] args) throws ServiceException {
+        if (prov instanceof LdapProv) {
+            boolean confirmed = confirm("-l option is specified.  " +
+                    "Only the LDAP portion of the account will be deleted.\n" + 
+                    "DB data of the account will not be renamed.\n");
+            
+            if (!confirmed) {
+                console.println("aborted");
+                return;
+            }
+        }
+        
+        prov.renameAccount(lookupAccount(args[1]).getId(), args[2]);
     }
 
     private void doGetAccountIdentities(String[] args) throws ServiceException {
@@ -3293,6 +3351,7 @@ public class ProvUtil implements HttpDebugListener {
                 pu.initProvisioning();
                 InputStream is = null;
                 if (cl.hasOption('f')) {
+                    pu.setBatchMode(true);
                     is = new FileInputStream(cl.getOptionValue('f'));
                 } else {
                     if (LC.command_line_editing_enabled.booleanValue()) {
