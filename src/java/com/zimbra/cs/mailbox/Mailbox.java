@@ -1717,19 +1717,21 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("deleteMailbox", null, redoRecorder);
-            if (needRedo)
+            if (needRedo) {
                 redoRecorder.log();
+            }
 
             try {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
-                DbMailbox.clearMailboxContent(this);
-                synchronized (DbMailbox.getSynchronizer()) {
-                    DbMailbox.deleteMailbox(conn, this);
-                }
 
                 if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
                     blobs = DbMailItem.getAllBlobs(this);
+                }
+
+                DbMailbox.clearMailboxContent(this);
+                synchronized (DbMailbox.getSynchronizer()) {
+                    DbMailbox.deleteMailbox(conn, this);
                 }
 
                 // Remove all data related to this mailbox from memcached, so the data doesn't

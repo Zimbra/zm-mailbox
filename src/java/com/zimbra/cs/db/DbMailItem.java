@@ -3157,8 +3157,6 @@ public class DbMailItem {
     }
 
     public static SpoolingCache<MailboxBlob> getAllBlobs(Mailbox mbox) throws ServiceException {
-        ZimbraLog.mailbox.info("getting blob list for mailbox %d", mbox.getId());
-
         SpoolingCache<MailboxBlob> blobs = new SpoolingCache<MailboxBlob>(5000);
 
         Connection conn = mbox.getOperationConnection();
@@ -3185,6 +3183,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT item_id, mod_content, volume_id FROM " + getRevisionTableName(mbox, true) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
             getAllBlobs(stmt, mbox, blobs);
+
+            ZimbraLog.mailbox.info("got blob list for mailbox %d (%d blobs)", mbox.getId(), blobs.size());
 
             return blobs;
         } catch (SQLException e) {
