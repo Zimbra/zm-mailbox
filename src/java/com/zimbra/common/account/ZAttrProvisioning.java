@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120319-1201 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120323-1238 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1134,6 +1134,22 @@ public class ZAttrProvisioning {
         public boolean isBottom() { return this == bottom;}
         public boolean isOff() { return this == off;}
         public boolean isRight() { return this == right;}
+    }
+
+    public static enum Product {
+        OCTOPUS("OCTOPUS"),
+        ZCS("ZCS");
+        private String mValue;
+        private Product(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static Product fromString(String s) throws ServiceException {
+            for (Product value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOCTOPUS() { return this == OCTOPUS;}
+        public boolean isZCS() { return this == ZCS;}
     }
 
     public static enum ReverseProxyClientCertMode {
@@ -9291,6 +9307,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=638)
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
+
+    /**
+     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1392)
+    public static final String A_zimbraProduct = "zimbraProduct";
 
     /**
      * Allowed domains for Proxy servlet
