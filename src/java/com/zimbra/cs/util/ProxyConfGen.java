@@ -797,7 +797,8 @@ class DomainAttrExceptionItem extends DomainAttrItem {
 
 public class ProxyConfGen
 {
-    private static final int DEFAULT_SERVER_NAME_HASH_MAX_SIZE = 512;
+    private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
+    private static final int DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE = 64;
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
     private static Options mOptions = new Options();
     private static boolean mDryRun = false;
@@ -1402,7 +1403,8 @@ public class ProxyConfGen
         mConfVars.put("web.mailmode", new ProxyConfVar("web.mailmode", Provisioning.A_zimbraReverseProxyMailMode, "both", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"Reverse Proxy Mail Mode - can be http|https|both|redirect|mixed"));
         mConfVars.put("web.upstream.name", new ProxyConfVar("web.upstream.name", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream cluster"));
         mConfVars.put("web.upstream.:servers", new ProxyConfVar("web.upstream.:servers", "zimbraReverseProxyLookupTarget", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CONFIG,"List of upstream HTTP servers used by Web Proxy (i.e. servers for which zimbraReverseProxyLookupTarget is true, and whose mail mode is http|mixed|both)"));
-        mConfVars.put("web.server_names.size", new ProxyConfVar("web.server_names.size", null, DEFAULT_SERVER_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.NONE, "the server names hash max size, needed to be increased if too many virtual host names are added"));
+        mConfVars.put("web.server_names.max_size", new ProxyConfVar("web.server_names.max_size", "proxy_server_names_hash_max_size", DEFAULT_SERVERS_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash max size, needed to be increased if too many virtual host names are added"));
+        mConfVars.put("web.server_names.bucket_size", new ProxyConfVar("web.server_names.bucket_size", "proxy_server_names_hash_bucket_size", DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash bucket size, needed to be increased if too many virtual host names are added"));
         mConfVars.put("web.:routehandlers", new ProxyConfVar("web.:routehandlers", "zimbraReverseProxyLookupTarget", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,"List of web route lookup handlers (i.e. servers for which zimbraReverseProxyLookupTarget is true)"));
         mConfVars.put("web.routetimeout", new ProxyConfVar("web.routetimeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to web route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
@@ -1583,15 +1585,7 @@ public class ProxyConfGen
         /* upgrade the variable map from the config in force */
         mLog.debug("Loading Attrs in Domain Level");
         mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
-        
-        //bug 69648, manually set the server name hash size when too many server names are added
-        int size = DEFAULT_SERVER_NAME_HASH_MAX_SIZE;
-        if (mDomainReverseProxyAttrs.size() > DEFAULT_SERVER_NAME_HASH_MAX_SIZE) {
-            size = mDomainReverseProxyAttrs.size() + 100; // add a little more than needed
-        }
 
-        mConfVars.get("web.server_names.size").mValue = size;
-        
         mLog.debug("Updating Default Variable Map");
         updateDefaultVars();
 
