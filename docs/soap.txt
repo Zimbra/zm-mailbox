@@ -622,7 +622,7 @@ effect if called in a <nosession> context.
 
 <GetAccountInfoResponse>
    <name>{account-name}</name>
-   <attr name="{name}">{value}</a>+
+   <a name="{name}">{value}</a>+
    <soapURL>{mail-url}</soapURL>+
    <publicURL>{account-base-public-url}</publicURL>
 </GetAccountInfoResponse>
