@@ -6932,7 +6932,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1392" name="zimbraProduct" type="enum" cardinality="single" value="ZCS,OCTOPUS" optionalIn="globalConfig" since="8.0.0">
+<attr id="1392" name="zimbraProduct" type="enum" cardinality="single" value="ZCS,OCTOPUS" optionalIn="globalConfig" immutable="1" since="8.0.0">
   <globalConfigValue>ZCS</globalConfigValue>
   <desc>whether this instance of Zimbra is running ZCS or OCTOPUS</desc>
 </attr>
