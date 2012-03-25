@@ -1037,7 +1037,8 @@ public class SoapSession extends Session {
         OperationContextData.setNeedGranteeName(octxt, false);
         GetFolder.encodeFolderNode(root, eRefresh, ifmt, octxt);
 
-        Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>();
+        // The Boolean of the Pair indicates whether the mountpoint is found to be broken
+        Map<ItemId, Pair<Boolean, Element>> mountpoints = new HashMap<ItemId, Pair<Boolean, Element>>();
         // for mountpoints pointing to this host, get the serialized folder subhierarchy
         expandLocalMountpoints(octxt, root, eRefresh.getFactory(), mountpoints);
         // for mountpoints pointing to other hosts, get the folder structure from the remote server
@@ -1049,7 +1050,8 @@ public class SoapSession extends Session {
         }
     }
 
-    private void expandLocalMountpoints(OperationContext octxt, FolderNode node, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+    private void expandLocalMountpoints(OperationContext octxt, FolderNode node, Element.ElementFactory factory,
+            Map<ItemId, Pair<Boolean, Element>> mountpoints) {
         if (node.mFolder == null || mountpoints == null) {
             return;
         } else if (node.mFolder instanceof Mountpoint) {
@@ -1062,7 +1064,8 @@ public class SoapSession extends Session {
         }
     }
 
-    private void expandLocalMountpoint(OperationContext octxt, Mountpoint mpt, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+    private void expandLocalMountpoint(OperationContext octxt, Mountpoint mpt, Element.ElementFactory factory,
+            Map<ItemId, Pair<Boolean, Element>> mountpoints) {
         // don't bother generating the subhierarchy more than once
         ItemId iidTarget = mpt.getTarget();
         if (mountpoints.containsKey(iidTarget)) {
@@ -1071,8 +1074,20 @@ public class SoapSession extends Session {
         try {
             Provisioning prov = Provisioning.getInstance();
             Account owner = prov.get(Key.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
-            if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
+            if (owner == null || owner.getId().equals(mAuthenticatedAccountId)) {
+                mountpoints.put(iidTarget, new Pair<Boolean, Element>(true, null));
                 return;
+            }
+
+            // treat the target account as inactive if it's in maintenance mode, or
+            // if we're non-admin and it's not active
+            if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(owner.getAccountStatus(prov)) ||
+                    (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(owner.getAccountStatus(prov)) &&
+                            (!octxt.isUsingAdminPrivileges() ||
+                                    !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), owner)))) {
+                mountpoints.put(iidTarget, new Pair<Boolean, Element>(true, null));
+                return;
+            }
 
             // handle mountpoints pointing to a different server later
             if (!Provisioning.onLocalServer(owner)) {
@@ -1089,7 +1104,7 @@ public class SoapSession extends Session {
                     OperationContextData.addGranteeNames(octxt, remote);
                 }
                 Element subhierarchy = GetFolder.encodeFolderNode(remote, factory.createElement("ignored"), ifmt, octxt).detach();
-                mountpoints.put(iidTarget, subhierarchy);
+                mountpoints.put(iidTarget, new Pair<Boolean, Element>(false, subhierarchy));
                 // fault in a delegate session because there's actually something to listen on...
                 getDelegateSession(mpt.getOwnerId());
             }
@@ -1098,10 +1113,11 @@ public class SoapSession extends Session {
         }
     }
 
-    private void expandRemoteMountpoints(OperationContext octxt, ZimbraSoapContext zsc, Map<ItemId, Element> mountpoints) {
+    private void expandRemoteMountpoints(OperationContext octxt, ZimbraSoapContext zsc,
+            Map<ItemId, Pair<Boolean, Element>> mountpoints) {
         Map<String, Server> remoteServers = null;
         Provisioning prov = Provisioning.getInstance();
-        for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
+        for (Map.Entry<ItemId, Pair<Boolean, Element>> mptinfo : mountpoints.entrySet()) {
             try {
                 // local mountpoints already have their targets serialized
                 if (mptinfo.getValue() != null) {
@@ -1125,13 +1141,15 @@ public class SoapSession extends Session {
 
         if (remoteServers != null && !remoteServers.isEmpty()) {
             Map<String, Element> remoteHierarchies = fetchRemoteHierarchies(octxt, zsc, remoteServers);
-            for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
+            for (Map.Entry<ItemId, Pair<Boolean, Element>> mptinfo : mountpoints.entrySet()) {
                 // local mountpoints already have their targets serialized
                 if (mptinfo.getValue() != null) {
                     continue;
                 }
                 ItemId iid = mptinfo.getKey();
-                mptinfo.setValue(findRemoteFolder(iid.toString(mAuthenticatedAccountId), remoteHierarchies.get(iid.getAccountId())));
+                Element remoteFolderElement =
+                        findRemoteFolder(iid.toString(mAuthenticatedAccountId), remoteHierarchies.get(iid.getAccountId()));
+                mptinfo.setValue(new Pair<Boolean, Element>(remoteFolderElement == null, remoteFolderElement));
             }
         }
     }
@@ -1188,11 +1206,13 @@ public class SoapSession extends Session {
         return null;
     }
 
-    private static void transferMountpointContents(Element elem, OperationContext octxt, Map<ItemId, Element> mountpoints) throws ServiceException {
+    private static void transferMountpointContents(Element elem, OperationContext octxt, 
+            Map<ItemId, Pair<Boolean, Element>> mountpoints) 
+            throws ServiceException {
         if (elem == null) {
             return;
         }
-        Element target = null;
+        Pair<Boolean, Element> target = null;
         if (elem.getName().equals(MailConstants.E_MOUNT)) {
             ItemId iidTarget = new ItemId(elem.getAttribute(MailConstants.A_ZIMBRA_ID, null), (int) elem.getAttributeLong(MailConstants.A_REMOTE_ID, -1));
             target = mountpoints.get(iidTarget);
@@ -1204,7 +1224,12 @@ public class SoapSession extends Session {
                 transferMountpointContents(child, octxt, mountpoints);
             }
         } else {
-            ToXML.transferMountpointContents(elem, target);
+            boolean broken = target.getFirst();
+            if (broken) {
+                elem.addAttribute(MailConstants.A_BROKEN, true);
+            } else {
+                ToXML.transferMountpointContents(elem, target.getSecond());
+            }
         }
     }
 
@@ -1392,7 +1417,7 @@ public class SoapSession extends Session {
                         Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
                         // special-case notifications for new mountpoints in the authenticated user's mailbox
                         if (item instanceof Mountpoint && mbox == item.getMailbox()) {
-                            Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>(2);
+                            Map<ItemId, Pair<Boolean, Element>> mountpoints = new HashMap<ItemId, Pair<Boolean, Element>>(2);
                             expandLocalMountpoint(octxt, (Mountpoint) item, eCreated.getFactory(), mountpoints);
                             expandRemoteMountpoints(octxt, zsc, mountpoints);
                             transferMountpointContents(elem, octxt, mountpoints);
