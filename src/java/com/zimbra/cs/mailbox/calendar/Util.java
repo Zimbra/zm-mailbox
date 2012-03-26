@@ -19,7 +19,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -117,5 +120,18 @@ public class Util {
             return list;
         }
         return null;
+    }
+    
+    /**
+     * Returns the time zone for the given account.
+     */
+    public static ICalTimeZone getAccountTimeZone(Account account) {
+        String tzid = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        tzid = TZIDMapper.canonicalize(tzid);
+        ICalTimeZone timeZone = WellKnownTimeZones.getTimeZoneById(tzid);
+        if (timeZone == null) {
+            return ICalTimeZone.getUTC();
+        }
+        return timeZone;
     }
 }
