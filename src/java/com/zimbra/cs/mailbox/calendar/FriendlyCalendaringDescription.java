@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
