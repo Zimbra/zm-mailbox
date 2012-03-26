@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010,2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -30,6 +30,11 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CosInfo;
 
+/**
+ * @zm-api-response-description Provides a limited amount of information about the requested account.
+ * <br />
+ * Note: there are some minor differences between the Admin and Account versions of GetAccountInfoResponse.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_INFO_RESPONSE)
 @XmlType(propOrder = {"name","attrList", "cos", "soapURLList", "adminSoapURL", "publicMailURL"})
@@ -43,7 +48,11 @@ public class GetAccountInfoResponse {
     private String name;
 
     /**
-     * @zm-api-field-description Attributes
+     * @zm-api-field-description Account attributes.  Currently only these attributes are returned:
+     * <table>
+     * <tr><td> <b>zimbraId</b>       </td><td> the unique UUID of the zimbra account </td></tr>
+     * <tr><td> <b>zimbraMailHost</b> </td><td> the server on which this user's mail resides </td></tr>
+     * </table>
      */
     @XmlElement(name=AdminConstants.E_A)
     private List<Attr> attrList = new ArrayList<Attr>();

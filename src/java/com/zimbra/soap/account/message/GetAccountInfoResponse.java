@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011,2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -31,6 +31,11 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.NamedValue;
 
+/**
+ * @zm-api-response-description Provides a limited amount of information about the requested account.
+ * <br />
+ * Note: there are some minor differences between the Admin and Account versions of GetAccountInfoResponse.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_INFO_RESPONSE)
 @XmlType(propOrder = {"name", "attrs", "soapURLs", "publicURL",
@@ -41,17 +46,18 @@ public class GetAccountInfoResponse {
      * @zm-api-field-tag account-email-address
      * @zm-api-field-description Account name - an email address (user@domain)
      */
-    @XmlElement(name=AccountConstants.A_NAME, required=true)
+    @XmlElement(name=AccountConstants.A_NAME /* name */, required=true)
     private final String name;
 
     /**
-     * @zm-api-field-description Account attributes Currently only two attrs are returned:
-     * <ol>
-     * <li> <b>zimbraId</b>       - the unique UUID of the zimbra account
-     * <li> <b>zimbraMailHost</b> - the server on which this user's mail resides
-     * </ol>
+     * @zm-api-field-description Account attributes.  Currently only these attributes are returned:
+     * <table>
+     * <tr><td> <b>zimbraId</b>       </td><td> the unique UUID of the zimbra account </td></tr>
+     * <tr><td> <b>zimbraMailHost</b> </td><td> the server on which this user's mail resides </td></tr>
+     * <tr><td> <b>displayName</b>    </td><td> display name for the account </td></tr>
+     * </table>
      */
-    @XmlElement(name=AccountConstants.E_ATTR, required=true)
+    @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
     private List<NamedValue> attrs = Lists.newArrayList();
 
     /**
@@ -64,14 +70,14 @@ public class GetAccountInfoResponse {
      * Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
        then only one URL will be returned.
      */
-    @XmlElement(name=AccountConstants.E_SOAP_URL, required=false)
+    @XmlElement(name=AccountConstants.E_SOAP_URL /* soapURL */, required=false)
     private List<NamedValue> soapURLs = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag account-base-public-url
      * @zm-api-field-description Base public URL for the requested account
      */
-    @XmlElement(name=AccountConstants.E_PUBLIC_URL, required=false)
+    @XmlElement(name=AccountConstants.E_PUBLIC_URL /* publicURL */, required=false)
     private NamedValue publicURL;
 
     /**
@@ -79,7 +85,7 @@ public class GetAccountInfoResponse {
      * @zm-api-field-description URL to talk to in order to change a password.  Not returned if not configured
      * via domain attribute <b>zimbraChangePasswordURL</b>
      */
-    @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL, required=false)
+    @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL /* changePasswordURL */, required=false)
     private NamedValue changePasswordURL;
 
     /**
