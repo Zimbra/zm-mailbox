@@ -14,10 +14,10 @@
  */
 package com.zimbra.cs.mailbox;
 
+import javax.mail.Address;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-
-import javax.mail.Address;
 
 /**
  * @since Jun 1, 2004
@@ -99,6 +99,8 @@ public class MailServiceException extends ServiceException {
     public static final String INVALID_IMAGE = "mail.INVALID_IMAGE";
 
     public static final String TEMPORARY_ANALYSIS_ERROR = "mail.TEMPORARY_ANALYSIS_ERROR";
+
+    public static final String GRANT_EXISTS = "mail.GRANT_EXISTS";
 
     public static final String ID              = "id";
     public static final String TOKEN           = "token";
@@ -413,7 +415,7 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException IMMUTABLE_OBJECT(int id) {
         return new MailServiceException("cannot modify immutable object: " + id, IMMUTABLE_OBJECT, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
-    
+
     public static MailServiceException ALREADY_EXISTS(String name) {
         return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT,
             new Argument(NAME, name, Argument.Type.STR));
@@ -566,9 +568,13 @@ public class MailServiceException extends ServiceException {
     public static ServiceException TOMBSTONES_EXPIRED() {
         return new MailServiceException("sync token too old; tombstones have already been expired", MUST_RESYNC, SENDERS_FAULT);
     }
-    
+
     public static ServiceException NO_SUCH_GRANTEE(String message, Throwable cause) {
         return new MailServiceException("no such grantee "+message, NO_SUCH_GRANTEE, SENDERS_FAULT, cause);
+    }
+
+    public static ServiceException GRANTEE_EXISTS(String message, Throwable cause) {
+        return new MailServiceException("grantee already exists "+message, GRANT_EXISTS, SENDERS_FAULT, cause);
     }
     
     public static ServiceException INVALID_IMAGE(String message) {

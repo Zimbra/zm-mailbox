@@ -22,12 +22,12 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @since Jul 5, 2005
@@ -90,7 +90,7 @@ public final class ACL {
         private String mName;
         /** The type of object the grantee's ID refers to.
          *  For instance, {@link ACL#GRANTEE_USER}. */
-        private byte mType;
+        private final byte mType;
         /** A bitmask of the rights being granted.  For instance,
          *  <tt>{@link ACL#RIGHT_INSERT} | {@link ACL#RIGHT_READ}</tt>. */
         private short mRights;
@@ -307,7 +307,7 @@ public final class ACL {
     }
 
     /** The <tt>List</tt> of all {@link ACL.Grant}s set on an item. */
-    private List<Grant> mGrants = new ArrayList<Grant>(3);
+    private final List<Grant> mGrants = new ArrayList<Grant>(3);
     /** Time when all grants to internal users or groups expire. Value of 0 indicates that they never expire. */
     private long mInternalGrantExpiry = 0;
     /** Time when all grants to guest/external users expire. Value of 0 indicates that they never expire. */
@@ -426,14 +426,22 @@ public final class ACL {
             secret = generateAccessKey();
 
         if (!mGrants.isEmpty()) {
-            for (Grant grant : mGrants)
+            for (Grant grant : mGrants) {
                 if (grant.isGrantee(zimbraId)) {
+                    if (grant.getGrantedRights() == rights &&
+                            ((type != GRANTEE_GUEST && type != GRANTEE_KEY) || grant.getPassword().equals(secret)) &&
+                            (grant.getExpiry() == expiry)) {
+                        // same grant is already in the ACL
+                        throw MailServiceException.GRANTEE_EXISTS(zimbraId, null);
+
+                    }
                     grant.setRights(rights);
                     if (type == GRANTEE_GUEST || type == GRANTEE_KEY)
                         grant.setPassword(secret);
                     grant.setExpiry(expiry);
                     return grant;
                 }
+            }
         }
 
         Grant grant = new Grant(zimbraId, type, rights, secret, expiry);
