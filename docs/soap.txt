@@ -620,21 +620,26 @@ effect if called in a <nosession> context.
   <account by="id|name">...</account>
 </GetAccountInfoRequest>
 
+  Note: For historical reasons, there are some minor differences between the Admin and Account versions of
+        GetAccountInfoResponse.
+
 <GetAccountInfoResponse>
    <name>{account-name}</name>
-   <a name="{name}">{value}</a>+
-   <soapURL>{mail-url}</soapURL>+
+   <attr name="{name}">{value}</a>+
+   <soapURL>{soap-url}</soapURL>+
    <publicURL>{account-base-public-url}</publicURL>
+   [<changePasswordURL>{change-password-url}</changePasswordURL>]
 </GetAccountInfoResponse>
 
   {account-name} = email address (user@domain)
 
-  {attrs} = account attrs. Currently only two attrs are returned:
+  attr = account attrs. Currently only these attrs are returned:
 
       zimbraId       - the unique UUID of the zimbra account
       zimbraMailHost - the server on which this user's mail resides
+      displayName    - Display name for the account
 
-  {mail-url} = URL to talk to for soap service for this account. i.e:
+  {soap-url} = URL to talk to for soap service for this account. i.e:
 
        http://server:7070/service/soap/
 
@@ -642,6 +647,8 @@ effect if called in a <nosession> context.
        the only one URL will be returned.
 
   {account-base-public-url} = base public URL for the requested account
+  {change-password-url} = URL to talk to in order to change a password.  Not returned if not configured via domain
+                          attribute zimbraChangePasswordURL
 
 ----------------------------
 

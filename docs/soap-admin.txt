@@ -105,11 +105,15 @@ Access: domain admin sufficient
   <account by="id|name">...</account>
 </GetAccountInfoRequest>
 
+  Note: For historical reasons, there are some minor differences between the Admin and Account versions of
+        GetAccountInfoResponse.
+
 <GetAccountInfoResponse>
    <name>{account-name}</name>
    <a n="{name}">{value}</a>+
-   <soapURL>{mail-url}</soapURL>+
-   <adminSoapURL>{mail-url}</adminSoapURL>
+   <soapURL>{acct-soap-url}</soapURL>+
+   <adminSoapURL>{admin-soap-url}</adminSoapURL>
+   <publicMailURL>{web-mail-url}</publicMailURL>
 </GetInfoResponse>
 
   {account-name} = email address (user@domain)
@@ -119,12 +123,17 @@ Access: domain admin sufficient
       zimbraId       - the unique UUID of the zimbra account
       zimbraMailHost - the server on which this user's mail resides
 
-  {mail-url} = URL to talk to for soap service for this account. i.e:
+  {acct-soap-url} = URL to talk to for soap service for this account. i.e:
 
        http://server:7070/service/soap/
 
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
        the only one URL will be returned.
+
+  {admin-soap-url} = URL for the Admin SOAP service
+                     Note: Admin app only runs over SSL.
+
+  {web-mail-url} = URL for the Web Mail application
 
 Access: domain admin sufficient
 
