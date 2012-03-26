@@ -239,7 +239,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
     @Override
     public IncomingBlob createIncoming(Object ctx) throws IOException, ServiceException
     {
-        BlobBuilder bb = storeManager.getBlobBuilder();
+        BlobBuilder bb = storeManager.getBlobBuilder().init();
 
         synchronized (incomingBlobs) {
 

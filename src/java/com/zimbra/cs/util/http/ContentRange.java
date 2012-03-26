@@ -1,5 +1,4 @@
-package com.zimbra.cs.util
-.http;
+package com.zimbra.cs.util.http;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +14,8 @@ import org.eclipse.jetty.http.HttpException;
 
 public class ContentRange
 {
+    public static final String HEADER = "Content-Range";
+
     private long start;
     private long end;
     private boolean startEndSet;
