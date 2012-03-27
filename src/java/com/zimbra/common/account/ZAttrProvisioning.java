@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120323-1238 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1285,6 +1285,11 @@ public class ZAttrProvisioning {
         public boolean isOPTIMIZE() { return this == OPTIMIZE;}
         public boolean isANALYZE() { return this == ANALYZE;}
     }
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisArchiveQuarantineTo = "amavisArchiveQuarantineTo";
 
     /**
      */
