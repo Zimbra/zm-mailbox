@@ -1,0 +1,316 @@
+SECTION amavis 
+  REWRITE conf/amavisd.conf.in conf/amavisd.conf
+	POSTCONF content_filter 
+	if SERVICE antivirus
+		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+	fi
+	if SERVICE antispam
+		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+	fi
+	if SERVICE archiving
+		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+	fi
+	LOCAL amavis_dspam_enabled
+	LOCAL av_notify_domain
+	LOCAL av_notify_user
+	LOCAL ldap_url
+	LOCAL ldap_amavis_password
+	VAR zimbraMtaBlockedExtension
+	VAR zimbraVirusWarnRecipient
+	VAR zimbraSpamKillPercent
+	VAR zimbraSpamTagPercent
+	VAR zimbraSpamSubjectTag
+	VAR zimbraAmavisQuarantineAccount
+  RESTART archiving antispam antivirus mta
+
+SECTION antivirus DEPENDS amavis
+  REWRITE conf/clamd.conf.in conf/clamd.conf
+  REWRITE conf/freshclam.conf.in conf/freshclam.conf MODE 0600
+	VAR zimbraVirusWarnAdmin
+	VAR zimbraVirusDefinitionsUpdateFrequency
+	VAR zimbraVirusBlockEncryptedArchive
+  VAR zimbraMtaMaxMessageSize
+  RESTART antivirus mta
+
+SECTION antispam DEPENDS amavis
+  REWRITE conf/salocal.cf.in conf/salocal.cf
+  VAR zimbraMtaMyNetworks
+  VAR zimbraMtaAntiSpamLockMethod
+  LOCAL antispam_mysql_enabled
+  LOCAL antispam_mysql_host
+  LOCAL antispam_mysql_port
+  LOCAL antispam_mysql_user
+  LOCAL antispam_mysql_password
+  RESTART antispam mta
+
+SECTION archiving DEPENDS amavis
+  RESTART archiving mta
+
+SECTION mta DEPENDS amavis
+  LOCAL postfix_enable_smtpd_policyd
+  REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
+  REWRITE conf/mta_milter_options.in conf/mta_milter_options
+  VAR zimbraMilterServerEnabled
+	VAR zimbraMtaRestriction
+	VAR zimbraMtaAuthEnabled
+	VAR zimbraMtaBlockedExtension
+	VAR zimbraMtaRecipientDelimiter
+	VAR zimbraMtaMyNetworks
+	VAR zimbraMtaMyOrigin
+	VAR zimbraMtaMyHostname
+	VAR zimbraMilterServerEnabled
+	VAR zimbraMilterServerBindAddress
+	VAR zimbraMilterServerBindPort
+	VAR zimbraMtaSmtpdMilters
+	VAR zimbraMtaNonSmtpdMilters
+	if VAR zimbraMtaMyNetworks
+		POSTCONF mynetworks VAR zimbraMtaMyNetworks
+	fi
+	if VAR zimbraMtaMyOrigin
+		POSTCONF myorigin VAR zimbraMtaMyOrigin
+	fi
+	if VAR zimbraMtaMyDestination
+		POSTCONF mydestination VAR zimbraMtaMyDestination
+	fi
+	POSTCONF smtpd_milters
+	if VAR zimbraMtaSmtpdMilters
+		POSTCONF smtpd_milters VAR zimbraMtaSmtpdMilters
+	fi
+	POSTCONF non_smtpd_milters
+	if VAR zimbraMtaNonSmtpdMilters
+		POSTCONF non_smtpd_milters VAR zimbraMtaNonSmtpdMilters
+	fi
+	LOCAL zimbra_server_hostname
+	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
+	POSTCONF myhostname		LOCAL zimbra_server_hostname
+	if VAR zimbraMtaMyHostname
+		POSTCONF myhostname VAR zimbraMtaMyHostname
+	fi
+	POSTCONF recipient_delimiter	                VAR zimbraMtaRecipientDelimiter
+	POSTCONF smtpd_sasl_auth_enable               VAR zimbraMtaSaslAuthEnable
+	POSTCONF smtpd_tls_auth_only	                VAR zimbraMtaTlsAuthOnly
+	POSTCONF smtpd_tls_security_level			                 VAR zimbraMtaTlsSecurityLevel
+	POSTCONF disable_dns_lookups	                VAR !zimbraMtaDnsLookupsEnabled	
+	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
+	POSTCONF mailbox_size_limit		                0
+	POSTCONF relayhost				                    VAR zimbraMtaRelayHost
+	POSTCONF smtpd_recipient_restrictions FILE postfix_recipient_restrictions.cf
+	POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
+
+	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
+	POSTCONF broken_sasl_auth_clients			        LOCAL postfix_broken_sasl_auth_clients
+  POSTCONF bounce_queue_lifetime                LOCAL postfix_bounce_queue_lifetime
+  POSTCONF bounce_notice_recipient              LOCAL postfix_bounce_notice_recipient
+	POSTCONF mail_owner                           LOCAL postfix_mail_owner
+	POSTCONF setgid_group                         LOCAL postfix_setgid_group
+	POSTCONF command_directory					          LOCAL postfix_command_directory
+	POSTCONF daemon_directory					            LOCAL postfix_daemon_directory
+  POSTCONF delay_warning_time                   LOCAL postfix_delay_warning_time
+	POSTCONF header_checks						            LOCAL postfix_header_checks
+  if VAR zimbraMtaBlockedExtensionWarnRecipient
+	  POSTCONF header_checks
+  fi
+	POSTCONF mailq_path							              LOCAL postfix_mailq_path
+	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
+	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
+	POSTCONF notify_classes                       LOCAL postfix_notify_classes
+	POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
+	POSTCONF queue_directory					            LOCAL postfix_queue_directory
+	POSTCONF smtpd_sasl_authenticated_header			LOCAL postfix_smtpd_sasl_authenticated_header
+	POSTCONF smtpd_sender_restrictions			LOCAL postfix_smtpd_sender_restrictions
+	POSTCONF sender_canonical_maps				        LOCAL postfix_sender_canonical_maps
+	POSTCONF sendmail_path						            LOCAL postfix_sendmail_path
+	POSTCONF smtpd_client_restrictions			      LOCAL postfix_smtpd_client_restrictions
+	POSTCONF smtpd_data_restrictions			        LOCAL postfix_smtpd_data_restrictions
+	POSTCONF smtpd_helo_required				          LOCAL postfix_smtpd_helo_required
+	POSTCONF smtpd_reject_unlisted_recipient	    no
+	POSTCONF smtpd_tls_cert_file				          LOCAL postfix_smtpd_tls_cert_file
+	POSTCONF smtpd_tls_key_file					          LOCAL postfix_smtpd_tls_key_file
+	POSTCONF smtpd_tls_loglevel					          LOCAL postfix_smtpd_tls_loglevel
+	POSTCONF in_flow_delay                        LOCAL postfix_in_flow_delay
+	POSTCONF queue_run_delay                      LOCAL postfix_queue_run_delay
+	POSTCONF minimal_backoff_time                 LOCAL postfix_minimal_backoff_time
+	POSTCONF maximal_backoff_time                 LOCAL postfix_maximal_backoff_time
+	POSTCONF lmtp_connection_cache_destinations   LOCAL postfix_lmtp_connection_cache_destinations
+	POSTCONF lmtp_connection_cache_time_limit     LOCAL postfix_lmtp_connection_cache_time_limit
+	POSTCONF lmtp_host_lookup                     LOCAL postfix_lmtp_host_lookup
+	POSTCONF transport_maps						            LOCAL postfix_transport_maps
+	POSTCONF propagate_unmatched_extensions		LOCAL postfix_propagate_unmatched_extensions
+	POSTCONF virtual_alias_domains				        LOCAL postfix_virtual_alias_domains
+	POSTCONF virtual_alias_maps					          LOCAL postfix_virtual_alias_maps
+	POSTCONF virtual_mailbox_domains			        LOCAL postfix_virtual_mailbox_domains
+	POSTCONF virtual_mailbox_maps				          LOCAL postfix_virtual_mailbox_maps
+	POSTCONF virtual_transport					          LOCAL postfix_virtual_transport
+	POSTCONF always_add_missing_headers           LOCAL postfix_always_add_missing_headers
+	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
+  RESTART mta
+
+SECTION sasl
+  VAR getAllMtaAuthURLs
+  REWRITE cyrus-sasl-2.1.23.3z/etc/saslauthd.conf.in cyrus-sasl-2.1.23.3z/etc/saslauthd.conf
+  RESTART mta sasl
+
+SECTION webxml
+	VAR zimbraMailPort
+	VAR zimbraMailSSLPort
+	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
+	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
+	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
+	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml
+	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
+	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
+	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties
+  RESTART mailboxd
+
+SECTION mailbox
+	VAR zimbraMailPort
+	VAR zimbraMailSSLPort
+  VAR zimbraLogToSyslog
+  VAR zimbraAdminURL
+  VAR zimbraLmtpBindPort
+  VAR zimbraPop3ServerEnabled
+  VAR zimbraPop3BindAddress
+  VAR zimbraPop3BindPort
+  VAR zimbraPop3SSLServerEnabled
+  VAR zimbraPop3SSLBindAddress
+  VAR zimbraPop3SSLBindPort
+  VAR zimbraImapServerEnabled
+  VAR zimbraImapBindAddress
+  VAR zimbraImapBindPort
+  VAR zimbraImapSSLServerEnabled
+  VAR zimbraImapSSLBindAddress
+  VAR zimbraImapSSLBindPort
+  VAR zimbraHttpNumThreads
+  VAR nio_imap_enabled
+  VAR zimbraSSLExcludeCipherSuites
+  VAR zimbraSSLExcludeCipherSuitesXML
+  LOCAL mailboxd_keystore_password
+  LOCAL mailboxd_truststore_password
+  LOCAL zimbra_uid
+  LOCAL zimbra_gid
+  REWRITE conf/log4j.properties.in conf/log4j.properties
+  REWRITE mailboxd/etc/jetty.properties.in mailboxd/etc/jetty.properties
+	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
+	REWRITE conf/spnego_java_options.in conf/spnego_java_options
+  RESTART mailboxd
+
+SECTION imapproxy
+	LOCAL ldap_url
+	VAR getAllMemcachedServers
+	VAR getAllReverseProxyBackends
+	VAR getAllReverseProxyURLs
+	VAR zimbraFileUploadMaxSize
+	VAR zimbraImapProxyBindPort
+	VAR zimbraImapSSLProxyBindPort
+	VAR zimbraMailProxyPort
+	VAR zimbraMailSSLProxyPort
+	VAR zimbraPop3ProxyBindPort
+	VAR zimbraPop3SSLProxyBindPort
+	VAR zimbraReverseProxyAuthWaitInterval
+	VAR zimbraReverseProxyCacheEntryTTL
+	VAR zimbraReverseProxyCacheFetchTimeout
+	VAR zimbraReverseProxyCacheReconnectInterval
+	VAR zimbraReverseProxyDefaultRealm
+	VAR zimbraReverseProxyHttpEnabled
+	VAR zimbraReverseProxyImapEnabledCapability
+	VAR zimbraReverseProxyImapExposeVersionOnBanner
+	VAR zimbraReverseProxyImapSaslGssapiEnabled
+	VAR zimbraReverseProxyImapSaslPlainEnabled
+	VAR zimbraReverseProxyImapStartTlsMode
+	VAR zimbraReverseProxyInactivityTimeout
+	VAR zimbraReverseProxyIPLoginLimit
+	VAR zimbraReverseProxyIPLoginLimitTime
+	VAR zimbraReverseProxyIpThrottleMsg
+	VAR zimbraReverseProxyLogLevel
+	VAR zimbraReverseProxyMailEnabled
+	VAR zimbraReverseProxyMailMode
+	VAR zimbraReverseProxyPassErrors
+	VAR zimbraReverseProxyPop3EnabledCapability
+	VAR zimbraReverseProxyPop3ExposeVersionOnBanner
+	VAR zimbraReverseProxyPop3SaslGssapiEnabled
+	VAR zimbraReverseProxyPop3SaslPlainEnabled
+	VAR zimbraReverseProxyPop3StartTlsMode
+	VAR zimbraReverseProxyRouteLookupTimeout 
+	VAR zimbraReverseProxySendPop3Xoip
+	VAR zimbraReverseProxySSLCiphers
+	VAR zimbraReverseProxyUpstreamPollingTimeout
+	VAR zimbraReverseProxyUpstreamReadTimeout
+	VAR zimbraReverseProxyUpstreamSendTimeout
+	VAR zimbraReverseProxyUserLoginLimit
+	VAR zimbraReverseProxyUserLoginLimitTime
+	VAR zimbraReverseProxyUserThrottleMsg
+	VAR zimbraReverseProxyWorkerConnections
+	VAR zimbraReverseProxyWorkerProcesses
+	PROXYGEN
+	RESTART imapproxy
+
+SECTION ldap
+	LOCAL ldap_common_loglevel
+	LOCAL ldap_common_require_tls
+	LOCAL ldap_common_threads
+	LOCAL ldap_common_toolthreads
+	LOCAL ldap_common_writetimeout
+	LOCAL ldap_db_cachefree
+	LOCAL ldap_db_cachesize
+	LOCAL ldap_db_checkpoint
+	LOCAL ldap_db_dncachesize
+	LOCAL ldap_db_idlcachesize
+	LOCAL ldap_db_shmkey
+	LOCAL ldap_accesslog_cachefree
+	LOCAL ldap_accesslog_cachesize
+	LOCAL ldap_accesslog_checkpoint
+	LOCAL ldap_accesslog_dncachesize
+	LOCAL ldap_accesslog_idlcachesize
+	LOCAL ldap_accesslog_shmkey
+	LOCAL ldap_overlay_syncprov_checkpoint
+	LOCAL ldap_overlay_syncprov_sessionlog
+	LOCAL ldap_overlay_accesslog_logpurge
+	LDAP ldap_common_loglevel LOCAL ldap_common_loglevel
+	LDAP ldap_common_require_tls LOCAL ldap_common_require_tls
+	LDAP ldap_common_threads LOCAL ldap_common_threads
+	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
+	LDAP ldap_common_writetimeout LOCAL ldap_common_writetimeout
+	LDAP ldap_db_cachefree LOCAL ldap_db_cachefree
+	LDAP ldap_db_cachesize LOCAL ldap_db_cachesize
+	LDAP ldap_db_checkpoint LOCAL ldap_db_checkpoint
+	LDAP ldap_db_dncachesize LOCAL ldap_db_dncachesize
+	LDAP ldap_db_idlcachesize LOCAL ldap_db_idlcachesize
+	LDAP ldap_db_shmkey LOCAL ldap_db_shmkey
+	LDAP ldap_accesslog_cachefree LOCAL ldap_accesslog_cachefree
+	LDAP ldap_accesslog_cachesize LOCAL ldap_accesslog_cachesize
+	LDAP ldap_accesslog_checkpoint LOCAL ldap_accesslog_checkpoint
+	LDAP ldap_accesslog_dncachesize LOCAL ldap_accesslog_dncachesize
+	LDAP ldap_accesslog_idlcachesize LOCAL ldap_accesslog_idlcachesize
+	LDAP ldap_accesslog_shmkey LOCAL ldap_accesslog_shmkey
+	LDAP ldap_overlay_syncprov_checkpoint LOCAL ldap_overlay_syncprov_checkpoint
+	LDAP ldap_overlay_syncprov_sessionlog LOCAL ldap_overlay_syncprov_sessionlog
+	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
+
+SECTION cbpolicyd
+	REWRITE conf/cbpolicyd.conf.in conf/cbpolicyd.conf
+	LOCAL cbpolicyd_pid_file
+	LOCAL cbpolicyd_log_file
+	LOCAL cbpolicyd_db_file
+	LOCAL cbpolicyd_log_level
+	LOCAL cbpolicyd_log_mail
+	LOCAL cbpolicyd_log_detail
+	LOCAL cbpolicyd_bind_host
+	LOCAL cbpolicyd_bind_port
+	LOCAL cbpolicyd_timeout
+	LOCAL cbpolicyd_bypass_mode
+	LOCAL cbpolicyd_bypass_timeout
+	LOCAL cbpolicyd_module_accesscontrol
+	LOCAL cbpolicyd_module_greylisting
+	LOCAL cbpolicyd_module_checkhelo
+	LOCAL cbpolicyd_module_checkspf
+	LOCAL cbpolicyd_module_quotas
+	if SERVICE cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
+	fi
+	if SERVICE !cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions
+	fi
+  RESTART cbpolicyd mta
+
+SECTION stats
+	REWRITE conf/stats.conf.in conf/stats.conf
