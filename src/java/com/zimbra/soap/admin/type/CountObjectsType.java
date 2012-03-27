@@ -24,7 +24,11 @@ public enum CountObjectsType {
     dl,
     domain,
     cos,
-    server;
+    server,
+    
+    // for license counting
+    internalUserAccount,
+    internalArchivingAccount;
 
     public static CountObjectsType fromString(String type) throws ServiceException {
         try {
