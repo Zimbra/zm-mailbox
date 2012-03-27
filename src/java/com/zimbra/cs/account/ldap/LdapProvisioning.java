@@ -7852,6 +7852,14 @@ public class LdapProvisioning extends LdapProv {
                 types.add(ObjectType.accounts);
                 filter = filterFactory.allNonSystemAccounts();
                 break;
+            case internalUserAccount:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.allNonSystemInternalAccounts();
+                break;
+            case internalArchivingAccount:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.allNonSystemArchivingAccounts();
+                break;
             case account: 
                 types.add(ObjectType.accounts);
                 types.add(ObjectType.resources);

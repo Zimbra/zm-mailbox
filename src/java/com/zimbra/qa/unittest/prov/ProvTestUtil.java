@@ -172,6 +172,12 @@ public abstract class ProvTestUtil {
         return createAccount(localPart, domain, (Map) null);
     }
     
+    public Account createExternalAccount(String localPart, Domain domain) throws Exception {
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraIsExternalVirtualAccount, ProvisioningConstants.TRUE);
+        return createAccount(localPart, domain, attrs);
+    }
+    
     public Account createAccount(String localPart, Domain domain, Map<String, Object> attrs)
     throws Exception {
         String acctName = TestUtil.getAddress(localPart, domain.getName());

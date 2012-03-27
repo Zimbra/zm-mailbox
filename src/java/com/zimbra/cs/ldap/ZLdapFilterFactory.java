@@ -59,6 +59,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ALL_IDENTITIES(SINGLETON.allIdentities()),
         ALL_MIME_ENTRIES(SINGLETON.allMimeEntries()),
         ALL_NON_SYSTEM_ACCOUNTS(SINGLETON.allNonSystemAccounts()),
+        ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS(SINGLETON.allNonSystemArchivingAccounts()),
+        ALL_NON_SYSTEM_INTERNAL_ACCOUNTS(SINGLETON.allNonSystemInternalAccounts()),
         ALL_SERVERS(SINGLETON.allServers()),
         ALL_SIGNATURES(SINGLETON.allSignatures()),
         ALL_XMPP_COMPONENTS(SINGLETON.allXMPPComponents()),
@@ -259,6 +261,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allAccountsOnly();
     public abstract ZLdapFilter allAdminAccounts();
     public abstract ZLdapFilter allNonSystemAccounts();
+    public abstract ZLdapFilter allNonSystemArchivingAccounts();
+    public abstract ZLdapFilter allNonSystemInternalAccounts();
     public abstract ZLdapFilter accountByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter accountById(String id);
     public abstract ZLdapFilter accountByMemberOf(String dynGroupId);

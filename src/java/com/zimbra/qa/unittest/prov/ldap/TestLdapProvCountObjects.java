@@ -17,11 +17,13 @@ package com.zimbra.qa.unittest.prov.ldap;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
@@ -58,18 +60,34 @@ public class TestLdapProvCountObjects extends LdapTest {
         // accounts should NOT be counted as userAccount
         Account systemResource = provUtil.createSystemResource(genAcctNameLocalPart("system-resource"), domain);
         
+        // accounts should NOT be counted as internalUserAccount
+        Account externalAccount = provUtil.createExternalAccount(genAcctNameLocalPart("external"), domain);
+        
+        // archiving account
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_amavisArchiveQuarantineTo, "test@junk.com");
+        Account archivingAcct = provUtil.createAccount(genAcctNameLocalPart("archiving"), domain, attrs);
+        
         Domain otherDomain = provUtil.createDomain(genDomainName(domain.getName()));
         Account userAcctOtherDomain = provUtil.createAccount(genAcctNameLocalPart("user"), otherDomain);
         
         long num = prov.countObjects(CountObjectsType.userAccount, domain);
-        assertEquals(2, num);
+        assertEquals(4, num); // userAcct, systemAcct, externalAccount, archivingAcct
         
         num = prov.countObjects(CountObjectsType.account, domain);
-        assertEquals(3, num);
+        assertEquals(5, num); // all accounts
+        
+        num = prov.countObjects(CountObjectsType.internalUserAccount, domain);
+        assertEquals(3, num);  // userAcct, systemAcct, archivingAcct
+        
+        num = prov.countObjects(CountObjectsType.internalArchivingAccount, domain);
+        assertEquals(1, num);  // archivingAcct
         
         provUtil.deleteAccount(userAcct);
         provUtil.deleteAccount(systemAcct);
         provUtil.deleteAccount(systemResource);
+        provUtil.deleteAccount(externalAccount);
+        provUtil.deleteAccount(archivingAcct);
         provUtil.deleteAccount(userAcctOtherDomain);
         provUtil.deleteDomain(otherDomain);
     }

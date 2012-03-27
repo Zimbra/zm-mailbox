@@ -53,6 +53,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_IDENTITIES;
     private static Filter FILTER_ALL_MIME_ENTRIES;
     private static Filter FILTER_ALL_NON_SYSTEM_ACCOUNTS;
+    private static Filter FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS;
+    private static Filter FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS;
     private static Filter FILTER_ALL_SERVERS;
     private static Filter FILTER_ALL_SHARE_LOCATORS;
     private static Filter FILTER_ALL_SIGNATURES;
@@ -61,6 +63,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ANY_ENTRY;
     private static Filter FILTER_DOMAIN_LABEL;
     private static Filter FILTER_HAS_SUBORDINATES;
+    private static Filter FILTER_IS_ARCHIVING_ACCOUNT;
+    private static Filter FILTER_IS_EXTERNAL_ACCOUNT;
     private static Filter FILTER_IS_SYSTEM_RESOURCE;
     private static Filter FILTER_NOT_SYSTEM_RESOURCE;
     private static Filter FILTER_PUBLIC_SHARE;
@@ -161,6 +165,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_hasSubordinates, LdapConstants.LDAP_TRUE);
 
+        FILTER_IS_ARCHIVING_ACCOUNT = 
+                Filter.createPresenceFilter(Provisioning.A_amavisArchiveQuarantineTo);
+            
+        FILTER_IS_EXTERNAL_ACCOUNT =
+                Filter.createEqualityFilter(
+                Provisioning.A_zimbraIsExternalVirtualAccount, LdapConstants.LDAP_TRUE);
+        
         FILTER_IS_SYSTEM_RESOURCE =
                 Filter.createEqualityFilter(
                 Provisioning.A_zimbraIsSystemResource, LdapConstants.LDAP_TRUE);
@@ -205,6 +216,18 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS_ONLY,
                         Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE));
+        
+        FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS = 
+            Filter.createANDFilter(
+                    FILTER_ALL_ACCOUNTS_ONLY,
+                    Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                    FILTER_IS_ARCHIVING_ACCOUNT);
+        
+        FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS =
+            Filter.createANDFilter(
+                    FILTER_ALL_ACCOUNTS_ONLY,
+                    Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                    Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT));
 
         FILTER_ALL_GROUPS =
                 Filter.createORFilter(
@@ -340,6 +363,20 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ALL_NON_SYSTEM_ACCOUNTS,
                 FILTER_ALL_NON_SYSTEM_ACCOUNTS);
     }
+    
+    @Override
+    public ZLdapFilter allNonSystemArchivingAccounts() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS,
+                FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS);
+    }
+    
+    @Override
+    public ZLdapFilter allNonSystemInternalAccounts() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS);
+    }
 
     @Override
     public ZLdapFilter accountByForeignPrincipal(String foreignPrincipal) {
@@ -432,12 +469,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.EXTERNAL_ACCOUNTS_HOMED_ON_SERVER,
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS_ONLY,
-                        externalAccounts(),
+                        FILTER_IS_EXTERNAL_ACCOUNT,
                         homedOnServerFilter(serverServiceHostname)));
-    }
-
-    private static Filter externalAccounts() {
-        return Filter.createEqualityFilter(Provisioning.A_zimbraIsExternalVirtualAccount, LdapConstants.LDAP_TRUE);
     }
 
     @Override

@@ -64,4 +64,7 @@
 
 <attr name="amavisBannedRuleNames" type="astring" max="256"/>
 
+<attr name="amavisArchiveQuarantineTo" type="astring" max="256"/>
+
+
 </attrs>
