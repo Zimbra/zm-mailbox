@@ -357,20 +357,6 @@ public final class MailboxUpgrade {
         DbMailItem.assignUuids(mbox, false);
     }
 
-    /**
-     * Move appointments from Tasks folder to Calendar folder. Also move todo items from Calendar folder to Tasks folder.
-     * @param mbox
-     * @throws ServiceException
-     */
-    public static void upgradeTo2_6(Mailbox mbox) throws ServiceException {
-        // bug 69886
-        try {
-            CalendarUtils.migrateAppointmentsAndTasks(mbox);
-        } catch (Exception e) {
-            ZimbraLog.mailbox.warn("appointments/tasks migration failed", e);
-        }
-    }
-
     private static void migrateFlagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {
         // for flags that we want to be searchable, put an entry in the TAG table
         for (int tagId : Mailbox.REIFIED_FLAGS) {

@@ -739,12 +739,7 @@ public class Mailbox {
                     updateVersion(new MailboxVersion((short) 2, (short) 5));
                 }
 
-                // Move appointments from non-appointment folders to Calendar folder and tasks from non-todo folders to Tasks folder.
-                if (!mData.version.atLeast(2, 6)) {
-                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.6", getVersion());
-                    MailboxUpgrade.upgradeTo2_6(this);
-                    updateVersion(new MailboxVersion((short) 2, (short) 6));
-                }
+                // Upgrade step for 2.6 is backed out due to bug 72131
 
                 // MUTED flag
                 if (!mData.version.atLeast(2, 7)) {
