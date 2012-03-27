@@ -386,7 +386,8 @@ public class ContactAutoComplete {
      * @return true if the address is a group, false otherwise
      */
     private void resolveGroupInfo(ContactEntry entry, String email) {
-        GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(email, mNeedCanExpand, mRequestedAcct, mAuthedAcct);
+        GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().
+                getGroupInfo(email, mNeedCanExpand, mRequestedAcct, mAuthedAcct);
         if (groupInfo != null) {
             boolean canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
             entry.setIsGalGroup(canExpand);
@@ -600,7 +601,11 @@ public class ContactAutoComplete {
             tokens.add(token.toLowerCase());
         }
 
-        if (attrs.get(ContactConstants.A_groupMember) == null) { // NOT a contact group.
+        if (!Contact.isGroup(attrs) || folderId == FOLDER_ID_GAL) {
+            // 
+            // either a GAL entry or a non-contact-group contact entry
+            //
+            
             boolean nameMatches = matchesName(tokens, attrs);
 
             // matching algorithm is slightly different between matching
@@ -645,7 +650,7 @@ public class ContactAutoComplete {
                     }
                 }
             }
-        } else { // IS a local contact group
+        } else { // IS a contact group
             String nickname = getFieldAsString(attrs, ContactConstants.A_nickname);
             if (matchesName(tokens, nickname)) {
                 ContactEntry entry = new ContactEntry();
