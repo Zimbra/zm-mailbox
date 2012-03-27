@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120326-1623 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3757,11 +3757,11 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Maximum size in bytes for attachments
      *
-     * @return zimbraFileUploadMaxSize, or 2147483648 if unset
+     * @return zimbraFileUploadMaxSize, or 10485760 if unset
      */
     @ZAttr(id=227)
     public long getFileUploadMaxSize() {
-        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, 2147483648L);
+        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, 10485760L);
     }
 
     /**
