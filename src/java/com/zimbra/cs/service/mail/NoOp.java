@@ -85,11 +85,11 @@ public class NoOp extends MailDocumentHandler  {
                 throw ServiceException.INVALID_REQUEST("Cannot execute a NoOpRequest with wait=\"1\" without a session."+
                                                        "  Set the <session> flag in the <context> of your request", null);
             }
-            Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
-            if (continuation.isInitial()) {
+            ZimbraSoapContext origContext = (ZimbraSoapContext)(servletRequest.getAttribute("nop_origcontext"));
+            if (origContext == null) { // Initial
                 servletRequest.setAttribute("nop_origcontext", zsc);
-                
                 // NOT a resumed request -- block if necessary
+                Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
                 if (zsc.beginWaitForNotifications(continuation, includeDelegates)) {
                     if (enforceLimit) {
                         ZimbraSoapContext otherContext = sBlockedNops.put(zsc.getAuthtokenAccountId(), zsc);
@@ -120,8 +120,7 @@ public class NoOp extends MailDocumentHandler  {
                     // if it hasn't already been removed by someone else...
                     sBlockedNops.remove(zsc.getAuthtokenAccountId(), zsc);
                 }
-            } else {
-                ZimbraSoapContext origContext = (ZimbraSoapContext)(servletRequest.getAttribute("nop_origcontext"));
+            } else { // Resumed
                 if (origContext.isCanceledWaitForNotifications())
                     blockingUnsupported = true;
                 if (enforceLimit) {

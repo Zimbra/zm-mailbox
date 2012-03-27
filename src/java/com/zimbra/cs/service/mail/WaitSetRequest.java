@@ -154,12 +154,10 @@ public class WaitSetRequest extends MailDocumentHandler {
         String lastKnownSeqNo = request.getAttribute(MailConstants.A_SEQ);
         boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
 
-        Callback cb;
-        Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
-        if (!continuation.isInitial()) {
-            cb  = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
-            // load variables here
-        } else {
+        Callback cb = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
+        
+        if (cb == null) { // Initial
+            Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
             cb = new Callback();
             cb.continuation = continuation;
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
