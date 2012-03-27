@@ -3921,6 +3921,19 @@ public class ZMailbox implements ToZJSONObject {
         Collections.sort(result);
         return result;
     }
+	
+	public List<String> getAvailableLocales() throws ServiceException {
+        Element req = newRequestElement(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST);
+        Element resp = invoke(req);
+        List<String> result = new ArrayList<String>();
+        for (Element locale : resp.listElements(AccountConstants.E_LOCALE)) {
+            String id = locale.getAttribute(AccountConstants.A_ID, null);
+            if (id != null)
+                result.add(id);
+        }
+        Collections.sort(result);
+        return result;
+    }
 
     public enum GalEntryType {
         account, resource, all;
