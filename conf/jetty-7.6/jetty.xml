@@ -52,7 +52,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.eclipse.jetty.server.ssl.SelectChannelConnector">
+        <New id="ssl" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">7443</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
