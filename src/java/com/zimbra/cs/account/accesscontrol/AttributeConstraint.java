@@ -545,7 +545,7 @@ public class AttributeConstraint {
             String attrName = newConstraintsForAttr.getAttrName();
             AttributeConstraint curConstraintsForAttr = curConstraints.get(attrName);
             
-            if (curConstraintsForAttr == null) {
+            if (curConstraintsForAttr != null) {
                 // currently there are constraints for the attr
                 if (newConstraintsForAttr.isEmpty()) {
                     // new constraints for the attr is empty, remove the current constraints for the attr
