@@ -3076,7 +3076,8 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private static boolean isMultiValued(AttributeManager attrMgr, String attrName) {
-        return attrMgr.getAttributeInfo(attrName).getCardinality() == AttributeCardinality.multi;
+        AttributeInfo attributeInfo = attrMgr.getAttributeInfo(attrName);
+        return attributeInfo != null && attributeInfo.getCardinality() == AttributeCardinality.multi;
     }
 
     private Map<String, Object> getAttrMap(String[] args, int offset, boolean isCreateCmd)
