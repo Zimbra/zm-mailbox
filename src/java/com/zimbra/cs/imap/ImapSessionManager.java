@@ -253,6 +253,10 @@ final class ImapSessionManager {
                 // no matching session means we next check for serialized folder data
                 if (i4list == null) {
                     i4list = duplicateSerializedFolder(folder);
+                } else if (CONSISTENCY_CHECK) {
+                    Collections.sort(i4list);
+                    //sort only if using list from duplicated session which may be out of order
+                    //if loaded from serialized folder order _should_ already be OK since no changes have occurred
                 }
                 // do the consistency check, if requested
                 if (CONSISTENCY_CHECK) {
