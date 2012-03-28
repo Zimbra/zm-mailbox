@@ -66,6 +66,13 @@ extends Folder {
     @XmlAttribute(name=MailConstants.A_REMINDER /* reminder */, required=false)
     private ZmBoolean reminderEnabled;
 
+    /**
+     * @zm-api-field-tag broken-link
+     * @zm-api-field-description If "tr" is true in the request, <b>broken</b> is set if this is a broken link
+     */
+    @XmlAttribute(name=MailConstants.A_BROKEN /* broken */, required=false)
+    private ZmBoolean broken;
+
     public Mountpoint() {
     }
 
@@ -107,5 +114,13 @@ extends Folder {
 
     public void setReminderEnabled(Boolean reminderEnabled) {
         this.reminderEnabled = ZmBoolean.fromBool(reminderEnabled);
+    }
+
+    public Boolean getBroken() {
+        return ZmBoolean.toBool(broken);
+    }
+
+    public void setBroken(Boolean broken) {
+        this.broken = ZmBoolean.fromBool(broken);
     }
 }
