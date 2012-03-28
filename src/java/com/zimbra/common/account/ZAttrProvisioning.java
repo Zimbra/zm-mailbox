@@ -690,7 +690,6 @@ public class ZAttrProvisioning {
 
     public static enum PrefCalendarInitialView {
         workWeek("workWeek"),
-        schedule("schedule"),
         month("month"),
         list("list"),
         day("day"),
@@ -705,7 +704,6 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isWorkWeek() { return this == workWeek;}
-        public boolean isSchedule() { return this == schedule;}
         public boolean isMonth() { return this == month;}
         public boolean isList() { return this == list;}
         public boolean isDay() { return this == day;}
