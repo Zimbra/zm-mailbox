@@ -88,14 +88,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             Element eAction = request.getElement(AccountConstants.E_ACTION);
             Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
             
-            if (op == Operation.delete || op == Operation.rename) {
-                // need create right, will check in the handlers
-            } else {
-                // need owner right
-                if (!GroupOwner.hasOwnerPrivilege(acct, group)) {
-                    throw ServiceException.PERM_DENIED(
-                            "you do not have sufficient rights to access this distribution list");
-                }
+            // all ops need owner right
+            // delete and rename ops also need create right, will check in the handlers
+            if (!GroupOwner.hasOwnerPrivilege(acct, group)) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have sufficient rights to access this distribution list");
             }
 
             DLActionHandler handler = null;
