@@ -52,7 +52,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
+        <New id="ssl" class="org.eclipse.jetty.server.ssl.SelectChannelConnector">
           <Set name="Port">7443</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
@@ -87,6 +87,7 @@
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
+	  <Set name="soLingerTime">1</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -126,6 +127,7 @@
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
           <Set name="Acceptors">2</Set>
+	  <Set name="soLingerTime">5</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
           <Set name="KeyPassword">zimbra</Set>
