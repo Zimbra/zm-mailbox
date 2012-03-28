@@ -102,8 +102,7 @@ public class FlushCache extends AdminDocumentHandler {
 
     private void doFlush(Map<String, Object> context, CacheEntryType cacheType, Element eCache) throws ServiceException {
 
-		Config config = Provisioning.getInstance().getConfig();
-		String mailURL = config.getMailURL();
+		String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
 		switch (cacheType) {
 			case acl:
 				PermissionCache.invalidateCache();
@@ -145,10 +144,10 @@ public class FlushCache extends AdminDocumentHandler {
                         eEntry.getText());
             }
         }
-        
+
         return entries;
     }
-    
+
     private void flushLdapCache(CacheEntryType cacheType, Element eCache) throws ServiceException {
         CacheEntry[] entries = getCacheEntries(eCache);
         Provisioning.getInstance().flushCache(cacheType, entries);
