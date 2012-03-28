@@ -1370,7 +1370,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Data for class that scans attachments during compose</desc>
 </attr>
 
-<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,schedule,list" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,list" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>workWeek</defaultCOSValue>
   <desc>initial calendar view to use</desc>
 </attr>
