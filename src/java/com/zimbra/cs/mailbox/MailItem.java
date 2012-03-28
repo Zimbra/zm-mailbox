@@ -1165,7 +1165,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @see Folder#checkRights(short, Account, boolean) */
     short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // authuser has full permission
-        if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
+        if (hasFullPermission(authuser))
             return rightsNeeded;
         // if it is an anonymous user, check is public sharing is enabled
         if (GuestAccount.ANONYMOUS_ACCT.equals(authuser) && !getAccount().isPublicSharingEnabled()) {
@@ -1197,6 +1197,18 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return (short) (granted & rightsNeeded);
     }
 
+    /**
+     * If the operating context is null or auth user is the owner of the mailbox
+     * the user has full permission.
+     *
+     * @param authuser
+     * @return
+     */
+    protected boolean hasFullPermission(Account authuser) {
+        if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
+            return true;
+        return false;
+    }
 
     /** Returns the {@link MailboxBlob} corresponding to the item's on-disk
      *  representation.  If the item is memory- or database-only, returns

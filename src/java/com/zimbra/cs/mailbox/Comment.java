@@ -31,7 +31,7 @@ public class Comment extends MailItem {
     public static Comment create(Mailbox mbox, MailItem parent, int id, String uuid, String text, String creatorId, CustomMetadata custom) throws ServiceException {
         if (!(parent instanceof Document))
             throw MailServiceException.CANNOT_PARENT();
-        
+
         UnderlyingData data = new UnderlyingData();
         data.uuid = uuid;
         data.id = id;
@@ -43,14 +43,14 @@ public class Comment extends MailItem {
         data.size = text.length();
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, creatorId, custom);
         data.contentChanged(mbox);
-        
+
         new DbMailItem(mbox).create(data);
         Comment comment = new Comment(mbox, data);
         comment.finishCreation(parent);
-        
+
         return comment;
     }
-    
+
     @Override
     public String getSender() {
         return "";
@@ -84,39 +84,49 @@ public class Comment extends MailItem {
 
     /**
      * Content of the comment with the maximum of 1024 bytes.
-     * 
+     *
      * @return
      */
     public String getText() {
         return getSubject();
     }
-    
+
     public String getCreatorAccountId() {
         return mCreatorId;
     }
-    
+
     public Account getCreatorAccount() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         return prov.getAccountById(mCreatorId);
     }
-    
+
+    /**
+     * The creator of the comment has full permission.
+     */
+    @Override
+    protected boolean hasFullPermission(Account authuser) {
+        if (authuser != null && authuser.getId().equals(mCreatorId))
+            return true;
+        return super.hasFullPermission(authuser);
+    }
+
     private String mCreatorId;
-    
+
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mCreatorId, mExtendedData);
     }
-    
+
     private static String encodeMetadata(Color color, int metaVersion, int version, String accountId, CustomMetadata custom) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, metaVersion, version, accountId, extended).toString();
     }
-    
+
     private static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, String accountId, CustomMetadataList extended) {
         meta.put(Metadata.FN_CREATOR, accountId);
         return encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
-    
+
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
