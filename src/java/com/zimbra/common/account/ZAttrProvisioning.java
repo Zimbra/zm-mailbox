@@ -5183,6 +5183,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHsmBatchSize = "zimbraHsmBatchSize";
 
     /**
+     * Keep only the tip revision in the main volume, and move all the old
+     * revisions to the secondary volume. For document type mail items only,
+     * works independently of zimbraHsmPolicy.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1393)
+    public static final String A_zimbraHsmMovePreviousRevisions = "zimbraHsmMovePreviousRevisions";
+
+    /**
      * The policy that determines which mail items get moved to secondary
      * storage during HSM. Each value specifies a comma-separated list of
      * item types and the search query used to select items to move. See the
