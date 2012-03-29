@@ -358,7 +358,7 @@ public class CalendarUtils {
         return toRet;
     }
 
-    static ParseMimeMessage.InviteParserResult parseInviteForCounter(Account account, MailItem.Type type,
+    static ParseMimeMessage.InviteParserResult parseInviteForCounter(Account account, Invite oldInvite, MailItem.Type type,
             Element inviteElem) throws ServiceException {
         TimeZoneMap tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
         Invite inv = new Invite(ICalTok.COUNTER.toString(), tzMap, false);
@@ -366,11 +366,12 @@ public class CalendarUtils {
         CalendarUtils.parseInviteElementCommon(account, type, inviteElem, inv, true, true);
         
         // Get the existing invite to populate X-MS-OLK-ORIGINALSTART and X-MS-OLK-ORIGINALEND
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        Invite oldInvite = null;
-        CalendarItem calItem = mbox.getCalendarItemByUid(inv.getUid());
-        if (calItem != null)
-            oldInvite = calItem.getInvite(inv.getRecurId());
+        if (oldInvite == null) {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            CalendarItem calItem = mbox.getCalendarItemByUid(inv.getUid());
+            if (calItem != null)
+                oldInvite = calItem.getInvite(inv.getRecurId());
+        }
         
         if (oldInvite != null) {
             // Add TZIDs from oldInvite to inv
