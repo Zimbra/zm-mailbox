@@ -1054,7 +1054,8 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 // The syntax is very similar to CreateAppointmentRequest.
 //
 //
-<CounterAppointmentRequest>
+<CounterAppointmentRequest  id="INVITE_ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE"
+    ms="change-sequence of fetched version" rev="revision of fetched version">
   <m>
     <e t="f" .../>  // From
     <e t="t" .../>  // To
@@ -1072,6 +1073,10 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
     </inv>
   </m>
 </CounterAppointmentRequest>
+
+"ms" and "rev" are used for conflict detection.  By setting these, the request indicates
+which version of the appointment it is attempting to propose.  If the appointment was updated on
+the server between the fetch and modify, an INVITE_OUT_OF_DATE exception will be thrown.
 
 <CounterAppointmentResponse/>
 
