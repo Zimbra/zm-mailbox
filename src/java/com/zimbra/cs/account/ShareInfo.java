@@ -744,7 +744,17 @@ public class ShareInfo {
                 default:
                     folderView = sid.getFolderDefaultView();
             }
-            return L10nUtil.getMessage(MsgKey.shareNotifBodyFolderDesc, locale, folderView);
+            MsgKey key = null;
+            try {
+                if (Provisioning.getInstance().isOctopus()) {
+                    key = MsgKey.octopus_share_notification_email_bodyFolderDesc;
+                } else {
+                    key = MsgKey.shareNotifBodyFolderDesc;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("failed to retrieve Octopus info from LDAP " +  e);
+            }
+            return L10nUtil.getMessage(key, locale, folderView);
         }
 
         private static class MailSenderVisitor implements PublishedShareInfoVisitor {
