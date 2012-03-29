@@ -81,6 +81,25 @@ public class StringUtil {
         }
     }
 
+    /** Compares two string ignoring case differences.
+     *
+     */
+    public static int compareToIgnoreCase(String s1, String s2) {
+        if (s1 != null) {
+            if (s2 != null) {
+                return s1.compareToIgnoreCase(s2);
+            } else {
+                return 1;
+            }
+        } else {  // s1 == null
+            if (s2 != null) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
     public static int countOccurrences(String str, char c) {
         if (str == null) {
             return 0;
