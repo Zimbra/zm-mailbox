@@ -7864,12 +7864,14 @@ public class Mailbox {
     }
 
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
-            String author, String description, InputStream data) throws ServiceException {
+            String author, String description, InputStream data)
+    throws ServiceException {
         return createDocument(octxt, folderId, filename, mimeType, author, description, true, data, MailItem.Type.DOCUMENT);
     }
 
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
-            String author, String description, boolean descEnabled, InputStream data, MailItem.Type type) throws ServiceException {
+            String author, String description, boolean descEnabled, InputStream data, MailItem.Type type)
+    throws ServiceException {
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description, descEnabled);
             return createDocument(octxt, folderId, pd, type, 0);
@@ -7879,7 +7881,8 @@ public class Mailbox {
     }
 
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
-            int flags) throws IOException, ServiceException {
+            int flags)
+    throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
 

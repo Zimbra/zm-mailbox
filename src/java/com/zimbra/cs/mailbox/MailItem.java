@@ -36,6 +36,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
@@ -2561,6 +2562,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     private static final String INVALID_NAME_PATTERN = ".*" + INVALID_NAME_CHARACTERS + ".*";
 
+    private static final Set<String> RESERVED_NAMES = ImmutableSet.of(".", "..");
+
     /** The maximum length for an item name.  This is not the maximum length
      *  of a <u>path</u>, just the maximum length of a single item or folder's
      *  name. */
@@ -2583,8 +2586,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             throw MailServiceException.INVALID_NAME(name);
         }
         // strip trailing whitespace and validate length of resulting name
+        //   (also, rule out "." and ".." due to UNIX directory confusion)
         String trimmed = StringUtil.trimTrailingSpaces(name);
-        if (trimmed.isEmpty() || trimmed.length() > MAX_NAME_LENGTH) {
+        if (trimmed.isEmpty() || trimmed.length() > MAX_NAME_LENGTH || RESERVED_NAMES.contains(trimmed)) {
             throw MailServiceException.INVALID_NAME(name);
         }
         return trimmed;
@@ -2605,6 +2609,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 normalized = normalized.replaceAll(INVALID_NAME_CHARACTERS, "");
             }
             normalized = StringUtil.trimTrailingSpaces(normalized);
+            if (RESERVED_NAMES.contains(normalized)) {
+                normalized = "";
+            }
+
             if (normalized.trim().equals("")) {
                 normalized = "item" + System.currentTimeMillis();
             }

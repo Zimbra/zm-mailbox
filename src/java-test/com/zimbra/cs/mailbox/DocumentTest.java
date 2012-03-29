@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
@@ -119,5 +120,64 @@ public final class DocumentTest {
         ParsedDocument pd = new ParsedDocument(in, name, "text/plain", System.currentTimeMillis(), null, null);
         int flags = (isNote ? Flag.BITMASK_NOTE : 0);
         return mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.Type.DOCUMENT, flags);
+    }
+
+    private static void checkName(Mailbox mbox, String name, boolean valid) throws Exception {
+        Document doc = null;
+        ParsedDocument pd = new ParsedDocument(new ByteArrayInputStream("test".getBytes()), name, "text/plain", System.currentTimeMillis(), null, null);
+        try {
+            doc = mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.Type.DOCUMENT, 0);
+            if (!valid) {
+                Assert.fail("should not have been allowed to create document: [" + name + "]");
+            }
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error code", MailServiceException.INVALID_NAME, e.getCode());
+            if (valid) {
+                Assert.fail("should have been allowed to create document: [" + name + "]");
+            }
+        }
+
+        // clean up after ourselves
+        if (doc != null) {
+            mbox.delete(null, doc.getId(), MailItem.Type.DOCUMENT);
+        }
+    }
+
+    @Test
+    public void names() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        // empty or all-whitespace
+        checkName(mbox, "", false);
+        checkName(mbox, "   ", false);
+
+        // control characters converted to spaces by ParsedDocument constructor
+        checkName(mbox, "sam\rwise", true);
+        checkName(mbox, "sam\nwise", true);
+        checkName(mbox, "sam\twise", true);
+        checkName(mbox, "sam\u0003wise", true);
+
+        // invalid characters (BOM, unpaired surrogates) not converted by ParsedDocument constructor
+        checkName(mbox, "sam\uFFFEwise", false);
+        checkName(mbox, "sam\uDBFFwise", false);
+        checkName(mbox, "sam\uDC00wise", false);
+
+        // invalid path characters
+        checkName(mbox, "sam/wise", false);
+        checkName(mbox, "sam\"wise", false);
+        checkName(mbox, "sam:wise", false);
+
+        // reserved names
+        checkName(mbox, ".", false);
+        checkName(mbox, "..", false);
+        checkName(mbox, ".  ", false);
+        checkName(mbox, ".. ", false);
+
+        // valid path characters
+        checkName(mbox, "sam\\wise", true);
+        checkName(mbox, "sam'wise", true);
+        checkName(mbox, "sam*wise", true);
+        checkName(mbox, "sam|wise", true);
+        checkName(mbox, "sam wise", true);
     }
 }

@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -58,7 +59,7 @@ public final class FolderTest {
     }
 
     @Test
-    public void testImapMODSEQ() throws Exception {
+    public void imapMODSEQ() throws Exception {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
@@ -155,43 +156,6 @@ public final class FolderTest {
     }
 
     @Test
-    public void deleteFolder() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder root = mbox.createFolder(null, "/Root", (byte) 0, MailItem.Type.DOCUMENT);
-        mbox.createFolder(null, "/Root/test1", (byte) 0, MailItem.Type.DOCUMENT);
-        mbox.createFolder(null, "/Root/test2", (byte) 0, MailItem.Type.DOCUMENT);
-
-        Exception ex = null;
-        try {
-            mbox.getFolderByPath(null, "/Root");
-            mbox.getFolderByPath(null, "/Root/test1");
-            mbox.getFolderByPath(null, "/Root/test2");
-        } catch (Exception e) {
-            ex = e;
-        }
-        Assert.assertNull(ex);
-        mbox.delete(null, root.mId, MailItem.Type.FOLDER);
-        try {
-            mbox.getFolderByPath(null, "/Root");
-        } catch (Exception e) {
-            ex = e;
-        }
-        Assert.assertNotNull(ex);
-        try {
-            mbox.getFolderByPath(null, "/Root/test1");
-        } catch (Exception e) {
-            ex = e;
-        }
-        Assert.assertNotNull(ex);
-        try {
-            mbox.getFolderByPath(null, "/Root/test2");
-        } catch (Exception e) {
-            ex = e;
-        }
-        Assert.assertNotNull(ex);
-    }
-
-    @Test
     public void defaultFolderFlags() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -201,17 +165,49 @@ public final class FolderTest {
         Assert.assertTrue(inbox.isFlagSet(Flag.BITMASK_SUBSCRIBED));
     }
 
+    @Test
+    public void deleteFolder() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Folder root = mbox.createFolder(null, "/Root", (byte) 0, MailItem.Type.DOCUMENT);
+        mbox.createFolder(null, "/Root/test1", (byte) 0, MailItem.Type.DOCUMENT);
+        mbox.createFolder(null, "/Root/test2", (byte) 0, MailItem.Type.DOCUMENT);
+        try {
+            mbox.getFolderByPath(null, "/Root");
+            mbox.getFolderByPath(null, "/Root/test1");
+            mbox.getFolderByPath(null, "/Root/test2");
+        } catch (Exception e) {
+            Assert.fail();
+        }
+
+        // delete the root folder and make sure it and all the leaves are gone
+        mbox.delete(null, root.mId, MailItem.Type.FOLDER);
+        try {
+            mbox.getFolderByPath(null, "/Root");
+            Assert.fail();
+        } catch (Exception e) {
+        }
+        try {
+            mbox.getFolderByPath(null, "/Root/test1");
+            Assert.fail();
+        } catch (Exception e) {
+        }
+        try {
+            mbox.getFolderByPath(null, "/Root/test2");
+            Assert.fail();
+        } catch (Exception e) {
+        }
+    }
+
     /**
      * Confirms that deleting a parent folder also deletes the child.
      */
     @Test
-    public void deleteParent()
-    throws Exception {
+    public void deleteParent() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder parent = mbox.createFolder(null, "/" + "deleteParent - parent", (byte) 0, MailItem.Type.UNKNOWN);
         int parentId = parent.getId();
-        Folder child = mbox.createFolder(
-            null, "deleteParent - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder child = mbox.createFolder(null, "deleteParent - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         int childId = child.getId();
         mbox.delete(null, parent.getId(), parent.getType());
 
@@ -250,13 +246,11 @@ public final class FolderTest {
      * Confirms that emptying a folder removes subfolders only when requested.
      */
     @Test
-    public void emptyFolderNonrecursive()
-    throws Exception {
+    public void emptyFolderNonrecursive() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder parent = mbox.createFolder(null, "/" + "parent", (byte) 0, MailItem.Type.UNKNOWN);
         int parentId = parent.getId();
-        Folder child = mbox.createFolder(
-            null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder child = mbox.createFolder(null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         int childId = child.getId();
         mbox.emptyFolder(null, parent.getId(), false);
 
@@ -287,13 +281,11 @@ public final class FolderTest {
      * Confirms that emptying a folder removes subfolders only when requested.
      */
     @Test
-    public void testEmptyFolderRecursive()
-    throws Exception {
+    public void testEmptyFolderRecursive() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder parent = mbox.createFolder(null, "/" + "parent", (byte) 0, MailItem.Type.UNKNOWN);
         int parentId = parent.getId();
-        Folder child = mbox.createFolder(
-            null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder child = mbox.createFolder(null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         int childId = child.getId();
         mbox.emptyFolder(null, parent.getId(), true);
 
@@ -328,8 +320,7 @@ public final class FolderTest {
      * Creates a hierarchy twenty folders deep.
      */
     @Test
-    public void manySubfolders()
-    throws Exception {
+    public void manySubfolders() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         final int NUM_LEVELS = 20;
         int parentId = Mailbox.ID_FOLDER_INBOX;
@@ -351,8 +342,7 @@ public final class FolderTest {
      * that the conversation size was correctly decremented.
      */
     @Test
-    public void markDeletionTargets()
-    throws Exception {
+    public void markDeletionTargets() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         String name = "MDT";
 
@@ -383,16 +373,66 @@ public final class FolderTest {
      * Confirms that deleting a subfolder correctly updates the subfolder hierarchy.
      */
     @Test
-    public void updateHierarchy()
-    throws Exception {
+    public void updateHierarchy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
         Folder f1 = mbox.createFolder(null, "/f1", (byte) 0, MailItem.Type.UNKNOWN);
         Folder f2 = mbox.createFolder(null, "/f1/f2", (byte) 0, MailItem.Type.UNKNOWN);
         mbox.createFolder(null, "/f1/f2/f3", (byte) 0, MailItem.Type.UNKNOWN);
         Assert.assertEquals("Hierarchy size before delete", 3, f1.getSubfolderHierarchy().size());
+
         mbox.delete(null, f2.getId(), f2.getType());
+        f1 = mbox.getFolderById(null, f1.getId());
         List<Folder> hierarchy = f1.getSubfolderHierarchy();
         Assert.assertEquals("Hierarchy size after delete", 1, hierarchy.size());
         Assert.assertEquals("Folder id", f1.getId(), hierarchy.get(0).getId());
+    }
+
+    private static void checkName(Mailbox mbox, String name, boolean valid) {
+        try {
+            mbox.createFolder(null, name, Mailbox.ID_FOLDER_USER_ROOT, MailItem.Type.DOCUMENT, 0, (byte) 0, null);
+            if (!valid) {
+                Assert.fail("should not have been allowed to create folder: [" + name + "]");
+            }
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error code", MailServiceException.INVALID_NAME, e.getCode());
+            if (valid) {
+                Assert.fail("should have been allowed to create folder: [" + name + "]");
+            }
+        }
+    }
+
+    @Test
+    public void names() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        // empty or all-whitespace
+        checkName(mbox, "", false);
+        checkName(mbox, "   ", false);
+
+        // invalid path characters
+        checkName(mbox, "sam\rwise", false);
+        checkName(mbox, "sam\nwise", false);
+        checkName(mbox, "sam\twise", false);
+        checkName(mbox, "sam\u0003wise", false);
+        checkName(mbox, "sam\uFFFEwise", false);
+        checkName(mbox, "sam\uDBFFwise", false);
+        checkName(mbox, "sam\uDC00wise", false);
+        checkName(mbox, "sam/wise", false);
+        checkName(mbox, "sam\"wise", false);
+        checkName(mbox, "sam:wise", false);
+
+        // reserved names
+        checkName(mbox, ".", false);
+        checkName(mbox, "..", false);
+        checkName(mbox, ".  ", false);
+        checkName(mbox, ".. ", false);
+
+        // valid path characters
+        checkName(mbox, "sam\\wise", true);
+        checkName(mbox, "sam'wise", true);
+        checkName(mbox, "sam*wise", true);
+        checkName(mbox, "sam|wise", true);
+        checkName(mbox, "sam wise", true);
     }
 }
