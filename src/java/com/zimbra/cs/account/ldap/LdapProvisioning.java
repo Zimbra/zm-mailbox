@@ -5077,7 +5077,8 @@ public class LdapProvisioning extends LdapProv {
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
 
         // update the validity value to invalidate auto-standing auth tokens
-        acct.setAuthTokenValidityValue(acct.getAuthTokenValidityValue()+1, attrs);
+        int tokenValidityValue = acct.getAuthTokenValidityValue();
+        acct.setAuthTokenValidityValue(tokenValidityValue == Integer.MAX_VALUE ? 0 : tokenValidityValue + 1, attrs);
 
         ChangePasswordListener.ChangePasswordListenerContext ctxts = new ChangePasswordListener.ChangePasswordListenerContext();
         ChangePasswordListener.invokePreModify(acct, newPassword, ctxts, attrs);
