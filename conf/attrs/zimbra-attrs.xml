@@ -6937,4 +6937,12 @@ TODO: delete them permanently from here
   <desc>whether this instance of Zimbra is running ZCS or OCTOPUS</desc>
 </attr>
 
+<attr id="1393" name="zimbraHsmMovePreviousRevisions" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+  <globalConfigValue>FLASE</globalConfigValue>
+  <desc>
+    Keep only the tip revision in the main volume, and move all the old revisions to the secondary volume.
+    For document type mail items only, works independently of zimbraHsmPolicy.  
+  </desc>
+</attr>
+
 </attrs>

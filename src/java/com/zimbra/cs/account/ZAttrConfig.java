@@ -12147,6 +12147,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Keep only the tip revision in the main volume, and move all the old
+     * revisions to the secondary volume. For document type mail items only,
+     * works independently of zimbraHsmPolicy.
+     *
+     * @return zimbraHsmMovePreviousRevisions, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1393)
+    public boolean isHsmMovePreviousRevisions() {
+        return getBooleanAttr(Provisioning.A_zimbraHsmMovePreviousRevisions, false);
+    }
+
+    /**
+     * Keep only the tip revision in the main volume, and move all the old
+     * revisions to the secondary volume. For document type mail items only,
+     * works independently of zimbraHsmPolicy.
+     *
+     * @param zimbraHsmMovePreviousRevisions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1393)
+    public void setHsmMovePreviousRevisions(boolean zimbraHsmMovePreviousRevisions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmMovePreviousRevisions, zimbraHsmMovePreviousRevisions ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Keep only the tip revision in the main volume, and move all the old
+     * revisions to the secondary volume. For document type mail items only,
+     * works independently of zimbraHsmPolicy.
+     *
+     * @param zimbraHsmMovePreviousRevisions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1393)
+    public Map<String,Object> setHsmMovePreviousRevisions(boolean zimbraHsmMovePreviousRevisions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmMovePreviousRevisions, zimbraHsmMovePreviousRevisions ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Keep only the tip revision in the main volume, and move all the old
+     * revisions to the secondary volume. For document type mail items only,
+     * works independently of zimbraHsmPolicy.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1393)
+    public void unsetHsmMovePreviousRevisions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmMovePreviousRevisions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Keep only the tip revision in the main volume, and move all the old
+     * revisions to the secondary volume. For document type mail items only,
+     * works independently of zimbraHsmPolicy.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1393)
+    public Map<String,Object> unsetHsmMovePreviousRevisions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmMovePreviousRevisions, "");
+        return attrs;
+    }
+
+    /**
      * The policy that determines which mail items get moved to secondary
      * storage during HSM. Each value specifies a comma-separated list of
      * item types and the search query used to select items to move. See the
