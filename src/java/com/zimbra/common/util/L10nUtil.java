@@ -225,7 +225,8 @@ public class L10nUtil {
         octopus_share_notification_email_subject,
         octopus_share_notification_email_message,
         octopus_share_notification_email_accept,
-        octopus_share_notification_email_ignore
+        octopus_share_notification_email_ignore,
+        octopus_share_notification_email_bodyFolderDesc
         // add other messages in the future...
     }
 
