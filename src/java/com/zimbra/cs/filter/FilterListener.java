@@ -39,7 +39,7 @@ public class FilterListener extends MailboxListener {
     );
 
     public static final ImmutableSet<MailItem.Type> ITEMTYPES = ImmutableSet.of(
-            MailItem.Type.FOLDER, MailItem.Type.TAG
+            MailItem.Type.FOLDER, MailItem.Type.MOUNTPOINT, MailItem.Type.TAG
     );
 
     @Override
@@ -76,7 +76,7 @@ public class FilterListener extends MailboxListener {
         if (notification.mods.deleted != null) {
             for (Map.Entry<ModificationKey, Change> entry : notification.mods.deleted.entrySet()) {
                 MailItem.Type type = (MailItem.Type) entry.getValue().what;
-                if (type == MailItem.Type.FOLDER) {
+                if (type == MailItem.Type.FOLDER || type == MailItem.Type.MOUNTPOINT) {
                     Folder oldFolder = (Folder) entry.getValue().preModifyObj;
                     if (oldFolder == null) {
                         ZimbraLog.filter.warn("Cannot determine the old folder name for %s.", entry.getKey());
