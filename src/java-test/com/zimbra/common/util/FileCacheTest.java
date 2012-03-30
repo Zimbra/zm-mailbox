@@ -51,7 +51,7 @@ public class FileCacheTest {
      */
     @Test
     public void get() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         FileCache.Item item = cache.get(1);
@@ -66,7 +66,7 @@ public class FileCacheTest {
      */
     @Test
     public void keyDoesNotExist() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
         assertNull(cache.get(1));
     }
 
@@ -75,7 +75,7 @@ public class FileCacheTest {
      */
     @Test
     public void contains() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         assertTrue(cache.contains(1));
@@ -87,7 +87,7 @@ public class FileCacheTest {
      */
     @Test
     public void dedupe() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         cache.put(2, new ByteArrayInputStream(data));
@@ -101,7 +101,7 @@ public class FileCacheTest {
      */
     @Test
     public void remove() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         cache.put(2, new ByteArrayInputStream(data));
@@ -138,7 +138,7 @@ public class FileCacheTest {
      */
     @Test
     public void maxFiles() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).maxFiles(2).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).maxFiles(2).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         cache.put(2, new ByteArrayInputStream(data));
@@ -160,7 +160,7 @@ public class FileCacheTest {
      */
     @Test
     public void accessOrder() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).maxFiles(2).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).maxFiles(2).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         data = getRandomBytes(100);
@@ -177,7 +177,7 @@ public class FileCacheTest {
 
     @Test
     public void maxBytes() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).maxBytes(299).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).maxBytes(299).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         data = getRandomBytes(100);
@@ -213,7 +213,7 @@ public class FileCacheTest {
      */
     @Test
     public void okToRemove() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir)
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false)
             .maxFiles(2)
             .removeCallback(new KeepSmallFiles(99)).build();
         byte[] data = getRandomBytes(99);
@@ -234,7 +234,7 @@ public class FileCacheTest {
      */
     @Test
     public void minLifetime() throws IOException, InterruptedException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).maxFiles(2).minLifetime(200).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).maxFiles(2).minLifetime(200).build();
         byte[] data = getRandomBytes(100);
         cache.put(1, new ByteArrayInputStream(data));
         data = getRandomBytes(100);
@@ -261,9 +261,8 @@ public class FileCacheTest {
     /**
      * Verifies that cached files are cleaned up after the item is aged out.
      */
-    @Test
-    public void cleanUpFiles() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).maxFiles(1).build();
+    private void cleanUpFiles(boolean persistent) throws IOException {
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, persistent).maxFiles(1).build();
         File dataDir = new File(tmpDir, "data");
         File propDir = new File(tmpDir, "properties");
 
@@ -273,20 +272,22 @@ public class FileCacheTest {
         File dataFile = new File(dataDir, item1.digest);
         File propFile = new File(propDir, item1.digest + ".properties");
         assertTrue(dataFile.isFile());
-        assertTrue(propFile.isFile());
+        assertEquals(persistent, propFile.isFile());
 
         data = getRandomBytes(100);
         cache.put(2, new ByteArrayInputStream(data));
         assertFalse(dataFile.exists());
         assertFalse(propFile.exists());
     }
-
-    /**
-     * Verifies reloading cache content.
-     */
+    
     @Test
-    public void reload() throws IOException {
-        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+    public void cleanUpFiles() throws IOException {
+        cleanUpFiles(true); //make sure expiration works in both cases
+        cleanUpFiles(false); //also confirm by proxy that non-persistent cache is not writing propFiles
+    }
+    
+    private void storePersistentCache() throws IOException {
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, true).build();
         byte[] data = getRandomBytes(100);
 
         // Store 2 entries for the same content.
@@ -300,18 +301,42 @@ public class FileCacheTest {
         assertEquals("Kelly", item.properties.get("Winton"));
 
         assertEquals(item, cache.get(2));
+    }
 
+    /**
+     * Verifies reloading cache content.
+     */
+    @Test
+    public void reload() throws IOException {
+        storePersistentCache();
+        
         // Reload cache and compare content.
-        cache = FileCache.Builder.createWithIntegerKey(tmpDir).build();
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, true).build();
         assertEquals(1, cache.getNumFiles());
         assertEquals(100, cache.getNumBytes());
 
-        item = cache.get(1);
+        FileCache.Item item = cache.get(1);
         assertEquals(2, item.properties.size());
         assertEquals("Evans", item.properties.get("Bill"));
         assertEquals("Kelly", item.properties.get("Winton"));
 
         assertEquals(item, cache.get(2));
+    }
+    
+    @Test
+    public void reloadEmpty() throws IOException {
+        storePersistentCache();
+
+        // build cache with persistent - false. it must contain no entries 
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
+
+        assertEquals(0, cache.getNumFiles());
+        assertEquals(0, cache.getNumKeys());
+        File dataDir = new File(tmpDir, "data");
+        File propDir = new File(tmpDir, "properties");
+        
+        assertEquals(0, dataDir.list().length);
+        assertEquals(0, propDir.list().length);
     }
 
     private static byte[] getRandomBytes(int size) {

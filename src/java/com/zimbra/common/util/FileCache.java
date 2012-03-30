@@ -79,6 +79,7 @@ public class FileCache<K> {
 
     private static final String PROP_KEYS = "FileCache.keys";
     private static final ImmutableSet<String> INTERNAL_PROP_NAMES = ImmutableSet.of(PROP_KEYS);
+    private boolean persistent;
 
     public static class Item {
         public final File file;
@@ -123,22 +124,24 @@ public class FileCache<K> {
         private int maxFiles = Integer.MAX_VALUE;
         private long maxBytes = Long.MAX_VALUE;
         private RemoveCallback removeCallback;
+        private boolean persistent;
 
         // Default value is -1 instead of 0.  When set to 0, unit tests fail intermittently
         // if prune() runs at the exact same timestamp as when the item is added.
         private long minLifetime = -1;
 
-        public static Builder<String> createWithStringKey(File cacheDir) {
-            return new Builder<String>(cacheDir, STRING_KEY_PARSER);
+        public static Builder<String> createWithStringKey(File cacheDir, boolean persistent) {
+            return new Builder<String>(cacheDir, STRING_KEY_PARSER, persistent);
         }
 
-        public static Builder<Integer> createWithIntegerKey(File cacheDir) {
-            return new Builder<Integer>(cacheDir, INTEGER_KEY_PARSER);
+        public static Builder<Integer> createWithIntegerKey(File cacheDir, boolean persistent) {
+            return new Builder<Integer>(cacheDir, INTEGER_KEY_PARSER, persistent);
         }
 
-        public Builder(File cacheDir, KeyParser<K2> keyParser) {
+        public Builder(File cacheDir, KeyParser<K2> keyParser, boolean persistent) {
             this.cacheDir = cacheDir;
             this.keyParser = keyParser;
+            this.persistent = persistent;
         }
 
         public Builder<K2> maxFiles(int maxFiles) {
@@ -162,7 +165,7 @@ public class FileCache<K> {
         }
 
         public FileCache<K2> build() throws IOException {
-            return new FileCache<K2>(cacheDir, maxFiles, maxBytes, minLifetime, keyParser, removeCallback).startup();
+            return new FileCache<K2>(cacheDir, maxFiles, maxBytes, minLifetime, keyParser, removeCallback, persistent).startup();
         }
     }
 
@@ -192,7 +195,7 @@ public class FileCache<K> {
         public boolean okToRemove(Item item);
     }
 
-    private FileCache(File cacheDir, Integer maxFiles, Long maxBytes, Long minLifetime, KeyParser<K> keyParser, RemoveCallback callback) {
+    private FileCache(File cacheDir, Integer maxFiles, Long maxBytes, Long minLifetime, KeyParser<K> keyParser, RemoveCallback callback, boolean persistent) {
         if (cacheDir == null) {
             throw new IllegalStateException("cacheDir cannot be null");
         }
@@ -208,6 +211,7 @@ public class FileCache<K> {
         // Default is -1 instead of 0, to avoid intermittent unit test failures
         // when several operations happen within the same millisecond.
         this.minLifetime = (minLifetime == null ? -1 : minLifetime);
+        this.persistent = persistent;
     }
 
     /**
@@ -220,12 +224,17 @@ public class FileCache<K> {
 
         // Create directories if necessary.
         dataDir = new File(cacheDir, "data");
-        FileUtil.ensureDirExists(dataDir);
         propDir = new File(cacheDir, "properties");
-        FileUtil.ensureDirExists(propDir);
         tmpDir = new File(cacheDir, "tmp");
+        FileUtil.ensureDirExists(dataDir);
+        FileUtil.ensureDirExists(propDir);
         FileUtil.deleteDirContents(tmpDir);
         FileUtil.ensureDirExists(tmpDir);
+        if (!persistent) {
+            FileUtil.deleteDirContents(dataDir);
+            FileUtil.deleteDirContents(propDir);
+            return this;
+        }
 
         // Load existing files.
         List<File> dataFiles = Lists.newArrayList(listFiles(dataDir));
@@ -389,15 +398,17 @@ public class FileCache<K> {
         }
 
         synchronized (this) {
-            // Store properties.
-            Properties props = makeProperties(key, userProps, digest);
-            File propFile = new File(propDir, digest + ".properties");
-            OutputStream propOut = null;
-            try {
-                propOut = new FileOutputStream(propFile);
-                props.store(propOut, null);
-            } finally {
-                ByteUtil.closeStream(propOut);
+            if (persistent) {
+                // Store properties.
+                Properties props = makeProperties(key, userProps, digest);
+                File propFile = new File(propDir, digest + ".properties");
+                OutputStream propOut = null;
+                try {
+                    propOut = new FileOutputStream(propFile);
+                    props.store(propOut, null);
+                } finally {
+                    ByteUtil.closeStream(propOut);
+                }
             }
 
             // Update in-memory data.
@@ -508,8 +519,10 @@ public class FileCache<K> {
 
             // Delete from filesystem.
             deleteWithWarning(item.file);
-            File propFile = new File(propDir, item.digest + ".properties");
-            deleteWithWarning(propFile);
+            if (persistent) {
+                File propFile = new File(propDir, item.digest + ".properties");
+                deleteWithWarning(propFile);
+            }
 
             // Update in-memory caches.
             i.remove();
