@@ -9,8 +9,11 @@
   <path id="class.path">
     <pathelement location="${build.classes.dir}" />
     <fileset dir="jars">
-      <include name="**/*.jar" />
+    	<include name="**/*.jar" />
     </fileset>
+  	<fileset dir="jars-test/easymock-3.0">
+  		<include name="**/*.jar" />
+  	</fileset>
   </path>
 
   <!-- Targets -->

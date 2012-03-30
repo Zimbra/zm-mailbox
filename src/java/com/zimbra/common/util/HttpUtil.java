@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -33,10 +34,154 @@ import org.apache.commons.httpclient.HttpsURL;
 
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
+import com.mysql.jdbc.StringUtils;
 
 public final class HttpUtil {
 
-    public enum Browser { IE, FIREFOX, MOZILLA, OPERA, SAFARI, APPLE_ICAL, UNKNOWN };
+    public enum Browser {
+        // Browser types
+        // NOTE: please make sure to update getBrowser/getMajorVersion
+        // if you add a new type.
+        IE("MSIE"),
+        FIREFOX("Firefox"),
+        MOZILLA("Mozilla"),
+        OPERA("Opera"),
+        SAFARI("AppleWebKit"),
+        APPLE_ICAL("iCal"),
+        CHROME("Chrome"),
+        UNKNOWN("");
+        /**
+         * The string used to determine which browser this
+         * is in the user agent
+         */
+        private final String userAgentStr;
+        Browser(String userAgentStr) {
+            this.userAgentStr = userAgentStr;
+        };
+
+        String getUserAgentStr() {
+            return userAgentStr;
+        }
+
+        /**
+         * Gets the index of this browser in the string if its present, -1 if not
+         * @param str The string to check, usually the full user-agent
+         * @return The index (like String.indexof) if present, -1 if not
+         */
+        int indexOf(String str) {
+            if (StringUtils.isNullOrEmpty(str)) {
+                return -1;
+            }
+            return str.indexOf(userAgentStr);
+        }
+
+        /**
+         * Guesses the browser type based on the user agent string
+         * @param ua The user agent of the browser to check
+         * @return
+         */
+        static Browser guessBrowser(String ua) {
+            if (ua == null || ua.trim().equals(""))
+                return Browser.UNKNOWN;
+            if (Browser.IE.indexOf(ua) != -1)
+                return Browser.IE;
+            if (Browser.FIREFOX.indexOf(ua) != -1)
+                return Browser.FIREFOX;
+            if (Browser.CHROME.indexOf(ua) != -1)
+                // Note: Needs to happen before safari detection as
+                // it will be detected as the same thing
+                return Browser.CHROME;
+            if (Browser.SAFARI.indexOf(ua) != -1)
+                return Browser.SAFARI;
+            if (Browser.OPERA.indexOf(ua) != -1)
+                // Note: Needs to be detected after firefox and IE
+                // as it has user agents that attempt to be IE and firefox.
+               return Browser.OPERA;
+            if (Browser.APPLE_ICAL.indexOf(ua) != -1)
+                return Browser.APPLE_ICAL;
+            return Browser.UNKNOWN;
+        }
+
+        /**
+         * Gets the major version of the browser, mostly used to determine
+         * when bugs were fixed in the browser to change our workaround strategy
+         * @param ua The user agent from the browser
+         * @return The version if it can be found. -1 if not
+         */
+        int getMajorVersion(String ua) {
+            if (this == UNKNOWN) {
+                return -1;
+            }
+            // Note, this assumes that the major will be separated frome
+            // the minor versions by a '.'. So far everything supported does.
+            int start = 0;
+            int version = 0;
+            switch (this) {
+            case IE:
+                // example: MSIE 10.6;
+                start = indexOf(ua) + IE.userAgentStr.length() +1;
+                break;
+            case FIREFOX:
+                // example : Firefox/10.0a4
+                start = indexOf(ua) + FIREFOX.userAgentStr.length() + 1;
+                break;
+            case CHROME:
+                // example: Chrome/19.0.1042.0
+                start = indexOf(ua) + CHROME.userAgentStr.length() + 1;
+                break;
+            case SAFARI:
+                // example: AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5
+                start = indexOf(ua) + SAFARI.userAgentStr.length() +1 ;
+                version = ua.indexOf("Version") + "Version".length();
+                if (version < "Version".length()) {
+                    // Webkit doesn't use 'version' in versions 1 or 2.
+                    return 2;
+                }
+                start = version + 1;
+                break;
+            case OPERA:
+                // Opera does a bunch of silly things with its user agent
+                // depending on whether or not its attempting to fake IE or Firefox
+                // We're going to ignore those for this check.. As they should get
+                // detected as IE or Firefox when they are setup this way
+                start = indexOf(ua) + OPERA.userAgentStr.length() + 1;
+                version = ua.indexOf("Version") + "Version".length();
+                // if the version is found, we'll use it
+                // otherwise it'll just be Opera/<ver> for versions older than 10
+                if (version >= "Version".length()) {
+                    start = version +1;
+                }
+                break;
+            case APPLE_ICAL:
+                // example :iCal/4.0
+                start = indexOf(ua) + APPLE_ICAL.userAgentStr.length() +1 ;
+                break;
+
+            }
+            // If we get down to here, with a < 0 index, we know something bad happened
+            // so we'll just return -1
+            if (start < 0 || start >= ua.length()) {
+                return -1;
+            }
+
+            // find the end of the substring.. should be a '.' for all versions
+            int end = ua.indexOf(".", start);
+            String verStr = null;
+            if (end > start) {
+                verStr = ua.substring(start, end);
+            } else {
+                verStr = ua.substring(start);
+            }
+
+            try {
+                return Integer.parseInt(verStr);
+            } catch (NumberFormatException nfe) {
+                return -1;
+            }
+        }
+
+
+      };
 
     // Encode ' ' to '%20' instead of '+' because IE doesn't decode '+' to ' '.
     private static final BitSet IE_URL_SAFE = new BitSet(256);
@@ -68,22 +213,20 @@ public final class HttpUtil {
      * @return
      */
     public static Browser guessBrowser(String ua) {
-        if (ua == null || ua.trim().equals(""))
-            return Browser.UNKNOWN;
-        else if (ua.indexOf("MSIE") != -1)
-            return Browser.IE;
-        else if (ua.indexOf("Firefox") != -1)
-            return Browser.FIREFOX;
-        else if (ua.indexOf("AppleWebKit") != -1)
-            return Browser.SAFARI;
-        else if (ua.indexOf("Opera") != -1)
-            return Browser.OPERA;
-        else if (ua.indexOf("iCal") != -1)
-            return Browser.APPLE_ICAL;
-        else
-            return Browser.UNKNOWN;
+        return Browser.guessBrowser(ua);
+    }
+    /**
+     * Used to determine the browser version from the user agent string
+     * @param browser
+     * @param ua
+     * @return
+     */
+    public static int guessBrowserMajorVersion(String ua) {
+       Browser browser = Browser.guessBrowser(ua);
+       return browser.getMajorVersion(ua);
     }
 
+    @Deprecated
     public static String encodeFilename(HttpServletRequest req, String filename) {
         if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1) {
             return '"' + StringUtil.sanitizeFilename(filename) + '"';
@@ -91,6 +234,18 @@ public final class HttpUtil {
         return encodeFilename(guessBrowser(req), filename);
     }
 
+    /**
+     * Used to encode filenames to be safe for browser headers
+     *
+     * Note: Due to browsers finally starting to implement RFC 5987 its better
+     * to use the createContentDisposition() method below so it can
+     * setup the filename= or filename*= correctly based on the browser
+     *
+     * @param browser
+     * @param filename
+     * @return
+     */
+    @Deprecated
     public static String encodeFilename(Browser browser, String filename) {
         filename = StringUtil.sanitizeFilename(filename);
         if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1) {
@@ -101,6 +256,7 @@ public final class HttpUtil {
                 case IE:
                     return new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
                             Charsets.ISO_8859_1);
+                case CHROME:
                 case SAFARI:
                     // Safari doesn't support any encoding. The only solution is
                     // to let Safari use the path-info in URL by returning no
@@ -113,6 +269,93 @@ public final class HttpUtil {
         } catch (UnsupportedEncodingException uee) {
             return filename;
         }
+    }
+
+    /**
+     * Creates the content disposition value for a given filename.
+     * @param request
+     * @param disposition
+     * @param filename
+     * @return
+     */
+    public static String createContentDisposition(HttpServletRequest request, String disposition, String filename) {
+        StringBuffer result = new StringBuffer(disposition);
+        result.append("; ");
+
+        // First, check to see if we're just dealing with a straight ascii filename
+        // If that's the case nothing else needs to be done
+        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1) {
+            result.append("filename=")
+                  .append("\"")
+                  .append(filename)
+                  .append("\"");
+            return result.toString();
+        }
+
+        // Now here's where it gets fun. Some browsers don't do well with any encoding
+        // Newer browsers.. Chrome 11+, FF5+ IE 9+ support RFC 5987 for encoding non-ascii filenames
+        String pathInfo = request.getPathInfo();
+        String ua = request.getHeader("User-Agent");
+        Browser browser = guessBrowser(ua);
+
+        int majorVer = browser.getMajorVersion(ua);
+        try {
+            switch (browser) {
+                case IE:
+                    result.append("filename=")
+                          .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                                  Charsets.ISO_8859_1));
+                    break;
+                case SAFARI:
+                    // Safari still doesn't support any encoding.
+                    // If we have a path info that matches our filename, we'll leave out the
+                    // filename= part of the header and let the browser use that
+                    // if we don't we'll force it over to ASCII and '?' any of the characters we don't know.
+
+                    if (pathInfo != null && pathInfo.endsWith(filename)) {
+                        // The filename is already here. no need to do anything special
+                        break;
+                    }
+
+                    // Ok, so now we're stuck with ascii encoding.
+                    result.append("filename=")
+                          .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
+                    break;
+                case CHROME:
+                    // Chrome.. ah chrome.. if its 11+, we'll encode with 5987, if its less we'll do the
+                    // same hacks we did for safari.
+                    if (majorVer >= 11) {
+                        result.append("filename*=") // note: the *= is not a typo
+                              .append("UTF-8''")
+                              // encode it just like IE
+                              .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                                      Charsets.ISO_8859_1));
+                        break;
+                    }
+
+                    // must be less than 11,
+                    if (pathInfo.endsWith(filename)) {
+                        // The filename is already here. no need to do anything special
+                        break;
+                    }
+
+                    // Ok, so now we're stuck with ascii encoding.
+                    result.append("filename=")
+                          .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
+                    break;
+                case FIREFOX:
+                default:
+                    result.append("filename=\"")
+                          .append(MimeUtility.encodeText(filename, "utf-8", "B"))
+                          .append("\"");
+            }
+        } catch(UnsupportedEncodingException uee) {
+            // no need to do anything..
+            uee.printStackTrace();
+        }
+
+
+        return result.toString();
     }
 
     /** Strips any userinfo (username/password) data from the passed-in URL
@@ -154,12 +397,12 @@ public final class HttpUtil {
         for (String pair : queryString.split("&")) {
             String[] keyVal = pair.split("=");
             // URI query string is always encoded with application/x-www-form-urlencoded,
-            // so use URLDecoder.decode() which converts '+' to ' ' 
+            // so use URLDecoder.decode() which converts '+' to ' '
             try {
                 String value = keyVal.length > 1 ? URLDecoder.decode(keyVal[1], "UTF-8") : "";
                 params.put(URLDecoder.decode(keyVal[0], "UTF-8"), value);
-            } catch (UnsupportedEncodingException e) {                
-            }            
+            } catch (UnsupportedEncodingException e) {
+            }
         }
         return params;
     }
