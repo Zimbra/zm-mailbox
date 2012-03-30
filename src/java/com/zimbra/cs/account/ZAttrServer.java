@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120326-1623 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -21424,13 +21424,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Password for authenticating to share notification MTA.
      *
-     * @return zimbraShareNotificationMtaAuthPassword, or "FALSE" if unset
+     * @return zimbraShareNotificationMtaAuthPassword, or null if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1344)
     public String getShareNotificationMtaAuthPassword() {
-        return getAttr(Provisioning.A_zimbraShareNotificationMtaAuthPassword, "FALSE");
+        return getAttr(Provisioning.A_zimbraShareNotificationMtaAuthPassword, null);
     }
 
     /**

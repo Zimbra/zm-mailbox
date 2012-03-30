@@ -6665,7 +6665,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1344" name="zimbraShareNotificationMtaAuthPassword" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
-  <globalConfigValue>FALSE</globalConfigValue>
   <desc>Password for authenticating to share notification MTA.</desc>
 </attr>
 
