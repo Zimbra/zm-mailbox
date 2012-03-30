@@ -56,20 +56,34 @@ public class RevokeAccess extends RedoableOp {
     @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(folderId);
         sb.append(", grantee=").append(grantee);
+        if (dueToExpiry) {
+            sb.append(", dueToExpiry=").append(dueToExpiry);
+        }
         return sb.toString();
     }
 
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(folderId);
         out.writeUTF(grantee);
+        out.writeBoolean(dueToExpiry);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         folderId = in.readInt();
         grantee = in.readUTF();
+        if (getVersion().atLeast(1, 39)) {
+            dueToExpiry = in.readBoolean();
+            if (dueToExpiry) {
+                mOperation = MailboxOperation.ExpireAccess;
+            }
+        }
     }
 
     @Override public void redo() throws ServiceException {
+        if (dueToExpiry) {
+            // no need of redoing the op since expire access op is invoked by a system scheduled task
+            return;
+        }
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.revokeAccess(getOperationContext(), dueToExpiry, folderId, grantee);
     }
