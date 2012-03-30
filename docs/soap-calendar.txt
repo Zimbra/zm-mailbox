@@ -741,7 +741,7 @@ OR
      </m> ]
 </CancelAppointmentRequest>
 
-<CancelAppointmentResponse>....
+<CancelAppointmentResponse/>
 
 
 //////////////////////////////////////////////////////////////////////
