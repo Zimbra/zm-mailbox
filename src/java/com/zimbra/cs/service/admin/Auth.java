@@ -207,11 +207,10 @@ public class Auth extends AdminDocumentHandler {
         
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
 
-        boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
-        response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = updateAuthenticatedAccount(zsc, at, context, true);
-        if (session != null)
+        if (session != null) {
             ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
+        }
         return response;
     }
 
