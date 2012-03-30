@@ -744,15 +744,13 @@ public class ShareInfo {
                 default:
                     folderView = sid.getFolderDefaultView();
             }
-            MsgKey key = null;
+            MsgKey key = MsgKey.shareNotifBodyFolderDesc;
             try {
                 if (Provisioning.getInstance().isOctopus()) {
                     key = MsgKey.octopus_share_notification_email_bodyFolderDesc;
-                } else {
-                    key = MsgKey.shareNotifBodyFolderDesc;
                 }
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("failed to retrieve Octopus info from LDAP " +  e);
+                ZimbraLog.account.warn("failed to retrieve Octopus info from LDAP " + e);
             }
             return L10nUtil.getMessage(key, locale, folderView);
         }
