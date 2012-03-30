@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,57 +15,48 @@
 
 package com.zimbra.soap.admin.message;
 
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.Attr;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_RESPONSE)
-@XmlType(propOrder = { "authToken", "lifetime", "a" })
 public class AuthResponse {
+
     /**
+     * @zm-api-field-tag auth-token
      * @zm-api-field-description Auth Token
      */
-    @XmlElement(name=AdminConstants.E_AUTH_TOKEN, required=true)
+    @XmlElement(name=AdminConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
 
     /**
+     * @zm-api-field-tag auth-lifetime
      * @zm-api-field-description Life time for the authorization
      */
-    @XmlElement(name=AdminConstants.E_LIFETIME, required=true)
+    @XmlElement(name=AdminConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
 
-    /**
-     * @zm-api-field-description Attributes
-     */
-    @XmlElement(name=AdminConstants.E_A, required=true)
-    private Attr a;
-
-    public void setAuthToken(String authToken) {
-        this.authToken = authToken;
+    public AuthResponse() {
     }
 
-    public String getAuthToken() {
-        return authToken;
+    public void setAuthToken(String authToken) { this.authToken = authToken; }
+    public void setLifetime(long lifetime) { this.lifetime = lifetime; }
+    public String getAuthToken() { return authToken; }
+    public long getLifetime() { return lifetime; }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("authToken", authToken)
+            .add("lifetime", lifetime);
     }
 
-    public void setLifetime(long lifetime) {
-        this.lifetime = lifetime;
-    }
-
-    public long getLifetime() {
-        return lifetime;
-    }
-
-    public void setA(Attr a) {
-        this.a = a;
-    }
-
-    public Attr getA() {
-        return a;
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
