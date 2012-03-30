@@ -1529,7 +1529,7 @@ public class DbMailItem {
     throws ServiceException {
         if (item instanceof Tag)
             return;
-        List<Integer> allIds = info.itemIds.getAll();
+        List<Integer> allIds = info.itemIds.getAllIds();
         if (item != null) {
             allIds.remove(Integer.valueOf(item.getId()));
         }
@@ -1685,32 +1685,38 @@ public class DbMailItem {
     public static void writeTombstones(Mailbox mbox, TypedIdList tombstones) throws ServiceException {
         if (tombstones == null || tombstones.isEmpty())
             return;
-        for (Map.Entry<MailItem.Type, List<Integer>> entry : tombstones) {
+
+        for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : tombstones) {
             MailItem.Type type = entry.getKey();
             switch (type) {
                 case CONVERSATION:
                 case VIRTUAL_CONVERSATION:
                     continue;
             }
-            StringBuilder ids = new StringBuilder();
-            for (Integer id : entry.getValue()) {
-                ids.append(ids.length() == 0 ? "" : ",").append(id);
+
+            StringBuilder row = new StringBuilder();
+            for (TypedIdList.ItemInfo stone : entry.getValue()) {
+                // the list of tombstones is comma-delimited
+                row.append(row.length() == 0 ? "" : ",").append(stone.getId());
+                if (stone.getUuid() != null) {
+                    // a tombstone may either be ID or ID:UUID, so serialize accordingly
+                    row.append(':').append(stone.getUuid());
+                }
 
                 // catch overflows of TEXT values; since all chars are ASCII, no need to convert to UTF-8 for length check beforehand
-                if (ids.length() > MAX_TEXT_LENGTH - 50) {
-                    writeTombstone(mbox, type, ids.toString());
-                    ids.setLength(0);
+                if (row.length() > MAX_TEXT_LENGTH - 128) {
+                    writeTombstone(mbox, type, row.toString());
+                    row.setLength(0);
                 }
             }
 
-            writeTombstone(mbox, type, ids.toString());
+            writeTombstone(mbox, type, row.toString());
         }
     }
 
-    private static void writeTombstone(Mailbox mbox, MailItem.Type type, String ids) throws ServiceException {
-        if (Strings.isNullOrEmpty(ids)) {
+    private static void writeTombstone(Mailbox mbox, MailItem.Type type, String row) throws ServiceException {
+        if (Strings.isNullOrEmpty(row))
             return;
-        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -1724,10 +1730,10 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setByte(pos++, type.toByte());
-            stmt.setString(pos++, ids);
+            stmt.setString(pos++, row);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing tombstones for " + type + "(s): " + ids, e);
+            throw ServiceException.FAILURE("writing tombstones for " + type + "(s): " + row, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -1754,11 +1760,19 @@ public class DbMailItem {
                 String row = rs.getString(2);
                 if (row == null || row.equals(""))
                     continue;
-                for (String entry : row.split(",")) {
+
+                // the list of tombstones is comma-delimited
+                for (String stone : row.split(",")) {
                     try {
-                        tombstones.add(type, Integer.parseInt(entry));
+                        // a tombstone may either be ID or ID:UUID, so parse accordingly
+                        int delimiter = stone.indexOf(':');
+                        if (delimiter == -1) {
+                            tombstones.add(type, Integer.parseInt(stone), null);
+                        } else {
+                            tombstones.add(type, Integer.parseInt(stone.substring(0, delimiter)), Strings.emptyToNull(stone.substring(delimiter + 1)));
+                        }
                     } catch (NumberFormatException nfe) {
-                        ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + entry);
+                        ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + stone);
                     }
                 }
             }
@@ -2445,7 +2459,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : typeIn(type);
-            stmt = conn.prepareStatement("SELECT id, type, folder_id" +
+            stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
                         " ORDER BY mod_metadata, id");
@@ -2461,7 +2475,7 @@ public class DbMailItem {
                 if (visible == null || visible.contains(rs.getInt(3))) {
                     modified.add(rs.getInt(1));
                 } else {
-                    missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1));
+                    missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(4));
                 }
             }
 
@@ -2547,7 +2561,7 @@ public class DbMailItem {
     }
 
     static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, blob_digest," +
-                                           " mod_content, mod_metadata, flags, index_id, volume_id, tag_names";
+                                           " mod_content, mod_metadata, flags, index_id, volume_id, tag_names, uuid";
 
     private static final int LEAF_CI_ID           = 1;
     private static final int LEAF_CI_SIZE         = 2;
@@ -2562,6 +2576,7 @@ public class DbMailItem {
     private static final int LEAF_CI_INDEX_ID     = 11;
     private static final int LEAF_CI_VOLUME_ID    = 12;
     private static final int LEAF_CI_TAGS         = 13;
+    private static final int LEAF_CI_UUID         = 14;
 
     public static PendingDelete getLeafNodes(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
@@ -2569,8 +2584,8 @@ public class DbMailItem {
         QueryParams params = new QueryParams();
         params.setFolderIds(Collections.singletonList(folderId));
         PendingDelete info = getLeafNodes(mbox, params);
-        // make sure that the folder is in the list of deleted item ids
-        info.itemIds.add(folder.getType(), folderId);
+        // make sure that the folder is in the list of deleted items
+        info.itemIds.add(folder.getType(), folderId, folder.getUuid());
         return info;
     }
 
@@ -2758,15 +2773,16 @@ public class DbMailItem {
             }
 
             int id = rs.getInt(LEAF_CI_ID);
+            String uuid = rs.getString(LEAF_CI_UUID);
             long size = rs.getLong(LEAF_CI_SIZE);
             MailItem.Type type = MailItem.Type.of(rs.getByte(LEAF_CI_TYPE));
 
-            Integer item = new Integer(id);
-            info.itemIds.add(type, item);
+            Integer itemId = new Integer(id);
+            info.itemIds.add(type, itemId, uuid);
             info.size += size;
 
             if (rs.getBoolean(LEAF_CI_IS_UNREAD)) {
-                info.unreadIds.add(item);
+                info.unreadIds.add(itemId);
             }
             boolean isMessage = false;
             switch (type) {
@@ -2783,7 +2799,8 @@ public class DbMailItem {
             if (isMessage) {
                 int parentId = rs.getInt(LEAF_CI_PARENT_ID);
                 if (rs.wasNull() || parentId <= 0) {
-                    info.itemIds.add(MailItem.Type.VIRTUAL_CONVERSATION, -id);
+                    // conversations don't have UUIDs, so this is safe
+                    info.itemIds.add(MailItem.Type.VIRTUAL_CONVERSATION, -id, null);
                 } else {
                     info.modifiedIds.add(parentId);
                 }
@@ -2915,18 +2932,19 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT type, id " +
+            stmt = conn.prepareStatement("SELECT type, id, uuid " +
                     " FROM " + getMailItemTableName(mbox) +
                     " WHERE " + DbUtil.whereIn("parent_id", documents.size()) +
                     (DebugConfig.disableMailboxGroups ? "" : " AND mailbox_id = ?"));
             int pos = 1;
-            for (int id : documents)
+            for (int id : documents) {
                 stmt.setInt(pos++, id);
+            }
             pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                info.itemIds.add(MailItem.Type.of(rs.getByte(1)), rs.getInt(2));
+                info.itemIds.add(MailItem.Type.of(rs.getByte(1)), rs.getInt(2), rs.getString(3));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting Comment deletion info for items: " + documents, e);
@@ -3178,7 +3196,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+            stmt = conn.prepareStatement("SELECT id, type, uuid FROM " + getMailItemTableName(folder) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
@@ -3187,7 +3205,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                result.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1));
+                result.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(3));
             }
             return result;
         } catch (SQLException e) {
@@ -3472,12 +3490,12 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = calendarItemStatement(conn, "mi.id, mi.type", mbox, type, start, end, folderId, excludeFolderIds);
+            stmt = calendarItemStatement(conn, "mi.id, mi.type, mi.uuid", mbox, type, start, end, folderId, excludeFolderIds);
             rs = stmt.executeQuery();
 
             TypedIdList result = new TypedIdList();
             while (rs.next()) {
-                result.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1));
+                result.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(3));
             }
             return result;
         } catch (SQLException e) {
@@ -4171,7 +4189,7 @@ public class DbMailItem {
 
     public static TypedIdList listItems(Folder folder, long messageSyncStart, MailItem.Type type, boolean descending, boolean older) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+        assert Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox);
 
         TypedIdList result = new TypedIdList();
         DbConnection conn = mbox.getOperationConnection();
@@ -4179,11 +4197,11 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             if (older) {
-                stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                stmt = conn.prepareStatement("SELECT id, type, uuid FROM " + getMailItemTableName(folder) +
                         " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND folder_id = ? AND date < ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             } else {
-                stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                stmt = conn.prepareStatement("SELECT id, type, uuid FROM " + getMailItemTableName(folder) +
                         " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND folder_id = ? AND date >= ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             }
@@ -4196,7 +4214,7 @@ public class DbMailItem {
 
             while (rs.next()) {
                 MailItem.Type dataType = MailItem.Type.of(rs.getByte(2));
-                result.add(dataType, rs.getInt(1));
+                result.add(dataType, rs.getInt(1), rs.getString(3));
             }
             return result;
         } catch (SQLException e) {

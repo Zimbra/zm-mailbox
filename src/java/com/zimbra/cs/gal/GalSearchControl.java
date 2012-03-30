@@ -508,7 +508,7 @@ public class GalSearchControl {
                 List<Integer> deleted = null;
                 if (changeId > 0) {
                     try {
-                        deleted = mbox.getTombstones(changeId).getAll();
+                        deleted = mbox.getTombstones(changeId).getAllIds();
                     } catch (MailServiceException e) {
                         if (MailServiceException.MUST_RESYNC == e.getCode()) {
                             ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);

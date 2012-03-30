@@ -263,7 +263,7 @@ public class Sync extends MailDocumentHandler {
                 if (targetIds == null || targetIds.contains(folder.getId())) {
                     ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
                 } else {
-                    tombstones.add(folder.getType(), folder.getId());
+                    tombstones.add(folder.getType(), folder.getId(), folder.getUuid());
                 }
             }
         }
@@ -305,7 +305,7 @@ public class Sync extends MailDocumentHandler {
 
         // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
         if (changed.getSecond() != null) {
-            tombstones.add(changed.getSecond());
+            tombstones.addAll(changed.getSecond());
         }
 
         // cleanup: only return a <deleted> element if we're sending back deleted item ids
@@ -313,12 +313,12 @@ public class Sync extends MailDocumentHandler {
             eDeleted.detach();
         } else {
             StringBuilder deleted = new StringBuilder(), typed = new StringBuilder();
-            for (Map.Entry<MailItem.Type, List<Integer>> entry : tombstones) {
+            for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : tombstones) {
                 typed.setLength(0);
-                for (Integer id : entry.getValue()) {
-                    deleted.append(deleted.length() == 0 ? "" : ",").append(id);
+                for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
+                    deleted.append(deleted.length() == 0 ? "" : ",").append(iinfo.getId());
                     if (typedDeletes) {
-                        typed.append(typed.length() == 0 ? "" : ",").append(id);
+                        typed.append(typed.length() == 0 ? "" : ",").append(iinfo.getId());
                     }
                 }
                 if (typedDeletes) {

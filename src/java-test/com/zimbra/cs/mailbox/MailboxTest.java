@@ -14,20 +14,26 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -349,5 +355,56 @@ public final class MailboxTest {
         Assert.assertFalse("third reply not muted", msg4.isTagged(Flag.FlagInfo.MUTED));
         Assert.assertFalse("third reply in real conv", msg4.getConversationId() < 0);
         Assert.assertFalse("real conversation not muted", mbox.getConversationById(null, msg4.getConversationId()).isTagged(Flag.FlagInfo.MUTED));
+    }
+
+    @Test
+    public void tombstones() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        mbox.beginTrackingSync();
+        int token = mbox.getLastChangeID();
+
+        Document doc1 = DocumentTest.createDocument(mbox, "doc1", "abcdefg", false);
+        Document doc2 = DocumentTest.createDocument(mbox, "doc2", "tuvwxyz", false);
+
+        Set<Integer> ids = Sets.newHashSet(doc1.getId(), doc2.getId());
+        Set<String> uuids = Sets.newHashSet(doc1.getUuid(), doc2.getUuid());
+        Assert.assertEquals("2 different UUIDs", 2, uuids.size());
+
+        mbox.delete(null, ArrayUtil.toIntArray(ids), MailItem.Type.DOCUMENT, null);
+
+        TypedIdList tombstones = mbox.getTombstones(token);
+        Assert.assertEquals("2 tombstones", 2, tombstones.size());
+        for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> row : tombstones) {
+            Assert.assertEquals("all tombstones are for Documents", MailItem.Type.DOCUMENT, row.getKey());
+            for (TypedIdList.ItemInfo iinfo : row.getValue()) {
+                Assert.assertTrue(iinfo + ": id contained in set", ids.remove(iinfo.getId()));
+                Assert.assertTrue(iinfo + ": uuid contained in set", uuids.remove(iinfo.getUuid()));
+            }
+        }
+
+
+        token = mbox.getLastChangeID();
+
+        Message msg = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), STANDARD_DELIVERY_OPTIONS, null);
+        Document doc3 = DocumentTest.createDocument(mbox, "doc3", "lmnop", false);
+        Folder folder = mbox.createFolder(null, "test", (byte) 0, MailItem.Type.UNKNOWN);
+
+        ids = Sets.newHashSet(doc3.getId(), msg.getId(), folder.getId());
+        uuids = Sets.newHashSet(doc3.getUuid(), msg.getUuid(), folder.getUuid());
+        Assert.assertEquals("3 different UUIDs", 3, uuids.size());
+
+        mbox.move(null, new int[] { doc3.getId(), msg.getId() }, MailItem.Type.UNKNOWN, folder.getId(), null);
+        mbox.delete(null, folder.getId(), MailItem.Type.FOLDER, null);
+
+        tombstones = mbox.getTombstones(token);
+        Assert.assertEquals("3 tombstones", 3, tombstones.size());
+        for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> row : tombstones) {
+            Assert.assertTrue("expected tombstone types", EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.MESSAGE, MailItem.Type.DOCUMENT).contains(row.getKey()));
+            Assert.assertEquals("1 tombstone per type", 1, row.getValue().size());
+            for (TypedIdList.ItemInfo iinfo : row.getValue()) {
+                Assert.assertTrue(iinfo + ": id contained in set", ids.remove(iinfo.getId()));
+                Assert.assertTrue(iinfo + ": uuid contained in set", uuids.remove(iinfo.getUuid()));
+            }
+        }
     }
 }

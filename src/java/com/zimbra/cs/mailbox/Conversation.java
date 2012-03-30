@@ -23,18 +23,18 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.session.Session;
 
 /**
  * @since Jun 13, 2004
@@ -768,7 +768,7 @@ public class Conversation extends MailItem {
     @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
-        info.itemIds.add(getType(), mId);
+        info.itemIds.add(getType(), mId, mData.uuid);
 
         if (mData.size == 0) {
             return info;

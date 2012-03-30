@@ -3154,7 +3154,7 @@ public class Mailbox {
     }
 
     public List<Integer> listTombstones(int lastSync) throws ServiceException {
-        return getTombstones(lastSync).getAll();
+        return getTombstones(lastSync).getAllIds();
     }
 
     public TypedIdList getTombstones(int lastSync) throws ServiceException {
@@ -6245,7 +6245,7 @@ public class Mailbox {
      * @param targetId  The ID of the target folder for the move.
      * @param tcon      An optional constraint on the items being moved. */
     public void move(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId, TargetConstraint tcon)
-            throws ServiceException {
+    throws ServiceException {
         lock.lock();
         try {
             try {
@@ -6281,7 +6281,7 @@ public class Mailbox {
     }
 
     private String generateAlternativeItemName(OperationContext octxt, int id, MailItem.Type type)
-            throws ServiceException {
+    throws ServiceException {
         String name = getItemById(octxt, id, type).getName();
         String uuid = '{' + UUID.randomUUID().toString() + '}';
         if (name.length() + uuid.length() > MailItem.MAX_NAME_LENGTH) {
@@ -6292,7 +6292,8 @@ public class Mailbox {
     }
 
     private void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
-            TargetConstraint tcon) throws ServiceException {
+            TargetConstraint tcon)
+    throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
         boolean success = false;
@@ -7467,7 +7468,7 @@ public class Mailbox {
                     if (info.itemIds.isEmpty())
                         break;
 
-                    redoRecorder.setIds(ArrayUtil.toIntArray(info.itemIds.getAll()));
+                    redoRecorder.setIds(ArrayUtil.toIntArray(info.itemIds.getAllIds()));
                     MailItem.delete(this, info, null, true, false);
                     success = true;
                 } finally {

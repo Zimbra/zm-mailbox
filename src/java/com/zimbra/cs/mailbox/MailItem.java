@@ -2888,7 +2888,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 size     += other.size;
                 contacts += other.contacts;
 
-                itemIds.add(other.itemIds);
+                itemIds.addAll(other.itemIds);
                 unreadIds.addAll(other.unreadIds);
                 modifiedIds.addAll(other.modifiedIds);
                 indexIds.addAll(other.indexIds);
@@ -3016,7 +3016,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             // If there are any related items being deleted, log them in blocks of 200.
             int itemId = item == null ? 0 : Math.abs(item.getId()); // Use abs() for VirtualConversations
             Set<Integer> idSet = new TreeSet<Integer>();
-            for (int id : info.itemIds.getAll()) {
+            for (int id : info.itemIds.getAllIds()) {
                 id = Math.abs(id); // Use abs() for VirtualConversations
                 if (id != itemId) {
                     idSet.add(id);
@@ -3044,7 +3044,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             }
         } else if (!info.itemIds.isEmpty()) {
             // we're doing an old-item expunge or the like rather than a single delete/empty op
-            for (int itemId : info.itemIds.getAll()) {
+            for (int itemId : info.itemIds.getAllIds()) {
                 mbox.uncacheItem(itemId);
             }
 
@@ -3069,7 +3069,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             } catch (ServiceException se) {
                 MailboxErrorUtil.handleCascadeFailure(mbox, info.cascadeIds, se);
             }
-            info.itemIds.add(Type.CONVERSATION, info.cascadeIds);
+            // conversations don't have UUIDs, so this is safe
+            for (Integer id : info.cascadeIds) {
+                info.itemIds.add(Type.CONVERSATION, id, null);
+            }
         }
 
         // deal with index sharing
@@ -3119,7 +3122,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         Integer id = new Integer(mId);
         PendingDelete info = new PendingDelete();
         info.size   = getTotalSize();
-        info.itemIds.add(getType(), id);
+        info.itemIds.add(getType(), id, mData.uuid);
 
         if (!inDumpster()) {
             if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_UNREAD).canTag(this)) {

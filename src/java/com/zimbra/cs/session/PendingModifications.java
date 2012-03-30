@@ -173,23 +173,23 @@ public final class PendingModifications {
         return count;
     }
 
-    public boolean overlapsWithAccount(String accountId) {
-        accountId = accountId == null ? null : accountId.toLowerCase();
+    public boolean overlapsWithAccount(String acctId) {
+        acctId = acctId == null ? null : acctId.toLowerCase();
         if (deleted != null) {
             for (ModificationKey mkey : deleted.keySet()) {
-                if (mkey.getAccountId().equals(accountId))
+                if (mkey.getAccountId().equals(acctId))
                     return true;
             }
         }
         if (created != null) {
             for (ModificationKey mkey : created.keySet()) {
-                if (mkey.getAccountId().equals(accountId))
+                if (mkey.getAccountId().equals(acctId))
                     return true;
             }
         }
         if (modified != null) {
             for (ModificationKey mkey : modified.keySet()) {
-                if (mkey.getAccountId().equals(accountId)) {
+                if (mkey.getAccountId().equals(acctId)) {
                     return true;
                 }
             }
@@ -205,21 +205,20 @@ public final class PendingModifications {
         created.put(new ModificationKey(item), item);
     }
 
-    public void recordDeleted(
-            String accountId, int id, MailItem.Type type, MailboxOperation operation, long timestamp) {
+    public void recordDeleted(String acctId, int id, MailItem.Type type, MailboxOperation operation, long timestamp) {
         if (type != MailItem.Type.UNKNOWN) {
             changedTypes.add(type);
         }
-        ModificationKey key = new ModificationKey(accountId, id);
+        ModificationKey key = new ModificationKey(acctId, id);
         delete(key, type, operation, timestamp, null);
     }
 
-    public void recordDeleted(String accountId, TypedIdList idlist, MailboxOperation operation, long timestamp) {
+    public void recordDeleted(String acctId, TypedIdList idlist, MailboxOperation operation, long timestamp) {
         changedTypes.addAll(idlist.types());
-        for (Map.Entry<MailItem.Type, List<Integer>> entry : idlist) {
+        for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : idlist) {
             MailItem.Type type = entry.getKey();
-            for (Integer id : entry.getValue()) {
-                delete(new ModificationKey(accountId, id), type, operation, timestamp, null);
+            for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
+                delete(new ModificationKey(acctId, iinfo.getId()), type, operation, timestamp, null);
             }
         }
     }
@@ -245,9 +244,9 @@ public final class PendingModifications {
     }
 
     private void delete(ModificationKey key, Change chg) {
-        if (created != null && created.remove(key) != null) {
+        if (created != null && created.remove(key) != null)
             return;
-        }
+
         if (modified != null) {
             modified.remove(key);
         }

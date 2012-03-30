@@ -213,7 +213,7 @@ public class CalDavDataImport extends MailItemImport {
         List<Integer> deleted = new ArrayList<Integer>();
         int lastSync = (int)rootFolder.getLastSyncDate();
         if (lastSync > 0) {
-            for (int itemId : mbox.getTombstones(lastSync).getAll())
+            for (int itemId : mbox.getTombstones(lastSync).getAllIds())
                 deleted.add(itemId);
         }
         CalDavClient client = getClient();
@@ -636,7 +636,7 @@ public class CalDavDataImport extends MailItemImport {
             if (lastSync > 0) {  // Don't push local changes during initial sync.
                 // push local deletion
                 List<Integer> deleted = new ArrayList<Integer>();
-                for (int itemId : mbox.getTombstones(lastSync).getAll()) {
+                for (int itemId : mbox.getTombstones(lastSync).getAllIds()) {
                     if (deletedFromRemote.contains(itemId)) {
                         continue;  // was just deleted from sync
                     }

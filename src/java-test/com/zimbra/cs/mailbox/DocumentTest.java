@@ -115,7 +115,7 @@ public final class DocumentTest {
         Assert.assertEquals(Flag.FlagInfo.NOTE.toBitmask(), doc.getFlagBitmask());
     }
 
-    private Document createDocument(Mailbox mbox, String name, String content, boolean isNote) throws Exception {
+    static Document createDocument(Mailbox mbox, String name, String content, boolean isNote) throws Exception {
         InputStream in = new ByteArrayInputStream(content.getBytes());
         ParsedDocument pd = new ParsedDocument(in, name, "text/plain", System.currentTimeMillis(), null, null);
         int flags = (isNote ? Flag.BITMASK_NOTE : 0);
