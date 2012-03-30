@@ -61,7 +61,7 @@ public class CachedThreadPoolTest {
             pool.execute(new MyTask(5000));
         
         //Let all the tasks be scheduled 
-        Thread.sleep(100);
+        Thread.sleep(1000);
        
         Assert.assertTrue(pool.getNumActiveThreads() == 5);
 
