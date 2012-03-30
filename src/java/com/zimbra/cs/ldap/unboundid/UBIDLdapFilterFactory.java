@@ -757,6 +757,16 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ALL_DOMAINS,
                 FILTER_ALL_DOMAINS);
     }
+    
+    @Override
+    public ZLdapFilter domainAliases(String id) {
+        return new UBIDLdapFilter(
+                FilterId.DOMAIN_ALIASES,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraDomainAliasTargetId, id), // zimbraDomainAliasTargetId is indexed, bug 72309
+                        FILTER_ALL_DOMAINS,
+                        Filter.createEqualityFilter(Provisioning.A_zimbraDomainType, Provisioning.DomainType.alias.name())));
+    }
 
     @Override
     public ZLdapFilter domainById(String id) {

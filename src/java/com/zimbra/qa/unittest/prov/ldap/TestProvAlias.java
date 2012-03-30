@@ -95,12 +95,12 @@ public class TestProvAlias extends LdapTest {
         Map<String, Object> attrs = new HashMap<String, Object>();
         
         // create the local domain
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain localDomain = provUtil.createDomain(LOCAL_DOMAIN_NAME, attrs);
         
         // create the alias domain
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_ALIAS);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.alias.name());
         attrs.put(Provisioning.A_zimbraDomainAliasTargetId, localDomain.getId());
         Domain aliasDomain = provUtil.createDomain(ALIAS_DOMAIN_NAME, attrs);
     }
@@ -256,7 +256,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EE-AE-aliasPointToEntry" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -316,7 +316,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EE-AE-aliasPointToOtherEntry" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account the alias points to
@@ -346,17 +346,20 @@ public class TestProvAlias extends LdapTest {
         // the hacked attrs should be removed after the removeAlais call
         {
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_mail, aliasName);
+            
+            // can no long do this, we now have an unique constraint on mail
+            // attributes.put(Provisioning.A_mail, aliasName);
+            
             attributes.put(Provisioning.A_zimbraMailAlias, aliasName);
             LdapEntry ldapAccount = (LdapEntry)otherAcct;
             ((LdapProv) prov).getHelper().modifyEntry(ldapAccount.getDN(), attributes, 
                     (Entry)ldapAccount, LdapUsage.UNITTEST);
             
-            // make the attrs did get hacked in
+            // make sure the attrs did get hacked in
             prov.reload(otherAcct);
             Set<String> values;
-            values = otherAcct.getMultiAttrSet(Provisioning.A_mail);
-            assertTrue(values.contains(aliasName));
+            // values = otherAcct.getMultiAttrSet(Provisioning.A_mail);
+            // assertTrue(values.contains(aliasName));
             values = otherAcct.getMultiAttrSet(Provisioning.A_zimbraMailAlias);
             assertTrue(values.contains(aliasName));
             
@@ -416,7 +419,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EE-AE-aliasPointToNonExistEntry" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -497,7 +500,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EE-AN" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -575,7 +578,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EN-AE-aliasPointToOtherEntry" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account the alias points to
@@ -641,7 +644,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EN-AE-aliasPointToNonExistEntry" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -719,7 +722,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = "EN-AN" + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -788,7 +791,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -851,7 +854,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -923,7 +926,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account
@@ -964,7 +967,7 @@ public class TestProvAlias extends LdapTest {
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
         domainName = domainName.toLowerCase();
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.local.name());
         Domain domain  = prov.createDomain(domainName, attrs);
         
         // create the account

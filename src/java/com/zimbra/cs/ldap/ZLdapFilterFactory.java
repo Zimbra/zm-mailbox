@@ -86,6 +86,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         DN_SUBTREE_MATCH(SINGLETON.dnSubtreeMatch("dn1", "dn2")),
 
+        DOMAIN_ALIASES(SINGLETON.domainAliases("{DOMAIN-ID}")),
         DOMAIN_BY_ID(SINGLETON.domainById("{DOMAIN-ID}")),
         DOMAIN_BY_NAME(SINGLETON.domainByName("{DOMAIN-NAME}")),
         DOMAIN_BY_KRB5_REALM(SINGLETON.domainByKrb5Realm("{DOMAIN-KRB5-REALM}")),
@@ -337,7 +338,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     /*
      * domain
      */
-    public abstract ZLdapFilter allDomains() ;
+    public abstract ZLdapFilter allDomains();
+    public abstract ZLdapFilter domainAliases(String id);
     public abstract ZLdapFilter domainById(String id);
     public abstract ZLdapFilter domainByName(String name);
     public abstract ZLdapFilter domainByKrb5Realm(String krb5Realm);

@@ -2324,7 +2324,7 @@ public class LdapProvisioning extends LdapProv {
             // creation, but do not allow modifies afterwards"
             String domainType = (String) domainAttrs.get(A_zimbraDomainType);
             if (domainType == null) {
-                domainType = DOMAIN_TYPE_LOCAL;
+                domainType = DomainType.local.name();
             } else {
                 domainAttrs.remove(A_zimbraDomainType); // add back later
             }
@@ -2362,7 +2362,7 @@ public class LdapProvisioning extends LdapProv {
             if (mailStatus == null)
                 entry.setAttr(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
 
-            if (domainType.equalsIgnoreCase(DOMAIN_TYPE_ALIAS)) {
+            if (domainType.equalsIgnoreCase(DomainType.alias.name())) {
                 entry.setAttr(A_zimbraMailCatchAllAddress, "@" + name);
             }
 
@@ -3010,27 +3010,116 @@ public class LdapProvisioning extends LdapProv {
             PermissionCache.invalidateCache(renamedAcct);
         }
     }
-
+    
     @Override
     public void deleteDomain(String zimbraId) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DOMAIN);
+            
+            Domain domain = getDomainById(zimbraId, zlc);
+            if (domain == null) {
+                throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
+            }
+            
+            List<String> aliasDomainIds = null;
+            if (domain.isLocal()) {
+                aliasDomainIds = getEmptyAliasDomainIds(zlc, domain);
+            }
+            
+            // delete the domain;
+            deleteDomainInternal(zlc, zimbraId);
+            
+            // delete all alias domains if any
+            if (aliasDomainIds != null) {
+                for (String aliasDomainId : aliasDomainIds) {
+                    deleteDomainInternal(zlc, aliasDomainId);
+                }
+            }
+            
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to delete domain " + zimbraId, e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+
+    }
+    
+    private List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain) 
+    throws ServiceException {
+        List<String> aliasDomainIds = new ArrayList<String>();
+        
+        ZSearchResultEnumeration ne = null;
+        try {
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
+                    new String[]{Provisioning.A_zimbraId, Provisioning.A_zimbraDomainName});
+            
+            ne = helper.searchDir(mDIT.domainBaseDN(), filterFactory.domainAliases(targetDomain.getId()), 
+                    searchControls, zlc, LdapServerType.MASTER);
+            
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                
+                String aliasDomainId = sr.getAttributes().getAttrString(Provisioning.A_zimbraId);
+                String aliasDomainName = sr.getAttributes().getAttrString(Provisioning.A_zimbraDomainName);
+                
+                // make sure the alias domain is ready to be deleted
+                String aliasDomainDn = sr.getDN();
+                String acctBaseDn = mDIT.domainDNToAccountBaseDN(aliasDomainDn);
+                String dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(aliasDomainDn);
+                
+                if (hasSubordinates(zlc, acctBaseDn) || hasSubordinates(zlc, dynGroupsBaseDn)) {
+                    throw ServiceException.FAILURE("alias domain " + aliasDomainName + 
+                            " of doamin " + targetDomain.getName() + " is not empty", null);
+                }
+                
+                if (aliasDomainId != null) {
+                    aliasDomainIds.add(aliasDomainId);
+                }
+            }
+        } finally {
+            ne.close();
+        }
+        
+        return aliasDomainIds;
+    }
+    
+    private boolean hasSubordinates(ZLdapContext zlc, String dn) throws ServiceException {
+        boolean hasSubordinates = false;
+        
+        ZSearchResultEnumeration ne = null;
+        try {
+            ne = helper.searchDir(dn,
+                    filterFactory.hasSubordinates(), ZSearchControls.SEARCH_CTLS_SUBTREE(),
+                    zlc, LdapServerType.MASTER);
+            hasSubordinates = ne.hasMore();
+        } finally {
+            if (ne != null) {
+                ne.close();
+            }
+        }
+        
+        return hasSubordinates;
+    }
+
+    public void deleteDomainInternal(ZLdapContext zlc, String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
         // if there aren't, we need to delete the people trees first, then delete the domain.
-        ZLdapContext zlc = null;
-        LdapDomain d = null;
+        LdapDomain domain = null;
         String acctBaseDn = null;
         String dynGroupsBaseDn = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DOMAIN);
-
-            d = (LdapDomain) getDomainById(zimbraId, zlc);
-            if (d == null)
+            domain = (LdapDomain) getDomainById(zimbraId, zlc);
+            if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
-
-            String name = d.getName();
+            }
+            
+            String name = domain.getName();
 
             // delete account base DN
-            acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
-            if (!acctBaseDn.equals(d.getDN())) {
+            acctBaseDn = mDIT.domainDNToAccountBaseDN(domain.getDN());
+            if (!acctBaseDn.equals(domain.getDN())) {
                 try {
                     zlc.deleteEntry(acctBaseDn);
                 } catch (LdapEntryNotFoundException e) {
@@ -3039,8 +3128,8 @@ public class LdapProvisioning extends LdapProv {
             }
 
             // delete dynamic groups base DN
-            dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(d.getDN());
-            if (!dynGroupsBaseDn.equals(d.getDN())) {
+            dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(domain.getDN());
+            if (!dynGroupsBaseDn.equals(domain.getDN())) {
                 try {
                     zlc.deleteEntry(dynGroupsBaseDn);
                 } catch (LdapEntryNotFoundException e) {
@@ -3049,16 +3138,16 @@ public class LdapProvisioning extends LdapProv {
             }
 
             try {
-                zlc.deleteEntry(d.getDN());
-                domainCache.remove(d);
+                zlc.deleteEntry(domain.getDN());
+                domainCache.remove(domain);
             } catch (LdapContextNotEmptyException e) {
                 // remove from cache before nuking all attrs
-                domainCache.remove(d);
+                domainCache.remove(domain);
                 // assume subdomains exist and turn into plain dc object
                 Map<String, String> attrs = new HashMap<String, String>();
                 attrs.put("-"+A_objectClass, "zimbraDomain");
                 // remove all zimbra attrs
-                for (String key : d.getAttrs(false).keySet()) {
+                for (String key : domain.getAttrs(false).keySet()) {
                     if (key.startsWith("zimbra"))
                         attrs.put(key, "");
                 }
@@ -3066,7 +3155,7 @@ public class LdapProvisioning extends LdapProv {
                 // e.g. zimbraDomainStatus would add zimbraMailStatus, then we will get a LDAP
                 // schema violation naming error(zimbraDomain is removed, thus there cannot be
                 // any zimbraAttrs left) and the modify will fail.
-                modifyAttrs(d, attrs, false, false);
+                modifyAttrs(domain, attrs, false, false);
             }
 
             String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
@@ -3106,14 +3195,12 @@ public class LdapProvisioning extends LdapProv {
                 // quietly ignore
             } catch (ServiceException se) {
                 ZimbraLog.account.warn("unable to get sample entries in non-empty domain "
-                        + d.getName() + " for reporting", se);
+                        + domain.getName() + " for reporting", se);
             }
             sb.append("...)");
-            throw AccountServiceException.DOMAIN_NOT_EMPTY(d.getName() + sb.toString(), e);
+            throw AccountServiceException.DOMAIN_NOT_EMPTY(domain.getName() + sb.toString(), e);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge domain: "+zimbraId, e);
-        } finally {
-            LdapClient.closeContext(zlc);
         }
     }
 

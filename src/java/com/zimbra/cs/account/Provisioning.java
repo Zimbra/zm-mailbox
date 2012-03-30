@@ -162,20 +162,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String DOMAIN_STATUS_SHUTDOWN = "shutdown";
 
     /**
-     * An alias domain is a domain where ALL addresses in the domain
-     * are forwarded to the same local part of the address in another
-     * domain.
-     */
-    public static final String DOMAIN_TYPE_ALIAS = "alias";
-
-    /**
-     * A local domain is not an alias domain - ie the whole domain is
-     * not a forwarding domain, normal mailbox addresses and
-     * individually listed aliases exist.
-     */
-    public static final String DOMAIN_TYPE_LOCAL = "local";
-
-    /**
      * Compose mail in text format
      */
     public static final String MAIL_FORMAT_TEXT = "text";
@@ -459,8 +445,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         if (parts.length == 2) {
             Domain domain = getDomain(Key.DomainBy.name, parts[1], true);
             if (domain != null) {
-                String domainType = domain.getAttr(A_zimbraDomainType);
-                if (DOMAIN_TYPE_ALIAS.equals(domainType)) {
+                if (!domain.isLocal()) {
                     String targetDomainId = domain.getAttr(A_zimbraDomainAliasTargetId);
                     if (targetDomainId != null) {
                         domain = getDomainById(targetDomainId);

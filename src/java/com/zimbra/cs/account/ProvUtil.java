@@ -1506,11 +1506,10 @@ public class ProvUtil implements HttpDebugListener {
     private Domain doCreateAliasDomain(String aliasDomain, String localDoamin, Map<String, Object> attrs)
             throws ServiceException {
         Domain local = lookupDomain(localDoamin);
-        String localType = local.getAttr(Provisioning.A_zimbraDomainType);
-        if (!Provisioning.DOMAIN_TYPE_LOCAL.equals(localType)) {
+        if (!local.isLocal()) {
             throw ServiceException.INVALID_REQUEST("target domain must be a local domain", null);
         }
-        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_ALIAS);
+        attrs.put(Provisioning.A_zimbraDomainType, Provisioning.DomainType.alias.name());
         attrs.put(Provisioning.A_zimbraDomainAliasTargetId, local.getId());
         return prov.createDomain(aliasDomain, attrs);
     }
