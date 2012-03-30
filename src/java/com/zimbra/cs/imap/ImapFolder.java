@@ -1068,7 +1068,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                 getMailbox().resetImapUid(null, renumber);
             } catch (ServiceException e) {
                 if (debug) {
-                    ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): %d", renumber);
+                    ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): %s", renumber);
                 }
             }
         }

@@ -288,7 +288,7 @@ public class ImapSession extends Session {
                             if (folder != null) {
                                 mFolder = new PagedFolderData(serialize(active), folder);
                             } else {
-                                ZimbraLog.imap.warn("folder not found while reloading for relocate. probably already evicted");
+                                ZimbraLog.imap.debug("folder not found while reloading for relocate. probably already evicted");
                             }
                         } catch (ImapSessionClosedException e) {
                             throw ServiceException.FAILURE("Session closed while relocating paged item", e);
