@@ -80,7 +80,7 @@ public abstract class HttpStoreManager extends StoreManager {
         File localCacheDir = new File(tmpDir, "blobs");
         FileUtil.deleteDir(localCacheDir);
         FileUtil.ensureDirExists(localCacheDir);
-        localCache = FileCache.Builder.createWithStringKey(localCacheDir)
+        localCache = FileCache.Builder.createWithStringKey(localCacheDir, false)
             .maxFiles(LC.http_store_local_cache_max_files.intValue())
             .maxBytes(LC.http_store_local_cache_max_bytes.longValue())
             .minLifetime(LC.http_store_local_cache_min_lifetime.longValue())
@@ -89,7 +89,7 @@ public abstract class HttpStoreManager extends StoreManager {
         // initialize file uncompressed file cache and file descriptor cache
         File ufCacheDir = new File(tmpDir, "uncompressed");
         FileUtil.ensureDirExists(ufCacheDir);
-        FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir)
+        FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir, false)
             .maxFiles(LC.http_store_local_cache_max_files.intValue())
             .maxBytes(LC.http_store_local_cache_max_bytes.longValue())
             .minLifetime(LC.http_store_local_cache_min_lifetime.longValue())

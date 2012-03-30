@@ -61,7 +61,7 @@ public class FileDescriptorCacheTest {
     @Test
     public void testUncompressedCache()
     throws Exception {
-        FileCache<String> uc = FileCache.Builder.createWithStringKey(uncompressedDir).build();
+        FileCache<String> uc = FileCache.Builder.createWithStringKey(uncompressedDir, false).build();
         FileDescriptorCache fdc = new FileDescriptorCache(uc);
         fdc.setMaxSize(2);
 
