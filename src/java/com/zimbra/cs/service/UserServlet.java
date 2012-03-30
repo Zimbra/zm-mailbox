@@ -126,7 +126,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_AUTHTOKEN = "authToken";
 
     public static final String QP_FMT = "fmt"; // format query param
-    
+
     public static final String QP_NOHIERARCHY = "nohierarchy"; // nohierarchy query param
 
     public static final String QP_ZLV = "zlv"; // zip level query param
@@ -786,7 +786,7 @@ public class UserServlet extends ZimbraServlet {
 
     /** Helper class so that we can close connection upon stream close */
     public static class HttpInputStream extends FilterInputStream {
-        private HttpMethod method;
+        private final HttpMethod method;
 
         public HttpInputStream(HttpMethod m) throws IOException {
             super(m.getResponseBodyAsStream());

@@ -326,7 +326,7 @@ public final class NativeFormatter extends Formatter {
             if (neuter)
                 sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
             else
-                sendbackBinaryData(context.req, context.resp, is, contentType, null, doc.getName(), doc.getSize());
+                sendbackBinaryData(context.req, context.resp, is, contentType, null , doc.getName(), doc.getSize());
         }
     }
 
@@ -539,7 +539,7 @@ public final class NativeFormatter extends Formatter {
             if (bytesRead > 0)
                 pis.unread(buf, 0, bytesRead);
         }
-        String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
+        String cd = HttpUtil.createContentDisposition(req, disposition, filename == null ? "unknown" : filename);
         resp.addHeader("Content-Disposition", cd);
         if (size > 0)
             resp.setContentLength((int)size);

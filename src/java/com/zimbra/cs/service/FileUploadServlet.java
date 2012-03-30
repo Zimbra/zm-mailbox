@@ -48,6 +48,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key;
@@ -115,6 +116,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             assert(attachment != null); // TODO: Remove null checks in mainline.
+
 
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
@@ -580,6 +582,9 @@ public class FileUploadServlet extends ZimbraServlet {
             sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
             return Collections.emptyList();
         }
+
+        // Unescape the filename so it actually displays correctly
+        filename = StringEscapeUtils.unescapeHtml(filename);
 
         // store the fetched file as a normal upload
         ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);

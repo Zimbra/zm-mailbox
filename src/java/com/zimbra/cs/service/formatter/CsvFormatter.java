@@ -85,7 +85,7 @@ public class CsvFormatter extends Formatter {
         String filename = context.itemPath;
         if (filename == null || filename.length() == 0)
             filename = "contacts";
-        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".csv");
+        String cd = HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT, filename);
         context.resp.addHeader("Content-Disposition", cd);
         context.resp.setCharacterEncoding(context.getCharset().name());
         context.resp.setContentType("text/csv");

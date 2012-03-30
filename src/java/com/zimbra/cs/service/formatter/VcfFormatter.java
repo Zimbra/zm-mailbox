@@ -64,8 +64,7 @@ public class VcfFormatter extends Formatter {
 
             String filename = context.target instanceof Contact ?
                     ((Contact) context.target).getFileAsString() : "contacts";
-            String cd = Part.ATTACHMENT + "; filename=" +
-            HttpUtil.encodeFilename(context.req, filename + ".vcf");
+            String cd = HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT,filename +".vcf");
             context.resp.addHeader("Content-Disposition", cd);
             context.resp.setContentType(MimeConstants.CT_TEXT_VCARD_LEGACY);  // for backward compatibility
             context.resp.setCharacterEncoding(charset.name());

@@ -212,7 +212,7 @@ public class SyncFormatter extends Formatter {
         String filename = Mime.getFilename(mp);
         if (filename == null)
             filename = "unknown";
-        String cd = Part.INLINE + "; filename=" + HttpUtil.encodeFilename(req, filename);
+        String cd = HttpUtil.createContentDisposition(req, Part.INLINE, filename);
         resp.addHeader("Content-Disposition", cd);
         String desc = mp.getDescription();
         if (desc != null)

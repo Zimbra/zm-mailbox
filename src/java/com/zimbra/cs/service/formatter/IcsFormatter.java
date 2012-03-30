@@ -109,7 +109,7 @@ public class IcsFormatter extends Formatter {
             else
                 filename = filename.replaceAll("^\\W",""); // Trim off leading non-word characters (e.g. forward slash)
 
-            String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".ics");
+            String cd = HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT, requestFilename);
             context.resp.addHeader("Content-Disposition", cd);
         }
         Browser browser = HttpUtil.guessBrowser(context.req);

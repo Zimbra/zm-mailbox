@@ -107,8 +107,8 @@ import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 
 public abstract class ArchiveFormatter extends Formatter {
-    private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
-    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|\\\0]");
+    private final Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
+    private final Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private static String UTF8 = "UTF-8";
     public static enum Resolve { Modify, Replace, Reset, Skip }
     public static final String PARAM_RESOLVE = "resolve";
@@ -217,8 +217,9 @@ public abstract class ArchiveFormatter extends Formatter {
             if (emptyname != null && !emptyname.equals("") &&
                 !emptyname.endsWith(ext))
                 emptyname += ext;
-            context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
-                "; filename=" + HttpUtil.encodeFilename(context.req, filename));
+
+            context.resp.addHeader("Content-Disposition", HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT, filename));
+
             if (ext.equals(".tar"))
                 context.resp.setContentType("application/x-tar");
             else if (ext.equals(".tgz"))
@@ -310,8 +311,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     context.resp.setHeader("Content-Disposition", null);
                     throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "No data found");
                 }
-                context.resp.setHeader("Content-Disposition", Part.ATTACHMENT +
-                        "; filename=" + HttpUtil.encodeFilename(context.req, emptyname));
+                context.resp.setHeader("Content-Disposition", HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT, filename));
                 aos = getOutputStream(context, UTF8);
             }
         } finally {
@@ -508,7 +508,7 @@ public abstract class ArchiveFormatter extends Formatter {
             if (aos == null) {
                 aos = getOutputStream(context, charsetEncoder.charset().name());
             }
-            
+
             if ((mi instanceof CalendarItem) &&
                     (context.getStartTime() != TIME_UNSPECIFIED || context.getEndTime() != TIME_UNSPECIFIED)) {
                 Collection<Instance> instances = ((CalendarItem)mi).expandInstances(
@@ -516,7 +516,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (instances.isEmpty())
                     return aos;
             }
-            
+
             aoe = aos.newOutputEntry(path + ".meta", mi.getType().toString(), mi.getType().toByte(), mi.getDate());
             if (mi instanceof Message && (mi.getFlagBitmask() & Flag.ID_UNREAD) != 0) {
                 aoe.setUnread();
