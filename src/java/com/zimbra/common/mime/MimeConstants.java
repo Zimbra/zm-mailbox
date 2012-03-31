@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,6 +30,7 @@ public class MimeConstants {
     public static final String CT_TEXT_XML_LEGACY = "application/xml";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
     public static final String CT_APPLICATION_XHTML = "application/xhtml+xml";
+    public static final String CT_APPLICATION_JSON = "application/json";
     public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_APPLICATION_BINARY = "application/binary";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
@@ -51,6 +52,7 @@ public class MimeConstants {
     public static final String CT_APPLICATION_WILD = "application/.*";
     public static final String CT_IMAGE_WILD = "image/.*";
     public static final String CT_IMAGE_SVG = "image/svg+xml";
+    public static final String CT_IMAGE_PNG = "image/png";
     public static final String CT_AUDIO_WILD = "audio/.*";
     public static final String CT_VIDEO_WILD = "video/.*";
     public static final String CT_MULTIPART_WILD = "multipart/.*";
@@ -81,8 +83,8 @@ public class MimeConstants {
     public static final String P_CHARSET_WINDOWS_31J = "Windows-31J";
     public static final String P_CHARSET_SHIFT_JIS = "shift_jis";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
-    
-    public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = 
+
+    public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET =
         new ImmutableSet.Builder<String>().add(CT_APPLICATION_ZIMBRA_DOC,
                                                CT_APPLICATION_ZIMBRA_SLIDES,
                                                CT_APPLICATION_ZIMBRA_SPREADSHEET).build();
