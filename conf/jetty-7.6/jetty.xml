@@ -385,6 +385,7 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/service</Set>
+      <Set name="compactPath">true</Set>
       <Call name="setAttribute">
         <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
 		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
@@ -398,6 +399,7 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
+      <Set name="compactPath">true</Set>
       <Get name="errorHandler">
         <Call name="addErrorPage">
           <Arg type="int">400</Arg>
@@ -418,6 +420,7 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
+      <Set name="compactPath">true</Set>
       <Call name="setAttribute">
         <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
 		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
@@ -432,6 +435,7 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimlet</Set>
+      <Set name="compactPath">true</Set>
       <Set name="baseResource">
         <New class="org.eclipse.jetty.util.resource.ResourceCollection">
           <Arg>
