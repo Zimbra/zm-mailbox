@@ -271,7 +271,7 @@ public final class DateUtilTest {
 
     @Test
     public void toImapDateTime() throws Exception {
-        Assert.assertEquals("31-Dec-1969 16:00:00 -0800", DateUtil.toImapDateTime(new Date(0L)));
+        Assert.assertEquals("31-Dec-1969 16:00:00 -0800", DateUtil.toImapDateTime(new Date(0L), TimeZone.getTimeZone("US/Pacific")));
     }
 
     @Test

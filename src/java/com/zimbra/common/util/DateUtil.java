@@ -97,7 +97,11 @@ public final class DateUtil {
     private static final String[] MONTH_NAME = new String[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     public static String toImapDateTime(Date date) {
-        Calendar cal = new GregorianCalendar();
+        return toImapDateTime(date, TimeZone.getDefault());
+    }
+
+    public static String toImapDateTime(Date date, TimeZone tz) {
+        Calendar cal = new GregorianCalendar(tz);
         cal.setTime(date);
 
         StringBuilder sb = new StringBuilder(40);
