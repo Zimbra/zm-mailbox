@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxUpgrade;
 import com.zimbra.cs.mailbox.MigrateToDocuments;
+import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class MigrateAccount extends AdminDocumentHandler {
@@ -41,6 +42,7 @@ public class MigrateAccount extends AdminDocumentHandler {
     }
 
     private static enum Action {
+        bug72174,
         contactGroup,
         wiki;
         
@@ -81,6 +83,9 @@ public class MigrateAccount extends AdminDocumentHandler {
             case wiki:
                 migrateWiki(account);
                 break;
+            case bug72174:
+                migrateCalendar(account);
+                break;
             default: 
                 throw ServiceException.INVALID_REQUEST("unsupported action " + action.name(), null);
         }
@@ -100,6 +105,15 @@ public class MigrateAccount extends AdminDocumentHandler {
     private void migrateWiki(Account account) throws ServiceException {
         MigrateToDocuments toDoc = new MigrateToDocuments();
         toDoc.handleAccount(account);
+    }
+    
+    private void migrateCalendar(Account account) throws ServiceException {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
+        if (mbox == null) {
+            throw ServiceException.INVALID_REQUEST("no mailbox", null);
+        }
+        
+        CalendarUtils.migrateAppointmentsAndTasks(mbox);
     }
     
     @Override

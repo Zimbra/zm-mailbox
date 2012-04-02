@@ -2534,7 +2534,7 @@ Returns the memcached client configuration on a mailbox server.
 ----------------------------
 
 <MigrateAccountRequest>
-  <migrate action="wiki|contactGroup" id="{zimbraId-of-account}"/>
+  <migrate action="bug72174|wiki|contactGroup" id="{zimbraId-of-account}"/>
 </MigrateAccountRequest>
 
 <MigrateAccountResponse/>

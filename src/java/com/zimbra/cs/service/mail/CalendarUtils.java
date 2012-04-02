@@ -48,11 +48,13 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupMembers;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -73,6 +75,7 @@ import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
+import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 public class CalendarUtils {
@@ -1493,5 +1496,54 @@ public class CalendarUtils {
         cancel.setDtStamp(new Date().getTime());
 
         return cancel;
+    }
+    
+    /**
+     * Move appointments from TASKS type folders to Calendar folder. 
+     * Also, move tasks from APPOINTMENT type folders to Tasks folder.
+     * @param mbox
+     * @throws ServiceException
+     */
+    
+    public static void migrateAppointmentsAndTasks(Mailbox mbox) throws ServiceException {
+        // get the list of folders.
+        List<Folder> folderList = mbox.getFolderList(null, SortBy.NONE);
+
+        for (Folder folder : folderList) {
+            int targetId;
+            TypedIdList idlist;
+            MailItem.Type type;
+            
+            if (folder.getDefaultView() == MailItem.Type.APPOINTMENT) {
+                // get tasks from this folder and move them to TASKS folder.
+                idlist = mbox.listCalendarItemsForRange(null, MailItem.Type.TASK, 0, 0, folder.getId());
+                targetId = Mailbox.ID_FOLDER_TASKS;
+                type = MailItem.Type.TASK;
+            } else if (folder.getDefaultView() == MailItem.Type.TASK) {
+                // get appointments from this folder and move them to Calendar folder.
+                idlist = mbox.listCalendarItemsForRange(null, MailItem.Type.APPOINTMENT, 0, 0, folder.getId());
+                targetId = Mailbox.ID_FOLDER_CALENDAR;
+                type = MailItem.Type.APPOINTMENT;
+            } else {
+                continue;
+            }
+            
+            if (!idlist.isEmpty()) {
+                if (type == MailItem.Type.APPOINTMENT)
+                    ZimbraLog.calendar.info("Migrating " + idlist.size() + " Appointment(s) from '" + 
+                            folder.getName() + "' to 'Calendar' folder for mailbox " + mbox.getId());
+                else 
+                    ZimbraLog.calendar.info("Migrating " + idlist.size() + " Task(s) from '" + 
+                            folder.getName() + "' to 'Tasks' folder for mailbox " + mbox.getId());
+                
+                int[] items = new int[idlist.size()];
+                int i = 0;
+                for (Integer id : idlist.getAllIds()) {
+                    items[i] = id.intValue();
+                    i++;
+                }
+                mbox.move(null, items, type, targetId, null);
+            }
+        }
     }
 }
