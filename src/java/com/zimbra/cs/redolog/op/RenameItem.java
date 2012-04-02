@@ -32,6 +32,7 @@ public class RenameItem extends RedoableOp {
     protected MailItem.Type type;
     protected int mFolderId;
     protected String mName;
+    protected Long mDate;
 
     public RenameItem() {
         super(MailboxOperation.RenameItem);
@@ -40,17 +41,22 @@ public class RenameItem extends RedoableOp {
     }
 
     public RenameItem(int mailboxId, int id, MailItem.Type type, String name, int folderId) {
+        this(mailboxId, id, type, name, folderId, null);
+    }
+
+        public RenameItem(int mailboxId, int id, MailItem.Type type, String name, int folderId, Long date) {
         this();
         setMailboxId(mailboxId);
         mId = id;
         this.type = type;
         mFolderId = folderId;
         mName = name != null ? name : "";
+        mDate = date;
     }
 
     @Override
     protected String getPrintableData() {
-        return "id=" + mId + ", type=" + type + ", name=" + mName + ",parent=" + mFolderId;
+        return "id=" + mId + ", type=" + type + ", name=" + mName + ",parent=" + mFolderId + ", date=" + mDate;
     }
 
     @Override
@@ -59,6 +65,12 @@ public class RenameItem extends RedoableOp {
         out.writeInt(mFolderId);
         out.writeUTF(mName);
         out.writeByte(type.toByte());
+
+        // mDate added in 1.40
+        out.writeBoolean(mDate != null);
+        if (mDate != null) {
+            out.writeLong(mDate);
+        }
     }
 
     @Override
@@ -67,11 +79,16 @@ public class RenameItem extends RedoableOp {
         mFolderId = in.readInt();
         mName = in.readUTF();
         type = MailItem.Type.of(in.readByte());
+        if (getVersion().atLeast(1, 40)) {
+            if (in.readBoolean()) {
+                mDate = in.readLong();
+            }
+        }
     }
 
     @Override
     public void redo() throws Exception {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mailbox.rename(getOperationContext(), mId, type, mName, mFolderId);
+        mailbox.rename(getOperationContext(), mId, type, mName, mFolderId, mDate);
     }
 }

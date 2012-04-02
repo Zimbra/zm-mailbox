@@ -2658,7 +2658,34 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *        permissions</ul>
      * @see #validateItemName(String)
      * @see #move(Folder) */
+
     void rename(String newName, Folder target) throws ServiceException {
+        rename(newName, target, null);
+    }
+
+    /** Renames the item and optionally moves it.  Altering an item's case
+     *  (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.  If you don't
+     *  want the item to be moved, you must pass <tt>folder.getFolder()</tt>
+     *  as the second parameter.
+     *
+     * @param newName  The new name for this item.
+     * @param target   The new parent folder to move this item to.
+     * @param date     The new date for this item, if null the date will be
+     *                 unchanged.
+     * @perms {@link ACL#RIGHT_WRITE} on the item to rename it,
+     *        {@link ACL#RIGHT_DELETE} on the parent folder and
+     *        {@link ACL#RIGHT_INSERT} on the target folder to move it
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the item can't be renamed
+     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a different item by that name
+     *        already exists in the target folder
+     *    <li><tt>mail.INVALID_NAME</tt> - if the new item's name is invalid
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
+     * @see #validateItemName(String)
+     * @see #move(Folder) */
+    void rename(String newName, Folder target, Long date) throws ServiceException {
         String name = validateItemName(newName);
 
         boolean renamed = !name.equals(mData.name);
@@ -2695,7 +2722,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
             // XXX: note that we don't update mData.folderId here, as we need the subsequent
             //   move() to execute (it does several things that this code does not)
-            markItemModified(Change.NAME);
+
+            if (date == null) {
+                markItemModified(Change.NAME);
+            } else {
+                markItemModified(Change.NAME | Change.DATE);
+                mData.date = (int)(date / 1000);
+            }
             mData.name = name;
             mData.setSubject(name);
             mData.dateChanged = mMailbox.getOperationTimestamp();

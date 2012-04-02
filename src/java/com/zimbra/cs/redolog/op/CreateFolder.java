@@ -36,7 +36,7 @@ public class CreateFolder extends RedoableOp {
     private String mUrl;
     private int mFolderId;
     private String mFolderUuid;
-    private Integer mDate;
+    private Long mDate;
 
     public CreateFolder() {
         super(MailboxOperation.CreateFolder);
@@ -53,7 +53,7 @@ public class CreateFolder extends RedoableOp {
 
     }
     public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
-        Color color, String url, Integer date) {
+        Color color, String url, Long date) {
         this();
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
@@ -106,11 +106,11 @@ public class CreateFolder extends RedoableOp {
         if (getVersion().atLeast(1, 37)) {
             out.writeUTF(mFolderUuid);
         }
-        if (getVersion().atLeast(1, 39)) {
-            out.writeBoolean(mDate != null);
-            if (mDate != null) {
-                out.writeInt(mDate.intValue());
-            }
+
+        // mDate as long in version 1.40
+        out.writeBoolean(mDate != null);
+        if (mDate != null) {
+            out.writeLong(mDate);
         }
     }
 
@@ -134,12 +134,16 @@ public class CreateFolder extends RedoableOp {
             mFolderUuid = in.readUTF();
         }
         if (getVersion().atLeast(1, 39)) {
-            boolean hasDate = in.readBoolean();
-            if (hasDate) {
-                mDate = new Integer(in.readInt());
+            if (in.readBoolean()) {
+                if (getVersion().atLeast(1, 40)) {
+                    mDate = in.readLong();
+                } else {
+                    mDate = ((long)in.readInt()) * 1000;
+                }
             }
         }
     }
+
 
     @Override
     public void redo() throws Exception {

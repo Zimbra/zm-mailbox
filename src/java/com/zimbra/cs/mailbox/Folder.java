@@ -754,7 +754,7 @@ public class Folder extends MailItem {
      */
     @SuppressWarnings("deprecation")
     static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
-            Color color, Integer date, String url, CustomMetadata custom) throws ServiceException {
+            Color color, Long date, String url, CustomMetadata custom) throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(Type.FOLDER)) {
                 throw MailServiceException.CANNOT_CONTAIN(parent, Type.FOLDER);
@@ -775,7 +775,7 @@ public class Folder extends MailItem {
         data.type = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
-        data.date = date == null ?  mbox.getOperationTimestamp() : date;
+        data.date = date == null ?  mbox.getOperationTimestamp() : (int)(date / 1000);
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
@@ -890,7 +890,7 @@ public class Folder extends MailItem {
         }
         saveMetadata();
     }
-    
+
     public boolean isActiveSyncDisabled() {
         return activeSyncDisabled;
     }
@@ -904,7 +904,7 @@ public class Folder extends MailItem {
             ZimbraLog.mailop.warn("Cannot disable activesync access for system folder " + mId);
             return;
         }
-        
+
         markItemModified(Change.DISABLE_ACTIVESYNC);
         this.activeSyncDisabled = disableActiveSync;
         saveMetadata();
@@ -1029,14 +1029,14 @@ public class Folder extends MailItem {
      * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
      *        {@link ACL#RIGHT_DELETE} on the folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
-    @Override void rename(String name, Folder target) throws ServiceException {
+    @Override void rename(String name, Folder target, Long date) throws ServiceException {
         name = validateItemName(name);
         boolean renamed = !name.equals(mData.name);
         if (!renamed && target == parent)
             return;
         String oldName = mData.name;
         Folder oldParent = (target == parent ? parent : null);
-        super.rename(name, target);
+        super.rename(name, target, date == null ? ((long)mMailbox.getOperationTimestamp()) * 1000 : date);
         if (oldParent != null) { //null if moved; super.rename() already removed it from old
             oldParent.subfolderRenamed(oldName, name);
         }
@@ -1045,7 +1045,6 @@ public class Folder extends MailItem {
         }
 
         // for Folder objects rename also means the change in the contents.
-        mData.date = mMailbox.getOperationTimestamp();
         contentChanged();
     }
 
@@ -1354,8 +1353,8 @@ public class Folder extends MailItem {
         } else {
             retentionPolicy = new RetentionPolicy();
         }
-        
-        activeSyncDisabled = meta.getBool(Metadata.FN_DISABLE_ACTIVESYNC, false);  
+
+        activeSyncDisabled = meta.getBool(Metadata.FN_DISABLE_ACTIVESYNC, false);
     }
 
     @Override

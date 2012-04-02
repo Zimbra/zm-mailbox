@@ -6338,6 +6338,12 @@ public class Mailbox {
     }
 
     public void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId)
+        throws ServiceException {
+        rename(octxt, id, type, name, folderId, null);
+    }
+
+
+    public void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId, Long date)
             throws ServiceException {
         if (name != null && name.startsWith("/")) {
             rename(octxt, id, type, name);
@@ -6349,7 +6355,7 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("cannot set name to empty string", null);
         }
 
-        RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId);
+        RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId, date);
 
         boolean success = false;
         try {
@@ -6364,7 +6370,7 @@ public class Mailbox {
             trainSpamFilter(octxt, item, target, "rename");
 
             String oldName = item.getName();
-            item.rename(name, target);
+            item.rename(name, target, date);
 
             if (item instanceof Tag) {
                 mTagCache.remove(oldName.toLowerCase());
@@ -6908,7 +6914,7 @@ public class Mailbox {
     }
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, MailItem.Type defaultView,
-            int flags, Color color, String url, Integer date)
+            int flags, Color color, String url, Long date)
     throws ServiceException {
         CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url, date);
 
