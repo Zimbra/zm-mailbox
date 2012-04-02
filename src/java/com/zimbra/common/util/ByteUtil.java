@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -201,7 +201,7 @@ public class ByteUtil {
      * Reads a <tt>String</tt> from the given <tt>Reader</tt>.  Reads
      * until the either end of the stream is hit or until <tt>length</tt> characters
      * are read.
-     * 
+     *
      * @param reader the content source
      * @param length number of characters to read, or <tt>-1</tt> for no limit
      * @param close <tt>true</tt> to close the <tt>Reader</tt> when done
@@ -386,7 +386,7 @@ public class ByteUtil {
             baos = new ByteArrayOutputStream(data.length); //data.length overkill
             gos = new GZIPOutputStream(baos);
             gos.write(data);
-            gos.finish();            
+            gos.finish();
             return baos.toByteArray();
         } finally {
             if (gos != null) {
@@ -489,7 +489,7 @@ public class ByteUtil {
         return new String(encoded);
     }
 
-    private static byte[] decodeFSSafeBase64(String str) {
+    public static byte[] decodeFSSafeBase64(String str) {
         byte[] bytes = str.getBytes();
         // Undo the mapping done in encodeFSSafeBase64().
         for (int i = 0; i < bytes.length; i++) {
@@ -498,11 +498,11 @@ public class ByteUtil {
         }
         return Base64.decodeBase64(bytes);
     }
-    
+
     public static String encodeLDAPBase64(byte[] data) {
         return new String(Base64.encodeBase64(data));
     }
-    
+
     public static byte[] decodeLDAPBase64(String str) {
         return Base64.decodeBase64(str);
     }
@@ -521,7 +521,7 @@ public class ByteUtil {
             byte[] digest = md.digest(data);
             if (base64)
                 return encodeFSSafeBase64(digest);
-            else 
+            else
                 return new String(Hex.encodeHex(digest));
         } catch (NoSuchAlgorithmException e) {
             // this should never happen unless the JDK is foobar
@@ -815,7 +815,7 @@ public class ByteUtil {
         return buf.toByteArray();
     }
 
-    // Custom read/writeUTF8 methods to replace DataInputStream.readUTF() and 
+    // Custom read/writeUTF8 methods to replace DataInputStream.readUTF() and
     // DataOutputStream.writeUTF() which have 64KB limit
 
     private static final int MAX_STRING_LEN = 32 * 1024 * 1024;     // 32MB
@@ -897,7 +897,7 @@ public class ByteUtil {
 
     /**
      * Calculates the number of bytes read from the wrapped stream.
-     * 
+     *
      * @see PositionInputStream#getPosition()
      */
     public static class PositionInputStream extends FilterInputStream {
