@@ -32,8 +32,8 @@ public class IdAndAction {
     private final String id;
 
     /**
-     * @zm-api-field-tag wiki|contactGroup
-     * @zm-api-field-description wiki or contactGroup
+     * @zm-api-field-tag bug72174|wiki|contactGroup
+     * @zm-api-field-description bug72174 or wiki or contactGroup
      */
     @XmlAttribute(name=AdminConstants.A_ACTION, required=true)
     private final String action;
