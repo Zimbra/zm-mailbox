@@ -348,7 +348,7 @@ public final class HttpUtilTest {
 
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt";
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         String pathInfoWithFilename = "/path/info/ascii.txt";
@@ -379,7 +379,7 @@ public final class HttpUtilTest {
 
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt";
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         String pathInfoWithFilename = "/path/info/ascii.txt";
@@ -407,7 +407,7 @@ public final class HttpUtilTest {
         String ua = "Mozilla/5.0 (Windows; U; Windows NT 6.1; de-DE) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.224 Safari/534.10";
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt"; // note, we can't upload a file with this name in chrome.
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         String pathInfoWithFilename = "/path/info/ascii.txt";
@@ -427,7 +427,7 @@ public final class HttpUtilTest {
         Assert.assertEquals("attachement; filename=\"ascii.txt\"", HttpUtil.createContentDisposition(request,  "attachement", asciiFilename));
         Assert.assertEquals("attachement; filename=space\" space.txt", HttpUtil.createContentDisposition(request,  "attachement", asciiQuote));
         // Note, this should work as the é is just extended ascii (iso8859) which appears to be valid for a web header (but not a mail header)
-        Assert.assertEquals("attachement; filename=Wikipédia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
+        Assert.assertEquals("attachement; filename=Wikip\u00E9dia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
         Assert.assertEquals("attachement; filename=???%20???.pdf", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
 
     }
@@ -437,7 +437,7 @@ public final class HttpUtilTest {
         String ua = "Mozilla/5.0 (Windows; U; Windows NT 6.1; de-DE) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.224 Safari/534.10";
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt"; // note, we can't upload a file with this name in chrome.
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         // with the filename needs to be non-ascii to trip the test correctly
@@ -470,7 +470,7 @@ public final class HttpUtilTest {
 
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt";
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         String pathInfoWithoutFilename = "/path/info/";
@@ -498,7 +498,7 @@ public final class HttpUtilTest {
 
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt";
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         String pathInfoWithFilename = "/path/info/Wikipédia.txt";
@@ -526,7 +526,7 @@ public final class HttpUtilTest {
 
         String asciiFilename = "ascii.txt";
         String asciiQuote = "space\" space.txt";
-        String iso8859Filename =  "Wikipédia.txt";
+        String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         String pathInfoWithoutFilename = "/path/info/";
