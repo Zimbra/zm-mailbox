@@ -34011,6 +34011,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * When displaying an invite in a conversation, show the day calendar
+     * immediately
+     *
+     * @return zimbraPrefConvShowCalendar, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1394)
+    public boolean isPrefConvShowCalendar() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefConvShowCalendar, false);
+    }
+
+    /**
+     * When displaying an invite in a conversation, show the day calendar
+     * immediately
+     *
+     * @param zimbraPrefConvShowCalendar new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1394)
+    public void setPrefConvShowCalendar(boolean zimbraPrefConvShowCalendar) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvShowCalendar, zimbraPrefConvShowCalendar ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When displaying an invite in a conversation, show the day calendar
+     * immediately
+     *
+     * @param zimbraPrefConvShowCalendar new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1394)
+    public Map<String,Object> setPrefConvShowCalendar(boolean zimbraPrefConvShowCalendar, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvShowCalendar, zimbraPrefConvShowCalendar ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * When displaying an invite in a conversation, show the day calendar
+     * immediately
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1394)
+    public void unsetPrefConvShowCalendar() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvShowCalendar, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When displaying an invite in a conversation, show the day calendar
+     * immediately
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1394)
+    public Map<String,Object> unsetPrefConvShowCalendar(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConvShowCalendar, "");
+        return attrs;
+    }
+
+    /**
      * order of messages displayed within a conversation
      *
      * <p>Valid values: [dateAsc, dateDesc]

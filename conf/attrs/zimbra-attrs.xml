@@ -6944,4 +6944,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1394" name="zimbraPrefConvShowCalendar" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>When displaying an invite in a conversation, show the day calendar immediately.</desc>
+</attr>
+
 </attrs>
