@@ -744,8 +744,8 @@ public final class LC {
     public static final KnownKey imap_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey imap_max_idle_time = KnownKey.newKey(60);
     public static final KnownKey imap_authenticated_max_idle_time = KnownKey.newKey(1800);
-    public static final KnownKey imap_throttle_ip_limit = KnownKey.newKey(100);
-    public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(100);
+    public static final KnownKey imap_throttle_ip_limit = KnownKey.newKey(250);
+    public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(250);
     public static final KnownKey imap_throttle_command_limit = KnownKey.newKey(25);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
