@@ -331,6 +331,9 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 case TASK:
                     appFeatureAttrs.put(Provisioning.A_zimbraFeatureTasksEnabled, ProvisioningConstants.TRUE);
                     break;
+                case MESSAGE:
+                    appFeatureAttrs.put(Provisioning.A_zimbraFeatureMailEnabled, ProvisioningConstants.TRUE);
+                    break;
                 default:
                     // we don't care about other types
             }
