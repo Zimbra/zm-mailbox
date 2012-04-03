@@ -8242,6 +8242,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefConvReadingPaneLocation = "zimbraPrefConvReadingPaneLocation";
 
     /**
+     * When displaying an invite in a conversation, show the day calendar
+     * immediately
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1394)
+    public static final String A_zimbraPrefConvShowCalendar = "zimbraPrefConvShowCalendar";
+
+    /**
      * dedupeNone|secondCopyIfOnToOrCC|moveSentMessageToInbox|dedupeAll
      */
     @ZAttr(id=144)
