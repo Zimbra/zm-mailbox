@@ -21,6 +21,7 @@ import javax.mail.Session;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.util.ByteUtil;
@@ -28,6 +29,11 @@ import com.zimbra.common.zmime.ZMimeUtility.ByteBuilder;
 import com.zimbra.common.zmime.ZTransferEncoding.Base64EncoderStream;
 
 public class ZMimeMultipartTest {
+    @BeforeClass
+    public static void init() {
+        System.setProperty("mail.mime.ignoremultipartencoding", "false");
+    }
+
     @Test
     public void encoded() throws Exception {
         final String boundary = "dfghjkl";
@@ -55,8 +61,6 @@ public class ZMimeMultipartTest {
         bbmulti.append("\r\n");
         bbmulti.append(html).append("\r\n");
         bbmulti.append("--").append(boundary).append("--\r\n");
-
-        System.setProperty("mail.mime.ignoremultipartencoding", "false");
 
         // message with CTE header and base64-encoded body
         ByteBuilder bb = new ByteBuilder();

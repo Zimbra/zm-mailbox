@@ -15,11 +15,17 @@
 package com.zimbra.common.zmime;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.util.ByteUtil;
 
 public class ZMimeBodyPartTest {
+    @BeforeClass
+    public static void init() {
+        // throw this here so that it gets set in the static initializers of MimeBodyPart
+        System.setProperty("mail.mime.ignoremultipartencoding", "false");
+    }
 
     @Test
     public void setStringContent() throws Exception {
