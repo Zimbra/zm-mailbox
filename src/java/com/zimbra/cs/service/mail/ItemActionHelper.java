@@ -617,6 +617,7 @@ public class ItemActionHelper {
                     Element edoc = req.addUniqueElement(MailConstants.E_DOC);
                     edoc.addAttribute(MailConstants.A_NAME, name);
                     edoc.addAttribute(MailConstants.A_FOLDER, folderStr);
+                    edoc.addAttribute(MailConstants.A_FLAGS, flags);
                     Element upload = edoc.addElement(MailConstants.E_UPLOAD);
                     upload.addAttribute(MailConstants.A_ID, uploadId);
                     transport.setResponseProtocol(mResponseProtocol);

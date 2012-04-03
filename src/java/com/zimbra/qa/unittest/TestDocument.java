@@ -18,11 +18,18 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZItem;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
+import com.zimbra.common.account.Key;
 
 public class TestDocument extends TestCase {
 
@@ -59,6 +66,61 @@ public class TestDocument extends TestCase {
 
     }
 
+    /**
+     * Tests moving of documents created with the {@code Note} flag set.
+     */
+    public void testMoveNote()
+    throws Exception {
+        String USER2_NAME = "user2";
+        String filename = NAME_PREFIX + "-testMoveNote.txt";
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
+        Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER2_NAME));
+        
+        // Create a note.
+        ZMailbox zmbx = TestUtil.getZMailbox(USER_NAME);
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE);
+        ZDocument note = TestUtil.createDocument(zmbx, folderId, filename, "text/plain", "note".getBytes(), true);
+        String flags = Character.toString(ZItem.Flag.note.getFlagChar());
+        // Confirm that note flag is set.
+        assertEquals(flags, note.getFlags());
+
+        Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(acct2);
+        Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct);
+        
+        // Clean up test data for user2.
+        TestUtil.deleteTestData(USER2_NAME, NAME_PREFIX);
+        
+        // reset the access if there are any present.
+        remoteMbox.revokeAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, acct.getId());
+        mbox1.revokeAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, acct2.getId());
+        
+        // Give write permissions on user2's Briefcase for user1 and user1's Briefcase for user2.
+        remoteMbox.grantAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, acct.getId(), ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
+        mbox1.grantAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, acct2.getId(), ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
+        
+        // move the note to user2
+        zmbx.moveItem(note.getId(), acct2.getId() + ":" + Mailbox.ID_FOLDER_BRIEFCASE, null);
+        ZMailbox remoteZmbx = TestUtil.getZMailbox(USER2_NAME);
+        String idStr = TestUtil.search(remoteZmbx, "in:briefcase " + filename , ZSearchParams.TYPE_DOCUMENT).get(0);
+        Document doc = remoteMbox.getDocumentById(null, Integer.parseInt(idStr));
+        
+        // make sure moved document has note flag.
+        assertEquals(note.getFlags(), doc.getFlagString());
+        
+        // move the note back to user1
+        remoteZmbx.moveItem(String.valueOf(doc.getId()), acct.getId() + ":" + Mailbox.ID_FOLDER_BRIEFCASE, null);
+        
+        // reset the access
+        remoteMbox.revokeAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, acct.getId());
+        mbox1.revokeAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, acct2.getId());
+        idStr = TestUtil.search(zmbx, "in:briefcase " + filename , ZSearchParams.TYPE_DOCUMENT).get(0);
+        
+        doc = mbox1.getDocumentById(null, Integer.parseInt(idStr));
+        
+        // make sure moved document has note flag.
+        assertEquals(note.getFlags(), doc.getFlagString());
+    }
+    
     /**
      * Tests the content-type based on file extension.
      */
