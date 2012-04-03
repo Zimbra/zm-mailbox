@@ -20,6 +20,7 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
+import com.zimbra.soap.mail.type.Acl;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,13 +56,16 @@ public final class GetFolderTest {
         Folder top = result.getFolder();
         boolean foundGrant = false;
         for (Folder child : top.getSubfolders()) {
-            List <Grant> myGrants = child.getGrants();
-            if (myGrants.size() > 0) {
-                foundGrant = true;
-                Grant first = myGrants.get(0);
-                GrantGranteeType mGranteeType = GrantGranteeType.fromString(
-                        first.getGranteeType().toString());
-                Assert.assertEquals(GrantGranteeType.usr, mGranteeType);
+            Acl acl = child.getAcl();
+            if (acl != null) {
+                List<Grant> myGrants = acl.getGrants();
+                if (myGrants.size() > 0) {
+                    foundGrant = true;
+                    Grant first = myGrants.get(0);
+                    GrantGranteeType mGranteeType = GrantGranteeType.fromString(
+                            first.getGranteeType().toString());
+                    Assert.assertEquals(GrantGranteeType.usr, mGranteeType);
+                }
             }
         }
         Assert.assertTrue("Should have processed a valid <grant>", foundGrant);
@@ -70,12 +74,15 @@ public final class GetFolderTest {
         top = result.getFolder();
         foundGrant = false;
         for (Folder child : top.getSubfolders()) {
-            List <Grant> myGrants = child.getGrants();
-            if (myGrants.size() > 0) {
-                foundGrant = true;
-                Grant first = myGrants.get(0);
-                GrantGranteeType mGranteeType = first.getGranteeType();
-                Assert.assertNull("There was no 'gt' attribute", mGranteeType);
+            Acl acl = child.getAcl();
+            if (acl != null) {
+                List <Grant> myGrants = acl.getGrants();
+                if (myGrants.size() > 0) {
+                    foundGrant = true;
+                    Grant first = myGrants.get(0);
+                    GrantGranteeType mGranteeType = first.getGranteeType();
+                    Assert.assertNull("There was no 'gt' attribute", mGranteeType);
+                }
             }
         }
         Assert.assertTrue("Should have processed a bad <grant>", foundGrant);

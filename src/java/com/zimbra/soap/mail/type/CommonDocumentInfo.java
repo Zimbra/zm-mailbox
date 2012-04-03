@@ -32,7 +32,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = { "metadatas", "fragment", "grants" })
+@XmlType(propOrder = { "metadatas", "fragment", "acl" })
 public class CommonDocumentInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
@@ -179,11 +179,10 @@ public class CommonDocumentInfo {
     private String fragment;
 
     /**
-     * @zm-api-field-description Grants
+     * @zm-api-field-description ACL for sharing
      */
-    @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
-    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
-    private List<Grant> grants = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_ACL /* acl */, required=false)
+    private Acl acl;
 
     public CommonDocumentInfo() {
         this((String) null);
@@ -237,16 +236,7 @@ public class CommonDocumentInfo {
     }
 
     public void setFragment(String fragment) { this.fragment = fragment; }
-    public void setGrants(Iterable <Grant> grants) {
-        this.grants.clear();
-        if (grants != null) {
-            Iterables.addAll(this.grants,grants);
-        }
-    }
-
-    public void addGrant(Grant grant) {
-        this.grants.add(grant);
-    }
+    public void setAcl(Acl acl) { this.acl = acl; }
 
     public String getId() { return id; }
     public String getUuid() { return uuid; }
@@ -272,9 +262,7 @@ public class CommonDocumentInfo {
         return Collections.unmodifiableList(metadatas);
     }
     public String getFragment() { return fragment; }
-    public List<Grant> getGrants() {
-        return Collections.unmodifiableList(grants);
-    }
+    public Acl getAcl() { return acl; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
@@ -299,7 +287,7 @@ public class CommonDocumentInfo {
             .add("createdDate", createdDate)
             .add("metadatas", metadatas)
             .add("fragment", fragment)
-            .add("grants", grants);
+            .add("acl", acl);
     }
 
     @Override

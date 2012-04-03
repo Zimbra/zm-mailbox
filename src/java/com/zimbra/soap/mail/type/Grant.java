@@ -30,7 +30,7 @@ import com.zimbra.soap.type.GrantGranteeType;
  */
 
 /*
-<grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>*
+<grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [pw="{password-for-guest}"] [key=="{access-key}"]/>*
  */
 @XmlAccessorType(XmlAccessType.NONE)
 public class Grant {
@@ -67,6 +67,20 @@ public class Grant {
     private String granteeId;
 
     /**
+     * @zm-api-field-tag millis-since-epoch
+     * @zm-api-field-description Time when this grant expires.
+     * For internal/guest grant:  If this attribute is not specified, the expiry of the grant is derived
+     * from internalGrantExpiry/guestGrantExpiry of the ACL it is part of.  If this attribute is
+     * specified (overridden), the expiry value can not be greater than the corresponding expiry value in
+     * the ACL.
+     * For public grant:  If this attribute is not specified, defaults to the maximum allowed expiry for
+     * a public grant.  If not specified in the response, defaults to 0.  Value of 0 indicates that this
+     * grant never expires.
+     */
+    @XmlAttribute(name=MailConstants.A_EXPIRY /* expiry */, required=false)
+    private Long expiry;
+
+    /**
      * @zm-api-field-tag grantee-name
      * @zm-api-field-description Name or email address of the principal being granted rights.  optional if
      * {grantee-type} is "all"/"guest"/"pub".  When specified in a request, this can be just the username portion of
@@ -95,12 +109,14 @@ public class Grant {
     public void setPerm(String perm) { this.perm = perm; }
     public void setGranteeType(GrantGranteeType granteeType) { this.granteeType = granteeType; }
     public void setGranteeId(String granteeId) { this.granteeId = granteeId; }
+    public void setExpiry(Long expiry) { this.expiry = expiry; }
     public void setGranteeName(String granteeName) { this.granteeName = granteeName; }
     public void setGuestPassword(String guestPassword) { this.guestPassword = guestPassword; }
     public void setAccessKey(String accessKey) { this.accessKey = accessKey; }
     public String getPerm() { return perm; }
     public GrantGranteeType getGranteeType() { return granteeType; }
     public String getGranteeId() { return granteeId; }
+    public Long getExpiry() { return expiry; }
     public String getGranteeName() { return granteeName; }
     public String getGuestPassword() { return guestPassword; }
     public String getAccessKey() { return accessKey; }
@@ -110,6 +126,7 @@ public class Grant {
             .add("perm", perm)
             .add("granteeType", granteeType)
             .add("granteeId", granteeId)
+            .add("expiry", expiry)
             .add("granteeName", granteeName)
             .add("guestPassword", guestPassword)
             .add("accessKey", accessKey);

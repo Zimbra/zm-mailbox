@@ -24,7 +24,6 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
@@ -47,7 +46,7 @@ import com.zimbra.soap.type.ZmBoolean;
 // Root element name needed to differentiate between types of folder
 // MailConstants.E_FOLDER == "folder"
 @XmlRootElement(name=MailConstants.E_FOLDER)
-@XmlType(propOrder = {"metadatas", "grants", "retentionPolicy", "subfolders"})
+@XmlType(propOrder = {"metadatas", "acl", "retentionPolicy", "subfolders"})
 public class Folder {
 
     @XmlEnum
@@ -267,11 +266,10 @@ public class Folder {
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     /**
-     * @zm-api-field-description Grants
+     * @zm-api-field-description ACL for sharing
      */
-    @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
-    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
-    private List<Grant> grants = new ArrayList<Grant>();
+    @XmlElement(name=MailConstants.E_ACL /* acl */, required=false)
+    private Acl acl;
 
     /**
      * @zm-api-field-description Subfolders
@@ -326,8 +324,8 @@ public class Folder {
         return Collections.unmodifiableList(metadatas);
     }
 
-    public List<Grant> getGrants() {
-        return Collections.unmodifiableList(grants);
+    public Acl getAcl() {
+        return acl;
     }
 
     public Integer getModifiedSequence() { return modifiedSequence; }
@@ -377,11 +375,8 @@ public class Folder {
         return this;
     }
 
-    public void setGrants(Collection<Grant> grants) {
-        this.grants.clear();
-        if (grants != null) {
-            this.grants.addAll(grants);
-        }
+    public void setAcl(Acl acl) {
+        this.acl = acl;
     }
 
     public void setModifiedSequence(Integer modifiedSequence) {
