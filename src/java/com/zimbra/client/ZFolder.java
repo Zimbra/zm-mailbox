@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.zimbra.soap.mail.type.Acl;
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
@@ -308,8 +309,11 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
 
-        for (Grant g : f.getGrants()) {
-            mGrants.add(new ZGrant(g));
+        Acl acl = f.getAcl();
+        if (acl != null) {
+            for (Grant g : acl.getGrants()) {
+                mGrants.add(new ZGrant(g));
+            }
         }
 
         mRetentionPolicy = f.getRetentionPolicy();
