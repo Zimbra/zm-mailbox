@@ -18,6 +18,7 @@ package com.zimbra.cs.store;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,9 +46,21 @@ public class FileDescriptorCache
 
     // Create the file cache with default LinkedHashMap values, but sorted by last access time.
     private final LinkedHashMap<String, SharedFile> mCache = new LinkedHashMap<String, SharedFile>(16, 0.75f, true);
+    // Create a concurrent list for the SharedFies for which the mapping has been removed but is still in use by some threads.
+    private final List<SharedFileInfo> mInactiveCache = Collections.synchronizedList(new ArrayList<SharedFileInfo>());
     private int mMaxSize = 1000;
     private final UncompressedFileCache<String> mUncompressedFileCache;
     private final Counter mHitRate = new Counter();
+    
+    private class SharedFileInfo {
+        public String path;
+        public SharedFile file;
+        
+        public SharedFileInfo(String path, SharedFile file) {
+            this.path = path;
+            this.file = file;
+        }
+    }
 
     public FileDescriptorCache(UncompressedFileCache<String> uncompressedCache) {
         mUncompressedFileCache = uncompressedCache;
@@ -87,7 +100,9 @@ public class FileDescriptorCache
             SharedFile file = entry.getValue();
             iEntries.remove();
             try {
-                close(file, path);
+                boolean success = close(file, path);
+                if (!success)
+                    sLog.warn("Unable to close %s. File is in use.", file);
             } catch (IOException e) {
                 sLog.warn("Unable to close %s", file, e);
             }
@@ -180,48 +195,59 @@ public class FileDescriptorCache
         }
 
         if (file != null) {
-            close(file, path);
+            boolean success = close(file, path);
+            if (!success)
+                mInactiveCache.add(new SharedFileInfo(path, file));
         } else {
             sLog.debug("Attempted to remove %s but could not find it in the cache.", path);
         }
+        
+        // Close if there are any SharedFiles in the inactive cache.
+        quietCloseInactiveCache();
     }
 
     /**
-     * Waits for all threads to finish reading from the given <tt>SharedFile</tt>
-     * and closes it.
-     * @throws IOException if the operation times out waiting for readers to finish
+     * Close the file if it is not in use.
+     * @return true if the file is closed, false otherwise.
+     * @throws IOException if there is an error closing the file.
      */
-    private void close(SharedFile file, String path)
+    private boolean close(SharedFile file, String path)
     throws IOException {
         if (file != null) {
             sLog.debug("Closing file descriptor for %s, %s", path, file);
 
-            // Loop until other threads are done reading.
-            for (int i = 1; i <= 20; i++) {
-                int numReaders = file.getNumReaders();
-                if (numReaders == 0) {
-                    file.close();
-
-                    if (mUncompressedFileCache != null) {
-                        synchronized (this) {
-                            if (!mCache.containsKey(path)) {
-                                mUncompressedFileCache.remove(path);
-                            } else {
-                                sLog.debug("Not removing %s from the uncompressed cache.  Another thread reopened it.");
-                            }
+            if (file.getNumReaders() == 0) {
+                file.close();
+                if (mUncompressedFileCache != null) {
+                    synchronized (this) {
+                        if (!mCache.containsKey(path)) {
+                            mUncompressedFileCache.remove(path);
+                        } else {
+                            sLog.debug("Not removing %s from the uncompressed cache.  Another thread reopened it.");
                         }
                     }
-
-                    return;
-                } else {
-                    sLog.debug("numReaders=%d.  Sleeping.", numReaders);
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                    }
+                }
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    private void quietCloseInactiveCache() {
+        synchronized (mInactiveCache) {
+            Iterator<SharedFileInfo> iter = mInactiveCache.iterator();
+            while (iter.hasNext()) {
+                SharedFileInfo info = iter.next();
+                try {
+                    boolean success = close(info.file, info.path);
+                    if (success)
+                        iter.remove();
+                } catch (IOException e) {
+                    ZimbraLog.store.warn("Unable to close file descriptor for " + info.path, e);
+                    iter.remove();
                 }
             }
-            throw new IOException("FileDescriptorCache.close() timed out waiting for " + file);
         }
     }
 
@@ -251,10 +277,15 @@ public class FileDescriptorCache
             String path = mapEntry.getKey();
             SharedFile file = mapEntry.getValue();
             try {
-                close(file, path);
+                boolean success = close(file, path);
+                if (!success)
+                    mInactiveCache.add(new SharedFileInfo(path, file));
             } catch (IOException e) {
                 ZimbraLog.store.warn("Unable to close file descriptor for " + path, e);
             }
         }
+
+        // Close if there are any SharedFiles in the inactive cache.
+        quietCloseInactiveCache();
     }
 }
