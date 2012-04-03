@@ -441,7 +441,7 @@ public final class HttpUtilTest {
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
         // with the filename needs to be non-ascii to trip the test correctly
-        String pathInfoWithFilename = "/path/info/Wikipédia.txt";
+        String pathInfoWithFilename = "/path/info/Wikip\u00E9dia.txt";
 
         // Use a servlet request mock
         HttpServletRequest request = EasyMock.createNiceMock(HttpServletRequest.class);
@@ -488,7 +488,7 @@ public final class HttpUtilTest {
 
         Assert.assertEquals("attachement; filename=\"ascii.txt\"", HttpUtil.createContentDisposition(request,  "attachement", asciiFilename));
         Assert.assertEquals("attachement; filename=space\" space.txt", HttpUtil.createContentDisposition(request,  "attachement", asciiQuote));
-        Assert.assertEquals("attachement; filename=Wikipédia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
+        Assert.assertEquals("attachement; filename=Wikip\u00E9dia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
         Assert.assertEquals("attachement; filename=???%20???.pdf", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
 
     }
@@ -501,7 +501,7 @@ public final class HttpUtilTest {
         String iso8859Filename =  "Wikip\u00E9dia.txt";
         String unicodeFilename = "\uD55C\uAD6D\uC5B4%20\uC218\uC2E0\uC790.pdf";
 
-        String pathInfoWithFilename = "/path/info/Wikipédia.txt";
+        String pathInfoWithFilename = "/path/info/Wikip\u00E9dia.txt";
 
         // Use a servlet request mock
         HttpServletRequest request = EasyMock.createNiceMock(HttpServletRequest.class);
