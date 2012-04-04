@@ -42,7 +42,6 @@ import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
-import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -667,8 +666,8 @@ public final class ParseMimeMessage {
     throws ServiceException, MessagingException {
         try {
             Upload up = UserServlet.getRemoteResourceAsUpload(ctxt.zsc.getAuthToken(), iid, params);
-            attachUpload(mmp, up, contentID, ctxt, ctypeOverride);
             ctxt.out.addFetch(up);
+            attachUpload(mmp, up, contentID, ctxt, ctypeOverride);
             return;
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("can't serialize remote item", ioe);
@@ -811,39 +810,17 @@ public final class ParseMimeMessage {
         }
 
         String filename = Mime.getFilename(mp);
-        ctxt.incrementSize("part " + filename, mp.getSize());
-
-        MimeBodyPart mbp = new ForceBase64MimeBodyPart();
-
-        String ctypeHdr = mp.getContentType();
+        String ctypeHdr = mp.getContentType(), contentType = null;
         if (ctypeHdr != null) {
-            // Clean up the content type and pass it to the new MimeBodyPart via DataSourceWrapper.
-            // If we don't do this, JavaMail ignores the Content-Type header.  See bug 42452,
-            // JavaMail bug 1650154.
-            ContentType ctype = (ContentType) new ContentType(ctypeHdr, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename);
-            String contentType = ctype.toString();
-            DataHandler originalHandler = mp.getDataHandler();
-            DataSourceWrapper wrapper = new DataSourceWrapper(originalHandler.getDataSource());
-            wrapper.setContentType(contentType);
-            mbp.setDataHandler(new DataHandler(wrapper));
-
-            mbp.setHeader("Content-Type", contentType);
-            if (ctype.getContentType().equals(MimeConstants.CT_APPLICATION_PDF))
-                mbp.setHeader("Content-Transfer-Encoding", "base64");
-        } else {
-            mbp.setDataHandler(mp.getDataHandler());
+            contentType = new ContentType(ctypeHdr, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename).toString();
         }
 
-        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
-
-        String desc = mp.getDescription();
-        if (desc != null) {
-            mbp.setHeader("Content-Description", desc);
-        }
-
-        mbp.setContentID(contentID);
-
-        mmp.addBodyPart(mbp);
+        // bug 70015: two concurrent SaveDrafts each reference the same attachment in the original draft
+        //   -- avoid race condition by copying attached part to FileUploadServlet, so
+        //      deleting original blob doesn't lead to stale BlobInputStream references
+        Upload up = FileUploadServlet.saveUpload(mp.getInputStream(), filename, contentType, DocumentHandler.getRequestedAccount(ctxt.zsc).getId());
+        ctxt.out.addFetch(up);
+        attachUpload(mmp, up, contentID, ctxt, null);
     }
 
 

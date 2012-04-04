@@ -15,6 +15,7 @@
 package com.zimbra.cs.store;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -92,8 +93,7 @@ implements SharedInputStream, InputStreamSource {
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire blob.
      */
-    public BlobInputStream(Blob blob)
-    throws IOException {
+    public BlobInputStream(Blob blob) throws IOException {
         this(blob.getFile(), blob.getRawSize(), null, null, null);
     }
 
@@ -102,8 +102,7 @@ implements SharedInputStream, InputStreamSource {
      * @param file
      * @param rawSize size of file, before any compression
      */
-    public BlobInputStream(File file, long rawSize)
-    throws IOException {
+    public BlobInputStream(File file, long rawSize) throws IOException {
         this(file, rawSize, null, null, null);
     }
 
@@ -114,8 +113,7 @@ implements SharedInputStream, InputStreamSource {
      * @param start starting index, or <tt>null</tt> for beginning of file
      * @param end ending index (exclusive), or <tt>null</tt> for end of file
      */
-    public BlobInputStream(File file, long rawSize, Long start, Long end)
-    throws IOException {
+    public BlobInputStream(File file, long rawSize, Long start, Long end) throws IOException {
         this(file, rawSize, start, end, null);
     }
 
@@ -135,14 +133,14 @@ implements SharedInputStream, InputStreamSource {
             mFile = file;
             mRoot = this;
             if (!file.exists()) {
-                throw new IOException(file.getPath() + " does not exist.");
+                throw new FileNotFoundException(file.getPath() + " does not exist");
             }
         } else {
             // New stream.  Get settings from the parent and add this stream to the group.
             mRoot = parent.mRoot;
             file = mRoot.mFile;
             if (!file.exists() && !getFileDescriptorCache().contains(file.getPath())) {
-                throw new IOException(file.getPath() + " does not exist.");
+                throw new FileNotFoundException(file.getPath() + " does not exist");
             }
         }
         mRawSize = rawSize;

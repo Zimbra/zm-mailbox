@@ -17,6 +17,7 @@ package com.zimbra.cs.store;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +29,8 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 
 import com.google.common.io.ByteStreams;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -50,13 +53,18 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public void startup() {
+    public void startup() throws IOException {
         purge();
+
+        FileUtil.ensureDirExists(MockLocalBlob.tmpdir);
+        BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(null));
     }
 
     @Override
     public void shutdown() {
         purge();
+
+        BlobInputStream.setFileDescriptorCache(null);
     }
 
     @Override
@@ -130,7 +138,23 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean delete(Blob blob) {
+    public boolean delete(Blob blob) throws IOException {
+        if (blob instanceof MockLocalBlob) {
+            File file = blob.getFile();
+            if (file != null) {
+                ZimbraLog.store.debug("Deleting %s.", file.getPath());
+                BlobInputStream.getFileDescriptorCache().remove(file.getPath());  // Prevent stale cache read.
+                boolean deleted = file.delete();
+                if (deleted) {
+                    return true;
+                }
+                if (!file.exists()) {
+                    // File wasn't there to begin with.
+                    return false;
+                }
+                throw new IOException("Unable to delete blob file " + file.getAbsolutePath());
+            }
+        }
         return true;
     }
 
@@ -140,8 +164,9 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean delete(MailboxBlob mblob) {
+    public boolean delete(MailboxBlob mblob) throws IOException {
         BLOBS.remove(mblob.getItemId());
+        delete(((MockMailboxBlob) mblob).blob);
         return true;
     }
 
@@ -161,7 +186,7 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) {
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException {
         assert blobs != null : "we require a blob iterator for testing purposes";
         for (MailboxBlob mblob : blobs) {
             delete(mblob);
@@ -197,6 +222,32 @@ public final class MockStoreManager extends StoreManager {
         }
     }
 
+    private static final class MockLocalBlob extends Blob {
+        static final File tmpdir = new File("build/test/store");
+        private final int length;
+
+        public MockLocalBlob(byte[] content) throws IOException {
+            super(writeToTemp(content));
+            length = content.length;
+        }
+
+        private static File writeToTemp(byte[] content) throws IOException {
+            File blob = File.createTempFile("mlblob", ".msg", tmpdir);
+            blob.deleteOnExit();
+
+            FileOutputStream fos = new FileOutputStream(blob);
+            fos.write(content);
+            fos.close();
+
+            return blob;
+        }
+
+        @Override
+        public long getRawSize() {
+            return length;
+        }
+    }
+
     private static final class MockStagedBlob extends StagedBlob {
         final byte[] content;
 
@@ -214,6 +265,7 @@ public final class MockStoreManager extends StoreManager {
     @SuppressWarnings("serial")
     private static final class MockMailboxBlob extends MailboxBlob {
         final byte[] content;
+        MockLocalBlob blob = null;
 
         MockMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, byte[] data) {
             super(mbox, itemId, revision, locator);
@@ -222,7 +274,7 @@ public final class MockStoreManager extends StoreManager {
 
         @Override
         public Blob getLocalBlob() throws IOException {
-            return new MockBlob(content);
+            return blob == null ? blob = new MockLocalBlob(content) : blob;
         }
     }
 
