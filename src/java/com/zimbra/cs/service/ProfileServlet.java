@@ -76,6 +76,7 @@ public class ProfileServlet extends ZimbraServlet {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.length() == 0) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
         }
         if (pathInfo.startsWith("/")) {
             pathInfo = pathInfo.substring(1);
@@ -100,6 +101,11 @@ public class ProfileServlet extends ZimbraServlet {
             Account account = prov.getAccountByName(emailAddress);
             if (account == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+            if (!Provisioning.onLocalServer(account)) {
+                proxyServletRequest(req, resp, account.getId());
+                return;
             }
             // for now the profile picture is public.  we could add privacy acl later on.
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);

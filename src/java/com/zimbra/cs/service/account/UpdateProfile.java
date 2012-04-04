@@ -52,7 +52,7 @@ public class UpdateProfile extends AccountDocumentHandler {
                 up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), imageId, zsc.getAuthToken());
                 // validate the image based on the content.
                 String contentType = MimeDetect.getMimeDetect().detect(up.getInputStream());
-                if (contentType == null || contentType.matches(MimeConstants.CT_IMAGE_WILD) == false)
+                if (contentType == null || !contentType.matches(MimeConstants.CT_IMAGE_WILD))
                     throw MailServiceException.INVALID_IMAGE("Uploaded image is not a valid image file");
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
                 OperationContext octxt = getOperationContext(zsc, context);
@@ -65,11 +65,10 @@ public class UpdateProfile extends AccountDocumentHandler {
                     if (!(se instanceof MailServiceException.NoSuchItemException))
                         throw se;
                 }
-                if (image == null) {
-                    mbox.createDocument(octxt, Mailbox.ID_FOLDER_PROFILE, pd, MailItem.Type.DOCUMENT, 0);
-                } else {
-                    mbox.addDocumentRevision(octxt, image.getId(), pd);
+                if (image != null) {
+                    mbox.delete(octxt, image.getId(), MailItem.Type.DOCUMENT);
                 }
+                mbox.createDocument(octxt, Mailbox.ID_FOLDER_PROFILE, pd, MailItem.Type.DOCUMENT, 0);
             } catch (IOException e) {
                 ZimbraLog.account.warn("can't save profile image", e);
             } finally {
