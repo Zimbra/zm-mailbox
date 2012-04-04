@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class MsgToSend
@@ -32,17 +33,30 @@ extends Msg {
      */
     @XmlAttribute(name=MailConstants.A_DRAFT_ID /* did */, required=false)
     private String draftId;
+    
+    /**
+     * @zm-api-field-tag send-from-draft
+     * @zm-api-field-description If set, message gets constructed based on the "did" (id of the draft).
+     */
+    @XmlAttribute(name=MailConstants.A_SEND_FROM_DRAFT /* sfd */, required=false)
+    private ZmBoolean sendFromDraft;
 
     public MsgToSend() {
     }
 
     public void setDraftId(String draftId) { this.draftId = draftId; }
     public String getDraftId() { return draftId; }
+    
+    public void setSendFromDraft(Boolean sendFromDraft) {
+        this.sendFromDraft = ZmBoolean.fromBool(sendFromDraft);
+    }
+    public Boolean getSendFromDraft() { return ZmBoolean.toBool(sendFromDraft); }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
-            .add("draftId", draftId);
+            .add("draftId", draftId)
+            .add("sendFromDraft", sendFromDraft);
     }
 
     @Override
