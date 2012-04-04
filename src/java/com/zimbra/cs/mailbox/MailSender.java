@@ -966,7 +966,10 @@ public class MailSender {
             // Initialize recipient addresses
             Address[] rcptAddresses = getRecipients(mm);
 
-            while (rcptAddresses != null && rcptAddresses.length > 0) {
+            if (rcptAddresses == null || rcptAddresses.length == 0)
+                throw new SendFailedException("No recipient addresses");
+            
+            while (true) {
                 try {
                     logMessage(mm, hostname, mOriginalMessageId, mUploads, mReplyType);
                     if (hostname != null) {

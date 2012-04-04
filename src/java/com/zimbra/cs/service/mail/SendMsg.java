@@ -62,6 +62,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarDataSource;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -126,6 +127,7 @@ public final class SendMsg extends MailDocumentHandler {
         String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
         String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
         ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
+        boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
 
         SendState state = SendState.NEW;
         ItemId savedMsgId = null;
@@ -162,6 +164,9 @@ public final class SendMsg extends MailDocumentHandler {
                 MimeMessage mm;
                 if (attachId != null) {
                     mm = parseUploadedMessage(zsc, attachId, mimeData, needCalendarSentByFixup);
+                } else if (iidDraft != null && sendFromDraft) {
+                    Message msg = mbox.getMessageById(octxt, iidDraft.getId());
+                    mm = msg.getMimeMessage(false);
                 } else {
                     mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
                 }

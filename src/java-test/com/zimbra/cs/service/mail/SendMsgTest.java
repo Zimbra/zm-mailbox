@@ -24,6 +24,9 @@ import java.util.Properties;
 import java.util.UUID;
 
 import javax.mail.Address;
+import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
@@ -76,9 +79,12 @@ public class SendMsgTest {
                             protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks)
                             throws SafeMessagingException, IOException {
                                 try {
-                                    return Arrays.asList(getRecipients(mm));
-                                } catch (Exception e) {
-                                    return Collections.emptyList();
+                                    Address[] rcptAddresses = getRecipients(mm);
+                                    if (rcptAddresses == null || rcptAddresses.length == 0)
+                                        throw new SendFailedException("No recipient addresses");
+                                    return Arrays.asList(rcptAddresses);
+                                } catch (MessagingException e) {
+                                    throw new SafeMessagingException(e);
                                 }
                             }
                         };
@@ -112,6 +118,40 @@ public class SendMsgTest {
         context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(acct), acct.getId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS));
         new SendMsg().handle(request, context);
 
+        // finally, verify that the draft is gone
+        Message draft = null;
+        try {
+            draft = mbox.getMessageById(null, draftId);
+        } catch (NoSuchItemException nsie) {
+        }
+        Assert.assertNull("draft message not deleted", draft);
+    }
+    
+    @Test
+    public void testSendFromDraft() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // first, add draft message
+        MimeMessage mm = new MimeMessage(Session.getInstance(new Properties()));
+        mm.setRecipients(RecipientType.TO, "rcpt@zimbra.com");
+        mm.saveChanges();
+        ParsedMessage pm = new ParsedMessage(mm, false);
+        int draftId = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT).getId();
+
+        // then send a message referencing the draft
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID, draftId).addAttribute(MailConstants.A_SEND_FROM_DRAFT, true);
+
+        Map<String, Object> context = new HashMap<String, Object>();
+        context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(acct), acct.getId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS));
+        Element response = new SendMsg().handle(request, context);
+        String sentIdStr = response.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_ID);
+        int sentId = Integer.parseInt(sentIdStr);
+        // make sure sent message exist.
+        Message sent = mbox.getMessageById(null, sentId);
+        Assert.assertNotNull("sent message does not exist", sent);
+        Assert.assertEquals(pm.getRecipients(), sent.getRecipients());
         // finally, verify that the draft is gone
         Message draft = null;
         try {

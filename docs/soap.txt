@@ -2276,6 +2276,7 @@ u,n attributes present iff count > 0
 +  can optionally set identity-id to specify the identity being used to compose the message
 +  if noSave="1", a copy will *not* be saved to sent regardless of account/identity settings
 +  can set priority high (!) or low (?) on sent message by specifying "f" attr on <m>
++  if "did" is specified, then the draft item will be removed if the SendMsg is successful.
 
 <SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [noSave="0|1"]>
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
@@ -2301,6 +2302,23 @@ u,n attributes present iff count > 0
 <SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"]>
   <m aid="{uploaded-MIME-body-ID}" [origid="..." rt="r|w"]/>
 </SendMsgRequest>
+
+Composing the message based on existing draft:
+
+If you want to compose the message based on existing draft use the following. The parameter sfd="1" (sendFromDraft) instructs
+the server to construct message based on the "did" (id of the draft). The draft item will be removed if the SendMsg is successful.
+    
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [noSave="0|1"]>
+  <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] did="{saved-draft-id}" sfd="1"/>
+</SendMsgRequest>   
+
+Or if you want to compose the message based on existing draft, but want to make some changes such
+as subject/recipient follow the below steps.
+  
+1> Send <GetMsgRequest> with the draft id as message id, and get all the data for the saved message.
+
+2> Use <SendMsgRequest> with the data retrieved from <GetMsgResponse> and set the "did" parameter to draft id.
+   This will ensure that the draft gets removed if the SendMsg is successful. 
 
 # If the message is saved to the sent folder then the id of the message is returned.
 # Otherwise, no id is returned -- just a <m></m> is returned.
