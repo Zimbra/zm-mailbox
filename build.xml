@@ -24,14 +24,14 @@
   <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl" />
   <property name="soapdocs.templates.dir" location="soapdocs/templates" />
   <property name="soapdocs.output.dir" location="${build.dir}/docs/soap" />
-  <property name="soapdocs.src.dir" location="soapdocs/src"/>
-  <property name="soapdocs.classes.dir" location="${build.dir}/wsdl-doc-classes"/>
+  <property name="soapdocs.src.dir" location="soapdocs/src/java"/>
+  <property name="soapdocs.classes.dir" location="${build.dir}/soap-doc-classes"/>
   <property name="soapdocs.jar" location="soapdocs/jars/ZmApiDoclet.jar"/>
   <property name="soapdocs.apidesc.file" location="${build.dir}/soapapi-desc.json" />
-  <property name="soapdocs.apidesc.baseline.file" location="soapdocs/baseline-soapapi-desc.json"/>
-  <property name="soapapi.changelog.output.dir" location="${build.dir}/docs/soap/api-changelog" />
+  <property name="soapdocs.apidesc.baseline.file" location="soapdocs/baseline-soapapi-desc.json.gz"/>
+  <property name="soapapi.changelog.output.dir" location="${soapdocs.output.dir}/api-changelog" />
+  <property name="soapapi.doc.file" location="${build.dir}/docs/soapapi-zimbra-doc.zip" />
   <property name="soapapi.changelog.file" location="${build.dir}/docs/soapapi-changelog.zip" />
-
   <property name="soapdocs.test.dir" location="${build.dir}/soapdocs-test"/>
   <property name="soapdocs.test.src.dir" location="soapdocs/src/java-test"/>
   <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
@@ -308,10 +308,16 @@
             <include name="com/zimbra/soap/header/**"/>
             <include name="com/zimbra/soap/type/**"/>
         </packageset>
-  </javadoc>
+    </javadoc>
   </target>
 
-  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc">
+  <target name="package-soap-api-doc" depends="generate-soap-api-doc">
+    <zip destfile="${soapapi.doc.file}" basedir="${soapdocs.output.dir}">
+      <include name="api-reference/**"/>
+    </zip>
+  </target>
+
+  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc,soap-api-doc-compile">
     <delete dir="${soapapi.changelog.output.dir}" quiet="true"/>
     <mkdir dir="${soapapi.changelog.output.dir}" />
     <copy todir="${soapapi.changelog.output.dir}">
@@ -325,6 +331,17 @@
         <arg line="--baseline-apidesc ${soapdocs.apidesc.baseline.file}"/>
         <arg line="--current-apidesc ${soapdocs.apidesc.file}"/>
     </java>
+  </target>
+
+  <target name="package-soap-api-changelog" depends="generate-soap-api-changelog">
+    <zip destfile="${soapapi.changelog.file}" basedir="${soapdocs.output.dir}">
+      <include name="api-changelog/**"/>
+    </zip>
+  </target>
+
+  <target name="update-baseline-apidesc" depends="generate-soap-api-doc"
+      description="Update the baseline description of the SOAP API used by target generate-soap-api-changelog">
+      <gzip src="${soapdocs.apidesc.file}" destfile="${soapdocs.apidesc.baseline.file}"/>
   </target>
 
   <target name="soapdocs-test-compile" depends="soap-api-doc-compile">

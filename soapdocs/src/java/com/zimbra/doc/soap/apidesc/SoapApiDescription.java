@@ -16,11 +16,13 @@
 package com.zimbra.doc.soap.apidesc;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -132,6 +134,12 @@ public class SoapApiDescription {
 
     public static SoapApiDescription deserializeFromJson(File inFile)
     throws JsonParseException, JsonMappingException, IOException {
+        String fname = inFile.getName();
+        if ((fname != null) && (fname.endsWith(".gz"))) {
+            FileInputStream fis = new FileInputStream(inFile);
+            GZIPInputStream gis = new GZIPInputStream(fis);
+            return deserializeFromJson(gis);
+        }
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(inFile, SoapApiDescription.class);
     }
