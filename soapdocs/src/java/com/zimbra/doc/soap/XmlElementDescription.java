@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.util.JaxbAttributeInfo;
 import com.zimbra.soap.util.JaxbElementInfo;
 import com.zimbra.soap.util.JaxbInfo;
@@ -42,8 +43,9 @@ implements DescriptionNode, XmlUnit {
     DescriptionNode parent;
     private final List<XmlAttributeDescription> attribs = Lists.newArrayList();
     private final List<DescriptionNode> children = Lists.newArrayList();
-    private boolean isOptional;
-    private boolean isSingleton;
+    private final boolean optional;
+    private final boolean singleton;  /* maximum of 1 */
+    private final boolean wrapper;
     private boolean isInnerRecursionElement;
     private boolean isMasterDescriptionForJaxbClass = false;
     private int minOccurs;
@@ -54,8 +56,9 @@ implements DescriptionNode, XmlUnit {
     private String typeIdString;
     private String fieldName;
     private String valueFieldName;    // Field that has @XmlValue annotation
-    private String valueFieldDescription;
-    private String elementText;
+    private String valueFieldDescription; // Content of JavaDoc annotation associated with @XmlValue field
+    private ValueDescription valueType = null;  // Description for type associated with @XmlValue field
+    private String elementText; // Text to use between the start and end tags in the XML representation
     private String description;
     private String fieldTag;
     // If there is another description we have already seen for the XML being described for the same class,
@@ -69,14 +72,15 @@ implements DescriptionNode, XmlUnit {
         LOG.setLevel(Level.INFO);
     }
 
-    public XmlElementDescription() {
+    private XmlElementDescription(boolean isSingleton, boolean isWrapper, boolean isOptional) {
+        this.singleton = isSingleton;
+        this.wrapper = isWrapper;
+        this.optional = isOptional;
     }
 
     public static XmlElementDescription createTopLevel(JaxbInfo jaxbInfo, String namespace, String name) {
-        XmlElementDescription desc = new XmlElementDescription();
+        XmlElementDescription desc = new XmlElementDescription(true, false, false);
         desc.parent = null;
-        desc.isOptional = false;
-        desc.isSingleton = true;
         desc.isInnerRecursionElement = false;
         desc.minOccurs = 1;
         desc.targetNamespace = namespace;
@@ -89,10 +93,9 @@ implements DescriptionNode, XmlUnit {
     }
 
     private static XmlElementDescription createForElement(DescriptionNode parent, JaxbElementInfo nodeInfo) {
-        XmlElementDescription desc = new XmlElementDescription();
+        XmlElementDescription desc = new XmlElementDescription(! nodeInfo.isMultiElement(), false, false);
         desc.parent = parent;
         desc.minOccurs = nodeInfo.isRequired() ? 1 : 0;
-        desc.isSingleton = ! nodeInfo.isMultiElement();
         desc.targetNamespace = nodeInfo.getNamespace();
         desc.name = nodeInfo.getName();
         desc.jaxbClass = nodeInfo.getAtomClass();
@@ -110,10 +113,9 @@ implements DescriptionNode, XmlUnit {
     }
 
     private static XmlElementDescription createForWrappedElement(DescriptionNode parent, WrappedElementInfo nodeInfo) {
-        XmlElementDescription desc = new XmlElementDescription();
+        XmlElementDescription desc = new XmlElementDescription(true, true, false);
         desc.parent = parent;
         desc.minOccurs = 1;
-        desc.isSingleton = true;
         desc.targetNamespace = nodeInfo.getNamespace();
         desc.name = nodeInfo.getName();
         desc.isInnerRecursionElement = false;
@@ -144,7 +146,8 @@ implements DescriptionNode, XmlUnit {
         JaxbValueInfo valueInfo = jaxbInfo.getElementValue();
         if (valueInfo != null) {
             desc.valueFieldName = valueInfo.getFieldName();
-            desc.elementText = ValueDescription.getRepresentation(desc.valueFieldName, valueInfo.getAtomClass());
+            desc.valueType = ValueDescription.create(desc.valueFieldName, valueInfo.getAtomClass());
+            desc.elementText = desc.valueType.getRepresentation();
         }
         for (JaxbAttributeInfo attrInfo : jaxbInfo.getAttributes()) {
             desc.attribs.add(XmlAttributeDescription.create(desc, attrInfo));
@@ -168,14 +171,14 @@ implements DescriptionNode, XmlUnit {
 
     private static JaxbInfo getJaxbInfoForClass(Class<?> klass) {
         JaxbInfo jaxbInfo = null;
-        if (klass == null || klass.getName().startsWith("com.zimbra.soap")) {
+        if (JaxbUtil.isJaxbType(klass)) {
             jaxbInfo = JaxbInfo.getFromCache(klass);
         }
         return jaxbInfo;
     }
 
     private static void processTypeInfo(XmlElementDescription desc, Class<?> klass) {
-        desc.typeName = ValueDescription.getRepresentation(klass);
+        desc.typeName = ValueDescription.create(klass).getRepresentation();
         if (klass.isPrimitive() || klass.getName().startsWith("java.lang.")) {
             desc.typeIdString = "";
             String ftag = desc.getFieldTag();
@@ -310,7 +313,7 @@ implements DescriptionNode, XmlUnit {
     private int indentForCurrentElement(int depth) {
         
         int cnt = depth * INDENT_CHAR_NUM;
-        if (!isSingleton) {
+        if (!singleton) {
             cnt++;
         }
         if (minOccurs != 1) {
@@ -333,24 +336,24 @@ implements DescriptionNode, XmlUnit {
     }
 
     private void writeStartOptionalInfo(StringBuilder desc) {
-        if (isOptional) {
+        if (optional) {
             desc.append("[");
         }
     }
 
     private void writeEndOptionalInfo(StringBuilder desc) {
-        if (isOptional) {
+        if (optional) {
             desc.append("]");
         }
     }
     private void writeStartMultiElementInfo(StringBuilder desc) {
-        if (!isSingleton) {
+        if (!singleton) {
             desc.append("(");
         }
     }
 
     private void writeEndMultiElementInfo(StringBuilder desc) {
-        if (isSingleton) {
+        if (singleton) {
             return;
         }
         desc.append(")");
@@ -361,7 +364,7 @@ implements DescriptionNode, XmlUnit {
         }
     }
 
-    private String getTypeName() {
+    public String getTypeName() {
         return typeName;
     }
 
@@ -542,6 +545,10 @@ implements DescriptionNode, XmlUnit {
         return getDescription();
     }
 
+    public String getRawDescription() {
+        return description;
+    }
+
     @Override
     public String getDescription() {
         StringBuilder desc = new StringBuilder();
@@ -602,7 +609,7 @@ implements DescriptionNode, XmlUnit {
 
     @Override
     public OccurrenceSpec getOccurrence() {
-        if (isSingleton) {
+        if (singleton) {
             if (minOccurs > 0) {
                 return OccurrenceSpec.REQUIRED;
             } else {
@@ -616,4 +623,13 @@ implements DescriptionNode, XmlUnit {
             }
         }
     }
+
+    public boolean isJaxbType() {
+        return JaxbUtil.isJaxbType(jaxbClass);
+    }
+
+    public boolean isWrapper() { return wrapper; }
+    public boolean isOptional() { return optional; }
+    public boolean isSingleton() { return singleton; }
+    public ValueDescription getValueType() { return valueType; }
 }

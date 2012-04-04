@@ -334,6 +334,7 @@ public class JaxbInfo {
             if (encClassInfo != null) {
                 return encClassInfo.getClassForAttribute(name);
             }
+            return null;
         }
         return info.getAtomClass();
     }

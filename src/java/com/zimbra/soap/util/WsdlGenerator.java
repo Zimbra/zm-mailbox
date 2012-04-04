@@ -149,7 +149,7 @@ public class WsdlGenerator {
                 addWsdlRequestAndResponseMessageElements(root, wsdlNsInfo,
                         reqMsgName, respMsgName, requestName, responseName);
 
-                addWsdlPortTypeOperationElements(portTypeElems.get(svcInfo), wsdlNsInfo, reqMsgName, respMsgName, reqOpName);
+                addWsdlPortTypeOperationElements(portTypeElems.get(svcInfo), reqMsgName, respMsgName, reqOpName);
 
                 addWsdlBindingOperationElements(bindElems.get(svcInfo), wsdlNsInfo, reqOpName, rootName);
             }
@@ -210,7 +210,7 @@ public class WsdlGenerator {
             partElem.addAttribute("element", xsdPrefix + ":" + responseName);
     }
 
-    private static void addWsdlPortTypeOperationElements(Element portTypeElem, WsdlInfoForNamespace nsInfo,
+    private static void addWsdlPortTypeOperationElements(Element portTypeElem,
             String reqMsgName, String respMsgName, String reqOpName) {
             // wsdl:definitions/wsdl:portType/wsdl:operation
             Element opElem = portTypeElem.addElement(wsdlOperation);
@@ -320,8 +320,8 @@ public class WsdlGenerator {
             }
             reqList.add(requestName);
         }
-        for (String key :packageToRequestListsMap.keySet()) {
-            Collections.sort(packageToRequestListsMap.get(key));
+        for (Entry<String, List<String>> entry : packageToRequestListsMap.entrySet()) {
+            Collections.sort(entry.getValue());
         }
         return packageToRequestListsMap;
     }

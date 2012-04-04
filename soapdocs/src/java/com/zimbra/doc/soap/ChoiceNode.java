@@ -25,9 +25,13 @@ implements DescriptionNode {
     static final String name = "{CHOICE NODE}";
     private DescriptionNode parent;
     private List<DescriptionNode> children = Lists.newArrayList();
-    private boolean canHaveMultipleChildren;
+    private boolean singleChild;
     public ChoiceNode(boolean canHaveMultipleChildren) {
-        this.canHaveMultipleChildren = canHaveMultipleChildren;
+        this.singleChild = !canHaveMultipleChildren;
+    }
+
+    public boolean isSingleChild() {
+        return singleChild;
     }
 
     public String getHtmlDescription() {
@@ -46,10 +50,10 @@ implements DescriptionNode {
     @Override
     public void writeDescription(StringBuilder desc, int depth) {
         XmlElementDescription.writeRequiredIndentation(desc, true, depth);
-        if (canHaveMultipleChildren) {
-            desc.append("List of any of");
-        } else {
+        if (singleChild) {
             desc.append("Choose one of");
+        } else {
+            desc.append("List of any of");
         }
         desc.append(": {<br />\n");
         for (DescriptionNode child : getChildren()) {

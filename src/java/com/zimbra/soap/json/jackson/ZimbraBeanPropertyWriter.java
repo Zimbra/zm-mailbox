@@ -153,7 +153,7 @@ public class ZimbraBeanPropertyWriter
             }
             QName wrappedName = nameInfo.getWrappedName();
             // "_attrs" is the name used for Zimbra KeyValuePairs
-            if ("_attrs".equals(_name)) {
+            if ("_attrs".equals(_name.getValue())) {
                 jgen.writeFieldName(_name);
             } else if (wrappedName != null) {
                 jgen.writeFieldName(wrappedName.getLocalPart());

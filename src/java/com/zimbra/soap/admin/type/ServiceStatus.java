@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -111,10 +113,10 @@ public class ServiceStatus {
     public static List<ServiceStatus> parseData(Map<String,CsvReader> data)
     throws IOException {
         List<ServiceStatus> results = Lists.newArrayList();
-        for (String host : data.keySet()) {
-            CsvReader r = data.get(host);
-            List<String> columns = new ArrayList<String>(
-                    Arrays.asList(r.getColNames()));
+        for (Entry<String, CsvReader> entry : data.entrySet()) {
+            String host = entry.getKey();
+            CsvReader r = entry.getValue();
+            List<String> columns = new ArrayList<String>(Arrays.asList(r.getColNames()));
             columns.remove("timestamp");
             Map<String,String> row = Maps.newHashMap();
             String lastTS = null;
@@ -138,14 +140,14 @@ public class ServiceStatus {
             }
             if (lastTS != null) {
                 long timeStamp = Long.parseLong(lastTS);
-                for (String service : row.keySet()) {
-                    String status = row.get(service);
+                for (Entry<String, String> svcStatusEntry : row.entrySet()) {
+                    String service = svcStatusEntry.getKey();
+                    String status = svcStatusEntry.getValue();
                     if (status != null) {
                         status = status.trim();
                         // for some reason, QA is getting an empty string
                         if ("".equals(status)) continue;
-                        ServiceStatus s = fromServerServiceTimeStatus(host,
-                                service, timeStamp,
+                        ServiceStatus s = fromServerServiceTimeStatus(host, service, timeStamp,
                                 // 0.8 check because of rrd rounding,
                                 // happens when a service has just started
                                 ZeroOrOne.fromBool(Float.parseFloat(status) > 0.8));

@@ -27,8 +27,8 @@ public class Command implements java.io.Serializable {
     private static final String REGEX_DESCRIPTION_SHORT_DELIM =
             "<br|<BR|<p>|<P>|<table|<TABLE|<ul|<UL|<ol|<OL|<pre>|<PRE>";
 
-    private XmlElementDescription request = new XmlElementDescription();
-    private XmlElementDescription response = new XmlElementDescription();
+    private XmlElementDescription request;
+    private XmlElementDescription response;
 
     private List<XmlElementDescription> allElements = new LinkedList<XmlElementDescription>();
 
@@ -128,9 +128,9 @@ public class Command implements java.io.Serializable {
     }
 
     private void loadAllElements(DescriptionNode root) {
-        Iterator it = root.getChildren().iterator();
+        Iterator<DescriptionNode> it = root.getChildren().iterator();
         while(it.hasNext()) {
-            DescriptionNode dn = (DescriptionNode) it.next();
+            DescriptionNode dn = it.next();
             if (dn instanceof XmlElementDescription) {
                 XmlElementDescription e = (XmlElementDescription) dn;
                 if (this.allElements.contains(e) == false)
@@ -138,6 +138,11 @@ public class Command implements java.io.Serializable {
                 loadAllElements(e);
             } else {
                 for (DescriptionNode dnc : dn.getChildren()) {
+                    if (dnc instanceof XmlElementDescription) {
+                        XmlElementDescription e = (XmlElementDescription) dnc;
+                        if (this.allElements.contains(e) == false)
+                            this.allElements.add(e);
+                    }
                     loadAllElements(dnc);
                 }
             }
@@ -166,13 +171,6 @@ public class Command implements java.io.Serializable {
 
     public List<XmlElementDescription> getAllElements() {
         return this.allElements;
-    }
-
-    public List<XmlElementDescription> getAllSubElements() {
-        List<XmlElementDescription> els = new LinkedList<XmlElementDescription>(this.allElements);
-        els.remove(this.request);
-        els.remove(this.response);
-        return els;
     }
 
     public void setNetworkEdition(boolean networkEdition) { this.networkEdition = networkEdition; }
@@ -207,8 +205,6 @@ public class Command implements java.io.Serializable {
         buf.append(this.getResponse());
         buf.append(";allElements=");
         buf.append(this.getAllElements().size());
-        buf.append(";allSubElements=");
-        buf.append(this.getAllSubElements().size());
         buf.append("]");
 
         return    buf.toString();

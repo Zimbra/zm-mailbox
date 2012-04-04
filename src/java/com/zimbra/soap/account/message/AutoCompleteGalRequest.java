@@ -16,23 +16,13 @@
 package com.zimbra.soap.account.message;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.account.type.CalTZInfo;
-import com.zimbra.soap.base.CalTZInfoInterface;
-import com.zimbra.soap.type.AttributeName;
-import com.zimbra.soap.type.CursorInfo;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -116,11 +106,7 @@ public class AutoCompleteGalRequest {
     public String getGalAccountId() { return galAccountId; }
     public Integer getLimit() { return limit; }
 
-    // Not a JAXB related method
-    public void setCalTz(CalTZInfoInterface calTz) { this.setCalTz((CalTZInfo)calTz); }
-
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("type", type)
@@ -131,7 +117,6 @@ public class AutoCompleteGalRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

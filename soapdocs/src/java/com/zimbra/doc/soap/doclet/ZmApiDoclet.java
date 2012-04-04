@@ -15,6 +15,7 @@
 
 package com.zimbra.doc.soap.doclet;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
@@ -24,6 +25,7 @@ import com.zimbra.doc.soap.ApiClassDocumentation;
 import com.zimbra.doc.soap.Root;
 import com.zimbra.doc.soap.SoapDocException;
 import com.zimbra.doc.soap.WsdlDocGenerator;
+import com.zimbra.doc.soap.apidesc.SoapApiDescription;
 import com.zimbra.doc.soap.template.ApiReferenceTemplateHandler;
 import com.zimbra.doc.soap.template.TemplateHandler;
 
@@ -34,15 +36,18 @@ public class ZmApiDoclet {
 
     private static final String ARG_TEMPLATES_DIR = "--templates-dir";
     private static final String ARG_OUTPUT_DIR    = "--output-dir";
+    private static final String ARG_APIDESC_JSON  = "--apidesc-json";
     private static final String ARG_BUILD_VERSION = "--build-version";
     private static final String ARG_BUILD_DATE    = "--build-date";
 
     private static String templatesDir = null;
     private static String outputDir = null;
+    private static String apiDescriptionJson = null;
     private static String buildVersion = null;
     private static String buildDate = null;
  
-    private static final String[] ARG_NAMES = { ARG_TEMPLATES_DIR, ARG_OUTPUT_DIR, ARG_BUILD_VERSION, ARG_BUILD_DATE };
+    private static final String[] ARG_NAMES =
+        { ARG_TEMPLATES_DIR, ARG_OUTPUT_DIR, ARG_APIDESC_JSON, ARG_BUILD_VERSION, ARG_BUILD_DATE };
     private static DocletApiListener apiListener;
 
     public static void setListener(DocletApiListener listener) {
@@ -76,6 +81,12 @@ public class ZmApiDoclet {
         // generate the API Reference documentation
         ApiReferenceTemplateHandler templateHandler = new ApiReferenceTemplateHandler(templateContext);
         templateHandler.process(soapApiDataModelRoot);
+
+        // generate a JSON representation of the API used when creating a changelog
+        SoapApiDescription jsonDesc = new SoapApiDescription(buildVersion, buildDate);
+        jsonDesc.build(soapApiDataModelRoot);
+        File json = new File(apiDescriptionJson);
+        jsonDesc.serializeToJson(json);
         return true;
     }
 
@@ -85,6 +96,8 @@ public class ZmApiDoclet {
                 templatesDir = opt[1];
             } else if (opt[0].equals(ARG_OUTPUT_DIR)) {
                 outputDir = opt[1];
+            } else if (opt[0].equals(ARG_APIDESC_JSON)) {
+                apiDescriptionJson = opt[1];
             } else if (opt[0].equals(ARG_BUILD_VERSION)) {
                 buildVersion = opt[1];
             } else if (opt[0].equals(ARG_BUILD_DATE)) {

@@ -27,7 +27,16 @@
   <property name="soapdocs.src.dir" location="soapdocs/src"/>
   <property name="soapdocs.classes.dir" location="${build.dir}/wsdl-doc-classes"/>
   <property name="soapdocs.jar" location="soapdocs/jars/ZmApiDoclet.jar"/>
+  <property name="soapdocs.apidesc.file" location="${build.dir}/soapapi-desc.json" />
+  <property name="soapdocs.apidesc.baseline.file" location="soapdocs/baseline-soapapi-desc.json"/>
+  <property name="soapapi.changelog.output.dir" location="${build.dir}/docs/soap/api-changelog" />
+  <property name="soapapi.changelog.file" location="${build.dir}/docs/soapapi-changelog.zip" />
+
+  <property name="soapdocs.test.dir" location="${build.dir}/soapdocs-test"/>
+  <property name="soapdocs.test.src.dir" location="soapdocs/src/java-test"/>
+  <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
   <!-- END   ZimbraSoapDocs Properties -->
+
 
   <path id="all.java.path">
     <pathelement location="${src.java.dir}" />
@@ -70,6 +79,7 @@
     </fileset>
     <fileset dir="${common.jars.dir}">
         <include name="**/commons-lang-*.jar"/>
+        <include name="**/commons-cli-*.jar"/>
     </fileset>
   </path>
 
@@ -92,6 +102,7 @@
         <include name="**/freemarker*.jar"/>
     </fileset>
   </path>
+
   <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
     <classpath refid="jaxws.classpath"/>
   </taskdef>
@@ -286,6 +297,7 @@
         <doclet name="com.zimbra.doc.soap.doclet.ZmApiDoclet">
             <param name="--templates-dir" value="${soapdocs.templates.dir}"/>
             <param name="--output-dir" value="${soapdocs.output.dir}"/>
+            <param name="--apidesc-json" value="${soapdocs.apidesc.file}"/>
             <param name="--build-version" value="${zimbra.buildinfo.version}"/>
             <param name="--build-date" value="${zimbra.buildinfo.date}"/>
         </doclet>
@@ -298,4 +310,53 @@
         </packageset>
   </javadoc>
   </target>
+
+  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc">
+    <delete dir="${soapapi.changelog.output.dir}" quiet="true"/>
+    <mkdir dir="${soapapi.changelog.output.dir}" />
+    <copy todir="${soapapi.changelog.output.dir}">
+        <fileset dir="${soapdocs.templates.dir}/changelog">
+            <exclude name="**/*.ftl"/>
+        </fileset>
+    </copy>
+    <java classname="com.zimbra.doc.soap.changelog.SoapApiChangeLog" classpathref="soapdocs.class.path" fork="true" failonerror="true">
+        <arg line="--output-dir ${soapapi.changelog.output.dir}"/>
+        <arg line="--templates-dir ${soapdocs.templates.dir}"/>
+        <arg line="--baseline-apidesc ${soapdocs.apidesc.baseline.file}"/>
+        <arg line="--current-apidesc ${soapdocs.apidesc.file}"/>
+    </java>
+  </target>
+
+  <target name="soapdocs-test-compile" depends="soap-api-doc-compile">
+    <mkdir dir="${soapdocs.test.classes.dir}"/>
+    <javac srcdir="${soapdocs.test.src.dir}" destdir="${soapdocs.test.classes.dir}"
+      debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
+    <copy todir="${soapdocs.test.classes.dir}">
+      <fileset dir="${soapdocs.test.src.dir}" excludes="**/*.java"/>
+    </copy>
+  </target>
+
+  <target name="soapdocs-test" depends="soapdocs-test-compile" description="Run soapdocs unit tests">
+    <delete dir="${soapdocs.test.dir}" quiet="true"/>
+    <mkdir dir="${soapdocs.test.dir}/output"/>
+    <mkdir dir="${soapdocs.test.dir}/report"/>
+    <junit printsummary="on" fork="yes" forkmode="once" failureproperty="soapdocs.junit.failure" tempdir="${soapdocs.test.dir}">
+      <classpath refid="soapdocs.class.path"/>
+      <classpath path="${soapdocs.test.classes.dir}"/>
+      <assertions><enable/></assertions>
+      <formatter type="xml"/>
+      <batchtest todir="${soapdocs.test.dir}/output">
+        <fileset dir="${soapdocs.test.src.dir}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+    <junitreport todir="${soapdocs.test.dir}/report">
+      <fileset dir="${soapdocs.test.dir}/output"/>
+      <report todir="${soapdocs.test.dir}/report"/>
+    </junitreport>
+    <echo>SOAPDOCS Test Report: ${soapdocs.test.dir}/report/index.html</echo>
+    <fail if="soapdocs.junit.failure" message="SOAPDOCS Unit test failed"/>
+  </target>
+
 </project>

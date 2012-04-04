@@ -183,7 +183,7 @@ public class ApiReferenceTemplateHandler extends TemplateHandler {
     throws    IOException, SoapDocException {
         List<Command>    allCommands = root.getAllCommands();
 
-        Map data = Maps.newHashMap();
+        Map<String,List<Command>> data = Maps.newHashMap();
         data.put(KEY_ALL_COMMANDS, allCommands);
 
         processTemplate(root, data, OUTPUT_ALL_COMMANDS_FRAME, this.allCommandsFrameTemplate);
@@ -199,14 +199,14 @@ public class ApiReferenceTemplateHandler extends TemplateHandler {
     throws    IOException, SoapDocException {
 
         List<Command>    commands = service.getCommands();
-        Iterator it = commands.iterator();
+        Iterator<Command> it = commands.iterator();
         while (it.hasNext()) {
             Command    c = (Command)it.next();
 
             String    filename = c.getName() + ".html";
             File cf = new File(outputFile, filename);
 
-            Map data = Maps.newHashMap();
+            Map<String,Object>data = Maps.newHashMap();
             data.put(KEY_COMMAND, c);
             data.put(KEY_SERVICE, service);
 

@@ -15,9 +15,11 @@
 
 package com.zimbra.doc.soap;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -166,11 +168,10 @@ public class WsdlDocGenerator {
         elemDesc.markupDuplicateElements(primaryDescriptions);
     }
 
-    public static Root processJaxbClasses(Map<String,ApiClassDocumentation> javadocInfo) {
-        Class<?>[] jaxbClasses = JaxbUtil.getJaxbRequestAndResponseClasses();
+    public static Root processJaxbClasses(Map<String,ApiClassDocumentation> javadocInfo, List<Class<?>> classes) {
         Map<Package,String> pkgToNamespace = Maps.newHashMap();
         Root root = new Root();
-        for (Class<?> jaxbClass : jaxbClasses) {
+        for (Class<?> jaxbClass : classes) {
             JaxbInfo jaxbInfo = JaxbInfo.getFromCache(jaxbClass);
             String namespace = getNamespace(jaxbClass, pkgToNamespace);
             Service svc = root.getServiceForNamespace(namespace);
@@ -212,5 +213,9 @@ public class WsdlDocGenerator {
         }
         populateWithJavadocInfo(root, javadocInfo);
         return root;
+    }
+
+    public static Root processJaxbClasses(Map<String,ApiClassDocumentation> javadocInfo) {
+        return processJaxbClasses(javadocInfo, JaxbUtil.getJaxbRequestAndResponseClasses());
     }
 }

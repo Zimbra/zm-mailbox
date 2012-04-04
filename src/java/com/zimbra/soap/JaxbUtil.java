@@ -44,6 +44,7 @@ import org.w3c.dom.NodeList;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
@@ -944,8 +945,8 @@ public final class JaxbUtil {
     private JaxbUtil() {
     }
 
-    public static Class<?>[] getJaxbRequestAndResponseClasses() {
-        return MESSAGE_CLASSES;
+    public static ImmutableList<Class<?>> getJaxbRequestAndResponseClasses() {
+        return ImmutableList.<Class<?>>builder().add(MESSAGE_CLASSES).build();
     }
 
     /**
@@ -1111,6 +1112,13 @@ public final class JaxbUtil {
         }
     }
 
+    public static boolean isJaxbType(Class<?> klass) {
+        if ( (klass == null) || klass.isPrimitive()) {
+            return false;
+        }
+        return klass.getName().startsWith("com.zimbra.soap") || klass.getName().startsWith("com.zimbra.doc.soap");
+    }
+
     /**
      * Manipulates a structure under {@link elem} which obeys Zimbra's
      * SOAP XML structure rules to comply with more stringent JAXB rules.
@@ -1126,7 +1134,7 @@ public final class JaxbUtil {
             LOG.debug("JAXB no class associated with " + elem.getLocalName());
             return;
         }
-        if (!klass.getName().startsWith("com.zimbra.soap")) {
+        if (!isJaxbType(klass)) {
             return;
         }
 

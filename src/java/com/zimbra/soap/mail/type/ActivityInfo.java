@@ -19,9 +19,9 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -106,8 +106,8 @@ public class ActivityInfo {
 
     public void setArgs(Map<String,String> args) {
         if (args != null) {
-            for (String key : args.keySet()) {
-                this.addArg(new NamedValue(key,args.get(key)));
+            for (Entry<String,String> entry : args.entrySet()) {
+                this.addArg(new NamedValue(entry.getKey(),entry.getValue()));
             }
         }
     }

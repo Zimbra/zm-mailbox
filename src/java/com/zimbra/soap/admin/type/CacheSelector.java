@@ -32,12 +32,12 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class CacheSelector {
+public final class CacheSelector {
 
-    private static Splitter COMMA_SPLITTER = Splitter.on(",");
-    private static Joiner COMMA_JOINER = Joiner.on(",");
+    private final static Splitter COMMA_SPLITTER = Splitter.on(",");
+    private final static Joiner COMMA_JOINER = Joiner.on(",");
 
-    private List<CacheEntryType> types = Lists.newArrayList();
+    private final List<CacheEntryType> types = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag all-servers
@@ -55,7 +55,7 @@ public class CacheSelector {
      * @zm-api-field-description Cache entry selectors
      */
     @XmlElement(name=AdminConstants.E_ENTRY /* entry */, required=false)
-    private List <CacheEntrySelector> entries = Lists.newArrayList();
+    private final List <CacheEntrySelector> entries = Lists.newArrayList();
 
     public CacheSelector()
     throws ServiceException {
@@ -90,7 +90,7 @@ public class CacheSelector {
 
     public void setEntries(Iterable<CacheEntrySelector> entryList) {
         this.entries.clear();
-        if (entries != null) {
+        if (entryList != null) {
             Iterables.addAll(this.entries, entryList);
         }
     }

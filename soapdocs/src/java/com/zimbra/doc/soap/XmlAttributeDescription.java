@@ -21,32 +21,35 @@ import com.zimbra.soap.util.JaxbAttributeInfo;
 public class XmlAttributeDescription
 implements XmlUnit {
     private XmlElementDescription parent;
-    private String name;
-    private boolean required;
-    private String valueRepresentation;
+    private final String name;
+    private final boolean required;
+    private final String fieldName;
+    private ValueDescription valueDescription;
     private Class<?> jaxbClass;
-    private String fieldName;
     private String description;
     private String fieldTag;
 
-    private XmlAttributeDescription() {
+    private XmlAttributeDescription(String name, boolean required, String fieldName) {
+        this.name = name;
+        this.required = required;
+        this.fieldName = fieldName;
     }
 
     public static XmlAttributeDescription create(XmlElementDescription parent, JaxbAttributeInfo info) {
-        XmlAttributeDescription desc = new XmlAttributeDescription();
+        XmlAttributeDescription desc = new XmlAttributeDescription(
+                info.getName(), info.isRequired(), info.getFieldName());
         desc.parent = parent;
-        desc.name = info.getName();
-        desc.required = info.isRequired();
         desc.jaxbClass = info.getAtomClass();
-        desc.fieldName = info.getFieldName();
-        desc.valueRepresentation = ValueDescription.getRepresentation(desc.jaxbClass);
+        desc.valueDescription = ValueDescription.create(desc.jaxbClass);
         return desc;
     }
 
     @Override
     public String getName() { return name; }
     public boolean isRequired() { return required; }
-    public String getValueRepresentation() { return Strings.nullToEmpty(valueRepresentation); }
+    public String getValueRepresentation() {
+        return (valueDescription == null) ? "" : Strings.nullToEmpty(valueDescription.getRepresentation());
+    }
 
     public void setFieldTag(String fieldTag) { this.fieldTag = fieldTag; }
     public String getFieldTag() { return Strings.nullToEmpty(fieldTag); }
@@ -57,8 +60,14 @@ implements XmlUnit {
     public String getDescriptionForTable() {
         return getDescription();
     }
+
+    public String getRawDescription() {
+        return description;
+    }
+
     public String getDescription() {
         StringBuilder desc = new StringBuilder();
+        String valueRepresentation = getValueRepresentation();
         if (!Strings.isNullOrEmpty(valueRepresentation)) {
             desc.append("<b>Type:").append(valueRepresentation).append("</b>");
             if (!Strings.isNullOrEmpty(description)) {
@@ -70,7 +79,6 @@ implements XmlUnit {
         return desc.toString();
     }
 
-    public void setFieldName(String fieldName) { this.fieldName = fieldName; }
     public String getFieldName() { return Strings.nullToEmpty(fieldName); }
 
     /**
@@ -137,5 +145,13 @@ implements XmlUnit {
     @Override
     public OccurrenceSpec getOccurrence() {
         return required ? OccurrenceSpec.REQUIRED : OccurrenceSpec.OPTIONAL;
+    }
+
+    public Class<?> getJaxbClass() {
+        return jaxbClass;
+    }
+
+    public ValueDescription getValueDescription() {
+        return valueDescription;
     }
 }
