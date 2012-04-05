@@ -52,6 +52,7 @@ import com.zimbra.cs.mime.ParsedContact;
  * @author ysasaki
  */
 
+@Ignore("bug 72573")
 public final class CassandraIndexTest {
     private static CassandraDaemon cassandra;
     private static CassandraIndex.Factory factory;
