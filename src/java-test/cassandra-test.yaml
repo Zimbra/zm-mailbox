@@ -22,7 +22,6 @@ data_file_directories:
   - build/test/cassandra/data
 commitlog_directory: build/test/cassandra/commitlog
 saved_caches_directory: build/test/cassandra/cache
-commitlog_rotation_threshold_in_mb: 128
 commitlog_sync: periodic
 commitlog_sync_period_in_ms: 10000
 seed_provider:
@@ -46,7 +45,6 @@ rpc_keepalive: true
 thrift_framed_transport_size_in_mb: 15
 thrift_max_message_length_in_mb: 16
 snapshot_before_compaction: false
-binary_memtable_throughput_in_mb: 256
 column_index_size_in_kb: 64
 in_memory_compaction_limit_in_mb: 64
 rpc_timeout_in_ms: 10000
