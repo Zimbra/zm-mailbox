@@ -1819,9 +1819,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void setColor(byte color) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
-        } else if (color == mRGBColor.getMappedColor()) {
-            return;
         }
+
+        if (color == mRGBColor.getMappedColor())
+            return;
+
         markItemModified(Change.COLOR);
         mRGBColor.setColor(color);
         saveMetadata();
@@ -1835,17 +1837,19 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void setDate(long date) throws ServiceException {
-        if (mData.date == date) {
+        if (mData.date == date)
             return;
-        } else if (!canAccess(ACL.RIGHT_WRITE)) {
+
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
         }
-        markItemModified(Change.DATE);
-        mData.date = (int)(date / 1000L);
-        metadataChanged();
+
         if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("Setting date of %s to %d.", getMailopContext(this), date);
         }
+        markItemModified(Change.DATE);
+        mData.date = (int) (date / 1000L);
+        metadataChanged();
         DbMailItem.saveDate(this);
     }
 
@@ -1853,9 +1857,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  not update the containing folder's IMAP UID highwater mark; that is
      *  done implicitly whenever the folder size increases. */
     void setImapUid(int imapId) throws ServiceException {
-        if (mData.imapId == imapId) {
+        if (mData.imapId == imapId)
             return;
-        }
+
         if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("Setting imapId of %s to %d.", getMailopContext(this), imapId);
         }
@@ -2658,34 +2662,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *        permissions</ul>
      * @see #validateItemName(String)
      * @see #move(Folder) */
-
     void rename(String newName, Folder target) throws ServiceException {
-        rename(newName, target, null);
-    }
-
-    /** Renames the item and optionally moves it.  Altering an item's case
-     *  (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.  If you don't
-     *  want the item to be moved, you must pass <tt>folder.getFolder()</tt>
-     *  as the second parameter.
-     *
-     * @param newName  The new name for this item.
-     * @param target   The new parent folder to move this item to.
-     * @param date     The new date for this item, if null the date will be
-     *                 unchanged.
-     * @perms {@link ACL#RIGHT_WRITE} on the item to rename it,
-     *        {@link ACL#RIGHT_DELETE} on the parent folder and
-     *        {@link ACL#RIGHT_INSERT} on the target folder to move it
-     * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the item can't be renamed
-     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a different item by that name
-     *        already exists in the target folder
-     *    <li><tt>mail.INVALID_NAME</tt> - if the new item's name is invalid
-     *    <li><tt>service.FAILURE</tt> - if there's a database failure
-     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul>
-     * @see #validateItemName(String)
-     * @see #move(Folder) */
-    void rename(String newName, Folder target, Long date) throws ServiceException {
         String name = validateItemName(newName);
 
         boolean renamed = !name.equals(mData.name);
@@ -2723,12 +2700,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             // XXX: note that we don't update mData.folderId here, as we need the subsequent
             //   move() to execute (it does several things that this code does not)
 
-            if (date == null) {
-                markItemModified(Change.NAME);
-            } else {
-                markItemModified(Change.NAME | Change.DATE);
-                mData.date = (int)(date / 1000);
-            }
+            markItemModified(Change.NAME);
             mData.name = name;
             mData.setSubject(name);
             mData.dateChanged = mMailbox.getOperationTimestamp();

@@ -114,7 +114,6 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -6076,7 +6075,7 @@ public class Mailbox {
                     if (fromDumpster) {
                         for (MailItem.UnderlyingData data : DbMailItem.getByParent(item, SortBy.DATE_DESC, -1, true)) {
                             MailItem child = getItem(data);
-                            Folder destination = (child.getType() == Type.COMMENT) ? getFolderById(ID_FOLDER_COMMENTS) : folder;
+                            Folder destination = (child.getType() == MailItem.Type.COMMENT) ? getFolderById(ID_FOLDER_COMMENTS) : folder;
                             child.copy(destination, getNextItemId(ID_AUTO_INCREMENT), child.getUuid(), copy);
                         }
                     }
@@ -6338,13 +6337,12 @@ public class Mailbox {
     }
 
     public void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId)
-        throws ServiceException {
+    throws ServiceException {
         rename(octxt, id, type, name, folderId, null);
     }
 
-
     public void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId, Long date)
-            throws ServiceException {
+    throws ServiceException {
         if (name != null && name.startsWith("/")) {
             rename(octxt, id, type, name);
             return;
@@ -6370,7 +6368,11 @@ public class Mailbox {
             trainSpamFilter(octxt, item, target, "rename");
 
             String oldName = item.getName();
-            item.rename(name, target, date);
+            item.rename(name, target);
+
+            if (date != null) {
+                item.setDate(date);
+            }
 
             if (item instanceof Tag) {
                 mTagCache.remove(oldName.toLowerCase());
@@ -7044,7 +7046,7 @@ public class Mailbox {
         try {
             beginTransaction("grantAccess", octxt, redoPlayer);
 
-            MailItem item = getItemById(itemId, Type.UNKNOWN);
+            MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
             grant = item.grantAccess(grantee, granteeType, rights, args, expiry);
             success = true;
@@ -7066,7 +7068,7 @@ public class Mailbox {
         try {
             beginTransaction(dueToExpiry ? "expireAccess" : "revokeAccess", octxt, redoPlayer);
 
-            MailItem item = getItemById(itemId, Type.UNKNOWN);
+            MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
             item.revokeAccess(grantee);
             success = true;
@@ -7082,7 +7084,7 @@ public class Mailbox {
         try {
             beginTransaction("setPermissions", octxt, redoPlayer);
 
-            MailItem item = getItemById(itemId, Type.UNKNOWN);
+            MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
             item.setPermissions(acl);
             success = true;
@@ -7785,7 +7787,7 @@ public class Mailbox {
                     long tagTimeout = getOperationTimestampMillis() - tagLifetime;
                     PendingDelete info = DbTag.getLeafNodes(this, tag, (int) (tagTimeout / 1000), maxItemsPerFolder);
                     MailItem.delete(this, info, null, false, false);
-                    List<Integer> ids = info.itemIds.getIds(Type.MESSAGE);
+                    List<Integer> ids = info.itemIds.getIds(MailItem.Type.MESSAGE);
                     int numPurged = (ids == null ? 0 : ids.size());
                     purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 }
@@ -8662,9 +8664,9 @@ public class Mailbox {
                         }
 
                         if (obj instanceof Tag || obj == MailItem.Type.TAG) {
-                            purge(Type.TAG);
+                            purge(MailItem.Type.TAG);
                         } else if (obj instanceof Folder || FOLDER_TYPES.contains(obj)) {
-                            purge(Type.FOLDER);
+                            purge(MailItem.Type.FOLDER);
                         } else if (obj instanceof MailItem && change.itemCache != null) {
                             change.itemCache.remove(((MailItem) obj).getId());
                         }
@@ -8797,8 +8799,8 @@ public class Mailbox {
         try {
             beginTransaction("createComment", octxt, redoRecorder);
 
-            MailItem parent = getItemById(octxt, parentId, Type.UNKNOWN);
-            if (parent.getType() != Type.DOCUMENT) {
+            MailItem parent = getItemById(octxt, parentId, MailItem.Type.UNKNOWN);
+            if (parent.getType() != MailItem.Type.DOCUMENT) {
                 throw MailServiceException.CANNOT_PARENT();
             }
             CreateComment redoPlayer = (CreateComment) currentChange.getRedoPlayer();
@@ -8842,7 +8844,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getComments", octxt, null);
-            MailItem parent = getItemById(parentId, Type.UNKNOWN, fromDumpster);
+            MailItem parent = getItemById(parentId, MailItem.Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
         } finally {
             endTransaction(success);
@@ -8859,7 +8861,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getComments", octxt, null);
-            MailItem parent = getItemByUuid(parentUuid, Type.UNKNOWN, fromDumpster);
+            MailItem parent = getItemByUuid(parentUuid, MailItem.Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
         } finally {
             endTransaction(success);
@@ -8870,7 +8872,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("markMetadataChanged", octxt, null);
-            MailItem item = getItemById(octxt, itemId, Type.UNKNOWN);
+            MailItem item = getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
             item.markMetadataChanged();
             success = true;
             return item;

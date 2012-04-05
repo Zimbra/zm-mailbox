@@ -1029,14 +1029,15 @@ public class Folder extends MailItem {
      * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
      *        {@link ACL#RIGHT_DELETE} on the folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
-    @Override void rename(String name, Folder target, Long date) throws ServiceException {
+    @Override
+    void rename(String name, Folder target) throws ServiceException {
         name = validateItemName(name);
         boolean renamed = !name.equals(mData.name);
         if (!renamed && target == parent)
             return;
         String oldName = mData.name;
         Folder oldParent = (target == parent ? parent : null);
-        super.rename(name, target, date == null ? ((long)mMailbox.getOperationTimestamp()) * 1000 : date);
+        super.rename(name, target);
         if (oldParent != null) { //null if moved; super.rename() already removed it from old
             oldParent.subfolderRenamed(oldName, name);
         }
