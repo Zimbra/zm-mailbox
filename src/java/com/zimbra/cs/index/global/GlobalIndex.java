@@ -498,7 +498,11 @@ public final class GlobalIndex {
                 ZimbraLog.index.error("Failed to update total item count", e);
             } finally {
                 Closeables.closeQuietly(scanner);
-                pool.putTable(table);
+                try {
+                    pool.putTable(table);
+                } catch (IOException e) {
+                    ZimbraLog.index.error("Failed to close the table", e);
+                }
             }
         }
     }
