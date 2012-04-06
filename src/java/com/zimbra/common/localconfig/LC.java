@@ -317,6 +317,8 @@ public final class LC {
     public static final KnownKey cassandra_host = KnownKey.newKey("localhost:9160");
     public static final KnownKey hbase_host = KnownKey.newKey("localhost");
     public static final KnownKey hbase_table_pool_size = KnownKey.newKey(10);
+    public static final KnownKey hbase_index_sweep_time = KnownKey.newKey("00:00:00-00:30:00"); //start-end; time in hh:mm:ss format
+    public static final KnownKey global_index_enabled = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
