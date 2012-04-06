@@ -569,8 +569,8 @@ public final class HBaseIndex implements IndexStore {
         }
 
         @Override
-        protected void doCommit(Map<String, String> commitUserData) {
-            throw new UnsupportedOperationException();
+        protected void doCommit(Map<String, String> commitUserData) throws IOException {
+            table.close();
         }
 
         @Override
