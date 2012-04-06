@@ -15,11 +15,15 @@
 
 package com.zimbra.common.calendar;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
+import com.zimbra.common.localconfig.LC;
+
 public class ParsedDateTimeTest {
     
     /*
@@ -32,7 +36,15 @@ public class ParsedDateTimeTest {
                 "Custom TZ",
                 -10800000, "16010101T000000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=2;BYDAY=-1SU", "FOO",
                 -7200000, "16010101T000000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=3SU", "BAR");
+        
+        // Configure test timezones.ics file.
+        File tzFile = File.createTempFile("timezones-", ".ics");
+        BufferedWriter writer= new BufferedWriter(new FileWriter(tzFile));
+        writer.write("BEGIN:VCALENDAR\r\nEND:VCALENDAR");
+        writer.close();
         TimeZoneMap tzmap = new TimeZoneMap(localTZ);
+        LC.timezone_file.setDefault(tzFile.getAbsolutePath());
+        
         ParsedDateTime pd;
         // Cross-over dates in October
         pd = ParsedDateTime.parse("20121020", tzmap, null, localTZ);
