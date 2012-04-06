@@ -579,5 +579,178 @@ Debugging tips
 ================
 1. Add -Djavax.net.debug=ssl,handshake,data,trustmanager in localconfig key mailboxd_java_options
    Output will be in zmmailboxd.out.
-   
 
+============
+OCSP support 
+============
+
+Server uses OCSP protocol to obtain revocation status of X.509 client certificate. All 
+the certificates that were issued after 2005-05-16 should have the OCSP Service URL 
+automatically included. That is why server checks AuthorityInfoAccess extension of 
+certificate to retrieve OCSP responder service url. If aforementioned extension exists, 
+OCSP request is made using OCSP responder service url to obtain revocation status of 
+certificate in question. Two way certificate based authentication succeeds only in case 
+if OCSP returns positive status for submitted certificate. Otherwise if OCSP service is 
+down or revoked certificate status is returned, server concludes that client certificate 
+is not valid and redirects to password based login page.
+
+=========
+OCSP flow 
+=========
+
+- As a part of evaluation of client certificate, server retrieves OCSP responder url 
+  and sends request containing client certificate along with CA certificate.
+
+- OCSP responder analyzes certificates provided and returns revocation status of certificate
+
+- Based on revocation status, server makes a conclusion in regards to validity of 
+  client certificate
+   
+===============================
+Preparation of OCSP environment 
+===============================
+
+Preparation of environment for self signed certificates is a multi step process which 
+includes setup of local OCSP responder as well as modification of AuthorityInfoAccess 
+extension of client certificate which can be somewhat time consuming. Also please note 
+that self signed certificate produced as a result of procedure described above doesn't 
+contain AuthorityInfoAccess extension necessary for OCSP processing, so the server will
+simply skip OCSP check for this particular certificate. Although OCSP feature can be 
+tested with any types of certificates (including self signed), luckily i was able to 
+find SSL framework called CAcert (http://cacert.org) which significantly simplifies 
+preparation of OCSP environment. CAcert hosts OCSP responder (ocsp.cacert.org) listening 
+on default OCSP port as well as port 80 for cases where clients are behind the firewall 
+and can't reach OCSP on default port, CAcert also offers free SSL certificates pre 
+populated with AuthorityInfoAccess extension pointing to http://ocsp.cacert.org. Below go
+the steps describing how to setup environment:
+
+- go to http://cacert.org, click on the link called 'Root certificate', find and download 
+it in PEM format, save it under mycerts folder as ca.crt (rename existing self signed 
+ca.crt before saving).
+
+- import client certificate into the server keystore:
+
+for dev environment:
+
+keytool -import -keystore /opt/zimbra/jetty/etc/keystore -alias myca -file ca.crt
+
+see section (Import CA certificate) for reference on how to do it in production environment
+
+- create CACert account for testing, go to http://cacert.org and click on 'Join', fill up 
+form and provide your zimbra email address, in my case it's eugene@zimbra.com. 
+
+- use credentials created in previous step to login to your account. Go to http://cacert.org
+and click on 'Password login'
+
+- create client certificate, click on 'Client Certificates' -> 'New'
+
+- install newly created client certificate in Firefox. After completion of previous step, 
+you should see link allowing automatic installation of client certificate. Verify in
+Firefox (Firefox->Preferences->View Certificates) that client cert is installed.
+
+- export client cert from Firefox(Firefox->Preferences->View Certificates->double click 
+on client certifciate->export->switch to details tab->hit <export> button->save in PEM 
+format) and save under mycerts folder as 'clientcert.crt'
+
+- make sure that firewall doesn't block default OCSP port(note that VMware blocks default OCSP port, so usage of public wireless network may help to overcome port problem) and check the validity of client 
+certificate using openssl:
+
+openssl ocsp -issuer ca.crt -cert clientcert.crt -url http://ocsp.cacert.org/ -resp_text
+
+If default OCSP port is blocked above command will report connection issue. Otherwise if client 
+certificate is valid you should see output similar to below:
+ 
+OCSP Response Data:
+    OCSP Response Status: successful (0x0)
+    Response Type: Basic OCSP Response
+    Version: 1 (0x0)
+    Responder Id: C = AU, ST = NSW, L = Sydney, O = CAcert Inc., OU = Server Administration, CN = ocsp.cacert.org
+    Produced At: Apr  6 19:54:56 2012 GMT
+    Responses:
+    Certificate ID:
+      Hash Algorithm: sha1
+      Issuer Name Hash: 8BA4C9CB172919453EBB8E730991B925F2832265
+      Issuer Key Hash: 16B5321BD4C7F3E0E68EF3BDD2B03AEEB23918D1
+      Serial Number: 0B90A1
+    Cert Status: good
+    Revocation Time: Apr  5 06:08:26 2012 GMT
+    This Update: Apr  6 19:44:26 2012 GMT
+    Next Update: Apr  8 19:54:56 2012 GMT
+
+If certificate is revoked, the output will contain:
+
+    Cert Status: revoked
+
+- make sure that server doesn't run in 'http' mode. use 
+
+zmprov ms <your servername> zimbraMailMode both (or https) to change mailmode
+
+- modify log4j.properties to add tracing info pertinent to OCSP/Two way authentication. 
+Add the following sections to your existing log4j.properties:
+
+# Appender ACCOUNT writes to the file "account.log".
+log4j.appender.ACCOUNT=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.ACCOUNT.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.ACCOUNT.RollingPolicy.FileNamePattern=/opt/zimbra/log/account.log.%d{yyyy-MM-dd}
+log4j.appender.ACCOUNT.File=/opt/zimbra/log/account.log
+log4j.appender.ACCOUNT.layout=com.zimbra.common.util.ZimbraPatternLayout
+log4j.appender.ACCOUNT.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
+
+and 
+
+log4j.additivity.zimbra.account=false
+log4j.logger.zimbra.account=DEBUG,ACCOUNT
+
+Please note that this step is arbitrary and needed only if you need to see trace 
+of what is going on during OCSP validation
+
+- restart server for above changes to take effect
+
+- in ZCS (or Octopus) admin console provision new account with email address which was supplied 
+to create account on CACert. In my case it is 'eugene@zimbra.com'. This account is necessary for two 
+way authentication mechanism to be able to map certificate to ZCS (or Octopus) account.
+
+============
+Running test
+============
+
+- Using Firefox hit https://<your server name here>:9443/certauth
+
+- Firefox will pop a window stating 'this site has requested to identify yourself with certificate', 
+verify certificate's content and hit <ok>.
+
+- At this point, server will use certificate provided by Firefox to perform OCSP validation against 
+CACert's OCSP responder
+
+- Since certificate is valid, server automatically authenticates into the account associated
+ with client certificate (in my case it is eugene@zimbra.com) without necessity to provide 
+username/password credentials
+
+- Now let's revoke client certificate, go to http://cacert.org -> login to previously created
+ test account-> cick on 'client certificates'-> hit Revoke/Delete and wait for confirmation 
+of certificate revocation
+
+- Verify with openssl that OCSP status of client certificate is 'revoked', use the following 
+command to confirm that:
+
+openssl ocsp -issuer ca.crt -cert clientcert.crt -url http://ocsp.cacert.org/ -resp_text
+
+please note that with CACert it may take a couple of minutes(up to 5 minutes) after revocation
+of certificate for correct status to show up, so you may need to wait until aforementioned 
+command will return proper status
+
+- Once confirmed previous step, restart Firefox as it often caches http responses. Go to
+https://<your server name here>:9443/certauth after restart
+
+- Since certificate was revoked, certificate authentication is expected to fail and you 
+should be redirected to username/password login page
+
+
+============
+Notes
+============
+
+The feature is expected to work on both products ZCS and Octopus. Also you will not see any effects of OCSP 
+validation with self signed certificates created to test two way authentication using steps described at the
+beginning of this document. These certificates do not contain OCSP url extension and therefore server will
+not perform OCSP validation on these certificates.
