@@ -148,6 +148,11 @@ public final class ParsedDateTime {
                 hasTime = true;
             } else {
                 cal.set(year, month, date, 0, 0, 0);
+                if (cal.get(Calendar.DATE) != date) { 
+                    // 12AM does not exist for this date and timezone. This is possible if the day light cross over happens at mid night
+                    // and this date happens to be day light cross over date (bug 51966). Set the time to the correct mid night (i.e> 1AM)
+                    cal.set(year, month, date, (int) (tz.getDSTSavings()/MSECS_PER_HOUR), 0, 0);
+                }
             }
             return new ParsedDateTime(cal, tz, hasTime);
         } else {
