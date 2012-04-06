@@ -28,6 +28,7 @@ public final class MailConstants {
         public static final String E_GRANTEE = "grantee";
         public static final String E_GRANTOR = "grantor";
         public static final String E_LINK = "link";
+        public static final String E_NOTES = "notes";
 
         public static final String A_VERSION = "version";
         public static final String A_ACTION = "action";
@@ -36,6 +37,7 @@ public final class MailConstants {
         public static final String A_NAME = "name";
         public static final String A_VIEW = "view";
         public static final String A_PERM = "perm";
+        public static final String A_EXPIRE = "expire";
 
         public static final String ACTION_NEW = "new";
 
@@ -639,6 +641,8 @@ public final class MailConstants {
     public static final String E_GRANT = "grant";
     public static final String E_NOTES = "notes";
     public static final String E_SHARE = "share";
+    public static final String E_REVOKE = "revoke";
+    public static final String A_EXPIRE = "expire";
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";

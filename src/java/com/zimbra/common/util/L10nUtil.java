@@ -117,6 +117,10 @@ public class L10nUtil {
         shareRevokeBodyText,
         shareRevokeBodyHtml,
 
+        shareExpireSubject,
+        shareExpireBodyText,
+        shareExpireBodyHtml,
+
         shareNotifBodyAddedToGroup1,
         shareNotifBodyAddedToGroup2,
 

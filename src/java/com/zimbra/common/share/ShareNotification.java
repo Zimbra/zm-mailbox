@@ -24,7 +24,7 @@ import org.dom4j.DocumentException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.MailConstants.ShareConstants;
 
 public class ShareNotification {
 
@@ -37,26 +37,27 @@ public class ShareNotification {
     }
 
     private ShareNotification(Element xml) throws ServiceException {
-        Element grantor = xml.getElement(MailConstants.E_GRANTOR);
-        Element grantee = xml.getElement(MailConstants.E_GRANTEE);
-        Element link = xml.getElement(MailConstants.E_MOUNT);
-        Element n = xml.getOptionalElement(MailConstants.E_NOTES);
+        Element grantor = xml.getElement(ShareConstants.E_GRANTOR);
+        Element grantee = xml.getElement(ShareConstants.E_GRANTEE);
+        Element link = xml.getElement(ShareConstants.E_LINK);
+        Element n = xml.getOptionalElement(ShareConstants.E_NOTES);
 
-        grantorId = grantor.getAttribute(MailConstants.A_ID);
-        grantorEmail = grantor.getAttribute(MailConstants.A_EMAIL);
-        grantorName = grantor.getAttribute(MailConstants.A_NAME);
+        grantorId = grantor.getAttribute(ShareConstants.A_ID);
+        grantorEmail = grantor.getAttribute(ShareConstants.A_EMAIL);
+        grantorName = grantor.getAttribute(ShareConstants.A_NAME);
 
-        granteeId = grantee.getAttribute(MailConstants.A_ID, null);
-        granteeEmail = grantee.getAttribute(MailConstants.A_EMAIL);
-        granteeName = grantee.getAttribute(MailConstants.A_NAME);
+        granteeId = grantee.getAttribute(ShareConstants.A_ID, null);
+        granteeEmail = grantee.getAttribute(ShareConstants.A_EMAIL);
+        granteeName = grantee.getAttribute(ShareConstants.A_NAME);
 
-        itemId = (int)link.getAttributeLong(MailConstants.A_ID);
-        itemName = link.getAttribute(MailConstants.A_NAME);
-        view = link.getAttribute(MailConstants.A_DEFAULT_VIEW);
+        itemId = (int)link.getAttributeLong(ShareConstants.A_ID);
+        itemName = link.getAttribute(ShareConstants.A_NAME);
+        view = link.getAttribute(ShareConstants.A_VIEW);
 
-        if (xml.getQName().equals(MailConstants.ShareConstants.SHARE)) {
-            permissions = link.getAttribute(MailConstants.A_RIGHTS);
-            revoke = false;
+        if (xml.getQName().equals(ShareConstants.SHARE)) {
+            permissions = link.getAttribute(ShareConstants.A_PERM);
+        } else if (xml.getAttributeBool(ShareConstants.A_EXPIRE, false)) {
+            expire = true;
         } else {
             revoke = true;
         }
@@ -114,6 +115,10 @@ public class ShareNotification {
         return revoke;
     }
 
+    public boolean isExpire() {
+        return expire;
+    }
+
     private final String grantorId;
     private final String grantorName;
     private final String grantorEmail;
@@ -129,4 +134,5 @@ public class ShareNotification {
 
     private String notes;
     private boolean revoke;
+    private boolean expire;
 }
