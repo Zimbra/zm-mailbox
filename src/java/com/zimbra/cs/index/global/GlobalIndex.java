@@ -15,6 +15,7 @@
 package com.zimbra.cs.index.global;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -38,6 +39,10 @@ import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueExcludeFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -46,6 +51,7 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -54,7 +60,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.global.HBaseIndex.TermInfo;
+import com.zimbra.cs.index.global.HBaseIndex.TermsInfo;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -66,15 +74,19 @@ import com.zimbra.cs.session.PendingModifications;
  * Global Index Store.
  *
  * @author ysasaki
+ * @author smukhopadhyay
  */
 public final class GlobalIndex {
     static final String GLOBAL_INDEX_TABLE = "zimbra.global.index";
+    static final String GLOBAL_TOMBSTONE_TABLE = "zimbra.global.tombstone";
     static final byte[] SERVER_CF = Bytes.toBytes("server");
     static final byte[] ITEM_COUNT_COL = Bytes.toBytes("#item"); // number of total items per server
     static final byte[] ACL_COL = Bytes.toBytes("acl");
+    static final byte[] TERMS_COL = Bytes.toBytes("terms"); // list of unique terms appears in the item; used for deleting the orphan terms 
 
     private final HTablePool pool;
     private final byte[] indexTableName;
+    private final byte[] tombstoneTableName;
     private final ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("GlobalIndex").setDaemon(true).build());
     private final AtomicLong totalItemCount = new AtomicLong(0L);
@@ -82,6 +94,7 @@ public final class GlobalIndex {
     GlobalIndex(Configuration conf, HTablePool pool) {
         this.pool = pool;
         indexTableName = Bytes.toBytes(conf.get(GLOBAL_INDEX_TABLE, GLOBAL_INDEX_TABLE)); // test may override
+        tombstoneTableName = Bytes.toBytes(conf.get(GLOBAL_TOMBSTONE_TABLE, GLOBAL_TOMBSTONE_TABLE)); // test may override
         MailboxListener.register(new GlobalIndexMailboxListener());
         timer.scheduleWithFixedDelay(new TotalItemCountUpdater(), 0L, 60L, TimeUnit.SECONDS); //TODO LC
     }
@@ -130,12 +143,97 @@ public final class GlobalIndex {
         }
         totalItemCount.addAndGet(items.size());
     }
+    
+    
+    public void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException {
+        if (item.getType() != MailItem.Type.DOCUMENT) {
+            return;
+        }
+        
+        // item and terms share a same timestamp to filter out stale terms during ITEM CF fetch
+        long ts = System.currentTimeMillis();
+        List<Put> batch = Lists.newArrayList();
+        byte[] gid = GlobalItemID.toBytes(item.getMailbox().getAccountId(), item.getId());
+        
+        Map<String, TermInfo> term2info = Maps.newHashMap();
+        Map<Character, Integer> prefix2count = Maps.newHashMapWithExpectedSize(HBaseIndex.FIELD2PREFIX.size());
+        int pos = 0;
+        for (IndexDocument doc : docs) {
+            for (Fieldable field : doc.toDocument().getFields()) {
+                Character prefix = HBaseIndex.FIELD2PREFIX.get(field.name());
+                if (prefix != null && field.isIndexed() && field.isTokenized()) {
+                    TokenStream stream = field.tokenStreamValue();
+                    if (stream == null) {
+                        stream = item.getMailbox().index.getAnalyzer().tokenStream(field.name(),
+                                new StringReader(field.stringValue()));
+                    }
+                    CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
+                    PositionIncrementAttribute posAttr = stream.addAttribute(PositionIncrementAttribute.class);
+                    stream.reset();
+                    int termCount = 0; // number of terms per field
+                    while (stream.incrementToken()) {
+                        termCount++;
+                        if (termAttr.length() == 0) {
+                            continue;
+                        }
+                        String term = prefix + termAttr.toString();
+                        TermInfo info = term2info.get(term);
+                        if (info == null) {
+                            info = new TermInfo();
+                            term2info.put(term, info);
+                        }
+                        pos += posAttr.getPositionIncrement();
+                        info.positions.add(pos);
+                    }
+                    stream.end();
+                    Closeables.closeQuietly(stream);
+                    Integer count = prefix2count.get(prefix);
+                    prefix2count.put(prefix, count != null ? count + termCount : termCount);
+                }
+            }
+        }
+            
+        Put globalItem = new Put(gid, ts);
+        globalItem = HBaseIndex.put(globalItem, ts, item);            
+        // Since we are in the middle of Mailbox.endTransaction(), do not call Mailbox.getFolderById(), which calls
+        // another Mailbox.beginTransaction().
+        indexACL(folder, globalItem);
+        indexTerms(term2info.keySet(), globalItem);
+        batch.add(globalItem);
+
+        for (Map.Entry<String, TermInfo> entry : term2info.entrySet()) {
+            entry.getValue().totalTermCount = prefix2count.get(entry.getKey().charAt(0));
+            Put put = new Put(Bytes.toBytes(entry.getKey()), ts);
+            put.add(HBaseIndex.TERM_CF, gid, TermInfo.encode(entry.getValue()));
+            batch.add(put);
+        }
+            
+        HTableInterface table = pool.getTable(indexTableName);
+        try {
+            table.put(batch);
+            table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
+                    SERVER_CF, ITEM_COUNT_COL, 1);
+        } finally {
+            pool.putTable(table);
+        }
+        totalItemCount.addAndGet(1);
+    }
 
     /**
      * Denormalize the ACL down to the item level.
      */
     private void indexACL(Folder folder, Put put) {
         put.add(HBaseIndex.ITEM_CF, ACL_COL, encodeACL(folder));
+    }
+    
+    /**
+     * index all the prefixed terms for the item
+     * @throws IOException 
+     */
+    private void indexTerms(Set<String> terms, Put put) throws IOException {
+        TermsInfo info = new TermsInfo();
+        info.termsSet = terms;
+        put.add(HBaseIndex.ITEM_CF, TERMS_COL, TermsInfo.encode(info));
     }
 
     /**
@@ -216,16 +314,46 @@ public final class GlobalIndex {
         }
         return Bytes.toBytes(Joiner.on('\0').join(grantees));
     }
-
+    
+    private Put put(HTableInterface table, long ts, GlobalItemID id) throws IOException {
+        Get get = new Get(id.toBytes());
+        get.addColumn(HBaseIndex.ITEM_CF, TERMS_COL);
+        Result result = table.get(get);
+        if (result != null && !result.isEmpty()) {
+            byte[] terms = result.getValue(HBaseIndex.ITEM_CF, TERMS_COL);
+            Put put = new Put(id.toBytes(), ts);
+            put.add(HBaseIndex.ITEM_CF, TERMS_COL, terms);
+            return put;
+        }
+        return null;
+    }
+    
+    private void writeTombstones(List<Put> batch) throws IOException {
+        HTableInterface tombstoneTable = pool.getTable(tombstoneTableName);
+        try {
+            tombstoneTable.put(batch);
+        } finally {
+            pool.putTable(tombstoneTable);
+        }
+    }
+    
     /**
      * Delete the row from ITEM CF leaving associated terms in TERM CF orphan.
      *
      * TODO: purge orphan terms upon search or by MapReduce.
      */
     void delete(GlobalItemID id) throws IOException {
+        HTableInterface table = pool.getTable(indexTableName);
+        
+        //add item to tombstone so the terms can be purged later
+        long ts = System.currentTimeMillis();
+        Put put = put(table, ts, id);
+        if (put != null) {
+            writeTombstones(ImmutableList.of(put));
+        }
+        
         Delete delete = new Delete(id.toBytes());
         delete.deleteFamily(HBaseIndex.ITEM_CF);
-        HTableInterface table = pool.getTable(indexTableName);
         try {
             table.delete(delete);
             table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
@@ -238,10 +366,16 @@ public final class GlobalIndex {
 
     /**
      * Delete all rows from ITEM CF for the account leaving associated terms in TERM CF orphan.
+     * Move the item terms to tombstone so that terms can be purged from the index table later.
      */
     void delete(String account) throws IOException {
+        long ts = System.currentTimeMillis();
         List<Delete> batch = Lists.newArrayList();
         HTableInterface table = pool.getTable(indexTableName);
+        
+        int tombstoneItemsBatchSize = 10; //we have lot of data to write per item in tombstone; so let's use a fixed batch size for now!!
+        List<Put> itemsList = Lists.newArrayListWithCapacity(tombstoneItemsBatchSize);
+        
         ResultScanner scanner = null;
         try {
             scanner = table.getScanner(new Scan(new GlobalItemID(account, 0).toBytes(),
@@ -249,8 +383,20 @@ public final class GlobalIndex {
             while (true) {
                 Result result = scanner.next();
                 if (result == null) {
+                    //make sure we write remaining items to tombstone before quitting
+                    if (itemsList.size() > 0) {
+                        writeTombstones(itemsList);
+                    }   
                     break;
                 }
+                
+                Put put = put(table, ts, new GlobalItemID(result.getRow()));
+                itemsList.add(put);
+                if (itemsList.size() >= tombstoneItemsBatchSize) {
+                    writeTombstones(itemsList);
+                    itemsList.clear();
+                }
+                
                 batch.add(new Delete(result.getRow()));
             }
             if (!batch.isEmpty()) {
@@ -263,6 +409,51 @@ public final class GlobalIndex {
             pool.putTable(table);
         }
         totalItemCount.addAndGet(-batch.size());
+    }
+    
+    public void purgeOrphanTerms(String account) throws IOException {
+        HTableInterface table = pool.getTable(tombstoneTableName);
+        List<Delete> deletes = Lists.newArrayList();
+        ResultScanner scanner = null;
+        try {
+            scanner = table.getScanner(new Scan(new GlobalItemID(account, 0).toBytes(),
+                    new GlobalItemID(account, Integer.MAX_VALUE).toBytes()));
+            while (true) {
+                Result result = scanner.next();
+                if (result == null) {
+                    break;
+                }
+                byte[] gid = result.getRow();
+                TermsInfo info = TermsInfo.decode(result.getValue(HBaseIndex.ITEM_CF, TERMS_COL));
+                List<Delete> batch = Lists.newArrayList();
+                for (String term : info.termsSet) {
+                    Delete delete = new Delete(Bytes.toBytes(term));
+                    delete.deleteColumns(HBaseIndex.TERM_CF, gid);
+                    batch.add(delete);
+                }
+                boolean deleteItem = true;
+                HTableInterface indexTable = pool.getTable(indexTableName);
+                if (!batch.isEmpty()) {
+                    try {
+                        indexTable.delete(batch);
+                    } catch (Exception x) {
+                        deleteItem = false; //we should try purging the terms next time!! hence keep the reference in tombstone
+                    } finally {
+                        pool.putTable(indexTable);
+                    }
+                }
+                //finally add the gid row for batch deletion from tombstone table
+                if (deleteItem) {
+                    deletes.add(new Delete(gid));
+                }
+            }
+            if (!deletes.isEmpty()) {
+                table.delete(deletes);
+            }
+        } finally {
+            Closeables.closeQuietly(scanner);
+            pool.putTable(table);
+        }
     }
 
     /**
@@ -543,5 +734,4 @@ public final class GlobalIndex {
             return Objects.toStringHelper(this).add("id", id).add("score", score).toString();
         }
     }
-
 }

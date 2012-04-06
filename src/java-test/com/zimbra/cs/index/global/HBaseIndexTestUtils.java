@@ -30,10 +30,12 @@ import com.zimbra.cs.mailbox.Mailbox;
  * Tools for {@link HBaseIndex} tests.
  *
  * @author ysasaki
+ * @author smukhopadhyay
  */
 final class HBaseIndexTestUtils {
     private static final String TEST_INDEX_TABLE = "__zimbra.index";
     private static final String TEST_GLOBAL_INDEX_TABLE = "__zimbra.global.index";
+    private static final String TEST_GLOBAL_TOMBSTONE_TABLE = "__zimbra.global.tombstone";
     private static final HBaseIndex.Factory FACTORY;
     static {
         Configuration conf = HBaseConfiguration.create();
@@ -41,6 +43,7 @@ final class HBaseIndexTestUtils {
         conf.setInt(HBaseIndex.TABLE_POOL_SIZE, 2);
         conf.set(HBaseIndex.INDEX_TABLE, TEST_INDEX_TABLE);
         conf.set(GlobalIndex.GLOBAL_INDEX_TABLE, TEST_GLOBAL_INDEX_TABLE);
+        conf.set(GlobalIndex.GLOBAL_TOMBSTONE_TABLE, TEST_GLOBAL_TOMBSTONE_TABLE);
         FACTORY = new HBaseIndex.Factory(conf);
     }
 
@@ -49,6 +52,10 @@ final class HBaseIndexTestUtils {
 
     static HBaseIndex createIndex(Mailbox mbox) throws ServiceException {
         return FACTORY.getIndexStore(mbox);
+    }
+    
+    static GlobalIndex getGlobalIndex() {
+        return FACTORY.getGlobalIndex();
     }
 
     static void initSchema() throws IOException {
@@ -61,6 +68,11 @@ final class HBaseIndexTestUtils {
         try {
             admin.disableTable(TEST_GLOBAL_INDEX_TABLE);
             admin.deleteTable(TEST_GLOBAL_INDEX_TABLE);
+        } catch (TableNotFoundException ignore) {
+        }
+        try {
+            admin.disableTable(TEST_GLOBAL_TOMBSTONE_TABLE);
+            admin.deleteTable(TEST_GLOBAL_TOMBSTONE_TABLE);
         } catch (TableNotFoundException ignore) {
         }
 
@@ -87,6 +99,12 @@ final class HBaseIndexTestUtils {
         globalServerCF.setMaxVersions(1);
         globalIndexTableDesc.addFamily(globalServerCF);
         admin.createTable(globalIndexTableDesc);
+        
+        HTableDescriptor globalTombstoneTableDesc = new HTableDescriptor(TEST_GLOBAL_TOMBSTONE_TABLE);
+        HColumnDescriptor globalTombstoneItemCF = new HColumnDescriptor(HBaseIndex.ITEM_CF);
+        globalTombstoneItemCF.setMaxVersions(1);
+        globalTombstoneTableDesc.addFamily(globalItemCF);
+        admin.createTable(globalTombstoneTableDesc);
     }
 
 }

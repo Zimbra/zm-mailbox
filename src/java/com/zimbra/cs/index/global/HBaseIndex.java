@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
@@ -70,6 +71,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.primitives.UnsignedBytes;
 import com.zimbra.common.localconfig.LC;
@@ -90,6 +92,7 @@ import com.zimbra.cs.mailbox.Message;
  * {@link IndexStore} implementation using Apache HBase.
  *
  * @author ysasaki
+ * @author smukhopadhyay
  */
 public final class HBaseIndex implements IndexStore {
     static final String INDEX_TABLE = "zimbra.index";
@@ -109,7 +112,7 @@ public final class HBaseIndex implements IndexStore {
     static final byte[] SORT_SENDER_COL = Bytes.toBytes("^from");
     static final byte[] MIME_TYPE_COL = Bytes.toBytes("mime");
 
-    private static final ObjectMapper JSON_MAPPER = new ObjectMapper(new SmileFactory());
+    static final ObjectMapper JSON_MAPPER = new ObjectMapper(new SmileFactory());
     static {
         JSON_MAPPER.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
         JSON_MAPPER.configure(SerializationConfig.Feature.USE_ANNOTATIONS, true)
@@ -122,7 +125,7 @@ public final class HBaseIndex implements IndexStore {
             .configure(DeserializationConfig.Feature.AUTO_DETECT_FIELDS, false)
             .configure(DeserializationConfig.Feature.AUTO_DETECT_SETTERS, false);
     }
-    private static final BiMap<String, Character> FIELD2PREFIX = ImmutableBiMap.<String, Character>builder()
+    static final BiMap<String, Character> FIELD2PREFIX = ImmutableBiMap.<String, Character>builder()
         .put(LuceneFields.L_CONTENT, 'A')
         .put(LuceneFields.L_CONTACT_DATA, 'B')
         .put(LuceneFields.L_MIMETYPE, 'C')
@@ -236,6 +239,37 @@ public final class HBaseIndex implements IndexStore {
 
         getGlobalIndex().delete(mailbox.getAccountId());
     }
+    
+    static Put put(Put put, long ts, MailItem item) {
+        
+        assert put != null;
+        
+        put.add(ITEM_CF, TYPE_COL, ts, toBytes(item.getType()));
+        put.add(ITEM_CF, DATE_COL, ts, Bytes.toBytes(item.getDate()));
+        put.add(ITEM_CF, SIZE_COL, ts, Bytes.toBytes(item.getSize()));
+        switch (item.getType()) {
+            case MESSAGE:
+                Message msg = (Message) item;
+                put.add(ITEM_CF, SENDER_COL, ts, Bytes.toBytes(msg.getSender()));
+                put.add(ITEM_CF, SORT_SENDER_COL, ts, Bytes.toBytes(msg.getSortSender()));
+                put.add(ITEM_CF, SUBJECT_COL, ts, Bytes.toBytes(msg.getSubject()));
+                put.add(ITEM_CF, SORT_SUBJECT_COL, ts, Bytes.toBytes(msg.getSortSubject()));
+                put.add(ITEM_CF, FRAGMENT_COL, ts, Bytes.toBytes(msg.getFragment()));
+                break;
+            case CONTACT:
+                Contact contact = (Contact) item;
+                put.add(ITEM_CF, NAME_COL, ts, Bytes.toBytes(contact.getSender()));
+                break;
+            case DOCUMENT:
+                com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
+                put.add(ITEM_CF, SENDER_COL, ts, Bytes.toBytes(doc.getCreator()));
+                put.add(ITEM_CF, NAME_COL, ts, Bytes.toBytes(doc.getName()));
+                put.add(ITEM_CF, FRAGMENT_COL, ts, Bytes.toBytes(doc.getFragment()));
+                put.add(ITEM_CF, MIME_TYPE_COL, ts, Bytes.toBytes(doc.getContentType()));
+                break;
+        }
+        return put;
+    }
 
     /**
      * Does nothing.
@@ -341,10 +375,10 @@ public final class HBaseIndex implements IndexStore {
 
     static final class TermInfo {
         @JsonProperty("tc")
-        private int totalTermCount;
+        int totalTermCount;
 
         @JsonProperty("pos")
-        private final List<Integer> positions = Lists.newArrayList();
+        final List<Integer> positions = Lists.newArrayList();
 
         /**
          * Returns the total number of terms in the document.
@@ -371,6 +405,31 @@ public final class HBaseIndex implements IndexStore {
 
         static TermInfo decode(byte[] raw) throws IOException {
             return JSON_MAPPER.readValue(raw, TermInfo.class);
+        }
+    }
+    
+    /**
+     * List of unique prefixed terms appearing in the doc/item
+     * @author smukhopadhyay
+     *
+     */
+    static final class TermsInfo {
+        @JsonProperty("terms")
+        Set<String> termsSet = Sets.newHashSet();
+        
+        /*
+         * Returns the total number of unique terms in the document
+         */
+        int getTotalTerms() {
+            return termsSet.size();
+        }
+        
+        static byte[] encode(TermsInfo info) throws IOException {
+            return JSON_MAPPER.writeValueAsBytes(info);
+        }
+
+        static TermsInfo decode(byte[] raw) throws IOException {
+            return JSON_MAPPER.readValue(raw, TermsInfo.class);
         }
     }
 
@@ -438,31 +497,7 @@ public final class HBaseIndex implements IndexStore {
 
         private Put put(long ts, MailItem item) {
             Put put = new Put(row);
-            put.add(ITEM_CF, TYPE_COL, ts, toBytes(item.getType()));
-            put.add(ITEM_CF, DATE_COL, ts, Bytes.toBytes(item.getDate()));
-            put.add(ITEM_CF, SIZE_COL, ts, Bytes.toBytes(item.getSize()));
-            switch (item.getType()) {
-                case MESSAGE:
-                    Message msg = (Message) item;
-                    put.add(ITEM_CF, SENDER_COL, ts, Bytes.toBytes(msg.getSender()));
-                    put.add(ITEM_CF, SORT_SENDER_COL, ts, Bytes.toBytes(msg.getSortSender()));
-                    put.add(ITEM_CF, SUBJECT_COL, ts, Bytes.toBytes(msg.getSubject()));
-                    put.add(ITEM_CF, SORT_SUBJECT_COL, ts, Bytes.toBytes(msg.getSortSubject()));
-                    put.add(ITEM_CF, FRAGMENT_COL, ts, Bytes.toBytes(msg.getFragment()));
-                    break;
-                case CONTACT:
-                    Contact contact = (Contact) item;
-                    put.add(ITEM_CF, NAME_COL, ts, Bytes.toBytes(contact.getSender()));
-                    break;
-                case DOCUMENT:
-                    com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
-                    put.add(ITEM_CF, SENDER_COL, ts, Bytes.toBytes(doc.getCreator()));
-                    put.add(ITEM_CF, NAME_COL, ts, Bytes.toBytes(doc.getName()));
-                    put.add(ITEM_CF, FRAGMENT_COL, ts, Bytes.toBytes(doc.getFragment()));
-                    put.add(ITEM_CF, MIME_TYPE_COL, ts, Bytes.toBytes(doc.getContentType()));
-                    break;
-            }
-            return put;
+            return HBaseIndex.put(put, ts, item);
         }
 
         /**

@@ -76,6 +76,8 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.global.GlobalIndex;
+import com.zimbra.cs.index.global.GlobalIndexSweeper;
 import com.zimbra.cs.index.global.GlobalSearchHit;
 import com.zimbra.cs.index.global.GlobalSearchQuery;
 import com.zimbra.cs.index.global.HBaseIndex;
@@ -103,6 +105,9 @@ public final class MailboxIndex {
     private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
             0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             new ThreadFactoryBuilder().setNameFormat("ReIndex-%d").setDaemon(true).build());
+    private static GlobalIndex globalIndex;
+    @SuppressWarnings("unused")
+    private static GlobalIndexSweeper globalIndexSweeper;
     private static IndexStore.Factory indexStoreFactory;
     static {
         setIndexStoreFactory(LC.index_store.value());
@@ -137,6 +142,14 @@ public final class MailboxIndex {
             indexStoreFactory = new HBaseIndex.Factory();
         } else {
             indexStoreFactory = new LuceneIndex.Factory();
+            if (LC.global_index_enabled.booleanValue()) {
+                globalIndex = new HBaseIndex.Factory().getGlobalIndex();
+                try {
+                    globalIndexSweeper = new GlobalIndexSweeper(globalIndex);
+                } catch (ServiceException e) {
+                    ZimbraLog.index.fatal("Could not start global index sweeper..." + e);
+                }
+            }
         }
         ZimbraLog.index.info("Using %s", indexStoreFactory.getClass().getDeclaringClass().getSimpleName());
     }
@@ -274,7 +287,11 @@ public final class MailboxIndex {
             if (query == null) { // empty after trimming stop words
                 return Collections.emptyList();
             }
-            return indexStoreFactory.getGlobalIndex().search(mailbox.getAccountId(), query);
+            if (globalIndex != null) {
+                return globalIndex.search(mailbox.getAccountId(), query);
+            } else {
+                return indexStoreFactory.getGlobalIndex().search(mailbox.getAccountId(), query);
+            }
         } catch (UnsupportedOperationException e) { // only supported by HBase backend
             throw ServiceException.UNSUPPORTED();
         } catch (IOException e) {
@@ -797,6 +814,8 @@ public final class MailboxIndex {
             Indexer indexer = indexStore.openIndexer();
             try {
                 indexer.addDocument(item.getFolder(), item, docs);
+                if (globalIndex != null)
+                    globalIndex.addDocument(item.getFolder(), item, docs);
             } finally {
                 indexer.close();
             }
@@ -869,6 +888,8 @@ public final class MailboxIndex {
 
                 try {
                     indexer.addDocument(entry.item.getFolder(), entry.item, entry.documents);
+                    if (globalIndex != null)
+                        globalIndex.addDocument(entry.item.getFolder(), entry.item, entry.documents);
                 } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();
