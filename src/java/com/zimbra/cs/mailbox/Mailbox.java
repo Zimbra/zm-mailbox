@@ -2780,18 +2780,23 @@ public class Mailbox {
         return MailItem.constructItem(this, data);
     }
 
+    public MailItem getItemRevision(OperationContext octxt, int id, MailItem.Type type, int version)
+            throws ServiceException {
+        return getItemRevision(octxt, id, type, version, false);
+    }
+
     /** Returns a current or past revision of an item.  Item version numbers
      *  are 1-based and incremented each time the "content" of the item changes
      *  (e.g. editing a draft, modifying a contact's fields).  If the requested
      *  revision does not exist, either because the version number is out of
      *  range or because the requested revision has not been retained, returns
      *  <tt>null</tt>. */
-    public MailItem getItemRevision(OperationContext octxt, int id, MailItem.Type type, int version)
+    public MailItem getItemRevision(OperationContext octxt, int id, MailItem.Type type, int version, boolean fromDumpster)
             throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getItemRevision", octxt);
-            MailItem revision = checkAccess(getItemById(id, type)).getRevision(version);
+            MailItem revision = checkAccess(getItemById(id, type, fromDumpster)).getRevision(version);
             success = true;
             return revision;
         } finally {

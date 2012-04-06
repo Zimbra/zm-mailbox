@@ -2551,7 +2551,7 @@ public final class ToXML {
                 Document revision = null;
                 int v = 1;
                 while (revision == null && v <= doc.getVersion()) {
-                    revision = (Document) doc.getMailbox().getItemRevision(octxt, doc.getId(), doc.getType(), v++);
+                    revision = (Document) doc.getMailbox().getItemRevision(octxt, doc.getId(), doc.getType(), v++, doc.inDumpster());
                 }
                 if (revision != null) {
                     m.addAttribute(MailConstants.A_CREATOR, revision.getCreator());

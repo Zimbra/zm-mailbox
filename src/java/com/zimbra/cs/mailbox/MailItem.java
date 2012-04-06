@@ -788,7 +788,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     public String getFolderUuid() throws ServiceException {
-        return getFolder().getUuid();
+        Folder f = getFolder();
+        return f != null ? f.getUuid() : null;
     }
 
     /** Returns the path to the MailItem.  If the item is in a hidden folder
@@ -1512,7 +1513,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @throws ServiceException should never be thrown, as the set of all
      *                          folders must already be cached. */
     Folder getFolder() throws ServiceException {
-        return mMailbox.getFolderById(mData.folderId);
+        return !inDumpster() ? mMailbox.getFolderById(mData.folderId) : null;
     }
 
     abstract boolean isTaggable();
