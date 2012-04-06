@@ -139,7 +139,7 @@ public final class GlobalIndex {
             table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
                     SERVER_CF, ITEM_COUNT_COL, items.size());
         } finally {
-            pool.putTable(table);
+            table.close();
         }
         totalItemCount.addAndGet(items.size());
     }
@@ -214,7 +214,7 @@ public final class GlobalIndex {
             table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
                     SERVER_CF, ITEM_COUNT_COL, 1);
         } finally {
-            pool.putTable(table);
+            table.close();
         }
         totalItemCount.addAndGet(1);
     }
@@ -252,7 +252,7 @@ public final class GlobalIndex {
         try {
             table.put(put);
         } finally {
-            pool.putTable(table);
+            table.close();
         }
     }
 
@@ -284,7 +284,7 @@ public final class GlobalIndex {
         try {
             table.put(batch);
         } finally {
-            pool.putTable(table);
+            table.close();
         }
     }
 
@@ -333,7 +333,7 @@ public final class GlobalIndex {
         try {
             tombstoneTable.put(batch);
         } finally {
-            pool.putTable(tombstoneTable);
+            tombstoneTable.close();
         }
     }
     
@@ -359,7 +359,7 @@ public final class GlobalIndex {
             table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
                     SERVER_CF, ITEM_COUNT_COL, -1L);
         } finally {
-            pool.putTable(table);
+            table.close();
         }
         totalItemCount.addAndGet(-1L);
     }
@@ -406,7 +406,7 @@ public final class GlobalIndex {
             }
         } finally {
             Closeables.closeQuietly(scanner);
-            pool.putTable(table);
+            table.close();
         }
         totalItemCount.addAndGet(-batch.size());
     }
@@ -439,7 +439,7 @@ public final class GlobalIndex {
                     } catch (Exception x) {
                         deleteItem = false; //we should try purging the terms next time!! hence keep the reference in tombstone
                     } finally {
-                        pool.putTable(indexTable);
+                        indexTable.close();
                     }
                 }
                 //finally add the gid row for batch deletion from tombstone table
@@ -452,7 +452,7 @@ public final class GlobalIndex {
             }
         } finally {
             Closeables.closeQuietly(scanner);
-            pool.putTable(table);
+            table.close();
         }
     }
 
@@ -551,7 +551,7 @@ public final class GlobalIndex {
             Collections.sort(hits); // sort by score
             return fetch(table, principal, hits);
         } finally {
-            pool.putTable(table);
+            table.close();
         }
     }
 
@@ -618,7 +618,7 @@ public final class GlobalIndex {
             Collections.sort(hits); // sort by score
             return fetch(table, principal, hits);
         } finally {
-            pool.putTable(table);
+            table.close();
         }
     }
 
@@ -690,7 +690,7 @@ public final class GlobalIndex {
             } finally {
                 Closeables.closeQuietly(scanner);
                 try {
-                    pool.putTable(table);
+                    table.close();
                 } catch (IOException e) {
                     ZimbraLog.index.error("Failed to close the table", e);
                 }

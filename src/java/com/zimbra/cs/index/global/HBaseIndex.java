@@ -176,7 +176,7 @@ public final class HBaseIndex implements IndexStore {
             return Bytes.add(row, result.isEmpty() ?
                     new byte[] {Byte.MIN_VALUE} : result.getValue(MBOX_CF, VERSION_COL));
         } finally {
-            factory.pool.putTable(table);
+            table.close();
         }
     }
 
@@ -233,7 +233,7 @@ public final class HBaseIndex implements IndexStore {
         } catch (InterruptedException e) {
             throw new IOException(e);
         } finally {
-            factory.pool.putTable(table);
+            table.close();
         }
         row[row.length - 1] = ver;
 
@@ -287,7 +287,7 @@ public final class HBaseIndex implements IndexStore {
         try {
             return table.get(get);
         } finally {
-            factory.pool.putTable(table);
+            table.close();
         }
     }
 
@@ -537,7 +537,7 @@ public final class HBaseIndex implements IndexStore {
             } catch (InterruptedException e) {
                 throw new IOException(e);
             } finally {
-                factory.pool.putTable(table);
+                table.close();
             }
             if (!indexGlobal.isEmpty()) {
                 getGlobalIndex().index(HBaseIndex.this, indexGlobal);
@@ -565,7 +565,7 @@ public final class HBaseIndex implements IndexStore {
 
         @Override
         protected void doClose() throws IOException {
-            factory.pool.putTable(table);
+            table.close();
         }
 
         @Override
