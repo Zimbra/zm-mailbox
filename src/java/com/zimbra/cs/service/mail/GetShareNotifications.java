@@ -14,16 +14,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.mail.MessagingException;
-
-import org.dom4j.DocumentException;
-
 import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -46,6 +36,14 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.soap.ZimbraSoapContext;
+import org.dom4j.DocumentException;
+
+import javax.mail.MessagingException;
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class GetShareNotifications extends MailDocumentHandler {
 
@@ -84,7 +82,10 @@ public class GetShareNotifications extends MailDocumentHandler {
                                 }
                                 shares.add(shareItemId);
 
-                                Element share = response.addElement(sn.isRevoke() ? MailConstants.ShareConstants.E_REVOKE : MailConstants.ShareConstants.E_SHARE);
+                                Element share = response.addElement(sn.isRevoke() || sn.isExpire() ? MailConstants.E_REVOKE : MailConstants.E_SHARE);
+                                if (sn.isExpire()) {
+                                    share.addAttribute(MailConstants.A_EXPIRE, true);
+                                }
                                 Element g = share.addUniqueElement(MailConstants.E_GRANTOR);
                                 g.addAttribute(MailConstants.A_ID, sn.getGrantorId());
                                 g.addAttribute(MailConstants.A_EMAIL, sn.getGrantorEmail());
@@ -98,8 +99,8 @@ public class GetShareNotifications extends MailDocumentHandler {
                                 share.addAttribute(MailConstants.A_STATUS, status);
                                 share.addAttribute(MailConstants.A_ID, "" + message.getId());
                                 share.addAttribute(MailConstants.A_DATE, message.getDate());
-                                if (sn.isRevoke()) {
-                                    // purge revoke notification upon receipt
+                                if (sn.isRevoke() || sn.isExpire()) {
+                                    // purge revoke/expire notification upon receipt
                                     mbox.delete(octxt, message.getId(), Type.MESSAGE);
                                 }
                             }

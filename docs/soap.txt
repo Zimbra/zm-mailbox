@@ -3904,7 +3904,7 @@ mid="{mountpoint-id}" : returned if the share is already mounted.
 
 ----------------------------
 
-<SendShareNotificationRequest [action="revoke"]>
+<SendShareNotificationRequest [action="revoke|expire"]>
     <item id="{item-id}"/>
     [<e a="{email-addr}"/>]+
     [<notes>{notes}</notes>]
@@ -3912,6 +3912,9 @@ mid="{mountpoint-id}" : returned if the share is already mounted.
 
 The client can list the recipient email addresses for the share, along
 with the itemId of the item being shared.
+
+A request with "action=expire" is sent by the system itself, when a share
+expires and is automatically revoked.
 
 <SendShareNotificationResponse/>
 
@@ -4042,7 +4045,7 @@ added to Documents only.
       <grantor id="{zimbra-id}" email="{email-address}" name="{display-name}"/>
       <link id="{shared-item-id}" name="{item-name}" view="{item-type}" perm="{permissions-granted}"/>
     </share>]*
-   [<revoke id="{notification-item-id}" d="{date}">
+   [<revoke id="{notification-item-id}" d="{date}" [expire="1"]>
       <grantor id="{zimbra-id}" email="{email-address}" name="{display-name}"/>
       <link id="{revoked-item-id}" name="{item-name}" view="{item-type}"/>
     </revoke>]*
@@ -4051,7 +4054,9 @@ added to Documents only.
     There will be at most one <share/> or <revoke/> block for each shared item
     regardless of how many times the share notification was re-sent by the
     owner.  <revoke/> indicates the previous share is no longer available
-    to the user and should be hidden or removed from the UI.
+    to the user and should be hidden or removed from the UI. If "expire=1" is set
+    on <revoke/> it indicates that the share expired and was automatically revoked
+    by the system.
     
     notification-item-id = the id of the share notification message.  The message must be in the Inbox folder.
     status is "new" if the message is unread or "seen" if the message is read.

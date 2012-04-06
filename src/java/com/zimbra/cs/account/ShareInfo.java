@@ -14,35 +14,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
-
-import org.apache.commons.codec.binary.Hex;
-import org.dom4j.QName;
-
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
@@ -73,10 +44,37 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
-import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
+import org.apache.commons.codec.binary.Hex;
+import org.dom4j.QName;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 
 public class ShareInfo {
@@ -558,7 +556,7 @@ public class ShareInfo {
                                                   ACL.RIGHT_ACTION;
 
 
-        public static MimeMultipart genNotifBody(ShareInfoData sid, String notes, Locale locale, boolean revoke)
+        public static MimeMultipart genNotifBody(ShareInfoData sid, String notes, Locale locale, Action action)
                 throws MessagingException, ServiceException {
 
             // Body
@@ -566,7 +564,7 @@ public class ShareInfo {
 
             String shareAcceptUrl = null;
             String extUserLoginUrl = null;
-            if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
+            if (action == null && sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
                 shareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), sid.getGranteeName());
                 extUserLoginUrl = getExtUserLoginURL(owner);
@@ -574,8 +572,10 @@ public class ShareInfo {
 
             // TEXT part (add me first!)
             String mimePartText;
-            if (revoke) {
+            if (action == Action.revoke) {
                 mimePartText = genRevokeText(sid, locale, false);
+            } else if (action == Action.expire) {
+                mimePartText = genExpireText(sid, locale, false);
             } else {
                 mimePartText = genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, false);
             }
@@ -584,8 +584,10 @@ public class ShareInfo {
             mmp.addBodyPart(textPart);
 
             // HTML part
-            if (revoke) {
+            if (action == Action.revoke) {
                 mimePartText = genRevokeText(sid, locale, true);
+            } else if (action == Action.expire) {
+                mimePartText = genExpireText(sid, locale, true);
             } else {
                 mimePartText = genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, true);
             }
@@ -597,7 +599,7 @@ public class ShareInfo {
             if (sid.getGranteeTypeCode() != ACL.GRANTEE_GUEST) {
                 MimeBodyPart xmlPart = new ZMimeBodyPart();
                 xmlPart.setDataHandler(
-                        new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null, revoke))));
+                        new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null, action))));
                 mmp.addBodyPart(xmlPart);
             }
 
@@ -672,19 +674,44 @@ public class ShareInfo {
             return sb.toString();
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, boolean revoke) throws ServiceException {
-            if (sb == null)
+        private static String genExpireText(ShareInfoData sid, Locale locale, boolean html) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(L10nUtil.getMessage((html ? MsgKey.shareExpireBodyHtml : MsgKey.shareExpireBodyText),
+                    sid.getName(),
+                    formatFolderDesc(locale, sid),
+                    sid.getOwnerNotifName()));
+            return sb.toString();
+        }
+
+        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, Action action)
+                throws ServiceException {
+            if (sb == null) {
                 sb = new StringBuilder();
-            QName action = revoke ? ShareConstants.REVOKE : ShareConstants.SHARE;
-            Element share = Element.create(SoapProtocol.Soap12, action).addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).addAttribute(ShareConstants.A_ACTION, ShareConstants.ACTION_NEW);
-            share.addElement(ShareConstants.E_GRANTEE).addAttribute(ShareConstants.A_ID, sid.getGranteeId()).addAttribute(ShareConstants.A_EMAIL, sid.getGranteeName()).addAttribute(ShareConstants.A_NAME, sid.getGranteeNotifName());
-            share.addElement(ShareConstants.E_GRANTOR).addAttribute(ShareConstants.A_ID, sid.getOwnerAcctId()).addAttribute(ShareConstants.A_EMAIL, sid.getOwnerAcctEmail()).addAttribute(ShareConstants.A_NAME, sid.getOwnerNotifName());
+            }
+            QName actionName = action == null ? ShareConstants.SHARE : ShareConstants.REVOKE;
+            Element share = Element.create(SoapProtocol.Soap12, actionName).
+                    addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).
+                    addAttribute(ShareConstants.A_ACTION, ShareConstants.ACTION_NEW);
+            if (action == Action.expire) {
+                share.addAttribute(ShareConstants.A_EXPIRE, true);
+            }
+            share.addElement(ShareConstants.E_GRANTEE).
+                    addAttribute(ShareConstants.A_ID, sid.getGranteeId()).
+                    addAttribute(ShareConstants.A_EMAIL, sid.getGranteeName()).
+                    addAttribute(ShareConstants.A_NAME, sid.getGranteeNotifName());
+            share.addElement(ShareConstants.E_GRANTOR).
+                    addAttribute(ShareConstants.A_ID, sid.getOwnerAcctId()).
+                    addAttribute(ShareConstants.A_EMAIL, sid.getOwnerAcctEmail()).
+                    addAttribute(ShareConstants.A_NAME, sid.getOwnerNotifName());
             Element link = share.addElement(ShareConstants.E_LINK);
-            link.addAttribute(ShareConstants.A_ID, sid.getItemId()).addAttribute(ShareConstants.A_NAME, sid.getName()).addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView());
-            if (!revoke) {
+            link.addAttribute(ShareConstants.A_ID, sid.getItemId()).
+                    addAttribute(ShareConstants.A_NAME, sid.getName()).
+                    addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView());
+            if (action == null) {
                 link.addAttribute(ShareConstants.A_PERM, ACL.rightsToString(sid.getRightsCode()));
             }
-            return share.prettyPrint();
+            sb.append(share.prettyPrint());
+            return sb.toString();
         }
 
         private static void appendCommaSeparated(StringBuffer sb, String s) {
@@ -811,12 +838,12 @@ public class ShareInfo {
             private String genXml(Integer idx) throws ServiceException {
                 StringBuilder sb = new StringBuilder();
 
-                 if (idx == null) {
+                if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genXmlPart(sid, null, sb, false);
+                        genXmlPart(sid, null, sb, null);
                     }
                 } else {
-                    genXmlPart(mShares.get(idx), null, sb, false);
+                    genXmlPart(mShares.get(idx), null, sb, null);
                 }
                 return sb.toString();
             }

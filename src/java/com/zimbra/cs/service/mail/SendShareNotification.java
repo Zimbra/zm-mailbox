@@ -14,21 +14,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
 import com.google.common.collect.Sets;
 import com.ibm.icu.text.MessageFormat;
 import com.zimbra.common.account.Key.AccountBy;
@@ -72,7 +57,22 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
 
 public class SendShareNotification extends MailDocumentHandler {
 
@@ -97,14 +97,14 @@ public class SendShareNotification extends MailDocumentHandler {
 
         // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
-        String action = request.getAttribute(MailConstants.A_ACTION, null);
+        Action action = Action.fromString(request.getAttribute(MailConstants.A_ACTION, null));
         String notes = (eNotes==null)?null:eNotes.getText();
 
         // send the messages
         try {
             Account authAccount = getAuthenticatedAccount(zsc);
             for (ShareInfoData sid : shareInfos) {
-                MimeMessage mm = generateShareNotification(authAccount, account, sid, notes, REVOKE.equals(action));
+                MimeMessage mm = generateShareNotification(authAccount, account, sid, notes, action);
                 mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
                 // also send a copy of the message out to relay MTA
                 if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled()) {
@@ -116,8 +116,7 @@ public class SendShareNotification extends MailDocumentHandler {
                     "Messaging Exception while sending share notification message", e);
         }
 
-        Element response = zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
-        return response;
+        return zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
     }
 
     private Collection<ShareInfoData> validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
@@ -505,13 +504,17 @@ public class SendShareNotification extends MailDocumentHandler {
         return folder;
     }
 
-    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid, String notes, boolean action) throws ServiceException, MessagingException {
+    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid,
+            String notes, Action action)
+            throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
 
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
 
-        String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
+        MsgKey subjectKey = action == null ? MsgKey.shareNotifSubject :
+                action == Action.revoke ? MsgKey.shareRevokeSubject : MsgKey.shareExpireSubject;
+        String subject = L10nUtil.getMessage(subjectKey, locale);
         subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), sid.getOwnerNotifName());
         mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
         mm.setSentDate(new Date());

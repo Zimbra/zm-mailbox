@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -54,7 +55,9 @@ import com.zimbra.cs.service.util.ItemId;
 public class SendShareNotificationTest extends SendShareNotification {
 
     @Override
-    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid, String notes, boolean action) throws ServiceException, MessagingException {
+    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid,
+            String notes, SendShareNotificationRequest.Action action)
+            throws ServiceException, MessagingException {
         MimeMessage mm = super.generateShareNotification(authAccount, ownerAccount, sid, notes, action);
 
         try {
