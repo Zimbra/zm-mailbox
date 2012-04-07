@@ -257,6 +257,10 @@ public final class KnownKey {
     public KnownKey setDefault(long defaultValue) {
         return setDefault(String.valueOf(defaultValue));
     }
+    
+    public KnownKey setDefault(boolean defaultValue) {
+        return setDefault(String.valueOf(defaultValue));
+    }
 
     public KnownKey setForceToEdit(boolean value) {
         forceToEdit = value;
