@@ -74,11 +74,25 @@ public class CommonDocumentInfo {
     private String folderId;
 
     /**
+     * @zm-api-field-tag folder-uuid
+     * @zm-api-field-description Folder UUID
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER_UUID /* luuid */, required=false)
+    private String folderUuid;
+
+    /**
      * @zm-api-field-tag modified-sequence
      * @zm-api-field-description Modified sequence
      */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
+
+    /**
+     * @zm-api-field-tag metadata-version
+     * @zm-api-field-description Metadata version
+     */
+    @XmlAttribute(name=MailConstants.A_METADATA_VERSION /* mdver */, required=false)
+    private Integer metadataVersion;
 
     /**
      * @zm-api-field-tag change-date
@@ -117,8 +131,8 @@ public class CommonDocumentInfo {
     private String tagNames;
 
     /**
-     * @zm-api-field-tag description
-     * @zm-api-field-description Description
+     * @zm-api-field-tag optional-description
+     * @zm-api-field-description Optional description
      */
     @XmlAttribute(name=MailConstants.A_DESC /* desc */, required=false)
     private String description;
@@ -263,8 +277,12 @@ public class CommonDocumentInfo {
     }
     public String getFragment() { return fragment; }
     public Acl getAcl() { return acl; }
-
+    public String getFolderUuid() { return folderUuid; }
+    public void setFolderUuid(String folderUuid) { this.folderUuid = folderUuid; }
+    public Integer getMetadataVersion() { return metadataVersion; }
+    public void setMetadataVersion(Integer metadataVersion) { this.metadataVersion = metadataVersion; }
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+
         return helper
             .add("id", id)
             .add("uuid", uuid)
@@ -272,7 +290,9 @@ public class CommonDocumentInfo {
             .add("size", size)
             .add("date", date)
             .add("folderId", folderId)
+            .add("folderUuid", folderUuid)
             .add("modifiedSequence", modifiedSequence)
+            .add("metadataVersion", metadataVersion)
             .add("changeDate", changeDate)
             .add("revision", revision)
             .add("flags", flags)

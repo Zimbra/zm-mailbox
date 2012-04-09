@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.DocumentInfo;
@@ -33,19 +34,20 @@ import com.zimbra.soap.mail.type.IdEmailName;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_LIST_DOCUMENT_REVISIONS_RESPONSE)
+@XmlType(propOrder = { "revisions", "users" })
 public class ListDocumentRevisionsResponse {
-
-    /**
-     * @zm-api-field-description User information
-     */
-    @XmlElement(name=MailConstants.A_USER /* user */, required=false)
-    private List<IdEmailName> users = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Document revision information
      */
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
     private List<DocumentInfo> revisions = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-description User information
+     */
+    @XmlElement(name=MailConstants.A_USER /* user */, required=false)
+    private List<IdEmailName> users = Lists.newArrayList();
 
     public ListDocumentRevisionsResponse() {
     }

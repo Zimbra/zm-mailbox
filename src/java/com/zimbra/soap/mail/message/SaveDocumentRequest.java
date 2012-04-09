@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,15 +18,11 @@ package com.zimbra.soap.mail.message;
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.IdVersion;
-import com.zimbra.soap.mail.type.MessagePartSpec;
-import com.zimbra.soap.type.Id;
-import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.mail.type.DocumentSpec;
 
 /**
  * @zm-api-command-description Save Document
@@ -60,7 +56,7 @@ import com.zimbra.soap.type.ZmBoolean;
  * upload-id from the FileUploadResponse.
  * <br />
  * When <b>&lt;m></b> is used, the document is retrieved from an existing message in the mailbox, identified by the
- * msg-id and part-id.  The content of the document can be inlined in the <b>&ly;content></b> element.
+ * msg-id and part-id.  The content of the document can be inlined in the <b>&lt;content></b> element.
  * The content can come from another document / revision specified in the <b>&lt;doc></b> sub element.
  * <br />
  * Examples:
@@ -75,7 +71,7 @@ import com.zimbra.soap.type.ZmBoolean;
  *     &lt;/SaveDocumentRequest>
  *
  *     &lt;SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
- *       &lt;doc ver="1" id="574" rest="http://localhost:7070/home/user1/Notebook/PICT0370.JPG"/>
+ *       &lt;doc ver="1" id="574" name="PICT0370.JPG"/>
  *     &lt;/SaveDocumentResponse>
  * </pre>
  * Updating an existing document
@@ -87,7 +83,7 @@ import com.zimbra.soap.type.ZmBoolean;
  *     &lt;/SaveDocumentRequest>
  *
  *     &lt;SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
- *       &lt;doc ver="2" id="574" rest="http://localhost:7070/home/user1/Notebook/PICT0370.JPG"/>
+ *       &lt;doc ver="2" id="574" name="PICT0370.JPG"/>
  *     &lt;/SaveDocumentResponse>
  * </pre>
  */
@@ -96,146 +92,24 @@ import com.zimbra.soap.type.ZmBoolean;
 public class SaveDocumentRequest {
 
     /**
-     * @zm-api-field-tag file-name
-     * @zm-api-field-description File name
+     * @zm-api-field-description Document specification
      */
-    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
-    private String name;
-
-    /**
-     * @zm-api-field-tag content-type
-     * @zm-api-field-description Content Type
-     */
-    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
-    private String contentType;
-
-    /**
-     * @zm-api-field-tag description
-     * @zm-api-field-description Description
-     */
-    @XmlAttribute(name=MailConstants.A_DESC /* desc */, required=false)
-    private String description;
-
-    /**
-     * @zm-api-field-tag folder-id
-     * @zm-api-field-description Folder ID
-     */
-    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
-    private String folderId;
-
-    /**
-     * @zm-api-field-tag item-id
-     * @zm-api-field-description Item ID
-     */
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
-    private String id;
-
-    /**
-     * @zm-api-field-tag last-known-version
-     * @zm-api-field-description Last known version
-     */
-    @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=false)
-    private Integer version;
-
-    /**
-     * @zm-api-field-tag inlined-document-content-string
-     * @zm-api-field-description Inlined document content string
-     */
-    @XmlAttribute(name=MailConstants.E_CONTENT /* content */, required=false)
-    private String content;
-
-    /**
-     * @zm-api-field-tag desc-enabled
-     * @zm-api-field-description Desc enabled flag
-     */
-    @XmlAttribute(name=MailConstants.A_DESC_ENABLED, required=false)
-    private ZmBoolean descEnabled;
-
-    /**
-     * @zm-api-field-tag flags
-     * @zm-api-field-description Flags - Any of the flags specified in soap.txt, with the addition of "t", which
-     * specifies that the document is a note.
-     */
-    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
-    private String flags;
-
-    /**
-     * @zm-api-field-tag upload-id
-     * @zm-api-field-description Upload ID
-     */
-    @XmlElement(name=MailConstants.E_UPLOAD /* upload */, required=false)
-    private Id upload;
-
-    /**
-     * @zm-api-field-description Message part specification
-     */
-    @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
-    private MessagePartSpec messagePart;
-
-    /**
-     * @zm-api-field-description Information on document version to restore to
-     */
-    @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
-    private IdVersion docRevision;
+    @XmlElement(name=MailConstants.E_DOC /* doc */, required=true)
+    private DocumentSpec doc;
 
     public SaveDocumentRequest() {
     }
 
-    public void setName(String name) { this.name = name; }
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public void setFolderId(String folderId) { this.folderId = folderId; }
-    public void setId(String id) { this.id = id; }
-    public void setVersion(Integer version) { this.version = version; }
-    public void setContent(String content) { this.content = content; }
-    public void setDescEnabled(Boolean descEnabled) {
-        this.descEnabled = ZmBoolean.fromBool(descEnabled);
-    }
-    public void setFlags(String flags) { this.flags = flags; }
-    public void setUpload(Id upload) { this.upload = upload; }
-    public void setMessagePart(MessagePartSpec messagePart) {
-        this.messagePart = messagePart;
-    }
-    public void setDocRevision(IdVersion docRevision) {
-        this.docRevision = docRevision;
-    }
-    public String getName() { return name; }
-    public String getContentType() { return contentType; }
-    public String getDescription() { return description; }
-    public String getFolderId() { return folderId; }
-    public String getId() { return id; }
-    public Integer getVersion() { return version; }
-    public String getContent() { return content; }
-    public Boolean getDescEnabled() { return ZmBoolean.toBool(descEnabled); }
-    public String getFlags() { return flags; }
-    public Id getUpload() { return upload; }
-    public MessagePartSpec getMessagePart() { return messagePart; }
-    public IdVersion getDocRevision() { return docRevision; }
+    public void setDoc(DocumentSpec doc) { this.doc = doc; }
+    public DocumentSpec getDoc() { return doc; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
-            .add("name", name)
-            .add("contentType", contentType)
-            .add("description", description)
-            .add("folderId", folderId)
-            .add("id", id)
-            .add("version", version)
-            .add("content", content)
-            .add("descEnabled", descEnabled)
-            .add("flags", flags)
-            .add("upload", upload)
-            .add("messagePart", messagePart)
-            .add("docRevision", docRevision);
+            .add("doc", doc);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
