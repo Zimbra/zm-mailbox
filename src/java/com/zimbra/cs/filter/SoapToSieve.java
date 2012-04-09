@@ -86,7 +86,11 @@ public final class SoapToSieve {
 
         // Handle actions
         Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
-        for (FilterAction action : rule.getFilterActions()) {
+        List<FilterAction> filterActions = rule.getFilterActions();
+        if (filterActions.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST("Missing action", null);
+        }
+        for (FilterAction action : filterActions) {
             String result = handleAction(action);
             if (result != null) {
                 FilterUtil.addToMap(index2action, action.getIndex(), result);
@@ -302,7 +306,11 @@ public final class SoapToSieve {
             return "discard";
         } else if (action instanceof FilterAction.FileIntoAction) {
             FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
-            return String.format("fileinto \"%s\"", FilterUtil.escape(fileinto.getFolder()));
+            String folderPath = fileinto.getFolder();
+            if (StringUtil.isNullOrEmpty(folderPath)) {
+                throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
+            }
+            return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             return String.format("tag \"%s\"", FilterUtil.escape(tag.getTag()));
