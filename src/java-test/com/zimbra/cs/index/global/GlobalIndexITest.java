@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.LuceneFields;
@@ -189,6 +190,32 @@ public final class GlobalIndexITest {
     }
     
     @Test
+    public void deleteDocuments() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_BRIEFCASE);
+        
+        ParsedDocument pdoc1 = new ParsedDocument(IOUtils.toInputStream("test"),
+                "filename1.txt", "text/plain", 12345L, "creator", "description");
+        Document doc1 = mbox.createDocument(null, folder.getId(), pdoc1, MailItem.Type.DOCUMENT, 0);
+        
+        ParsedDocument pdoc2 = new ParsedDocument(IOUtils.toInputStream("test"),
+                "filename2.txt", "text/plain", 12345L, "creator", "description");
+        Document doc2 = mbox.createDocument(null, folder.getId(), pdoc2, MailItem.Type.DOCUMENT, 0);
+        
+        GlobalIndex index = HBaseIndexTestUtils.getGlobalIndex();
+        index.delete(mbox.getAccountId());
+        index.addDocument(folder, doc1, doc1.generateIndexData());
+        index.addDocument(folder, doc2, doc2.generateIndexData());
+        
+        TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "test"));
+        List<GlobalSearchHit> hits = index.search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
+        Assert.assertEquals(2, hits.size());
+        index.delete(mbox.getAccountId(), ImmutableList.of(doc1.getId(), doc2.getId()));
+        hits = index.search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
+        Assert.assertEquals(0, hits.size());
+    }
+    
+    @Test
     public void purgeOrphanTerms() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_BRIEFCASE);
@@ -201,6 +228,7 @@ public final class GlobalIndexITest {
 
         GlobalIndex index = HBaseIndexTestUtils.getGlobalIndex();
         index.delete(mbox.getAccountId());
+        index.purgeOrphanTerms(mbox.getAccountId()); //make sure we don't have any stale entries in tombstone from previous tests!!
         index.addDocument(folder, doc1, doc1.generateIndexData());
         index.addDocument(folder, doc2, doc2.generateIndexData());
         

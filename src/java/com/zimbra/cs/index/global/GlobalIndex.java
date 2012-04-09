@@ -363,12 +363,40 @@ public final class GlobalIndex {
         }
         totalItemCount.addAndGet(-1L);
     }
+    
+    public void delete(String account, List<Integer> ids) throws IOException {
+        long ts = System.currentTimeMillis();
+        List<Put> putList = Lists.newArrayList();
+        List<Delete> batch = Lists.newArrayList();
+        HTableInterface table = pool.getTable(indexTableName);
+
+        for (int id : ids) {
+            GlobalItemID gid = new GlobalItemID(account, id);
+            Put put = put(table, ts, gid);
+            if (put != null)
+                putList.add(put);
+            batch.add(new Delete(gid.toBytes()));
+        }
+        
+        if (!putList.isEmpty())
+            writeTombstones(putList);
+        
+        if (!batch.isEmpty()) {
+            try {
+            table.delete(batch);
+            table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
+                    SERVER_CF, ITEM_COUNT_COL, -batch.size());
+            } finally {
+                table.close();
+            }
+        }
+    }
 
     /**
      * Delete all rows from ITEM CF for the account leaving associated terms in TERM CF orphan.
      * Move the item terms to tombstone so that terms can be purged from the index table later.
      */
-    void delete(String account) throws IOException {
+    public void delete(String account) throws IOException {
         long ts = System.currentTimeMillis();
         List<Delete> batch = Lists.newArrayList();
         HTableInterface table = pool.getTable(indexTableName);

@@ -382,6 +382,8 @@ public final class MailboxIndex {
 
     public void deleteIndex() throws IOException {
         indexStore.deleteIndex();
+        if (globalIndex != null)
+            globalIndex.delete(mailbox.getAccountId());
     }
 
     /**
@@ -845,6 +847,8 @@ public final class MailboxIndex {
 
         try {
             indexer.deleteDocument(ids);
+            if (globalIndex != null)
+                globalIndex.delete(mailbox.getAccountId(), ids);
         } catch (IOException e) {
             ZimbraLog.index.warn("Failed to delete index documents", e);
         } finally {
