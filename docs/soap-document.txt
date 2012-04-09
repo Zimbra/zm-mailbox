@@ -101,7 +101,7 @@ that the document is a note.
 // RESPONSE:
 //
 //<SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
-//  <doc ver="1" id="574" rest="http://localhost:7070/home/user1/Notebook/PICT0370.JPG"/>
+//  <doc ver="1" id="574" name="PICT0370.JPG"/>
 //</SaveDocumentResponse>
 //
 //
@@ -118,7 +118,7 @@ that the document is a note.
 // RESPONSE:
 //
 //<SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
-//  <doc ver="2" id="574" rest="http://localhost:7070/home/user1/Notebook/PICT0370.JPG"/>
+//  <doc ver="2" id="574" name="PICT0370.JPG"/>
 //</SaveDocumentResponse>
 //
 //
@@ -146,10 +146,10 @@ that the document is a note.
 </ListDocumentRevisionsRequest>
 
 <ListDocumentRevisionsResponse>
-  [<user id="{account-id}" name="{display-name}" email="{email-address}"/>]*
   [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" cd="{created-date}" l="{folder}" [f="{flags}"] [tn="{tag-names}"] [loid="{lock-owner-account-id}"] [loe="{lock-owner-email}"] [desc="{optional-description}] [descEnabled="true|false"]>
      <fr>... fragment ...</fr>
   </doc>]+
+  [<user id="{account-id}" name="{display-name}" email="{email-address}"/>]*
 </ListDocumentRevisionsResponse>
 
 Documents that have multiple revisions have the flag "/", which indicates that the document is versioned.
