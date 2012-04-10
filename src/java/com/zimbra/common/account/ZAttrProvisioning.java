@@ -6222,6 +6222,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailSSLClientCertMode = "zimbraMailSSLClientCertMode";
 
     /**
+     * enable OCSP support for two way authentication.
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1395)
+    public static final String A_zimbraMailSSLClientCertOCSPEnabled = "zimbraMailSSLClientCertOCSPEnabled";
+
+    /**
      * SSL port requesting client certificate for end-user UI
      *
      * @since ZCS 7.1.0
@@ -8243,7 +8251,7 @@ public class ZAttrProvisioning {
 
     /**
      * When displaying an invite in a conversation, show the day calendar
-     * immediately
+     * immediately.
      *
      * @since ZCS 8.0.0
      */
@@ -11018,14 +11026,14 @@ public class ZAttrProvisioning {
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
-    /**
+	/**
      * binary data
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=10000)
     public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
+	
     /**
      * binary data
      *
