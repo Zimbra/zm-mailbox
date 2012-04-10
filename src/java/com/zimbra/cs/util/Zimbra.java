@@ -17,6 +17,7 @@ package com.zimbra.cs.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.Security;
 import java.util.Timer;
 
 import org.apache.mina.core.buffer.IoBuffer;
@@ -184,6 +185,18 @@ public final class Zimbra {
             if (forMailboxd) {
                 AttributeManager.loadLdapSchemaExtensionAttrs((LdapProv) prov);
             }
+        }
+
+        if( Provisioning.getInstance().getLocalServer().isMailSSLClientCertOCSPEnabled()) {
+            // Activate OCSP
+            Security.setProperty("ocsp.enable", "true");
+            // Activate CRLDP
+            System.setProperty("com.sun.security.enableCRLDP", "true");
+        }else {
+            // Disable OCSP
+            Security.setProperty("ocsp.enable", "false");
+            // Disable CRLDP
+            System.setProperty("com.sun.security.enableCRLDP", "false");
         }
 
         try {

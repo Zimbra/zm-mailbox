@@ -17815,6 +17815,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * enable OCSP support for two way authentication.
+     *
+     * @return zimbraMailSSLClientCertOCSPEnabled, or true if unset
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1395)
+    public boolean isMailSSLClientCertOCSPEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMailSSLClientCertOCSPEnabled, true);
+    }
+
+    /**
+     * enable OCSP support for two way authentication.
+     *
+     * @param zimbraMailSSLClientCertOCSPEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1395)
+    public void setMailSSLClientCertOCSPEnabled(boolean zimbraMailSSLClientCertOCSPEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertOCSPEnabled, zimbraMailSSLClientCertOCSPEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable OCSP support for two way authentication.
+     *
+     * @param zimbraMailSSLClientCertOCSPEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1395)
+    public Map<String,Object> setMailSSLClientCertOCSPEnabled(boolean zimbraMailSSLClientCertOCSPEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertOCSPEnabled, zimbraMailSSLClientCertOCSPEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable OCSP support for two way authentication.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1395)
+    public void unsetMailSSLClientCertOCSPEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertOCSPEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable OCSP support for two way authentication.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.0
+     */
+    @ZAttr(id=1395)
+    public Map<String,Object> unsetMailSSLClientCertOCSPEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLClientCertOCSPEnabled, "");
+        return attrs;
+    }
+
+    /**
      * SSL port requesting client certificate for end-user UI
      *
      * <p>Use getMailSSLClientCertPortAsString to access value as a string.

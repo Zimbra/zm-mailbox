@@ -6949,4 +6949,9 @@ TODO: delete them permanently from here
   <desc>When displaying an invite in a conversation, show the day calendar immediately.</desc>
 </attr>
 
+<attr id="1395" name="zimbraMailSSLClientCertOCSPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.2.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>enable OCSP support for two way authentication.</desc>
+</attr>
+
 </attrs>

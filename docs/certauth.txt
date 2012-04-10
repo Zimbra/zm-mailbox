@@ -686,20 +686,9 @@ If certificate is revoked, the output will contain:
 zmprov ms <your servername> zimbraMailMode both (or https) to change mailmode
 
 - modify log4j.properties to add tracing info pertinent to OCSP/Two way authentication. 
-Add the following sections to your existing log4j.properties:
+Add the following line to your existing log4j.properties:
 
-# Appender ACCOUNT writes to the file "account.log".
-log4j.appender.ACCOUNT=org.apache.log4j.rolling.RollingFileAppender
-log4j.appender.ACCOUNT.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
-log4j.appender.ACCOUNT.RollingPolicy.FileNamePattern=/opt/zimbra/log/account.log.%d{yyyy-MM-dd}
-log4j.appender.ACCOUNT.File=/opt/zimbra/log/account.log
-log4j.appender.ACCOUNT.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.ACCOUNT.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
-
-and 
-
-log4j.additivity.zimbra.account=false
-log4j.logger.zimbra.account=DEBUG,ACCOUNT
+log4j.logger.zimbra.account=DEBUG,LOGFILE
 
 Please note that this step is arbitrary and needed only if you need to see trace 
 of what is going on during OCSP validation

@@ -228,12 +228,6 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
                     // Activate certificate revocation checking
                     params.setRevocationEnabled(true);
 
-                    // Activate OCSP
-                    Security.setProperty("ocsp.enable", "true");
-
-                    // Activate CRLDP
-                    System.setProperty("com.sun.security.enableCRLDP", "true");
-
                     // Ensure that the ocsp.responderURL property is not set.
                     if (Security.getProperty("ocsp.responderURL") != null) {
                         throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "ocsp.responderURL property should not be set");
@@ -242,7 +236,6 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
                     // perform validation
                     CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
                     PKIXCertPathValidatorResult cpv_result = (PKIXCertPathValidatorResult) cpv.validate(cp, params);
-                    //X509Certificate trustedCert = (X509Certificate) cpv_result.getTrustAnchor().getTrustedCert();
 
                     ZimbraLog.account.debug(LOG_PREFIX +  cpv_result.toString());
                 }
