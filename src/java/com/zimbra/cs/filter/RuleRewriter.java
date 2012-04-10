@@ -31,10 +31,12 @@ import org.apache.jsieve.parser.generated.ASTstring_list;
 import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,8 +47,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 /**
  * Rewrites a parsed Sieve tree to XML or vice versa.
@@ -66,7 +66,7 @@ public class RuleRewriter {
         MATCH_TYPES.add(":before");
         MATCH_TYPES.add(":after");
     }
-    private Stack<String> mStack = new Stack<String>();
+    private final Stack<String> mStack = new Stack<String>();
 
     private Element mRoot;
     private List<String> mRuleNames;
@@ -485,7 +485,8 @@ public class RuleRewriter {
                 createFolderIfNecessary(argVal, ruleName);
             } else if ("tag".equals(actionName)) {
                 try {
-                    mMailbox.getTagByName(argVal);
+                    // rule established by user, so use their rights to fetch tag
+                    mMailbox.getTagByName(null, argVal);
                 } catch (MailServiceException.NoSuchItemException e) {
                     // create tag
                     mMailbox.createTag(null, argVal, Tag.DEFAULT_COLOR);

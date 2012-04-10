@@ -2399,7 +2399,7 @@ public class Mailbox {
     }
 
     public MailItem getItemById(OperationContext octxt, int id, MailItem.Type type, boolean fromDumpster)
-            throws ServiceException {
+    throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
@@ -2909,7 +2909,7 @@ public class Mailbox {
 
             MailItem item = null;
             if (folderId == ID_FOLDER_TAGS) {
-                item = getTagByName(name);
+                item = getTagByName(octxt, name);
             } else {
                 // check for the specified item -- folder first, then document
                 item = parent.findSubfolder(name);
@@ -3399,23 +3399,28 @@ public class Mailbox {
      *   <li>{@link MailServiceException#NO_SUCH_TAG} if the tag does not exist
      *  </ul>
      */
-    public Tag getTagByName(String name) throws ServiceException {
+    public Tag getTagByName(OperationContext octxt, String name) throws ServiceException {
         if (Strings.isNullOrEmpty(name)) {
             throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
         }
 
         boolean success = false;
         try {
-            beginTransaction("getTagByName", null);
-            Tag tag = name.startsWith(Tag.FLAG_NAME_PREFIX) ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
-            if (tag == null) {
-                throw MailServiceException.NO_SUCH_TAG(name);
-            }
+            beginTransaction("getTagByName", octxt);
+            Tag tag = checkAccess(getTagByName(name));
             success = true;
             return tag;
         } finally {
             endTransaction(success);
         }
+    }
+
+    Tag getTagByName(String name) throws ServiceException {
+        Tag tag = name.startsWith(Tag.FLAG_NAME_PREFIX) ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
+        if (tag == null) {
+            throw MailServiceException.NO_SUCH_TAG(name);
+        }
+        return tag;
     }
 
     /** Returns the folder with the specified id.
@@ -5868,7 +5873,7 @@ public class Mailbox {
                     success = true;
                     return;
                 }
-                tag = getTagByName(ntags.getTags()[0]);
+                tag = getTagByName(octxt, ntags.getTags()[0]);
             }
 
             alterTag(itemIds, type, tag, addTag);
@@ -6649,7 +6654,11 @@ public class Mailbox {
     Tag createTagInternal(int tagId, String name, Color color, boolean listed) throws ServiceException {
         try {
             Tag tag = getTagByName(name);
-            if (tag.isListed()) {
+            if (!listed) {
+                // want an implicitly-created tag but there's already a listed tag, so just return it unchanged
+                return tag;
+            } else if (tag.isListed()) {
+                // can't have two listed tags with the same name
                 throw MailServiceException.ALREADY_EXISTS(name);
             }
 
@@ -6662,6 +6671,7 @@ public class Mailbox {
             tag.setColor(color);
             return tag;
         } catch (NoSuchItemException nsie) {
+            // no conflict, so just create the new tag as requested
             return Tag.create(this, getNextItemId(tagId), name, color, listed);
         }
     }

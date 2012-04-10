@@ -78,7 +78,7 @@ public class TagUtil {
         List<Integer> tagIds = new ArrayList<Integer>(tags.length);
         for (String tag : tags) {
             try {
-                tagIds.add(mbox.getTagByName(tag).getId());
+                tagIds.add(mbox.getTagByName(null, tag).getId());
             } catch (ServiceException e) { }
         }
         if (tagIds.size() > 1) {
@@ -116,7 +116,7 @@ public class TagUtil {
         if (tags == null || tags.isEmpty()) {
             return "";
         }
-    
+
         StringBuilder encoded = new StringBuilder();
         for (String tag : tags) {
             encoded.append(encoded.length() == 0 ? "" : ",").append(tag.replace("\\", "\\\\").replace(",", "\\,"));

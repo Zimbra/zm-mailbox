@@ -31,6 +31,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.zimbra.client.ZFolder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -45,9 +46,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.client.ZFolder;
+import com.zimbra.cs.session.Session;
 
 /**
  * @since Apr 30, 2005
@@ -67,11 +67,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     private transient ImapFlagCache flags;
 
     private final int folderId;
-    private int uidValidity;
+    private final int uidValidity;
     private String query;
     private Set<MailItem.Type> typeConstraint = ImapHandler.ITEM_TYPES;
     private final List<ImapMessage> sequence = new ArrayList<ImapMessage>();
-    private ImapFlagCache tags;   // operationally could be "transient", but that makes deserialization replay depend on magic
+    private final ImapFlagCache tags;   // operationally could be "transient", but that makes deserialization replay depend on magic
 
     // below this point are session-specific attributes of the folder SELECT state
     static class SessionData {
@@ -427,7 +427,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             for (String tag : i4msg.tags) {
                 if (tags.getByZimbraName(tag) == null) {
                     try {
-                        tags.cache(new ImapFlag(mailbox.getTagByName(tag)));
+                        tags.cache(new ImapFlag(mailbox.getTagByName(null, tag)));
                         setTagsDirty(true);
                     } catch (ServiceException e) {
                         ZimbraLog.imap.warn("could not fetch listed tag: %s", tag, e);

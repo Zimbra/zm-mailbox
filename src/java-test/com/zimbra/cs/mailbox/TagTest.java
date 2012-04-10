@@ -114,7 +114,7 @@ public class TagTest {
         Assert.assertEquals("tag rename", tag3, tag.getName());
         mbox.purge(MailItem.Type.TAG);
         try {
-            tag = mbox.getTagByName(tag3);
+            tag = mbox.getTagByName(null, tag3);
             Assert.assertEquals("fetching renamed tag", tagId, tag.getId());
         } catch (NoSuchItemException nsie) {
             Assert.fail("renamed tag could not be fetched");
@@ -137,29 +137,29 @@ public class TagTest {
         Assert.assertEquals("tag color 2", 2, tag.getColor());
 
         mbox.purge(MailItem.Type.TAG);
-        tag = mbox.getTagByName(tag1);
+        tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("tag color 2", 2, tag.getColor());
         DbTag.debugConsistencyCheck(mbox);
 
         // color specified as rgb
         Color color = new Color(0x668822);
         mbox.setColor(null, new int[] { tag.getId() }, MailItem.Type.TAG, color);
-        tag = mbox.getTagByName(tag1);
+        tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("tag color " + color, color, tag.getRgbColor());
 
         mbox.purge(MailItem.Type.TAG);
-        tag = mbox.getTagByName(tag1);
+        tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("tag color " + color, color, tag.getRgbColor());
         DbTag.debugConsistencyCheck(mbox);
 
         // color specified as default
         mbox.setColor(null, new int[] { tag.getId() }, MailItem.Type.TAG, MailItem.DEFAULT_COLOR_RGB);
-        tag = mbox.getTagByName(tag1);
+        tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("default tag color", MailItem.DEFAULT_COLOR, tag.getColor());
         Assert.assertEquals("default tag color", MailItem.DEFAULT_COLOR_RGB, tag.getRgbColor());
 
         mbox.purge(MailItem.Type.TAG);
-        tag = mbox.getTagByName(tag1);
+        tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("default tag color", MailItem.DEFAULT_COLOR, tag.getColor());
         Assert.assertEquals("default tag color", MailItem.DEFAULT_COLOR_RGB, tag.getRgbColor());
         DbTag.debugConsistencyCheck(mbox);
@@ -184,7 +184,7 @@ public class TagTest {
 
     private void checkTagCounts(String msg, Mailbox mbox, String tagName, int count, int unread) throws Exception {
         try {
-            Tag tag = mbox.getTagByName(tagName);
+            Tag tag = mbox.getTagByName(null, tagName);
             Assert.assertEquals(msg + " (tag messages)", count, tag.getSize());
             Assert.assertEquals(msg + " (tag unread)", unread, tag.getUnreadCount());
         } catch (MailServiceException.NoSuchItemException nsie) {
@@ -290,7 +290,7 @@ public class TagTest {
         String bad = "badbadbad";
         mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, bad, false, null);
         try {
-            mbox.getTagByName(bad);
+            mbox.getTagByName(null, bad);
             Assert.fail("removing nonexistent tag should not autocreate");
         } catch (NoSuchItemException nsie) { }
 
@@ -313,7 +313,7 @@ public class TagTest {
         checkTagCounts(tag3, mbox, tag3, 1, 1);
         checkTagCounts(tag4, mbox, tag4, 1, 1);
         try {
-            mbox.getTagByName(bad);
+            mbox.getTagByName(null, bad);
             Assert.fail("removing nonexistent tag should not autocreate");
         } catch (NoSuchItemException nsie) { }
     }
@@ -448,6 +448,7 @@ public class TagTest {
     @Test
     public void permissions() throws Exception {
         Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+        OperationContext octxt2 = new OperationContext(acct2);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -455,23 +456,23 @@ public class TagTest {
 
         // need full perms on account to fetch a tag by ID
         try {
-            mbox.getTagById(new OperationContext(acct2), tagId1);
+            mbox.getTagById(octxt2, tagId1);
             Assert.fail("fetched tag by ID without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("unexpected error when fetching tag by ID", ServiceException.PERM_DENIED, e.getCode());
         }
 
-//        // need full perms on account to fetch a tag by name
-//        try {
-//            mbox.getTagByName(new OperationContext(acct2), tagId1);
-//            Assert.fail("fetched tag by name without permissions");
-//        } catch (ServiceException e) {
-//            Assert.assertEquals("unexpected error when fetching tag by name", ServiceException.PERM_DENIED, e.getCode());
-//        }
+        // need full perms on account to fetch a tag by name
+        try {
+            mbox.getTagByName(octxt2, tag1);
+            Assert.fail("fetched tag by name without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when fetching tag by name", ServiceException.PERM_DENIED, e.getCode());
+        }
 
         // need full perms on account to get the tag list
         try {
-            mbox.getTagList(new OperationContext(acct2));
+            mbox.getTagList(octxt2);
             Assert.fail("fetched tag list without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("unexpected error when fetching tag list", ServiceException.PERM_DENIED, e.getCode());
@@ -479,7 +480,7 @@ public class TagTest {
 
         // need full perms on account to create a tag in the tag list
         try {
-            mbox.createTag(new OperationContext(acct2), tag2, (byte) 0);
+            mbox.createTag(octxt2, tag2, (byte) 0);
             Assert.fail("created tag without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("unexpected error when creating tag", ServiceException.PERM_DENIED, e.getCode());
@@ -489,14 +490,14 @@ public class TagTest {
         mbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_INSERT, null);
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2 });
-            mbox.addMessage(new OperationContext(acct2), ThreaderTest.getRootMessage(), dopt, null).getId();
+            mbox.addMessage(octxt2, ThreaderTest.getRootMessage(), dopt, null).getId();
         } catch (ServiceException e) {
             Assert.fail("unable to insert message with implicit tag");
         }
 
         // still need full perms to "create" an existing but unlisted tag
         try {
-            mbox.createTag(new OperationContext(acct2), tag2, (byte) 0);
+            mbox.createTag(octxt2, tag2, (byte) 0);
             Assert.fail("switched tag from unlisted to listed without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("unexpected error when \"creating\" existing unlisted tag", ServiceException.PERM_DENIED, e.getCode());
@@ -504,7 +505,7 @@ public class TagTest {
 
         // need full perms to rename a tag
         try {
-            mbox.rename(new OperationContext(acct2), tagId1, MailItem.Type.TAG, tag4);
+            mbox.rename(octxt2, tagId1, MailItem.Type.TAG, tag4);
             Assert.fail("renamed tag without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("unexpected error when renaming tag", ServiceException.PERM_DENIED, e.getCode());
@@ -512,7 +513,7 @@ public class TagTest {
 
         // need full perms to delete a tag
         try {
-            mbox.delete(new OperationContext(acct2), tagId1, MailItem.Type.TAG);
+            mbox.delete(octxt2, tagId1, MailItem.Type.TAG);
             Assert.fail("deleted tag without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("unexpected error when deleting tag", ServiceException.PERM_DENIED, e.getCode());

@@ -50,14 +50,14 @@ public final class DbSearchTest {
 
     private DbConnection conn = null;
     private Mailbox mbox = null;
-    
+
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         conn = DbPool.getConnection(mbox);
     }
-    
+
     @After
     public void tearDown() {
         conn.closeQuietly();
@@ -265,7 +265,7 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?)", mbox.getId(), 103, Flag.ID_FLAGGED);
 
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
         List<DbSearch.Result> result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100,
                 DbSearch.FetchMode.ID);
         Assert.assertEquals(2, result.size());
@@ -273,7 +273,7 @@ public final class DbSearchTest {
         Assert.assertEquals(103, result.get(1).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), false);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), false);
         result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(102, result.get(0).getId());
@@ -281,21 +281,21 @@ public final class DbSearchTest {
         Assert.assertEquals(105, result.get(2).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        constraints.addTag(mbox.getTagByName("\\Unread"), false);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), false);
         result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(0, result.size());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        constraints.addTag(mbox.getTagByName("\\Flagged"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Flagged"), true);
         result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(103, result.get(0).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        constraints.addTag(mbox.getTagByName("\\Flagged"), false);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Flagged"), false);
         result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(101, result.get(0).getId());
@@ -326,7 +326,7 @@ public final class DbSearchTest {
         mbox.createTag(null, "test", (byte) 0);
 
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
         List<DbSearch.Result> result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100,
                 DbSearch.FetchMode.ID);
         Assert.assertEquals(2, result.size());
@@ -334,7 +334,7 @@ public final class DbSearchTest {
         Assert.assertEquals(103, result.get(1).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), false);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), false);
         result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(102, result.get(0).getId());
@@ -342,21 +342,21 @@ public final class DbSearchTest {
         Assert.assertEquals(105, result.get(2).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        constraints.addTag(mbox.getTagByName("\\Unread"), false);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), false);
         result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(0, result.size());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        constraints.addTag(mbox.getTagByName("\\Flagged"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Flagged"), true);
         result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(103, result.get(0).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        constraints.addTag(mbox.getTagByName("\\Flagged"), false);
+        constraints.addTag(mbox.getTagByName(null, "\\Unread"), true);
+        constraints.addTag(mbox.getTagByName(null, "\\Flagged"), false);
         result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(101, result.get(0).getId());
