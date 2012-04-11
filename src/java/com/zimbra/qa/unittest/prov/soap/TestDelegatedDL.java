@@ -1528,7 +1528,6 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
         
-        
         provUtil.deleteAccount(ownerAcct);
         provUtil.deleteAccount(memberAcct1);
         provUtil.deleteAccount(memberAcct2);
@@ -1536,6 +1535,19 @@ public class TestDelegatedDL extends SoapTest {
         provUtil.deleteAccount(memberAcct4);
         provUtil.deleteAccount(nonMemberAcct);
         provUtil.deleteGroup(group);
+    }
+    
+    @Test
+    @Bug(bug=72791)
+    public void InvalidOwnerEmail() throws Exception {
+        String GROUP_NAME = getAddress(genGroupNameLocalPart());
 
+        String errorCode = null;
+        try {
+            Group group = createGroupAndAddOwner(GROUP_NAME, "bogus@bogus.com");
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(AccountServiceException.NO_SUCH_ACCOUNT, errorCode);
     }
 }
