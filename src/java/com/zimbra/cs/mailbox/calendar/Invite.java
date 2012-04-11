@@ -2068,7 +2068,7 @@ public class Invite {
         }
     }
 
-    private static void logIcsParseImportError(Invite inv, Exception e) {
+    public static void logIcsParseImportError(Invite inv, Exception e) {
         String uid = inv.getUid();
         String recurrenceId = inv.hasRecurId() ? inv.getRecurId().toString() : null;
         int seq = inv.getSeqNo();

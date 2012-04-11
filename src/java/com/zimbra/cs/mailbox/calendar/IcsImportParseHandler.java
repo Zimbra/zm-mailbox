@@ -227,12 +227,20 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                 addRevision = false;
             }
             // and add the invite to the calendar!
-            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mPreserveExistingAlarms, addRevision);
-            if (ZimbraLog.calendar.isDebugEnabled()) {
-                if (inv.isEvent())
-                    ZimbraLog.calendar.debug("Appointment imported: UID=" + inv.getUid());
-                else if (inv.isTodo())
-                    ZimbraLog.calendar.debug("Task imported: UID=" + inv.getUid());
+            try {
+                mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mPreserveExistingAlarms, addRevision);
+                if (ZimbraLog.calendar.isDebugEnabled()) {
+                    if (inv.isEvent())
+                        ZimbraLog.calendar.debug("Appointment imported: UID=" + inv.getUid());
+                    else if (inv.isTodo())
+                        ZimbraLog.calendar.debug("Task imported: UID=" + inv.getUid());
+                }
+            } catch (ServiceException se) {
+                if (se.getCode().equals(ServiceException.FORBIDDEN)) {
+                    Invite.logIcsParseImportError(inv, se);
+                } else {
+                    throw se;
+                }
             }
         }
     }

@@ -489,6 +489,15 @@ public abstract class CalendarItem extends MailItem {
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
+        
+        CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
+        Invite defInvite = item.getDefaultInviteOrNull();
+        if (defInvite != null) {
+            Collection<Instance> instances = item.expandInstances(0, Long.MAX_VALUE, false);
+            if (instances.isEmpty()) {
+                throw ServiceException.FORBIDDEN("Recurring series has effectively zero instances");
+            }
+        }
         if (!firstInvite.hasRecurId()) {
             ZimbraLog.calendar.info(
                     "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s",
@@ -504,8 +513,6 @@ public abstract class CalendarItem extends MailItem {
         }
 
         new DbMailItem(mbox).setSender(sender).create(data);
-
-        CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
 
         // If we're creating an invite during email delivery, always default to NEEDS_ACTION state.
         // If not email delivery, we assume the requesting client knows what it's doing and has set the
@@ -2055,6 +2062,8 @@ public abstract class CalendarItem extends MailItem {
                     if (defInvite != null) {
                         Collection<Instance> instances = expandInstances(0, Long.MAX_VALUE, false);
                         if (instances.isEmpty())  {
+                            ZimbraLog.calendar.warn("Deleting calendar item " + getId() +
+                                    " in mailbox " + getMailboxId() + " because it has no invite after applying request/cancel invite");
                             delete();
                             return true;
                         }

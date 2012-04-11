@@ -452,7 +452,10 @@ public class CalendarCollection extends Collection {
                     scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
             return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
         } catch (ServiceException e) {
-            throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            if (e.getCode().equals(ServiceException.FORBIDDEN))
+                throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
+            else
+                throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
         }
     }
 
