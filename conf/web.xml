@@ -73,7 +73,7 @@
 
     <init-param>
       <param-name>mimeTypes</param-name>
-      <param-value>application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
+      <param-value>application/soap+xml</param-value>
     </init-param>
 
     <init-param>
@@ -99,6 +99,30 @@
   <filter-mapping>
     <filter-name>GzipFilter</filter-name>
     <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>ZimbraSyncGzipFilter</filter-name>
+    <filter-class>org.eclipse.jetty.servlets.IncludableGzipFilter</filter-class>
+
+    <init-param>
+      <param-name>mimeTypes</param-name>
+      <param-value>text/plain,text/html,application/pdf,application/vnd.ms-sync.wbxml,application/vnd.ms-sync.multipart,application/msword,application/vnd.ms-excel,application/vnd.ms-powerpoint</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>minGzipSize</param-name>
+      <param-value>2048</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>uncheckedPrintWriter</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>ZimbraSyncGzipFilter</filter-name>
+    <url-pattern>/extension/zimbrasync/*</url-pattern>
   </filter-mapping>
 
   <filter>
