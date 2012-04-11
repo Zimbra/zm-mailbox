@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120411-1454 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3374,6 +3374,44 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1210)
     public static final String A_zimbraDefaultFolderFlags = "zimbraDefaultFolderFlags";
+
+    /**
+     * allowed passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1397)
+    public static final String A_zimbraDeviceAllowedPasscodeLockoutDuration = "zimbraDeviceAllowedPasscodeLockoutDuration";
+
+    /**
+     * For native apps - whether to lock device when inactive.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1399)
+    public static final String A_zimbraDeviceLockWhenInactive = "zimbraDeviceLockWhenInactive";
+
+    /**
+     * Whether device is password protected in native apps
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1396)
+    public static final String A_zimbraDevicePasscodeEnabled = "zimbraDevicePasscodeEnabled";
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public static final String A_zimbraDevicePasscodeLockoutDuration = "zimbraDevicePasscodeLockoutDuration";
 
     /**
      * Email address to put in from header for the share info email. If not
@@ -11026,14 +11064,14 @@ public class ZAttrProvisioning {
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
-	/**
+    /**
      * binary data
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=10000)
     public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-	
+
     /**
      * binary data
      *
