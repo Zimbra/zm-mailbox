@@ -22,6 +22,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -361,7 +362,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         Key.DomainBy domainBy = null;
         String domainStr = null;
-        Key.CosBy cosBy = null;
+        CosBy cosBy = null;
         String cosStr = null;
         
         if (targetType.isDomained()) {
@@ -378,10 +379,10 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             targetType == TargetType.calresource) {
             cosStr = (String)attrs.get(Provisioning.A_zimbraCOSId);
             if (cosStr != null) {
-                if (LdapUtil.isValidUUID(cosStr)) {
-                    cosBy = cosBy.id;
+                if (Provisioning.isUUID(cosStr)) {
+                    cosBy = CosBy.id;
                 } else {
-                    cosBy = cosBy.name;
+                    cosBy = CosBy.name;
                 }
             }
         }
