@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120411-1454 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4209,6 +4209,343 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetDefaultFolderFlags(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultFolderFlags, "");
+        return attrs;
+    }
+
+    /**
+     * allowed passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraDeviceAllowedPasscodeLockoutDuration, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1397)
+    public String[] getDeviceAllowedPasscodeLockoutDurationAsString() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraDeviceAllowedPasscodeLockoutDuration); return value.length > 0 ? value : new String[] {"1m","2m","5m","10m","30m"};
+    }
+
+    /**
+     * allowed passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDeviceAllowedPasscodeLockoutDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1397)
+    public void setDeviceAllowedPasscodeLockoutDuration(String[] zimbraDeviceAllowedPasscodeLockoutDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceAllowedPasscodeLockoutDuration, zimbraDeviceAllowedPasscodeLockoutDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allowed passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDeviceAllowedPasscodeLockoutDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1397)
+    public Map<String,Object> setDeviceAllowedPasscodeLockoutDuration(String[] zimbraDeviceAllowedPasscodeLockoutDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceAllowedPasscodeLockoutDuration, zimbraDeviceAllowedPasscodeLockoutDuration);
+        return attrs;
+    }
+
+    /**
+     * allowed passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1397)
+    public void unsetDeviceAllowedPasscodeLockoutDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceAllowedPasscodeLockoutDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allowed passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1397)
+    public Map<String,Object> unsetDeviceAllowedPasscodeLockoutDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceAllowedPasscodeLockoutDuration, "");
+        return attrs;
+    }
+
+    /**
+     * For native apps - whether to lock device when inactive.
+     *
+     * @return zimbraDeviceLockWhenInactive, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1399)
+    public boolean isDeviceLockWhenInactive() {
+        return getBooleanAttr(Provisioning.A_zimbraDeviceLockWhenInactive, false);
+    }
+
+    /**
+     * For native apps - whether to lock device when inactive.
+     *
+     * @param zimbraDeviceLockWhenInactive new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1399)
+    public void setDeviceLockWhenInactive(boolean zimbraDeviceLockWhenInactive) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceLockWhenInactive, zimbraDeviceLockWhenInactive ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For native apps - whether to lock device when inactive.
+     *
+     * @param zimbraDeviceLockWhenInactive new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1399)
+    public Map<String,Object> setDeviceLockWhenInactive(boolean zimbraDeviceLockWhenInactive, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceLockWhenInactive, zimbraDeviceLockWhenInactive ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * For native apps - whether to lock device when inactive.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1399)
+    public void unsetDeviceLockWhenInactive() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceLockWhenInactive, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For native apps - whether to lock device when inactive.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1399)
+    public Map<String,Object> unsetDeviceLockWhenInactive(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceLockWhenInactive, "");
+        return attrs;
+    }
+
+    /**
+     * Whether device is password protected in native apps
+     *
+     * @return zimbraDevicePasscodeEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1396)
+    public boolean isDevicePasscodeEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDevicePasscodeEnabled, false);
+    }
+
+    /**
+     * Whether device is password protected in native apps
+     *
+     * @param zimbraDevicePasscodeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1396)
+    public void setDevicePasscodeEnabled(boolean zimbraDevicePasscodeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeEnabled, zimbraDevicePasscodeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether device is password protected in native apps
+     *
+     * @param zimbraDevicePasscodeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1396)
+    public Map<String,Object> setDevicePasscodeEnabled(boolean zimbraDevicePasscodeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeEnabled, zimbraDevicePasscodeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether device is password protected in native apps
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1396)
+    public void unsetDevicePasscodeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether device is password protected in native apps
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1396)
+    public Map<String,Object> unsetDevicePasscodeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getDevicePasscodeLockoutDurationAsString to access value as a string.
+     *
+     * @see #getDevicePasscodeLockoutDurationAsString()
+     *
+     * @return zimbraDevicePasscodeLockoutDuration in millseconds, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public long getDevicePasscodeLockoutDuration() {
+        return getTimeInterval(Provisioning.A_zimbraDevicePasscodeLockoutDuration, -1L);
+    }
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraDevicePasscodeLockoutDuration, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public String getDevicePasscodeLockoutDurationAsString() {
+        return getAttr(Provisioning.A_zimbraDevicePasscodeLockoutDuration, null);
+    }
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDevicePasscodeLockoutDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public void setDevicePasscodeLockoutDuration(String zimbraDevicePasscodeLockoutDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeLockoutDuration, zimbraDevicePasscodeLockoutDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDevicePasscodeLockoutDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public Map<String,Object> setDevicePasscodeLockoutDuration(String zimbraDevicePasscodeLockoutDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeLockoutDuration, zimbraDevicePasscodeLockoutDuration);
+        return attrs;
+    }
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public void unsetDevicePasscodeLockoutDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeLockoutDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * passcode lockout duration. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1398)
+    public Map<String,Object> unsetDevicePasscodeLockoutDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDevicePasscodeLockoutDuration, "");
         return attrs;
     }
 
@@ -25623,7 +25960,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * When displaying an invite in a conversation, show the day calendar
-     * immediately
+     * immediately.
      *
      * @return zimbraPrefConvShowCalendar, or false if unset
      *
@@ -25636,7 +25973,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * When displaying an invite in a conversation, show the day calendar
-     * immediately
+     * immediately.
      *
      * @param zimbraPrefConvShowCalendar new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25652,7 +25989,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * When displaying an invite in a conversation, show the day calendar
-     * immediately
+     * immediately.
      *
      * @param zimbraPrefConvShowCalendar new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25669,7 +26006,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * When displaying an invite in a conversation, show the day calendar
-     * immediately
+     * immediately.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -25684,7 +26021,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * When displaying an invite in a conversation, show the day calendar
-     * immediately
+     * immediately.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -6954,4 +6954,29 @@ TODO: delete them permanently from here
   <desc>enable OCSP support for two way authentication.</desc>
 </attr>
 
+
+<attr id="1396" name="zimbraDevicePasscodeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether device is password protected in native apps</desc>
+</attr>
+
+<attr id="1397" name="zimbraDeviceAllowedPasscodeLockoutDuration" type="duration" cardinality="multi" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+  <defaultCOSValue>1m</defaultCOSValue>
+  <defaultCOSValue>2m</defaultCOSValue>
+  <defaultCOSValue>5m</defaultCOSValue>
+  <defaultCOSValue>10m</defaultCOSValue>
+  <defaultCOSValue>30m</defaultCOSValue>
+  <desc>allowed passcode lockout duration</desc>
+</attr>
+
+<attr id="1398" name="zimbraDevicePasscodeLockoutDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+  <desc>passcode lockout duration</desc>
+</attr>
+
+<attr id="1399" name="zimbraDeviceLockWhenInactive" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>For native apps - whether to lock device when inactive.</desc>
+</attr>
+
+
 </attrs>
