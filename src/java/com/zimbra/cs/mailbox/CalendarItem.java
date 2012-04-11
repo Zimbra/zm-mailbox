@@ -2050,6 +2050,15 @@ public abstract class CalendarItem extends MailItem {
                             throw ServiceException.FAILURE("IOException", e);
                         }
                     }
+                    // remove the item if all the instances are canceled.
+                    Invite defInvite = getDefaultInviteOrNull();
+                    if (defInvite != null) {
+                        Collection<Instance> instances = expandInstances(0, Long.MAX_VALUE, false);
+                        if (instances.isEmpty())  {
+                            delete();
+                            return true;
+                        }
+                    }
 
                     Callback cb = getCallback();
                     if (cb != null)
