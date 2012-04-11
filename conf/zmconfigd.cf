@@ -38,8 +38,10 @@ SECTION antivirus DEPENDS amavis
 
 SECTION antispam DEPENDS amavis
 	REWRITE conf/salocal.cf.in conf/salocal.cf
+	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
+	VAR zimbraIPMode
 	LOCAL antispam_mysql_enabled
 	LOCAL antispam_mysql_host
 	LOCAL antispam_mysql_port
@@ -168,6 +170,7 @@ SECTION sasl
 SECTION webxml
 	VAR zimbraMailPort
 	VAR zimbraMailSSLPort
+	VAR zimbraIPMode
 	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
 	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml

@@ -28,7 +28,7 @@
     
     <init-param>
      <param-name>ipWhitelist</param-name>
-     <param-value>127.0.0.1</param-value>
+     <param-value>%%zimbraLocalBindAddress%%</param-value>
     </init-param>
     
     <init-param>
