@@ -401,7 +401,7 @@ public final class LC {
     public static final KnownKey ldap_common_loglevel = KnownKey.newKey(49152);
     public static final KnownKey ldap_common_require_tls = KnownKey.newKey(0);
     public static final KnownKey ldap_common_threads = KnownKey.newKey(8);
-    public static final KnownKey ldap_common_toolthreads = KnownKey.newKey(1);
+    public static final KnownKey ldap_common_toolthreads = KnownKey.newKey(2);
     public static final KnownKey ldap_common_writetimeout = KnownKey.newKey(0);
     public static final KnownKey ldap_db_checkpoint = KnownKey.newKey("64 5");
     public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920L);
