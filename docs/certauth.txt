@@ -688,7 +688,7 @@ zmprov ms <your servername> zimbraMailMode both (or https) to change mailmode
 - modify log4j.properties to add tracing info pertinent to OCSP/Two way authentication. 
 Add the following line to your existing log4j.properties:
 
-log4j.logger.zimbra.account=DEBUG,LOGFILE
+log4j.logger.zimbra.account=DEBUG
 
 Please note that this step is arbitrary and needed only if you need to see trace 
 of what is going on during OCSP validation
