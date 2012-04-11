@@ -52,6 +52,7 @@ public class ServiceException extends Exception {
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
     public static final String SAX_READER_ERROR = "service.SAX_READER_ERROR";
     public static final String UNSUPPORTED = "service.UNSUPPORTED";
+    public static final String FORBIDDEN = "service.FORBIDDEN";
     
     protected String mCode;
     private List<Argument> mArgs;
@@ -363,5 +364,9 @@ public class ServiceException extends Exception {
     
     public static ServiceException UNSUPPORTED() {
         return new ServiceException("unsupported", UNSUPPORTED, RECEIVERS_FAULT);
+    }
+    
+    public static ServiceException FORBIDDEN(String str) {
+        return new ServiceException("forbidden: " + str, FORBIDDEN, SENDERS_FAULT);
     }
 }
