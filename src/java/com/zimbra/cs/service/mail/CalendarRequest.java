@@ -571,9 +571,11 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 } else {
                     rcpts = addedRcpts;
                 }
-                MimeMessage mmModify = CalendarMailSender.createCalendarMessage(authAcct, from, sender, rcpts, mmInv, inv, cal, true);
-                CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
-                        new ItemId(mbox, inv.getMailItemId()), null, null, false);
+                if (rcpts != null && !rcpts.isEmpty()) {
+                    MimeMessage mmModify = CalendarMailSender.createCalendarMessage(authAcct, from, sender, rcpts, mmInv, inv, cal, true);
+                    CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
+                            new ItemId(mbox, inv.getMailItemId()), null, null, false);
+                }
             }
         } finally {
             mbox.lock.release();
