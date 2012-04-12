@@ -17,7 +17,9 @@ package com.zimbra.cs.mailbox.acl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TimerTask;
 
 import com.google.common.collect.Multimap;
@@ -87,7 +89,7 @@ public class AclPushTask extends TimerTask {
 
                 Account account = mbox.getAccount();
                 String[] existingSharedItems = account.getSharedItem();
-                List<String> updatedSharedItems = new ArrayList<String>();
+                Set<String> updatedSharedItems = new HashSet<String>();
 
                 for (String sharedItem : existingSharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
