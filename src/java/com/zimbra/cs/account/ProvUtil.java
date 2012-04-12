@@ -41,6 +41,9 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 import net.spy.memcached.HashAlgorithm;
 
 import org.apache.commons.cli.CommandLine;
@@ -157,7 +160,7 @@ public class ProvUtil implements HttpDebugListener {
     private Provisioning prov;
     private BufferedReader cliReader;
     private boolean outputBinaryToFile;
-    private boolean allowMultiValuedAttrReplacement = true;
+    private boolean allowMultiValuedAttrReplacement;
     private long sendStart;
 
     private boolean errorOccursDuringInteraction = false; // bug 58554
@@ -198,13 +201,10 @@ public class ProvUtil implements HttpDebugListener {
         batchMode = value;
     }
     
-
-    /*
     private void setAllowMultiValuedAttrReplacement(boolean value) {
         allowMultiValuedAttrReplacement = value;
     }
-    */
-    
+
     private boolean outputBinaryToFile() {
         return outputBinaryToFile;
     }
@@ -269,7 +269,7 @@ public class ProvUtil implements HttpDebugListener {
         console.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
         console.println("  -d/--debug                            debug mode (dumps SOAP messages)");
         console.println("  -m/--master                           use LDAP master (only valid with -l)");
-        // console.println("  -r/--replace                          allow replacement of multi-valued attr value");
+        console.println("  -r/--replace                          allow replacement of safe-guarded multi-valued attributes configured in localconfig key \"zmprov_safeguarded_attrs\"");
         console.println("");
         doHelp(null);
         System.exit(1);
@@ -3051,6 +3051,12 @@ public class ProvUtil implements HttpDebugListener {
         AttributeManager attrMgr = AttributeManager.getInstance();
 
         Map<String, Object> attrs = new HashMap<String, Object>();
+
+        String safeguarded_attrs_prop = LC.get("zmprov_safeguarded_attrs");
+        Set<String> safeguarded_attrs = safeguarded_attrs_prop == null ?
+                Sets.<String>newHashSet() : Sets.newHashSet(safeguarded_attrs_prop.toLowerCase().split(","));
+        Multiset<String> multiValAttrsToCheck = HashMultiset.create();
+
         for (int i = offset; i < args.length; i += 2) {
             String n = args[i];
             if (i + 1 >= args.length) {
@@ -3060,9 +3066,8 @@ public class ProvUtil implements HttpDebugListener {
             String attrName = n;
             if (n.charAt(0) == '+' || n.charAt(0) == '-') {
                 attrName = attrName.substring(1);
-            } else if (!isCreateCmd && isMultiValued(attrMgr, attrName) && !allowMultiValuedAttrReplacement) {
-                printError("error: cannot replace multi-valued attr value unless -r is specified");
-                System.exit(2);
+            } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && isMultiValued(attrMgr, attrName)) {
+                multiValAttrsToCheck.add(attrName.toLowerCase());
             }
             if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
                 File file = new File(v);
@@ -3071,6 +3076,18 @@ public class ProvUtil implements HttpDebugListener {
             }
             StringUtil.addToMultiMap(attrs, n, v);
         }
+
+        if (!allowMultiValuedAttrReplacement && !isCreateCmd) {
+            for (Multiset.Entry<String> entry : multiValAttrsToCheck.entrySet()) {
+                if (entry.getCount() == 1) {
+                    // If multiple values are being assigned to an attr as part of the same command
+                    // then we don't consider it an unsafe replacement
+                    printError("error: cannot replace multi-valued attr value unless -r is specified");
+                    System.exit(2);
+                }
+            }
+        }
+
         return attrs;
     }
 
@@ -3338,12 +3355,10 @@ public class ProvUtil implements HttpDebugListener {
             pu.setOutputBinaryToFile(true);
         }
 
-        /*
         if (cl.hasOption('r')) {
             pu.setAllowMultiValuedAttrReplacement(true);
         }
-        */
-        
+
         args = cl.getArgs();
 
         try {
