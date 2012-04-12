@@ -16,7 +16,6 @@ package com.zimbra.qa.unittest.prov.soap;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -199,6 +198,12 @@ public class TestDelegatedDL extends SoapTest {
          */
         
         // add ownerName as an owner
+        addOwner(transport, groupName, ownerName);
+        
+        // remove USER_CREATOR from the owner list
+        removeOwner(transport, groupName, USER_CREATOR);
+        
+        /*
         DistributionListAction action = new DistributionListAction(Operation.addOwners);
         DistributionListActionRequest actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
@@ -215,8 +220,31 @@ public class TestDelegatedDL extends SoapTest {
         action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, USER_CREATOR));
         actionResp = invokeJaxb(transport, actionReq);
+        */
         
         return group;
+    }
+    
+    private static void addOwner(SoapTransport transport, String groupName, String ownerName) 
+    throws Exception {
+        DistributionListAction action = new DistributionListAction(Operation.addOwners);
+        DistributionListActionRequest actionReq = new DistributionListActionRequest(
+                DistributionListSelector.fromName(groupName), action);
+        
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, ownerName));
+        DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
+    }
+    
+    private static void removeOwner(SoapTransport transport, String groupName, String ownerName) 
+    throws Exception {
+        DistributionListAction action = new DistributionListAction(Operation.removeOwners);
+        DistributionListActionRequest actionReq = new DistributionListActionRequest(
+                DistributionListSelector.fromName(groupName), action);
+        
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, ownerName));
+        DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
     }
     
     private String getAddress(String localpart) {
@@ -1010,14 +1038,28 @@ public class TestDelegatedDL extends SoapTest {
         SoapTransport transport = authUser(ownerAcct.getName());
         String errorCode = null;
         try {
-            // only people with create right can rename
+            // only people with create right and owner right can rename
             resp = invokeJaxb(transport, req);
         } catch (ServiceException e) {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
         
-        // auth as creator and try again, should succeed
+        // auth as creator and try again, should still fail
+        transport = authUser(USER_CREATOR);
+        errorCode = null;
+        try {
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(ServiceException.PERM_DENIED, errorCode);
+        
+        // make the creator an owner
+        transport = authUser(ownerAcct.getName());
+        addOwner(transport, GROUP_NAME, USER_CREATOR);
+        
+        // now try reanme as the creator (also an owner now), should succeed
         transport = authUser(USER_CREATOR);
         resp = invokeJaxb(transport, req);
         
@@ -1087,7 +1129,7 @@ public class TestDelegatedDL extends SoapTest {
         
         String errorCode = null;
         try {
-            // only people with create right can rename
+            // only people with create right and owner right can delete
             resp = invokeJaxb(transport, req);
         } catch (ServiceException e) {
             errorCode = e.getCode();
@@ -1095,11 +1137,25 @@ public class TestDelegatedDL extends SoapTest {
         assertEquals(ServiceException.PERM_DENIED, errorCode);
         
         /*
-         * auth as creator and try again
+         * auth as creator and try again, should still fail
          */
         transport = authUser(USER_CREATOR);
-        resp = invokeJaxb(transport, req);
+        errorCode = null;
+        try {
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(ServiceException.PERM_DENIED, errorCode);
         
+        // make the creator an owner
+        transport = authUser(USER_OWNER);
+        addOwner(transport, group.getName(), USER_CREATOR);
+        
+        // now try delete as the creator (also an owner now), should succeed
+        transport = authUser(USER_CREATOR);
+        resp = invokeJaxb(transport, req);
+    
         group = prov.getGroup(Key.DistributionListBy.name, NAME);
         assertNull(null);
     }
@@ -1550,4 +1606,63 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(AccountServiceException.NO_SUCH_ACCOUNT, errorCode);
     }
+    
+    @Test
+    @Bug(bug=72791)
+    public void distributionListActionSetBadOwners() throws Exception {
+        String GROUP_NAME = getAddress(genGroupNameLocalPart());
+        Group group = createGroupAndAddOwner(GROUP_NAME);
+        
+        Account owner1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
+        Account owner2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
+        Account owner3 = provUtil.createAccount(genAcctNameLocalPart("3"), domain);
+        
+        SoapTransport transport = authUser(USER_OWNER);
+        
+        //
+        // setOwners: some good owners an a bogus owner (not a user)
+        //
+        DistributionListAction action = new DistributionListAction(Operation.setOwners);
+        DistributionListActionRequest req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, USER_OWNER));
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, owner1.getName()));
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, owner2.getName()));
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, owner3.getName()));
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+                DistributionListGranteeBy.name, "bogus@bogus.com"));
+        
+        String errorCode = null;
+        try {
+            DistributionListActionResponse resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(AccountServiceException.NO_SUCH_ACCOUNT, errorCode);
+        
+        //
+        // verify owners are NOT replaced
+        //
+        GetDistributionListRequest getDLReq = new GetDistributionListRequest(
+                DistributionListSelector.fromName(GROUP_NAME), Boolean.TRUE);
+        GetDistributionListResponse getDLResp = invokeJaxb(transport, getDLReq);
+        DistributionListInfo dlInfo = getDLResp.getDl();
+        List<? extends DistributionListGranteeInfoInterface> owners = dlInfo.getOwners();
+        Set<String> ownerNames = Sets.newHashSet();
+        for (DistributionListGranteeInfoInterface owner : owners) {
+            if (owner.getType() == com.zimbra.soap.type.GranteeType.usr) {
+                ownerNames.add(owner.getName());
+            }
+        }
+        assertEquals(1, owners.size());
+        Verify.verifyEquals(
+                Sets.newHashSet(USER_OWNER), 
+                ownerNames);
+    }
+
 }

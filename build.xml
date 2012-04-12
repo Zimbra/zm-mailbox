@@ -1084,7 +1084,7 @@
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init,upgrade-domain-admin"
+    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init,grant-rights"
       description="Cleans deployed files, compiles, and initializes /opt/zimbra."/>
 
     <target name="reset-the-world-stage2" depends="deploy-war,init-unittest"
@@ -2113,12 +2113,8 @@
   <property name="admin-name" value="admin@${defaultdomain.name}"/>
 
   <target name="grant-rights">
-    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getAccount"/></antcall>
-    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getAccountInfo"/></antcall>
-    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getAccountMembership"/></antcall>
-    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getDomain"/></antcall>
-    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getGlobalConfig"/></antcall>
-    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getMailboxInfo"/></antcall>
+    <antcall target="zmprov"><param name="args" value="-l grr domain ${defaultdomain.name} dom ${defaultdomain.name} createDistList"/></antcall>
+    <antcall target="upgrade-domain-admin"/>
   </target>
 
   <target name="upgrade-domain-admin">

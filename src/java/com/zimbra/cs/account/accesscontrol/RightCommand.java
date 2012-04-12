@@ -1276,11 +1276,36 @@ public class RightCommand {
         }
     }
     
+    /*
+     * only verifies if the grant can be made, does NOT action commit the grant
+     */
+    public static void verifyGrantRight(
+            Provisioning prov, Account authedAcct,
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            String right, RightModifier rightModifier) 
+    throws ServiceException {
+        grantRightInternal(prov, authedAcct, targetType, targetBy, target,
+                granteeType, granteeBy, grantee, secret,
+                right, rightModifier, true);
+    }
+    
     public static void grantRight(
             Provisioning prov, Account authedAcct,
             String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) 
+    throws ServiceException {
+        grantRightInternal(prov, authedAcct, targetType, targetBy, target,
+                granteeType, granteeBy, grantee, secret,
+                right, rightModifier, false);
+    }
+    
+    private static void grantRightInternal(
+            Provisioning prov, Account authedAcct,
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            String right, RightModifier rightModifier, boolean dryRun) 
     throws ServiceException {
         
         verifyAccessManager();
@@ -1316,6 +1341,10 @@ public class RightCommand {
         }
         
         validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, secret, r, rightModifier, false);
+        
+        if (dryRun) {
+            return;
+        }
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, secret);

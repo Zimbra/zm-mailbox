@@ -283,7 +283,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
         };
 
-        protected List<Grantee> parseGrantees(Element parent, String granteeElem) throws ServiceException {
+        protected List<Grantee> parseGrantees(Element parent, String granteeElem) 
+        throws ServiceException {
             List<Grantee> grantees = Lists.newArrayList();
 
             for (Element eGrantee : parent.listElements(granteeElem)) {
@@ -301,6 +302,15 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
 
             return grantees;
+        }
+        
+        protected void verifyGrantRight(Right right, GranteeType granteeType,
+                Key.GranteeBy granteeBy, String grantee) throws ServiceException {
+            RightCommand.verifyGrantRight(prov,
+                    null,  // grant the right as a a system admin
+                    TargetType.dl.getCode(), TargetBy.id, group.getId(),
+                    granteeType.getCode(), granteeBy, grantee, null,
+                    right.getName(), null);
         }
 
         protected void grantRight(Right right, GranteeType granteeType,
@@ -349,9 +359,21 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
+            
+            for (Grantee owner : owners) {
+                verifyOwner(this, owner.type, owner.by, owner.grantee);
+            }
+            
             for (Grantee owner : owners) {
                 addOwner(this, owner.type, owner.by, owner.grantee);
             }
+        }
+        
+        private static void verifyOwner(ModifyRightHandler handler,
+                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
+        throws ServiceException {
+            handler.verifyGrantRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
+                    granteeType, granteeBy, grantee);
         }
 
         private static void addOwner(ModifyRightHandler handler,
@@ -404,6 +426,12 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
+            
+            // bug 72791: 
+            // validate if the grant can be made before actually modifying anything
+            for (Grantee owner : owners) {
+                AddOwnersHandler.verifyOwner(this, owner.type, owner.by, owner.grantee);
+            }
 
             // remove all current owners
             List<GroupOwner> curOwners = GroupOwner.getOwners(group, false);
@@ -688,12 +716,13 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
             MsgKey msgKey;
             if (accepted) {
-                msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeResponseAcceptedText :
-                    MsgKey.dlUnsubscribeResponseAcceptedText;
+                msgKey = DistributionListSubscribeOp.subscribe == op ? 
+                        MsgKey.dlSubscribeResponseAcceptedText :
+                        MsgKey.dlUnsubscribeResponseAcceptedText;
             } else {
-                msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeResponseRejectedText :
-                    MsgKey.dlUnsubscribeResponseRejectedText;
-
+                msgKey = DistributionListSubscribeOp.subscribe == op ? 
+                        MsgKey.dlSubscribeResponseRejectedText :
+                        MsgKey.dlUnsubscribeResponseRejectedText;
             }
 
             sb.append("\n");
