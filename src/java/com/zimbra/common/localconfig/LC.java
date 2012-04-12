@@ -145,6 +145,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_zmprov_default_soap_server = KnownKey.newKey("localhost");
+
+    public static final KnownKey zmprov_safeguarded_attrs = KnownKey.newKey("zimbraServiceEnabled,zimbraServiceInstalled");
+
     public static final KnownKey zimbra_require_interprocess_security = KnownKey.newKey(1);
     public static final KnownKey zimbra_relative_volume_path = KnownKey.newKey(false);
 
