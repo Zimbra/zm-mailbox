@@ -272,7 +272,7 @@ public final class FilterUtil {
             }
         }
 
-        MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setRedirectMode(true);
+        MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setRedirectMode(true).setSkipHeaderUpdate(true);
 
         try {
             if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
