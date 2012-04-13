@@ -109,7 +109,7 @@ public class ItemAction extends MailDocumentHandler {
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
         // determine the requested operation
-        boolean flagValue = opAttr.startsWith("!");
+        boolean flagValue = !opAttr.startsWith("!");
         String opStr = getOperation(opAttr);
 
         // figure out which items are local and which ones are remote, and proxy accordingly
