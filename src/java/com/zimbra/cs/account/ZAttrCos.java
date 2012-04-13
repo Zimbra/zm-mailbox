@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120412-1601 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4296,6 +4296,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetDeviceAllowedPasscodeLockoutDuration(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDeviceAllowedPasscodeLockoutDuration, "");
+        return attrs;
+    }
+
+    /**
+     * Whether OpenWith feature is enabled on devices.
+     *
+     * @return zimbraDeviceFileOpenWithEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1400)
+    public boolean isDeviceFileOpenWithEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDeviceFileOpenWithEnabled, true);
+    }
+
+    /**
+     * Whether OpenWith feature is enabled on devices.
+     *
+     * @param zimbraDeviceFileOpenWithEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1400)
+    public void setDeviceFileOpenWithEnabled(boolean zimbraDeviceFileOpenWithEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceFileOpenWithEnabled, zimbraDeviceFileOpenWithEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether OpenWith feature is enabled on devices.
+     *
+     * @param zimbraDeviceFileOpenWithEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1400)
+    public Map<String,Object> setDeviceFileOpenWithEnabled(boolean zimbraDeviceFileOpenWithEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceFileOpenWithEnabled, zimbraDeviceFileOpenWithEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether OpenWith feature is enabled on devices.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1400)
+    public void unsetDeviceFileOpenWithEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceFileOpenWithEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether OpenWith feature is enabled on devices.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1400)
+    public Map<String,Object> unsetDeviceFileOpenWithEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceFileOpenWithEnabled, "");
         return attrs;
     }
 

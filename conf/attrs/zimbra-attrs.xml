@@ -6978,5 +6978,9 @@ TODO: delete them permanently from here
   <desc>For native apps - whether to lock device when inactive.</desc>
 </attr>
 
+<attr id="1400" name="zimbraDeviceFileOpenWithEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether OpenWith feature is enabled on devices.</desc>
+</attr>
 
 </attrs>
