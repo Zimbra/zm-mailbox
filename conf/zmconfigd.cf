@@ -2,13 +2,13 @@ SECTION amavis
 	REWRITE conf/amavisd.conf.in conf/amavisd.conf
 	POSTCONF content_filter 
 	if SERVICE antivirus
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE postfix_content_filter.cf
 	fi
 	if SERVICE antispam
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE postfix_content_filter.cf
 	fi
 	if SERVICE archiving
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE postfix_content_filter.cf
 	fi
 	LOCAL amavis_dspam_enabled
 	LOCAL av_notify_domain
