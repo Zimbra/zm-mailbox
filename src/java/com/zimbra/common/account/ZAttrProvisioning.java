@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120412-1601 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3385,6 +3385,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1397)
     public static final String A_zimbraDeviceAllowedPasscodeLockoutDuration = "zimbraDeviceAllowedPasscodeLockoutDuration";
+
+    /**
+     * Whether OpenWith feature is enabled on devices.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1400)
+    public static final String A_zimbraDeviceFileOpenWithEnabled = "zimbraDeviceFileOpenWithEnabled";
 
     /**
      * For native apps - whether to lock device when inactive.
