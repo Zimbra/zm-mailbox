@@ -907,8 +907,6 @@ public class Message extends MailItem {
                             } else {
                                 LOG.info("Mailbox %d Message %d SKIPPING Invite %s b/c no CalendarItem could be found",
                                         getMailboxId(), getId(), method);
-                                success = true;
-                                continue; // for now, just ignore this Invitation
                             }
                         } else {
                             // bug 27887: Ignore when calendar request email somehow made a loop back to the
