@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,19 +49,21 @@ public class ServiceException extends Exception {
     public static final String ALREADY_IN_PROGRESS = "service.ALREADY_IN_PROGRESS";
     public static final String NOT_IN_PROGRESS = "service.NOT_IN_PROGRESS";
     public static final String INTERRUPTED = "service.INTERRUPTED";
-    public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
+    public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL";
     public static final String SAX_READER_ERROR = "service.SAX_READER_ERROR";
     public static final String UNSUPPORTED = "service.UNSUPPORTED";
     public static final String FORBIDDEN = "service.FORBIDDEN";
-    
+    // generic "not found" error for objects other than mail items
+    public static final String NOT_FOUND = "service.NOT_FOUND";
+
     protected String mCode;
     private List<Argument> mArgs;
     private String mId;
 
     public static final String HOST            = "host";
-    public static final String URL             = "url"; 
+    public static final String URL             = "url";
     public static final String MAILBOX_ID      = "mboxId";
-    public static final String ACCOUNT_ID      = "acctId"; 
+    public static final String ACCOUNT_ID      = "acctId";
 
     public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
 
@@ -91,7 +93,7 @@ public class ServiceException extends Exception {
 
     public static class Argument {
         public static enum Type {
-            IID,       // mail-item ID or UUID or mailbox-id 
+            IID,       // mail-item ID or UUID or mailbox-id
             ACCTID,    // account ID
             STR,       // opaque string
             NUM        // opaque number
@@ -120,17 +122,17 @@ public class ServiceException extends Exception {
         @Override public String toString() {
             return "(" + name + ", " + type.name() + ", \"" + value + "\")";
         }
-        
+
         @Override
         public boolean equals(Object obj) {
             return (obj != null && hashCode() == obj.hashCode());
         }
-        
+
         @Override
         public int hashCode() {
             return Objects.hashCode(name, value, type);
         }
-        
+
         public String getName() {
             return name;
         }
@@ -156,23 +158,23 @@ public class ServiceException extends Exception {
 
     /**
      * Comment for <code>mReceiver</code>
-     * 
-     * Causes a Sender/Receiver element to show up in a soap fault. It is supposed to let the client know whether it 
-     * did something wrong or something is wrong on the server.  
+     *
+     * Causes a Sender/Receiver element to show up in a soap fault. It is supposed to let the client know whether it
+     * did something wrong or something is wrong on the server.
 
-     * For example, ServiceException.FAILURE sets it to true, meaning something bad happened on the server-side and 
+     * For example, ServiceException.FAILURE sets it to true, meaning something bad happened on the server-side and
      * the client could attempt a retry. The rest are false, as it generally means the client made a bad request.
-     * 
+     *
      */
     public static final boolean RECEIVERS_FAULT = true; // server's fault
     public static final boolean SENDERS_FAULT = false; // client's fault
     private boolean mReceiver;
 
     /**
-     * This is for exceptions that are usually not logged and thus need to include an unique "label" 
+     * This is for exceptions that are usually not logged and thus need to include an unique "label"
      * in the exception id so the thrown(or instantiation) location can be identified by the exception id alone
      * (without referencing the log - the stack won't be in the log).
-     * 
+     *
      * @param callSite call site of the stack where the caller wants to include in the exception id
      */
     public void setIdLabel(StackTraceElement callSite) {
@@ -195,7 +197,7 @@ public class ServiceException extends Exception {
         List<Argument> argList = (arguments == null ? Collections.<Argument>emptyList() : Arrays.asList(arguments));
         init(message, code, isReceiversFault, cause, argList);
     }
-    
+
     protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, List<Argument> arguments) {
         super(message, cause);
         init(message, code, isReceiversFault, cause, arguments);
@@ -204,7 +206,7 @@ public class ServiceException extends Exception {
     protected ServiceException(String message, String code, boolean isReceiversFault, Argument... arguments) {
         this(message, code, isReceiversFault, null, arguments);
     }
-    
+
     private void init(String message, String code, boolean isReceiversFault, Throwable cause, List<Argument> arguments) {
         mCode = code;
         mReceiver = isReceiversFault;
@@ -228,7 +230,7 @@ public class ServiceException extends Exception {
     public List<Argument> getArgs() {
         return mArgs;
     }
-    
+
     public String getArgumentValue(String name) {
         for (Argument arg : mArgs) {
             if (Objects.equal(arg.name, name)) {
@@ -285,7 +287,7 @@ public class ServiceException extends Exception {
     public static ServiceException PERM_DENIED(String message) {
         return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT);
     }
-    
+
     public static ServiceException PERM_DENIED(String message, Argument... arguments) {
         return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT, arguments);
     }
@@ -293,11 +295,11 @@ public class ServiceException extends Exception {
     public static ServiceException AUTH_EXPIRED(String message) {
         return new ServiceException("auth credentials have expired" + (message==null ? "" : ": "+message), AUTH_EXPIRED, SENDERS_FAULT);
     }
-    
+
     public static ServiceException AUTH_EXPIRED() {
         return AUTH_EXPIRED(null);
     }
-    
+
     // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_ACCOUNT
     public static ServiceException DEFEND_ACCOUNT_HARVEST(String account) {
         return PERM_DENIED("can not access account " + account);
@@ -317,12 +319,12 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException PROXY_ERROR(Throwable cause, String url) {
-        return new ServiceException("error while proxying request to target server: " + (cause != null ? cause.getMessage() : "unknown reason"), 
+        return new ServiceException("error while proxying request to target server: " + (cause != null ? cause.getMessage() : "unknown reason"),
                 PROXY_ERROR, RECEIVERS_FAULT, cause, new InternalArgument(URL, url, Argument.Type.STR));
     }
 
     public static ServiceException PROXY_ERROR(String statusLine, String url) {
-        return new ServiceException("error while proxying request to target server: " + statusLine, 
+        return new ServiceException("error while proxying request to target server: " + statusLine,
                 PROXY_ERROR, RECEIVERS_FAULT, new InternalArgument(URL, url, Argument.Type.STR));
     }
 
@@ -357,16 +359,24 @@ public class ServiceException extends Exception {
     public static ServiceException NO_SPELL_CHECK_URL(String str) {
         return new ServiceException("Spell Checking Not Available "+str!=null?str:"", NO_SPELL_CHECK_URL, RECEIVERS_FAULT);
     }
-    
+
     public static ServiceException SAX_READER_ERROR(String str, Throwable cause) {
         return new ServiceException("SAX Reader Error: " + (str != null ? str : ""), SAX_READER_ERROR, SENDERS_FAULT, cause);
     }
-    
+
     public static ServiceException UNSUPPORTED() {
         return new ServiceException("unsupported", UNSUPPORTED, RECEIVERS_FAULT);
     }
-    
+
     public static ServiceException FORBIDDEN(String str) {
         return new ServiceException("forbidden: " + str, FORBIDDEN, SENDERS_FAULT);
+    }
+
+    public static ServiceException NOT_FOUND(String msg) {
+        return new ServiceException("not found" + msg != null ? msg : "", NOT_FOUND, RECEIVERS_FAULT);
+    }
+
+    public static ServiceException NOT_FOUND(String msg, Throwable cause) {
+        return new ServiceException("not found" + msg != null ? msg : "", NOT_FOUND, RECEIVERS_FAULT, cause);
     }
 }
