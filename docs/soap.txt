@@ -2177,15 +2177,16 @@ note that "delete", "empty", "rename", "move", "color", "update" can be used on 
 ---------
 
 <TagActionRequest>
-  <action op="read|rename|color|delete|update|retentionpolicy" id="..." [name="..."] [color="..."]>
+  <action op="read|rename|color|delete|update|retentionpolicy" [id="{tag-ids}" | tn="{tag-names}"] [name="..."] [color="..."]>
     [<retentionPolicy> ... </retentionPolicy>]
   </action>
 </TagActionRequest>
 
+  - caller must supply one of "id" or "tn"
   - if op="update", the caller can specify "name" and/or "color"
 
 <TagActionResponse>
-  <action op="read|rename|color|delete|update|retentionpolicy" id="..."/> <!-- iff op was successful -->
+  <action op="read|rename|color|delete|update|retentionpolicy" id="..." tn="..." /> <!-- iff op was successful -->
 </TagActionResponse>
 
 --------------

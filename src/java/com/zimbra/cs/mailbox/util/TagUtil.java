@@ -108,7 +108,7 @@ public class TagUtil {
         return mbox.getTagById(octxt, tagId).getName();
     }
 
-    public static String encodeTags(String[] tags) {
+    public static String encodeTags(String... tags) {
         return tags == null || tags.length == 0 ? "" : TagUtil.encodeTags(Arrays.asList(tags));
     }
 

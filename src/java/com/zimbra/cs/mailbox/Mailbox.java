@@ -3407,6 +3407,10 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getTagByName", octxt);
+            if (!hasFullAccess()) {
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            }
+
             Tag tag = checkAccess(getTagByName(name));
             success = true;
             return tag;

@@ -23,16 +23,16 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
@@ -80,9 +80,9 @@ public class ContactAction extends ItemAction {
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         ArrayList<Integer> local = new ArrayList<Integer>();
-        HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
+        HashMap<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
-        StringBuffer successes = proxyRemoteItems(action, remote, request, context);
+        StringBuilder successes = proxyRemoteItems(action, remote, request, context);
 
         if (!local.isEmpty()) {
             String localResults;

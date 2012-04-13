@@ -68,8 +68,12 @@ public class GetFolderTest {
     }
 
     public static Map<String, Object> getRequestContext(Account acct) throws Exception {
+        return getRequestContext(acct, acct);
+    }
+
+    public static Map<String, Object> getRequestContext(Account authAcct, Account targetAcct) throws Exception {
         Map<String, Object> context = new HashMap<String, Object>();
-        context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(acct), acct.getId(), SoapProtocol.Soap12, SoapProtocol.Soap12));
+        context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(authAcct), targetAcct.getId(), SoapProtocol.Soap12, SoapProtocol.Soap12));
         context.put(SoapServlet.SERVLET_REQUEST, new MockHttpServletRequest("test".getBytes("UTF-8"), new URL("http://localhost:7070/service/FooRequest"), ""));
         context.put(SoapEngine.ZIMBRA_ENGINE, new MockSoapEngine(new MailService()));
         return context;
