@@ -91,6 +91,20 @@ public class Key {
             }
         }
     }
+    
+    public static enum UCServerBy {
+
+        // case must match protocol
+        id, name;
+
+        public static UCServerBy fromString(String s) throws ServiceException {
+            try {
+                return UCServerBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
 
     public static enum ZimletBy {
 
