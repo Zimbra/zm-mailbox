@@ -23,7 +23,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapHelper;
@@ -33,6 +32,11 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
+/**
+ * 
+ * @author pshao
+ *
+ */
 public abstract class LdapProv extends Provisioning {
     
     protected LdapDIT mDIT;
@@ -76,6 +80,8 @@ public abstract class LdapProv extends Provisioning {
     public abstract double getDomainCacheHitRate();
     public abstract int getServerCacheSize();
     public abstract double getServerCacheHitRate();
+    public abstract int getUCServerCacheSize();
+    public abstract double getUCServerCacheHitRate();
     public abstract int getZimletCacheSize();
     public abstract double getZimletCacheHitRate();
     public abstract int getGroupCacheSize();

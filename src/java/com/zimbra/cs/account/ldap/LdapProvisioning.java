@@ -42,6 +42,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.UCServerBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -84,6 +85,7 @@ import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ProvisioningExt;
 import com.zimbra.cs.account.SearchAccountsOptions;
+import com.zimbra.cs.account.UCServer;
 import com.zimbra.cs.account.ProvisioningExt.PostCreateAccountListener;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions;
@@ -106,13 +108,11 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.auth.PasswordUtil;
-import com.zimbra.cs.account.cache.AccountCache;
 import com.zimbra.cs.account.cache.DomainCache;
 import com.zimbra.cs.account.cache.IAccountCache;
 import com.zimbra.cs.account.cache.IDomainCache;
 import com.zimbra.cs.account.cache.IMimeTypeCache;
 import com.zimbra.cs.account.cache.INamedEntryCache;
-import com.zimbra.cs.account.cache.NamedEntryCache;
 import com.zimbra.cs.account.cache.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.CallbackContext.DataKey;
@@ -137,6 +137,7 @@ import com.zimbra.cs.account.ldap.entry.LdapMimeType;
 import com.zimbra.cs.account.ldap.entry.LdapServer;
 import com.zimbra.cs.account.ldap.entry.LdapShareLocator;
 import com.zimbra.cs.account.ldap.entry.LdapSignature;
+import com.zimbra.cs.account.ldap.entry.LdapUCServer;
 import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
@@ -218,6 +219,7 @@ public class LdapProvisioning extends LdapProv {
     private INamedEntryCache<Group> groupCache;
     private IMimeTypeCache mimeTypeCache;
     private INamedEntryCache<Server> serverCache;
+    private INamedEntryCache<UCServer> ucServerCache;
     private INamedEntryCache<ShareLocator> shareLocatorCache;
     private INamedEntryCache<XMPPComponent> xmppComponentCache;
     private INamedEntryCache<LdapZimlet> zimletCache;
@@ -267,6 +269,7 @@ public class LdapProvisioning extends LdapProv {
         groupCache = cache.groupCache();
         mimeTypeCache = cache.mimeTypeCache();
         serverCache = cache.serverCache();
+        ucServerCache = cache.ucServerCache();
         shareLocatorCache = cache.shareLocatorCache();
         xmppComponentCache = cache.xmppComponentCache();
         zimletCache = cache.zimletCache();
@@ -310,9 +313,15 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public int getServerCacheSize() { return serverCache.getSize(); }
+    
+    @Override
+    public int getUCServerCacheSize() { return ucServerCache.getSize(); }
 
     @Override
     public double getServerCacheHitRate() { return serverCache.getHitRate(); }
+    
+    @Override
+    public double getUCServerCacheHitRate() { return ucServerCache.getHitRate(); }
 
     @Override
     public int getZimletCacheSize() { return zimletCache.getSize(); }
@@ -559,6 +568,8 @@ public class LdapProvisioning extends LdapProv {
             domainCache.replace((Domain)entry);
         } else if (entry instanceof Server) {
             serverCache.replace((Server)entry);
+        } else if (entry instanceof UCServer) {
+            ucServerCache.replace((UCServer)entry);
         } else if (entry instanceof XMPPComponent) {
             xmppComponentCache.replace((XMPPComponent)entry);
         } else if (entry instanceof LdapZimlet) {
@@ -9121,6 +9132,168 @@ public class LdapProvisioning extends LdapProv {
     public Set<String> getDynamicGroupMembersSet(DynamicGroup dygGroup) {
         List<String> members = getDynamicGroupMembersList(dygGroup);
         return Sets.newHashSet(members);
+    }
+    
+    
+    
+    /*
+     * 
+     * UC server methods
+     * 
+     */
+    
+    private UCServer getUCServerByQuery(ZLdapFilter filter, ZLdapContext initZlc)
+    throws ServiceException {
+        try {
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.ucServerBaseDN(), filter, initZlc, false);
+            if (sr != null) {
+                return new LdapUCServer(sr.getDN(), sr.getAttributes(), this);
+            }
+        } catch (LdapMultipleEntriesMatchedException e) {
+            throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getUCServerByQuery", e);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup ucserver via query: "+
+                    filter.toFilterString() + " message:" + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    private UCServer getUCServerById(String zimbraId, ZLdapContext zlc, boolean nocache)
+    throws ServiceException {
+        if (zimbraId == null) {
+            return null;
+        }
+        UCServer s = null;
+        if (!nocache) {
+            s = ucServerCache.getById(zimbraId);
+        }
+        if (s == null) {
+            s = getUCServerByQuery(filterFactory.ucServerById(zimbraId), zlc);
+            ucServerCache.put(s);
+        }
+        return s;
+    }
+    
+    private UCServer getUCServerByName(String name, boolean nocache) throws ServiceException {
+        if (!nocache) {
+            UCServer s = ucServerCache.getByName(name);
+            if (s != null) {
+                return s;
+            }
+        }
+
+        try {
+            String dn = mDIT.ucServerNameToDN(name);
+            ZAttributes attrs = helper.getAttributes(LdapUsage.GET_UCSERVER, dn);
+            LdapUCServer s = new LdapUCServer(dn, attrs, this);
+            ucServerCache.put(s);
+            return s;
+        } catch (LdapEntryNotFoundException e) {
+            return null;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup ucserver by name: "+name+" message: "+e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public UCServer createUCServer(String name, Map<String, Object> attrs)
+            throws ServiceException {
+        name = name.toLowerCase().trim();
+
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(attrs, null, callbackContext, true);
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_UCSERVER);
+
+            ZMutableEntry entry = LdapClient.createMutableEntry();
+            entry.mapToAttrs(attrs);
+
+            Set<String> ocs = LdapObjectClass.getUCServerObjectClasses(this);
+            entry.addAttr(A_objectClass, ocs);
+
+            String zimbraIdStr = LdapUtil.generateUUID();
+            entry.setAttr(A_zimbraId, zimbraIdStr);
+            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_cn, name);
+            String dn = mDIT.ucServerNameToDN(name);
+
+            entry.setDN(dn);
+            zlc.createEntry(entry);
+
+            UCServer ucServer = getUCServerById(zimbraIdStr, zlc, true);
+            AttributeManager.getInstance().postModify(attrs, ucServer, callbackContext);
+            return ucServer;
+
+        } catch (LdapEntryAlreadyExistException nabe) {
+            throw AccountServiceException.SERVER_EXISTS(name);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to create ucserver: " + name, e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    @Override
+    public void deleteUCServer(String zimbraId) throws ServiceException {
+        LdapUCServer ucServer = (LdapUCServer) getUCServerById(zimbraId, null, false);
+        if (ucServer == null) {
+            throw AccountServiceException.NO_SUCH_UC_SERVER(zimbraId);
+        }
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_UCSERVER);
+            zlc.deleteEntry(ucServer.getDN());
+            ucServerCache.remove(ucServer);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to purge ucserver: "+zimbraId, e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    @Override
+    public UCServer get(UCServerBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name:
+                return getUCServerByName(key, false);
+            case id:
+                return getUCServerById(key, null, false);
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public List<UCServer> getAllUCServers() throws ServiceException {
+        List<UCServer> result = new ArrayList<UCServer>();
+
+        ZLdapFilter filter = filterFactory.allUCServers();
+
+        try {
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.ucServerBaseDN(),
+                    filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                LdapUCServer s = new LdapUCServer(sr.getDN(), sr.getAttributes(), this);
+                result.add(s);
+            }
+            ne.close();
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to list all servers", e);
+        }
+
+        if (result.size() > 0) {
+            ucServerCache.put(result, true);
+        }
+        Collections.sort(result);
+        return result;
     }
 
 }

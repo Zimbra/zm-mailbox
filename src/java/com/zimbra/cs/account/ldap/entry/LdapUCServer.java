@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,10 +14,8 @@
  */
 package com.zimbra.cs.account.ldap.entry;
 
-import java.util.Map;
-
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.UCServer;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 
@@ -26,14 +24,14 @@ import com.zimbra.cs.ldap.ZAttributes;
  * @author pshao
  *
  */
-public class LdapServer extends Server implements LdapEntry {
+public class LdapUCServer extends UCServer implements LdapEntry {
 
     private String mDn;
 
-    public LdapServer(String dn, ZAttributes attrs, Map<String,Object> defaults, Provisioning prov) throws LdapException {
+    public LdapUCServer(String dn, ZAttributes attrs, Provisioning prov) throws LdapException {
         super(attrs.getAttrString(Provisioning.A_cn), 
                 attrs.getAttrString(Provisioning.A_zimbraId), 
-                attrs.getAttrs(), defaults, prov);
+                attrs.getAttrs(), prov);
         mDn = dn;
     }
 
@@ -41,3 +39,4 @@ public class LdapServer extends Server implements LdapEntry {
         return mDn;
     }
 }
+

@@ -27,7 +27,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.ZAttrProvisioning.Product;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
@@ -867,15 +866,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final int SD_COS_FLAG = 0x20;
     
     public static final int SD_SERVER_FLAG = 0x40;
+    
+    public static final int SD_UCSERVER_FLAG = 0x80;
 
     /** return coses from searchDirectory */
-    public static final int SD_DYNAMIC_GROUP_FLAG = 0x80;
+    public static final int SD_DYNAMIC_GROUP_FLAG = 0x100;
 
     /** do not fixup objectclass in query for searchObject, only used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x100;
+    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x200;
 
     /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_RETURNATTRS = 0x200;
+    public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
 
     /**
      *  do not set account defaults in makeAccount
@@ -1156,7 +1157,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
+    /*
+     * UC server
+     */
+    public abstract UCServer createUCServer(String name, Map<String, Object> attrs) throws ServiceException;
 
+    public abstract UCServer get(Key.UCServerBy keyName, String key) throws ServiceException;
+
+    public abstract List<UCServer> getAllUCServers()  throws ServiceException;
+
+    public abstract void deleteUCServer(String zimbraId) throws ServiceException;
+    
     /*
      * ==============================
      *

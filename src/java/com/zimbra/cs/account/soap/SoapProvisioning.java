@@ -42,6 +42,7 @@ import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.SignatureBy;
+import com.zimbra.common.account.Key.UCServerBy;
 import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
@@ -75,6 +76,7 @@ import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.UCServer;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
@@ -2569,6 +2571,43 @@ public class SoapProvisioning extends Provisioning {
 
         invoke(req);
     }
+    
+    @Override
+    public ShareLocator get(ShareLocatorBy keyType, String key) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ShareLocator createShareLocator(String id, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteShareLocator(String id) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UCServer createUCServer(String name, Map<String, Object> attrs)
+            throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteUCServer(String zimbraId) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UCServer get(UCServerBy keyName, String key) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<UCServer> getAllUCServers() throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+    
 
     /* Convert to equivalent JAXB object */
     private static CalendarResourceSelector.CalendarResourceBy toJaxb(
@@ -2622,33 +2661,4 @@ public class SoapProvisioning extends Provisioning {
                 d.toString());
     }
 
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup();
-
-        SoapProvisioning prov = new SoapProvisioning();
-        prov.soapSetURI("https://localhost:7071/service/admin/soap/");
-        prov.soapZimbraAdminAuthenticate();
-
-        Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        // acctAttrs.put("zimbraForeignPrincipal", null);
-        acctAttrs.put("zimbraForeignPrincipal", new String[0]);
-        // acctAttrs.put("zimbraForeignPrincipal", new String[]{"aaa", "bbb"});
-        Account acct = prov.get(AccountBy.name, "user1");
-        prov.modifyAttrs(acct, acctAttrs);
-    }
-
-    @Override
-    public ShareLocator get(ShareLocatorBy keyType, String key) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ShareLocator createShareLocator(String id, Map<String, Object> attrs) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void deleteShareLocator(String id) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
 }

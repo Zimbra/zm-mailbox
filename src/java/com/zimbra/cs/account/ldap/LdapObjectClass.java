@@ -108,6 +108,12 @@ public class LdapObjectClass {
         addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraServerExtraObjectClass);
         return ocs;
     }
+    
+    public static Set<String> getUCServerObjectClasses(Provisioning prov) throws ServiceException {
+        Set<String> ocs = new LinkedHashSet<String>();
+        ocs.add(AttributeClass.OC_zimbraUCServer);
+        return ocs;
+    }
 
     public static Set<String> getShareLocatorObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();

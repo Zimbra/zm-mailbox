@@ -149,6 +149,12 @@ public class ZimbraPerf {
 
     @Description("LDAP server cache hit rate")
     public static final String RTS_SERVER_CACHE_HIT_RATE = "server_cache_hit_rate";
+    
+    @Description("LDAP UC server cache size")
+    public static final String RTS_UCSERVER_CACHE_SIZE = "ucserver_cache_size";
+
+    @Description("LDAP UC server cache hit rate")
+    public static final String RTS_UCSERVER_CACHE_HIT_RATE = "ucserver_cache_hit_rate";
 
     @Description("LDAP zimlet cache size")
     public static final String RTS_ZIMLET_CACHE_SIZE = "zimlet_cache_size";

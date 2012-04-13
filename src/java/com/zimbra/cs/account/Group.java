@@ -33,6 +33,11 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 
+/**
+ * 
+ * @author pshao
+ *
+ */
 public abstract class Group extends MailTarget implements AliasedEntry {
     
     public static final DistributionListSubscriptionPolicy 

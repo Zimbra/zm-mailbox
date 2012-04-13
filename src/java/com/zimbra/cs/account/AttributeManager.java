@@ -1247,7 +1247,8 @@ public class AttributeManager {
         getExtraObjectClassAttrs(prov, AttributeClass.server, Provisioning.A_zimbraServerExtraObjectClass);
     }
 
-    private void getExtraObjectClassAttrs(LdapProv prov, AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
+    private void getExtraObjectClassAttrs(LdapProv prov, AttributeClass attrClass, String extraObjectClassAttr) 
+    throws ServiceException {
         Config config = prov.getConfig();
 
         String[] extraObjectClasses = config.getMultiAttr(extraObjectClassAttr);

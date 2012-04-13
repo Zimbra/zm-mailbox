@@ -91,6 +91,7 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_GLOBAL_DYNAMICGROUP = "cn=groups";
     protected final String DEFAULT_BASE_RDN_MIME           = "cn=mime";
     protected final String DEFAULT_BASE_RDN_SERVER         = "cn=servers";
+    protected final String DEFAULT_BASE_RDN_UCSERVER       = "cn=ucservers";
     protected final String DEFAULT_BASE_RDN_SHARE_LOCATOR  = "cn=sharelocators";
     protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT  = "cn=xmppcomponents";
     protected final String DEFAULT_BASE_RDN_ZIMLET         = "cn=zimlets";
@@ -103,6 +104,7 @@ public class LdapDIT {
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT      = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME             = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_SERVER           = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_UCSERVER         = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_SHARE_LOCATOR    = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT    = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET           = "cn";
@@ -124,6 +126,7 @@ public class LdapDIT {
     protected String BASE_DN_GLOBAL_DYNAMICGROUP;
     protected String BASE_DN_MIME;
     protected String BASE_DN_SERVER;
+    protected String BASE_DN_UCSERVER;
     protected String BASE_DN_SHARE_LOCATOR;
     protected String BASE_DN_XMPPCOMPONENT;
     protected String BASE_DN_ZIMLET;
@@ -135,6 +138,7 @@ public class LdapDIT {
     protected String NAMING_RDN_ATTR_DYNAMICGROUP;
     protected String NAMING_RDN_ATTR_MIME;
     protected String NAMING_RDN_ATTR_SERVER;
+    protected String NAMING_RDN_ATTR_UCSERVER;
     protected String NAMING_RDN_ATTR_SHARE_LOCATOR;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
     protected String NAMING_RDN_ATTR_ZIMLET;
@@ -164,6 +168,7 @@ public class LdapDIT {
         NAMING_RDN_ATTR_GLOBALGRANT   = DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
         NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
+        NAMING_RDN_ATTR_UCSERVER      = DEFAULT_NAMING_RDN_ATTR_UCSERVER;
         NAMING_RDN_ATTR_SHARE_LOCATOR = DEFAULT_NAMING_RDN_ATTR_SHARE_LOCATOR;
         NAMING_RDN_ATTR_XMPPCOMPONENT = DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT;
         NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
@@ -177,6 +182,7 @@ public class LdapDIT {
         BASE_DN_GLOBAL_DYNAMICGROUP = DEFAULT_BASE_RDN_GLOBAL_DYNAMICGROUP           + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG;
         BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_UCSERVER     = DEFAULT_BASE_RDN_UCSERVER      + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_SHARE_LOCATOR = DEFAULT_BASE_RDN_SHARE_LOCATOR + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_XMPPCOMPONENT= DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET        + "," + BASE_DN_CONFIG_BRANCH;
@@ -198,6 +204,7 @@ public class LdapDIT {
             NAMING_RDN_ATTR_GLOBALGRANT == null ||
             NAMING_RDN_ATTR_MIME == null ||
             NAMING_RDN_ATTR_SERVER == null ||
+            NAMING_RDN_ATTR_UCSERVER == null ||
             NAMING_RDN_ATTR_SHARE_LOCATOR == null ||
             NAMING_RDN_ATTR_ZIMLET == null ||
             BASE_DN_ADMIN == null ||
@@ -206,6 +213,7 @@ public class LdapDIT {
             BASE_DN_GLOBAL_DYNAMICGROUP == null ||
             BASE_DN_MIME == null ||
             BASE_DN_SERVER == null ||
+            BASE_DN_UCSERVER == null ||
             BASE_DN_XMPPCOMPONENT == null ||
             BASE_DN_ZIMLET == null ||
             DN_GLOBALCONFIG == null ||
@@ -554,6 +562,19 @@ public class LdapDIT {
     public String serverNameToDN(String name) {
         return NAMING_RDN_ATTR_SERVER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_SERVER;
     }
+    
+    /*
+     * ==========
+     *   UC server
+     * ==========
+     */
+    public String ucServerBaseDN() {
+        return BASE_DN_UCSERVER;
+    }
+
+    public String ucServerNameToDN(String name) {
+        return NAMING_RDN_ATTR_UCSERVER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_UCSERVER;
+    }
 
 
     /*
@@ -680,6 +701,8 @@ public class LdapDIT {
             return NAMING_RDN_ATTR_DYNAMICGROUP;
         else if (entry instanceof Server)
             return NAMING_RDN_ATTR_SERVER;
+        else if (entry instanceof Server)    // FIXME!!!
+            return NAMING_RDN_ATTR_UCSERVER;
         else if (entry instanceof Zimlet)
             return NAMING_RDN_ATTR_ZIMLET;
         else
@@ -727,6 +750,7 @@ public class LdapDIT {
         boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
         boolean servers = (flags & Provisioning.SD_SERVER_FLAG) != 0;
+        boolean ucservers = (flags & Provisioning.SD_UCSERVER_FLAG) != 0;
 
         if (accounts || aliases || lists || calendarResources) {
             addBase(bases, mailBranchBaseDN());
@@ -746,6 +770,10 @@ public class LdapDIT {
         
         if (servers) {
             addBase(bases, serverBaseDN());
+        }
+        
+        if (ucservers) {
+            addBase(bases, ucServerBaseDN());
         }
 
         return bases.toArray(new String[bases.size()]);
