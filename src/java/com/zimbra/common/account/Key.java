@@ -92,14 +92,14 @@ public class Key {
         }
     }
     
-    public static enum UCServerBy {
+    public static enum UCServiceBy {
 
         // case must match protocol
         id, name;
 
-        public static UCServerBy fromString(String s) throws ServiceException {
+        public static UCServiceBy fromString(String s) throws ServiceException {
             try {
-                return UCServerBy.valueOf(s);
+                return UCServiceBy.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }

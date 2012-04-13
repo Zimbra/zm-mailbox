@@ -451,8 +451,8 @@ public final class LC {
     public static final KnownKey ldap_cache_right_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_server_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_server_maxage = KnownKey.newKey(15);
-    public static final KnownKey ldap_cache_ucserver_maxsize = KnownKey.newKey(100);
-    public static final KnownKey ldap_cache_ucserver_maxage = KnownKey.newKey(15);
+    public static final KnownKey ldap_cache_ucservice_maxsize = KnownKey.newKey(100);
+    public static final KnownKey ldap_cache_ucservice_maxage = KnownKey.newKey(15);
 
     @Supported
     public static final KnownKey ldap_cache_timezone_maxsize = KnownKey.newKey(100);
