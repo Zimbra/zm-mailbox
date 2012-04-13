@@ -80,8 +80,8 @@ public abstract class LdapProv extends Provisioning {
     public abstract double getDomainCacheHitRate();
     public abstract int getServerCacheSize();
     public abstract double getServerCacheHitRate();
-    public abstract int getUCServerCacheSize();
-    public abstract double getUCServerCacheHitRate();
+    public abstract int getUCServiceCacheSize();
+    public abstract double getUCServiceCacheHitRate();
     public abstract int getZimletCacheSize();
     public abstract double getZimletCacheHitRate();
     public abstract int getGroupCacheSize();

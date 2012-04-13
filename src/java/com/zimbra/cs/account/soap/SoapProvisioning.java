@@ -42,7 +42,7 @@ import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.SignatureBy;
-import com.zimbra.common.account.Key.UCServerBy;
+import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
@@ -76,7 +76,7 @@ import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.UCServer;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
@@ -2588,23 +2588,23 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public UCServer createUCServer(String name, Map<String, Object> attrs)
+    public UCService createUCService(String name, Map<String, Object> attrs)
             throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void deleteUCServer(String zimbraId) throws ServiceException {
+    public void deleteUCService(String zimbraId) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UCServer get(UCServerBy keyName, String key) throws ServiceException {
+    public UCService get(UCServiceBy keyName, String key) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<UCServer> getAllUCServers() throws ServiceException {
+    public List<UCService> getAllUCServices() throws ServiceException {
         throw new UnsupportedOperationException();
     }
     

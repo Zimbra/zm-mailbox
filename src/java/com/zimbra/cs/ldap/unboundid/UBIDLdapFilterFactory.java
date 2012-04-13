@@ -27,6 +27,9 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
+/**
+ * @author pshao
+ */
 public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
     @Override
@@ -56,7 +59,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS;
     private static Filter FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS;
     private static Filter FILTER_ALL_SERVERS;
-    private static Filter FILTER_ALL_UC_SERVERS;
+    private static Filter FILTER_ALL_UC_SERVICES;
     private static Filter FILTER_ALL_SHARE_LOCATORS;
     private static Filter FILTER_ALL_SIGNATURES;
     private static Filter FILTER_ALL_XMPP_COMPONENTS;
@@ -139,9 +142,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraServer);
         
-        FILTER_ALL_UC_SERVERS =
+        FILTER_ALL_UC_SERVICES =
             Filter.createEqualityFilter(
-            LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraUCServer);
+            LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraUCService);
 
         FILTER_ALL_SHARE_LOCATORS =
                 Filter.createEqualityFilter(
@@ -913,22 +916,22 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
     
     /*
-     * UC server
+     * UC service
      */
     @Override
-    public ZLdapFilter allUCServers() {
+    public ZLdapFilter allUCServices() {
         return new UBIDLdapFilter(
-                FilterId.ALL_UC_SERVERS,
-                FILTER_ALL_UC_SERVERS);
+                FilterId.ALL_UC_SERVICES,
+                FILTER_ALL_UC_SERVICES);
     }
 
     @Override
-    public ZLdapFilter ucServerById(String id) {
+    public ZLdapFilter ucServiceById(String id) {
         return new UBIDLdapFilter(
-                FilterId.UC_SERVER_BY_ID,
+                FilterId.UC_SERVICE_BY_ID,
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
-                        FILTER_ALL_UC_SERVERS));
+                        FILTER_ALL_UC_SERVICES));
     }
     
 

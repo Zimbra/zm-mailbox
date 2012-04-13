@@ -291,7 +291,7 @@ public class ProvUtil implements HttpDebugListener {
         RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"),
         SERVER("help on server-related commands"),
-        UCSERVER("help on UC server-related commands"),
+        UCSERVICE("help on ucservice-related commands"),
         SHARE("help on share related commands");
 
         private final String description;
@@ -486,7 +486,7 @@ public class ProvUtil implements HttpDebugListener {
         CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
-        CREATE_UC_SERVER("createUCServer", "cucs", "{name} [attr1 value1 [attr2 value2...]]", Category.UCSERVER, 1, Integer.MAX_VALUE),
+        CREATE_UC_SERVICE("createUCService", "cucs", "{name} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 1, Integer.MAX_VALUE),
         CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {classname} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 6, Integer.MAX_VALUE),
@@ -499,7 +499,7 @@ public class ProvUtil implements HttpDebugListener {
         DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
-        DELETE_UC_SERVER("deleteUCServer", "ducs", "{name|id}", Category.UCSERVER, 1, 1),
+        DELETE_UC_SERVICE("deleteUCService", "ducs", "{name|id}", Category.UCSERVICE, 1, 1),
         DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{xmpp-component-name}", Category.CONFIG, 1, 1),
         DESCRIBE("describe", "desc", "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE, null, null, true),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
@@ -524,7 +524,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
         GET_ALL_RIGHTS("getAllRights", "gar", "[-v] [-t {target-type}] [-c " + RightClass.allValuesInString("|") + "]", Category.RIGHT, 0, 5),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
-        GET_ALL_UC_SERVERS("getAllUCServers", "gaucs", "[-v]", Category.UCSERVER, 0, 3),
+        GET_ALL_UC_SERVICES("getAllUCServices", "gaucs", "[-v]", Category.UCSERVICE, 0, 3),
         GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
         GET_AUTH_TOKEN_INFO("getAuthTokenInfo", "gati", "{auth-token}", Category.MISC, 1, 1),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE),
@@ -548,7 +548,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_RIGHT("getRight", "gr", "{right} [-e]", Category.RIGHT, 1, 2),
         GET_RIGHTS_DOC("getRightsDoc", "grd", "[java packages]", Category.RIGHT, 0, Integer.MAX_VALUE),
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
-        GET_UC_SERVER("getUCServer", "gucs", "[-e] {name|id} [attr1 [attr2...]]", Category.UCSERVER, 1, Integer.MAX_VALUE),
+        GET_UC_SERVICES("getUCService", "gucs", "[-e] {name|id} [attr1 [attr2...]]", Category.UCSERVICE, 1, Integer.MAX_VALUE),
         GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
         GET_SPNEGO_DOMAIN("getSpnegoDomain", "gsd", "", Category.MISC, 0, 0),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
@@ -567,6 +567,7 @@ public class ProvUtil implements HttpDebugListener {
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
+        MODIFY_UC_SERVICE("modifyUCService", "mucs", "{name|id} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 3, Integer.MAX_VALUE),
         MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "[account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         PUSH_FREEBUSY_DOMAIN("pushFreebusyDomain", "pfbd", "{domain}", Category.FREEBUSY, 1, 1),
@@ -836,8 +837,8 @@ public class ProvUtil implements HttpDebugListener {
             case CREATE_SERVER:
                 console.println(prov.createServer(args[1], getMapAndCheck(args, 2, true)).getId());
                 break;
-            case CREATE_UC_SERVER:
-                console.println(prov.createUCServer(args[1], getMapAndCheck(args, 2, true)).getId());
+            case CREATE_UC_SERVICE:
+                console.println(prov.createUCService(args[1], getMapAndCheck(args, 2, true)).getId());
                 break;
             case CREATE_XMPP_COMPONENT:
                 doCreateXMPPComponent(args);
@@ -912,8 +913,8 @@ public class ProvUtil implements HttpDebugListener {
             case GET_ALL_SERVERS:
                 doGetAllServers(args);
                 break;
-            case GET_ALL_UC_SERVERS:
-                doGetAllUCServers(args);
+            case GET_ALL_UC_SERVICES:
+                doGetAllUCServices(args);
                 break;
             case GET_CONFIG:
                 doGetConfig(args);
@@ -948,8 +949,8 @@ public class ProvUtil implements HttpDebugListener {
             case GET_SERVER:
                 doGetServer(args);
                 break;
-            case GET_UC_SERVER:
-                dumpUCServer(lookupUCServer(args[1]), getArgNameSet(args, 2));
+            case GET_UC_SERVICES:
+                dumpUCService(lookupUCService(args[1]), getArgNameSet(args, 2));
                 break;
             case GET_XMPP_COMPONENT:
                 doGetXMPPComponent(args);
@@ -1011,6 +1012,9 @@ public class ProvUtil implements HttpDebugListener {
             case MODIFY_SERVER:
                 prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2, false), true);
                 break;
+            case MODIFY_UC_SERVICE:
+                prov.modifyAttrs(lookupUCService(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
             case DELETE_ACCOUNT:
                 doDeleteAccount(args);
                 break;
@@ -1034,8 +1038,8 @@ public class ProvUtil implements HttpDebugListener {
             case DELETE_SERVER:
                 prov.deleteServer(lookupServer(args[1]).getId());
                 break;
-            case DELETE_UC_SERVER:
-                prov.deleteUCServer(lookupUCServer(args[1]).getId());
+            case DELETE_UC_SERVICE:
+                prov.deleteUCService(lookupUCService(args[1]).getId());
                 break;
             case DELETE_XMPP_COMPONENT:
                 prov.deleteXMPPComponent(lookupXMPPComponent(args[1]));
@@ -2468,15 +2472,15 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
     
-    private void doGetAllUCServers(String[] args) throws ServiceException {
+    private void doGetAllUCServices(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
-        List<UCServer> allUCServers = prov.getAllUCServers();
-        for (UCServer ucServer : allUCServers) {
+        List<UCService> allUCServices = prov.getAllUCServices();
+        for (UCService ucService : allUCServices) {
             if (verbose) {
-                dumpUCServer(ucServer, attrNames);
+                dumpUCService(ucService, attrNames);
             } else {
-                console.println(ucServer.getName());
+                console.println(ucService.getName());
             }
         }
     }
@@ -2488,9 +2492,9 @@ public class ProvUtil implements HttpDebugListener {
         console.println();
     }
     
-    private void dumpUCServer(UCServer ucserver, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+ucserver.getName());
-        Map<String, Object> attrs = ucserver.getAttrs();
+    private void dumpUCService(UCService ucService, Set<String> attrNames) throws ServiceException {
+        console.println("# name "+ucService.getName());
+        Map<String, Object> attrs = ucService.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
     }
@@ -2915,12 +2919,12 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
     
-    private UCServer lookupUCServer(String key) throws ServiceException {
-        UCServer ucserver = prov.get(guessUCServerBy(key), key);
-        if (ucserver == null) {
-            throw AccountServiceException.NO_SUCH_UC_SERVER(key);
+    private UCService lookupUCService(String key) throws ServiceException {
+        UCService ucService = prov.get(guessUCServiceBy(key), key);
+        if (ucService == null) {
+            throw AccountServiceException.NO_SUCH_UC_SERVICE(key);
         } else {
-            return ucserver;
+            return ucService;
         }
     }
 
@@ -3008,11 +3012,11 @@ public class ProvUtil implements HttpDebugListener {
         return Key.ServerBy.name;
     }
     
-    public static Key.UCServerBy guessUCServerBy(String value) {
+    public static Key.UCServiceBy guessUCServiceBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return Key.UCServerBy.id;
+            return Key.UCServiceBy.id;
         }
-        return Key.UCServerBy.name;
+        return Key.UCServiceBy.name;
     }
 
     public static Key.CalendarResourceBy guessCalendarResourceBy(String value) {

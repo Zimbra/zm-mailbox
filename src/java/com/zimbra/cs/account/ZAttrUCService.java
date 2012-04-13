@@ -33,9 +33,9 @@ import com.zimbra.common.util.StringUtil;
  * AUTO-GENERATED. DO NOT EDIT.
  *
  */
-public abstract class ZAttrUCServer extends NamedEntry {
+public abstract class ZAttrUCService extends NamedEntry {
 
-    public ZAttrUCServer(String name, String id, Map<String,Object> attrs, Provisioning prov) {
+    public ZAttrUCService(String name, String id, Map<String,Object> attrs, Provisioning prov) {
         super(name, id, attrs, null, prov);
     }
 

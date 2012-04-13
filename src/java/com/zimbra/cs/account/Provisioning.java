@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
@@ -867,7 +868,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public static final int SD_SERVER_FLAG = 0x40;
     
-    public static final int SD_UCSERVER_FLAG = 0x80;
+    public static final int SD_UC_SERVICE_FLAG = 0x80;
 
     /** return coses from searchDirectory */
     public static final int SD_DYNAMIC_GROUP_FLAG = 0x100;
@@ -1158,15 +1159,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
     /*
-     * UC server
+     * UC service
      */
-    public abstract UCServer createUCServer(String name, Map<String, Object> attrs) throws ServiceException;
-
-    public abstract UCServer get(Key.UCServerBy keyName, String key) throws ServiceException;
-
-    public abstract List<UCServer> getAllUCServers()  throws ServiceException;
-
-    public abstract void deleteUCServer(String zimbraId) throws ServiceException;
+    public abstract UCService createUCService(String name, Map<String, Object> attrs) throws ServiceException;
+    public abstract void deleteUCService(String zimbraId) throws ServiceException;
+    public abstract UCService get(UCServiceBy keyName, String key) throws ServiceException;
+    public abstract List<UCService> getAllUCServices()  throws ServiceException;
     
     /*
      * ==============================

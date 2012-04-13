@@ -23,6 +23,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 
+/**
+ * @author pshao
+ */
 public class LdapObjectClass {
 
     /*
@@ -109,9 +112,9 @@ public class LdapObjectClass {
         return ocs;
     }
     
-    public static Set<String> getUCServerObjectClasses(Provisioning prov) throws ServiceException {
+    public static Set<String> getUCServiceObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
-        ocs.add(AttributeClass.OC_zimbraUCServer);
+        ocs.add(AttributeClass.OC_zimbraUCService);
         return ocs;
     }
 

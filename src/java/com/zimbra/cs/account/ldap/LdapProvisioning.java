@@ -42,7 +42,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.UCServerBy;
+import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -85,7 +85,7 @@ import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ProvisioningExt;
 import com.zimbra.cs.account.SearchAccountsOptions;
-import com.zimbra.cs.account.UCServer;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.ProvisioningExt.PostCreateAccountListener;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions;
@@ -137,7 +137,7 @@ import com.zimbra.cs.account.ldap.entry.LdapMimeType;
 import com.zimbra.cs.account.ldap.entry.LdapServer;
 import com.zimbra.cs.account.ldap.entry.LdapShareLocator;
 import com.zimbra.cs.account.ldap.entry.LdapSignature;
-import com.zimbra.cs.account.ldap.entry.LdapUCServer;
+import com.zimbra.cs.account.ldap.entry.LdapUCService;
 import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
@@ -219,7 +219,7 @@ public class LdapProvisioning extends LdapProv {
     private INamedEntryCache<Group> groupCache;
     private IMimeTypeCache mimeTypeCache;
     private INamedEntryCache<Server> serverCache;
-    private INamedEntryCache<UCServer> ucServerCache;
+    private INamedEntryCache<UCService> ucServiceCache;
     private INamedEntryCache<ShareLocator> shareLocatorCache;
     private INamedEntryCache<XMPPComponent> xmppComponentCache;
     private INamedEntryCache<LdapZimlet> zimletCache;
@@ -269,7 +269,7 @@ public class LdapProvisioning extends LdapProv {
         groupCache = cache.groupCache();
         mimeTypeCache = cache.mimeTypeCache();
         serverCache = cache.serverCache();
-        ucServerCache = cache.ucServerCache();
+        ucServiceCache = cache.ucServiceCache();
         shareLocatorCache = cache.shareLocatorCache();
         xmppComponentCache = cache.xmppComponentCache();
         zimletCache = cache.zimletCache();
@@ -313,15 +313,15 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public int getServerCacheSize() { return serverCache.getSize(); }
-    
-    @Override
-    public int getUCServerCacheSize() { return ucServerCache.getSize(); }
 
     @Override
     public double getServerCacheHitRate() { return serverCache.getHitRate(); }
     
     @Override
-    public double getUCServerCacheHitRate() { return ucServerCache.getHitRate(); }
+    public int getUCServiceCacheSize() { return ucServiceCache.getSize(); }
+    
+    @Override
+    public double getUCServiceCacheHitRate() { return ucServiceCache.getHitRate(); }
 
     @Override
     public int getZimletCacheSize() { return zimletCache.getSize(); }
@@ -568,8 +568,8 @@ public class LdapProvisioning extends LdapProv {
             domainCache.replace((Domain)entry);
         } else if (entry instanceof Server) {
             serverCache.replace((Server)entry);
-        } else if (entry instanceof UCServer) {
-            ucServerCache.replace((UCServer)entry);
+        } else if (entry instanceof UCService) {
+            ucServiceCache.replace((UCService)entry);
         } else if (entry instanceof XMPPComponent) {
             xmppComponentCache.replace((XMPPComponent)entry);
         } else if (entry instanceof LdapZimlet) {
@@ -9138,65 +9138,65 @@ public class LdapProvisioning extends LdapProv {
     
     /*
      * 
-     * UC server methods
+     * UC service methods
      * 
      */
     
-    private UCServer getUCServerByQuery(ZLdapFilter filter, ZLdapContext initZlc)
+    private UCService getUCServiceByQuery(ZLdapFilter filter, ZLdapContext initZlc)
     throws ServiceException {
         try {
-            ZSearchResultEntry sr = helper.searchForEntry(mDIT.ucServerBaseDN(), filter, initZlc, false);
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.ucServiceBaseDN(), filter, initZlc, false);
             if (sr != null) {
-                return new LdapUCServer(sr.getDN(), sr.getAttributes(), this);
+                return new LdapUCService(sr.getDN(), sr.getAttributes(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
-            throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getUCServerByQuery", e);
+            throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getUCServiceByQuery", e);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup ucserver via query: "+
+            throw ServiceException.FAILURE("unable to lookup ucservice via query: "+
                     filter.toFilterString() + " message:" + e.getMessage(), e);
         }
         return null;
     }
 
-    private UCServer getUCServerById(String zimbraId, ZLdapContext zlc, boolean nocache)
+    private UCService getUCServiceById(String zimbraId, ZLdapContext zlc, boolean nocache)
     throws ServiceException {
         if (zimbraId == null) {
             return null;
         }
-        UCServer s = null;
+        UCService s = null;
         if (!nocache) {
-            s = ucServerCache.getById(zimbraId);
+            s = ucServiceCache.getById(zimbraId);
         }
         if (s == null) {
-            s = getUCServerByQuery(filterFactory.ucServerById(zimbraId), zlc);
-            ucServerCache.put(s);
+            s = getUCServiceByQuery(filterFactory.ucServiceById(zimbraId), zlc);
+            ucServiceCache.put(s);
         }
         return s;
     }
     
-    private UCServer getUCServerByName(String name, boolean nocache) throws ServiceException {
+    private UCService getUCServiceByName(String name, boolean nocache) throws ServiceException {
         if (!nocache) {
-            UCServer s = ucServerCache.getByName(name);
+            UCService s = ucServiceCache.getByName(name);
             if (s != null) {
                 return s;
             }
         }
 
         try {
-            String dn = mDIT.ucServerNameToDN(name);
-            ZAttributes attrs = helper.getAttributes(LdapUsage.GET_UCSERVER, dn);
-            LdapUCServer s = new LdapUCServer(dn, attrs, this);
-            ucServerCache.put(s);
+            String dn = mDIT.ucServiceNameToDN(name);
+            ZAttributes attrs = helper.getAttributes(LdapUsage.GET_UCSERVICE, dn);
+            LdapUCService s = new LdapUCService(dn, attrs, this);
+            ucServiceCache.put(s);
             return s;
         } catch (LdapEntryNotFoundException e) {
             return null;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup ucserver by name: "+name+" message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup ucservice by name: "+name+" message: "+e.getMessage(), e);
         }
     }
 
     @Override
-    public UCServer createUCServer(String name, Map<String, Object> attrs)
+    public UCService createUCService(String name, Map<String, Object> attrs)
             throws ServiceException {
         name = name.toLowerCase().trim();
 
@@ -9205,26 +9205,26 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_UCSERVER);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_UCSERVICE);
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(attrs);
 
-            Set<String> ocs = LdapObjectClass.getUCServerObjectClasses(this);
+            Set<String> ocs = LdapObjectClass.getUCServiceObjectClasses(this);
             entry.addAttr(A_objectClass, ocs);
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
-            String dn = mDIT.ucServerNameToDN(name);
+            String dn = mDIT.ucServiceNameToDN(name);
 
             entry.setDN(dn);
             zlc.createEntry(entry);
 
-            UCServer ucServer = getUCServerById(zimbraIdStr, zlc, true);
-            AttributeManager.getInstance().postModify(attrs, ucServer, callbackContext);
-            return ucServer;
+            UCService ucService = getUCServiceById(zimbraIdStr, zlc, true);
+            AttributeManager.getInstance().postModify(attrs, ucService, callbackContext);
+            return ucService;
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.SERVER_EXISTS(name);
@@ -9233,55 +9233,55 @@ public class LdapProvisioning extends LdapProv {
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to create ucserver: " + name, e);
+            throw ServiceException.FAILURE("unable to create ucservice: " + name, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
     }
 
     @Override
-    public void deleteUCServer(String zimbraId) throws ServiceException {
-        LdapUCServer ucServer = (LdapUCServer) getUCServerById(zimbraId, null, false);
-        if (ucServer == null) {
-            throw AccountServiceException.NO_SUCH_UC_SERVER(zimbraId);
+    public void deleteUCService(String zimbraId) throws ServiceException {
+        LdapUCService ucService = (LdapUCService) getUCServiceById(zimbraId, null, false);
+        if (ucService == null) {
+            throw AccountServiceException.NO_SUCH_UC_SERVICE(zimbraId);
         }
 
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_UCSERVER);
-            zlc.deleteEntry(ucServer.getDN());
-            ucServerCache.remove(ucServer);
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_UCSERVICE);
+            zlc.deleteEntry(ucService.getDN());
+            ucServiceCache.remove(ucService);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to purge ucserver: "+zimbraId, e);
+            throw ServiceException.FAILURE("unable to purge ucservice: "+zimbraId, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
     }
 
     @Override
-    public UCServer get(UCServerBy keyType, String key) throws ServiceException {
+    public UCService get(UCServiceBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case name:
-                return getUCServerByName(key, false);
+                return getUCServiceByName(key, false);
             case id:
-                return getUCServerById(key, null, false);
+                return getUCServiceById(key, null, false);
             default:
                 return null;
         }
     }
 
     @Override
-    public List<UCServer> getAllUCServers() throws ServiceException {
-        List<UCServer> result = new ArrayList<UCServer>();
+    public List<UCService> getAllUCServices() throws ServiceException {
+        List<UCService> result = new ArrayList<UCService>();
 
-        ZLdapFilter filter = filterFactory.allUCServers();
+        ZLdapFilter filter = filterFactory.allUCServices();
 
         try {
-            ZSearchResultEnumeration ne = helper.searchDir(mDIT.ucServerBaseDN(),
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.ucServiceBaseDN(),
                     filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-                LdapUCServer s = new LdapUCServer(sr.getDN(), sr.getAttributes(), this);
+                LdapUCService s = new LdapUCService(sr.getDN(), sr.getAttributes(), this);
                 result.add(s);
             }
             ne.close();
@@ -9290,7 +9290,7 @@ public class LdapProvisioning extends LdapProv {
         }
 
         if (result.size() > 0) {
-            ucServerCache.put(result, true);
+            ucServiceCache.put(result, true);
         }
         Collections.sort(result);
         return result;

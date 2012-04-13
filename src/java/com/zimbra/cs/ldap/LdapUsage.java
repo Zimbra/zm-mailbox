@@ -18,6 +18,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.gal.GalOp;
 
+/**
+ * @author pshao
+ */
 public enum LdapUsage {
     ADD_ALIAS,
     ADD_ALIAS_ACCOUNT,
@@ -33,7 +36,7 @@ public enum LdapUsage {
     CREATE_DYNAMICGROUP,
     CREATE_IDENTITY,
     CREATE_SERVER,
-    CREATE_UCSERVER,
+    CREATE_UCSERVICE,
     CREATE_SHARELOCATOR,
     CREATE_SIGNATURE,
     CREATE_XMPPCOMPONENT,
@@ -46,7 +49,7 @@ public enum LdapUsage {
     DELETE_DYNAMICGROUP,
     DELETE_IDENTITY,
     DELETE_SERVER,
-    DELETE_UCSERVER,
+    DELETE_UCSERVICE,
     DELETE_SHARELOCATOR,
     DELETE_SIGNATURE,
     DELETE_XMPPCOMPONENT,
@@ -69,7 +72,7 @@ public enum LdapUsage {
     GET_GROUP_MEMBER,
     GET_SCHEMA,
     GET_SERVER,
-    GET_UCSERVER,
+    GET_UCSERVICE,
     GET_SHARELOCATOR,
     GET_XMPPCOMPONENT,
     GET_ZIMLET,
@@ -87,6 +90,7 @@ public enum LdapUsage {
     MODIFY_IDENTITY,
     MODIFY_MIMETYPE,
     MODIFY_SERVER,
+    MODIFY_UCSERVICE,
     MODIFY_SHARELOCATOR,
     MODIFY_SIGNATURE,
     MODIFY_XMPPCOMPONENT,
@@ -127,6 +131,7 @@ public enum LdapUsage {
             case IDENTITY: return MODIFY_IDENTITY;
             case MIMETYPE: return MODIFY_MIMETYPE;
             case SERVER: return MODIFY_SERVER;
+            case UCSERVICE: return MODIFY_UCSERVICE;
             case SIGNATURE: return MODIFY_SIGNATURE;
             case XMPPCOMPONENT: return MODIFY_XMPPCOMPONENT;
             case ZIMLET: return MODIFY_ZIMLET;

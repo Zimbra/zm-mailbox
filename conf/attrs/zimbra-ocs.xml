@@ -259,11 +259,11 @@
   </comment>
 </objectclass>
 
-<objectclass id="29" name="zimbraUCServer" type="STRUCTURAL">
+<objectclass id="29" name="zimbraUCService" type="STRUCTURAL">
   <sup>top</sup>
-  <desc>Unified Communication Server in the cluster</desc>
+  <desc>Unified Communication service in the cluster</desc>
   <comment>
-    zimbraUCServer is used to represent a third party UC server.
+    zimbraUCService is used to represent a third party UC service.
     This includes information like URLs to the UC providers service and 
     Zimbra extensions to load for the service, etc.
   </comment>

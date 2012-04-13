@@ -32,7 +32,7 @@ public enum AttributeClass {
     domain("zimbraDomain",                      true),
     securityGroup("zimbraSecurityGroup",        false),
     server("zimbraServer",                      true),
-    ucServer("zimbraUCServer",                  true),
+    ucService("zimbraUCService",                true),
     mimeEntry("zimbraMimeEntry",                true),
     objectEntry("zimbraObjectEntry",            false),
     timeZone("zimbraTimeZone",                  false),
@@ -69,7 +69,7 @@ public enum AttributeClass {
     public static final String OC_zimbraPop3DataSource = pop3DataSource.getOCName();
     public static final String OC_zimbraRssDataSource = rssDataSource.getOCName();
     public static final String OC_zimbraServer = server.getOCName();
-    public static final String OC_zimbraUCServer = ucServer.getOCName();
+    public static final String OC_zimbraUCService = ucService.getOCName();
     public static final String OC_zimbraSignature = signature.getOCName();
     public static final String OC_zimbraXMPPComponent = xmppComponent.getOCName();
     public static final String OC_zimbraZimletEntry = zimletEntry.getOCName();
