@@ -2703,5 +2703,62 @@ See soap.txt for more details about the <retentionPolicy> element structure.
 </ClearCookieRequest>
 
 <ClearCookieResponse/>
+
 -----------------------------
+
+<CreateUCServiceRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateUCServiceRequest>
+
+<CreateUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+</CreateUCServiceResponse>
+
+-----------------------------
+
+<GetUCServiceRequest [attrs="{req-attrs}"]>
+  <ucservice by="id|name">...</ucservice>
+</GetUCServiceRequest>
+
+<GetUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+</GetUCServiceResponse>
+
+{req-attrs} = comma-seperated list of attrs to return
+
+-----------------------------
+
+<GetAllUCServicesRequest/>
+
+<GetAllUCServicesResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>+
+</GetAllUCServicesResponse>
+
+-----------------------------
+
+<ModifyUCServiceRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyUCServiceRequest>
+
+<ModifyUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+</ModifyUCServiceResponse>]
+
+-----------------------------
+
+<DeleteUCServiceRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteUCServiceRequest>
+
+<DeleteUCServiceResponse/>
 

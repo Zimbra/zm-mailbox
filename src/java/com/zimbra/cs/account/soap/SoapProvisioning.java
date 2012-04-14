@@ -139,6 +139,8 @@ import com.zimbra.soap.admin.type.ReindexProgressInfo;
 import com.zimbra.soap.admin.type.RightInfo;
 import com.zimbra.soap.admin.type.ServerInfo;
 import com.zimbra.soap.admin.type.ServerSelector;
+import com.zimbra.soap.admin.type.UCServiceInfo;
+import com.zimbra.soap.admin.type.UCServiceSelector;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
@@ -2590,24 +2592,40 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public UCService createUCService(String name, Map<String, Object> attrs)
             throws ServiceException {
-        throw new UnsupportedOperationException();
+        CreateUCServiceResponse resp = invokeJaxb(new CreateUCServiceRequest(name, attrs));
+        return new SoapUCService(resp.getUCService(), this);
     }
 
     @Override
     public void deleteUCService(String zimbraId) throws ServiceException {
-        throw new UnsupportedOperationException();
+        invokeJaxb(new DeleteUCServiceRequest(zimbraId));
     }
 
     @Override
-    public UCService get(UCServiceBy keyName, String key) throws ServiceException {
-        throw new UnsupportedOperationException();
+    public UCService get(UCServiceBy keyType, String key) throws ServiceException {
+        UCServiceSelector sel =
+            new UCServiceSelector(SoapProvisioning.toJaxb(keyType), key);
+        try {
+            GetUCServiceResponse resp =
+                invokeJaxb(new GetUCServiceRequest(sel));
+            return new SoapUCService(resp.getUCService(), this);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_UC_SERVICE))
+                return null;
+            else
+                throw e;
+        }
     }
 
     @Override
     public List<UCService> getAllUCServices() throws ServiceException {
-        throw new UnsupportedOperationException();
+        ArrayList<UCService> result = new ArrayList<UCService>();
+        GetAllUCServicesResponse resp = invokeJaxb(new GetAllUCServicesRequest());
+        for (UCServiceInfo ucServiceInfo : resp.getUCServiceList()) {
+            result.add(new SoapUCService(ucServiceInfo, this));
+        }
+        return result;
     }
-    
 
     /* Convert to equivalent JAXB object */
     private static CalendarResourceSelector.CalendarResourceBy toJaxb(
@@ -2631,8 +2649,15 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /* Convert to equivalent JAXB object */
-    private static ServerSelector.ServerBy toJaxb(Key.ServerBy provServerBy) throws ServiceException {
+    private static ServerSelector.ServerBy toJaxb(Key.ServerBy provServerBy) 
+    throws ServiceException {
         return ServerSelector.ServerBy.fromString(provServerBy.toString());
+    }
+    
+    /* Convert to equivalent JAXB object */
+    private static UCServiceSelector.UCServiceBy toJaxb(Key.UCServiceBy provUCServiceBy) 
+    throws ServiceException {
+        return UCServiceSelector.UCServiceBy.fromString(provUCServiceBy.toString());
     }
 
     /* Convert to equivalent JAXB object */

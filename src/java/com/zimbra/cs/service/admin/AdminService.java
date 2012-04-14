@@ -79,6 +79,12 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ALL_SERVERS_REQUEST, new GetAllServers());
         dispatcher.registerHandler(AdminConstants.MODIFY_SERVER_REQUEST, new ModifyServer());
         dispatcher.registerHandler(AdminConstants.DELETE_SERVER_REQUEST, new DeleteServer());
+        
+        dispatcher.registerHandler(AdminConstants.CREATE_UC_SERVICE_REQUEST, new CreateUCService());
+        dispatcher.registerHandler(AdminConstants.GET_UC_SERVICE_REQUEST, new GetUCService());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_UC_SERVICES_REQUEST, new GetAllUCServices());
+        dispatcher.registerHandler(AdminConstants.MODIFY_UC_SERVICE_REQUEST, new ModifyUCService());
+        dispatcher.registerHandler(AdminConstants.DELETE_UC_SERVICE_REQUEST, new DeleteUCService());
 
         dispatcher.registerHandler(AdminConstants.GET_CONFIG_REQUEST, new GetConfig());
         dispatcher.registerHandler(AdminConstants.GET_ALL_CONFIG_REQUEST, new GetAllConfig());
