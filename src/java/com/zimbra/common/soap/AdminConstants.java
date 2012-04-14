@@ -115,6 +115,17 @@ public final class AdminConstants {
     public static final String E_DELETE_SERVER_RESPONSE = "DeleteServerResponse";
     public static final String E_GET_ALL_SERVERS_REQUEST = "GetAllServersRequest";
     public static final String E_GET_ALL_SERVERS_RESPONSE = "GetAllServersResponse";
+    
+    public static final String E_CREATE_UC_SERVICE_REQUEST = "CreateUCServiceRequest";
+    public static final String E_CREATE_UC_SERVICE_RESPONSE = "CreateUCServiceResponse";
+    public static final String E_DELETE_UC_SERVICE_REQUEST = "DeleteUCServiceRequest";
+    public static final String E_DELETE_UC_SERVICE_RESPONSE = "DeleteUCServiceResponse";
+    public static final String E_GET_UC_SERVICE_REQUEST = "GetUCServiceRequest";
+    public static final String E_GET_UC_SERVICE_RESPONSE = "GetUCServiceResponse";
+    public static final String E_GET_ALL_UC_SERVICES_REQUEST = "GetAllUCServicesRequest";
+    public static final String E_GET_ALL_UC_SERVICES_RESPONSE = "GetAllUCServicesResponse";
+    public static final String E_MODIFY_UC_SERVICE_REQUEST = "ModifyUCServiceRequest";
+    public static final String E_MODIFY_UC_SERVICE_RESPONSE = "ModifyUCServiceResponse";
 
     public static final String E_GET_CONFIG_REQUEST = "GetConfigRequest";
     public static final String E_GET_CONFIG_RESPONSE = "GetConfigResponse";
@@ -557,6 +568,17 @@ public final class AdminConstants {
     public static final QName DELETE_SERVER_RESPONSE = QName.get(E_DELETE_SERVER_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_SERVERS_REQUEST = QName.get(E_GET_ALL_SERVERS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_SERVERS_RESPONSE = QName.get(E_GET_ALL_SERVERS_RESPONSE, NAMESPACE);
+    
+    public static final QName CREATE_UC_SERVICE_REQUEST = QName.get(E_CREATE_UC_SERVICE_REQUEST, NAMESPACE);
+    public static final QName CREATE_UC_SERVICE_RESPONSE = QName.get(E_CREATE_UC_SERVICE_RESPONSE, NAMESPACE);
+    public static final QName DELETE_UC_SERVICE_REQUEST = QName.get(E_DELETE_UC_SERVICE_REQUEST, NAMESPACE);
+    public static final QName DELETE_UC_SERVICE_RESPONSE = QName.get(E_DELETE_UC_SERVICE_RESPONSE, NAMESPACE);
+    public static final QName GET_UC_SERVICE_REQUEST = QName.get(E_GET_UC_SERVICE_REQUEST, NAMESPACE);
+    public static final QName GET_UC_SERVICE_RESPONSE = QName.get(E_GET_UC_SERVICE_RESPONSE, NAMESPACE);
+    public static final QName GET_ALL_UC_SERVICES_REQUEST = QName.get(E_GET_ALL_UC_SERVICES_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_UC_SERVICES_RESPONSE = QName.get(E_GET_ALL_UC_SERVICES_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_UC_SERVICE_REQUEST = QName.get(E_MODIFY_UC_SERVICE_REQUEST, NAMESPACE);
+    public static final QName MODIFY_UC_SERVICE_RESPONSE = QName.get(E_MODIFY_UC_SERVICE_RESPONSE, NAMESPACE);
 
     public static final QName GET_CONFIG_REQUEST = QName.get(E_GET_CONFIG_REQUEST, NAMESPACE);
     public static final QName GET_CONFIG_RESPONSE = QName.get(E_GET_CONFIG_RESPONSE, NAMESPACE);
@@ -954,6 +976,7 @@ public final class AdminConstants {
     public static final String E_QUEUE = "queue";
     public static final String E_ACTION = "action";
     public static final String E_SERVER = "server";
+    public static final String E_UC_SERVICE = "ucservice";
     public static final String E_XMPP_COMPONENT = "xmppcomponent";
     public static final String E_STATUS = "status";
     public static final String E_END_TIME = "endTime";
