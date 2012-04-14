@@ -80,11 +80,9 @@ public class GetUCService extends AdminDocumentHandler {
         ToXML.encodeAttrs(eUCService, attrs, reqAttrs, attrRightChecker);
     }
     
-    
-    // TODO
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_getServer);
-        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getServer.getName()));
+        relatedRights.add(Admin.R_getUCService);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getUCService.getName()));
     }
 }

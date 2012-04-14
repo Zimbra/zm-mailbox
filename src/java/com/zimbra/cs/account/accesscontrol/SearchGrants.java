@@ -16,7 +16,6 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +23,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -37,6 +35,9 @@ import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.soap.type.TargetBy;
 
+/**
+ * @author pshao
+ */
 public final class SearchGrants {
     private final Provisioning prov;
     private final Set<TargetType> targetTypes;
@@ -154,6 +155,8 @@ public final class SearchGrants {
                 tt = TargetType.domain;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraServer)) {
                 tt = TargetType.server;
+            } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraUCService)) {
+                tt = TargetType.ucservice;    
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraXMPPComponent)) {
                 tt = TargetType.xmppcomponent;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraZimletEntry)) {

@@ -30,7 +30,7 @@ public class UserRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120123-1236 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120413-1510 */
 
 
     public static UserRight R_createDistList;

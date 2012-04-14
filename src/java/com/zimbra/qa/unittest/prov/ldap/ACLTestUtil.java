@@ -69,6 +69,7 @@ public class ACLTestUtil {
     static Right ADMIN_PRESET_DOMAIN;
     static Right ADMIN_PRESET_GLOBALGRANT;
     static Right ADMIN_PRESET_SERVER;
+    static Right ADMIN_PRESET_UC_SERVICE;
     static Right ADMIN_PRESET_XMPP_COMPONENT;
     static Right ADMIN_PRESET_ZIMLET;
     
@@ -105,6 +106,10 @@ public class ACLTestUtil {
     static Right ADMIN_ATTR_SETALL_SERVER;
     static Right ADMIN_ATTR_GETSOME_SERVER;
     static Right ADMIN_ATTR_SETSOME_SERVER;
+    static Right ADMIN_ATTR_GETALL_UC_SERVICE;
+    static Right ADMIN_ATTR_SETALL_UC_SERVICE;
+    static Right ADMIN_ATTR_GETSOME_UC_SERVICE;
+    static Right ADMIN_ATTR_SETSOME_UC_SERVICE;
     static Right ADMIN_ATTR_GETALL_ZIMLET;
     static Right ADMIN_ATTR_SETALL_ZIMLET;
     static Right ADMIN_ATTR_GETSOME_ZIMLET;
@@ -120,6 +125,7 @@ public class ACLTestUtil {
     static Right ADMIN_COMBO_DOMAIN;
     static Right ADMIN_COMBO_GLOBALGRANT;
     static Right ADMIN_COMBO_SERVER;
+    static Right ADMIN_COMBO_UC_SERVICE;
     static Right ADMIN_COMBO_XMPP_COMPONENT;
     static Right ADMIN_COMBO_ZIMLET;
     // static Right ADMIN_COMBO_ALL;
@@ -145,6 +151,7 @@ public class ACLTestUtil {
         ADMIN_PRESET_DOMAIN            = getRight("test-preset-domain");
         ADMIN_PRESET_GLOBALGRANT       = getRight("test-preset-globalgrant");
         ADMIN_PRESET_SERVER            = getRight("test-preset-server");
+        ADMIN_PRESET_UC_SERVICE        = getRight("test-preset-ucservice");
         ADMIN_PRESET_XMPP_COMPONENT    = getRight("test-preset-xmppcomponent");
         ADMIN_PRESET_ZIMLET            = getRight("test-preset-zimlet");
         
@@ -180,6 +187,10 @@ public class ACLTestUtil {
         ADMIN_ATTR_SETALL_SERVER                = Admin.R_modifyServer;
         ADMIN_ATTR_GETSOME_SERVER               = getRight("test-getAttrs-server");
         ADMIN_ATTR_SETSOME_SERVER               = getRight("test-setAttrs-server");
+        ADMIN_ATTR_GETALL_UC_SERVICE            = Admin.R_getUCService;
+        ADMIN_ATTR_SETALL_UC_SERVICE            = Admin.R_modifyUCService;
+        ADMIN_ATTR_GETSOME_UC_SERVICE           = getRight("test-getAttrs-ucservice");
+        ADMIN_ATTR_SETSOME_UC_SERVICE           = getRight("test-setAttrs-ucservice");
         ADMIN_ATTR_GETALL_ZIMLET                = Admin.R_getZimlet;
         ADMIN_ATTR_SETALL_ZIMLET                = Admin.R_modifyZimlet;
         ADMIN_ATTR_GETSOME_ZIMLET               = getRight("test-getAttrs-zimlet");
@@ -194,6 +205,7 @@ public class ACLTestUtil {
         ADMIN_COMBO_DOMAIN            = getRight("test-combo-domain");
         ADMIN_COMBO_GLOBALGRANT       = getRight("test-combo-globalgrant");
         ADMIN_COMBO_SERVER            = getRight("test-combo-server");
+        ADMIN_COMBO_UC_SERVICE        = getRight("test-combo-ucservice");
         ADMIN_COMBO_XMPP_COMPONENT    = getRight("test-combo-xmppcomponent");
         ADMIN_COMBO_ZIMLET            = getRight("test-combo-zimlet");
         // ADMIN_COMBO_ALL               = getRight("test-combo-all");

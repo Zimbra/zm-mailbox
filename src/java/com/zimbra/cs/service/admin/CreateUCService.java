@@ -42,9 +42,8 @@ public class CreateUCService extends AdminDocumentHandler {
         String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
         
-        // TODO
-        checkRight(zsc, context, null, Admin.R_createServer);
-        checkSetAttrsOnCreate(zsc, TargetType.server, name, attrs);
+        checkRight(zsc, context, null, Admin.R_createUCService);
+        checkSetAttrsOnCreate(zsc, TargetType.ucservice, name, attrs);
         
         UCService ucService = prov.createUCService(name, attrs);
 
@@ -57,11 +56,10 @@ public class CreateUCService extends AdminDocumentHandler {
         return response;
     }
 
-    //TODO
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_createServer);
+        relatedRights.add(Admin.R_createUCService);
         notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
-                Admin.R_modifyServer.getName(), "server"));
+                Admin.R_modifyUCService.getName(), "ucservice"));
     }
 }

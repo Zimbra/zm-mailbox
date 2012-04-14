@@ -26,21 +26,20 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.Key.XMPPComponentBy;
-import com.zimbra.common.account.Key.ZimletBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -55,6 +54,7 @@ public class TestACLGrant extends TestACL {
     private static String DISTRIBUTION_LIST_NAME = getEmailAddr(TEST_CASE_NAME + "dl").toLowerCase();
     private static String SUBDOMAIN_NAME         = getSubDomainName(TEST_CASE_NAME +  "domain").toLowerCase();
     private static String SERVER_NAME            = TEST_CASE_NAME + "server".toLowerCase();
+    private static String UC_SERVICE_NAME        = TEST_CASE_NAME + "ucservice".toLowerCase();
     private static String XMPP_COMPONENT_NAME    = TEST_CASE_NAME + "xmppcomponent".toLowerCase();
     private static String ZIMLET_NAME            = TEST_CASE_NAME + "zimlet".toLowerCase();
     
@@ -66,7 +66,7 @@ public class TestACLGrant extends TestACL {
     }
     
     private CalendarResource getCalendarResource() throws ServiceException {
-        CalendarResource cr = mProv.get(Key.CalendarResourceBy.name, CALENDAR_RESOURCE_NAME);
+        CalendarResource cr = mProv.get(CalendarResourceBy.name, CALENDAR_RESOURCE_NAME);
         if (cr == null) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             attrs.put(Provisioning.A_displayName, "CALENDAR_RESOURCE_NAME");
@@ -77,35 +77,42 @@ public class TestACLGrant extends TestACL {
     }
     
     private Cos getCos() throws ServiceException {
-        Cos cos = mProv.get(Key.CosBy.name, COS_NAME);
+        Cos cos = mProv.get(CosBy.name, COS_NAME);
         if (cos == null)
             cos = mProv.createCos(COS_NAME, null);
         return cos;
     }
     
     private DistributionList getDistributionList() throws ServiceException {
-        DistributionList dl = mProv.get(Key.DistributionListBy.name, DISTRIBUTION_LIST_NAME);
+        DistributionList dl = mProv.get(DistributionListBy.name, DISTRIBUTION_LIST_NAME);
         if (dl == null)
             dl = mProv.createDistributionList(DISTRIBUTION_LIST_NAME, new HashMap<String, Object>());
         return dl;
     }
     
     private Domain getDomain() throws ServiceException {
-        Domain domain = mProv.get(Key.DomainBy.name, SUBDOMAIN_NAME);
+        Domain domain = mProv.get(DomainBy.name, SUBDOMAIN_NAME);
         if (domain == null)
             domain = mProv.createDomain(SUBDOMAIN_NAME, new HashMap<String, Object>());
         return domain;
     }
     
     private Server getServer() throws ServiceException {
-        Server server = mProv.get(Key.ServerBy.name, SERVER_NAME);
+        Server server = mProv.get(ServerBy.name, SERVER_NAME);
         if (server == null)
             server = mProv.createServer(SERVER_NAME, new HashMap<String, Object>());
         return server;
     }
     
+    private UCService getUCService() throws ServiceException {
+        UCService ucService = mProv.get(UCServiceBy.name, UC_SERVICE_NAME);
+        if (ucService == null)
+            ucService = mProv.createUCService(UC_SERVICE_NAME, new HashMap<String, Object>());
+        return ucService;
+    }
+    
     private XMPPComponent getXMPPComponent() throws ServiceException {
-        XMPPComponent xmppCpnt = mProv.get(Key.XMPPComponentBy.name, XMPP_COMPONENT_NAME);
+        XMPPComponent xmppCpnt = mProv.get(XMPPComponentBy.name, XMPP_COMPONENT_NAME);
         if (xmppCpnt == null) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             attrs.put(Provisioning.A_zimbraXMPPComponentCategory, "whatever");
@@ -156,6 +163,7 @@ public class TestACLGrant extends TestACL {
         doTargetTest(authedAcct, grantee, TargetType.dl, getDistributionList(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.domain, getDomain(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.server, getServer(), right, expected);
+        doTargetTest(authedAcct, grantee, TargetType.ucservice, getUCService(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.xmppcomponent, getXMPPComponent(), right, expected);
         doTargetTest(authedAcct, grantee, TargetType.zimlet, getZimlet(), right, expected);
 
@@ -229,6 +237,7 @@ public class TestACLGrant extends TestACL {
     public void testDistributionListRight() throws Exception {}
     public void testDomainRight() throws Exception {}
     public void testServerRight() throws Exception {}
+    public void testUCServiceRight() throws Exception {}
     public void testXMPPComponentRight() throws Exception {}
     public void testZimletRight() throws Exception {}
     public void testConfigRight() throws Exception {}

@@ -52,6 +52,7 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.CheckRight;
@@ -175,6 +176,7 @@ public class TestACLAll extends LdapTest {
         rights.add(ACLTestUtil.ADMIN_PRESET_DOMAIN);
         rights.add(ACLTestUtil.ADMIN_PRESET_GLOBALGRANT);
         rights.add(ACLTestUtil.ADMIN_PRESET_SERVER);
+        rights.add(ACLTestUtil.ADMIN_PRESET_UC_SERVICE);
         rights.add(ACLTestUtil.ADMIN_PRESET_XMPP_COMPONENT);
         rights.add(ACLTestUtil.ADMIN_PRESET_ZIMLET);
         
@@ -210,6 +212,10 @@ public class TestACLAll extends LdapTest {
         rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_SERVER);
         rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_SERVER);
         rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_SERVER);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_UC_SERVICE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_UC_SERVICE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_UC_SERVICE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_UC_SERVICE);
         rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_ZIMLET);
         rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_ZIMLET);
         rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_ZIMLET);
@@ -224,6 +230,7 @@ public class TestACLAll extends LdapTest {
         rights.add(ACLTestUtil.ADMIN_COMBO_DOMAIN);
         rights.add(ACLTestUtil.ADMIN_COMBO_GLOBALGRANT);
         rights.add(ACLTestUtil.ADMIN_COMBO_SERVER);
+        rights.add(ACLTestUtil.ADMIN_COMBO_UC_SERVICE);
         rights.add(ACLTestUtil.ADMIN_COMBO_XMPP_COMPONENT);
         rights.add(ACLTestUtil.ADMIN_COMBO_ZIMLET);
         // sRights.add(ACLTestUtil.ADMIN_COMBO_ALL);
@@ -273,6 +280,10 @@ public class TestACLAll extends LdapTest {
     
     private String serverName() {
         return "server-" + nextSeq();
+    }
+    
+    private String ucServiceName() {
+        return "ucservice-" + nextSeq();
     }
     
     private String XMPPComponentName() {
@@ -412,6 +423,10 @@ public class TestACLAll extends LdapTest {
         return provUtil.createServer(serverName());
     }
     
+    private UCService createUCService() throws Exception {
+        return provUtil.createUCService(ucServiceName());
+    }
+    
     private Zimlet createZimlet() throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraZimletVersion, "1.0");
@@ -478,6 +493,7 @@ public class TestACLAll extends LdapTest {
             }
         case group:    
         case server:
+        case ucservice:
         case xmppcomponent:
         case zimlet:
         case config:
@@ -524,6 +540,10 @@ public class TestACLAll extends LdapTest {
                 break;
             case server:
                 validTypes.add(TargetType.server);
+                validTypes.add(TargetType.global);
+                break;
+            case ucservice:
+                validTypes.add(TargetType.ucservice);
                 validTypes.add(TargetType.global);
                 break;
             case xmppcomponent:
@@ -865,6 +885,10 @@ public class TestACLAll extends LdapTest {
             grantedOnTarget = createServer();
             targetName = ((Server)grantedOnTarget).getName();
             break;
+        case ucservice:
+            grantedOnTarget = createUCService();
+            targetName = ((UCService)grantedOnTarget).getName();
+            break;
         case xmppcomponent:
             // skip for now
             return;
@@ -975,6 +999,9 @@ public class TestACLAll extends LdapTest {
                 inheritableTypes.add(TargetType.global);
                 break;
             case server:
+                inheritableTypes.add(TargetType.global);
+                break;
+            case ucservice:
                 inheritableTypes.add(TargetType.global);
                 break;
             case xmppcomponent:
@@ -1234,6 +1261,16 @@ public class TestACLAll extends LdapTest {
                 badTargets.add(createServer());
             } else if (grantedOnTargetType == TargetType.global) {
                 goodTargets.add(createServer());
+            } else {
+                badTargets.add(grantedOnTarget);
+            }
+            break;
+        case ucservice:
+            if (grantedOnTargetType == TargetType.ucservice) {
+                goodTargets.add(grantedOnTarget);
+                badTargets.add(createUCService());
+            } else if (grantedOnTargetType == TargetType.global) {
+                goodTargets.add(createUCService());
             } else {
                 badTargets.add(grantedOnTarget);
             }
@@ -1821,13 +1858,14 @@ public class TestACLAll extends LdapTest {
          *  group
          *  domain
          *  server
+         *  ucservice
          *  xmppcomponent
          *  zimlet
          *  config
          *  global
          */
         
-        TargetType targetType = TargetType.account;
+        TargetType targetType = TargetType.ucservice;
         Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
          
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive

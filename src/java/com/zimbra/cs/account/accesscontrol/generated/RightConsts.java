@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120123-1236 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120413-1510 */
 
 
     /*
@@ -259,6 +259,11 @@ public class RightConsts {
      * Console
      */
     public static final String RT_adminConsoleCertificateRights = "adminConsoleCertificateRights";
+
+    /**
+     * Rights for uploading client software through Admin Console
+     */
+    public static final String RT_adminConsoleClientUploadRights = "adminConsoleClientUploadRights";
 
     /**
      * Admin Console set attr rights for configure GAL
@@ -753,6 +758,11 @@ public class RightConsts {
     public static final String RT_createTopDomain = "createTopDomain";
 
     /**
+     * create UC service
+     */
+    public static final String RT_createUCService = "createUCService";
+
+    /**
      * create XMPP component
      */
     public static final String RT_createXMPPComponent = "createXMPPComponent";
@@ -811,6 +821,11 @@ public class RightConsts {
      * delete server
      */
     public static final String RT_deleteServer = "deleteServer";
+
+    /**
+     * delete UC service
+     */
+    public static final String RT_deleteUCService = "deleteUCService";
 
     /**
      * delete XMPP component
@@ -1109,6 +1124,11 @@ public class RightConsts {
     public static final String RT_getSessions = "getSessions";
 
     /**
+     * get all UC service attributes
+     */
+    public static final String RT_getUCService = "getUCService";
+
+    /**
      * get all XMPP component attributes
      */
     public static final String RT_getXMPPComponent = "getXMPPComponent";
@@ -1165,9 +1185,14 @@ public class RightConsts {
     public static final String RT_listGroup = "listGroup";
 
     /**
-     * see server in GetAllCos/SearchDirectoryResponse
+     * see server in GetAllServers/SearchDirectoryResponse
      */
     public static final String RT_listServer = "listServer";
+
+    /**
+     * see UC service in GetAllUCServices/SearchDirectoryResponse
+     */
+    public static final String RT_listUCService = "listUCService";
 
     /**
      * see XMPP component in GetAllXMPPComponents
@@ -1258,6 +1283,11 @@ public class RightConsts {
      * set all server attributes
      */
     public static final String RT_modifyServer = "modifyServer";
+
+    /**
+     * set all UC service attributes
+     */
+    public static final String RT_modifyUCService = "modifyUCService";
 
     /**
      * set all XMPP component attributes
@@ -1779,6 +1809,11 @@ public class RightConsts {
      * manager
      */
     public static final String RT_setDomainAdminDomainAttrs = "setDomainAdminDomainAttrs";
+
+    /**
+     * upload client software via Admin Console
+     */
+    public static final String RT_uploadClientSoftware = "uploadClientSoftware";
 
     /**
      * execute the GetAdminConsoleUIComp SOAP when an account other than the

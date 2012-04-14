@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120123-1236 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120413-1510 */
 
 
     public static AdminRight R_accessGAL;
@@ -65,6 +65,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleCOSThemesTabRights;
     public static AdminRight R_adminConsoleCOSZimletsTabRights;
     public static AdminRight R_adminConsoleCertificateRights;
+    public static AdminRight R_adminConsoleClientUploadRights;
     public static AdminRight R_adminConsoleConfigGALRights;
     public static AdminRight R_adminConsoleCreateGALRights;
     public static AdminRight R_adminConsoleCreateSubDomainModifierRights;
@@ -163,6 +164,7 @@ public class AdminRights {
     public static AdminRight R_createServer;
     public static AdminRight R_createSubDomain;
     public static AdminRight R_createTopDomain;
+    public static AdminRight R_createUCService;
     public static AdminRight R_createXMPPComponent;
     public static AdminRight R_createZimlet;
     public static AdminRight R_crossDomainAdmin;
@@ -175,6 +177,7 @@ public class AdminRights {
     public static AdminRight R_deleteDomain;
     public static AdminRight R_deleteGroup;
     public static AdminRight R_deleteServer;
+    public static AdminRight R_deleteUCService;
     public static AdminRight R_deleteXMPPComponent;
     public static AdminRight R_deleteZimlet;
     public static AdminRight R_deployZimlet;
@@ -234,6 +237,7 @@ public class AdminRights {
     public static AdminRight R_getServerStats;
     public static AdminRight R_getServiceStatus;
     public static AdminRight R_getSessions;
+    public static AdminRight R_getUCService;
     public static AdminRight R_getXMPPComponent;
     public static AdminRight R_getZimlet;
     public static AdminRight R_installCertificate;
@@ -246,6 +250,7 @@ public class AdminRights {
     public static AdminRight R_listDomain;
     public static AdminRight R_listGroup;
     public static AdminRight R_listServer;
+    public static AdminRight R_listUCService;
     public static AdminRight R_listXMPPComponent;
     public static AdminRight R_listZimlet;
     public static AdminRight R_mailQueueRights;
@@ -264,6 +269,7 @@ public class AdminRights {
     public static AdminRight R_modifyGlobalConfig;
     public static AdminRight R_modifyGroup;
     public static AdminRight R_modifyServer;
+    public static AdminRight R_modifyUCService;
     public static AdminRight R_modifyXMPPComponent;
     public static AdminRight R_modifyZimlet;
     public static AdminRight R_moveAccountMailbox;
@@ -367,6 +373,7 @@ public class AdminRights {
     public static AdminRight R_setDomainAdminConsoleResourcesPropertiesTab;
     public static AdminRight R_setDomainAdminDistributionListAttrs;
     public static AdminRight R_setDomainAdminDomainAttrs;
+    public static AdminRight R_uploadClientSoftware;
     public static AdminRight R_viewAccountAdminUI;
     public static AdminRight R_viewAdminConsoleAccountsACLTab;
     public static AdminRight R_viewAdminConsoleAccountsAliasesTab;
@@ -481,6 +488,7 @@ public class AdminRights {
         R_adminConsoleCOSThemesTabRights       = rm.getAdminRight(Right.RT_adminConsoleCOSThemesTabRights);
         R_adminConsoleCOSZimletsTabRights      = rm.getAdminRight(Right.RT_adminConsoleCOSZimletsTabRights);
         R_adminConsoleCertificateRights        = rm.getAdminRight(Right.RT_adminConsoleCertificateRights);
+        R_adminConsoleClientUploadRights       = rm.getAdminRight(Right.RT_adminConsoleClientUploadRights);
         R_adminConsoleConfigGALRights          = rm.getAdminRight(Right.RT_adminConsoleConfigGALRights);
         R_adminConsoleCreateGALRights          = rm.getAdminRight(Right.RT_adminConsoleCreateGALRights);
         R_adminConsoleCreateSubDomainModifierRights = rm.getAdminRight(Right.RT_adminConsoleCreateSubDomainModifierRights);
@@ -579,6 +587,7 @@ public class AdminRights {
         R_createServer                         = rm.getAdminRight(Right.RT_createServer);
         R_createSubDomain                      = rm.getAdminRight(Right.RT_createSubDomain);
         R_createTopDomain                      = rm.getAdminRight(Right.RT_createTopDomain);
+        R_createUCService                      = rm.getAdminRight(Right.RT_createUCService);
         R_createXMPPComponent                  = rm.getAdminRight(Right.RT_createXMPPComponent);
         R_createZimlet                         = rm.getAdminRight(Right.RT_createZimlet);
         R_crossDomainAdmin                     = rm.getAdminRight(Right.RT_crossDomainAdmin);
@@ -591,6 +600,7 @@ public class AdminRights {
         R_deleteDomain                         = rm.getAdminRight(Right.RT_deleteDomain);
         R_deleteGroup                          = rm.getAdminRight(Right.RT_deleteGroup);
         R_deleteServer                         = rm.getAdminRight(Right.RT_deleteServer);
+        R_deleteUCService                      = rm.getAdminRight(Right.RT_deleteUCService);
         R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
         R_deployZimlet                         = rm.getAdminRight(Right.RT_deployZimlet);
@@ -650,6 +660,7 @@ public class AdminRights {
         R_getServerStats                       = rm.getAdminRight(Right.RT_getServerStats);
         R_getServiceStatus                     = rm.getAdminRight(Right.RT_getServiceStatus);
         R_getSessions                          = rm.getAdminRight(Right.RT_getSessions);
+        R_getUCService                         = rm.getAdminRight(Right.RT_getUCService);
         R_getXMPPComponent                     = rm.getAdminRight(Right.RT_getXMPPComponent);
         R_getZimlet                            = rm.getAdminRight(Right.RT_getZimlet);
         R_installCertificate                   = rm.getAdminRight(Right.RT_installCertificate);
@@ -662,6 +673,7 @@ public class AdminRights {
         R_listDomain                           = rm.getAdminRight(Right.RT_listDomain);
         R_listGroup                            = rm.getAdminRight(Right.RT_listGroup);
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
+        R_listUCService                        = rm.getAdminRight(Right.RT_listUCService);
         R_listXMPPComponent                    = rm.getAdminRight(Right.RT_listXMPPComponent);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
         R_mailQueueRights                      = rm.getAdminRight(Right.RT_mailQueueRights);
@@ -680,6 +692,7 @@ public class AdminRights {
         R_modifyGlobalConfig                   = rm.getAdminRight(Right.RT_modifyGlobalConfig);
         R_modifyGroup                          = rm.getAdminRight(Right.RT_modifyGroup);
         R_modifyServer                         = rm.getAdminRight(Right.RT_modifyServer);
+        R_modifyUCService                      = rm.getAdminRight(Right.RT_modifyUCService);
         R_modifyXMPPComponent                  = rm.getAdminRight(Right.RT_modifyXMPPComponent);
         R_modifyZimlet                         = rm.getAdminRight(Right.RT_modifyZimlet);
         R_moveAccountMailbox                   = rm.getAdminRight(Right.RT_moveAccountMailbox);
@@ -783,6 +796,7 @@ public class AdminRights {
         R_setDomainAdminConsoleResourcesPropertiesTab = rm.getAdminRight(Right.RT_setDomainAdminConsoleResourcesPropertiesTab);
         R_setDomainAdminDistributionListAttrs  = rm.getAdminRight(Right.RT_setDomainAdminDistributionListAttrs);
         R_setDomainAdminDomainAttrs            = rm.getAdminRight(Right.RT_setDomainAdminDomainAttrs);
+        R_uploadClientSoftware                 = rm.getAdminRight(Right.RT_uploadClientSoftware);
         R_viewAccountAdminUI                   = rm.getAdminRight(Right.RT_viewAccountAdminUI);
         R_viewAdminConsoleAccountsACLTab       = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsACLTab);
         R_viewAdminConsoleAccountsAliasesTab   = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsAliasesTab);

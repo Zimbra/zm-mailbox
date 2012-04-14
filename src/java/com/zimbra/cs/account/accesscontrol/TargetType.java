@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.ldap.LdapDIT;
@@ -48,7 +49,9 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.soap.type.TargetBy;
 
-
+/**
+ * @author pshao
+ */
 public enum TargetType {
     account(true,       true,    AttributeClass.account,          com.zimbra.soap.type.TargetType.account,       "Account"),
     calresource(true,   true,    AttributeClass.calendarResource, com.zimbra.soap.type.TargetType.calresource,   "CalendarResource"),
@@ -57,6 +60,7 @@ public enum TargetType {
     group(true,         true,    AttributeClass.group,            com.zimbra.soap.type.TargetType.group,         "DynamicGroup"),     // dynamic group
     domain(true,        false,   AttributeClass.domain,           com.zimbra.soap.type.TargetType.domain,        "Domain"),
     server(true,        false,   AttributeClass.server,           com.zimbra.soap.type.TargetType.server,        "Server"),
+    ucservice(true,     false,   AttributeClass.ucService,        com.zimbra.soap.type.TargetType.ucservice,     "UCService"),
     xmppcomponent(true, false,   AttributeClass.xmppComponent,    com.zimbra.soap.type.TargetType.xmppcomponent, "XMPPComponent"),
     zimlet(true,        false,   AttributeClass.zimletEntry,      com.zimbra.soap.type.TargetType.zimlet,        "Zimlet"),
     config(false,       false,   AttributeClass.globalConfig,     com.zimbra.soap.type.TargetType.config,        "GlobalConfig"),
@@ -143,6 +147,9 @@ public enum TargetType {
         TargetType.server.setInheritedByTargetTypes(
                 new TargetType[]{server});
         
+        TargetType.ucservice.setInheritedByTargetTypes(
+                new TargetType[]{ucservice});
+        
         TargetType.xmppcomponent.setInheritedByTargetTypes(
                 new TargetType[]{xmppcomponent});
         
@@ -160,6 +167,7 @@ public enum TargetType {
                                  group,
                                  domain,
                                  server,
+                                 ucservice,
                                  xmppcomponent,
                                  zimlet,
                                  config,
@@ -349,6 +357,12 @@ public enum TargetType {
                 throw AccountServiceException.NO_SUCH_SERVER(target); 
             }
             break;
+        case ucservice:
+            targetEntry = prov.get(Key.UCServiceBy.fromString(targetBy.name()), target);
+            if (targetEntry == null && mustFind) {
+                throw AccountServiceException.NO_SUCH_UC_SERVICE(target); 
+            }
+            break;
         case xmppcomponent:
             targetEntry = prov.get(Key.XMPPComponentBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind) {
@@ -403,6 +417,8 @@ public enum TargetType {
             return TargetType.group;
         else if (target instanceof Server)
             return TargetType.server;
+        else if (target instanceof UCService)
+            return TargetType.ucservice;
         else if (target instanceof Config)
             return TargetType.config;
         else if (target instanceof GlobalGrant)
@@ -488,6 +504,9 @@ public enum TargetType {
             break;    
         case server:
             base = dit.serverBaseDN();
+            break;
+        case ucservice:
+            base = dit.ucServiceBaseDN();
             break;
         case xmppcomponent:
             base = dit.xmppcomponentBaseDN();

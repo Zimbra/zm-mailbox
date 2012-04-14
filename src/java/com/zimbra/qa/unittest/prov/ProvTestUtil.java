@@ -31,6 +31,7 @@ import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -85,6 +86,8 @@ public abstract class ProvTestUtil {
             prov.deleteDomain(entry.getId());
         } else if (entry instanceof Server) {
             prov.deleteServer(entry.getId());
+        } else if (entry instanceof UCService) {
+            prov.deleteUCService(entry.getId());
         } else if (entry instanceof Zimlet) {
             prov.deleteZimlet(entry.getName());
         } else {
@@ -458,6 +461,29 @@ public abstract class ProvTestUtil {
     
     public Server createServer(String serverName) throws Exception {
         return createServer(serverName, null);
+    }
+    
+    public UCService createUCService(String ucServiceName, Map<String, Object> attrs) 
+    throws Exception {
+        if (attrs == null) {
+            attrs = new HashMap<String, Object>();
+        }
+        UCService ucService = prov.get(Key.UCServiceBy.name, ucServiceName);
+        assertNull(ucService);
+        
+        ucService = prov.createUCService(ucServiceName, attrs);
+        assertNotNull(ucService);
+        
+        ucService = prov.get(Key.UCServiceBy.name, ucServiceName);
+        assertNotNull(ucService);
+        assertEquals(ucServiceName.toLowerCase(), ucService.getName().toLowerCase());
+        
+        createdEntries.add(ucService);
+        return ucService;
+    }
+    
+    public UCService createUCService(String serverName) throws Exception {
+        return createUCService(serverName, null);
     }
     
     public void deleteServer(Server server) throws Exception {

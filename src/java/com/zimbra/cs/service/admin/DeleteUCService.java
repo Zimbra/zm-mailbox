@@ -30,6 +30,9 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @author pshao
+ */
 public class DeleteUCService extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -44,8 +47,7 @@ public class DeleteUCService extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_UC_SERVICE(id);
         }
         
-        // TODO
-        checkRight(zsc, context, ucService, Admin.R_deleteServer);
+        checkRight(zsc, context, ucService, Admin.R_deleteUCService);
         
         prov.deleteUCService(ucService.getId());
         
@@ -56,9 +58,8 @@ public class DeleteUCService extends AdminDocumentHandler {
         return response;
     }
     
-    // TODO
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_deleteServer);
+        relatedRights.add(Admin.R_deleteUCService);
     }
 }

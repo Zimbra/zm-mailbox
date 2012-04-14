@@ -59,10 +59,9 @@ public final class ModifyUCService extends AdminDocumentHandler {
         return response;
     }
 
-    // TODO
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY,
-                Admin.R_modifyServer.getName(), "server"));
+                Admin.R_modifyUCService.getName(), "ucservice"));
     }
 }

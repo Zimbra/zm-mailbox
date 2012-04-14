@@ -46,7 +46,7 @@ public class GetAllUCServices extends AdminDocumentHandler {
         
         Element response = zsc.createElement(AdminConstants.GET_ALL_UC_SERVICES_RESPONSE);
         for (UCService ucSservice : ucServices) {
-            if (aac.hasRightsToList(ucSservice, Admin.R_listServer, null)) {  // TODO
+            if (aac.hasRightsToList(ucSservice, Admin.R_listUCService, null)) {
                 GetUCService.encodeUCService(response, ucSservice, null, aac.getAttrRightChecker(ucSservice));
             }
         }
@@ -54,11 +54,10 @@ public class GetAllUCServices extends AdminDocumentHandler {
         return response;
     }
     
-    // TODO
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_listServer);
-        relatedRights.add(Admin.R_getServer);
+        relatedRights.add(Admin.R_listUCService);
+        relatedRights.add(Admin.R_getUCService);
         
         notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }

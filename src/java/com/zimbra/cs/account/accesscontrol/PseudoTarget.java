@@ -18,8 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -30,13 +28,16 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 
+/**
+ * @author pshao
+ */
 public class PseudoTarget {
     
     static class PseudoZimbraId {
@@ -58,6 +59,7 @@ public class PseudoTarget {
             entry instanceof PseudoCos ||
             entry instanceof PseudoDomain ||
             entry instanceof PseudoServer ||
+            entry instanceof PseudoUCService ||
             entry instanceof PseudoXMPPComponent ||
             entry instanceof PseudoZimlet) {
             return true;
@@ -111,8 +113,8 @@ public class PseudoTarget {
     static class PseudoCalendarResource extends CalendarResource {
         Domain mPseudoDomain;
         
-        public PseudoCalendarResource(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, 
-                Provisioning prov, Domain pseudoDomain) {
+        public PseudoCalendarResource(String name, String id, Map<String, Object> attrs, 
+                Map<String, Object> defaults, Provisioning prov, Domain pseudoDomain) {
             super(name, id, attrs, defaults, prov);
             mPseudoDomain = pseudoDomain;
         }
@@ -157,14 +159,23 @@ public class PseudoTarget {
     }
     
     static class PseudoDomain extends Domain {
-        private PseudoDomain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+        private PseudoDomain(String name, String id, Map<String, Object> attrs, 
+                Map<String, Object> defaults, Provisioning prov) {
             super(name, id, attrs, defaults, prov);
         }
     }
     
     static class PseudoServer extends Server {
-        private PseudoServer(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
+        private PseudoServer(String name, String id, Map<String,Object> attrs, 
+                Map<String,Object> defaults, Provisioning prov) {
             super(name, id, attrs, defaults, prov);
+        }
+    }
+    
+    static class PseudoUCService extends UCService {
+        private PseudoUCService(String name, String id, Map<String,Object> attrs, 
+                Provisioning prov) {
+            super(name, id, attrs, prov);
         }
     }
     
@@ -201,7 +212,8 @@ public class PseudoTarget {
      * @return
      * @throws ServiceException
      */
-    public static Domain createPseudoDomain(Provisioning prov, String domainName) throws ServiceException {
+    public static Domain createPseudoDomain(Provisioning prov, String domainName) 
+    throws ServiceException {
         return (Domain)createPseudoTarget(prov, TargetType.domain, null, null, false, null, null, domainName);
     }
     
@@ -261,7 +273,8 @@ public class PseudoTarget {
             targetType == TargetType.group) {
             
             if (createPseudoDomain) {
-                domain = pseudoDomain = (Domain)createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
+                domain = pseudoDomain = (Domain)createPseudoTarget(prov, 
+                        TargetType.domain, null, null, false, null, null);
             } else {
                 if (domainBy == null || domainStr == null)
                     throw ServiceException.INVALID_REQUEST("domainBy and domain identifier is required", null);
@@ -283,7 +296,8 @@ public class PseudoTarget {
                 }
                 attrMap.put(Provisioning.A_zimbraCOSId, cos.getId());
             } else {
-                String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
+                String domainCosId = domain != null ? 
+                        domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
                 if (domainCosId != null) {
                     cos = prov.get(Key.CosBy.id, domainCosId);
                 }
@@ -324,6 +338,9 @@ public class PseudoTarget {
             break;
         case server:  
             targetEntry = new PseudoServer("pseudo.pseudo", zimbraId, attrMap, config.getServerDefaults(), prov);
+            break;
+        case ucservice:  
+            targetEntry = new PseudoUCService("pseudo", zimbraId, attrMap, prov);
             break;
         case xmppcomponent:
             targetEntry = new PseudoXMPPComponent("pseudo", zimbraId, attrMap, prov);

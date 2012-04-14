@@ -65,6 +65,10 @@
   <desc>a preset server right</desc>
 </right>
 
+<right name="test-preset-ucservice" type="preset" targetType="ucservice">
+  <desc>a preset ucservice right</desc>
+</right>
+
 <right name="test-preset-xmppcomponent" type="preset" targetType="xmppcomponent">
   <desc>a preset xmppcomponent right</desc>
 </right>
@@ -147,6 +151,13 @@
 
 <right name="test-getAttrs-server" type="getAttrs" targetType="server">
   <desc>a getAttrs server right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-getAttrs-ucservice" type="getAttrs" targetType="ucservice">
+  <desc>a getAttrs ucservice right</desc>
   <attrs>
       <a n="description"/>
   </attrs>
@@ -260,6 +271,13 @@
 
 <right name="test-setAttrs-server" type="setAttrs" targetType="server">
   <desc>a setAttrs server right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
+<right name="test-setAttrs-ucservice" type="setAttrs" targetType="ucservice">
+  <desc>a setAttrs ucservice right</desc>
   <attrs>
       <a n="description"/>
   </attrs>
@@ -387,6 +405,15 @@
   </rights>
 </right>
 
+<right name="test-combo-ucservice" type="combo">
+  <desc>a combo right that has only ucservice rights</desc>
+  <rights>
+    <r n="test-preset-ucservice"/>
+    <r n="test-getAttrs-ucservice"/>
+    <r n="test-setAttrs-ucservice"/>
+  </rights>
+</right>
+
 <right name="test-combo-xmppcomponent" type="combo">
   <desc>a combo right that has only xmppcomponent rights</desc>
   <rights>
@@ -430,6 +457,7 @@
     <r n="test-combo-globalconfig"/>
     <r n="test-combo-globalgrant"/>
     <r n="test-combo-server"/>
+    <r n="test-combo-ucservice"/>
     <r n="test-combo-xmppcomponent"/>
     <r n="test-combo-zimlet"/>   
   </rights>
