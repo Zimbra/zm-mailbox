@@ -106,7 +106,6 @@
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
     <a n="zimbraExternalShareDomainWhitelistEnabled"/>
-    <a n="zimbraExternalShareLifetime"/>
     <a n="zimbraExternalShareWhitelistDomain"/>
     <a n="zimbraExternalSharingEnabled"/>
     <a n="zimbraFeatureAntispamEnabled"/>
@@ -367,6 +366,7 @@
     <a n="zimbraPrefWhenSentToEnabled"/>
     <a n="zimbraPrefZimletTreeOpen"/>
     <a n="zimbraPrefZimlets"/>
+    <a n="zimbraPublicSharingEnabled"/>
     <a n="zimbraQuotaWarnInterval"/>
     <a n="zimbraQuotaWarnMessage"/>
     <a n="zimbraQuotaWarnPercent"/>
@@ -379,6 +379,7 @@
     <a n="zimbraTextAnalyzer"/>
     <a n="zimbraWebClientShowOfflineLink"/>
     <a n="zimbraZimletAvailableZimlets"/>
+    <a n="zimbraZimletLoadSynchronously"/>
     <a n="zimbraZimletUserProperties"/>
 
   </attrs>
@@ -465,6 +466,7 @@
     <a n="zimbraPrefSkin"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefTimeZoneId"/>
+    <a n="zimbraPublicSharingEnabled"/>
     <a n="zimbraReverseProxyUseExternalRoute"/>
     <a n="zimbraReverseProxyUseExternalRouteIfAccountNotExist"/>
     <a n="zimbraSkinBackgroundColor"/>
@@ -477,8 +479,10 @@
     <a n="zimbraSkinSelectionColor"/>
     <a n="zimbraWebClientAdminReference"/>
     <a n="zimbraWebClientLoginURL"/>
+    <a n="zimbraWebClientLoginURLAllowedIP"/>
     <a n="zimbraWebClientLoginURLAllowedUA"/>
     <a n="zimbraWebClientLogoutURL"/>
+    <a n="zimbraWebClientLogoutURLAllowedIP"/>
     <a n="zimbraWebClientLogoutURLAllowedUA"/>
 
   </attrs>
