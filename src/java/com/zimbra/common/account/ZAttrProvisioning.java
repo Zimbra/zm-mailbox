@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120414-1503 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -11073,12 +11073,52 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
+     * admin password for UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1404)
+    public static final String A_zimbraUCAdminPassword = "zimbraUCAdminPassword";
+
+    /**
+     * admin service URL for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1405)
+    public static final String A_zimbraUCAdminURL = "zimbraUCAdminURL";
+
+    /**
+     * admin user for UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1403)
+    public static final String A_zimbraUCAdminUser = "zimbraUCAdminUser";
+
+    /**
+     * call control service URL for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1409)
+    public static final String A_zimbraUCCallControlURL = "zimbraUCCallControlURL";
+
+    /**
+     * call log service URL for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1408)
+    public static final String A_zimbraUCCallLogURL = "zimbraUCCallLogURL";
+
+    /**
      * handler class for the UC service
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1402)
-    public static final String A_zimbraUCServiceHandlerClass = "zimbraUCServiceHandlerClass";
+    public static final String A_zimbraUCHandlerClass = "zimbraUCHandlerClass";
 
     /**
      * UC service zimbraId
@@ -11087,6 +11127,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1401)
     public static final String A_zimbraUCServiceId = "zimbraUCServiceId";
+
+    /**
+     * video service URL for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public static final String A_zimbraUCVideoURL = "zimbraUCVideoURL";
+
+    /**
+     * voicemail service URL for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1406)
+    public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
 
     /**
      * binary data
