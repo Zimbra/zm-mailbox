@@ -48418,6 +48418,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * password for the user&#039;s UC service
+     *
+     * @return zimbraUCPassword, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1411)
+    public String getUCPassword() {
+        return getAttr(Provisioning.A_zimbraUCPassword, null);
+    }
+
+    /**
+     * password for the user&#039;s UC service
+     *
+     * @param zimbraUCPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1411)
+    public void setUCPassword(String zimbraUCPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPassword, zimbraUCPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * password for the user&#039;s UC service
+     *
+     * @param zimbraUCPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1411)
+    public Map<String,Object> setUCPassword(String zimbraUCPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPassword, zimbraUCPassword);
+        return attrs;
+    }
+
+    /**
+     * password for the user&#039;s UC service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1411)
+    public void unsetUCPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * password for the user&#039;s UC service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1411)
+    public Map<String,Object> unsetUCPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPassword, "");
+        return attrs;
+    }
+
+    /**
      * UC service zimbraId
      *
      * @return zimbraUCServiceId, or null if unset
@@ -48486,6 +48558,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetUCServiceId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCServiceId, "");
+        return attrs;
+    }
+
+    /**
+     * username for the user&#039;s UC service
+     *
+     * @return zimbraUCUsername, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public String getUCUsername() {
+        return getAttr(Provisioning.A_zimbraUCUsername, null);
+    }
+
+    /**
+     * username for the user&#039;s UC service
+     *
+     * @param zimbraUCUsername new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public void setUCUsername(String zimbraUCUsername) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCUsername, zimbraUCUsername);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * username for the user&#039;s UC service
+     *
+     * @param zimbraUCUsername new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public Map<String,Object> setUCUsername(String zimbraUCUsername, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCUsername, zimbraUCUsername);
+        return attrs;
+    }
+
+    /**
+     * username for the user&#039;s UC service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public void unsetUCUsername() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCUsername, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * username for the user&#039;s UC service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public Map<String,Object> unsetUCUsername(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCUsername, "");
         return attrs;
     }
 

@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.service.account;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -241,6 +242,21 @@ public class ToXML {
         } else {
             kvPair = parent.addKeyValuePair(key, "", eltname, attrname);
             kvPair.addAttribute(AccountConstants.A_PERM_DENIED, true);
+        }
+    }
+    
+    public static void encodeAttr(Element response, String key, Object value) {
+        if (value instanceof String[]) {
+            String sa[] = (String[]) value;
+            for (int i = 0; i < sa.length; i++) {
+                if (!Strings.isNullOrEmpty(sa[i])) {
+                    response.addKeyValuePair(key, sa[i], AccountConstants.E_ATTR, AccountConstants.A_NAME);
+                }
+            }
+        } else if (value instanceof String) {
+            if (!Strings.isNullOrEmpty((String) value)) {
+                response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
+            }
         }
     }
     

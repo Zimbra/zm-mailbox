@@ -7015,8 +7015,16 @@ TODO: delete them permanently from here
   <desc>call log service URL for the UC service</desc>
 </attr>
 
-<attr id="1409" name="zimbraUCCallControlURL" type="string" max="256" cardinality="single" optionalIn="ucService" flags="accountInfo" since="8.0.0">
+<attr id="1409" name="zimbraUCCallControlURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
   <desc>call control service URL for the UC service</desc>
+</attr>
+
+<attr id="1410" name="zimbraUCUsername" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>username for the user's UC service</desc>
+</attr>
+
+<attr id="1411" name="zimbraUCPassword" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>password for the user's UC service</desc>
 </attr>
 
 

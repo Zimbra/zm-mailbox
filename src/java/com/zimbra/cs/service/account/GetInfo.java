@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -46,7 +45,6 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -260,13 +258,11 @@ public class GetInfo extends AccountDocumentHandler  {
         Set<String> acctAttrs = attrMgr.getAllAttrsInClass(AttributeClass.account);
         Set<String> domainAttrs = attrMgr.getAllAttrsInClass(AttributeClass.domain);
         Set<String> serverAttrs = attrMgr.getAllAttrsInClass(AttributeClass.server);
-        Set<String> ucServiceAttrs = attrMgr.getAllAttrsInClass(AttributeClass.ucService);
         Set<String> configAttrs = attrMgr.getAllAttrsInClass(AttributeClass.globalConfig);
 
         Provisioning prov = Provisioning.getInstance();
         Domain domain = prov.getDomain(acct);
         Server server = acct.getServer();
-        UCService ucService = acct.getUCService();
         Config config = prov.getConfig();
 
         for (String key : attrList) {
@@ -289,8 +285,6 @@ public class GetInfo extends AccountDocumentHandler  {
                             }
                         } else if (serverAttrs.contains(key)) {
                             value = server.getMultiAttr(key); // value on server/global config (serverInherited)
-                        } else if (ucService != null && ucServiceAttrs.contains(key)) {
-                            value = ucService.getMultiAttr(key); // value on ucservice
                         } else if (configAttrs.contains(key)) {
                             value = config.getMultiAttr(key); // value on global config
                         }
@@ -298,26 +292,9 @@ public class GetInfo extends AccountDocumentHandler  {
                 }
             }
 
-            doAttr(response, key, value);
+            ToXML.encodeAttr(response, key, value);
         }
     }
-
-    static void doAttr(Element response, String key, Object value) {
-        if (value instanceof String[]) {
-            String sa[] = (String[]) value;
-            for (int i = 0; i < sa.length; i++) {
-                // FIXME: change to "a"/"n" rather than "attr"/"name"
-                if (!Strings.isNullOrEmpty(sa[i])) {
-                    response.addKeyValuePair(key, sa[i], AccountConstants.E_ATTR, AccountConstants.A_NAME);
-                }
-            }
-        } else if (value instanceof String) {
-            if (!Strings.isNullOrEmpty((String) value)) {
-                response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
-            }
-        }
-    }
-
 
     private static void doZimlets(Element response, Account acct) {
         try {

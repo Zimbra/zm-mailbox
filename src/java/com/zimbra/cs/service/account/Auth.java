@@ -245,7 +245,9 @@ public class Auth extends AccountDocumentHandler {
                 String name = e.getAttribute(AccountConstants.A_NAME);
                 if (name != null && attrList.contains(name)) {
                     Object v = acct.getUnicodeMultiAttr(name);
-                    if (v != null) GetInfo.doAttr(attrsResponse, name, v);
+                    if (v != null) {
+                        ToXML.encodeAttr(attrsResponse, name, v);
+                    }
                 }
             }
         }
