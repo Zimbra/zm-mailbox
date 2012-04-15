@@ -11121,12 +11121,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraUCHandlerClass = "zimbraUCHandlerClass";
 
     /**
+     * password for the user&#039;s UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1411)
+    public static final String A_zimbraUCPassword = "zimbraUCPassword";
+
+    /**
      * UC service zimbraId
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1401)
     public static final String A_zimbraUCServiceId = "zimbraUCServiceId";
+
+    /**
+     * username for the user&#039;s UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public static final String A_zimbraUCUsername = "zimbraUCUsername";
 
     /**
      * video service URL for the UC service

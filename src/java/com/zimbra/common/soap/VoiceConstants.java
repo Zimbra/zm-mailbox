@@ -22,7 +22,13 @@ public class VoiceConstants {
     
     public static final String NAMESPACE_STR = "urn:zimbraVoice";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
+    
+    public static final QName GET_UC_INFO_REQUEST  = QName.get("GetUCInfoRequest", NAMESPACE);
+    public static final QName GET_UC_INFO_RESPONSE = QName.get("GetUCInfoResponse", NAMESPACE);
 
+    public static final QName CHANGE_UC_PASSWORD_REQUEST  = QName.get("ChangeUCPasswordRequest", NAMESPACE);
+    public static final QName CHANGE_UC_PASSWORD_RESPONSE = QName.get("ChangeUCPasswordResponse", NAMESPACE);
+    
     public static final QName GET_VOICE_MAIL_PREFS_REQUEST  = QName.get("GetVoiceMailPrefsRequest", NAMESPACE);
     public static final QName GET_VOICE_MAIL_PREFS_RESPONSE = QName.get("GetVoiceMailPrefsResponse", NAMESPACE);
 
