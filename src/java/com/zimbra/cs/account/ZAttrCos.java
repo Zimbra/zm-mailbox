@@ -36703,6 +36703,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * UC service zimbraId
+     *
+     * @return zimbraUCServiceId, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1401)
+    public String getUCServiceId() {
+        return getAttr(Provisioning.A_zimbraUCServiceId, null);
+    }
+
+    /**
+     * UC service zimbraId
+     *
+     * @param zimbraUCServiceId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1401)
+    public void setUCServiceId(String zimbraUCServiceId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceId, zimbraUCServiceId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * UC service zimbraId
+     *
+     * @param zimbraUCServiceId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1401)
+    public Map<String,Object> setUCServiceId(String zimbraUCServiceId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceId, zimbraUCServiceId);
+        return attrs;
+    }
+
+    /**
+     * UC service zimbraId
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1401)
+    public void unsetUCServiceId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * UC service zimbraId
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1401)
+    public Map<String,Object> unsetUCServiceId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceId, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to show link to offline version in the web UI top bar
      *
      * @return zimbraWebClientShowOfflineLink, or true if unset

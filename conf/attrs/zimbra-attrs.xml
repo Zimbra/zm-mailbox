@@ -6983,4 +6983,13 @@ TODO: delete them permanently from here
   <desc>Whether OpenWith feature is enabled on devices.</desc>
 </attr>
 
+<attr id="1401" name="zimbraUCServiceId" type="id" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.0.0">
+  <desc>UC service zimbraId</desc>
+</attr>
+
+<attr id="1402" name="zimbraUCServiceHandlerClass" type="cstring" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>handler class for the UC service</desc>
+</attr>
+
+
 </attrs>

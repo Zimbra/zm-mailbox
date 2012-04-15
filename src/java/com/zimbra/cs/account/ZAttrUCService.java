@@ -536,6 +536,78 @@ public abstract class ZAttrUCService extends NamedEntry {
         return attrs;
     }
 
+    /**
+     * handler class for the UC service
+     *
+     * @return zimbraUCServiceHandlerClass, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public String getUCServiceHandlerClass() {
+        return getAttr(Provisioning.A_zimbraUCServiceHandlerClass, null);
+    }
+
+    /**
+     * handler class for the UC service
+     *
+     * @param zimbraUCServiceHandlerClass new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public void setUCServiceHandlerClass(String zimbraUCServiceHandlerClass) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceHandlerClass, zimbraUCServiceHandlerClass);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * handler class for the UC service
+     *
+     * @param zimbraUCServiceHandlerClass new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public Map<String,Object> setUCServiceHandlerClass(String zimbraUCServiceHandlerClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceHandlerClass, zimbraUCServiceHandlerClass);
+        return attrs;
+    }
+
+    /**
+     * handler class for the UC service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public void unsetUCServiceHandlerClass() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceHandlerClass, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * handler class for the UC service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public Map<String,Object> unsetUCServiceHandlerClass(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCServiceHandlerClass, "");
+        return attrs;
+    }
+
     ///// END-AUTO-GEN-REPLACE
 
 }

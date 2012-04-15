@@ -449,7 +449,11 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         addrs.addAll(getMultiAttrSet(Provisioning.A_zimbraMailAlias));
         return Collections.unmodifiableSet(addrs);
     }
-
+    
+    public UCService getUCService() throws ServiceException {
+        String ucServiceId = getAttr(Provisioning.A_zimbraUCServiceId);
+        return (ucServiceId == null ? null : getProvisioning().get(Key.UCServiceBy.id, ucServiceId));
+    }
     
 }
  
