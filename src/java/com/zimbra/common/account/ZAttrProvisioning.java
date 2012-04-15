@@ -11073,6 +11073,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
+     * handler class for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public static final String A_zimbraUCServiceHandlerClass = "zimbraUCServiceHandlerClass";
+
+    /**
+     * UC service zimbraId
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1401)
+    public static final String A_zimbraUCServiceId = "zimbraUCServiceId";
+
+    /**
      * binary data
      *
      * @since ZCS 8.0.0
