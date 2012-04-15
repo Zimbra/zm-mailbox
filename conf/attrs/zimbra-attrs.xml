@@ -6987,8 +6987,36 @@ TODO: delete them permanently from here
   <desc>UC service zimbraId</desc>
 </attr>
 
-<attr id="1402" name="zimbraUCServiceHandlerClass" type="cstring" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+<attr id="1402" name="zimbraUCHandlerClass" type="cstring" max="256" cardinality="single" requiredIn="ucService" since="8.0.0">
   <desc>handler class for the UC service</desc>
+</attr>
+
+<attr id="1403" name="zimbraUCAdminUser" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>admin user for UC service</desc>
+</attr>
+
+<attr id="1404" name="zimbraUCAdminPassword" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>admin password for UC service</desc>
+</attr>
+
+<attr id="1405" name="zimbraUCAdminURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>admin service URL for the UC service</desc>
+</attr>
+
+<attr id="1406" name="zimbraUCVoicemailURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>voicemail service URL for the UC service</desc>
+</attr>
+
+<attr id="1407" name="zimbraUCVideoURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>video service URL for the UC service</desc>
+</attr>
+
+<attr id="1408" name="zimbraUCCallLogURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>call log service URL for the UC service</desc>
+</attr>
+
+<attr id="1409" name="zimbraUCCallControlURL" type="string" max="256" cardinality="single" optionalIn="ucService" flags="accountInfo" since="8.0.0">
+  <desc>call control service URL for the UC service</desc>
 </attr>
 
 
