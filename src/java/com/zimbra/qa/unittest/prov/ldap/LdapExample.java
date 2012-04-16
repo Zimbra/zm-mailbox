@@ -1,7 +1,5 @@
 package com.zimbra.qa.unittest.prov.ldap;
 
-import org.junit.Test;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapUsage;
@@ -73,7 +71,6 @@ public class LdapExample {
         }
     }
     
-    @Test
     public void createEntry() throws Exception {
         // dn of entry to create 
         String dn = "uid=user1,ou=people,dc=test,dc=com";
@@ -106,7 +103,6 @@ public class LdapExample {
         }
     }
     
-    @Test
     public void deleteEntry() throws Exception {
         String dn = "uid=user1,ou=people,dc=test,dc=com";
         
