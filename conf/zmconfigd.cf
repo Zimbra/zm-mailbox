@@ -70,6 +70,9 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
+	if LOCAL postfix_enable_smtpd_policyd
+		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
+	fi
 	if VAR zimbraMtaMyNetworks
 		POSTCONF mynetworks VAR zimbraMtaMyNetworks
 	fi
@@ -310,7 +313,6 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_module_checkspf
 	LOCAL cbpolicyd_module_quotas
 	if SERVICE cbpolicyd
-		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
 	fi
 	if SERVICE !cbpolicyd
