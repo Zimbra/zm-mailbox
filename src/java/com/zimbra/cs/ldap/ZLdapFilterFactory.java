@@ -153,6 +153,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         UNITTEST("UNITTEST"),
         LDAP_UPGRADE("LDAP_UPGRADE"),
+        ZMCONFIGD("ZMCONFIGD"),
 
         TODO("TODO");
 

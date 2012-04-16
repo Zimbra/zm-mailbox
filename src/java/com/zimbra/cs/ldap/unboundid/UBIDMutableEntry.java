@@ -27,6 +27,9 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZMutableEntry;
 
+/**
+ * @author pshao
+  */
 public class UBIDMutableEntry extends ZMutableEntry {
 
     private Entry entry;
@@ -69,6 +72,11 @@ public class UBIDMutableEntry extends ZMutableEntry {
         for (String value : values) {
             entry.addAttribute(attrName, value);
         }
+    }
+    
+    @Override  // ZMutableEntry
+    public void addAttr(String attrName, String value) {
+        entry.addAttribute(attrName, value);
     }
     
     @Override  // ZMutableEntry

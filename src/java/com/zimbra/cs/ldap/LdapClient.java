@@ -18,13 +18,16 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.GenericLdapConfig;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapClient;
 import com.zimbra.cs.util.Zimbra;
 
+/**
+ * @author pshao
+ */
 public abstract class LdapClient {
     
     private static LdapClient ldapClient;
@@ -129,6 +132,33 @@ public abstract class LdapClient {
             LdapUsage usage) 
     throws ServiceException {
         return getInstance().getContextImpl(serverType, useConnPool, usage);
+    }
+    
+    /**
+     * For zmconfigd only.  
+     * 
+     * zmconfigd uses ldapi connection with root LDAP bind DN/password to bind to 
+     * Zimbra OpenLdap, whereas LdapClient.getContext() methods use LC keys for 
+     * the URL/bind DN/password.
+     * 
+     * Changing LC keys in  zmconfigd is not an option, because it also uses 
+     * LdapProvisioing, which uses the LC settings.
+     * 
+     * We could have zmconfigd call getExternalContext with a ExternalLdapConfig, which 
+     * takes URL/bind DN/password from parameters.  But the name "external" is misleading.
+     * 
+     * This method id just a wrapper around LdapClient.getExternalContext, the sole 
+     * purpose is masking out the "external" in method/parameter names.
+     * 
+     * @param ldapConfig
+     * @param usage
+     * @return
+     * @throws ServiceException
+     */
+    public static ZLdapContext getContext(GenericLdapConfig ldapConfig,
+            LdapUsage usage) 
+    throws ServiceException {
+        return getInstance().getExternalContextImpl(ldapConfig, usage);
     }
     
     public static ZLdapContext getExternalContext(ExternalLdapConfig ldapConfig,

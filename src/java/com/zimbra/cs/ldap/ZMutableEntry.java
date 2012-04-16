@@ -19,11 +19,8 @@ import java.util.Set;
 
 /**
  * Represents a transient, mutable entry in memory.
- * 
- * This class should be used for constructing an entry that is to be created in LDAP.
  *  
  * @author pshao
- *
  */
 public abstract class ZMutableEntry extends ZEntry {
 
@@ -40,6 +37,13 @@ public abstract class ZMutableEntry extends ZEntry {
      * then their values will be *merged*.
      */
     public abstract void addAttr(String attrName, Set<String> values);
+    
+    /**
+     * Adds the provided attribute to this entry. 
+     * If this entry already contains an attribute with the same name, 
+     * then their values will be *merged*.
+     */
+    public abstract void addAttr(String attrName, String value);
     
     public abstract String getAttrString(String attrName) throws LdapException;
     

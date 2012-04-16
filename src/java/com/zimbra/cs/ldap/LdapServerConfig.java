@@ -19,6 +19,10 @@ import java.util.Set;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 
+
+/**
+ * @author pshao
+ */
 public abstract class LdapServerConfig {
     private static final String DEFALT_LDAP_PORT = "389";
     
@@ -188,6 +192,21 @@ public abstract class LdapServerConfig {
             }
             
             return masterURL;
+        }
+    }
+    
+    /**
+     * A generic Ldap server(set) config
+     */
+    public static class GenericLdapConfig extends ExternalLdapConfig {
+        public GenericLdapConfig(String[] urls, boolean wantStartTLS, 
+                String bindDn, String bindPassword) {
+            this (LdapServerConfig.joinURLS(urls), wantStartTLS, bindDn, bindPassword);
+        }
+        
+        public GenericLdapConfig(String urls, boolean wantStartTLS, 
+                String bindDn, String bindPassword) {
+            super(urls, wantStartTLS, null, bindDn, bindPassword, null, null);
         }
     }
     
