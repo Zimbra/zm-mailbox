@@ -7027,5 +7027,8 @@ TODO: delete them permanently from here
   <desc>password for the user's UC service</desc>
 </attr>
 
+<attr id="1412" name="zimbraMobilePolicyApprovedApplicationList" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
+  <desc>This is the internal attr for "zimbraMobilePolicyApprovedApplication" which can only store app hash (to keep consistent with ActiveSync specification. This attr's format is "app_name":"app_hash", and is used for showing both the app name and hash in admin console UI</desc>
+</attr>
 
 </attrs>
