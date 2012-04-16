@@ -14,6 +14,9 @@
  */
 package com.zimbra.client;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
@@ -47,10 +50,22 @@ public class ZTag implements Comparable<ZTag>, ZItem, ToZJSONObject {
         rgbColor;
 
         private long mValue;
+        private static Map<String,Color> colorMap = new HashMap<String,Color>();
+
+        static {
+          for (Color c : Color.values())
+                colorMap.put(c.toString(), c);
+        }
 
         public long getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
+            if (s != null) {
+                s = s.toLowerCase();
+                if (colorMap.containsKey(s)) {
+                    return colorMap.get(s);
+                }
+            }
             return Color.values()[com.zimbra.common.mailbox.Color.getMappedColor(s)];
         }
 
