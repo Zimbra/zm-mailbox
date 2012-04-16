@@ -486,8 +486,7 @@
 </right>         
 
 
-
-    
+   
 <!-- 
 ========================================================
                     server rights
@@ -503,7 +502,7 @@
 </right>
 
 <right name="listServer" type="preset" targetType="server">
-  <desc>see server in GetAllCos/SearchDirectoryResponse</desc>
+  <desc>see server in GetAllServers/SearchDirectoryResponse</desc>
 </right>
 
 <right name="deleteServer" type="preset" targetType="server">
@@ -611,6 +610,30 @@
 </right>
 
 
+    
+<!-- 
+========================================================
+                    UC service rights
+========================================================
+-->   
+
+<right name="getUCService" type="getAttrs" targetType="ucservice">
+  <desc>get all UC service attributes</desc>
+</right>
+
+<right name="modifyUCService" type="setAttrs" targetType="ucservice">
+  <desc>set all UC service attributes</desc>
+</right>
+
+<right name="listUCService" type="preset" targetType="ucservice">
+  <desc>see UC service in GetAllUCServices/SearchDirectoryResponse</desc>
+</right>
+
+<right name="deleteUCService" type="preset" targetType="ucservice">
+  <desc>delete UC service</desc>
+</right>
+
+
 <!-- 
 ========================================================
                     XMPP component rights
@@ -670,6 +693,10 @@
 
 <right name="createServer" type="preset" targetType="global">
   <desc>create server</desc>
+</right>
+
+<right name="createUCService" type="preset" targetType="global">
+  <desc>create UC service</desc>
 </right>
 
 <right name="createTopDomain" type="preset" targetType="global">
