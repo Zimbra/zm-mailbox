@@ -332,6 +332,7 @@ public class Notification implements LmtpCallback {
 
             MailSender sender = mbox.getMailSender();
             sender.setSaveToSent(false);
+            sender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
             sender.sendMimeMessage(null, mbox, out);
             ZimbraLog.mailbox.info("outofoffice sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msgId);
 

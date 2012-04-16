@@ -519,6 +519,31 @@ public final class SmtpConnection extends MailConnection {
         }
     }
 
+    /**
+     * Return notification options as an RFC 1891 string.
+     * Returns null if no options set.
+     */
+    private String getDSNNotify(SMTPMessage message) {
+        if (message.getNotifyOptions() == 0)
+            return null;
+        if (message.getNotifyOptions() == SMTPMessage.NOTIFY_NEVER)
+            return "NEVER";
+        StringBuffer sb = new StringBuffer();
+        if ((message.getNotifyOptions() & SMTPMessage.NOTIFY_SUCCESS) != 0)
+            sb.append("SUCCESS");
+        if ((message.getNotifyOptions() & SMTPMessage.NOTIFY_FAILURE) != 0) {
+            if (sb.length() != 0)
+                sb.append(',');
+            sb.append("FAILURE");
+        }
+        if ((message.getNotifyOptions() & SMTPMessage.NOTIFY_DELAY) != 0) {
+            if (sb.length() != 0)
+                sb.append(',');
+            sb.append("DELAY");
+        }
+        return sb.toString();
+    }
+    
     private void sendInternal(String sender, String[] recipients, MimeMessage javaMailMessage, String messageString)
             throws IOException, MessagingException {
 
@@ -527,7 +552,16 @@ public final class SmtpConnection extends MailConnection {
         Collections.addAll(validRecipients, recipients);
 
         mail(sender);
-        rcpt(recipients);
+        
+        String notify = null;
+        if (serverExtensions.contains("DSN")) {
+            if (javaMailMessage instanceof SMTPMessage)
+                notify = getDSNNotify((SMTPMessage) javaMailMessage);
+            if (notify == null)
+                notify = getSmtpConfig().getDsn();
+        }
+        
+        rcpt(recipients, notify);
         Reply reply = sendCommand(DATA, null);
         if (reply.code != 354) {
             throw new CommandFailedException(DATA, reply.toString());
@@ -630,12 +664,15 @@ public final class SmtpConnection extends MailConnection {
         }
     }
 
-    private void rcpt(String[] recipients) throws IOException {
+    private void rcpt(String[] recipients, String dsn) throws IOException {
         for (String recipient : recipients) {
             if (recipient == null) {
                 recipient = "";
             }
-            Reply reply = sendCommand(RCPT, "TO:" + normalizeAddress(recipient));
+            String cmd = "TO:" + normalizeAddress(recipient);
+            if (dsn != null)
+                cmd += " NOTIFY=" + dsn;
+            Reply reply = sendCommand(RCPT, cmd);
             if (!reply.isPositive()) {
                 validRecipients.remove(recipient);
                 invalidRecipients.add(recipient);

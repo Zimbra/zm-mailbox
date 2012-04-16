@@ -20,6 +20,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -78,7 +79,9 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
 
         mm.saveChanges();
 
-        calItem.getMailbox().getMailSender().sendMimeMessage(null, calItem.getMailbox(), mm);
+        MailSender mailSender = calItem.getMailbox().getMailSender();
+        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
+        mailSender.sendMimeMessage(null, calItem.getMailbox(), mm);
     }
 
     private String getBody(CalendarItem calItem, Invite invite, boolean html, Locale locale, TimeZone tz) throws ServiceException {

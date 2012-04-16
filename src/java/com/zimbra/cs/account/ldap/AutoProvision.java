@@ -455,6 +455,9 @@ public abstract class AutoProvision {
             // Subject
             Locale locale = acct.getLocale();
             out.setSubject(subject);
+            
+            // NOTIFY=NEVER
+            out.setNotifyOptions(SMTPMessage.NOTIFY_NEVER);
 
             // body
             MimeMultipart mmp = new ZMimeMultipart("alternative");

@@ -28,6 +28,7 @@ public final class SmtpConfig extends MailConfig {
 
     private String domain;
     private boolean allowPartialSend;
+    private String dsn;
 
     public SmtpConfig(String host, int port, String domain) {
         super(ZimbraLog.smtp, host);
@@ -65,4 +66,11 @@ public final class SmtpConfig extends MailConfig {
         return allowPartialSend;
     }
 
+    public void setDsn(String dsn) {
+        this.dsn = dsn;
+    }
+
+    public String getDsn() {
+        return dsn;
+    }
 }

@@ -22,6 +22,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -84,7 +85,9 @@ public class CounterCalendarItem extends CalendarRequest {
         InviteParser parser = new InviteParser(oldInv);
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
 
-        mbox.getMailSender().sendMimeMessage(octxt, mbox, dat.mMm);
+        MailSender mailSender = mbox.getMailSender();
+        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
+        mailSender.sendMimeMessage(octxt, mbox, dat.mMm);
         Element response = getResponseElement(zsc);
         return response;
     }

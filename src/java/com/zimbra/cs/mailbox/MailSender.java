@@ -50,6 +50,7 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -98,11 +99,31 @@ public class MailSender {
     private int mCurrentHostIndex = 0;
     private List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
+    private String mDsn;
 
     public MailSender()  {
         mSession = JMSession.getSession();
     }
 
+    public static enum DsnNotifyOption {
+        NEVER,
+        SUCCESS,
+        FAILURE,
+        DELAY
+    }
+    
+    public MailSender setDsnNotifyOptions(DsnNotifyOption... dsnNotifyOptions) {
+        if (dsnNotifyOptions == null || dsnNotifyOptions.length == 0) {
+            mDsn = null;
+        } else {
+            List<DsnNotifyOption> listOptions = Arrays.asList(dsnNotifyOptions);
+            if (listOptions.size() > 1 && listOptions.contains(DsnNotifyOption.NEVER))
+                throw new IllegalArgumentException("DSN option 'NEVER' cannot be combined with others");
+            mDsn = StringUtil.join(",", dsnNotifyOptions);
+        }
+        return this;
+    }
+    
     /**
      * Specifies the uploads to attach to the outgoing message.
      * @param uploads the uploads or <tt>null</tt>
@@ -586,6 +607,10 @@ public class MailSender {
                 mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
                 mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
             }
+            
+            // If DSN is specified, set it in the JavaMail session.
+            if (mDsn != null && mSession != null)
+                mSession.getProperties().setProperty("mail.smtp.dsn.notify", mDsn);
 
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);

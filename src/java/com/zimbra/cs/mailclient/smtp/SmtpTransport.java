@@ -162,6 +162,7 @@ public class SmtpTransport extends Transport {
                 "mail." + protocol + ".connectiontimeout", 0) / 1000); // msec to sec
         config.setReadTimeout(PropUtil.getIntSessionProperty(session,
                 "mail." + protocol + ".timeout", 0) / 1000); // msec to sec
+        config.setDsn(session.getProperty("mail." + protocol + ".dsn.notify"));
 
         Properties props = session.getProperties();
         Object socketFactory = props.get("mail." + protocol + ".socketFactory");
