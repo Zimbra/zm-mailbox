@@ -140,7 +140,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         Element request = new Element.XMLElement(MailConstants.SEND_SHARE_NOTIFICATION_REQUEST);
         request.addElement(MailConstants.E_ITEM).addAttribute(MailConstants.A_ID, f.getId());
         request.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS, "test2@zimbra.com");
-        handle(request, GetFolderTest.getRequestContext(acct));
+        handle(request, ServiceTestUtil.getRequestContext(acct));
     }
 
     @Test
@@ -159,7 +159,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         Element request = new Element.XMLElement(MailConstants.SEND_SHARE_NOTIFICATION_REQUEST);
         request.addElement(MailConstants.E_ITEM).addAttribute(MailConstants.A_ID, new ItemId(acct.getId(), f.getId()).toString());
         request.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS, "test3@zimbra.com");
-        handle(request, GetFolderTest.getRequestContext(acct));
+        handle(request, ServiceTestUtil.getRequestContext(acct));
     }
 
     @Test
@@ -174,6 +174,6 @@ public class SendShareNotificationTest extends SendShareNotification {
         request.addAttribute(MailConstants.A_ACTION, "revoke");
         request.addElement(MailConstants.E_ITEM).addAttribute(MailConstants.A_ID, f.getId());
         request.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS, "test2@zimbra.com");
-        handle(request, GetFolderTest.getRequestContext(acct));
+        handle(request, ServiceTestUtil.getRequestContext(acct));
     }
 }

@@ -77,7 +77,7 @@ public class TagActionTest {
         Element action = request.addElement(MailConstants.E_ACTION);
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_COLOR).addAttribute(MailConstants.A_COLOR, 4);
         action.addAttribute(MailConstants.A_ID, tagids);
-        Element ack = new TagAction().handle(request, GetFolderTest.getRequestContext(acct)).getElement(MailConstants.E_ACTION);
+        Element ack = new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct)).getElement(MailConstants.E_ACTION);
 
         Assert.assertEquals(name1 + " color set", 4, mbox.getTagByName(null, name1).getColor());
         Assert.assertEquals(name2 + " color set", 4, mbox.getTagByName(null, name2).getColor());
@@ -99,7 +99,7 @@ public class TagActionTest {
         Element action = request.addElement(MailConstants.E_ACTION);
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_COLOR).addAttribute(MailConstants.A_COLOR, 4);
         action.addAttribute(MailConstants.A_TAG_NAMES, tagnames);
-        Element ack = new TagAction().handle(request, GetFolderTest.getRequestContext(acct)).getElement(MailConstants.E_ACTION);
+        Element ack = new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct)).getElement(MailConstants.E_ACTION);
 
         Assert.assertEquals(name1 + " color set", 4, mbox.getTagByName(null, name1).getColor());
         Assert.assertEquals(name2 + " color set", 4, mbox.getTagByName(null, name2).getColor());
@@ -120,7 +120,7 @@ public class TagActionTest {
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MOVE).addAttribute(MailConstants.A_FOLDER, Mailbox.ID_FOLDER_USER_ROOT);
         action.addAttribute(MailConstants.A_TAG_NAMES, TagUtil.encodeTags(name1));
         try {
-            new TagAction().handle(request, GetFolderTest.getRequestContext(acct));
+            new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct));
             Assert.fail("operation should not be permitted: " + ItemAction.OP_MOVE);
         } catch (ServiceException e) {
             Assert.assertEquals("expected error code: " + ServiceException.INVALID_REQUEST, ServiceException.INVALID_REQUEST, e.getCode());
@@ -129,7 +129,7 @@ public class TagActionTest {
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_RENAME).addAttribute(MailConstants.A_NAME, "tag3");
         action.addAttribute(MailConstants.A_TAG_NAMES, TagUtil.encodeTags(name2));
         try {
-            new TagAction().handle(request, GetFolderTest.getRequestContext(acct));
+            new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct));
             Assert.fail("allowed op on nonexistent tag");
         } catch (ServiceException e) {
             Assert.assertEquals("expected error code: " + MailServiceException.NO_SUCH_TAG, MailServiceException.NO_SUCH_TAG, e.getCode());
@@ -149,7 +149,7 @@ public class TagActionTest {
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_COLOR).addAttribute(MailConstants.A_COLOR, 4);
         action.addAttribute(MailConstants.A_TAG_NAMES, TagUtil.encodeTags(name1));
         try {
-            new TagAction().handle(request, GetFolderTest.getRequestContext(acct2, acct));
+            new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct2, acct));
             Assert.fail("colored another user's tags without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("expected error code: " + ServiceException.PERM_DENIED, ServiceException.PERM_DENIED, e.getCode());
@@ -157,7 +157,7 @@ public class TagActionTest {
 
         action.addAttribute(MailConstants.A_TAG_NAMES, (String) null).addAttribute(MailConstants.A_ID, tag1.getId());
         try {
-            new TagAction().handle(request, GetFolderTest.getRequestContext(acct2, acct));
+            new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct2, acct));
             Assert.fail("colored another user's tags without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("expected error code: " + ServiceException.PERM_DENIED, ServiceException.PERM_DENIED, e.getCode());
@@ -165,7 +165,7 @@ public class TagActionTest {
 
         action.addAttribute(MailConstants.A_TAG_NAMES, TagUtil.encodeTags(name2));
         try {
-            new TagAction().handle(request, GetFolderTest.getRequestContext(acct2, acct));
+            new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct2, acct));
             Assert.fail("colored another user's tags without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("expected error code: " + ServiceException.PERM_DENIED, ServiceException.PERM_DENIED, e.getCode());

@@ -62,7 +62,7 @@ public class SearchTest {
         // search for the conversation (normal)
         Element request = new Element.XMLElement(MailConstants.SEARCH_REQUEST).addAttribute(MailConstants.A_SEARCH_TYPES, "conversation");
         request.addAttribute(MailConstants.E_QUERY, "test", Element.Disposition.CONTENT);
-        Element response = new Search().handle(request, GetFolderTest.getRequestContext(acct));
+        Element response = new Search().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         List<Element> hits = response.listElements(MailConstants.E_CONV);
         Assert.assertEquals("1 hit", 1, hits.size());
@@ -70,7 +70,7 @@ public class SearchTest {
 
         // search for the conversation (no muted items)
         request.addAttribute(MailConstants.A_INCLUDE_TAG_MUTED, false);
-        response = new Search().handle(request, GetFolderTest.getRequestContext(acct));
+        response = new Search().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         hits = response.listElements(MailConstants.E_CONV);
         Assert.assertTrue("no hits", hits.isEmpty());

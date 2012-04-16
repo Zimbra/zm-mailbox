@@ -76,7 +76,7 @@ public class ItemActionTest {
 
         Element request = new Element.XMLElement(MailConstants.ITEM_ACTION_REQUEST);
         request.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_OPERATION, ItemAction.OP_INHERIT).addAttribute(MailConstants.A_ID, targets);
-        new ItemAction().handle(request, GetFolderTest.getRequestContext(acct));
+        new ItemAction().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         Assert.assertFalse("inbox doesn't have \\NoInherit", inbox.isTagged(Flag.FlagInfo.NO_INHERIT));
@@ -202,7 +202,7 @@ public class ItemActionTest {
         // mute virtual conv
         Element request = new Element.XMLElement(MailConstants.CONV_ACTION_REQUEST);
         Element action = request.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MUTE).addAttribute(MailConstants.A_ID, msg.getConversationId());
-        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+        new ConvAction().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         msg = mbox.getMessageById(null, msg.getId());
         Assert.assertFalse("root now read", msg.isUnread());
@@ -210,7 +210,7 @@ public class ItemActionTest {
 
         // unmute virtual conv
         action.addAttribute(MailConstants.A_OPERATION, "!" + ItemAction.OP_MUTE);
-        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+        new ConvAction().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         msg = mbox.getMessageById(null, msg.getId());
         Assert.assertFalse("root still read", msg.isUnread());
@@ -225,7 +225,7 @@ public class ItemActionTest {
 
         // mute real conv
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MUTE).addAttribute(MailConstants.A_ID, msg2.getConversationId());;
-        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+        new ConvAction().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         msg2 = mbox.getMessageById(null, msg2.getId());
         Assert.assertFalse("reply now read", msg2.isUnread());
@@ -233,7 +233,7 @@ public class ItemActionTest {
 
         // unmute real conv
         action.addAttribute(MailConstants.A_OPERATION, "!" + ItemAction.OP_MUTE);
-        new ConvAction().handle(request, GetFolderTest.getRequestContext(acct));
+        new ConvAction().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         msg2 = mbox.getMessageById(null, msg2.getId());
         Assert.assertFalse("reply still read", msg2.isUnread());

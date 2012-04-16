@@ -17,8 +17,6 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -36,10 +34,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailSender;
@@ -50,9 +46,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.soap.SoapEngine;
-import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.util.JMSession;
 
 public class SendMsgTest {
 
@@ -100,12 +94,14 @@ public class SendMsgTest {
     }
 
     @Test
-    public void testDeleteDraft() throws Exception {
-        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+    public void deleteDraft() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // first, add draft message
-        ParsedMessage pm = new ParsedMessage(new MimeMessage(Session.getInstance(new Properties())), false);
+        MimeMessage mm = new MimeMessage(JMSession.getSmtpSession(acct));
+        mm.setText("foo");
+        ParsedMessage pm = new ParsedMessage(mm, false);
         int draftId = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT).getId();
 
         // then send a message referencing the draft
@@ -113,23 +109,19 @@ public class SendMsgTest {
         Element m = request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID, draftId).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
         m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, "foo bar");
         m.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS_TYPE, ToXML.EmailType.TO.toString()).addAttribute(MailConstants.A_ADDRESS, "rcpt@zimbra.com");
-
-        Map<String, Object> context = new HashMap<String, Object>();
-        context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(acct), acct.getId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS));
-        new SendMsg().handle(request, context);
+        new SendMsg().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         // finally, verify that the draft is gone
-        Message draft = null;
         try {
-            draft = mbox.getMessageById(null, draftId);
+            mbox.getMessageById(null, draftId);
+            Assert.fail("draft message not deleted");
         } catch (NoSuchItemException nsie) {
         }
-        Assert.assertNull("draft message not deleted", draft);
     }
-    
+
     @Test
-    public void testSendFromDraft() throws Exception {
-        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+    public void sendFromDraft() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // first, add draft message
@@ -142,22 +134,18 @@ public class SendMsgTest {
         // then send a message referencing the draft
         Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
         request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID, draftId).addAttribute(MailConstants.A_SEND_FROM_DRAFT, true);
+        Element response = new SendMsg().handle(request, ServiceTestUtil.getRequestContext(acct));
 
-        Map<String, Object> context = new HashMap<String, Object>();
-        context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(acct), acct.getId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS));
-        Element response = new SendMsg().handle(request, context);
-        String sentIdStr = response.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_ID);
-        int sentId = Integer.parseInt(sentIdStr);
-        // make sure sent message exist.
+        // make sure sent message exists
+        int sentId = (int) response.getElement(MailConstants.E_MSG).getAttributeLong(MailConstants.A_ID);
         Message sent = mbox.getMessageById(null, sentId);
-        Assert.assertNotNull("sent message does not exist", sent);
         Assert.assertEquals(pm.getRecipients(), sent.getRecipients());
+
         // finally, verify that the draft is gone
-        Message draft = null;
         try {
-            draft = mbox.getMessageById(null, draftId);
+            mbox.getMessageById(null, draftId);
+            Assert.fail("draft message not deleted");
         } catch (NoSuchItemException nsie) {
         }
-        Assert.assertNull("draft message not deleted", draft);
     }
 }
