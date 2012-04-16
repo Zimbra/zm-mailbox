@@ -371,7 +371,7 @@ public class CalendarUtils {
         // Get the existing invite to populate X-MS-OLK-ORIGINALSTART and X-MS-OLK-ORIGINALEND
         if (oldInvite == null) {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            CalendarItem calItem = mbox.getCalendarItemByUid(inv.getUid());
+            CalendarItem calItem = mbox.getCalendarItemByUid(null, inv.getUid());
             if (calItem != null)
                 oldInvite = calItem.getInvite(inv.getRecurId());
         }

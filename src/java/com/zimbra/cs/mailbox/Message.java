@@ -596,7 +596,8 @@ public class Message extends MailItem {
      * the CalendarItems table.
      */
     private void processInvitesAfterCreate(String method, int folderId, boolean applyToCalendar, ParsedMessage pm,
-            List<Invite> invites) throws ServiceException {
+            List<Invite> invites)
+    throws ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage while processing invite in message " + mId, null);
 
@@ -816,7 +817,7 @@ public class Message extends MailItem {
                             // For attendee-originated methods, look up organizer from appointment on calendar.
                             // If appointment is not found, fall back to the intended-for address, then finally to self.
                             ZOrganizer org = null;
-                            CalendarItem ci = mMailbox.getCalendarItemByUid(cur.getUid());
+                            CalendarItem ci = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
                             if (ci != null) {
                                 Invite inv = ci.getInvite(cur.getRecurId());
                                 if (inv == null)
@@ -885,7 +886,7 @@ public class Message extends MailItem {
                 }
                 if (intendedForMe) {
                     cur.sanitize(true);
-                    calItem = mMailbox.getCalendarItemByUid(cur.getUid());
+                    calItem = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
                     if (applyToCalendar &&
                         !ICalTok.REPLY.equals(methodTok) &&  // replies are handled elsewhere (in Mailbox.addMessage())
                         !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {

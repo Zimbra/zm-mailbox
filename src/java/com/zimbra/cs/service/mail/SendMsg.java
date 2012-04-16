@@ -567,7 +567,7 @@ public final class SendMsg extends MailDocumentHandler {
                 String uid = replyInv.getUid();
                 mMailbox.lock.lock();
                 try {
-                    CalendarItem calItem = mMailbox.getCalendarItemByUid(uid);
+                    CalendarItem calItem = mMailbox.getCalendarItemByUid(null, uid);
                     if (calItem != null) {
                         RecurId rid = replyInv.getRecurId();
                         Invite inv = calItem.getInvite(rid);

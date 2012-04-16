@@ -121,7 +121,7 @@ public class FriendlyCalendaringDescription {
             // client.  Currently, this information is not stored in the Calendar.
             // Might be able to extract the information from messages in the Sent folder at
             // some point in the future?
-            CalendarItem calItem = mbox.getCalendarItemByUid(uid);
+            CalendarItem calItem = mbox.getCalendarItemByUid(null, uid);
             if (calItem != null) {
                 Invite [] calInvites = calItem.getInvites();
                 if ((calInvites != null) && (calInvites.length > 1))

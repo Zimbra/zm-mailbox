@@ -4432,7 +4432,7 @@ public class Mailbox {
             // calls to processNewInvite() because it'll delete all existing Invites and we'll lose
             // old invId information.
             if (!scidList.isEmpty()) {
-                calItem = getCalendarItemByUid(scidList.get(0).invite.getUid());
+                calItem = getCalendarItemByUid(octxt, scidList.get(0).invite.getUid());
                 for (SetCalendarItemData scid : scidList) {
                     int idBeingSet = scid.invite.getMailItemId();
                     if (idBeingSet <= 0) {
@@ -4827,7 +4827,7 @@ public class Mailbox {
                 inv.setInviteId(getNextItemId(currId));
             }
 
-            CalendarItem calItem = getCalendarItemByUid(inv.getUid());
+            CalendarItem calItem = getCalendarItemByUid(octxt, inv.getUid());
             boolean processed = true;
             if (calItem == null) {
                 // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
@@ -4872,10 +4872,6 @@ public class Mailbox {
         }
     }
 
-    public CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
-        return getCalendarItemByUid(null, uid);
-    }
-
     public CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
         boolean success = false;
         try {
@@ -4890,7 +4886,7 @@ public class Mailbox {
     }
 
     public Map<String, CalendarItem> getCalendarItemsByUid(OperationContext octxt, List<String> uids)
-            throws ServiceException {
+    throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarItemsByUid", octxt);
@@ -4961,7 +4957,7 @@ public class Mailbox {
         try {
             beginTransaction("iCalReply", octxt, redoRecorder);
             String uid = inv.getUid();
-            CalendarItem calItem = getCalendarItemByUid(uid);
+            CalendarItem calItem = getCalendarItemByUid(octxt, uid);
             if (calItem == null) {
                 ZimbraLog.calendar.warn("Unknown calendar item UID %s", uid);
                 return;
@@ -7275,7 +7271,8 @@ public class Mailbox {
     }
 
     private void importFeedInternal(OperationContext octxt, Folder folder, boolean subscription,
-            FeedManager.SubscriptionData<?> sdata) throws ServiceException {
+            FeedManager.SubscriptionData<?> sdata)
+    throws ServiceException {
         assert(lock.isLocked());
         // If syncing a folder with calendar items, remember the current items.  After applying the new
         // appointments/tasks, we need to remove ones that were not updated because they are apparently
@@ -7331,7 +7328,7 @@ public class Mailbox {
                     }
                     try {
                         boolean importIt;
-                        CalendarItem calItem = getCalendarItemByUid(uid);
+                        CalendarItem calItem = getCalendarItemByUid(octxtNoConflicts, uid);
                         if (calItem == null) {
                             // New appointment.  Import it.
                             importIt = true;
@@ -7369,8 +7366,9 @@ public class Mailbox {
                                 importIt = sameFolder && changed;
                             }
                         }
-                        if (importIt)
+                        if (importIt) {
                             addInvite(octxtNoConflicts, inv, folder.getId(), true, addRevision);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
                     }
