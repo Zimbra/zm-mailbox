@@ -750,7 +750,21 @@ public final class LuceneIndex implements IndexStore {
             if (docs == null || docs.isEmpty()) {
                 return;
             }
-
+            
+            // handle the partial re-index case here by simply deleting all the documents matching the index_id
+            // so that we can simply add the documents to the index later!!
+            switch (item.getIndexStatus()) {
+                case STALE:
+                case DONE: // for partial re-index
+                    Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
+                    writer.get().deleteDocuments(term);
+                    break;
+                case DEFERRED:
+                    break;
+                default:
+                    assert false : item.getIndexId();
+            }
+            
             for (IndexDocument doc : docs) {
                 // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
                 synchronized (doc) {
@@ -770,19 +784,8 @@ public final class LuceneIndex implements IndexStore {
 
                     doc.removeSortSize();
                     doc.addSortSize(item.getSize());
-
-                    switch (item.getIndexStatus()) {
-                        case STALE:
-                        case DONE: // for partial re-index
-                            Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
-                            writer.get().updateDocument(term, doc.toDocument());
-                            break;
-                        case DEFERRED:
-                            writer.get().addDocument(doc.toDocument());
-                            break;
-                        default:
-                            assert false : item.getIndexId();
-                    }
+                    
+                    writer.get().addDocument(doc.toDocument());
                 }
             }
         }
