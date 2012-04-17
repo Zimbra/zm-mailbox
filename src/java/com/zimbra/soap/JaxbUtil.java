@@ -625,6 +625,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllRightsResponse.class,
             com.zimbra.soap.admin.message.GetAllServersRequest.class,
             com.zimbra.soap.admin.message.GetAllServersResponse.class,
+            com.zimbra.soap.admin.message.GetAllSkinsRequest.class,
+            com.zimbra.soap.admin.message.GetAllSkinsResponse.class,
             com.zimbra.soap.admin.message.GetAllUCServicesRequest.class,
             com.zimbra.soap.admin.message.GetAllUCServicesResponse.class,
             com.zimbra.soap.admin.message.GetAllVolumesRequest.class,
