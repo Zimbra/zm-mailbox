@@ -276,6 +276,10 @@ public class AdminService implements DocumentService {
 
         // store manager verifier
         dispatcher.registerHandler(AdminConstants.VERIFY_STORE_MANAGER_REQUEST, new VerifyStoreManager());
+        
+        // Skins
+        dispatcher.registerHandler(AdminConstants.GET_ALL_SKINS_REQUEST, new GetAllSkins());
+
     }
 
     /**

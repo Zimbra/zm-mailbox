@@ -2785,3 +2785,8 @@ deleteTime - time (ms) for the delete operation
 
 -----------------------------
 
+<GetAllSkinsRequest/>
+
+<GetAllSkinsResponse>
+  <skin name="{skin-name}"/>+
+</GetAllSkinsResponse>

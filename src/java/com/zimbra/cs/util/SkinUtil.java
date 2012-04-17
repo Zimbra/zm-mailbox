@@ -100,6 +100,10 @@ public class SkinUtil {
         return availSkins;
     }
     
+    public static String[] getAllSkins() throws ServiceException {
+        return getAllInstalledSkinsSorted();
+    }
+    
     private static Set<String> getAvailableSkins(Account acct) throws ServiceException {
         return acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
     }
