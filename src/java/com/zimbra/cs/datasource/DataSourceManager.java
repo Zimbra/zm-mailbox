@@ -15,6 +15,7 @@
 package com.zimbra.cs.datasource;
 
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
@@ -287,16 +288,21 @@ public class DataSourceManager {
      */
     public static void importData(DataSource ds, List<Integer> folderIds, boolean fullSync) throws ServiceException {
 
-        ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
         ZimbraLog.datasource.info("Requested import.");
+        AccountStatus status = ds.getAccount().getAccountStatus();
+        if (!(status.isActive() || status.isLocked() || status.isLockout())) {
+            ZimbraLog.datasource.info("Account is not active. Skipping import.");
+            return;
+        }
+        if (DataSourceManager.getInstance().getMailbox(ds).getMaintenance() != null) {
+            ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
+            return;
+        }
+        ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
                 ZimbraLog.datasource.info("Attempted to start import while " +
                     " an import process was already running.  Ignoring the second request.");
-                return;
-            }
-            if (DataSourceManager.getInstance().getMailbox(ds).getMaintenance() != null) {
-                ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
                 return;
             }
             importStatus.mHasRun = true;
