@@ -33,9 +33,10 @@ public class ActionSelector {
 
     /**
      * @zm-api-field-tag comma-sep-ids
-     * @zm-api-field-description Comma separated list of item IDS to act on
+     * @zm-api-field-description Comma separated list of item IDs to act on.  Required except for TagActionRequest,
+     * where the tags items can be specified using their tag names as an alternative.
      */
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     protected final String ids;
 
     /**

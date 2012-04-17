@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,36 +22,32 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.IdAndOperation;
+import com.zimbra.soap.mail.type.TagActionInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_TAG_ACTION_RESPONSE)
 public class TagActionResponse {
 
     /**
-     * @zm-api-field-description The <b>&lt;action></b> element in the response contains the list of IDs for successes.
+     * @zm-api-field-description The <b>&lt;action></b> element contains information about the tags affected by
+     * the operation if and only if the operation was successful
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
-    private final IdAndOperation action;
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
+    private TagActionInfo action;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private TagActionResponse() {
-        this((IdAndOperation) null);
+    public TagActionResponse() {
     }
 
-    public TagActionResponse(IdAndOperation action) {
-        this.action = action;
-    }
+    public void setAction(TagActionInfo action) { this.action = action; }
+    public TagActionInfo getAction() { return action; }
 
-    public IdAndOperation getAction() { return action; }
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("action", action);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("action", action)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

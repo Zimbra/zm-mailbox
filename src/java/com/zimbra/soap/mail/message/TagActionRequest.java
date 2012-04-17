@@ -32,10 +32,15 @@ import com.zimbra.soap.mail.type.TagActionSelector;
 public class TagActionRequest {
 
     /**
-     * @zm-api-field-description Specify action to perform - if op="update", the caller can specify "name" and/or
-     * "color"
+     * @zm-api-field-description Specify action to perform.
+     * <br />
+     * Caller must supply one of <b>"id"</b> or <b>"tn"</b>
+     * <br />
+     * Supported operations: <b>"read|!read|color|delete|rename|update|retentionpolicy"</b>
+     * <br />
+     * If op="update", the caller can specify "name" and/or "color"
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private final TagActionSelector action;
 
     /**
