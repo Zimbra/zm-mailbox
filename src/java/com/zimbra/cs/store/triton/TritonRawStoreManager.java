@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -35,7 +36,6 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.external.ContentIdentifiedStoreManager;
 
-import cryptix.util.core.Hex;
 
 /**
  * StoreManager implementation which uses the TDS RAW API for storing and retrieving blobs
@@ -65,7 +65,7 @@ public class TritonRawStoreManager extends ContentIdentifiedStoreManager {
     }
 
     private String toHex(byte[] a) {
-        return Hex.toString(a).toLowerCase();
+        return Hex.encodeHexString(a).toLowerCase();
     }
 
     @Override
