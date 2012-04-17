@@ -27,6 +27,7 @@ import com.zimbra.cs.account.DataSourceConfig;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.cs.datasource.imap.ImapSync;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -281,21 +282,25 @@ public class DataSourceManager {
      * Executes the data source's <code>MailItemImport</code> implementation
      * to import data in the current thread.
      */
-    public static void importData(DataSource ds, List<Integer> folderIds,
-                                  boolean fullSync) throws ServiceException {
-        
+    public static void importData(DataSource ds, List<Integer> folderIds, boolean fullSync) throws ServiceException {
+
+        ZimbraLog.datasource.info("Requested import.");
+        AccountStatus status = ds.getAccount().getAccountStatus();
+        if (!(status.isActive() || status.isLocked() || status.isLockout())) {
+            ZimbraLog.datasource.info("Account is not active. Skipping import.");
+            return;
+        }
+        if (DataSourceManager.getInstance().getMailbox(ds).getMailboxLock() != null) {
+            ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
+            return;
+        } 
         ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
-       	ZimbraLog.datasource.info("Requested import.");
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
                 ZimbraLog.datasource.info("Attempted to start import while " +
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
-            if (DataSourceManager.getInstance().getMailbox(ds).getMailboxLock() != null) {
-                ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
-                return;
-            }            
             importStatus.mHasRun = true;
             importStatus.mIsRunning = true;
             importStatus.mSuccess = false;
