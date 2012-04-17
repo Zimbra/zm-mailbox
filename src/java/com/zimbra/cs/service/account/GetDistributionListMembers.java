@@ -37,17 +37,20 @@ import com.zimbra.cs.gal.GalGroupMembers.ProxiedDLMembers;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @author pshao
+ */
 public class GetDistributionListMembers extends GalDocumentHandler {
-    private static final String A_HIDE_IN_GAL_INTERNAL = "__hide_in_gal_internal__";
+    private static final String A_LDAP_FALLBACK = "__ldap_fallback__";
     
     @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) 
     throws ServiceException {
-        boolean internal = request.getAttributeBool(A_HIDE_IN_GAL_INTERNAL, false);
+        boolean internal = request.getAttributeBool(A_LDAP_FALLBACK, false);
         
         if (internal) {
             // the request was proxied here because this is the home server of the 
-            // hideInGal group, always execute locally
+            // group, always execute locally
             return null;
         } else {
             return super.proxyIfNecessary(request, context);
@@ -75,21 +78,29 @@ public class GetDistributionListMembers extends GalDocumentHandler {
         request.addAttribute(AccountConstants.A_OFFSET_INTERNAL, offset);
         request.addAttribute(AccountConstants.A_LIMIT_INTERNAL, limit);
         
-        boolean hideInGalInternal = request.getAttributeBool(A_HIDE_IN_GAL_INTERNAL, false);
-        DLMembersResult dlMembersResult = hideInGalInternal ? 
-                getMembersFromLdapForOwner(context, request, account, dlName, hideInGalInternal) : 
+        boolean ldapFallback = request.getAttributeBool(A_LDAP_FALLBACK, false);
+        DLMembersResult dlMembersResult = ldapFallback ? 
+                getMembersFromLdap(context, request, account, dlName, ldapFallback) : 
                 GalGroupMembers.searchGal(zsc, account, dlName, request);
         
         if (dlMembersResult == null) {
             /*
-             * bug 66234
-             * If the list is a Zimbra list and is hideInGal, it won't be returned from 
-             * GAL search.  In this case, allow the request for list owners.
-             * Do this only when the request is not already a A_HIDE_IN_GAL_INTERNAL request.
+             * bug 66234: if the group is a Zimbra group and is hideInGal, it won't be 
+             *            returned from GAL search.  Groups owners should be allowed to
+             *            see members in hideInGal groups.
+             *             
+             * bug 72482: if the group is a newly created user delegated group, it cannot 
+             *            be found in GAL if GSA is enabled and the group is not synced into 
+             *            the GSA yet.   Group owners and members should be allowed to 
+             *            see members before the group is synced in GSA.  
+             *            Non-owner, non-members users will have to wait till the groups 
+             *            is synced into the GSA.
+             *                
+             * Do this only when the request is not already a A_LDAP_FALLBACK request.
              */
-            if (!hideInGalInternal) {
+            if (!ldapFallback) {
                 dlMembersResult = 
-                    getMembersFromLdapForOwner(context, request, account, dlName, hideInGalInternal);
+                    getMembersFromLdap(context, request, account, dlName, ldapFallback);
             }
         }
         
@@ -108,70 +119,85 @@ public class GetDistributionListMembers extends GalDocumentHandler {
     }
     
     /*
-     * If internal is true, this is request was proxied to this server because 
-     * it is hideInGal.  Return members from LDAP if if user is an owner.
+     * We got here if the group could not be found in GAL.   This could be because 
+     * (1) the group is hideInGal - owners should be able to see members of the group.
+     * or
+     * (2) the groups is newly created and not synced into GSA yet. 
+     *     owners and members(because the group is visible to members in the UI as soon 
+     *     as the groups is created, if user refresh the UI) should be able to see 
+     *     members of the group.
      * 
-     * If internal is false, we couldn't find the group in GAL.  This server is either 
-     * the home server of the GAL sync account, or the user's home server if GAL sync 
-     * account is not enabled).  If this is not the home server of the group, 
-     * we need to proxy the request to the home server of the group with the internal flag.
+     * If ldapFallback is true, this request was proxied to this server because the 
+     * group could not be found in GAL and this is the home server of the group.
      * 
-     * We could've just rely on the Provisioning.onLocalServer(group), the internal flag 
-     * is just an extra safety latch to make sure we don't get to a proxy loop.
+     * If ldapFallback is false, we couldn't find the group in GAL.  This server is 
+     * either the home server of the GAL sync account, or the user's home server 
+     * if GAL sync account is not enabled.  If this is not the home server 
+     * of the group, we need to proxy the request to the home server of the group 
+     * with the ldapFallback flag.
+     * 
+     * We could've just rely on the Provisioning.onLocalServer(group), the 
+     * ldapFallback flag is just an extra safety latch to make sure we don't get 
+     * into a proxy loop.
      */
-    private DLMembersResult getMembersFromLdapForOwner(Map<String, Object> context,
-            Element request, Account account, String dlName, boolean hideInGalInternal) 
+    private DLMembersResult getMembersFromLdap(Map<String, Object> context,
+            Element request, Account account, String dlName, boolean ldapFallback) 
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (prov.isDistributionList(dlName)) {
             Group group = prov.getGroupBasic(DistributionListBy.name , dlName);
-            if (group != null && group.hideInGal()) {
-                ZimbraLog.account.debug("handling hideInGal group " + group.getName());
+            if (group != null) {
                 
-                // proxy to the home server of the group to get members from LDAP 
-                // if the user is an owner of the group.  The isOwner check will be 
-                // done on the home server of the group, which has the most 
-                // up-to-date data
+                // proxy to the home server of the group to get members from LDAP. 
+                // The isOwner/isMember/isHideInGal check will be executed on the 
+                // home server of the group, which has the most up-to-date data.  
                 
-                boolean needsProxy = !hideInGalInternal && !Provisioning.onLocalServer(group);
+                boolean needsProxy = !ldapFallback && !Provisioning.onLocalServer(group);
                 
                 if (needsProxy) {
                     Server server = group.getServer();
                     if (server == null) {
                         // just execute locally
                         ZimbraLog.account.warn(String.format(
-                                "unable to find home server (%s) for hideInGal group %s, " + 
+                                "unable to find home server (%s) for group %s, " + 
                                 "getting members from LDAP on local server" ,
                                 group.getAttr(Provisioning.A_zimbraMailHost), group.getName()));
-                        return getMembersFromLdapForOwner(account, group);
+                        // do it locally
+                        return getMembersFromLdap(account, group);
                     } else {
                         // proxy to the home server of the group
                         ZimbraLog.account.debug(
-                                String.format("Proxying request to home server (%s) of hideInGal group %s",
+                                String.format("Proxying request to home server (%s) of group %s",
                                 server.getName(), group.getName()));
                         
-                        request.addAttribute(A_HIDE_IN_GAL_INTERNAL, true);
+                        request.addAttribute(A_LDAP_FALLBACK, true);
                         Element resp = proxyRequest(request, context, server);
                         return new ProxiedDLMembers(resp);
                     }
                 } else {
                     // do it locally
-                    return getMembersFromLdapForOwner(account, group);
+                    return getMembersFromLdap(account, group);
                 }
             }
         }
         return null;
     }
     
-    private DLMembersResult getMembersFromLdapForOwner(Account account, Group group) 
+    private DLMembersResult getMembersFromLdap(Account account, Group group) 
     throws ServiceException {
-        boolean isOwner = GroupOwner.isOwner(account, group);
-        if (isOwner) {
-            ZimbraLog.account.debug("Retrieving group members from LDAP for hideInGal group " + group.getName());
+        boolean allow = false;
+        if (group.hideInGal()) {
+            allow = GroupOwner.isOwner(account, group);
+        } else {
+            allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account);
+        }
+        
+        if (allow) {
+            ZimbraLog.account.debug("Retrieving group members from LDAP for group " + group.getName());
             return new LdapDLMembers(group);
         } else {
             ZimbraLog.account.debug("account " + account.getName() + 
-                    " is not an owner of hideInGal group " + group.getName());
+                    " is not allowed to get members from ldap for group " + group.getName());
             return null;
         }
     }

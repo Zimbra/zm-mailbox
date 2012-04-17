@@ -1507,7 +1507,9 @@ public class TestDelegatedDL extends SoapTest {
     @Test
     @Bug(bug=66234)
     public void hideInGal() throws Exception {
-
+        // setup GAL sync account
+        GalTestUtil.enableGalSyncAccount(prov, domain.getName());
+        
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Multimap<String, String> attrs = ArrayListMultimap.create();
         attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
@@ -1526,10 +1528,6 @@ public class TestDelegatedDL extends SoapTest {
         
         // create a non-member account
         Account nonMemberAcct = provUtil.createAccount(genAcctNameLocalPart("non-member"), domain);
-        
-        // setup GAL sync account
-        // GalTestUtil.enableGalSyncAccount(prov, domain.getName());
-        
         
         /*
          * Owners should be able to see members even when the list is hideInGal
@@ -1584,11 +1582,91 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
         
+        GalTestUtil.disableGalSyncAccount(prov, domain.getName());
+        
         provUtil.deleteAccount(ownerAcct);
         provUtil.deleteAccount(memberAcct1);
         provUtil.deleteAccount(memberAcct2);
         provUtil.deleteAccount(memberAcct3);
         provUtil.deleteAccount(memberAcct4);
+        provUtil.deleteAccount(nonMemberAcct);
+        provUtil.deleteGroup(group);
+    }
+    
+    /*
+     * If GAL sync account is enabled, newly created groups are not synced in the GSA yet.
+     * If a GetDistributionListMembersRequest is issued before it's synced, will get 
+     * NO_SUCH_DISTRIBUTION_LIST exception.
+     */
+    @Test
+    @Bug(bug=72482)
+    public void getDistributionListMembersWithGSA() throws Exception {
+        // setup GAL sync account
+        GalTestUtil.enableGalSyncAccount(prov, domain.getName());
+        
+        String GROUP_NAME = getAddress(genGroupNameLocalPart());
+
+        // create an owner account
+        Account ownerAcct = provUtil.createAccount(genAcctNameLocalPart("owner"), domain);
+        Group group = createGroupAndAddOwner(GROUP_NAME, ownerAcct.getName());
+        
+        // create member accounts and add it to the group
+        Account memberAcct1 = provUtil.createAccount(genAcctNameLocalPart("member1"), domain);
+        Account memberAcct2 = provUtil.createAccount(genAcctNameLocalPart("member2"), domain);
+        Account memberAcct3 = provUtil.createAccount(genAcctNameLocalPart("member3"), domain);
+        
+        prov.addGroupMembers(group, new String[]{
+                memberAcct3.getName(), memberAcct2.getName(), memberAcct1.getName()});
+        
+        // create a non-member account
+        Account nonMemberAcct = provUtil.createAccount(genAcctNameLocalPart("non-member"), domain);
+        
+        /*
+         * Owners should be able to see members even when the list is not in GSA yet
+         */
+        // auth as the owner
+        SoapTransport transport = authUser(ownerAcct.getName());
+        GetDistributionListMembersRequest req = new GetDistributionListMembersRequest(
+                null, null, group.getName());
+
+        GetDistributionListMembersResponse resp = invokeJaxb(transport, req); 
+        List<String> members = resp.getDlMembers();
+        //make sure members are returned sorted
+        Verify.verifyEquals(
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                members);
+        
+        /*
+         * members should be able to see members even when the list is not in GSA yet
+         */
+        // auth as a member 
+        transport = authUser(memberAcct1.getName());
+        resp = invokeJaxb(transport, req); 
+        members = resp.getDlMembers();
+        //make sure members are returned sorted
+        Verify.verifyEquals(
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                members);
+        
+        /*
+         * non-owner, non-member cannot see members when the list is not in GSA yet
+         */
+        transport = authUser(nonMemberAcct.getName());
+        String errorCode = null;
+        try {
+            invokeJaxb(transport, req); 
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
+        
+        
+        GalTestUtil.disableGalSyncAccount(prov, domain.getName());
+        
+        provUtil.deleteAccount(ownerAcct);
+        provUtil.deleteAccount(memberAcct1);
+        provUtil.deleteAccount(memberAcct2);
+        provUtil.deleteAccount(memberAcct3); 
         provUtil.deleteAccount(nonMemberAcct);
         provUtil.deleteGroup(group);
     }

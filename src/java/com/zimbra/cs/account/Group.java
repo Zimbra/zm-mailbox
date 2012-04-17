@@ -27,6 +27,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -34,9 +35,7 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 
 /**
- * 
  * @author pshao
- *
  */
 public abstract class Group extends MailTarget implements AliasedEntry {
     
@@ -79,6 +78,11 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     public Server getServer() throws ServiceException {
         String serverName = getAttr(Provisioning.A_zimbraMailHost);
         return (serverName == null ? null : getProvisioning().get(Key.ServerBy.name, serverName));
+    }
+    
+    public boolean isMemberOf(Account acct) throws ServiceException {
+        GroupMembership membership = getProvisioning().getGroupMembership(acct, false);
+        return membership.groupIds().contains(getId());
     }
     
     public DistributionListSubscriptionPolicy getSubscriptionPolicy() {

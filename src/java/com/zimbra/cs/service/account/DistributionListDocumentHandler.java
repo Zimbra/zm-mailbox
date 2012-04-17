@@ -43,7 +43,6 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
@@ -55,6 +54,9 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.admin.type.CacheEntryType;
 
+/**
+ * @author pshao
+ */
 public abstract class DistributionListDocumentHandler extends AccountDocumentHandler {
 
     @Override
@@ -71,9 +73,10 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
                             group.getAttr(Provisioning.A_zimbraMailHost)), "");
                 }
                 return proxyRequest(request, context, server);
+            } else {
+                // execute locally
+                return null;
             }
-            
-            return super.proxyIfNecessary(request, context);
         } catch (ServiceException e) {
             // must be able to proxy, we don't want to fallback to local
             throw e;
