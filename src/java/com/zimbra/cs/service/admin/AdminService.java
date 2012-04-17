@@ -273,6 +273,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.CREATE_SYSTEM_RETENTION_POLICY_REQUEST, new CreateSystemRetentionPolicy());
         dispatcher.registerHandler(AdminConstants.MODIFY_SYSTEM_RETENTION_POLICY_REQUEST, new ModifySystemRetentionPolicy());
         dispatcher.registerHandler(AdminConstants.DELETE_SYSTEM_RETENTION_POLICY_REQUEST, new DeleteSystemRetentionPolicy());
+
+        // store manager verifier
+        dispatcher.registerHandler(AdminConstants.VERIFY_STORE_MANAGER_REQUEST, new VerifyStoreManager());
     }
 
     /**

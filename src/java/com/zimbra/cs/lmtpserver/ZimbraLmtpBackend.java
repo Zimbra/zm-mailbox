@@ -334,7 +334,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             }
 
             try {
-                blob = StoreManager.getInstance().storeIncoming(in, null);
+                blob = StoreManager.getInstance().storeIncoming(in);
             } catch (IOException ioe) {
                 throw new UnrecoverableLmtpException("Error in storing incoming message", ioe);
             }

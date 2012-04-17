@@ -24,7 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.StorageCallback;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
@@ -46,7 +46,7 @@ public class ServerConfig extends AttributeCallback {
                 attrName.equals(Provisioning.A_zimbraMailFileDescriptorCacheSize)) {
                 BlobInputStream.getFileDescriptorCache().loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraMailDiskStreamingThreshold)) {
-                StorageCallback.loadSettings();
+                StoreManager.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraMessageCacheSize)) {
                 MessageCache.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraSmtpHostname)) {

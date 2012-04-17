@@ -17,7 +17,9 @@ package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,10 +116,11 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 
@@ -131,42 +134,31 @@ extends Assert {
 
     public static boolean accountExists(String userName)
     throws ServiceException {
-        String address = getAddress(userName);
-        Account account = Provisioning.getInstance().get(AccountBy.name, address);
-        return (account != null);
+        return AccountTestUtil.accountExists(userName);
     }
 
     public static Account getAccount(String userName)
     throws ServiceException {
-        String address = getAddress(userName);
-        return Provisioning.getInstance().get(AccountBy.name, address);
+        return AccountTestUtil.getAccount(userName);
     }
 
     public static String getDomain()
     throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig(Provisioning.A_zimbraDefaultDomainName);
-        String domain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        assert(domain != null && domain.length() > 0);
-        return domain;
+        return AccountTestUtil.getDomain();
     }
 
     public static Mailbox getMailbox(String userName)
     throws ServiceException {
-        Account account = getAccount(userName);
-        return MailboxManager.getInstance().getMailboxByAccount(account);
+        return AccountTestUtil.getMailbox(userName);
     }
 
     public static String getAddress(String userName)
     throws ServiceException {
-        if (userName.contains("@")) {
-            return userName;
-        } else {
-            return userName + "@" + getDomain();
-        }
+        return AccountTestUtil.getAddress(userName);
     }
 
     public static String getAddress(String userName, String domainName) {
-        return userName + "@" + domainName;
+        return AccountTestUtil.getAddress(userName, domainName);
     }
 
     public static String getSoapUrl() {
@@ -1071,5 +1063,36 @@ extends Assert {
         }
         Assert.fail("Could not find default identity for " + mbox.getName());
         return null;
+    }
+
+    public static boolean checkLocalBlobs() {
+        //some tests check disk for blob files. these tests only work with FileBlobStore
+        return StoreManager.getInstance() instanceof FileBlobStore;
+    }
+
+    public static byte[] readInputStream(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int i = -1;
+        while ((i = is.read()) >= 0) {
+            baos.write(i);
+        }
+        return baos.toByteArray();
+    }
+
+    public static boolean bytesEqual(byte[] b1, InputStream is) throws IOException {
+        return bytesEqual(b1, readInputStream(is));
+    }
+
+    public static boolean bytesEqual(byte[] b1, byte[] b2) {
+        if (b1.length != b2.length) {
+            return false;
+        } else {
+            for (int i = 0; i < b1.length; i++) {
+                if (b1[i] != b2[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

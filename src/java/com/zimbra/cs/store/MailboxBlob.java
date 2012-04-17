@@ -30,7 +30,7 @@ public abstract class MailboxBlob implements Serializable {
 
     private final int mItemId;
     private final int mRevision;
-    private final String mLocator;
+    private final String locator;
     protected Long mSize;
     protected String mDigest;
 
@@ -38,7 +38,7 @@ public abstract class MailboxBlob implements Serializable {
         mMailbox = mbox;
         mItemId = itemId;
         mRevision = revision;
-        mLocator = locator;
+        this.locator = locator;
     }
 
     public int getItemId() {
@@ -50,7 +50,7 @@ public abstract class MailboxBlob implements Serializable {
     }
 
     public String getLocator() {
-        return mLocator;
+        return locator;
     }
 
     public String getDigest() throws IOException {

@@ -268,6 +268,11 @@ public final class Metadata {
         return raw == null ? defaultValue : Element.parseInt(key, raw);
     }
 
+    public short getShort(String key, short defaultValue) throws ServiceException {
+        String raw = get(key, null);
+        return raw == null ? defaultValue : Element.parseShort(key, raw);
+    }
+
     public double getDouble(String key, double defaultValue) throws ServiceException {
         String raw = get(key, null);
         return raw == null ? defaultValue : Element.parseDouble(key, raw);

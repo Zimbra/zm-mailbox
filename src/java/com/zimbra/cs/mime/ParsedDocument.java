@@ -55,7 +55,7 @@ public final class ParsedDocument {
     private boolean parsed = false; // whether or not analysis has taken place
 
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
-        return StoreManager.getInstance().storeIncoming(in, null);
+        return StoreManager.getInstance().storeIncoming(in);
     }
 
     public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator,

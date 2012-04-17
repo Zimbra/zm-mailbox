@@ -101,7 +101,7 @@ abstract class Literal {
         }
 
         @Override public Blob getBlob() throws IOException, ServiceException {
-            return StoreManager.getInstance().storeIncoming(getInputStream(), null);
+            return StoreManager.getInstance().storeIncoming(getInputStream());
         }
 
         @Override public void cleanup() {

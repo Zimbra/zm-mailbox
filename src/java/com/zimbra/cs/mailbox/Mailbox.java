@@ -5096,7 +5096,7 @@ public class Mailbox {
                 in = validator;
             }
 
-            blob = StoreManager.getInstance().storeIncoming(in, null);
+            blob = StoreManager.getInstance().storeIncoming(in);
 
             if (validator != null && !validator.isValid()) {
                 StoreManager.getInstance().delete(blob);
@@ -5174,7 +5174,7 @@ public class Mailbox {
             InputStream in = null;
             try {
                 in = pm.getRawInputStream();
-                blob = sm.storeIncoming(in, null);
+                blob = sm.storeIncoming(in);
             } finally {
                 ByteUtil.closeStream(in);
             }
@@ -5616,7 +5616,7 @@ public class Mailbox {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            staged = sm.stage(is, null, this);
+            staged = sm.stage(is, this);
         } finally {
             ByteUtil.closeStream(is);
         }
@@ -6774,7 +6774,7 @@ public class Mailbox {
             // write the contact content directly to the mailbox's blob staging area
             InputStream is = null;
             try {
-                staged = sm.stage(is = pc.getContentStream(), (int) pc.getSize(), null, this);
+                staged = sm.stage(is = pc.getContentStream(), (int) pc.getSize(), this);
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
             } finally {
@@ -6826,7 +6826,7 @@ public class Mailbox {
             // write the contact content directly to the mailbox's blob staging area
             InputStream is = null;
             try {
-                staged = sm.stage(is = pc.getContentStream(), pc.getSize(), null, this);
+                staged = sm.stage(is = pc.getContentStream(), pc.getSize(), this);
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
             } finally {
@@ -8053,7 +8053,7 @@ public class Mailbox {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            staged = sm.stage(is, null, this);
+            staged = sm.stage(is, this);
         } finally {
             ByteUtil.closeStream(is);
         }
@@ -8100,7 +8100,7 @@ public class Mailbox {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            staged = sm.stage(is, null, this);
+            staged = sm.stage(is, this);
         } finally {
             ByteUtil.closeStream(is);
         }

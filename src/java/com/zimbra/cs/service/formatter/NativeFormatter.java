@@ -412,7 +412,7 @@ public final class NativeFormatter extends Formatter {
                 }
             }
 
-            Blob blob = StoreManager.getInstance().storeIncoming(is, null);
+            Blob blob = StoreManager.getInstance().storeIncoming(is);
             saveDocument(blob, context, contentType, folder, filename);
 
         } finally {

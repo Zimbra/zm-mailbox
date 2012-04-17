@@ -130,7 +130,7 @@ public class DbMailItem {
             MailItem.Type type = MailItem.Type.of(data.type);
 
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mailbox) + "(" + MAILBOX_ID +
-                    " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
+                    " id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest, unread," +
                     " flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date," +
                     " mod_content, uuid) VALUES (" + MAILBOX_ID_VALUE +
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -157,11 +157,7 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, data.date);
             stmt.setLong(pos++, data.size);
-            if (data.locator != null) {
-                stmt.setString(pos++, data.locator);
-            } else {
-                stmt.setNull(pos++, Types.VARCHAR);
-            }
+            stmt.setString(pos++, data.locator);
             stmt.setString(pos++, data.getBlobDigest());
             switch (type) {
                 case MESSAGE:
@@ -252,7 +248,7 @@ public class DbMailItem {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement("INSERT INTO " + destTable +
                         "(" + mailbox_id +
-                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest," +
                         " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content, uuid) " +
                         "SELECT " + MAILBOX_ID_VALUE +
                         " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
@@ -273,11 +269,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, indexId);
             }
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
-            if (locator != null) {
-                stmt.setString(pos++, locator);                // VOLUME_ID specified by caller
-            } else {
-                stmt.setNull(pos++, Types.VARCHAR);            //   or, no VOLUME_ID
-            }
+            stmt.setString(pos++, locator);
             stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
@@ -354,7 +346,7 @@ public class DbMailItem {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement("INSERT INTO " + getRevisionTableName(mbox) +
                     "(" + mailbox_id +
-                    " item_id, version, date, size, volume_id, blob_digest, name, metadata," +
+                    " item_id, version, date, size, locator, blob_digest, name, metadata," +
                     " mod_metadata, change_date, mod_content) " +
                     "SELECT " + MAILBOX_ID_VALUE +
                     " ?, version, date, size, ?, blob_digest, name, metadata," +
@@ -364,11 +356,7 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, newId);
-            if (locator != null) {
-                stmt.setString(pos++, locator);       // VOLUME_ID specified by caller
-            } else {
-                stmt.setNull(pos++, Types.VARCHAR);      //   or, no VOLUME_ID
-            }
+            stmt.setString(pos++, locator);
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, revision.getId());
             stmt.setInt(pos++, revision.getVersion());
@@ -412,7 +400,7 @@ public class DbMailItem {
             }
             stmt = conn.prepareStatement("INSERT INTO " + table +
                         "(" + mailbox_id +
-                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest," +
                         " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                         "SELECT " + mailbox_id +
                         " ?, type, parent_id, ?, ?, ?, date, size, ?, blob_digest," +
@@ -427,11 +415,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.indexId);
             }
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
-            if (data.locator != null) {
-                stmt.setString(pos++, data.locator);           // VOLUME_ID
-            } else {
-                stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
-            }
+            stmt.setString(pos++, data.locator);
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
@@ -489,9 +473,9 @@ public class DbMailItem {
             String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(command + " INTO " + getRevisionTableName(mbox) +
-                        "(" + mailbox_id + "item_id, version, date, size, volume_id, blob_digest," +
+                        "(" + mailbox_id + "item_id, version, date, size, locator, blob_digest," +
                         " name, metadata, mod_metadata, change_date, mod_content) " +
-                        "SELECT " + mailbox_id + "id, ?, date, size, volume_id, blob_digest," +
+                        "SELECT " + mailbox_id + "id, ?, date, size, locator, blob_digest," +
                         " name, metadata, mod_metadata, change_date, mod_content" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
@@ -1035,7 +1019,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
                     "  blob_digest = ?, sender = ?, recipients = ?, subject = ?, name = ?," +
-                    "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
+                    "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, locator = ?" +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType().toByte());
@@ -1067,11 +1051,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mailbox.getOperationChangeID());
             stmt.setInt(pos++, mailbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-            if (item.getLocator() != null) {
-                stmt.setString(pos++, item.getLocator());
-            } else {
-                stmt.setNull(pos++, Types.TINYINT);
-            }
+            stmt.setString(pos++, item.getLocator());
             pos = setMailboxId(stmt, mailbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1098,16 +1078,12 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET size = ?, blob_digest = ?, volume_id = ?" +
+                        " SET size = ?, blob_digest = ?, locator = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setLong(pos++, item.getSize());
             stmt.setString(pos++, item.getDigest());
-            if (item.getLocator() != null) {
-                stmt.setString(pos++, item.getLocator());
-            } else {
-                stmt.setNull(pos++, Types.TINYINT);
-            }
+            stmt.setString(pos++, item.getLocator());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1599,11 +1575,11 @@ public class DbMailItem {
     // parent_id = null, change_date = ? (to be set to deletion time)
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
-        "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
+        "id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest, " +
         "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content, uuid";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
-        "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
+        "id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest, " +
         "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content, uuid";
 
     /**
@@ -2561,7 +2537,7 @@ public class DbMailItem {
     }
 
     static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, blob_digest," +
-                                           " mod_content, mod_metadata, flags, index_id, volume_id, tag_names, uuid";
+                                           " mod_content, mod_metadata, flags, index_id, locator, tag_names, uuid";
 
     private static final int LEAF_CI_ID           = 1;
     private static final int LEAF_CI_SIZE         = 2;
@@ -2574,7 +2550,7 @@ public class DbMailItem {
     private static final int LEAF_CI_MOD_METADATA = 9;
     private static final int LEAF_CI_FLAGS        = 10;
     private static final int LEAF_CI_INDEX_ID     = 11;
-    private static final int LEAF_CI_VOLUME_ID    = 12;
+    private static final int LEAF_CI_LOCATOR      = 12;
     private static final int LEAF_CI_TAGS         = 13;
     private static final int LEAF_CI_UUID         = 14;
 
@@ -2837,7 +2813,7 @@ public class DbMailItem {
                 String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
                 if (blobDigest != null) {
                     info.blobDigests.add(blobDigest);
-                    String locator = rs.getString(LEAF_CI_VOLUME_ID);
+                    String locator = rs.getString(LEAF_CI_LOCATOR);
                     try {
                         MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
                         if (mblob == null) {
@@ -2845,7 +2821,9 @@ public class DbMailItem {
                         } else {
                             info.blobs.add(mblob);
                         }
-                    } catch (Exception e1) { }
+                    } catch (Exception e1) {
+                        ZimbraLog.mailbox.warn("Exception while getting mailbox blob", e1);
+                    }
                 }
 
                 int indexId = rs.getInt(LEAF_CI_INDEX_ID);
@@ -2879,7 +2857,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT mi.id, mi.folder_id, rev.size, rev.mod_content, rev.volume_id, rev.blob_digest " +
+            stmt = conn.prepareStatement("SELECT mi.id, mi.folder_id, rev.size, rev.mod_content, rev.locator, rev.blob_digest " +
                     " FROM " + getMailItemTableName(mbox, "mi") + ", " + getRevisionTableName(mbox, "rev") +
                     " WHERE mi.id = rev.item_id AND " + DbUtil.whereIn("mi.id", versioned.size()) +
                     (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? AND mi.mailbox_id = rev.mailbox_id"));
@@ -3222,25 +3200,25 @@ public class DbMailItem {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("SELECT id, mod_content, volume_id FROM " + getMailItemTableName(mbox) +
+            stmt = conn.prepareStatement("SELECT id, mod_content, locator FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
             getAllBlobs(stmt, mbox, blobs);
             stmt.close();
             stmt = null;
 
-            stmt = conn.prepareStatement("SELECT id, mod_content, volume_id FROM " + getMailItemTableName(mbox, true) +
+            stmt = conn.prepareStatement("SELECT id, mod_content, locator FROM " + getMailItemTableName(mbox, true) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
             getAllBlobs(stmt, mbox, blobs);
             stmt.close();
             stmt = null;
 
-            stmt = conn.prepareStatement("SELECT item_id, mod_content, volume_id FROM " + getRevisionTableName(mbox) +
+            stmt = conn.prepareStatement("SELECT item_id, mod_content, locator FROM " + getRevisionTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
             getAllBlobs(stmt, mbox, blobs);
             stmt.close();
             stmt = null;
 
-            stmt = conn.prepareStatement("SELECT item_id, mod_content, volume_id FROM " + getRevisionTableName(mbox, true) +
+            stmt = conn.prepareStatement("SELECT item_id, mod_content, locator FROM " + getRevisionTableName(mbox, true) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
             getAllBlobs(stmt, mbox, blobs);
 
@@ -3282,7 +3260,7 @@ public class DbMailItem {
     public static final int CI_IMAP_ID     = 6;
     public static final int CI_DATE        = 7;
     public static final int CI_SIZE        = 8;
-    public static final int CI_VOLUME_ID   = 9;
+    public static final int CI_LOCATOR     = 9;
     public static final int CI_BLOB_DIGEST = 10;
     public static final int CI_UNREAD      = 11;
     public static final int CI_FLAGS       = 12;
@@ -3296,7 +3274,7 @@ public class DbMailItem {
     public static final int CI_UUID        = 20;
 
     static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.imap_id, mi.date, " +
-        "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject, mi.name, " +
+        "mi.size, mi.locator, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject, mi.name, " +
         "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid";
 
     static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
@@ -3327,7 +3305,7 @@ public class DbMailItem {
         }
         data.date = rs.getInt(CI_DATE + offset);
         data.size = rs.getLong(CI_SIZE + offset);
-        data.locator = rs.getString(CI_VOLUME_ID + offset);
+        data.locator = rs.getString(CI_LOCATOR + offset);
         data.setBlobDigest(rs.getString(CI_BLOB_DIGEST + offset));
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         int flags = rs.getInt(CI_FLAGS + offset);
@@ -3354,7 +3332,7 @@ public class DbMailItem {
         return data;
     }
 
-    private static final String REVISION_FIELDS = "date, size, volume_id, blob_digest, name, " +
+    private static final String REVISION_FIELDS = "date, size, locator, blob_digest, name, " +
                                                   "metadata, mod_metadata, change_date, mod_content";
 
     private static UnderlyingData constructRevision(ResultSet rs, MailItem item, boolean fromDumpster) throws SQLException, ServiceException {
@@ -3953,7 +3931,7 @@ public class DbMailItem {
             if (data.folderId != dbdata.folderId)        failures += " FOLDER_ID";
             if (data.indexId != dbdata.indexId)          failures += " INDEX_ID";
             if (data.imapId != dbdata.imapId)            failures += " IMAP_ID";
-            if (data.locator != dbdata.locator)          failures += " VOLUME_ID";
+            if (!StringUtil.equal(data.locator, dbdata.locator)) failures += " LOCATOR";
             if (data.date != dbdata.date)                failures += " DATE";
             if (data.size != dbdata.size)                failures += " SIZE";
             if (dbdata.type != MailItem.Type.CONVERSATION.toByte()) {

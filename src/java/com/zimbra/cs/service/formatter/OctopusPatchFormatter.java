@@ -132,7 +132,7 @@ public class OctopusPatchFormatter extends Formatter
             }
 
             log.debug("Storing blob");
-            Blob blob = StoreManager.getInstance().storeIncoming(pis, null);
+            Blob blob = StoreManager.getInstance().storeIncoming(pis);
 
             log.debug("Creating parsed document; filename=" + filename + ", contentType=" + contentType
                     + ", creator=" + creator);

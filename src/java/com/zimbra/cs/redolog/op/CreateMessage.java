@@ -50,7 +50,7 @@ import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.StorageCallback;
+import com.zimbra.cs.store.StoreManager;
 
 public class CreateMessage extends RedoableOp
 implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
@@ -430,7 +430,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             int dataLength = in.readInt();
             boolean inMemory = false;
             try {
-                inMemory = dataLength <= StorageCallback.getDiskStreamingThreshold();
+                inMemory = dataLength <= StoreManager.getDiskStreamingThreshold();
             } catch (ServiceException e) {}
 
             // mData must be the last thing deserialized.  See comments in serializeData()

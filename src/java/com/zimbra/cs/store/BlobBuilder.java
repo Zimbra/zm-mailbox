@@ -37,7 +37,6 @@ public class BlobBuilder {
     private long sizeHint;
     protected boolean disableCompression;
     private boolean disableDigest;
-    private StorageCallback storageCallback;
     private MessageDigest digest;
     private OutputStream out;
     private FileChannel fc;
@@ -62,11 +61,6 @@ public class BlobBuilder {
 
     public long getTotalBytes() {
         return totalBytes;
-    }
-
-    public BlobBuilder setStorageCallback(StorageCallback callback) {
-        this.storageCallback = callback;
-        return this;
     }
 
     /**
@@ -178,9 +172,6 @@ public class BlobBuilder {
         if (len > 0) {
             try {
                 out.write(b, off, len);
-                if (storageCallback != null) {
-                    storageCallback.wrote(blob, b, off, len);
-                }
                 if (digest != null) {
                     digest.update(b, off, len);
                 }

@@ -272,4 +272,47 @@ public final class DbVolume {
                 .setCompressBlobs(rs.getBoolean(CN_COMPRESS_BLOBS))
                 .setCompressionThreshold(rs.getLong(CN_COMPRESSION_THRESHOLD)).build();
     }
+
+    public static boolean isVolumeReferenced(DbConnection conn, short volumeId) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT distinct group_id from mailbox");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                int groupId = rs.getShort(1);
+                if (isVolumeReferenced(conn, volumeId, groupId)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting mailbox groups", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static boolean isVolumeReferenced(DbConnection conn, short volumeId, int groupId) throws ServiceException {
+        return tableRefsVolume(conn, volumeId, groupId, "revision") || tableRefsVolume(conn, volumeId, groupId, "revision_dumpster") ||
+            tableRefsVolume(conn, volumeId, groupId, "mail_item_dumpster") || tableRefsVolume(conn, volumeId, groupId, "mail_item");
+    }
+
+    private static boolean tableRefsVolume(DbConnection conn, short volumeId, int groupId, String table) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT count(*) from "+DbMailbox.qualifyTableName(groupId, table) +
+                " where locator=?");
+            stmt.setInt(1, volumeId);
+            rs = stmt.executeQuery();
+            return (rs.next() && rs.getInt(1) > 0);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("counting "+table+" refs", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
 }

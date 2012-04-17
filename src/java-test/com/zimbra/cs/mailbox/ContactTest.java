@@ -91,7 +91,7 @@ public final class ContactTest {
 
         conn.closeQuietly();
     }
-    
+
     @Test
     public void tooLongSender() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -140,19 +140,19 @@ public final class ContactTest {
         Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));
         Assert.assertEquals("2, Test", contacts.get(1).getFileAsString());
         Assert.assertEquals("TEST2@zimbra.com", contacts.get(1).getFields().get(ContactConstants.A_email));
-                
+
         Collection<javax.mail.Address> newAddrs = mbox.newContactAddrs(ImmutableList.of(
                 (javax.mail.Address)new javax.mail.internet.InternetAddress("test1@zimbra.com", "Test 1"),
                 (javax.mail.Address)new javax.mail.internet.InternetAddress("test2@zimbra.com", "Test 2")));
-        
+
         Assert.assertEquals(0, newAddrs.size());
     }
 
     /**
-     * Confirms that volumeId is not set for contacts.
+     * Confirms that locator is not set for contacts.
      */
     @Test
-    public void volumeId()
+    public void locator()
     throws Exception {
         // Create contact.
         Map<String, String> attrs = Maps.newHashMap();
@@ -161,10 +161,10 @@ public final class ContactTest {
         mbox.createContact(null, new ParsedContact(attrs), Mailbox.ID_FOLDER_CONTACTS, null);
 
         // Check volume id in database.
-        String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND volume_id IS NOT NULL",
+        String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND locator IS NOT NULL",
                 DbMailItem.getMailItemTableName(mbox), MailItem.Type.CONTACT.toByte());
         DbResults results = DbUtil.executeQuery(sql);
-        Assert.assertEquals("Found non-null volumeId values for contacts", 0, results.getInt(1));
+        Assert.assertEquals("Found non-null locator values for contacts", 0, results.getInt(1));
     }
 
     /**
@@ -190,7 +190,7 @@ public final class ContactTest {
             }
         }
     }
-    
+
     /**
      * Modify Contact having an attachment (bug 70488).
      */
@@ -204,13 +204,13 @@ public final class ContactTest {
         Attachment textAttachment = new Attachment(attachData, "image/png", "customField", "image.png");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Contact contact = mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(textAttachment)), Mailbox.ID_FOLDER_CONTACTS, null);
-        
+
         ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), new ArrayList<Attachment>());
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), pc.getContentStream());
         MimePart mp = Mime.getMimePart(mm, "1");
         Assert.assertEquals("image/png", mp.getContentType());
     }
-    
+
     /**
      * Tests Invalid image attachment (bug 71868).
      */
@@ -229,7 +229,7 @@ public final class ContactTest {
             Assert.assertEquals("check the INVALID_IMAGE exception", "mail.INVALID_IMAGE", se.getCode());
         }
     }
-    
+
     /**
      * Tests Invalid image attachment (bug 71868).
      */

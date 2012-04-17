@@ -2762,3 +2762,26 @@ See soap.txt for more details about the <retentionPolicy> element structure.
 
 <DeleteUCServiceResponse/>
 
+----------------------------
+
+<VerifyStoreManagerRequest [num="{numberOfBlobs}"] [fileSize="{fileSize}"]/>
+
+<VerifyStoreManagerResponse linkTime="{linkTime}" incomingTime="{incomingTime}" fetchTime="{fetchTime}"
+   stageTime="{stageTime}" deleteTime="{deleteTime}" storeManagerClass="{storeManagerClass}"/>
+
+Verify basic StoreManager functionality and performance. To be used by integrators during StoreManager development.
+
+numberOfBlobs - number of blobs to create. Defaults to 1000 if not specified.
+fileSize - size of each blob file in bytes. Defaults to 1024 if not specified. 
+
+All times reported in response are the total elapsed time for all blobs. 
+
+storeManagerClass - Java class name for the currently deployed StoreManager implementation
+incomingTime - time (ms) for the store incoming operation
+stageTime - time (ms) for the stage operation
+linkTime - time (ms) for the link operation
+fetchTime - time (ms) for the fetch operation
+deleteTime - time (ms) for the delete operation
+
+-----------------------------
+

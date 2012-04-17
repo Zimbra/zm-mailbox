@@ -15,13 +15,11 @@
 package com.zimbra.cs.store.http;
 
 import java.io.File;
-import java.util.HashMap;
 
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.io.Files;
@@ -29,19 +27,14 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.account.MockProvisioning;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTest;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.ThreaderTest;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StagedBlob;
+import com.zimbra.cs.store.AbstractStoreManagerTest;
 import com.zimbra.cs.store.StoreManager;
 
-public class HttpStoreManagerTest {
+public class HttpStoreManagerTest extends AbstractStoreManagerTest {
 
     public static class MockHttpStoreManager extends HttpStoreManager {
         @Override
@@ -68,83 +61,38 @@ public class HttpStoreManagerTest {
         }
 
         @Override
-        protected StagedBlob getStagedBlob(PostMethod post, String postDigest, long postSize, Mailbox mbox)
+        protected String getLocator(PostMethod post, String postDigest, long postSize, Mailbox mbox)
         throws ServiceException {
             String locator = post.getResponseHeader("Location").getValue();
             if (locator == null || locator.isEmpty()) {
                 throw ServiceException.FAILURE("no locator returned from POST", null);
             } else {
                 String[] parts = locator.trim().split("/");
-                return new HttpStagedBlob(mbox, postDigest, postSize, parts[parts.length - 1]);
+                return parts[parts.length - 1];
             }
         }
     }
 
-    private StoreManager originalStoreManager;
-    File tmpDir;
-
-    @BeforeClass
-    public static void init() throws Exception {
-        MailboxTestUtil.initServer();
-        MailboxTestUtil.initProvisioning();
-        Provisioning.getInstance().createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    public StoreManager getStoreManager() {
+        return new MockHttpStoreManager();
     }
 
+    File tmpDir;
+
     @Before
-    public void setUp() throws Exception {
-        originalStoreManager = StoreManager.getInstance();
-        StoreManager.setInstance(new MockHttpStoreManager());
+    public void setUpHttp() throws Exception {
         MockHttpStore.startup();
         tmpDir = Files.createTempDir();
         LC.zimbra_tmp_directory.setDefault(tmpDir.getPath());
-        StoreManager.getInstance().startup();
         MailboxTestUtil.clearData();
     }
 
     @After
-    public void tearDown() throws Exception {
-        StoreManager.getInstance().shutdown();
-        StoreManager.setInstance(originalStoreManager);
+    public void tearDownHttp() throws Exception {
         MockHttpStore.shutdown();
         if (tmpDir != null) {
             FileUtil.deleteDir(tmpDir);
         }
-    }
-
-    @Test
-    public void sizes() throws Exception {
-        ParsedMessage pm = ThreaderTest.getRootMessage();
-
-        StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(pm.getRawInputStream(), null);
-        Assert.assertEquals("blob size = message size", pm.getRawData().length, blob.getRawSize());
-
-        StagedBlob staged = sm.stage(blob, null);
-        Assert.assertEquals("staged size = blob size", blob.getRawSize(), staged.getSize());
-
-        MailboxBlob mblob = sm.link(staged, null, 0, 0);
-        Assert.assertEquals("mblob size = staged size", staged.getSize(), mblob.getSize());
-    }
-
-    /**
-     * Tests putting two copies of the same message into the store (bug 67969).
-     */
-    @Test
-    public void sameDigest() throws Exception {
-        ParsedMessage pm = ThreaderTest.getRootMessage();
-        StoreManager sm = StoreManager.getInstance();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        Blob blob1 = sm.storeIncoming(pm.getRawInputStream(), null);
-        StagedBlob staged1 = sm.stage(blob1, mbox);
-        MailboxBlob mblob1 = sm.link(staged1, mbox, 0, 0);
-
-        Blob blob2 = sm.storeIncoming(pm.getRawInputStream(), null);
-        StagedBlob staged2 = sm.stage(blob2, mbox);
-        MailboxBlob mblob2 = sm.link(staged2, mbox, 0, 0);
-
-        mblob1.getLocalBlob();
-        mblob2.getLocalBlob();
     }
 
     @Test

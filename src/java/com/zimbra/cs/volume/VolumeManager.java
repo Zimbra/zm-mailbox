@@ -202,6 +202,23 @@ public final class VolumeManager {
             if (currentIndexVolume != null && id == currentIndexVolume.getId()) {
                 throw VolumeServiceException.CANNOT_DELETE_CURRVOL(id, "index");
             }
+            Volume vol = getVolume(id);
+            if (vol.getType() == Volume.TYPE_MESSAGE || vol.getType() == Volume.TYPE_MESSAGE_SECONDARY) {
+                File path = new File(vol.getRootPath());
+                String[] files = path.list();
+                if (files != null && files.length > 0) {
+                    //have to check DB to see if any of these files are referenced by mail_item; no FK anymore
+                    DbConnection conn = DbPool.getConnection();
+                    try {
+                        if (DbVolume.isVolumeReferenced(conn, id)) {
+                            ZimbraLog.store.warn("volume %d referenced by mail_item cannot be deleted", id);
+                            throw VolumeServiceException.CANNOT_DELETE_VOLUME_IN_USE(id, null);
+                        }
+                    } finally {
+                        conn.closeQuietly();
+                    }
+                }
+            }
         }
 
         boolean success = false;

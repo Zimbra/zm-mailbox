@@ -2414,7 +2414,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         String locator = null;
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
-            MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
+            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
             locator = mblob.getLocator();
         }
@@ -2443,7 +2443,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 MailboxBlob srcRevBlob = revision.getBlob();
                 String revLocator = null;
                 if (srcRevBlob != null) {
-                    MailboxBlob copyRevBlob = sm.link(srcRevBlob, mMailbox, copyId, revision.getSavedSequence());
+                    MailboxBlob copyRevBlob = sm.copy(srcRevBlob, mMailbox, copyId, revision.getSavedSequence());
                     mMailbox.markOtherItemDirty(copyRevBlob);
                     revLocator = copyRevBlob.getLocator();
                 }
@@ -2517,7 +2517,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
             StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
+            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
             locator = mblob.getLocator();
         }

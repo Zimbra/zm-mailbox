@@ -67,7 +67,9 @@ public final class TestDocumentServer extends TestCase {
         File blobDir = getBlobDir(doc);
         List<Document> revisions = mbox.getAllRevisions(null, docId, type);
         assertEquals(1, revisions.size());
-        assertEquals(1, getBlobCount(blobDir, docId));
+        if (TestUtil.checkLocalBlobs()) {
+            assertEquals(1, getBlobCount(blobDir, docId));
+        }
         assertEquals(true, doc.isDescriptionEnabled());
 
         // Add a second revision.
@@ -76,14 +78,18 @@ public final class TestDocumentServer extends TestCase {
             new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions2.txt", "text/plain", System.currentTimeMillis(), USER_NAME, "two", false);
         doc = mbox.addDocumentRevision(null, docId, pd);
         assertEquals(2, mbox.getAllRevisions(null, docId, type).size());
-        assertEquals(2, getBlobCount(blobDir, docId));
+        if (TestUtil.checkLocalBlobs()) {
+            assertEquals(2, getBlobCount(blobDir, docId));
+        }
         assertEquals(false, doc.isDescriptionEnabled());
 
         // Move to trash, empty trash, and confirm that both blobs were deleted.
         mbox.move(null, doc.getId(), doc.getType(), Mailbox.ID_FOLDER_TRASH);
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
         mbox.emptyDumpster(null);
-        assertEquals(0, getBlobCount(blobDir, docId));
+        if (TestUtil.checkLocalBlobs()) {
+            assertEquals(0, getBlobCount(blobDir, docId));
+        }
     }
 
     private int getBlobCount(File dir, int id)

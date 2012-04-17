@@ -2266,7 +2266,7 @@ public abstract class CalendarItem extends MailItem {
         try {
             is = pm.getRawInputStream();
             if (is != null) {
-                StagedBlob sblob = sm.stage(is, null, mMailbox);
+                StagedBlob sblob = sm.stage(is, mMailbox);
                 return setContent(sblob, pm);
             } else {
                 ZimbraLog.calendar.warn(

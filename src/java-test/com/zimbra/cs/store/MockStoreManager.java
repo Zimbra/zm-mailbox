@@ -90,12 +90,12 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public Blob storeIncoming(InputStream data, StorageCallback callback, boolean storeAsIs) throws IOException {
+    public Blob storeIncoming(InputStream data, boolean storeAsIs) throws IOException {
         return new MockBlob(ByteStreams.toByteArray(data));
     }
 
     @Override
-    public StagedBlob stage(InputStream data, long actualSize, StorageCallback callback, Mailbox mbox)
+    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox)
     throws IOException {
         return new MockStagedBlob(mbox, ByteStreams.toByteArray(data));
     }
@@ -117,14 +117,6 @@ public final class MockStoreManager extends StoreManager {
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
                 src.getLocator(), ((MockStagedBlob) src).content);
-        BLOBS.put(destItemId, blob);
-        return blob;
-    }
-
-    @Override
-    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
-                src.getLocator(), ((MockMailboxBlob) src).content);
         BLOBS.put(destItemId, blob);
         return blob;
     }

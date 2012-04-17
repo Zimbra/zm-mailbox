@@ -20,8 +20,10 @@ import java.io.InputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.Zimbra;
 
@@ -57,6 +59,19 @@ public abstract class StoreManager {
     public static void setInstance(StoreManager instance) {
         ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
         sInstance = instance;
+    }
+
+    private static Integer diskStreamingThreshold;
+
+    public static int getDiskStreamingThreshold() throws ServiceException {
+        if (diskStreamingThreshold == null)
+            loadSettings();
+        return diskStreamingThreshold;
+    }
+
+    public static void loadSettings() throws ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer();
+        diskStreamingThreshold = server.getMailDiskStreamingThreshold();
     }
 
     /**
@@ -107,9 +122,9 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(InputStream data, StorageCallback callback)
+    public Blob storeIncoming(InputStream data)
     throws IOException, ServiceException {
-        return storeIncoming(data, callback, false);
+        return storeIncoming(data, false);
     }
 
     /**
@@ -121,7 +136,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, StorageCallback callback, boolean storeAsIs)
+    public abstract Blob storeIncoming(InputStream data, boolean storeAsIs)
     throws IOException, ServiceException;
 
     /**
@@ -134,7 +149,7 @@ public abstract class StoreManager {
      * @param callback callback, or {@code null}
      * @param mbox the mailbox
      */
-    public abstract StagedBlob stage(InputStream data, long actualSize, StorageCallback callback, Mailbox mbox)
+    public abstract StagedBlob stage(InputStream data, long actualSize, Mailbox mbox)
     throws IOException, ServiceException;
 
     /**
@@ -146,9 +161,9 @@ public abstract class StoreManager {
      * @param callback callback, or {@code null}
      * @param mbox the mailbox
      */
-    public StagedBlob stage(InputStream data, StorageCallback callback, Mailbox mbox)
+    public StagedBlob stage(InputStream data, Mailbox mbox)
     throws IOException, ServiceException {
-        return stage(data, -1, callback, mbox);
+        return stage(data, -1, mbox);
     }
 
     /**
@@ -166,6 +181,7 @@ public abstract class StoreManager {
     /**
      * Create a copy in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
+     * Implementations may choose to use linking where appropriate (i.e. files on same filesystem)
      * @param src
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
@@ -180,6 +196,8 @@ public abstract class StoreManager {
     /**
      * Create a link in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
+     * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
+     * If staging is done to temporary area such as our incoming directory this operation finishes it 
      * @param src
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
@@ -192,21 +210,8 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
-     * Create a link in destMbox mailbox with message ID of destMsgId that
-     * points to srcBlob.
-     * @param src
-     * @param destMbox
-     * @param destMsgId mail_item.id value for message in destMbox
-     * @param destRevision mail_item.mod_content value for message in destMbox
-     * @return MailboxBlob object representing the linked blob
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public abstract MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException;
-
-    /**
      * Rename a blob to a blob in mailbox directory.
+     * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items 
      * @param src
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox

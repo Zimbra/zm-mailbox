@@ -80,9 +80,10 @@ public final class TestAccount extends TestCase {
         TestUtil.addMessage(mbox, "TestAccount testDeleteAccount");
         String storePath = VolumeManager.getInstance().getCurrentMessageVolume().getMessageRootDir(mbox.getId());
         File storeDir = new File(storePath);
-        assertTrue(storePath + " does not exist", storeDir.exists());
-        assertTrue(storePath + " is not a directory", storeDir.isDirectory());
-
+        if (TestUtil.checkLocalBlobs()) {
+            assertTrue(storePath + " does not exist", storeDir.exists());
+            assertTrue(storePath + " is not a directory", storeDir.isDirectory());
+        }
         // Delete the account
         LmcSession session = TestUtil.getAdminSoapSession();
         LmcDeleteAccountRequest req = new LmcDeleteAccountRequest(account.getId());
@@ -94,8 +95,10 @@ public final class TestAccount extends TestCase {
             "SELECT COUNT(*) FROM mailbox WHERE id = " + mbox.getId());
         assertEquals("Unexpected row in mailbox table", 0, results.getInt(1));
 
-        // Confirm that the message directory was deleted
-        assertFalse(storePath + " exists", storeDir.exists());
+        if (TestUtil.checkLocalBlobs()) {
+            // Confirm that the message directory was deleted
+            assertFalse(storePath + " exists", storeDir.exists());
+        }
     }
 
     private void cleanUp() throws Exception {

@@ -33,7 +33,6 @@ import com.zimbra.cs.store.FileDescriptorCache;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
-import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
@@ -91,9 +90,9 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public Blob storeIncoming(InputStream in, StorageCallback callback, boolean storeAsIs)
+    public Blob storeIncoming(InputStream in, boolean storeAsIs)
     throws IOException, ServiceException {
-        BlobBuilder builder = getBlobBuilder().setStorageCallback(callback);
+        BlobBuilder builder = getBlobBuilder();
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
 
@@ -101,10 +100,10 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public VolumeStagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
+    public VolumeStagedBlob stage(InputStream in, long actualSize, Mailbox mbox)
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
-        Blob blob = storeIncoming(in, callback);
+        Blob blob = storeIncoming(in);
         return new VolumeStagedBlob(mbox, (VolumeBlob) blob).markStagedDirectly();
     }
 
@@ -118,9 +117,23 @@ public final class FileBlobStore extends StoreManager {
     public VolumeMailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
-        return copy(src.getLocalBlob(), destMbox, destItemId, destRevision, volume);
+        //FileBlobStore optimizes copy by using link where possible
+        return link(src.getLocalBlob(), destMbox, destItemId, destRevision, volume.getId());
     }
 
+    /**
+     * Create a copy of a blob in volume/path specified by dest* parameters.
+     * Note this method is not part of the StoreManager interface
+     * It is only to be used for FileBlobStore specific code such as BlobMover
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @param destVolumeId mail_item.volume_id for message in dest Mbox
+     * @return MailboxBlob object representing the linked blob
+     * @throws IOException
+     * @throws ServiceException
+     */
     public VolumeMailboxBlob copy(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getVolume(destVolumeId);
@@ -168,13 +181,6 @@ public final class FileBlobStore extends StoreManager {
 
         VolumeBlob newBlob = (VolumeBlob) new VolumeBlob(dest, destVolume.getId()).copyCachedDataFrom(src).setCompressed(destCompressed);
         return new VolumeMailboxBlob(destMbox, destItemId, destRevision, destVolume.getLocator(), newBlob);
-    }
-
-    @Override
-    public VolumeMailboxBlob link(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
-    throws IOException, ServiceException {
-        Volume volume = MANAGER.getCurrentMessageVolume();
-        return link(src.getLocalBlob(), destMbox, destItemId, destRevision, volume.getId());
     }
 
     @Override
@@ -243,7 +249,6 @@ public final class FileBlobStore extends StoreManager {
             // Do a copy instead.
             FileUtil.copy(srcFile, dest, !DebugConfig.disableMessageStoreFsync);
         }
-
         String destLocator = Short.toString(destVolumeId);
         VolumeBlob vblob = (VolumeBlob) new VolumeBlob(dest, destVolumeId).copyCachedDataFrom(src);
         return new VolumeMailboxBlob(destMbox, destItemId, destRevision, destLocator, vblob);
@@ -341,7 +346,7 @@ public final class FileBlobStore extends StoreManager {
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) throws ServiceException {
-        short volumeId = Short.parseShort(locator);
+        short volumeId = Short.valueOf(locator);
         File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, true);
         if (file == null) {
             return null;
