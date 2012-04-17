@@ -73,6 +73,9 @@ SECTION mta DEPENDS amavis
 	if LOCAL postfix_enable_smtpd_policyd
 		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	fi
+	if LOCAL !postfix_enable_smtpd_policyd
+		POSTCONFD policy_time_limit
+	fi
 	if VAR zimbraMtaMyNetworks
 		POSTCONF mynetworks VAR zimbraMtaMyNetworks
 	fi
