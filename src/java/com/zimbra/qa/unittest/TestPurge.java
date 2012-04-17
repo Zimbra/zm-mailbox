@@ -46,7 +46,7 @@ public class TestPurge extends TestCase {
     private static final String NAME_PREFIX = TestPurge.class.getSimpleName();
 
     private String originalSystemPolicy;
-    
+
     @Override
     public void setUp() throws Exception {
         cleanUp();
@@ -60,17 +60,17 @@ public class TestPurge extends TestCase {
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = TestUtil.createFolder(mbox, "/" + NAME_PREFIX + "-testFolderRetentionPolicy");
-        
-        // Set user keep policy for folder. 
+
+        // Set user keep policy for folder.
         FolderActionSelector action = new FolderActionSelector(folder.getId(), "retentionpolicy");
         RetentionPolicy rp = new RetentionPolicy(Arrays.asList(Policy.newUserPolicy("30d")), null);
         action.setRetentionPolicy(rp);
         FolderActionRequest req = new FolderActionRequest(action);
-        
+
         FolderActionResponse res = mbox.invokeJaxb(req);
         assertEquals("retentionpolicy", res.getAction().getOperation());
         assertEquals(folder.getId(), res.getAction().getId());
-        
+
         // Make sure that the retention policy is now set.
         folder = mbox.getFolderById(folder.getId());
         rp = folder.getRetentionPolicy();
@@ -79,17 +79,17 @@ public class TestPurge extends TestCase {
         Policy p = rp.getKeepPolicy().get(0);
         assertEquals(Policy.Type.USER, p.getType());
         assertEquals("30d", p.getLifetime());
-        
+
         // Turn off keep policy and set purge policy.
         action = new FolderActionSelector(folder.getId(), "retentionpolicy");
         rp = new RetentionPolicy(null, Arrays.asList(Policy.newUserPolicy("45d")));
         action.setRetentionPolicy(rp);
         req = new FolderActionRequest(action);
-        
+
         res = mbox.invokeJaxb(req);
         assertEquals("retentionpolicy", res.getAction().getOperation());
         assertEquals(folder.getId(), res.getAction().getId());
-        
+
         // Make sure that the retention policy is now set.
         folder = mbox.getFolderById(folder.getId());
         rp = folder.getRetentionPolicy();
@@ -98,27 +98,27 @@ public class TestPurge extends TestCase {
         p = rp.getPurgePolicy().get(0);
         assertEquals(Policy.Type.USER, p.getType());
         assertEquals("45d", p.getLifetime());
-        
+
         // Start a new session and make sure that the retention policy is still returned.
         mbox = TestUtil.getZMailbox(USER_NAME);
         folder = mbox.getFolderById(folder.getId());
         assertTrue(folder.getRetentionPolicy().isSet());
     }
-    
+
     public void testTagRetentionPolicy() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZTag tag = mbox.createTag(NAME_PREFIX + "-testTagRetentionPolicy", null);
-        
+
         // Set user keep policy for folder.
         TagActionSelector action = new TagActionSelector(tag.getId(), "retentionpolicy");
         RetentionPolicy rp = new RetentionPolicy(Arrays.asList(Policy.newUserPolicy("30d")), null);
         action.setRetentionPolicy(rp);
         TagActionRequest req = new TagActionRequest(action);
-        
+
         TagActionResponse res = mbox.invokeJaxb(req);
         assertEquals("retentionpolicy", res.getAction().getOperation());
-        assertEquals(tag.getId(), res.getAction().getId());
-        
+        assertEquals(tag.getId(), res.getAction().getSuccesses());
+
         // Make sure that the retention policy is now set.
         tag = mbox.getTagById(tag.getId());
         rp = tag.getRetentionPolicy();
@@ -127,17 +127,17 @@ public class TestPurge extends TestCase {
         Policy p = rp.getKeepPolicy().get(0);
         assertEquals(Policy.Type.USER, p.getType());
         assertEquals("30d", p.getLifetime());
-        
+
         // Turn off keep policy and set purge policy.
         action = new TagActionSelector(tag.getId(), "retentionpolicy");
         rp = new RetentionPolicy(null, Arrays.asList(Policy.newUserPolicy("45d")));
         action.setRetentionPolicy(rp);
         req = new TagActionRequest(action);
-        
+
         res = mbox.invokeJaxb(req);
         assertEquals("retentionpolicy", res.getAction().getOperation());
-        assertEquals(tag.getId(), res.getAction().getId());
-        
+        assertEquals(tag.getId(), res.getAction().getSuccesses());
+
         // Make sure that the retention policy is now set.
         tag = mbox.getTagById(tag.getId());
         rp = tag.getRetentionPolicy();
@@ -146,23 +146,23 @@ public class TestPurge extends TestCase {
         p = rp.getPurgePolicy().get(0);
         assertEquals(Policy.Type.USER, p.getType());
         assertEquals("45d", p.getLifetime());
-        
+
         // Start a new session and make sure that the retention policy is still returned.
         mbox = TestUtil.getZMailbox(USER_NAME);
         tag = mbox.getTagById(tag.getId());
         assertTrue(tag.getRetentionPolicy().isSet());
     }
-    
+
     public void testSystemRetentionPolicy() throws Exception {
         SoapProvisioning prov = TestUtil.newSoapProvisioning();
-        
+
         // Test getting empty system policy.
         GetSystemRetentionPolicyRequest getReq = new GetSystemRetentionPolicyRequest();
         GetSystemRetentionPolicyResponse getRes = prov.invokeJaxb(getReq);
         RetentionPolicy rp = getRes.getRetentionPolicy();
         assertEquals(0, rp.getKeepPolicy().size());
         assertEquals(0, rp.getPurgePolicy().size());
-        
+
         // Create keep policy.
         Policy keep = Policy.newSystemPolicy("keep", "60d");
         CreateSystemRetentionPolicyRequest createReq = CreateSystemRetentionPolicyRequest.newKeepRequest(keep);
@@ -172,18 +172,18 @@ public class TestPurge extends TestCase {
         assertEquals(keep.getName(), p.getName());
         assertEquals(keep.getLifetime(), p.getLifetime());
         keep = p;
-        
+
         // Create purge policy.
         Policy purge1 = Policy.newSystemPolicy("purge1", "120d");
         createReq = CreateSystemRetentionPolicyRequest.newPurgeRequest(purge1);
         createRes = prov.invokeJaxb(createReq);
         purge1 = createRes.getPolicy();
-        
+
         Policy purge2 = Policy.newSystemPolicy("purge2", "240d");
         createReq = CreateSystemRetentionPolicyRequest.newPurgeRequest(purge2);
         createRes = prov.invokeJaxb(createReq);
         purge2 = createRes.getPolicy();
-        
+
         // Test getting updated system policy.
         getRes = prov.invokeJaxb(getReq);
         rp = getRes.getRetentionPolicy();
@@ -192,30 +192,30 @@ public class TestPurge extends TestCase {
         assertEquals(2, rp.getPurgePolicy().size());
         assertEquals(purge1, rp.getPolicyById(purge1.getId()));
         assertEquals(purge2, rp.getPolicyById(purge2.getId()));
-        
+
         // Get system policy with the mail API.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         com.zimbra.soap.mail.message.GetSystemRetentionPolicyResponse mailRes =
             mbox.invokeJaxb(new com.zimbra.soap.mail.message.GetSystemRetentionPolicyRequest());
         assertEquals(rp, mailRes.getRetentionPolicy());
-        
+
         // Modify lifetime.
         Policy modLifetime = Policy.newSystemPolicy(purge1.getId(), null, "121d");
         ModifySystemRetentionPolicyRequest modifyReq = new ModifySystemRetentionPolicyRequest(modLifetime);
         ModifySystemRetentionPolicyResponse modifyRes = prov.invokeJaxb(modifyReq);
         Policy newPurge1 = modifyRes.getPolicy();
         assertEquals(Policy.newSystemPolicy(purge1.getId(), "purge1", "121d"), newPurge1);
-        
+
         getRes = prov.invokeJaxb(getReq);
         assertEquals(newPurge1, getRes.getRetentionPolicy().getPolicyById(newPurge1.getId()));
-        
+
         // Modify name.
         Policy modName = Policy.newSystemPolicy(purge1.getId(), "purge1-new", null);
         modifyReq = new ModifySystemRetentionPolicyRequest(modName);
         modifyRes = prov.invokeJaxb(modifyReq);
         newPurge1 = modifyRes.getPolicy();
         assertEquals(Policy.newSystemPolicy(purge1.getId(), "purge1-new", "121d"), newPurge1);
-        
+
         // Delete.
         DeleteSystemRetentionPolicyRequest deleteReq = new DeleteSystemRetentionPolicyRequest(purge1);
         @SuppressWarnings("unused")
@@ -227,7 +227,7 @@ public class TestPurge extends TestCase {
         assertEquals(1, rp.getPurgePolicy().size());
         assertEquals(purge2, rp.getPurgePolicy().get(0));
     }
-    
+
     @Override
     public void tearDown() throws Exception {
         cleanUp();
@@ -237,7 +237,7 @@ public class TestPurge extends TestCase {
     private void cleanUp() throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
-    
+
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();

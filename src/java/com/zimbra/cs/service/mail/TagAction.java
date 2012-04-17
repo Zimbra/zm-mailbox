@@ -82,7 +82,7 @@ public class TagAction extends ItemAction  {
         Element result = response.addUniqueElement(MailConstants.E_ACTION);
         result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_TAG_NAMES, successNames);
-        result.addAttribute(MailConstants.A_OPERATION, operation);
+        result.addAttribute(MailConstants.A_OPERATION, opAttr);
         return response;
     }
 }
