@@ -419,6 +419,14 @@ public abstract class Element implements Cloneable {
         }
     }
 
+    public static short parseShort(String key, String value) throws ServiceException {
+        try {
+            return Short.parseShort(value);
+        } catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST("invalid short value '" + value + "' for attribute: " + key, nfe);
+        }
+    }
+
     public static double parseDouble(String key, String value) throws ServiceException {
         try {
             return Double.parseDouble(value);

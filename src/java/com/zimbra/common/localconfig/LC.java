@@ -1190,12 +1190,14 @@ public final class LC {
     public static final KnownKey document_incoming_max_age = KnownKey.newKey(360); // 120 mins = 2 hours
 
     @Supported
-    public static final KnownKey http_store_local_cache_max_bytes = KnownKey.newKey(1024 * 1024 * 1024); // 1GB
+    public static final KnownKey external_store_local_cache_max_bytes = KnownKey.newKey(1024 * 1024 * 1024); // 1GB
 
     @Supported
-    public static final KnownKey http_store_local_cache_max_files = KnownKey.newKey(10000);
+    public static final KnownKey external_store_local_cache_max_files = KnownKey.newKey(10000);
 
-    public static final KnownKey http_store_local_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
+    @Supported
+    public static final KnownKey external_store_local_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
+
     public static final KnownKey uncompressed_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
