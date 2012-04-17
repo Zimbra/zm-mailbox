@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010,2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,37 +15,57 @@
 
 package com.zimbra.soap.account.type;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.HeaderConstants;
 
-/*
-       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"]]/>]
- */
-@XmlType(propOrder = {})
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;
+
+ // See ZimbraSoapContext.encodeSession:
+ // eSession.addAttribute(HeaderConstants.A_TYPE, typeStr).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
+
+@XmlAccessorType(XmlAccessType.NONE)
 public class Session {
 
     /**
-     * @zm-api-field-tag returned-from-server-in-last-response
-     * @zm-api-field-description The ID returned from the server in the last response
+     * @zm-api-field-tag session-type
+     * @zm-api-field-description Session type - currently only set if value is "admin"
      */
-    @XmlElement private String id;
+    @XmlAttribute(name=HeaderConstants.A_TYPE, required=false)
+    private String type;
+
     /**
-     * @zm-api-field-tag highest_notification_received
-     * @zm-api-field-description The highest notification received
+     * @zm-api-field-tag id
+     * @zm-api-field-description Session ID
      */
-    @XmlElement private Long seq;
+    @XmlAttribute(name=HeaderConstants.A_ID, required=true)
+    private String id;
 
     public Session() {
     }
 
-    public Session(String id, Long seq) {
-        setId(id);
-        setSeq(seq);
+    public void setType(String type) { this.type = type; }
+    public void setId(String id) { this.id = id; }
+    public void setSessionId(String sessionId) { this.id = sessionId; }
+    public String getType() { return type; }
+    public String getId() { return id; }
+    /**
+     * @zm-api-field-tag session-id
+     * @zm-api-field-description Session ID  (same as <b>id</b>)
+     */
+    @XmlValue
+    public String getSessionId() { return id; }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("type", type)
+            .add("id", id);
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public Long getSeq() { return seq; }
-    public void setSeq(Long seq) { this.seq = seq; }
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
+    }
 }

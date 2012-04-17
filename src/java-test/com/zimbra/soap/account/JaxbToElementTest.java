@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011,2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -48,6 +48,7 @@ import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.type.Pref;
+import com.zimbra.soap.account.type.Session;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
 import com.zimbra.soap.admin.message.CreateXMbxSearchRequest;
 import com.zimbra.soap.admin.message.MailQueueActionRequest;
@@ -82,6 +83,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 
@@ -585,6 +587,29 @@ public class JaxbToElementTest {
         } else {
             Assert.fail("Failed to get back a FolderActionSelector");
         }
+    }
+
+    /**
+     * The Session JAXB object shares the same field for both the value and the id attribute.  Check that nothing is
+     * lost in a round trip.
+     */
+    @Test
+    public void accountSessionJaxbTest() throws Exception {
+        final String myId = "my-id";
+        final String myType = "admin";
+        Session sess = new Session();
+        sess.setId(myId);
+        sess.setType(myType);
+        Element sessE = JaxbUtil.jaxbToNamedElement(HeaderConstants.E_SESSION, AccountConstants.NAMESPACE_STR, sess,
+                Element.XMLElement.mFactory);
+        Assert.assertNotNull("jaxbToNamedElement Session Element", sessE);
+        Assert.assertEquals("from jaxb id attr", myId, sessE.getAttribute(HeaderConstants.A_ID));
+        Assert.assertEquals("from jaxb type attr", myType, sessE.getAttribute(HeaderConstants.A_TYPE));
+        Assert.assertEquals("from jaxb value", myId, sessE.getText());
+        sess = JaxbUtil.elementToJaxb(sessE, Session.class);
+        Assert.assertEquals("jaxb from element - value", myId, sess.getSessionId());
+        Assert.assertEquals("jaxb from element - id", myId, sess.getId());
+        Assert.assertEquals("jaxb from element - type", myType, sess.getType());
     }
 
     @Test
