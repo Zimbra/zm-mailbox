@@ -19,7 +19,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 public class LdapExample {
     
     private GenericLdapConfig getLdapConfig() {
-        String ldapUrl = "ldapi://";
+        String ldapUrl = "ldapi:///";
         boolean startTLSEnabled = false;
         String bindDN = "cn=config";
         String bindPassword = LC.ldap_root_password.value();
@@ -79,7 +79,7 @@ public class LdapExample {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(ldapConfig, LdapUsage.SEARCH);
+            zlc = LdapClient.getContext(ldapConfig, LdapUsage.ADD);
             
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.setDN(dn);
@@ -110,7 +110,7 @@ public class LdapExample {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(ldapConfig, LdapUsage.SEARCH);
+            zlc = LdapClient.getContext(ldapConfig, LdapUsage.DELETE);
             zlc.deleteEntry(dn);
         } finally {
             // Note: this is important!! 
@@ -124,7 +124,7 @@ public class LdapExample {
         
         ZLdapContext zlc = null;
         try {
-            zlc = LdapClient.getContext(ldapConfig, LdapUsage.SEARCH);
+            zlc = LdapClient.getContext(ldapConfig, LdapUsage.MOD);
             
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.setAttr("description", "so this gets modified");

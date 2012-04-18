@@ -115,7 +115,12 @@ public enum LdapUsage {
     NGINX_LOOKUP,
     UNITTEST,
     UPGRADE,
-    GENERIC;  // used only by zmconfigd
+    // following only used by zmconfigd
+    GENERIC, 
+    ADD,
+    DELETE,
+    MOD,
+    MODRDN;
 
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {
