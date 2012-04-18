@@ -2,13 +2,13 @@ SECTION amavis
 	REWRITE conf/amavisd.conf.in conf/amavisd.conf
 	POSTCONF content_filter 
 	if SERVICE antivirus
-		POSTCONF content_filter FILE postfix_content_filter.cf
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	if SERVICE antispam
-		POSTCONF content_filter FILE postfix_content_filter.cf
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	if SERVICE archiving
-		POSTCONF content_filter FILE postfix_content_filter.cf
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	LOCAL amavis_dspam_enabled
 	LOCAL av_notify_domain
@@ -107,8 +107,8 @@ SECTION mta DEPENDS amavis
 	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit		                0
 	POSTCONF relayhost				                    VAR zimbraMtaRelayHost
-	POSTCONF smtpd_recipient_restrictions FILE postfix_recipient_restrictions.cf
-	POSTCONF smtpd_sender_restrictions FILE smtpd_sender_restrictions.cf
+	POSTCONF smtpd_recipient_restrictions FILE zmconfigd/postfix_recipient_restrictions.cf
+	POSTCONF smtpd_sender_restrictions FILE zmconfigd/smtpd_sender_restrictions.cf
 	POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
 
 	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
@@ -316,7 +316,7 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_module_checkspf
 	LOCAL cbpolicyd_module_quotas
 	if SERVICE cbpolicyd
-		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
+		POSTCONF smtpd_end_of_data_restrictions FILE zmconfigd/smtpd_end_of_data_restrictions.cf
 	fi
 	if SERVICE !cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions
