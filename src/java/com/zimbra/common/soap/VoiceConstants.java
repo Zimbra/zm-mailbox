@@ -96,7 +96,6 @@ public class VoiceConstants {
     public static final String A_TYPE          = "type";
     public static final String A_CALLABLE = "callable";
     public static final String A_EDITABLE = "editable";
-    public static final String A_NUM_PUBLISHABLE = "numpublishable";
 
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
