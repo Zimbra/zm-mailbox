@@ -76,12 +76,11 @@ public class TagAction extends ItemAction  {
         } else {
             successes = handleCommon(context, request, opAttr, MailItem.Type.TAG);
         }
-        String successNames = TagUtil.encodeTags(TagUtil.tagIdStringToNames(mbox, octxt, successes));
 
         Element response = zsc.createElement(MailConstants.TAG_ACTION_RESPONSE);
         Element result = response.addUniqueElement(MailConstants.E_ACTION);
         result.addAttribute(MailConstants.A_ID, successes);
-        result.addAttribute(MailConstants.A_TAG_NAMES, successNames);
+        result.addAttribute(MailConstants.A_TAG_NAMES, tn);
         result.addAttribute(MailConstants.A_OPERATION, opAttr);
         return response;
     }

@@ -600,4 +600,23 @@ public class TagTest {
             MailboxListener.unregister(ml);
         }
     }
+
+    @Test
+    public void lowercase() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        mbox.createTag(null, "foo", (byte) 5);
+        try {
+            mbox.getTagByName(null, "FOO");
+        } catch (ServiceException e) {
+            Assert.fail("could not find differently-cased tag");
+        }
+
+        mbox.createTag(null, "Foo2", (byte) 3);
+        try {
+            mbox.getTagByName(null, "foo2");
+        } catch (ServiceException e) {
+            Assert.fail("could not find differently-cased tag");
+        }
+    }
 }

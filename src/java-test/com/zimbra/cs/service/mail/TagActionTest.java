@@ -30,6 +30,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -83,7 +84,6 @@ public class TagActionTest {
         Assert.assertEquals(name2 + " color set", 4, mbox.getTagByName(null, name2).getColor());
 
         Assert.assertEquals(tagids, ack.getAttribute(MailConstants.A_ID));
-        Assert.assertEquals(TagUtil.encodeTags(name1, name2), ack.getAttribute(MailConstants.A_TAG_NAMES));
     }
 
     @Test
@@ -169,6 +169,35 @@ public class TagActionTest {
             Assert.fail("colored another user's tags without permissions");
         } catch (ServiceException e) {
             Assert.assertEquals("expected error code: " + ServiceException.PERM_DENIED, ServiceException.PERM_DENIED, e.getCode());
+        }
+    }
+
+    @Test
+    public void delete() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // create the tag
+        Element request = new Element.XMLElement(MailConstants.CREATE_TAG_REQUEST);
+        request.addUniqueElement(MailConstants.E_TAG).addAttribute(MailConstants.A_COLOR, 4).addAttribute(MailConstants.A_NAME, "test");
+        Element response = new CreateTag().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        int tagId = response.getElement(MailConstants.E_TAG).getAttributeInt(MailConstants.A_ID);
+        try {
+            mbox.getTagById(null, tagId);
+        } catch (ServiceException e) {
+            Assert.fail("tag not created: " + e);
+        }
+
+        // delete the tag
+        request = new Element.XMLElement(MailConstants.TAG_ACTION_REQUEST);
+        request.addUniqueElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_OPERATION, ItemAction.OP_HARD_DELETE).addAttribute(MailConstants.A_ID, tagId);
+        new TagAction().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        try {
+            mbox.getTagById(null, tagId);
+            Assert.fail("tag not deleted");
+        } catch (NoSuchItemException e) {
         }
     }
 }
