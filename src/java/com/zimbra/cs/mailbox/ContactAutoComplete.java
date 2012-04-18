@@ -445,7 +445,7 @@ public class ContactAutoComplete {
 
         @Override
         public void visit(GalContact c) throws ServiceException {
-            ZimbraLog.gal.debug("gal entry: %d", c.getId());
+            ZimbraLog.gal.debug("gal entry: %s", c.getId());
             handleContactAttrs(c.getAttrs());
         }
 
