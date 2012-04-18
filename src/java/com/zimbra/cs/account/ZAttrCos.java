@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120414-1503 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120417-1339 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4440,6 +4440,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetDeviceLockWhenInactive(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDeviceLockWhenInactive, "");
+        return attrs;
+    }
+
+    /**
+     * Whether offline reading of docuemnts on device is allowed
+     *
+     * @return zimbraDeviceOfflineCacheEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1413)
+    public boolean isDeviceOfflineCacheEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDeviceOfflineCacheEnabled, false);
+    }
+
+    /**
+     * Whether offline reading of docuemnts on device is allowed
+     *
+     * @param zimbraDeviceOfflineCacheEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1413)
+    public void setDeviceOfflineCacheEnabled(boolean zimbraDeviceOfflineCacheEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, zimbraDeviceOfflineCacheEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether offline reading of docuemnts on device is allowed
+     *
+     * @param zimbraDeviceOfflineCacheEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1413)
+    public Map<String,Object> setDeviceOfflineCacheEnabled(boolean zimbraDeviceOfflineCacheEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, zimbraDeviceOfflineCacheEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether offline reading of docuemnts on device is allowed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1413)
+    public void unsetDeviceOfflineCacheEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether offline reading of docuemnts on device is allowed
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1413)
+    public Map<String,Object> unsetDeviceOfflineCacheEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, "");
         return attrs;
     }
 
@@ -18438,6 +18510,176 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyApprovedApplication(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplication, "");
+        return attrs;
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @return zimbraMobilePolicyApprovedApplicationList, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public String[] getMobilePolicyApprovedApplicationList() {
+        return getMultiAttr(Provisioning.A_zimbraMobilePolicyApprovedApplicationList);
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param zimbraMobilePolicyApprovedApplicationList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public void setMobilePolicyApprovedApplicationList(String[] zimbraMobilePolicyApprovedApplicationList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param zimbraMobilePolicyApprovedApplicationList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public Map<String,Object> setMobilePolicyApprovedApplicationList(String[] zimbraMobilePolicyApprovedApplicationList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
+        return attrs;
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param zimbraMobilePolicyApprovedApplicationList new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public void addMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param zimbraMobilePolicyApprovedApplicationList new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public Map<String,Object> addMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
+        return attrs;
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param zimbraMobilePolicyApprovedApplicationList existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public void removeMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param zimbraMobilePolicyApprovedApplicationList existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public Map<String,Object> removeMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
+        return attrs;
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public void unsetMobilePolicyApprovedApplicationList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This is the internal attr for
+     * &quot;zimbraMobilePolicyApprovedApplication&quot; which can only store
+     * app hash (to keep consistent with ActiveSync specification. This
+     * attr&#039;s format is &quot;app_name&quot;:&quot;app_hash&quot;, and
+     * is used for showing both the app name and hash in admin console UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1412)
+    public Map<String,Object> unsetMobilePolicyApprovedApplicationList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, "");
         return attrs;
     }
 
