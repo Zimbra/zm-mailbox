@@ -22,9 +22,9 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -34,8 +34,8 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.FileUploadServlet;
 
 /**
@@ -122,11 +122,11 @@ public class Collection extends MailItemResource {
         return children;
     }
 
-    
+
     public MailItem.Type getDefaultView() {
         return view;
     }
-    
+
     private List<MailItem> getChildrenMailItem(DavContext ctxt) throws DavException,ServiceException {
         Mailbox mbox = getMailbox(ctxt);
 
@@ -147,7 +147,8 @@ public class Collection extends MailItemResource {
     public Collection mkCol(DavContext ctxt, String name, MailItem.Type view) throws DavException {
         try {
             Mailbox mbox = getMailbox(ctxt);
-            Folder f = mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
+            Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(view);
+            Folder f = mbox.createFolder(ctxt.getOperationContext(), name, mId, fopt);
             return (Collection)UrlNamespace.getResourceFromMailItem(ctxt, f);
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))

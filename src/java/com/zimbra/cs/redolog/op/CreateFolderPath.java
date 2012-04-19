@@ -16,8 +16,12 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -30,55 +34,60 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class CreateFolderPath extends RedoableOp {
 
-    private String mPath;
-    private byte mAttrs;
+    private String path;
+    private byte attrs;
     private MailItem.Type defaultView;
-    private int mFlags;
-    private long mColor;
-    private String mUrl;
-    private int mFolderIds[];
-    private String mFolderUuids[];
+    private int flags;
+    private long color;
+    private String url;
+    private Long date;
+    private CustomMetadata custom;
+    private int folderIds[];
+    private String folderUuids[];
 
     public CreateFolderPath() {
         super(MailboxOperation.CreateFolderPath);
     }
 
-    public CreateFolderPath(int mailboxId, String name, byte attrs, MailItem.Type view, int flags,
-            Color color, String url) {
+    public CreateFolderPath(int mailboxId, String path, Folder.FolderOptions fopt) {
         this();
         setMailboxId(mailboxId);
-        mPath = name == null ? "" : name;
-        mAttrs = attrs;
-        defaultView = view;
-        mFlags = flags;
-        mColor = color.getValue();
-        mUrl = url == null ? "" : url;
+        this.path = path == null ? "" : path;
+        this.attrs = fopt.getAttributes();
+        this.defaultView = fopt.getDefaultView();
+        this.flags = fopt.getFlags();
+        this.color = fopt.getColor().getValue();
+        this.url = Strings.nullToEmpty(fopt.getUrl());
+        this.date = fopt.getDate();
+        this.custom = fopt.getCustomMetadata();
     }
 
     public int[] getFolderIds() {
-        return mFolderIds;
+        return folderIds;
     }
 
     public String[] getFolderUuids() {
-        return mFolderUuids;
+        return folderUuids;
     }
 
     public void setFolderIdsAndUuids(int folderIds[], String folderUuids[]) {
-        mFolderIds = folderIds;
-        mFolderUuids = folderUuids;
+        this.folderIds = folderIds;
+        this.folderUuids = folderUuids;
     }
 
     @Override
     protected String getPrintableData() {
-        StringBuilder sb = new StringBuilder("name=").append(mPath);
-        sb.append(", attrs=").append(mAttrs).append(", view=").append(defaultView);
-        sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
-        sb.append(", url=").append(mUrl);
-        if (mFolderIds != null) {
+        StringBuilder sb = new StringBuilder("name=").append(path);
+        sb.append(", attrs=").append(attrs).append(", view=").append(defaultView);
+        sb.append(", flags=").append(flags).append(", color=").append(color);
+        sb.append(", url=").append(url);
+        sb.append(", date=").append(date);
+        sb.append(", custom=").append(custom);
+        if (folderIds != null) {
             sb.append(", folderIdsAndUuids=[");
-            for (int i = 0; i < mFolderIds.length; i++) {
-                sb.append(mFolderIds[i]).append(" (").append(mFolderUuids[i]).append(")");
-                if (i < mFolderIds.length - 1) {
+            for (int i = 0; i < folderIds.length; i++) {
+                sb.append(folderIds[i]).append(" (").append(folderUuids[i]).append(")");
+                if (i < folderIds.length - 1) {
                     sb.append(", ");
                 }
             }
@@ -89,19 +98,32 @@ public class CreateFolderPath extends RedoableOp {
 
     @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeUTF(mPath);
-        out.writeByte(mAttrs);
+        out.writeUTF(path);
+        out.writeByte(attrs);
         out.writeByte(defaultView.toByte());
-        out.writeInt(mFlags);
-        // mColor from byte to long in Version 1.27
-        out.writeLong(mColor);
-        out.writeUTF(mUrl);
-        if (mFolderIds != null) {
-            out.writeInt(mFolderIds.length);
-            for (int i = 0; i < mFolderIds.length; i++) {
-                out.writeInt(mFolderIds[i]);
+        out.writeInt(flags);
+        // color from byte to long in Version 1.27
+        out.writeLong(color);
+        out.writeUTF(url);
+        // date as long in version 1.41
+        out.writeBoolean(date != null);
+        if (date != null) {
+            out.writeLong(date);
+        }
+        // custom metadata as of version 1.41
+        if (custom == null) {
+            out.writeUTF(null);
+        } else {
+            out.writeUTF(custom.getSectionKey());
+            out.writeUTF(custom.getSerializedValue());
+        }
+
+        if (folderIds != null) {
+            out.writeInt(folderIds.length);
+            for (int i = 0; i < folderIds.length; i++) {
+                out.writeInt(folderIds[i]);
                 if (getVersion().atLeast(1, 37)) {
-                    out.writeUTF(mFolderUuids[i]);
+                    out.writeUTF(folderUuids[i]);
                 }
             }
         } else {
@@ -111,24 +133,38 @@ public class CreateFolderPath extends RedoableOp {
 
     @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mPath = in.readUTF();
-        mAttrs = in.readByte();
-        defaultView = MailItem.Type.of(in.readByte());
-        mFlags = in.readInt();
+        this.path = in.readUTF();
+        this.attrs = in.readByte();
+        this.defaultView = MailItem.Type.of(in.readByte());
+        this.flags = in.readInt();
         if (getVersion().atLeast(1, 27)) {
-            mColor = in.readLong();
+            this.color = in.readLong();
         } else {
-            mColor = in.readByte();
+            this.color = in.readByte();
         }
-        mUrl = in.readUTF();
+        this.url = in.readUTF();
+        if (getVersion().atLeast(1, 41)) {
+            if (in.readBoolean()) {
+                this.date = in.readLong();
+            }
+            String section = in.readUTF();
+            if (section != null) {
+                try {
+                    this.custom = new CustomMetadata(section, in.readUTF());
+                } catch (ServiceException e) {
+                    mLog.warn("could not deserialize custom metadata for folder", e);
+                }
+            }
+        }
+
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
-            mFolderIds = new int[numParentIds];
-            mFolderUuids = new String[numParentIds];
+            this.folderIds = new int[numParentIds];
+            this.folderUuids = new String[numParentIds];
             for (int i = 0; i < numParentIds; i++) {
-                mFolderIds[i] = in.readInt();
+                this.folderIds[i] = in.readInt();
                 if (getVersion().atLeast(1, 37)) {
-                    mFolderUuids[i] = in.readUTF();
+                    this.folderUuids[i] = in.readUTF();
                 }
             }
         }
@@ -139,14 +175,16 @@ public class CreateFolderPath extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
+        Folder.FolderOptions fopt = new Folder.FolderOptions();
+        fopt.setAttributes(attrs).setColor(Color.fromMetadata(color)).setDate(date);
+        fopt.setDefaultView(defaultView).setFlags(flags).setUrl(url).setCustomMetadata(custom);
+
         try {
-            mailbox.createFolder(getOperationContext(), mPath, mAttrs, defaultView, mFlags,
-                    Color.fromMetadata(mColor), mUrl);
+            mailbox.createFolder(getOperationContext(), path, fopt);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {
-                if (mLog.isInfoEnabled())
-                    mLog.info("Folder " + mPath + " already exists in mailbox " + mboxId);
+                mLog.info("Folder %s already exists in mailbox %d", path, mboxId);
             } else {
                 throw e;
             }

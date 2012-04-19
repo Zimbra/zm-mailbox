@@ -38,6 +38,8 @@ import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.http.HttpStoreManagerTest.MockHttpStoreManager;
+import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
 
 public final class MailboxTestUtil {
@@ -151,6 +153,8 @@ public final class MailboxTestUtil {
         }
         if (StoreManager.getInstance() instanceof MockStoreManager) {
             MockStoreManager.purge();
+        } else if (StoreManager.getInstance() instanceof MockHttpStoreManager) {
+            MockHttpStore.purge();
         }
     }
 

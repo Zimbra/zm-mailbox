@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
-
 public class TestCalDavImportServer extends TestCase {
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestCalDavImportServer.class.getSimpleName();
@@ -42,7 +41,7 @@ public class TestCalDavImportServer extends TestCase {
     private Folder rootFolder = null;
     private Account account = null;
     private Mailbox mbox = null;
-    
+
     @Override
     public void setUp() throws Exception {
         cleanUp();
@@ -50,7 +49,7 @@ public class TestCalDavImportServer extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         account = prov.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
         mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        rootFolder = mbox.createFolder(null, USER_NAME, Mailbox.ID_FOLDER_ROOT, MailItem.Type.APPOINTMENT, 0, MailItem.DEFAULT_COLOR, null);
+        rootFolder = mbox.createFolder(null, USER_NAME, Mailbox.ID_FOLDER_ROOT, new Folder.FolderOptions().setDefaultView(MailItem.Type.APPOINTMENT));
         createDataSource();
     }
 
@@ -62,12 +61,12 @@ public class TestCalDavImportServer extends TestCase {
         // make sure sync token is updated on root folder
         Assert.assertTrue(rootFolder.getLastSyncDate() > 0);
     }
-    
+
     @Override
     public void tearDown() throws Exception {
         cleanUp();
     }
-    
+
     private void createDataSource() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraMailPort));
@@ -82,12 +81,12 @@ public class TestCalDavImportServer extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceAttribute, "p:/principals/users/_USERNAME_");
         prov.createDataSource(account, DataSourceType.caldav, DATA_SOURCE_NAME, attrs);
     }
-    
+
     private DataSource getDataSource() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         return prov.get(account, Key.DataSourceBy.name, DATA_SOURCE_NAME);
     }
-    
+
     private void cleanUp() throws Exception {
         // Delete data source
         Account account = TestUtil.getAccount(TEMP_USER_NAME);

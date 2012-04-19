@@ -49,6 +49,92 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
  * @since Aug 18, 2004
  */
 public class Folder extends MailItem {
+    public static class FolderOptions {
+        private byte attributes;
+        private Type defaultView;
+        private int flags;
+        private Color color = DEFAULT_COLOR_RGB;
+        private String url;
+        private Long date;
+        private String uuid;
+        private CustomMetadata custom;
+
+        public FolderOptions setAttributes(byte attributes) {
+            this.attributes = attributes;
+            return this;
+        }
+
+        public byte getAttributes() {
+            return attributes;
+        }
+
+        public FolderOptions setDefaultView(Type view) {
+            this.defaultView = view;
+            return this;
+        }
+
+        public Type getDefaultView() {
+            return defaultView;
+        }
+
+        public FolderOptions setFlags(int flags) {
+            this.flags = flags;
+            return this;
+        }
+
+        public int getFlags() {
+            return flags;
+        }
+
+        public FolderOptions setColor(byte bcolor) {
+            return setColor(new Color(bcolor));
+        }
+
+        public FolderOptions setColor(Color color) {
+            this.color = color;
+            return this;
+        }
+
+        public Color getColor() {
+            return color;
+        }
+
+        public FolderOptions setUrl(String url) {
+            this.url = url;
+            return this;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public FolderOptions setDate(Long date) {
+            this.date = date;
+            return this;
+        }
+
+        public Long getDate() {
+            return date;
+        }
+
+        public FolderOptions setUuid(String uuid) {
+            this.uuid = uuid;
+            return this;
+        }
+
+        public String getUuid() {
+            return uuid;
+        }
+
+        public FolderOptions setCustomMetadata(CustomMetadata custom) {
+            this.custom = custom;
+            return this;
+        }
+
+        public CustomMetadata getCustomMetadata() {
+            return custom;
+        }
+    }
 
     public static final class SyncData {
         String url;
@@ -56,10 +142,18 @@ public class Folder extends MailItem {
         long   lastDate;
         boolean stop;
 
-        SyncData(String link)  { url = link; }
-        SyncData(SyncData sd)  { this(sd.url, sd.lastGuid, sd.lastDate); }
-        SyncData(String link, String guid, long date) {
-            url = link;  lastGuid = guid == null ? null : guid.trim();  lastDate = date;
+        SyncData(String url) {
+            this.url = url;
+        }
+
+        SyncData(SyncData sd) {
+            this(sd.url, sd.lastGuid, sd.lastDate);
+        }
+
+        SyncData(String url, String guid, long date) {
+            this.url = url;
+            this.lastGuid = guid == null ? null : guid.trim();
+            this.lastDate = date;
         }
 
         public boolean alreadySeen(String guid, Date date) {
@@ -70,7 +164,7 @@ public class Folder extends MailItem {
             } else if (guid == null || lastGuid == null || !guid.trim().equalsIgnoreCase(lastGuid)) {
                 return false;
             } else {
-                return (stop = true);
+                return (this.stop = true);  // note the assignment
             }
         }
 
@@ -662,30 +756,6 @@ public class Folder extends MailItem {
         return true;
     }
 
-    /** Creates a new Folder and persists it to the database.  A real
-     *  nonnegative item ID must be supplied from a previous call to
-     *  {@link Mailbox#getNextItemId(int)}.
-     *
-     * @param id      The id for the new folder.
-     * @param mbox    The {@link Mailbox} to create the folder in.
-     * @param parent  The parent folder to place the new folder in.
-     * @param name    The new folder's name.
-     * @perms {@link ACL#RIGHT_INSERT} on the parent folder
-     * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't have
-     *        subfolders
-     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a folder by that name already
-     *        exists in the parent folder
-     *    <li><tt>mail.INVALID_NAME</tt> - if the new folder's name is invalid
-     *    <li><tt>service.FAILURE</tt> - if there's a database failure
-     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul>
-     * @see #validateItemName(String)
-     * @see #canContain(byte) */
-    static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, uuid, mbox, parent, name, (byte) 0, Type.UNKNOWN, 0, DEFAULT_COLOR_RGB, null, null);
-    }
-
     /** Creates a new Folder with optional attributes and persists it
      *  to the database.  A real nonnegative item ID must be supplied
      *  from a previous call to {@link Mailbox#getNextItemId(int)}.
@@ -698,43 +768,8 @@ public class Folder extends MailItem {
      * @param view        The (optional) default object type for the folder.
      * @param flags       Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
      * @param color       The new folder's color.
-     * @param url         The (optional) url to sync folder contents to.
-     * @param custom      An optional extra set of client-defined metadata.
-     * @perms {@link ACL#RIGHT_INSERT} on the parent folder
-     * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't have
-     *        subfolders
-     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a folder by that name already
-     *        exists in the parent folder
-     *    <li><tt>mail.INVALID_NAME</tt> - if the new folder's name is invalid
-     *    <li><tt>service.FAILURE</tt> - if there's a database failure
-     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul>
-     * @see #validateItemName(String)
-     * @see #canContain(byte)
-     * @see #FOLDER_IS_IMMUTABLE
-     * @see #FOLDER_DONT_TRACK_COUNTS
-     */
-    public static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
-            Color color, String url, CustomMetadata custom) throws ServiceException {
-
-        return create(id, uuid, mbox, parent, name, attributes, view, flags, color, null, url, custom);
-    }
-
-    /** Creates a new Folder with optional attributes and persists it
-     *  to the database.  A real nonnegative item ID must be supplied
-     *  from a previous call to {@link Mailbox#getNextItemId(int)}.
-     *
-     * @param id          The id for the new folder.
-     * @param mbox        The {@link Mailbox} to create the folder in.
-     * @param parent      The parent folder to place the new folder in.
-     * @param name        The new folder's name.
-     * @param attributes  Any extra constraints on the folder.
-     * @param view        The (optional) default object type for the folder.
-     * @param flags       Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
-     * @param color       The new folder's color.
-     * @param date        Date (timestamp) for the new folder (in seconds since Unix epoch).
-     *                    If null, current time will be used.
+     * @param date        Date (timestamp) for the new folder (in millis
+     *                    since Unix epoch).  If null, use the current time.
      * @param url         The (optional) url to sync folder contents to.
      * @param custom      An optional extra set of client-defined metadata.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
@@ -754,16 +789,18 @@ public class Folder extends MailItem {
      */
     @SuppressWarnings("deprecation")
     static Folder create(int id, String uuid, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
-            Color color, Long date, String url, CustomMetadata custom) throws ServiceException {
+            Color color, Long date, String url, CustomMetadata custom)
+    throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(Type.FOLDER)) {
                 throw MailServiceException.CANNOT_CONTAIN(parent, Type.FOLDER);
             }
             name = validateItemName(name);
-            if (parent.findSubfolder(name) != null)
+            if (parent.findSubfolder(name) != null) {
                 throw MailServiceException.ALREADY_EXISTS(name);
-            if (!parent.canAccess(ACL.RIGHT_SUBFOLDER))
+            } else if (!parent.canAccess(ACL.RIGHT_SUBFOLDER)) {
                 throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
+            }
         }
         if (view == Type.INVITE) {
             throw MailServiceException.INVALID_TYPE(view.toString());
@@ -775,7 +812,7 @@ public class Folder extends MailItem {
         data.type = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
-        data.date = date == null ?  mbox.getOperationTimestamp() : (int)(date / 1000);
+        data.date = date == null ?  mbox.getOperationTimestamp() : (int) (date / 1000);
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);

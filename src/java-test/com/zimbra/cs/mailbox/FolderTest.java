@@ -22,8 +22,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -31,6 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.qa.unittest.TestUtil;
@@ -60,11 +62,11 @@ public final class FolderTest {
 
     @Test
     public void imapMODSEQ() throws Exception {
-        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // initial state: empty folder
-        Folder f = mbox.createFolder(null, "foo", (byte) 0, MailItem.Type.MESSAGE);
+        Folder f = mbox.createFolder(null, "foo", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         int folderId = f.getId(), modseq = f.getImapMODSEQ();
 
         // add a message to the folder
@@ -169,9 +171,10 @@ public final class FolderTest {
     public void deleteFolder() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
-        Folder root = mbox.createFolder(null, "/Root", (byte) 0, MailItem.Type.DOCUMENT);
-        mbox.createFolder(null, "/Root/test1", (byte) 0, MailItem.Type.DOCUMENT);
-        mbox.createFolder(null, "/Root/test2", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
+        Folder root = mbox.createFolder(null, "/Root", fopt);
+        mbox.createFolder(null, "/Root/test1", fopt);
+        mbox.createFolder(null, "/Root/test2", fopt);
         try {
             mbox.getFolderByPath(null, "/Root");
             mbox.getFolderByPath(null, "/Root/test1");
@@ -205,9 +208,9 @@ public final class FolderTest {
     @Test
     public void deleteParent() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder parent = mbox.createFolder(null, "/" + "deleteParent - parent", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder parent = mbox.createFolder(null, "/" + "deleteParent - parent", new Folder.FolderOptions());
         int parentId = parent.getId();
-        Folder child = mbox.createFolder(null, "deleteParent - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder child = mbox.createFolder(null, "deleteParent - child", parent.getId(), new Folder.FolderOptions());
         int childId = child.getId();
         mbox.delete(null, parent.getId(), parent.getType());
 
@@ -248,9 +251,9 @@ public final class FolderTest {
     @Test
     public void emptyFolderNonrecursive() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder parent = mbox.createFolder(null, "/" + "parent", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder parent = mbox.createFolder(null, "/" + "parent", new Folder.FolderOptions());
         int parentId = parent.getId();
-        Folder child = mbox.createFolder(null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder child = mbox.createFolder(null, "child", parent.getId(), new Folder.FolderOptions());
         int childId = child.getId();
         mbox.emptyFolder(null, parent.getId(), false);
 
@@ -283,9 +286,9 @@ public final class FolderTest {
     @Test
     public void testEmptyFolderRecursive() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder parent = mbox.createFolder(null, "/" + "parent", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder parent = mbox.createFolder(null, "/" + "parent", new Folder.FolderOptions());
         int parentId = parent.getId();
-        Folder child = mbox.createFolder(null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder child = mbox.createFolder(null, "child", parent.getId(), new Folder.FolderOptions());
         int childId = child.getId();
         mbox.emptyFolder(null, parent.getId(), true);
 
@@ -327,7 +330,7 @@ public final class FolderTest {
         Folder top = null;
 
         for (int i = 1; i <= NUM_LEVELS; i++) {
-            Folder folder = mbox.createFolder(null, "manySubfolders " + i, parentId, MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            Folder folder = mbox.createFolder(null, "manySubfolders " + i, parentId, new Folder.FolderOptions());
             if (i == 1) {
                 top = folder;
             }
@@ -354,7 +357,7 @@ public final class FolderTest {
         Message m3 = TestUtil.addMessage(mbox, "RE: " + name);
         ZimbraLog.test.debug("Created message 3, id=" + m3.getId());
 
-        Folder f = mbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder f = mbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, new Folder.FolderOptions());
         mbox.move(null, m1.getId(), m1.getType(), f.getId());
         mbox.move(null, m2.getId(), m2.getType(), f.getId());
 
@@ -376,9 +379,9 @@ public final class FolderTest {
     public void updateHierarchy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
-        Folder f1 = mbox.createFolder(null, "/f1", (byte) 0, MailItem.Type.UNKNOWN);
-        Folder f2 = mbox.createFolder(null, "/f1/f2", (byte) 0, MailItem.Type.UNKNOWN);
-        mbox.createFolder(null, "/f1/f2/f3", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder f1 = mbox.createFolder(null, "/f1", new Folder.FolderOptions());
+        Folder f2 = mbox.createFolder(null, "/f1/f2", new Folder.FolderOptions());
+        mbox.createFolder(null, "/f1/f2/f3", new Folder.FolderOptions());
         Assert.assertEquals("Hierarchy size before delete", 3, f1.getSubfolderHierarchy().size());
 
         mbox.delete(null, f2.getId(), f2.getType());
@@ -390,7 +393,7 @@ public final class FolderTest {
 
     private static void checkName(Mailbox mbox, String name, boolean valid) {
         try {
-            mbox.createFolder(null, name, Mailbox.ID_FOLDER_USER_ROOT, MailItem.Type.DOCUMENT, 0, (byte) 0, null);
+            mbox.createFolder(null, name, Mailbox.ID_FOLDER_USER_ROOT, new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
             if (!valid) {
                 Assert.fail("should not have been allowed to create folder: [" + name + "]");
             }
@@ -434,5 +437,60 @@ public final class FolderTest {
         checkName(mbox, "sam*wise", true);
         checkName(mbox, "sam|wise", true);
         checkName(mbox, "sam wise", true);
+    }
+
+    @Test
+    public void create() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        final String uuid = UUIDUtil.generateUUID();
+        final String url = "https://www.google.com/calendar/dav/YOUREMAIL@DOMAIN.COM/user";
+        final long date = ((System.currentTimeMillis() - Constants.MILLIS_PER_MONTH) / 1000) * 1000;
+
+        Folder.FolderOptions fopt = new Folder.FolderOptions();
+        fopt.setAttributes(Folder.FOLDER_DONT_TRACK_COUNTS);
+        fopt.setColor((byte) 3);
+        fopt.setCustomMetadata(new CustomMetadata("s", "d1:a1:be"));
+        fopt.setDate(date);
+        fopt.setDefaultView(MailItem.Type.CONTACT);
+        fopt.setFlags(Flag.BITMASK_CHECKED);
+        fopt.setUuid(uuid);
+        // setting folder sync URL triggers an error in MockProvisioning; comment out for now
+//        fopt.setUrl(url);
+
+        // create the folder and make sure all the options were applied
+        Folder folder = mbox.createFolder(null, "test", Mailbox.ID_FOLDER_CONTACTS, fopt);
+
+        Assert.assertEquals("correct name", "test", folder.getName());
+        Assert.assertEquals("correct parent", Mailbox.ID_FOLDER_CONTACTS, folder.getFolderId());
+        Assert.assertEquals("correct attributes", Folder.FOLDER_DONT_TRACK_COUNTS, folder.getAttributes());
+        Assert.assertEquals("correct color", 3, folder.getColor());
+        CustomMetadata custom = folder.getCustomData("s");
+        Assert.assertNotNull("custom data set", custom);
+        Assert.assertEquals("1 entry in custom data", 1, custom.size());
+        Assert.assertEquals("correct custom data", "b", custom.get("a"));
+        Assert.assertEquals("correct date", date, folder.getDate());
+        Assert.assertEquals("correct view", MailItem.Type.CONTACT, folder.getDefaultView());
+        Assert.assertEquals("correct flags", Flag.BITMASK_CHECKED, folder.getFlagBitmask());
+        Assert.assertEquals("correct uuid", uuid, folder.getUuid());
+//        Assert.assertEquals("correct url", url, folder.getUrl());
+
+        // check again after forcing a reload from disk, just in case
+        mbox.purge(MailItem.Type.FOLDER);
+        folder = mbox.getFolderById(null, folder.getId());
+
+        Assert.assertEquals("correct name", "test", folder.getName());
+        Assert.assertEquals("correct parent", Mailbox.ID_FOLDER_CONTACTS, folder.getFolderId());
+        Assert.assertEquals("correct attributes", Folder.FOLDER_DONT_TRACK_COUNTS, folder.getAttributes());
+        Assert.assertEquals("correct color", 3, folder.getColor());
+        custom = folder.getCustomData("s");
+        Assert.assertNotNull("custom data set", custom);
+        Assert.assertEquals("1 entry in custom data", 1, custom.size());
+        Assert.assertEquals("correct custom data", "b", custom.get("a"));
+        Assert.assertEquals("correct date", date, folder.getDate());
+        Assert.assertEquals("correct view", MailItem.Type.CONTACT, folder.getDefaultView());
+        Assert.assertEquals("correct flags", Flag.BITMASK_CHECKED, folder.getFlagBitmask());
+        Assert.assertEquals("correct uuid", uuid, folder.getUuid());
+//        Assert.assertEquals("correct url", url, folder.getUrl());
     }
 }

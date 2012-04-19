@@ -81,12 +81,12 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
@@ -1583,7 +1583,7 @@ abstract class ImapHandler {
         try {
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), (byte) 0, MailItem.Type.MESSAGE);
+                ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
             } else if (mboxobj instanceof ZMailbox) {
                 ((ZMailbox) mboxobj).createFolder(null, path.asResolvedPath(), ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
             } else {
@@ -2904,7 +2904,7 @@ abstract class ImapHandler {
     }
 
     /* The set of rights required to create a new subfolder in ZCS. */
-    private short SUBFOLDER_RIGHTS = ACL.RIGHT_INSERT | ACL.RIGHT_READ;
+    private final short SUBFOLDER_RIGHTS = ACL.RIGHT_INSERT | ACL.RIGHT_READ;
 
     /* Converts a Zimbra rights bitmask to an RFC 4314-compatible rights string */
     private String exportRights(short rights) {
@@ -3861,10 +3861,10 @@ abstract class ImapHandler {
         try {
             // list of tag names (not including Flags)
             List<String> tags = Lists.newArrayList();
-            
+
              //just Flag objects, no need to convert Tag objects to ImapFlag here
             Set<ImapFlag> i4flags = new HashSet<ImapFlag>(flagNames.size());
-            
+
             for (String name : flagNames) {
                 ImapFlag i4flag = i4folder.getFlagByName(name);
                 if (i4flag == null) {

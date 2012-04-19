@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -54,34 +54,34 @@ public class PurgeTest {
         prov.deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
-    
+
     @Test
     public void folderPurgePolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         // Create folder and test messages.
-        Folder folder = mbox.createFolder(null, "/folderPurgePolicy", (byte) 0, MailItem.Type.MESSAGE);
+        Folder folder = mbox.createFolder(null, "/folderPurgePolicy", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         Message older = TestUtil.addMessage(mbox, folder.getId(), "test1", System.currentTimeMillis() - (60 * Constants.MILLIS_PER_MINUTE));
         Message newer = TestUtil.addMessage(mbox, folder.getId(), "test2", System.currentTimeMillis() - (30 * Constants.MILLIS_PER_MINUTE));
         folder = mbox.getFolderById(null, folder.getId());
-        
+
         // Run purge with default settings and make sure nothing was deleted.
         mbox.purgeMessages(null);
         folder = mbox.getFolderById(null, folder.getId());
         assertEquals(2, folder.getSize());
-        
+
         // Add retention policy.
         Policy p = Policy.newUserPolicy("45m");
         RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p));
         mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
-        
+
         // Purge the folder cache and make sure that purge policy is reloaded from metadata.
         mbox.purge(MailItem.Type.FOLDER);
         folder = mbox.getFolderById(null, folder.getId());
         List<Policy> purgeList = folder.getRetentionPolicy().getPurgePolicy();
         assertEquals(1, purgeList.size());
         assertEquals("45m", purgeList.get(0).getLifetime());
-        
+
         // Run purge and make sure one of the messages was deleted.
         mbox.purgeMessages(null);
         assertEquals(1, folder.getSize());
@@ -92,7 +92,7 @@ public class PurgeTest {
         } catch (NoSuchItemException e) {
             // Older message was purged.
         }
-        
+
         // Remove purge policy and verify that the folder state was properly updated.
         mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, null);
         mbox.purge(MailItem.Type.FOLDER);
@@ -100,11 +100,11 @@ public class PurgeTest {
         assertEquals(0, folder.getRetentionPolicy().getKeepPolicy().size());
         assertEquals(0, folder.getRetentionPolicy().getPurgePolicy().size());
     }
-    
+
     @Test
     public void tagPurgePolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         // Create folder and test messages.
         Tag tag = mbox.createTag(null, "tag", (byte) 0);
         Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
@@ -113,23 +113,23 @@ public class PurgeTest {
         Message notTagged = TestUtil.addMessage(mbox, inbox.getId(), "test3", System.currentTimeMillis() - (90 * Constants.MILLIS_PER_MINUTE));
         mbox.setTags(null, older.getId(), older.getType(), 0, new String[] { tag.getName() });
         mbox.setTags(null, newer.getId(), newer.getType(), 0, new String[] { tag.getName() });
-        
+
         // Run purge with default settings and make sure nothing was deleted.
         mbox.purgeMessages(null);
         assertEquals(3, inbox.getSize());
-        
+
         // Add retention policy.
         Policy p = Policy.newUserPolicy("45m");
         RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p));
         mbox.setRetentionPolicy(null, tag.getId(), MailItem.Type.TAG, purgePolicy);
-        
+
         // Purge the tag cache and make sure that purge policy is reloaded from metadata.
         mbox.purge(MailItem.Type.TAG);
         tag = mbox.getTagById(null, tag.getId());
         List<Policy> purgeList = tag.getRetentionPolicy().getPurgePolicy();
         assertEquals(1, purgeList.size());
         assertEquals("45m", purgeList.get(0).getLifetime());
-        
+
         // Run purge and make sure one of the messages was deleted.
         mbox.purgeMessages(null);
         inbox = mbox.getFolderById(null, inbox.getId());
@@ -141,7 +141,7 @@ public class PurgeTest {
             fail("Older message was not purged.");
         } catch (NoSuchItemException e) {
         }
-        
+
         // Remove purge policy and verify that the folder state was properly updated.
         mbox.setRetentionPolicy(null, tag.getId(), MailItem.Type.TAG, null);
         mbox.purge(MailItem.Type.TAG);
@@ -262,7 +262,7 @@ public class PurgeTest {
         assertFalse("purged was kept", messageExists(purged.getId()));
         assertTrue("kept was purged", messageExists(kept.getId()));
     }
-    
+
     @Test
     public void purgeBatchSize()
     throws Exception {
@@ -355,7 +355,7 @@ public class PurgeTest {
         // Insert messages
         String prefix = "testAll ";
         Mailbox mbox = getMailbox();
-        Folder folder = mbox.createFolder(null, "/testAll" , (byte) 0, MailItem.Type.UNKNOWN);
+        Folder folder = mbox.createFolder(null, "/testAll", new Folder.FolderOptions());
         Message purged = TestUtil.addMessage(mbox, folder.getId(), prefix + "purged",
             System.currentTimeMillis() - (41 * Constants.MILLIS_PER_DAY));
         Message kept = TestUtil.addMessage(mbox, folder.getId(), prefix + "kept",
@@ -380,7 +380,7 @@ public class PurgeTest {
         // Insert messages
         String prefix = "testAllSafeguard ";
         Mailbox mbox = getMailbox();
-        Folder folder = mbox.createFolder(null, "/testAllSafeguard", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder folder = mbox.createFolder(null, "/testAllSafeguard", new Folder.FolderOptions());
         Message purged = TestUtil.addMessage(mbox, folder.getId(), prefix + "purged",
             System.currentTimeMillis() - (32 * Constants.MILLIS_PER_DAY));
         Message kept = TestUtil.addMessage(mbox, folder.getId(), prefix + "kept",
@@ -461,7 +461,7 @@ public class PurgeTest {
         // Create a subfolder of trash with a message in it.
         Mailbox mbox = getMailbox();
         String folderPath = "/Trash/testFolderInTrash";
-        Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.Type.MESSAGE);
+        Folder f = mbox.createFolder(null, folderPath, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         String subject = "testFolderInTrash";
         Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis() - Constants.MILLIS_PER_DAY);
 
@@ -492,15 +492,15 @@ public class PurgeTest {
     @Test
     public void testRecentFolderInTrashChangeDate()
     throws Exception {
-        
+
         Account account = getAccount();
         account.setPrefTrashLifetime("12h");
         account.setMailPurgeUseChangeDateForTrash(true);
-        
+
         // Create a subfolder of inbox with a message in it.
         Mailbox mbox = getMailbox();
         String folderPath = "/Inbox/testRecentFolderInTrashChangeDate";
-        Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.Type.MESSAGE);
+        Folder f = mbox.createFolder(null, folderPath, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         String subject = "testRecentFolderInTrashChangeDate";
         Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis() - Constants.MILLIS_PER_DAY);
 
@@ -511,22 +511,22 @@ public class PurgeTest {
         mbox.purgeMessages(null);
         assertTrue("msg was purged", messageExists(msg.getId()));
     }
-    
+
     /**
      * Confirms that recently moved trash folders does get purged when ChangeDate is false.
      */
     @Test
     public void testRecentFolderInTrashNoChangeDate()
     throws Exception {
-        
+
         Account account = getAccount();
         account.setPrefTrashLifetime("12h");
         account.setMailPurgeUseChangeDateForTrash(false);
-        
+
         // Create a subfolder of inbox with a message in it.
         Mailbox mbox = getMailbox();
         String folderPath = "/Inbox/testRecentFolderInTrashNoChangeDate";
-        Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.Type.MESSAGE);
+        Folder f = mbox.createFolder(null, folderPath, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         String subject = "testRecentFolderInTrashNoChangeDate";
         Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis() - Constants.MILLIS_PER_DAY);
 
@@ -537,11 +537,11 @@ public class PurgeTest {
         mbox.purgeMessages(null);
         assertFalse("msg was not purged", messageExists(msg.getId()));
     }
-    
+
     @Test
     public void invalidFolderMessageLifetime() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder folder = mbox.createFolder(null, "/invalidFolderMessageLifetime", (byte) 0, MailItem.Type.MESSAGE);
+        Folder folder = mbox.createFolder(null, "/invalidFolderMessageLifetime", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         Policy p = Policy.newUserPolicy("45x");
         RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p));
         try {
@@ -554,8 +554,8 @@ public class PurgeTest {
     @Test
     public void multipleUserPolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder folder = mbox.createFolder(null, "/multipleUserPolicy", (byte) 0, MailItem.Type.MESSAGE);
-        
+        Folder folder = mbox.createFolder(null, "/multipleUserPolicy", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+
         List<Policy> list = Arrays.asList(
             Policy.newUserPolicy("45d"),
             Policy.newUserPolicy("60d"));
@@ -565,7 +565,7 @@ public class PurgeTest {
             fail("Multiple purge policies.");
         } catch (ServiceException e) {
         }
-        
+
         purgePolicy = new RetentionPolicy(list, null);
         try {
             mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
@@ -573,7 +573,7 @@ public class PurgeTest {
         } catch (ServiceException e) {
         }
     }
-    
+
     @Test
     public void modifySystemPolicy() throws Exception {
         RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
@@ -581,12 +581,12 @@ public class PurgeTest {
         Policy keep2 = mgr.createSystemKeepPolicy("keep2", "400d");
         Policy purge1 = mgr.createSystemPurgePolicy("purge1", "500d");
         Policy purge2 = mgr.createSystemPurgePolicy("purge2", "500d");
-        
+
         assertEquals(keep1, mgr.getPolicyById(keep1.getId()));
         assertEquals(keep2, mgr.getPolicyById(keep2.getId()));
         assertEquals(purge1, mgr.getPolicyById(purge1.getId()));
         assertEquals(purge2, mgr.getPolicyById(purge2.getId()));
-        
+
         // Test modify.
         mgr.modifySystemPolicy(keep1.getId(), "new keep1", "301d");
         Policy newKeep1 = mgr.getPolicyById(keep1.getId());
@@ -594,7 +594,7 @@ public class PurgeTest {
         assertEquals(keep1.getId(), newKeep1.getId());
         assertEquals("new keep1", newKeep1.getName());
         assertEquals("301d", newKeep1.getLifetime());
-        
+
         // Test delete.
         assertTrue(mgr.deleteSystemPolicy(purge2.getId()));
         assertNull(mgr.getPolicyById(purge2.getId()));
@@ -611,14 +611,14 @@ public class PurgeTest {
     public void completeRetentionPolicy() throws Exception {
         RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
         Policy keep1 = mgr.createSystemKeepPolicy("keep1", "300d");
-        
+
         // Create mailbox policy that references the system policy, and confirm that
         // lookup returns the latest values.
         RetentionPolicy mboxRP = new RetentionPolicy(Arrays.asList(Policy.newSystemPolicy(keep1.getId())), null);
         RetentionPolicy completeRP = mgr.getCompleteRetentionPolicy(mboxRP);
         Policy latest = completeRP.getKeepPolicy().get(0);
         assertEquals(keep1, latest);
-        
+
         // Modify system policy and confirm that the accessor returns the latest values.
         mgr.modifySystemPolicy(keep1.getId(), "new keep1", "301d");
         completeRP = mgr.getCompleteRetentionPolicy(mboxRP);
@@ -628,25 +628,25 @@ public class PurgeTest {
         assertEquals("new keep1", latest.getName());
         assertEquals("301d", latest.getLifetime());
     }
-    
+
     @Test
     public void purgeWithSystemPolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         // Create folder and test messages.
-        Folder folder = mbox.createFolder(null, "/purgeWithSystemPolicy", (byte) 0, MailItem.Type.MESSAGE);
+        Folder folder = mbox.createFolder(null, "/purgeWithSystemPolicy", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         Message older = TestUtil.addMessage(mbox, folder.getId(), "older", System.currentTimeMillis() - (60 * Constants.MILLIS_PER_MINUTE));
         Message newer = TestUtil.addMessage(mbox, folder.getId(), "newer", System.currentTimeMillis() - (30 * Constants.MILLIS_PER_MINUTE));
         folder = mbox.getFolderById(null, folder.getId());
-        
+
         // Add user and system retention policy.
         Policy system = RetentionPolicyManager.getInstance().createSystemPurgePolicy("system", "45m");
-        
+
         Policy p1 = Policy.newUserPolicy("90m");
         Policy p2 = Policy.newSystemPolicy(system.getId());
         RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p1, p2));
         mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
-        
+
         // Run purge and make sure one of the messages was deleted.
         mbox.purgeMessages(null);
         folder = mbox.getFolderById(folder.getId());
@@ -669,13 +669,13 @@ public class PurgeTest {
         } catch (NoSuchItemException e) {
         }
     }
-    
+
     private Message alterUnread(Message msg, boolean unread) throws Exception {
         Mailbox mbox = getMailbox();
         mbox.alterTag(null, msg.getId(), msg.getType(), Flag.FlagInfo.UNREAD, unread, null);
         return mbox.getMessageById(null, msg.getId());
     }
-    
+
     private boolean messageExists(int id)
     throws Exception {
         Mailbox mbox = getMailbox();
@@ -692,7 +692,7 @@ public class PurgeTest {
     throws ServiceException {
         return Provisioning.getInstance().get(AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
-    
+
     private Mailbox getMailbox() throws ServiceException {
         return MailboxManager.getInstance().getMailboxByAccount(getAccount());
     }

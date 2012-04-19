@@ -12,14 +12,13 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mime.ParsedDocument;
 
 public class RenameTest {
     private Mailbox mbox;
     private Folder folder;
     private MailItem doc;
-    
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -31,12 +30,12 @@ public class RenameTest {
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        folder = mbox.createFolder(null, "/Briefcase/f", (byte)0, Type.DOCUMENT);
+        folder = mbox.createFolder(null, "/Briefcase/f", new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
         InputStream in = new ByteArrayInputStream("This is a document".getBytes());
         ParsedDocument pd = new ParsedDocument(in, "doc.txt", "text/plain", System.currentTimeMillis(), null, null);
         doc = mbox.createDocument(null, folder.getId(), pd, MailItem.Type.DOCUMENT, 0);
     }
-    
+
     @Test
     public void renameModContentTest() throws Exception {
         int id = doc.getId();

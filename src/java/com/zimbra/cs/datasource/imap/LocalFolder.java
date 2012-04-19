@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.datasource.imap;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -25,9 +28,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ListData;
-
-import java.util.HashSet;
-import java.util.Set;
 
 final class LocalFolder {
     private final Mailbox mbox;
@@ -74,7 +74,7 @@ final class LocalFolder {
 
     public void create() throws ServiceException {
         debug("creating folder");
-        folder = mbox.createFolder(null, path, (byte) 0, MailItem.Type.MESSAGE);
+        folder = mbox.createFolder(null, path, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
     }
 
     public void updateFlags(ListData ld) throws ServiceException {

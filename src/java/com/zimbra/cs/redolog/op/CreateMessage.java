@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,12 +36,12 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -83,7 +83,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
     private byte mMsgBodyType;
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
-    // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
+    // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
 
     public CreateMessage() {
         super(MailboxOperation.CreateMessage);
@@ -231,18 +231,18 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     public int getFolderId() {
         return mFolderId;
     }
-    
-    public int getFlags() { 
+
+    public int getFlags() {
         return mFlags;
     }
-    
+
     public void setFlags(int flags) {
         mFlags = flags;
     }
-    
+
     public String[] getTags() {
         return mTags;
-    }        
+    }
 
     public byte[] getMessageBody() throws IOException {
         if (mMsgBodyType == MSGBODY_LINK)
@@ -259,7 +259,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mData = new RedoableOpData(ds, (int) size);
         mPath = ":streamed:";
     }
-    
+
     public void setMessageBodyInfo(File dataFile) {
         mMsgBodyType = MSGBODY_INLINE;
         mData = new RedoableOpData(dataFile);
@@ -275,7 +275,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     public String getRcptEmail() {
         return mRcptEmail;
     }
-    
+
     protected RedoableOpData getData() {
         return mData;
     }
@@ -322,7 +322,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             return null;
         }
     }
-    
+
     @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mRcptEmail != null ? mRcptEmail : "");
@@ -418,10 +418,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mPath = in.readUTF();
         in.readShort();
         if (getVersion().atLeast(1, 25)) {
-            mExtendedData = null;
             String extendedKey = in.readUTF();
             if (extendedKey != null) {
-                mExtendedData = new CustomMetadata(extendedKey, in.readUTF());
+                try {
+                    mExtendedData = new CustomMetadata(extendedKey, in.readUTF());
+                } catch (ServiceException e) {
+                    mLog.warn("could not deserialize custom metadata for message", e);
+                }
             }
         }
 
@@ -441,7 +444,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             } else {
                 long pos = in.getFilePointer();
                 mData = new RedoableOpData(new File(in.getPath()), pos, dataLength);
-                
+
                 // Now that we have a stream to the data, skip to the next op.
                 int numSkipped = in.skipBytes(dataLength);
                 if (numSkipped != dataLength) {
@@ -480,9 +483,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
 
         DeliveryContext dctxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
-        
+
         if (mMsgBodyType == MSGBODY_LINK) {
-            Blob blob = StoreIncomingBlob.fetchBlob(mPath); 
+            Blob blob = StoreIncomingBlob.fetchBlob(mPath);
             if (blob == null)
                 throw new RedoException("Missing link source blob " + mPath + " (digest=" + mDigest + ")", this);
             dctxt.setIncomingBlob(blob);
@@ -517,7 +520,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 if (mData.getLength() != mMsgSize) {
                     in = new GZIPInputStream(in);
                 }
-                mbox.addMessage(octxt, in, mMsgSize, mReceivedDate, getDeliveryOptions(), dctxt); 
+                mbox.addMessage(octxt, in, mMsgSize, mReceivedDate, getDeliveryOptions(), dctxt);
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);

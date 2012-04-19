@@ -462,11 +462,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         private static final char ENC_OTHER = 'o';
         private static final char ENC_QUERY = 'q';
 
-        private short  inclusions;
+        private short inclusions;
         private String query;
 
         private final Mailbox mailbox;
-        private int     sentFolder = -1;
+        private int sentFolder = -1;
 
         public TargetConstraint(Mailbox mbox, short include) {
             this(mbox, include, null);
@@ -487,8 +487,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         public static TargetConstraint parseConstraint(Mailbox mbox, String encoded) throws ServiceException {
-            if (encoded == null)
+            if (encoded == null) {
                 return null;
+            }
 
             boolean invert = false;
             short inclusions = 0;
@@ -514,15 +515,26 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         @Override
         public String toString() {
-            if (inclusions == 0)
+            if (inclusions == 0) {
                 return "";
+            }
 
             StringBuilder sb = new StringBuilder();
-            if ((inclusions & INCLUDE_TRASH) != 0)   sb.append(ENC_TRASH);
-            if ((inclusions & INCLUDE_SPAM) != 0)    sb.append(ENC_SPAM);
-            if ((inclusions & INCLUDE_SENT) != 0)    sb.append(ENC_SENT);
-            if ((inclusions & INCLUDE_OTHERS) != 0)  sb.append(ENC_OTHER);
-            if ((inclusions & INCLUDE_QUERY) != 0)   sb.append(ENC_QUERY).append(query);
+            if ((inclusions & INCLUDE_TRASH) != 0) {
+                sb.append(ENC_TRASH);
+            }
+            if ((inclusions & INCLUDE_SPAM) != 0) {
+                sb.append(ENC_SPAM);
+            }
+            if ((inclusions & INCLUDE_SENT) != 0) {
+                sb.append(ENC_SENT);
+            }
+            if ((inclusions & INCLUDE_OTHERS) != 0) {
+                sb.append(ENC_OTHER);
+            }
+            if ((inclusions & INCLUDE_QUERY) != 0) {
+                sb.append(ENC_QUERY).append(query);
+            }
             return sb.toString();
         }
 
@@ -556,8 +568,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
          *  we want.  See bug 3972 for details. */
         private boolean inSent(MailItem item) {
             // only count as "in sent" if the item's in the real "/Sent" folder
-            if (item.getFolderId() != Mailbox.ID_FOLDER_SENT)
+            if (item.getFolderId() != Mailbox.ID_FOLDER_SENT) {
                 return false;
+            }
 
             if (sentFolder == -1) {
                 sentFolder = Mailbox.ID_FOLDER_SENT;
@@ -578,42 +591,35 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     public static final class CustomMetadata extends HashMap<String, String> {
         private static final long serialVersionUID = -3866150929202858077L;
 
-        private final String mSectionKey;
-        private final String mSerializedValue;
+        private final String sectionKey;
 
         public CustomMetadata(String section) {
-            this(section, null);
-        }
-
-        public CustomMetadata(String section, String serialized) {
             super(8);
-            mSectionKey = section.trim();
-            mSerializedValue = serialized;
+            this.sectionKey = section.trim();
         }
 
-        static CustomMetadata deserialize(Pair<String, String> serialized) throws ServiceException {
-            CustomMetadata custom = new CustomMetadata(serialized.getFirst());
-            for (Map.Entry<String, ?> entry : new Metadata(serialized.getSecond()).asMap().entrySet()) {
-                custom.put(entry.getKey(), entry.getValue().toString());
+        public CustomMetadata(String section, String serialized) throws ServiceException {
+            this(section);
+
+            if (!StringUtil.isNullOrEmpty(serialized)) {
+                for (Map.Entry<String, ?> entry : new Metadata(serialized).asMap().entrySet()) {
+                    put(entry.getKey(), entry.getValue().toString());
+                }
             }
-            return custom;
         }
 
         public String getSectionKey() {
-            return mSectionKey;
+            return sectionKey;
         }
 
         public String getSerializedValue() {
-            if (mSerializedValue != null) {
-                return mSerializedValue;
-            }
             remove(null);
             return new Metadata(this).toString();
         }
 
         @Override
         public String toString() {
-            return mSectionKey + ": " + super.toString();
+            return sectionKey + ": " + super.toString();
         }
 
         public CustomMetadataList asList() {
@@ -626,6 +632,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             public CustomMetadataList() {
                 super(1);
             }
+
             public CustomMetadataList(CustomMetadata custom) {
                 this();
                 addSection(custom);
@@ -650,7 +657,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 if (!isEmpty()) {
                     for (Pair<String, String> entry : this) {
                         if (key.equals(entry.getFirst())) {
-                            return CustomMetadata.deserialize(entry);
+                            return new CustomMetadata(entry.getFirst(), entry.getSecond());
                         }
                     }
                 }
@@ -934,8 +941,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     public List<String> getCustomDataSections() {
-        if (mExtendedData == null || mExtendedData.isEmpty())
+        if (mExtendedData == null || mExtendedData.isEmpty()) {
             return Collections.emptyList();
+        }
         return mExtendedData.listSections();
     }
 
@@ -957,9 +965,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  metdata contains no metadata key/value pairs, the section is deleted.
      * @see #getCustomData(String) */
     void setCustomData(CustomMetadata custom) throws ServiceException {
-        if (custom == null) {
+        if (custom == null)
             return;
-        }
+
         if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
         }

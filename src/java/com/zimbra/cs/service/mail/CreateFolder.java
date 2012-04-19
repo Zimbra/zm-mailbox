@@ -16,6 +16,11 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -25,11 +30,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -68,14 +68,15 @@ public class CreateFolder extends MailDocumentHandler {
         boolean alreadyExisted = false;
 
         try {
-            Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
+            Folder.FolderOptions fopt = new Folder.FolderOptions();
+            fopt.setColor(rgb != null ? new Color(rgb) : new Color(color)).setUrl(url);
+            fopt.setDefaultView(MailItem.Type.of(view)).setFlags(Flag.toBitmask(flags));
             if (iidParent != null) {
-                folder = mbox.createFolder(octxt, name, iidParent.getId(), (byte) 0, MailItem.Type.of(view),
-                        Flag.toBitmask(flags), itemColor, url);
+                folder = mbox.createFolder(octxt, name, iidParent.getId(), fopt);
             } else {
-                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.Type.of(view), Flag.toBitmask(flags),
-                        itemColor, url);
+                folder = mbox.createFolder(octxt, name, fopt);
             }
+
             if (!folder.getUrl().equals("") && syncToUrl) {
                 try {
                     mbox.synchronizeFolder(octxt, folder.getId());

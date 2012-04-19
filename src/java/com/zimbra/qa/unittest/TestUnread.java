@@ -115,12 +115,10 @@ public class TestUnread extends TestCase {
         mConvId = getMessage1().getConversationId();
         ZimbraLog.test.debug("Created conversation, id=" + mConvId);
 
-        Folder folder = mMbox.createFolder(null, FOLDER1_NAME, Mailbox.ID_FOLDER_INBOX,
-            MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder folder = mMbox.createFolder(null, FOLDER1_NAME, Mailbox.ID_FOLDER_INBOX, new Folder.FolderOptions());
         mFolder1Id = folder.getId();
 
-        folder = mMbox.createFolder(null, FOLDER2_NAME, mFolder1Id,
-            MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        folder = mMbox.createFolder(null, FOLDER2_NAME, mFolder1Id, new Folder.FolderOptions());
         mFolder2Id = folder.getId();
 
         Tag tag = mMbox.createTag(null, TAG1_NAME, (byte)0);

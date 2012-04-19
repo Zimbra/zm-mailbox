@@ -51,7 +51,7 @@ public class ACLTest {
         Account grantee = Provisioning.getInstance().get(Key.AccountBy.name, "principal@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
 
-        Folder folder = mbox.createFolder(null, "shared", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder folder = mbox.createFolder(null, "shared", new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
         OperationContext octxt = new OperationContext(owner);
         mbox.grantAccess(octxt, folder.getId(), grantee.getId(), ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
         try {
@@ -70,7 +70,7 @@ public class ACLTest {
         Account grantee = Provisioning.getInstance().get(Key.AccountBy.name, "principal@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
 
-        Folder folder = mbox.createFolder(null, "shared", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder folder = mbox.createFolder(null, "shared", new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
         OperationContext octxt = new OperationContext(owner);
         mbox.grantAccess(octxt, folder.getId(), grantee.getId(), ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
         try {

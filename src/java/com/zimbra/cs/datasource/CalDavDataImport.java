@@ -36,22 +36,22 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.client.CalDavClient;
-import com.zimbra.cs.dav.client.DavObject;
 import com.zimbra.cs.dav.client.CalDavClient.Appointment;
+import com.zimbra.cs.dav.client.DavObject;
 import com.zimbra.cs.dav.client.DavRequest;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class CalDavDataImport extends MailItemImport {
@@ -197,7 +197,7 @@ public class CalDavDataImport extends MailItemImport {
     private ArrayList<CalendarFolder> syncFolders() throws ServiceException, IOException, DavException {
         ArrayList<CalendarFolder> ret = new ArrayList<CalendarFolder>();
         DataSource ds = getDataSource();
-        OperationContext octxt = new OperationContext(mbox);        
+        OperationContext octxt = new OperationContext(mbox);
         HashMap<String,DataSourceItem> allFolders = getAllFolderMappings(ds);
         Folder rootFolder = null;
         try {
@@ -240,8 +240,9 @@ public class CalDavDataImport extends MailItemImport {
                 try {
                     folder = mbox.getFolderById(octxt, f.itemId);
                 } catch (ServiceException se) {
-                    if (se.getCode() != MailServiceException.NO_SUCH_FOLDER)
+                    if (se.getCode() != MailServiceException.NO_SUCH_FOLDER) {
                         throw se;
+                    }
                     f.itemId = 0;
                 }
             }
@@ -257,15 +258,17 @@ public class CalDavDataImport extends MailItemImport {
                 }
 
                 if (folder == null) {
-                    folder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.Type.APPOINTMENT,
-                            DEFAULT_FOLDER_FLAGS, getDefaultColor(), null);
+                    Folder.FolderOptions fopt = new Folder.FolderOptions();
+                    fopt.setDefaultView(MailItem.Type.APPOINTMENT).setFlags(DEFAULT_FOLDER_FLAGS).setColor(getDefaultColor());
+                    folder = mbox.createFolder(octxt, name, rootFolder.getId(), fopt);
                 }
                 f.itemId = folder.getId();
                 f.folderId = folder.getFolderId();
                 f.md = new Metadata();
                 f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
-                if (ctag != null)
+                if (ctag != null) {
                     f.md.put(METADATA_KEY_CTAG, ctag);
+                }
                 f.remoteId = url;
                 cf.id = f.itemId;
                 mbox.setSyncDate(octxt, folder.getId(), mbox.getLastChangeID());
@@ -324,7 +327,7 @@ public class CalDavDataImport extends MailItemImport {
                 }
             }
         }
-        mbox.setSyncDate(octxt, rootFolder.getId(), mbox.getLastChangeID());        
+        mbox.setSyncDate(octxt, rootFolder.getId(), mbox.getLastChangeID());
         return ret;
     }
     private void deleteRemoteFolder(String url) throws ServiceException, IOException, DavException {
@@ -642,18 +645,18 @@ public class CalDavDataImport extends MailItemImport {
                     }
                     deleted.add(itemId);
                 }
-    
+
                 // move to trash is equivalent to delete
                 HashSet<Integer> fid = new HashSet<Integer>();
                 fid.add(Mailbox.ID_FOLDER_TRASH);
                 List<Integer> trashed = mbox.getModifiedItems(octxt, lastSync, MailItem.Type.UNKNOWN, fid).getFirst();
                 deleted.addAll(trashed);
-    
+
                 if (!deleted.isEmpty()) {
                     // pushDelete returns true if one or more items were deleted
                     allDone &= !pushDelete(deleted);
                 }
-    
+
                 // push local modification
                 fid.clear();
                 fid.add(syncFolder.getId());

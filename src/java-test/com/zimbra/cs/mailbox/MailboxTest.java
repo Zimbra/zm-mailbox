@@ -199,7 +199,7 @@ public final class MailboxTest {
         MailboxListener.register(ml);
 
         try {
-            Folder f = mbox.createFolder(null, "foo", (byte) 0, MailItem.Type.MESSAGE);
+            Folder f = mbox.createFolder(null, "foo", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
             Folder fParent = (Folder) f.getParent();
 
             ModificationKey fkey = new ModificationKey(f);
@@ -387,7 +387,7 @@ public final class MailboxTest {
 
         Message msg = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), STANDARD_DELIVERY_OPTIONS, null);
         Document doc3 = DocumentTest.createDocument(mbox, "doc3", "lmnop", false);
-        Folder folder = mbox.createFolder(null, "test", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder folder = mbox.createFolder(null, "test", new Folder.FolderOptions());
 
         ids = Sets.newHashSet(doc3.getId(), msg.getId(), folder.getId());
         uuids = Sets.newHashSet(doc3.getUuid(), msg.getUuid(), folder.getUuid());

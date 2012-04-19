@@ -17,7 +17,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class SetActiveSyncDisabledTest {
-    
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -29,21 +29,21 @@ public class SetActiveSyncDisabledTest {
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
     }
-    
+
     /**
      * Verifies serializing, de-serializing, and replaying for folder.
      */
     @Test
     public void setDisableActiveSyncUserFolder() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         // Create folder.
-        Folder folder = mbox.createFolder(null, "/test", (byte) 0, MailItem.Type.MESSAGE);
+        Folder folder = mbox.createFolder(null, "/test", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         Assert.assertFalse(folder.isActiveSyncDisabled());
-        
+
         // Create RedoableOp.
         SetActiveSyncDisabled redoPlayer = new SetActiveSyncDisabled(mbox.getId(), folder.getId(), true);
-        
+
         // Serialize, deserialize, and redo.
         byte[] data = redoPlayer.testSerialize();
         redoPlayer = new SetActiveSyncDisabled();
@@ -53,16 +53,16 @@ public class SetActiveSyncDisabledTest {
         folder = mbox.getFolderById(null, folder.getId());
         Assert.assertTrue(folder.isActiveSyncDisabled());
     }
-    
+
     @Test
     public void setDisableActiveSyncSystemFolder() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         Assert.assertFalse(folder.isActiveSyncDisabled());
-        
+
         //try setting disableActiveSync to true!!
         folder.setActiveSyncDisabled(true);
-        
+
         //cannot disable activesync for system folders!!
         Assert.assertFalse(folder.isActiveSyncDisabled());
     }

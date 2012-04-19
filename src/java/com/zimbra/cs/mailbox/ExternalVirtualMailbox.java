@@ -32,15 +32,15 @@ public class ExternalVirtualMailbox extends Mailbox {
         try {
             byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
             Folder root = Folder.create(ID_FOLDER_ROOT, UUIDUtil.generateUUID(), this, null, "ROOT", hidden, MailItem.Type.UNKNOWN, 0,
-                    MailItem.DEFAULT_COLOR_RGB, null, null);
+                    MailItem.DEFAULT_COLOR_RGB, null,null,  null);
             Folder.create(ID_FOLDER_PROFILE, UUIDUtil.generateUUID(), this, root, "Profile", hidden, MailItem.Type.DOCUMENT, 0,
-                    MailItem.DEFAULT_COLOR_RGB, null, null);
+                    MailItem.DEFAULT_COLOR_RGB, null, null, null);
 
             byte system = Folder.FOLDER_IS_IMMUTABLE;
             Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, UUIDUtil.generateUUID(), this, root, "USER_ROOT", system,
-                    MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+                    MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT,
-                    0, MailItem.DEFAULT_COLOR_RGB, null, null);
+                    0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
         } finally {
             lock.release();
         }

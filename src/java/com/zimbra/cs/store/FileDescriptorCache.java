@@ -143,8 +143,7 @@ public class FileDescriptorCache
      * Returns the existing cache entry or creates a new one.  Implicitly
      * increments the number of readers for the <tt>SharedFile</tt>.
      */
-    private SharedFile getSharedFile(String path, long rawSize)
-    throws IOException {
+    private SharedFile getSharedFile(String path, long rawSize) throws IOException {
         SharedFile sharedFile = null;
 
         synchronized (this) {
@@ -201,8 +200,7 @@ public class FileDescriptorCache
      * Closes the file descriptor and removes it from the cache.  Does nothing if the file
      * descriptor is not in the cache.
      */
-    public void remove(String path)
-    throws IOException {
+    public void remove(String path) throws IOException {
         SharedFile file = null;
 
         synchronized (this) {
@@ -226,8 +224,7 @@ public class FileDescriptorCache
      * @return true if the file is closed, false otherwise.
      * @throws IOException if there is an error closing the file.
      */
-    private boolean close(SharedFile file, String path)
-    throws IOException {
+    private boolean close(SharedFile file, String path) throws IOException {
         if (file != null) {
             sLog.debug("Closing file descriptor for %s, %s", path, file);
 
@@ -293,8 +290,9 @@ public class FileDescriptorCache
             SharedFile file = mapEntry.getValue();
             try {
                 boolean success = close(file, path);
-                if (!success)
+                if (!success) {
                     mInactiveCache.add(new SharedFileInfo(path, file));
+                }
             } catch (IOException e) {
                 ZimbraLog.store.warn("Unable to close file descriptor for " + path, e);
             }

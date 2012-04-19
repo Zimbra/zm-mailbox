@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,7 +33,7 @@ public class MigrateToDocuments {
 
     private Mailbox mbox;
     private OperationContext octxt;
-    
+
     public void handleAccount(Account account) throws ServiceException {
         handleMailbox(MailboxManager.getInstance().getMailboxByAccount(account, true));
     }
@@ -48,7 +48,7 @@ public class MigrateToDocuments {
         } catch (Exception e) {
         }
         if (destRoot == null)
-            destRoot = mbox.createFolder(octxt, path, (byte)0, MailItem.Type.DOCUMENT);
+            destRoot = mbox.createFolder(octxt, path, new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
         if (destRoot == null) {
             ZimbraLog.misc.warn("Can't create folder: %s", path);
             return;
@@ -57,7 +57,7 @@ public class MigrateToDocuments {
         migrateFromBackupFolder(octxt, destRoot, root);
         mbox.delete(octxt, destRoot.getId(), MailItem.Type.FOLDER);
     }
-    
+
     private void moveToBackupFolder(Folder from, Folder to) throws ServiceException {
         for (Folder source : from.getSubfolders(octxt)) {
             if (source.getDefaultView() != MailItem.Type.WIKI)
@@ -65,7 +65,7 @@ public class MigrateToDocuments {
             String path = to.getPath() + "/" + source.getName();
             Folder dest = null;
             try {
-                dest = mbox.createFolder(octxt, path, (byte)0, MailItem.Type.DOCUMENT);
+                dest = mbox.createFolder(octxt, path, new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
             } catch (MailServiceException e) {
                 if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                     dest = mbox.getFolderByPath(octxt, path);
@@ -89,7 +89,7 @@ public class MigrateToDocuments {
             }
         }
     }
-    
+
     private void migrateFromBackupFolder(OperationContext octxt, Folder from, Folder to) throws ServiceException {
         for (Folder source : from.getSubfolders(octxt)) {
             String path = to.getPath();
@@ -127,7 +127,7 @@ public class MigrateToDocuments {
             addRevision(item.getName(), main, doc, to);
         }
     }
-    
+
     private Document addRevision(String name, Document main, Document revision, Folder to) {
         InputStream in = null;
         try {
@@ -151,7 +151,7 @@ public class MigrateToDocuments {
         }
         return main;
     }
-    
+
     private InputStream getContentStream(Document item) throws IOException, ServiceException {
         if (item.getType() == MailItem.Type.DOCUMENT)
             return item.getContentStream();
@@ -165,7 +165,7 @@ public class MigrateToDocuments {
         System.out.println("zmwikimigrate [accountId]+");
         System.exit(0);
     }
-    
+
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         DbPool.startup();

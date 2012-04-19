@@ -50,7 +50,7 @@ public class CommentTest {
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        folder = mbox.createFolder(null, "/Briefcase/f", (byte)0, Type.DOCUMENT);
+        folder = mbox.createFolder(null, "/Briefcase/f", new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
         createDocument("doc.txt", "This is a document");
     }
 

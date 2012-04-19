@@ -36,7 +36,7 @@ public class MockHttpStore {
     private static ServerSocket ssock;
     private static Map<String, byte[]> blobs = Maps.newHashMap();
 
-    static void startup() throws IOException {
+    public static void startup() throws IOException {
         final ServerSocket s = ssock = new ServerSocket(PORT);
         new Thread() {
             @Override
@@ -52,18 +52,18 @@ public class MockHttpStore {
         }.start();
     }
 
-    static void shutdown() throws IOException {
+    public static void shutdown() throws IOException {
         ssock.close();
         ssock = null;
 
         purge();
     }
 
-    static void purge() {
+    public static void purge() {
         blobs.clear();
     }
 
-    static int size() {
+    public static int size() {
         return blobs.size();
     }
 

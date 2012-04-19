@@ -26,14 +26,13 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mime.ParsedDocument;
 
 public class DumpsterTest {
 
     private Mailbox mbox;
     private Folder folder;
-    
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -45,7 +44,7 @@ public class DumpsterTest {
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        folder = mbox.createFolder(null, "/Briefcase/f", (byte)0, Type.DOCUMENT);
+        folder = mbox.createFolder(null, "/Briefcase/f", new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
         createDocument("doc.txt", "This is a document");
     }
 

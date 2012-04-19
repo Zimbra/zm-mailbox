@@ -19,6 +19,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcGetMsgRequest;
@@ -29,7 +30,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Tests concurrent operations on the same mailbox.
@@ -99,8 +99,7 @@ public class TestConcurrency extends TestCase {
         Thread[] threads = new Thread[numThreads];
 
         // Create thread for moving messages
-        Folder folder = mMbox.createFolder(null, FOLDER_NAME, Mailbox.ID_FOLDER_USER_ROOT, MailItem.Type.UNKNOWN, 0,
-                MailItem.DEFAULT_COLOR, null);
+        Folder folder = mMbox.createFolder(null, FOLDER_NAME, Mailbox.ID_FOLDER_USER_ROOT, new Folder.FolderOptions());
         threads[0] = new Thread(new MoveMessagesThread(folder, 5));
 
         // Create threads for reading messages

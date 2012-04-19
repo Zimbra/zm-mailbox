@@ -56,7 +56,8 @@ public class TestAclPush extends TestCase {
     public void testAclPushAndDiscovery() throws Exception {
         // create a folder in user1's mailbox
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
-        Folder folder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-folder1", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
+        Folder folder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-folder1", fopt);
 
         // grant access to the created folder to user2
         Account acct2 = Provisioning.getInstance().getAccountByName(TestUtil.getAddress(USER2_NAME));
@@ -88,7 +89,7 @@ public class TestAclPush extends TestCase {
         assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
 
         // create another folder and share with DL
-        Folder dlFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-dl", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder dlFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-dl", fopt);
         mbox1.grantAccess(null, dlFolder.getId(), dl.getId(), ACL.GRANTEE_GROUP, ACL.stringToRights("rwi"), null);
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
@@ -102,7 +103,7 @@ public class TestAclPush extends TestCase {
         assertEquals(acct1.getId(), dlShare.getOwnerId());
 
         // create another folder and share with "public"
-        Folder pubFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-public", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder pubFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-public", fopt);
         mbox1.grantAccess(null, pubFolder.getId(), null, ACL.GRANTEE_PUBLIC, ACL.stringToRights("rw"), null);
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);

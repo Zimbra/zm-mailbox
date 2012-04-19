@@ -535,7 +535,7 @@ public class RuleRewriter {
         } else if (remotePath != null) {
             // Create local folder path
             ZimbraLog.filter.info("Creating folder %s for rule %s.", path, ruleName);
-            mMailbox.createFolder(null, path, (byte) 0, MailItem.Type.MESSAGE);
+            mMailbox.createFolder(null, path, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         }
     }
 }

@@ -14,6 +14,14 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -24,32 +32,24 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateGalSyncAccountRequest;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.GalMode;
 import com.zimbra.soap.type.AccountBy;
 import com.zimbra.soap.type.AccountSelector;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.ZimbraSoapContext;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class CreateGalSyncAccount extends AdminDocumentHandler {
 
@@ -63,7 +63,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        
+
         CreateGalSyncAccountRequest cgaRequest = JaxbUtil.elementToJaxb(request);
 
         String name = cgaRequest.getName();
@@ -76,7 +76,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
         String password = cgaRequest.getPassword();
         String folder = cgaRequest.getFolder();
-        
+
         String mailHost = cgaRequest.getMailHost();
 
         Domain domain = prov.getDomainByName(domainStr);
@@ -119,13 +119,13 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
             return proxyRequest(request, context, server);
         }
         addDataSource(request, zsc, account, domain, folder, name, type);
-        
+
         Element response = zsc.createElement(AdminConstants.CREATE_GAL_SYNC_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account, false, emptySet, null);
         return response;
-    }    
+    }
 
-    static void addDataSource(Element request, ZimbraSoapContext zsc, Account account, 
+    static void addDataSource(Element request, ZimbraSoapContext zsc, Account account,
             Domain domain, String folder, String name, GalMode type)  throws ServiceException {
         String acctName = account.getName();
         String acctId = account.getId();
@@ -137,24 +137,27 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
         }
 
         // create folder if not already exists.
-        if (folder == null)
+        if (folder == null) {
             folder = "/Contacts";
-        else if (folder.length() > 0 && folder.charAt(0) != '/')
+        } else if (folder.length() > 0 && folder.charAt(0) != '/') {
             folder = "/" + folder;
+        }
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Folder contactFolder = null;
         try {
             contactFolder = mbox.getFolderByPath(null, folder);
         } catch (MailServiceException.NoSuchItemException e) {
-            contactFolder = mbox.createFolder(null, folder, (byte)0, MailItem.Type.CONTACT);
+            contactFolder = mbox.createFolder(null, folder, new Folder.FolderOptions().setDefaultView(MailItem.Type.CONTACT));
         }
 
         int folderId = contactFolder.getId();
 
         // check if there is another datasource already that maps to the same contact folder.
-        for (DataSource ds : account.getAllDataSources())
-            if (ds.getFolderId() == folderId)
+        for (DataSource ds : account.getAllDataSources()) {
+            if (ds.getFolderId() == folderId) {
                 throw MailServiceException.ALREADY_EXISTS("data source " + ds.getName() + " already contains folder " + folder);
+            }
+        }
 
 
         mbox.grantAccess(null, folderId, domain.getId(), ACL.GRANTEE_DOMAIN, ACL.stringToRights("r"), null);
@@ -164,18 +167,19 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
         try {
             attrs.put(Provisioning.A_zimbraGalType, type.name());
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, "" + folderId);
-            if (!attrs.containsKey(Provisioning.A_zimbraDataSourceEnabled))
+            if (!attrs.containsKey(Provisioning.A_zimbraDataSourceEnabled)) {
                 attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
-            if (!attrs.containsKey(Provisioning.A_zimbraGalStatus))
+            }
+            if (!attrs.containsKey(Provisioning.A_zimbraGalStatus)) {
                 attrs.put(Provisioning.A_zimbraGalStatus, "enabled");
+            }
             Provisioning.getInstance().createDataSource(account, DataSourceType.gal, name, attrs);
         } catch (ServiceException e) {
             ZimbraLog.gal.error("error creating datasource for GalSyncAccount", e);
             throw e;
         }
 
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "CreateGalSyncAccount", "name", acctName} ));
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "CreateGalSyncAccount", "name", acctName} ));
     }
 
     private static final Set<String> emptySet = Collections.emptySet();

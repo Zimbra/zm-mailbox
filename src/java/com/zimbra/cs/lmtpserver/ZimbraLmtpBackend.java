@@ -35,6 +35,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -51,7 +52,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -485,7 +485,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, false, DeliveryAction.discard));
                         continue;
                     }
-                    
+
                     // For non-shared delivery (i.e. only one recipient),
                     // always deliver regardless of backup mode.
                     DeliveryAction da = DeliveryAction.deliver;
@@ -562,8 +562,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                             folderId = folder.getId();
                                         } catch (ServiceException se) {
                                             if (se.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
-                                                Folder folder = mbox.createFolder(null, recipient.getFolder(), (byte) 0,
-                                                        MailItem.Type.MESSAGE);
+                                                Folder folder = mbox.createFolder(null, recipient.getFolder(),
+                                                        new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
                                                 folderId = folder.getId();
                                             } else {
                                                 throw se;

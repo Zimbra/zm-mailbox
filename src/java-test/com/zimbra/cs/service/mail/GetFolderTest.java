@@ -63,7 +63,7 @@ public class GetFolderTest {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-        mbox.createFolder(null, "Inbox/foo/bar/baz", (byte) 0, MailItem.Type.DOCUMENT);
+        mbox.createFolder(null, "Inbox/foo/bar/baz", new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
 
         // first, test the default setup (full tree)
         Element request = new Element.XMLElement(MailConstants.GET_FOLDER_REQUEST);
@@ -106,9 +106,10 @@ public class GetFolderTest {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-        mbox.createFolder(null, "foo", (byte) 0, MailItem.Type.DOCUMENT);
-        mbox.createFolder(null, "bar/baz", (byte) 0, MailItem.Type.DOCUMENT);
-        mbox.createFolder(null, "Inbox/woot", (byte) 0, MailItem.Type.DOCUMENT);
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
+        mbox.createFolder(null, "foo", fopt);
+        mbox.createFolder(null, "bar/baz", fopt);
+        mbox.createFolder(null, "Inbox/woot", fopt);
 
         Element request = new Element.XMLElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_DEFAULT_VIEW, MailItem.Type.DOCUMENT.toString());
         Element response = new GetFolder().handle(request, ServiceTestUtil.getRequestContext(acct));
@@ -141,9 +142,10 @@ public class GetFolderTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
 
-        int folderId = mbox2.createFolder(null, "foo", (byte) 0, MailItem.Type.DOCUMENT).getId();
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
+        int folderId = mbox2.createFolder(null, "foo", fopt).getId();
         Folder folder = mbox2.getFolderById(null, folderId);
-        mbox2.createFolder(null, "bar", folderId, MailItem.Type.DOCUMENT, 0, (byte) 0, null);
+        mbox2.createFolder(null, "bar", folderId, fopt);
         mbox2.grantAccess(null, folderId, acct.getId(), ACL.GRANTEE_USER, (short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE), null);
 
         Mountpoint mpt = mbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remote", acct2.getId(), folderId, folder.getUuid(), MailItem.Type.DOCUMENT, 0, (byte) 2, false);

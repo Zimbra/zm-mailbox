@@ -27,7 +27,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,6 +50,7 @@ import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 
 public class SendShareNotificationTest extends SendShareNotification {
 
@@ -133,7 +133,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT, 0, (byte)0, null);
+        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE, new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
 
         mbox.grantAccess(null, f.getId(), acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_ADMIN, null);
 
@@ -151,7 +151,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         Account acct3 = Provisioning.getInstance().get(Key.AccountBy.name, "test3@zimbra.com");
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT, 0, (byte)0, null);
+        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE, new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
 
         mbox.grantAccess(null, f.getId(), acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_ADMIN, null);
         mbox.grantAccess(null, f.getId(), acct3.getId(), ACL.GRANTEE_USER, ACL.RIGHT_ADMIN, null);
@@ -168,7 +168,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT, 0, (byte)0, null);
+        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE, new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
 
         Element request = new Element.XMLElement(MailConstants.SEND_SHARE_NOTIFICATION_REQUEST);
         request.addAttribute(MailConstants.A_ACTION, "revoke");

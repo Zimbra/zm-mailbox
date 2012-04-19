@@ -16,19 +16,20 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SetCustomData extends RedoableOp {
 
-    private int mId;
+    private int itemId;
     private MailItem.Type type;
-    private CustomMetadata mExtendedData;
+    private CustomMetadata custom;
 
     public SetCustomData() {
         super(MailboxOperation.SetCustomData);
@@ -37,37 +38,41 @@ public class SetCustomData extends RedoableOp {
     public SetCustomData(int mailboxId, int id, MailItem.Type type, CustomMetadata custom) {
         this();
         setMailboxId(mailboxId);
-        mId = id;
+        this.itemId = id;
         this.type = type;
-        mExtendedData = custom;
+        this.custom = custom;
     }
 
     @Override
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", data=").append(mExtendedData);
+        sb.append(itemId).append(", data=").append(custom);
         return sb.toString();
     }
 
     @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mId);
+        out.writeInt(itemId);
         out.writeByte(type.toByte());
-        out.writeUTF(mExtendedData.getSectionKey());
-        out.writeUTF(mExtendedData.getSerializedValue());
+        out.writeUTF(custom.getSectionKey());
+        out.writeUTF(custom.getSerializedValue());
     }
 
     @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mId = in.readInt();
-        type = MailItem.Type.of(in.readByte());
-        String extendedKey = in.readUTF();
-        mExtendedData = new CustomMetadata(extendedKey, in.readUTF());
+        this.itemId = in.readInt();
+        this.type = MailItem.Type.of(in.readByte());
+        try {
+            String extendedKey = in.readUTF();
+            this.custom = new CustomMetadata(extendedKey, in.readUTF());
+        } catch (ServiceException e) {
+            mLog.warn("could not deserialize custom metadata for folder", e);
+        }
     }
 
     @Override
     public void redo() throws Exception {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mailbox.setCustomData(getOperationContext(), mId, type, mExtendedData);
+        mailbox.setCustomData(getOperationContext(), itemId, type, custom);
     }
 }

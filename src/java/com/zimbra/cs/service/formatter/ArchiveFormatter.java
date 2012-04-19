@@ -916,7 +916,7 @@ public abstract class ArchiveFormatter extends Formatter {
             try {
                 fldr = context.targetMailbox.getFolderByPath(context.opContext, path);
             } catch (Exception e) {
-                fldr = context.targetMailbox.createFolder(context.opContext, path, (byte)0, view);
+                fldr = context.targetMailbox.createFolder(context.opContext, path, new Folder.FolderOptions().setDefaultView(view));
             }
             fmap.put(fldr.getId(), fldr);
             fmap.put(fldr.getPath(), fldr);
@@ -1243,7 +1243,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     if (oldItem == null) {
                         fldr = createParent(context, fmap, path, Folder.Type.UNKNOWN);
-                        newItem = fldr = mbox.createFolder(octxt, f.getName(), fldr.getId(), (byte)0, f.getDefaultView(), f.getFlagBitmask(), f.getColor(), f.getUrl());
+                        Folder.FolderOptions fopt = new Folder.FolderOptions();
+                        fopt.setDefaultView(f.getDefaultView()).setFlags(f.getFlagBitmask()).setColor(f.getColor()).setUrl(f.getUrl());
+                        newItem = fldr = mbox.createFolder(octxt, f.getName(), fldr.getId(), fopt);
                         if (doACL && acl != null) {
                             mbox.setPermissions(octxt, fldr.getId(), acl);
                         }
