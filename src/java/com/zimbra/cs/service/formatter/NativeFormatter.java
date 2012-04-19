@@ -362,7 +362,7 @@ public final class NativeFormatter extends Formatter {
             String desc, long size, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
         disp = (disp == null || disp.toLowerCase().startsWith("i")) ? Part.INLINE : Part.ATTACHMENT;
-        if (desc != null) {
+        if (desc != null && desc.length() <= 2048) { // do not return ridiculously long header.
             resp.addHeader("Content-Description", desc);
         }
         // defang when the html and svg attachment was requested with disposition inline
