@@ -15,6 +15,7 @@
 package com.zimbra.cs.extension;
 
 import java.lang.reflect.Method;
+import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
 
@@ -28,11 +29,13 @@ public class VoiceExtensionUtil {
      * This helper method facilitates the class loading complications.
      */
     @SuppressWarnings("unchecked")
-    public static void registerVoiceStore(String extension, String className) {
+    public static void registerVoiceProvider(String extension, String providerName,
+            String className, Set<String> applicableAttrs) {
         try {
             Class vsClass = ExtensionUtil.findClass("com.zimbra.cs.voice.VoiceStore");
-            Method method = vsClass.getMethod("register", String.class, String.class);
-            method.invoke(vsClass, extension, className);
+            Method method = vsClass.getMethod("register", String.class, String.class,
+                    String.class, Set.class);
+            method.invoke(vsClass, extension, providerName, className, applicableAttrs);
         } catch (Exception e) {
             ZimbraLog.extensions.error("unable to register VoiceStore: extension=" + 
                     extension + ", className=" + className, e);
