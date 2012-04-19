@@ -35,8 +35,10 @@ public class TagActionInfo {
     /**
      * @zm-api-field-tag tag-names
      * @zm-api-field-description Names of tags affected by successfully applied operation
+     * <br />
+     * Only present if <b>"tn"</b> was specified in the request
      */
-    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=true)
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String successNames;
 
     /**
