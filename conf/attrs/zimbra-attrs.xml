@@ -6987,51 +6987,35 @@ TODO: delete them permanently from here
   <desc>UC service zimbraId</desc>
 </attr>
 
-<attr id="1402" name="zimbraUCHandlerClass" type="cstring" max="256" cardinality="single" requiredIn="ucService" since="8.0.0">
-  <desc>handler class for the UC service</desc>
+<attr id="1402" name="zimbraUCProvider" type="cstring" max="256" cardinality="single" requiredIn="ucService" since="8.0.0">
+  <desc>provider for the UC service</desc>
 </attr>
 
-<attr id="1403" name="zimbraUCAdminUser" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
-  <desc>admin user for UC service</desc>
+<attr id="1403" name="zimbraUCUserURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>user info service URL for the UC service</desc>
 </attr>
 
-<attr id="1404" name="zimbraUCAdminPassword" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
-  <desc>admin password for UC service</desc>
-</attr>
-
-<attr id="1405" name="zimbraUCAdminURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
-  <desc>admin service URL for the UC service</desc>
-</attr>
-
-<attr id="1406" name="zimbraUCVoicemailURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+<attr id="1404" name="zimbraUCVoicemailURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
   <desc>voicemail service URL for the UC service</desc>
 </attr>
 
-<attr id="1407" name="zimbraUCVideoURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
-  <desc>video service URL for the UC service</desc>
-</attr>
-
-<attr id="1408" name="zimbraUCCallLogURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
-  <desc>call log service URL for the UC service</desc>
-</attr>
-
-<attr id="1409" name="zimbraUCCallControlURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+<attr id="1405" name="zimbraUCCallControlURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
   <desc>call control service URL for the UC service</desc>
 </attr>
 
-<attr id="1410" name="zimbraUCUsername" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
+<attr id="1406" name="zimbraUCUsername" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
   <desc>username for the user's UC service</desc>
 </attr>
 
-<attr id="1411" name="zimbraUCPassword" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
+<attr id="1407" name="zimbraUCPassword" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
   <desc>password for the user's UC service</desc>
 </attr>
 
-<attr id="1412" name="zimbraMobilePolicyApprovedApplicationList" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
+<attr id="1408" name="zimbraMobilePolicyApprovedApplicationList" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>This is the internal attr for "zimbraMobilePolicyApprovedApplication" which can only store app hash (to keep consistent with ActiveSync specification. This attr's format is "app_name":"app_hash", and is used for showing both the app name and hash in admin console UI</desc>
 </attr>
 
-<attr id="1413" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1409" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether offline reading of docuemnts on device is allowed</desc>
 </attr>

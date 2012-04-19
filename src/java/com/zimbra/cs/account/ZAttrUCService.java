@@ -537,229 +537,13 @@ public abstract class ZAttrUCService extends NamedEntry {
     }
 
     /**
-     * admin password for UC service
-     *
-     * @return zimbraUCAdminPassword, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public String getUCAdminPassword() {
-        return getAttr(Provisioning.A_zimbraUCAdminPassword, null);
-    }
-
-    /**
-     * admin password for UC service
-     *
-     * @param zimbraUCAdminPassword new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public void setUCAdminPassword(String zimbraUCAdminPassword) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminPassword, zimbraUCAdminPassword);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * admin password for UC service
-     *
-     * @param zimbraUCAdminPassword new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public Map<String,Object> setUCAdminPassword(String zimbraUCAdminPassword, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminPassword, zimbraUCAdminPassword);
-        return attrs;
-    }
-
-    /**
-     * admin password for UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public void unsetUCAdminPassword() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminPassword, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * admin password for UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public Map<String,Object> unsetUCAdminPassword(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminPassword, "");
-        return attrs;
-    }
-
-    /**
-     * admin service URL for the UC service
-     *
-     * @return zimbraUCAdminURL, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1405)
-    public String getUCAdminURL() {
-        return getAttr(Provisioning.A_zimbraUCAdminURL, null);
-    }
-
-    /**
-     * admin service URL for the UC service
-     *
-     * @param zimbraUCAdminURL new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1405)
-    public void setUCAdminURL(String zimbraUCAdminURL) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminURL, zimbraUCAdminURL);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * admin service URL for the UC service
-     *
-     * @param zimbraUCAdminURL new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1405)
-    public Map<String,Object> setUCAdminURL(String zimbraUCAdminURL, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminURL, zimbraUCAdminURL);
-        return attrs;
-    }
-
-    /**
-     * admin service URL for the UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1405)
-    public void unsetUCAdminURL() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminURL, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * admin service URL for the UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1405)
-    public Map<String,Object> unsetUCAdminURL(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminURL, "");
-        return attrs;
-    }
-
-    /**
-     * admin user for UC service
-     *
-     * @return zimbraUCAdminUser, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public String getUCAdminUser() {
-        return getAttr(Provisioning.A_zimbraUCAdminUser, null);
-    }
-
-    /**
-     * admin user for UC service
-     *
-     * @param zimbraUCAdminUser new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public void setUCAdminUser(String zimbraUCAdminUser) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminUser, zimbraUCAdminUser);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * admin user for UC service
-     *
-     * @param zimbraUCAdminUser new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public Map<String,Object> setUCAdminUser(String zimbraUCAdminUser, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminUser, zimbraUCAdminUser);
-        return attrs;
-    }
-
-    /**
-     * admin user for UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public void unsetUCAdminUser() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminUser, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * admin user for UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public Map<String,Object> unsetUCAdminUser(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCAdminUser, "");
-        return attrs;
-    }
-
-    /**
      * call control service URL for the UC service
      *
      * @return zimbraUCCallControlURL, or null if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1405)
     public String getUCCallControlURL() {
         return getAttr(Provisioning.A_zimbraUCCallControlURL, null);
     }
@@ -772,7 +556,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1405)
     public void setUCCallControlURL(String zimbraUCCallControlURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCCallControlURL, zimbraUCCallControlURL);
@@ -788,7 +572,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1405)
     public Map<String,Object> setUCCallControlURL(String zimbraUCCallControlURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCCallControlURL, zimbraUCCallControlURL);
@@ -802,7 +586,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1405)
     public void unsetUCCallControlURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCCallControlURL, "");
@@ -817,7 +601,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1405)
     public Map<String,Object> unsetUCCallControlURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCCallControlURL, "");
@@ -825,136 +609,64 @@ public abstract class ZAttrUCService extends NamedEntry {
     }
 
     /**
-     * call log service URL for the UC service
+     * provider for the UC service
      *
-     * @return zimbraUCCallLogURL, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1408)
-    public String getUCCallLogURL() {
-        return getAttr(Provisioning.A_zimbraUCCallLogURL, null);
-    }
-
-    /**
-     * call log service URL for the UC service
-     *
-     * @param zimbraUCCallLogURL new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1408)
-    public void setUCCallLogURL(String zimbraUCCallLogURL) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallLogURL, zimbraUCCallLogURL);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * call log service URL for the UC service
-     *
-     * @param zimbraUCCallLogURL new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1408)
-    public Map<String,Object> setUCCallLogURL(String zimbraUCCallLogURL, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallLogURL, zimbraUCCallLogURL);
-        return attrs;
-    }
-
-    /**
-     * call log service URL for the UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1408)
-    public void unsetUCCallLogURL() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallLogURL, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * call log service URL for the UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1408)
-    public Map<String,Object> unsetUCCallLogURL(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallLogURL, "");
-        return attrs;
-    }
-
-    /**
-     * handler class for the UC service
-     *
-     * @return zimbraUCHandlerClass, or null if unset
+     * @return zimbraUCProvider, or null if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1402)
-    public String getUCHandlerClass() {
-        return getAttr(Provisioning.A_zimbraUCHandlerClass, null);
+    public String getUCProvider() {
+        return getAttr(Provisioning.A_zimbraUCProvider, null);
     }
 
     /**
-     * handler class for the UC service
+     * provider for the UC service
      *
-     * @param zimbraUCHandlerClass new value
+     * @param zimbraUCProvider new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1402)
-    public void setUCHandlerClass(String zimbraUCHandlerClass) throws com.zimbra.common.service.ServiceException {
+    public void setUCProvider(String zimbraUCProvider) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCHandlerClass, zimbraUCHandlerClass);
+        attrs.put(Provisioning.A_zimbraUCProvider, zimbraUCProvider);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * handler class for the UC service
+     * provider for the UC service
      *
-     * @param zimbraUCHandlerClass new value
+     * @param zimbraUCProvider new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1402)
-    public Map<String,Object> setUCHandlerClass(String zimbraUCHandlerClass, Map<String,Object> attrs) {
+    public Map<String,Object> setUCProvider(String zimbraUCProvider, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCHandlerClass, zimbraUCHandlerClass);
+        attrs.put(Provisioning.A_zimbraUCProvider, zimbraUCProvider);
         return attrs;
     }
 
     /**
-     * handler class for the UC service
+     * provider for the UC service
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1402)
-    public void unsetUCHandlerClass() throws com.zimbra.common.service.ServiceException {
+    public void unsetUCProvider() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCHandlerClass, "");
+        attrs.put(Provisioning.A_zimbraUCProvider, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * handler class for the UC service
+     * provider for the UC service
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -962,81 +674,81 @@ public abstract class ZAttrUCService extends NamedEntry {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1402)
-    public Map<String,Object> unsetUCHandlerClass(Map<String,Object> attrs) {
+    public Map<String,Object> unsetUCProvider(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCHandlerClass, "");
+        attrs.put(Provisioning.A_zimbraUCProvider, "");
         return attrs;
     }
 
     /**
-     * video service URL for the UC service
+     * user info service URL for the UC service
      *
-     * @return zimbraUCVideoURL, or null if unset
+     * @return zimbraUCUserURL, or null if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1407)
-    public String getUCVideoURL() {
-        return getAttr(Provisioning.A_zimbraUCVideoURL, null);
+    @ZAttr(id=1403)
+    public String getUCUserURL() {
+        return getAttr(Provisioning.A_zimbraUCUserURL, null);
     }
 
     /**
-     * video service URL for the UC service
+     * user info service URL for the UC service
      *
-     * @param zimbraUCVideoURL new value
+     * @param zimbraUCUserURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1407)
-    public void setUCVideoURL(String zimbraUCVideoURL) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1403)
+    public void setUCUserURL(String zimbraUCUserURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVideoURL, zimbraUCVideoURL);
+        attrs.put(Provisioning.A_zimbraUCUserURL, zimbraUCUserURL);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * video service URL for the UC service
+     * user info service URL for the UC service
      *
-     * @param zimbraUCVideoURL new value
+     * @param zimbraUCUserURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1407)
-    public Map<String,Object> setUCVideoURL(String zimbraUCVideoURL, Map<String,Object> attrs) {
+    @ZAttr(id=1403)
+    public Map<String,Object> setUCUserURL(String zimbraUCUserURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVideoURL, zimbraUCVideoURL);
+        attrs.put(Provisioning.A_zimbraUCUserURL, zimbraUCUserURL);
         return attrs;
     }
 
     /**
-     * video service URL for the UC service
+     * user info service URL for the UC service
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1407)
-    public void unsetUCVideoURL() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1403)
+    public void unsetUCUserURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVideoURL, "");
+        attrs.put(Provisioning.A_zimbraUCUserURL, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * video service URL for the UC service
+     * user info service URL for the UC service
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1407)
-    public Map<String,Object> unsetUCVideoURL(Map<String,Object> attrs) {
+    @ZAttr(id=1403)
+    public Map<String,Object> unsetUCUserURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVideoURL, "");
+        attrs.put(Provisioning.A_zimbraUCUserURL, "");
         return attrs;
     }
 
@@ -1047,7 +759,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1406)
+    @ZAttr(id=1404)
     public String getUCVoicemailURL() {
         return getAttr(Provisioning.A_zimbraUCVoicemailURL, null);
     }
@@ -1060,7 +772,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1406)
+    @ZAttr(id=1404)
     public void setUCVoicemailURL(String zimbraUCVoicemailURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCVoicemailURL, zimbraUCVoicemailURL);
@@ -1076,7 +788,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1406)
+    @ZAttr(id=1404)
     public Map<String,Object> setUCVoicemailURL(String zimbraUCVoicemailURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCVoicemailURL, zimbraUCVoicemailURL);
@@ -1090,7 +802,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1406)
+    @ZAttr(id=1404)
     public void unsetUCVoicemailURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCVoicemailURL, "");
@@ -1105,7 +817,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1406)
+    @ZAttr(id=1404)
     public Map<String,Object> unsetUCVoicemailURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCVoicemailURL, "");
