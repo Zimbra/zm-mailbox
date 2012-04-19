@@ -3407,7 +3407,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1413)
+    @ZAttr(id=1409)
     public static final String A_zimbraDeviceOfflineCacheEnabled = "zimbraDeviceOfflineCacheEnabled";
 
     /**
@@ -6914,7 +6914,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1412)
+    @ZAttr(id=1408)
     public static final String A_zimbraMobilePolicyApprovedApplicationList = "zimbraMobilePolicyApprovedApplicationList";
 
     /**
@@ -11093,60 +11093,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
-     * admin password for UC service
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public static final String A_zimbraUCAdminPassword = "zimbraUCAdminPassword";
-
-    /**
-     * admin service URL for the UC service
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1405)
-    public static final String A_zimbraUCAdminURL = "zimbraUCAdminURL";
-
-    /**
-     * admin user for UC service
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public static final String A_zimbraUCAdminUser = "zimbraUCAdminUser";
-
-    /**
      * call control service URL for the UC service
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1405)
     public static final String A_zimbraUCCallControlURL = "zimbraUCCallControlURL";
-
-    /**
-     * call log service URL for the UC service
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1408)
-    public static final String A_zimbraUCCallLogURL = "zimbraUCCallLogURL";
-
-    /**
-     * handler class for the UC service
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1402)
-    public static final String A_zimbraUCHandlerClass = "zimbraUCHandlerClass";
 
     /**
      * password for the user&#039;s UC service
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1407)
     public static final String A_zimbraUCPassword = "zimbraUCPassword";
+
+    /**
+     * provider for the UC service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1402)
+    public static final String A_zimbraUCProvider = "zimbraUCProvider";
 
     /**
      * UC service zimbraId
@@ -11161,23 +11129,23 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1410)
+    @ZAttr(id=1406)
     public static final String A_zimbraUCUsername = "zimbraUCUsername";
 
     /**
-     * video service URL for the UC service
+     * user info service URL for the UC service
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1407)
-    public static final String A_zimbraUCVideoURL = "zimbraUCVideoURL";
+    @ZAttr(id=1403)
+    public static final String A_zimbraUCUserURL = "zimbraUCUserURL";
 
     /**
      * voicemail service URL for the UC service
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1406)
+    @ZAttr(id=1404)
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
 
     /**
