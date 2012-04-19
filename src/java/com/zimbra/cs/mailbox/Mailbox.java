@@ -5873,7 +5873,7 @@ public class Mailbox {
                     success = true;
                     return;
                 }
-                tag = getTagByName(octxt, ntags.getTags()[0]);
+                tag = getTagByName(ntags.getTags()[0]);
             }
 
             alterTag(itemIds, type, tag, addTag);

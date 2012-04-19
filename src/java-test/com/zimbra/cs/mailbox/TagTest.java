@@ -488,11 +488,25 @@ public class TagTest {
 
         // just need insert or write to implicitly create a tag
         mbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_INSERT, null);
+        int msgid = -1;
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2 });
-            mbox.addMessage(octxt2, ThreaderTest.getRootMessage(), dopt, null).getId();
+            msgid = mbox.addMessage(octxt2, ThreaderTest.getRootMessage(), dopt, null).getId();
         } catch (ServiceException e) {
             Assert.fail("unable to insert message with implicit tag");
+        }
+
+        // similar rights are needed to tag an existing item
+        mbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_WRITE, null);
+        try {
+            mbox.alterTag(octxt2, msgid, MailItem.Type.MESSAGE, tag3, true, null);
+        } catch (ServiceException e) {
+            Assert.fail("unable to tag existing message with implicit tag");
+        }
+        try {
+            mbox.alterTag(octxt2, msgid, MailItem.Type.MESSAGE, tag1, true, null);
+        } catch (ServiceException e) {
+            Assert.fail("unable to tag existing message with existing tag");
         }
 
         // still need full perms to "create" an existing but unlisted tag
