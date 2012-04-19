@@ -53,7 +53,14 @@ public class SyncGalResponse {
      */
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
-
+    
+    /**
+     * @zm-api-field-description galDefinitionLastModified
+     * @zm-api-field-description galDefinitionLastModified is the time at which the GAL definition is last modified.
+     * This is returned if the sync does not happen using GAL sync account.
+     */
+    @XmlAttribute(name=MailConstants.A_GAL_DEFINITION_LAST_MODIFIED /* galDefinitionLastModified */, required=false)
+    private String galDefinitionLastModified;
     /**
      * @zm-api-field-description Details of contact.  For element names <b>&lt;deleted</b> - gives details of deleted
      * entries.
@@ -69,6 +76,7 @@ public class SyncGalResponse {
 
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
+    public void setGalDefinitionLastModified(String timestamp) { this.galDefinitionLastModified = timestamp; }
     public void setHits(Iterable <Object> hits) {
         this.hits.clear();
         if (hits != null) {
@@ -82,6 +90,7 @@ public class SyncGalResponse {
 
     public Boolean getMore() { return ZmBoolean.toBool(more); }
     public String getToken() { return token; }
+    public String getGalDefinitionLastModified() { return galDefinitionLastModified; }
     public List<Object> getHits() {
         return Collections.unmodifiableList(hits);
     }
@@ -91,6 +100,7 @@ public class SyncGalResponse {
         return helper
             .add("more", more)
             .add("token", token)
+            .add("galDefinitionLastModified", galDefinitionLastModified)
             .add("hits", hits);
     }
 
