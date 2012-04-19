@@ -809,7 +809,7 @@ import and export of addressbook.
 
  <SyncGalRequest [token="{previous-token}] [idOnly={true|false}]"/>
 
- <SyncGalResponse token="{new-token}">
+ <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"]>
    <cn>...</cn>*
    <deleted id="{itemId}">*
  </SyncGalResponse>
@@ -821,6 +821,8 @@ import and export of addressbook.
   Note: idOnly only works when GAL sync account is configured/enabled.
   If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
+  galDefinitionLastModified is the time at which the GAL definition is last modified.
+  This is returned if the sync does not happen using GAL sync account.
 
 ----------------------------
 

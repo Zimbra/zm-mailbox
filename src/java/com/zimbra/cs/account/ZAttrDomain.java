@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120417-1339 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120418-1522 */
 
     /**
      * RFC2256: descriptive information
@@ -8939,6 +8939,125 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetGalAutoCompleteLdapFilter(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalAutoCompleteLdapFilter, "");
+        return attrs;
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * <p>Use getGalDefinitionLastModifiedTimeAsString to access value as a string.
+     *
+     * @see #getGalDefinitionLastModifiedTimeAsString()
+     *
+     * @return zimbraGalDefinitionLastModifiedTime as Date, null if unset or unable to parse
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public Date getGalDefinitionLastModifiedTime() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null);
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @return zimbraGalDefinitionLastModifiedTime, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public String getGalDefinitionLastModifiedTimeAsString() {
+        return getAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null);
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @param zimbraGalDefinitionLastModifiedTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public void setGalDefinitionLastModifiedTime(Date zimbraGalDefinitionLastModifiedTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraGalDefinitionLastModifiedTime));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @param zimbraGalDefinitionLastModifiedTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public Map<String,Object> setGalDefinitionLastModifiedTime(Date zimbraGalDefinitionLastModifiedTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraGalDefinitionLastModifiedTime));
+        return attrs;
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @param zimbraGalDefinitionLastModifiedTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public void setGalDefinitionLastModifiedTimeAsString(String zimbraGalDefinitionLastModifiedTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @param zimbraGalDefinitionLastModifiedTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public Map<String,Object> setGalDefinitionLastModifiedTimeAsString(String zimbraGalDefinitionLastModifiedTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime);
+        return attrs;
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public void unsetGalDefinitionLastModifiedTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time at which GAL definition is last modified.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1410)
+    public Map<String,Object> unsetGalDefinitionLastModifiedTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, "");
         return attrs;
     }
 

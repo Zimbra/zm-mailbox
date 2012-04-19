@@ -655,6 +655,14 @@ public class GalSearchControl {
             limit = domain.getGalMaxResults();
         }
         mParams.setLimit(limit);
+        
+        // Return the GAL definition last modified time so that clients can use it to decide if fullsync is required.
+        if (mParams.getOp() == GalOp.sync) {
+            String galLastModified = domain.getGalDefinitionLastModifiedTimeAsString();
+            if (galLastModified != null) {
+                mParams.getResultCallback().setGalDefinitionLastModified(galLastModified);
+            }
+        }
 
         if (galMode == GalMode.both) {
             // make two gal searches for 1/2 results each

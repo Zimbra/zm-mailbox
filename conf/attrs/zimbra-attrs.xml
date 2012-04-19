@@ -516,7 +516,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>user is unable to change password</desc>
 </attr>
 
-<attr id="46" name="zimbraGalMode" type="enum" value="zimbra,both,ldap" cardinality="single" optionalIn="domain">
+<attr id="46" name="zimbraGalMode" type="enum" value="zimbra,both,ldap" cardinality="single" optionalIn="domain" callback="GalCallback">
   <desc>
     valid modes are "zimbra" (query internal directory only), "ldap" (query
     external directory only), or "both" (query internal and external directory)
@@ -524,15 +524,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 </attr>
 
-<attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain">
+<attr id="47" name="zimbraGalLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain" callback="GalCallback">
   <desc>LDAP URL for external GAL queries</desc>
 </attr>
 
-<attr id="48" name="zimbraGalLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="48" name="zimbraGalLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain" callback="GalCallback">
   <desc>LDAP search base for external GAL queries</desc>
 </attr>
 
-<attr id="49" name="zimbraGalLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain">
+<attr id="49" name="zimbraGalLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" callback="GalCallback">
   <desc>LDAP bind dn for external GAL queries</desc>
 </attr>
 
@@ -540,7 +540,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP bind password for external GAL queries</desc>
 </attr>
 
-<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain" callback="GalLdapFilter">
+<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain" callback="GalCallback">
   <desc>LDAP search filter for external GAL search queries</desc>
 </attr>
 
@@ -7018,6 +7018,10 @@ TODO: delete them permanently from here
 <attr id="1409" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether offline reading of docuemnts on device is allowed</desc>
+</attr>
+
+<attr id="1410" name="zimbraGalDefinitionLastModifiedTime" type="gentime" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>the time at which GAL definition is last modified.</desc>
 </attr>
 
 </attrs>
