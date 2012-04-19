@@ -34,11 +34,6 @@ public class RemoteSoapSession extends SoapSession {
     }
 
     @Override
-    protected boolean isIMListener() {
-        return false;
-    }
-
-    @Override
     public String getRemoteSessionId(Server server) {
         return null;
     }

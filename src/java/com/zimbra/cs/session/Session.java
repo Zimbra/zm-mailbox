@@ -39,11 +39,11 @@ public abstract class Session {
     protected final String mAuthenticatedAccountId;
     protected final String mTargetAccountId;
     private   final Type   mSessionType;
+    private   final long   mCreationTime;
 
     private   String    mSessionId;
     protected volatile Mailbox mailbox;
     private   long      mLastAccessed;
-    private   long      mCreationTime;
     private   boolean   mCleanedUp;
     private   boolean   mIsRegistered;
     private   boolean   mAddedToCache;
@@ -90,7 +90,7 @@ public abstract class Session {
             return true;
         }
     }
-    
+
     /** Creates a {@code Session} of the given <tt>Type</tt> whose target
      *  {@link Account} is the same as its authenticated <tt>Account</tt>.
      * @param accountId  The account ID of the {@code Session}'s owner
@@ -175,11 +175,6 @@ public abstract class Session {
 
     protected boolean isRegistered() {
         return mIsRegistered;
-    }
-
-    /** Returns TRUE if this session wants to hear about IM events. */
-    protected boolean isIMListener() {
-        return false;
     }
 
     /** Whether the session should be attached to the target {@link Mailbox}

@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.io.Closeables;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -40,8 +42,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Comment;
@@ -50,12 +50,12 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
@@ -379,7 +379,7 @@ public class SoapSession extends Session {
 
         /** used by the Session object to ensure that notifications are reliably
          *  received by the listener */
-        private int mSequence;
+        private final int mSequence;
         int getSequence()  { return mSequence; }
 
         QueuedNotifications(int seqno)  { mSequence = seqno; }
@@ -453,9 +453,9 @@ public class SoapSession extends Session {
     protected QueuedNotifications changes = new QueuedNotifications(1);
     private PushChannel pushChannel;
     private boolean unregistered;
-    private Map<String, DelegateSession> delegateSessions = new HashMap<String, DelegateSession>(3);
+    private final Map<String, DelegateSession> delegateSessions = new HashMap<String, DelegateSession>(3);
     private List<RemoteSessionInfo> remoteSessions;
-    private boolean asAdmin;
+    private final boolean asAdmin;
     private boolean isOffline = false;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
@@ -516,11 +516,6 @@ public class SoapSession extends Session {
 
     @Override
     protected boolean isRegisteredInCache() {
-        return true;
-    }
-
-    @Override
-    protected boolean isIMListener() {
         return true;
     }
 
@@ -1206,8 +1201,8 @@ public class SoapSession extends Session {
         return null;
     }
 
-    private static void transferMountpointContents(Element elem, OperationContext octxt, 
-            Map<ItemId, Pair<Boolean, Element>> mountpoints) 
+    private static void transferMountpointContents(Element elem, OperationContext octxt,
+            Map<ItemId, Pair<Boolean, Element>> mountpoints)
             throws ServiceException {
         if (elem == null) {
             return;
