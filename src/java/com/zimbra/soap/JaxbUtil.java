@@ -964,21 +964,41 @@ public final class JaxbUtil {
     }
 
     /**
+     * For use with JAXB Request or Response objects listed in {@code MESSAGE_CLASSES} only
+     *
+     * @param o - associated JAXB class.  <b>MUST</b> have an @XmlRootElement annotation
+     * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
+     * @param removePrefixes - If true then remove namespace prefixes from unmarshalled XML.
+     */
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory, boolean removePrefixes)
+    throws ServiceException {
+        return jaxbToElement(o, factory, removePrefixes, true);
+    }
+
+    /**
      * JAXB marshaling creates XML which makes heavy use of namespace prefixes.  Historical Zimbra SOAP XML
      * has generally not used them inside the SOAP body.  JAXB uses randomly assigned prefixes such as "ns2" which
      * makes the XML ugly and verbose.  If {@link removePrefixes} is set then all namespace prefix usage is
      * expunged from the XML.
      *
-     * @param o - associated JAXB class must have an @XmlRootElement annotation
+     * @param o - associated JAXB class.  <b>MUST</b> have an @XmlRootElement annotation
      * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
-     * @param removePrefixes - If true then remove namepace prefixes from unmarshalled XML.
-     * @return
-     * @throws ServiceException
+     * @param removePrefixes - If true then remove namespace prefixes from unmarshalled XML.
+     * @param useContextMarshaller - Set true if Object is a JAXB Request or Response listed in {@code MESSAGE_CLASSES}
      */
-    public static Element jaxbToElement(Object o, Element.ElementFactory factory, boolean removePrefixes)
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory, boolean removePrefixes,
+            boolean useContextMarshaller)
     throws ServiceException {
+        if (o == null) {
+            return null;
+        }
         try {
-            Marshaller marshaller = getContext().createMarshaller();
+            Marshaller marshaller;
+            if (useContextMarshaller) {
+                marshaller = getContext().createMarshaller();
+            } else {
+                marshaller = createMarshaller(o.getClass());
+            }
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             DocumentResult dr = new DocumentResult();
             marshaller.marshal(o, dr);
@@ -993,7 +1013,6 @@ public final class JaxbUtil {
                     o.getClass().getName() + " to Element", e);
         }
     }
-
     /**
      * @param o - associated JAXB class must have an @XmlRootElement annotation
      * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory

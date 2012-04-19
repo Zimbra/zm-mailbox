@@ -16,16 +16,13 @@ package com.zimbra.soap.json;
 
 import java.io.IOException;
 import java.io.StringWriter;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchema;
 
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -34,6 +31,7 @@ import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.json.jackson.ZimbraJsonModule;
+import com.zimbra.soap.json.jackson.ZmPairAnnotationIntrospector;
 import com.zimbra.soap.util.JaxbInfo;
 
 public final class JacksonUtil {
@@ -65,21 +63,39 @@ public final class JacksonUtil {
         return jaxbToJSONElement(obj, JacksonUtil.getElementName(obj));
     }
 
-    public static Element jaxbToJSONElementOld(Object obj)
-    throws ServiceException {
-        String json = jaxbToJsonString(JacksonUtil.getWrapRootObjectMapper(), obj);
-        return jacksonJsonToElement(json, obj);
+    /**
+     * Note that currently does NOT use Jackson to go from JSON to JAXB to Element.
+     * {@code SoapEngine.dispatch} uses Element.parseJSON(in) to parse a SOAP API command.
+     * @param json - a String in JSON format
+     * @param qn
+     * @param obj - a JAXB object associated with the {@code json} argument
+     */
+    public static Element jacksonJsonToElement(String json, org.dom4j.QName qn, Object obj)
+    throws SoapParseException {
+        if (obj == null)
+            return null;
+        if (qn != null) {
+            return Element.parseJSON(json, qn, JSONElement.mFactory);
+        }
+        return Element.parseJSON(json);
     }
 
-    public static JsonNode fromJaxb(Object obj) {
-        ObjectMapper mapper = JacksonUtil.getObjectMapper();
-        return mapper.valueToTree(obj);
-    }
-
-    public static Element jaxbToJSONElement(ObjectMapper mapper, Object obj)
+    /**
+     * Makes a best efforts guess to determine the name/namespace associated with the object
+     * and produces a JSONElement tree from the supplied JSON string
+     * @param json - a String in JSON format
+     * @param obj - a JAXB object associated with the {@code json} argument
+     * @return a JSONElement corresponding to the {@code json} argument
+     */
+    public static Element jacksonJsonToElement(String json, Object obj)
     throws ServiceException {
-        String json = jaxbToJsonString(mapper, obj);
-        return jacksonJsonToElement(json, obj);
+        if (obj == null)
+            return null;
+        try {
+            return jacksonJsonToElement(json, getElementName(obj), obj);
+        } catch (SoapParseException e) {
+            throw ServiceException.FAILURE("SoapParseException", e);
+        }
     }
 
     public static String jaxbToJsonString(ObjectMapper mapper, Object obj)
@@ -96,89 +112,61 @@ public final class JacksonUtil {
         }
     }
 
-    public static Element jacksonJsonToElement(String json, org.dom4j.QName qn, Object obj)
-    throws SoapParseException {
+    /**
+     * Makes a best efforts guess at the name and namespace associated with a JAXB object.  Note that
+     * typically only classes with an {@link XmlRootElement} annotation have an authoritative associated
+     * {@code QName}
+     * @param obj - a JAXB object
+     * @return best guess {@code QName} associated with the {@code obj} argument
+     */
+    private static org.dom4j.QName getElementName(Object obj) {
         if (obj == null)
             return null;
-        if (qn != null) {
-            return Element.parseJSON(json, qn, JSONElement.mFactory);
-        }
-        return Element.parseJSON(json);
-    }
-
-    public static org.dom4j.QName getElementName(Object obj) {
-        if (obj == null)
-            return null;
-        org.dom4j.QName qn = null;
         String ns = null;
-        String className = null;
+        String elementName = null;
         XmlRootElement root = obj.getClass().getAnnotation(XmlRootElement.class);
         if (root != null) {
-           className = root.name();
+           elementName = root.name();
            if (!root.namespace().equals(JaxbInfo.DEFAULT_MARKER))
                 ns = root.namespace();
         }
         if (Strings.isNullOrEmpty(ns)) {
+            // Didn't get a valid namespace from XmlRootElement - see if there is one associated with the package
             XmlSchema schem = obj.getClass().getPackage().getAnnotation(XmlSchema.class);
             if (schem != null) {
                 ns = schem.namespace();
             }
         }
-        if (className == null) {
-            className = obj.getClass().getName();
-            if (className != null) {
-                int pos = className.lastIndexOf('.');
+        if (elementName == null) {
+            // Didn't get a valid element name from XmlRootElement - use the last part of the class name
+            elementName = obj.getClass().getName();
+            if (elementName != null) {
+                int pos = elementName.lastIndexOf('.');
                 if (pos > 0) {
-                    className = className.substring(pos + 1);
+                    elementName = elementName.substring(pos + 1);
                 }
             }
         }
-        if (className != null) {
+        org.dom4j.QName qn = null;
+        if (elementName != null) {
             org.dom4j.Namespace dom4jNS = org.dom4j.Namespace.get("", ns);
-            qn = new org.dom4j.QName(className, dom4jNS);
+            qn = new org.dom4j.QName(elementName, dom4jNS);
         }
         return qn;
     }
 
-    public static Element jacksonJsonToElement(String json, Object obj)
-    throws ServiceException {
-        if (obj == null)
-            return null;
-        org.dom4j.QName qn = null;
-        // The JSON we create using Jackson does not (currently) create the special
-        // namespace attribute with name "_jsns".  Even if it did, Element.parseJSON(String)
-        // would currently NOT understand it.
-        // Element.parseJSON(String, QName, ElementFactory) does use QName to set the correct namespace
-        // information on the top level Element.
-        XmlSchema schem = obj.getClass().getPackage().getAnnotation(XmlSchema.class);
-        if (schem != null) {
-            String ns = schem.namespace();
-            if (!Strings.isNullOrEmpty(ns)) {
-                XmlRootElement root = obj.getClass().getAnnotation(XmlRootElement.class);
-                if (root != null) {
-                    if (!root.namespace().equals(JaxbInfo.DEFAULT_MARKER))
-                        ns = root.namespace();
-                    org.dom4j.Namespace dom4jNS = org.dom4j.Namespace.get("", ns);
-                    qn = new org.dom4j.QName(root.name(), dom4jNS);
-                }
-            }
-        }
-        try {
-            return jacksonJsonToElement(json, qn, obj);
-        } catch (SoapParseException e) {
-            throw ServiceException.FAILURE("SoapParseException", e);
-        }
+    /**
+     * We use our own annotation introspector which is based on a pair of annotation introspectors so that we can
+     * handle both JAXB annotations and some Jackson annotations
+     */
+    private static AnnotationIntrospector getZimbraIntrospector() {
+        return new ZmPairAnnotationIntrospector();
     }
 
     public static ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        // Mostly, we use JAXB annotations but we do use some Jackson annotations e.g. @JsonSerialize
-        // so use both annotation introspectors
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-        mapper.getSerializationConfig().set(SerializationConfig.Feature.INDENT_OUTPUT, true);
+        mapper.setAnnotationIntrospector(getZimbraIntrospector());
+        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
         ZimbraJsonModule zimbraModule = new ZimbraJsonModule();
         mapper.registerModule(zimbraModule);
         return mapper;
@@ -186,15 +174,10 @@ public final class JacksonUtil {
 
     public static ObjectMapper getWrapRootObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        // Mostly, we use JAXB annotations but we do use some Jackson annotations e.g. @JsonSerialize
-        // so use both annotation introspectors
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-        mapper.getSerializationConfig().set(SerializationConfig.Feature.INDENT_OUTPUT, true);
+        mapper.setAnnotationIntrospector(getZimbraIntrospector());
+        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
         // Enable this next line to get everything wrapped with the name of the root element.
-        mapper.getSerializationConfig().set(SerializationConfig.Feature.WRAP_ROOT_VALUE, true);
+        mapper.enable(SerializationConfig.Feature.WRAP_ROOT_VALUE);
         ZimbraJsonModule zimbraModule = new ZimbraJsonModule();
         mapper.registerModule(zimbraModule);
         return mapper;
