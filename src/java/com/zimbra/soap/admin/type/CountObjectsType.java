@@ -18,17 +18,30 @@ import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 
 public enum CountObjectsType {
-    userAccount,
-    account,
-    alias,
-    dl,
-    domain,
-    cos,
-    server,
+    userAccount(true, false),
+    account(true, false),
+    alias(true, false),
+    dl(true, false),
+    domain(true, false),
+    cos(false, false),
+    server(false, false),
+    
+    // UC service objects
+    accountOnUCService(false, true),
+    cosOnUCService(false, true),
+    domainOnUCService(false, true),
     
     // for license counting
-    internalUserAccount,
-    internalArchivingAccount;
+    internalUserAccount(true, false),
+    internalArchivingAccount(true, false);
+    
+    private boolean allowsDomain;
+    private boolean allowsUCService;
+    
+    private CountObjectsType(boolean allowsDomain, boolean allowsUCService) {
+        this.allowsDomain = allowsDomain;
+        this.allowsUCService = allowsUCService;
+    }
 
     public static CountObjectsType fromString(String type) throws ServiceException {
         try {
@@ -46,6 +59,14 @@ public enum CountObjectsType {
     public static String names(String separator) {
         Joiner joiner = Joiner.on(separator);
         return joiner.join(CountObjectsType.values());
+    }
+    
+    public boolean allowsDomain() {
+        return allowsDomain;
+    }
+    
+    public boolean allowsUCService() {
+        return allowsUCService;
     }
 
 }

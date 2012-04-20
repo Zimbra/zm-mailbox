@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.UCServiceSelector;
 
 /**
  * @zm-api-command-description Count number of objects.
@@ -28,8 +29,12 @@ import com.zimbra.soap.admin.type.DomainSelector;
  * Returns number of objects of requested type.
  * <br />
  * <br />
- * Note: For account/alias/dl, if a domain is specified, only entries on the specified domain are counted.
- * If no domain is specified, entries on all domains are counted.
+ * Note: For account/alias/dl, if a domain is specified, only entries on the specified 
+ * domain are counted.  If no domain is specified, entries on all domains are counted.
+ * 
+ * For accountOnUCService/cosOnUCService/domainOnUCService, UCService is required, 
+ * and domain cannot be specified.
+ *
  */
 @XmlRootElement(name=AdminConstants.E_COUNT_OBJECTS_REQUEST)
 public class CountObjectsRequest {
@@ -45,22 +50,29 @@ public class CountObjectsRequest {
      */
     @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
     private DomainSelector domain;
+    
+    /**
+     * @zm-api-field-description UCService
+     */
+    @XmlElement(name=AdminConstants.E_UC_SERVICE, required=false)
+    private UCServiceSelector usService;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     public CountObjectsRequest() {
-        this((CountObjectsType) null, (DomainSelector) null);
+        this((CountObjectsType) null, (DomainSelector) null, (UCServiceSelector) null);
     }
 
     public CountObjectsRequest(CountObjectsType type) {
-        this(type, (DomainSelector) null);
+        this(type, (DomainSelector) null, (UCServiceSelector) null);
     }
 
-    public CountObjectsRequest(CountObjectsType type, DomainSelector domain) {
+    public CountObjectsRequest(CountObjectsType type, DomainSelector domain, UCServiceSelector ucService) {
         setType(type);
         setDomain(domain);
+        setUCService(ucService);
     }
 
     public void setType(CountObjectsType type) {
@@ -69,6 +81,10 @@ public class CountObjectsRequest {
 
     public void setDomain(DomainSelector domain) {
         this.domain = domain;
+    }
+    
+    public void setUCService(UCServiceSelector usService) {
+        this.usService = usService;
     }
 
     public CountObjectsType getType() {
