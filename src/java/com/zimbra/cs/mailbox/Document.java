@@ -348,6 +348,14 @@ public class Document extends MailItem {
         checkLock();
         return super.move(target);
     }
+    
+    @Override
+    void rename(String name, Folder target) throws ServiceException {
+        String oldName = getName();
+        super.rename(name, target);
+        if (!oldName.equalsIgnoreCase(name))
+            mMailbox.index.add(this);
+    }
 
     @Override
     void lock(Account authuser) throws ServiceException {
