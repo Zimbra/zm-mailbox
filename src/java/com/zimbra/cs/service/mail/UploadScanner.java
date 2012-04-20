@@ -22,9 +22,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 
 public abstract class UploadScanner {
 
@@ -55,37 +55,62 @@ public abstract class UploadScanner {
     }
     
     public static Result accept(Upload up, StringBuffer info) {
-        
-    	for (Iterator iter = sRegisteredScanners.iterator(); iter.hasNext();) {
-    		UploadScanner scanner = (UploadScanner)iter.next();
-    		if (!scanner.isEnabled()) {
-    			continue;
-    		}
-    		
-    		Result result;
-    		InputStream is = null;
-    		try {
-    			is = up.getInputStream();
-    		} catch (IOException ioe) {
-    			ZimbraLog.misc.error("exception getting input stream for scanning", ioe);
-    			info.append(" ").append(ioe);
-    			return ERROR;
-    		}
-    		try {
-    			result = scanner.accept(is, info); 
-    		} finally {
+
+        InputStream is = null;
+        try {
+            is = up.getInputStream();
+        } catch (IOException ioe) {
+            ZimbraLog.misc.error("exception getting input stream for scanning", ioe);
+            info.append(" ").append(ioe);
+            return ERROR;
+        }
+        for (Iterator iter = sRegisteredScanners.iterator(); iter.hasNext();) {
+            UploadScanner scanner = (UploadScanner)iter.next();
+            if (!scanner.isEnabled()) {
+                continue;
+            }
+
+            Result result;
+            try {
+                result = scanner.accept(is, info); 
+            } finally {
                 ByteUtil.closeStream(is);
-    		}
-			if (result == REJECT || result == ERROR) {
-				// Fail on the first scanner that says it was bad,
-				// or first error we encounter. Is bailing on first error
-				// too harsh, should we continue to try other scanners?
-				return result;
-			}
-    	}
+            }
+            if (result == REJECT || result == ERROR) {
+                // Fail on the first scanner that says it was bad,
+                // or first error we encounter. Is bailing on first error
+                // too harsh, should we continue to try other scanners?
+                return result;
+            }
+        }
         return ACCEPT;
     }
-    
+
+    public static Result acceptStream(InputStream is, StringBuffer info) {
+
+        for (Iterator iter = sRegisteredScanners.iterator(); iter.hasNext();) {
+
+            UploadScanner scanner = (UploadScanner)iter.next();
+            if (!scanner.isEnabled()) {
+                continue;
+            }
+
+            Result result;
+            try {
+                result = scanner.accept(is, info);
+            } finally {
+                ByteUtil.closeStream(is);
+            }
+            if (result == REJECT || result == ERROR) {
+                // Fail on the first scanner that says it was bad,
+                // or first error we encounter. Is bailing on first error
+                // too harsh, should we continue to try other scanners?
+                return result;
+            }
+        }
+        return ACCEPT;
+    }
+
     protected abstract Result accept(InputStream is, StringBuffer info);
 
     protected abstract Result accept(byte[] data, StringBuffer info);

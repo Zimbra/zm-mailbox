@@ -19,6 +19,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -32,6 +33,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.service.mail.UploadScanner;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -147,6 +149,14 @@ public class OctopusPatchFormatter extends Formatter
                     true);
 
             log.debug("Parsed document created " + filename);
+
+            // scan upload for viruses
+            StringBuffer info = new StringBuffer();
+            UploadScanner.Result result = UploadScanner.acceptStream(pis, info);
+            if (result == UploadScanner.REJECT)
+                throw MailServiceException.UPLOAD_REJECTED(filename, info.toString());
+            if (result == UploadScanner.ERROR)
+                throw MailServiceException.SCAN_ERROR(filename);
 
             if (item == null) {
                 log.debug("Creating new document " + filename);

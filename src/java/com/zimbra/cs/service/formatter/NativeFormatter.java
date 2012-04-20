@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -74,6 +75,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.service.mail.UploadScanner;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -413,14 +415,14 @@ public final class NativeFormatter extends Formatter {
             }
 
             Blob blob = StoreManager.getInstance().storeIncoming(is);
-            saveDocument(blob, context, contentType, folder, filename);
+            saveDocument(blob, context, contentType, folder, filename, is);
 
         } finally {
             is.close();
         }
     }
 
-    private void saveDocument(Blob blob, UserServletContext context, String contentType, Folder folder, String filename)
+    private void saveDocument(Blob blob, UserServletContext context, String contentType, Folder folder, String filename, InputStream is)
         throws IOException, ServiceException, UserServletException
     {
         Mailbox mbox = folder.getMailbox();
@@ -443,6 +445,14 @@ public final class NativeFormatter extends Formatter {
             // XXX: should we just overwrite here instead?
             if (!(item instanceof Document))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
+
+            // scan upload for viruses
+            StringBuffer info = new StringBuffer();
+            UploadScanner.Result result = UploadScanner.acceptStream(is, info);
+            if (result == UploadScanner.REJECT)
+                throw MailServiceException.UPLOAD_REJECTED(filename, info.toString());
+            if (result == UploadScanner.ERROR)
+                throw MailServiceException.SCAN_ERROR(filename);
 
             item = mbox.addDocumentRevision(context.opContext, item.getId(), pd);
         } catch (NoSuchItemException nsie) {
