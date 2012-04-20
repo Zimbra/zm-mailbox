@@ -1194,6 +1194,13 @@ public class LdapProvisioning extends LdapProv {
             entry.setAttr(A_uid, localPart);
 
             setInitialPassword(cos, entry, password);
+            
+            String ucPassword = entry.getAttrString(Provisioning.A_zimbraUCPassword);
+            if (ucPassword != null) {
+                String encryptedPassword = Account.encrypytUCPassword(
+                        entry.getAttrString(Provisioning.A_zimbraId), ucPassword);
+                entry.setAttr(Provisioning.A_zimbraUCPassword, encryptedPassword);
+            }
 
             dn = mDIT.accountDNCreate(baseDn, entry.getAttributes(), localPart, domain);
             entry.setDN(dn);
@@ -5123,7 +5130,7 @@ public class LdapProvisioning extends LdapProv {
         entry.setAttr(Provisioning.A_userPassword, userPassword);
         entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
     }
-
+    
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun)
     throws ServiceException {
 

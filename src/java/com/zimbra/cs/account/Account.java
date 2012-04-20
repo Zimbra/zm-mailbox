@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -454,9 +455,29 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         String ucServiceId = getAttr(Provisioning.A_zimbraUCServiceId);
         return (ucServiceId == null ? null : getProvisioning().get(Key.UCServiceBy.id, ucServiceId));
     }
-
+    
     public String getDecryptedUCPassword() throws ServiceException {
-        return DataSource.decryptData(this.getId(), this.getUCPassword());
+        String encryptedPassword = getUCPassword();
+        if (encryptedPassword == null) {
+            return null;
+        } else {
+            return DataSource.decryptData(getId(), encryptedPassword);
+        }
+    }
+    
+    public void changeUCPassord(String newPlainPassword) throws ServiceException {
+        String encryptedPassword = null;
+        
+        if (newPlainPassword != null) {
+            encryptedPassword = encrypytUCPassword(getId(), newPlainPassword);
+        }
+        
+        setUCPassword(encryptedPassword);
+    }
+    
+    public static String encrypytUCPassword(String acctId, String plainPassword) 
+    throws ServiceException {
+        return DataSource.encryptData(acctId, plainPassword);
     }
 }
  
