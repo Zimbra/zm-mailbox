@@ -454,6 +454,9 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         String ucServiceId = getAttr(Provisioning.A_zimbraUCServiceId);
         return (ucServiceId == null ? null : getProvisioning().get(Key.UCServiceBy.id, ucServiceId));
     }
-    
+
+    public String getDecryptedUCPassword() throws ServiceException {
+        return DataSource.decryptData(this.getId(), this.getUCPassword());
+    }
 }
  
