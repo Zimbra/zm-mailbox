@@ -7849,97 +7849,21 @@ public class LdapProvisioning extends LdapProv {
 
         return visitor.getResult();
     }
-
-    /*
-    @Override
-    public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
-
-        LdapDomain ldapDomain = null;
-        if (domain != null) {
-            if (domain instanceof LdapDomain) {
-                ldapDomain = (LdapDomain) domain;
-            }
-        }
-        
-        String[] bases = null;
-        ZLdapFilter filter = null;
-
-        // figure out bases, query, and attrs for each supported counting type
-        switch (type) {
-        case userAccount:
-        case account:
-            if (ldapDomain != null) {
-                String base = mDIT.domainDNToAccountSearchDN(ldapDomain.getDN());
-                bases = new String[]{base};
-            } else {
-                bases = mDIT.getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
-            }
-
-            if (type == CountObjectsType.userAccount) {
-                filter = filterFactory.allNonSystemAccounts();
-            } else {
-                filter = filterFactory.allAccounts();
-            }
-            break;
-        case alias:
-            if (ldapDomain != null) {
-                String base = mDIT.domainDNToAccountSearchDN(ldapDomain.getDN());
-                bases = new String[]{base};
-            } else {
-                bases = mDIT.getSearchBases(Provisioning.SD_ALIAS_FLAG);
-            }
-            filter = filterFactory.allAliases();
-            break;
-        case dl:
-            // distribution lists and dynamic groups
-            if (ldapDomain != null) {
-                String base = mDIT.domainDNToGroupSearchDN(ldapDomain.getDN());
-                bases = new String[]{base};
-            } else {
-                bases = mDIT.getSearchBases(Provisioning.SD_DISTRIBUTION_LIST_FLAG);
-            }
-            filter = filterFactory.allGroups();
-            break;
-        case domain:
-            if (ldapDomain != null) {
-                // count sub domains of the specified domain
-                bases = new String[]{ldapDomain.getDN()};
-            } else {
-                mDIT.getSearchBases(Provisioning.SD_DOMAIN_FLAG);
-            }
-            filter = filterFactory.allDomains();
-            break;
-        case cos:
-            if (ldapDomain != null) {
-                throw ServiceException.INVALID_REQUEST(
-                        "domain cannot be specified for counting type: " + type.toString(), null);
-            }
-            bases = mDIT.getSearchBases(Provisioning.SD_COS_FLAG);
-            filter = filterFactory.allCoses();
-            break;
-        case server:
-            if (ldapDomain != null) {
-                throw ServiceException.INVALID_REQUEST(
-                        "domain cannot be specified for counting type: " + type.toString(), null);
-            }
-            bases = mDIT.getSearchBases(Provisioning.SD_SERVER_FLAG);
-            filter = filterFactory.allServers();
-            break;
-        default:
-            throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
-        }
-
-        long num = 0;
-        for (String base : bases) {
-            num += countObjects(base, filter);
-        }
-
-        return num;
-    }
-    */
     
     @Override
-    public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
+    public long countObjects(CountObjectsType type, Domain domain, UCService ucService) 
+    throws ServiceException {
+        
+        if (domain != null && !type.allowsDomain()) {
+            throw ServiceException.INVALID_REQUEST(
+                    "domain cannot be specified for counting type: " + type.toString(), null);
+        }
+        
+        if (ucService != null && !type.allowsUCService()) {
+            throw ServiceException.INVALID_REQUEST(
+                    "UCService cannot be specified for counting type: " + type.toString(), null);
+        }
+
         
         ZLdapFilter filter;
         
@@ -7982,20 +7906,37 @@ public class LdapProvisioning extends LdapProv {
                 filter = filterFactory.allDomains();
                 break;
             case cos:
-                if (domain != null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "domain cannot be specified for counting type: " + type.toString(), null);
-                }
                 types.add(ObjectType.coses);
                 filter = filterFactory.allCoses();
                 break;
             case server:
-                if (domain != null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "domain cannot be specified for counting type: " + type.toString(), null);
-                }
                 types.add(ObjectType.servers);
                 filter = filterFactory.allServers();
+                break;
+            case accountOnUCService:
+                if (ucService == null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "UCService is required for counting type: " + type.toString(), null);
+                }
+                types.add(ObjectType.accounts);
+                types.add(ObjectType.resources);
+                filter = filterFactory.accountsOnUCService(ucService.getId());
+                break;
+            case cosOnUCService:
+                if (ucService == null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "UCService is required for counting type: " + type.toString(), null);
+                }
+                types.add(ObjectType.coses);
+                filter = filterFactory.cosesOnUCService(ucService.getId());
+                break;
+            case domainOnUCService:
+                if (ucService == null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "UCService is required for counting type: " + type.toString(), null);
+                }
+                types.add(ObjectType.domains);
+                filter = filterFactory.domainsOnUCService(ucService.getId());
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);

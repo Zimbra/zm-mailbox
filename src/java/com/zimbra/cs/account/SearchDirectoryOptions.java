@@ -56,7 +56,8 @@ public class SearchDirectoryOptions {
         resources(Provisioning.SD_CALENDAR_RESOURCE_FLAG),
         domains(Provisioning.SD_DOMAIN_FLAG),
         coses(Provisioning.SD_COS_FLAG),
-        servers(Provisioning.SD_SERVER_FLAG);
+        servers(Provisioning.SD_SERVER_FLAG),
+        ucservices(Provisioning.SD_UC_SERVICE_FLAG),;
         
         private int flag;
         private ObjectType(int flag) {

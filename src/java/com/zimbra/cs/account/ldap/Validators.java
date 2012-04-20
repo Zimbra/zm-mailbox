@@ -106,7 +106,7 @@ final public class Validators {
             long now = System.currentTimeMillis();
             if (now > getNextCheck()) {
                 try {
-                    mLastUserCount = prov.countObjects(CountObjectsType.userAccount, d);
+                    mLastUserCount = prov.countObjects(CountObjectsType.userAccount, d, null);
                 } catch (ServiceException e) {
                     Throwable cause = e.getCause();
                     String causeMsg = cause.getMessage();

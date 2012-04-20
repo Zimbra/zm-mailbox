@@ -474,7 +474,7 @@ public class ProvUtil implements HttpDebugListener {
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}", Category.RIGHT, 3, 4, null, new RightCommandHelp()),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
-        COUNT_OBJECTS("countObjects", "cto", "{" + CountObjectsType.names("|") + "} [-d {domain|id}]", Category.MISC, 1, 3, Via.ldap),
+        COUNT_OBJECTS("countObjects", "cto", "{" + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4, Via.ldap),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3, 3),
@@ -2062,6 +2062,7 @@ public class ProvUtil implements HttpDebugListener {
         CountObjectsType type = CountObjectsType.fromString(args[1]);
 
         Domain domain = null;
+        UCService ucService = null;
         int idx = 2;
         while (args.length > idx) {
             String arg = args[idx];
@@ -2076,6 +2077,16 @@ public class ProvUtil implements HttpDebugListener {
                     throw ServiceException.INVALID_REQUEST("expecting domain, not enough args", null);
                 }
                 domain = lookupDomain(args[idx]);
+            } else if (arg.equals("-u")) {
+                if (ucService != null) {
+                    throw ServiceException.INVALID_REQUEST("UCService is already specified as:" + ucService.getName(), null);
+                }
+                idx++;
+                if (args.length <= idx) {
+                    usage();
+                    throw ServiceException.INVALID_REQUEST("expecting UCService, not enough args", null);
+                }
+                ucService = lookupUCService(args[idx]);
             } else {
                 usage();
                 return;
@@ -2084,7 +2095,7 @@ public class ProvUtil implements HttpDebugListener {
             idx++;
 
         }
-        long result = prov.countObjects(type, domain);
+        long result = prov.countObjects(type, domain, ucService);
         console.println(result);
     }
 

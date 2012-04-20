@@ -2427,10 +2427,10 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public long countObjects(CountObjectsType type, Domain domain) 
+    public long countObjects(CountObjectsType type, Domain domain, UCService ucService) 
     throws ServiceException {
         CountObjectsResponse resp = invokeJaxb(new CountObjectsRequest(
-                type, getSelector(domain)));
+                type, getSelector(domain), getSelector(ucService)));
         return resp.getNum();
     }
 

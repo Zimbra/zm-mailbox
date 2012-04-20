@@ -71,16 +71,16 @@ public class TestLdapProvCountObjects extends LdapTest {
         Domain otherDomain = provUtil.createDomain(genDomainName(domain.getName()));
         Account userAcctOtherDomain = provUtil.createAccount(genAcctNameLocalPart("user"), otherDomain);
         
-        long num = prov.countObjects(CountObjectsType.userAccount, domain);
+        long num = prov.countObjects(CountObjectsType.userAccount, domain, null);
         assertEquals(4, num); // userAcct, systemAcct, externalAccount, archivingAcct
         
-        num = prov.countObjects(CountObjectsType.account, domain);
+        num = prov.countObjects(CountObjectsType.account, domain, null);
         assertEquals(5, num); // all accounts
         
-        num = prov.countObjects(CountObjectsType.internalUserAccount, domain);
+        num = prov.countObjects(CountObjectsType.internalUserAccount, domain, null);
         assertEquals(3, num);  // userAcct, systemAcct, archivingAcct
         
-        num = prov.countObjects(CountObjectsType.internalArchivingAccount, domain);
+        num = prov.countObjects(CountObjectsType.internalArchivingAccount, domain, null);
         assertEquals(1, num);  // archivingAcct
         
         provUtil.deleteAccount(userAcct);
@@ -99,7 +99,7 @@ public class TestLdapProvCountObjects extends LdapTest {
         prov.addAlias(acct, TestUtil.getAddress(genAcctNameLocalPart("alias-1"), domain.getName()));
         prov.addAlias(acct, TestUtil.getAddress(genAcctNameLocalPart("alias-2"), domain.getName()));
         
-        long num = prov.countObjects(CountObjectsType.alias, domain);
+        long num = prov.countObjects(CountObjectsType.alias, domain, null);
         assertEquals(2, num);
         
         provUtil.deleteAccount(acct);
@@ -118,7 +118,7 @@ public class TestLdapProvCountObjects extends LdapTest {
         
         long num;
         
-        num = prov.countObjects(CountObjectsType.dl, domain);
+        num = prov.countObjects(CountObjectsType.dl, domain, null);
         assertEquals(2, num);  // groups in sub domains should not be counted
         
         provUtil.deleteGroup(staticGroup);
@@ -136,13 +136,13 @@ public class TestLdapProvCountObjects extends LdapTest {
         
         Domain subDomain = provUtil.createDomain(genDomainName(domain.getName()));
         Domain subSubDomain = provUtil.createDomain(genDomainName(subDomain.getName()));
-        long num = prov.countObjects(CountObjectsType.domain, domain);
+        long num = prov.countObjects(CountObjectsType.domain, domain, null);
         
         // count sub domains of a domain, the domain itself should be included in the count.
         assertEquals(3, num); // domain, subDomain, subSubDomain
         
         // count all domains
-        num = prov.countObjects(CountObjectsType.domain, null);
+        num = prov.countObjects(CountObjectsType.domain, null, null);
         
         // fragile verification, assuming there are the two domains created by r-t-w 
         // and the domains created by this test.
@@ -155,7 +155,7 @@ public class TestLdapProvCountObjects extends LdapTest {
     @Test
     public void countCos() throws Exception {
         Cos cos = provUtil.createCos(genCosName());
-        long num = prov.countObjects(CountObjectsType.cos, null);
+        long num = prov.countObjects(CountObjectsType.cos, null, null);
         
         // fragile verification, assuming there are only the two cos created by r-t-w and 
         // the cos created in this test.
@@ -167,7 +167,7 @@ public class TestLdapProvCountObjects extends LdapTest {
     @Test
     public void countServer() throws Exception {
         Server server = provUtil.createServer(genServerName());
-        long num = prov.countObjects(CountObjectsType.server, null);
+        long num = prov.countObjects(CountObjectsType.server, null, null);
         
         // fragile verification, assuming there are only the server created by r-t-w and 
         // the server created in this test.

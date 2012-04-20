@@ -681,7 +681,7 @@ public class TestAutoProvision extends SoapTest {
          * TestDomainLockListener.HOLD_IT_AT_THIS_ENTRYth account is auto provisioned
          */
         while (true) {
-            long numAcctsAutoProvisioned = prov.countObjects(CountObjectsType.account, zimbraDomain);
+            long numAcctsAutoProvisioned = prov.countObjects(CountObjectsType.account, zimbraDomain, null);
             if (numAcctsAutoProvisioned == TestDomainLockListener.HOLD_IT_AT_THIS_ENTRY) {
                 break;
             }

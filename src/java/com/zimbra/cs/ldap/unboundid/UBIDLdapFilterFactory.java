@@ -470,6 +470,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                                 Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
                                 Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))));
     }
+    
+    @Override
+    public ZLdapFilter accountsOnUCService(String usServiceId) {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_ON_UCSERVICE,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraUCServiceId, usServiceId),
+                        FILTER_ALL_ACCOUNTS));
+    }
 
     @Override
     public ZLdapFilter externalAccountsHomedOnServer(String serverServiceHostname) {
@@ -630,6 +639,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         FILTER_ALL_COSES,
                         Filter.createEqualityFilter(Provisioning.A_zimbraMailHostPool, serverId)));
+    }
+    
+    @Override
+    public ZLdapFilter cosesOnUCService(String usServiceId) {
+        return new UBIDLdapFilter(
+                FilterId.COSES_ON_UCSERVICE,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraUCServiceId, usServiceId),
+                        FILTER_ALL_COSES));
     }
 
 
@@ -834,6 +852,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.DOMAIN_LOCKED_FOR_AUTO_PROVISION,
                 Filter.createNOTFilter(
                         Filter.createPresenceFilter(Provisioning.A_zimbraAutoProvLock)));
+    }
+    
+    @Override
+    public ZLdapFilter domainsOnUCService(String usServiceId) {
+        return new UBIDLdapFilter(
+                FilterId.DOMAINS_ON_UCSERVICE,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraUCServiceId, usServiceId),
+                        FILTER_ALL_DOMAINS));
     }
 
 

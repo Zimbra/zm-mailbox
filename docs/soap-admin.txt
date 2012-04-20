@@ -2262,6 +2262,7 @@ e.g.
 
 <CountObjectsRequest type="{count-objects-type}">
     [<domain by="{domain-by}">...</domain>]
+    [<UCService by="{UCService-by}">...</UCService>]
 </CountObjectsRequest>
 
 {count-objects-type} = userAccount | 
@@ -2270,14 +2271,20 @@ e.g.
                        dl |
                        domain |
                        cos | 
-                       server
+                       server |
+                       accountOnUCService |
+                       cosOnUCService |
+                       domainOnUCService
 
 <CountObjectsResponse num="{result}">
 </CountObjectsResponse>
 
-Note: For account/alias/dl, if a domain is specified, only entries on the 
+Note: For account/alias/dl, if a <domain> is specified, only entries on the 
       specified domain are counted.  If no domain is specified, entries on 
       all domains are counted.
+      
+      For accountOnUCService/cosOnUCService/domainOnUCService, <UCService> is required, 
+      and <domain> cannot be specified.
 
 ---------------------------------------------------------------------------
 # Get server's network interfaces. Returns IP  addresses and net masks

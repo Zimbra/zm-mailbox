@@ -54,6 +54,7 @@ import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
+import com.zimbra.soap.admin.type.UCServiceSelector;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
@@ -1042,6 +1043,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return null;
         return DomainSelector.fromId(domain.getId());
     }
+    
+    /**
+     * @param ucService
+     * @return may return null
+     */
+    public static UCServiceSelector getSelector(UCService ucService) {
+        if (ucService == null)
+            return null;
+        return UCServiceSelector.fromId(ucService.getId());
+    }
 
     /**
      * @param acct
@@ -1941,7 +1952,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
+    public long countObjects(CountObjectsType type, Domain domain, UCService ucService) 
+    throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
