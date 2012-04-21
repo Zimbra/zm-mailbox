@@ -18,6 +18,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -131,6 +132,19 @@ public class ContactFolderFormatter extends Formatter {
                 out.write(fields.get(k).getBytes("UTF-8"));
             }
         }
+        
+        // return the image part number required for Extensible Universal Contact Card (bug 73146)
+        List<Contact.Attachment> attachments = ((Contact) item).getAttachments();
+        for (Contact.Attachment attachment : attachments) {
+            if (attachment.getName().equals(ContactConstants.A_image)) {
+                out.write(FIELD_DELIMITER);
+                out.write((ContactConstants.A_image + MailConstants.A_PART).getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                out.write(attachment.getPartName().getBytes("UTF-8"));
+                break;
+            }
+        }
+        
         switch (d) {
         case Field:
             out.write(FIELD_DELIMITER);
