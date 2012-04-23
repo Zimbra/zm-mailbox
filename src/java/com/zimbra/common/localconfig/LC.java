@@ -1200,6 +1200,8 @@ public final class LC {
 
     public static final KnownKey triton_store_url = KnownKey.newKey("");
 
+    public static final KnownKey triton_hash_type = KnownKey.newKey("SHA0");
+
     public static final KnownKey uncompressed_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
