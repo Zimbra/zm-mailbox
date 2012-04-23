@@ -465,7 +465,7 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         }
     }
     
-    public void changeUCPassord(String newPlainPassword) throws ServiceException {
+    public void changeUCPassword(String newPlainPassword) throws ServiceException {
         String encryptedPassword = null;
         
         if (newPlainPassword != null) {
