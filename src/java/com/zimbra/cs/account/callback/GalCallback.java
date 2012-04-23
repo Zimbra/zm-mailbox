@@ -21,7 +21,9 @@ public class GalCallback extends AttributeCallback {
             Map attrsToModify, Entry entry) 
     throws ServiceException {
         
-        oldValue = entry.getAttr(attrName, true);
+        if (entry != null) {
+            oldValue = entry.getAttr(attrName, true);
+        }
         SingleValueMod mod = singleValueMod(attrsToModify, attrName);
         newValue = mod.value();
         if (attrName.equals("zimbraGalLdapFilter")) {
