@@ -27,6 +27,31 @@ public class LdapExample {
         return new GenericLdapConfig(ldapUrl, startTLSEnabled, bindDN, bindPassword);
     }
     
+    public void getAttributes() throws Exception {
+        
+        GenericLdapConfig ldapConfig = getLdapConfig();
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(ldapConfig, LdapUsage.SEARCH);
+            
+            /*
+             * get attributes zimbraId, cn and description on DN "cn=default,cn=cos,cn=zimbra"
+             */
+            ZAttributes attrs = zlc.getAttributes("cn=default,cn=cos,cn=zimbra", new String[]{"zimbraId", "cn", "description"});
+            String zimbraId = attrs.getAttrString("zimbraId");
+                        
+            /*
+             * get all attributes on DN "cn=default,cn=cos,cn=zimbra"
+             */
+            ZAttributes allAttrs = zlc.getAttributes("cn=default,cn=cos,cn=zimbra", null);
+            
+        } finally {
+            // Note: this is important!! 
+            LdapClient.closeContext(zlc);
+        }
+    }
+    
     public void search() throws Exception {
         String base = "cn=servers,cn=zimbra";
         String filter = "(objectClass=zimbraServer)";
@@ -141,6 +166,7 @@ public class LdapExample {
         
         LdapExample test = new LdapExample();
         
+        test.getAttributes();
         test.search();
         test.createEntry();
         test.deleteEntry();
