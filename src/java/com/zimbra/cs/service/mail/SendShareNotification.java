@@ -14,6 +14,21 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
 import com.google.common.collect.Sets;
 import com.ibm.icu.text.MessageFormat;
 import com.zimbra.common.account.Key.AccountBy;
@@ -60,20 +75,6 @@ import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
-
 public class SendShareNotification extends MailDocumentHandler {
 
     private static final Log sLog = LogFactory.getLog(SendShareNotification.class);
@@ -107,7 +108,7 @@ public class SendShareNotification extends MailDocumentHandler {
                 MimeMessage mm = generateShareNotification(authAccount, account, sid, notes, action);
                 mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
                 // also send a copy of the message out to relay MTA
-                if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled()) {
+                if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled() && action!=Action.revoke) {
                     sendExternalNotificationEmail(octxt, authAccount, sid);
                 }
             }
