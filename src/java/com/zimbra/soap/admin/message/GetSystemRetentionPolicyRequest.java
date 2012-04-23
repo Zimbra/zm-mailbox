@@ -17,9 +17,11 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.CosSelector;
 
 /**
  * @zm-api-command-description Get System Retention Policy
@@ -31,6 +33,18 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_SYSTEM_RETENTION_POLICY_REQUEST)
 public class GetSystemRetentionPolicyRequest {
+    /**
+     * @zm-api-field-description COS
+     */
+    @XmlElement(name=AdminConstants.E_COS)
+    private CosSelector cos;
+
+    public void setCos(CosSelector cos) {
+        this.cos = cos;
+    }
+
+    public CosSelector getCos() { return cos; }
+    
     public GetSystemRetentionPolicyRequest() {
     }
 }

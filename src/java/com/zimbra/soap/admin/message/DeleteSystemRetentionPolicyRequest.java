@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.mail.type.Policy;
 
 /**
@@ -30,6 +31,19 @@ import com.zimbra.soap.mail.type.Policy;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DELETE_SYSTEM_RETENTION_POLICY_REQUEST)
 public class DeleteSystemRetentionPolicyRequest {
+    
+    
+    /**
+     * @zm-api-field-description COS
+     */
+    @XmlElement(name=AdminConstants.E_COS)
+    private CosSelector cos;
+
+    public void setCos(CosSelector cos) {
+        this.cos = cos;
+    }
+
+    public CosSelector getCos() { return cos; }
 
     /**
      * @zm-api-field-description Details of policy
