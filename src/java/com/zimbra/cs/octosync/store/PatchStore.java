@@ -6,8 +6,8 @@ import java.io.OutputStream;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.octosync.PatchManifest;
-import com.zimbra.cs.octosync.store.BlobStore.IncomingBlob;
 import com.zimbra.cs.octosync.store.BlobStore.StoredBlob;
+import com.zimbra.cs.store.IncomingBlob;
 
 /**
  * Encapsulates functionality for storing and retrieving patches and their manifests.

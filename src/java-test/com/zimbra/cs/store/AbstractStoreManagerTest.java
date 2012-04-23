@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.store;
 
+import java.io.OutputStream;
 import java.util.HashMap;
 
 import org.junit.After;
@@ -106,5 +107,20 @@ public abstract class AbstractStoreManagerTest {
 
         mblob1.getLocalBlob();
         mblob2.getLocalBlob();
+    }
+
+    @Test
+    public void incoming() throws Exception {
+        StoreManager sm = StoreManager.getInstance();
+
+        IncomingBlob incoming = sm.newIncomingBlob("foo", null);
+
+        OutputStream out = incoming.getAppendingOutputStream();
+        out.write(123);
+
+        Blob blob = incoming.getBlob();
+
+        Assert.assertEquals("blob size = incoming written", 1, blob.getRawSize());
+
     }
 }

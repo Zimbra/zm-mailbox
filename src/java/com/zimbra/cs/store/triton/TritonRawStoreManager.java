@@ -34,14 +34,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.external.ContentIdentifiedStoreManager;
+import com.zimbra.cs.store.external.ContentAddressableStoreManager;
 
 
 /**
  * StoreManager implementation which uses the TDS RAW API for storing and retrieving blobs
  * This implementation is intended *only* for demonstration and will eventually be superseded by TritonBlobStoreManager
  */
-public class TritonRawStoreManager extends ContentIdentifiedStoreManager {
+public class TritonRawStoreManager extends ContentAddressableStoreManager {
 
     private String url;
 

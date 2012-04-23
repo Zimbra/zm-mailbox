@@ -197,7 +197,7 @@ public abstract class StoreManager {
      * Create a link in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
      * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
-     * If staging is done to temporary area such as our incoming directory this operation finishes it 
+     * If staging is done to temporary area such as our incoming directory this operation finishes it
      * @param src
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
@@ -211,7 +211,7 @@ public abstract class StoreManager {
 
     /**
      * Rename a blob to a blob in mailbox directory.
-     * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items 
+     * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items
      * @param src
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
@@ -367,4 +367,15 @@ public abstract class StoreManager {
      */
     public abstract boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs)
     throws IOException, ServiceException;
+
+    /**
+     * Create an IncomingBlob instance
+     * @param id
+     * @return
+     * @throws ServiceException
+     * @throws IOException
+     */
+    public IncomingBlob newIncomingBlob(String id, Object ctxt) throws IOException, ServiceException {
+        return new BufferingIncomingBlob(id, getBlobBuilder(), ctxt);
+    }
 }

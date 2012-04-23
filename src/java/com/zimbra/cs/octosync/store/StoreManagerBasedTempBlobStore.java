@@ -2,7 +2,6 @@ package com.zimbra.cs.octosync.store;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +14,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.BlobBuilder;
+import com.zimbra.cs.store.IncomingBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 
@@ -64,107 +63,6 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
     private long storedExpiration;
 
     private static final long REAPER_INTERVAL_MSEC = 3 * Constants.MILLIS_PER_MINUTE;
-
-    public final class IncomingBlob extends BlobStore.IncomingBlob
-    {
-        private String id;
-        private BlobBuilder blobBuilder;
-        private Object ctx;
-        private long expectedSize;
-        private boolean expectedSizeSet;
-        private long lastAccessTime;
-
-        IncomingBlob(String id, BlobBuilder blobBuilder, Object ctx)
-        {
-            this.id = id;
-            this.blobBuilder = blobBuilder;
-            this.ctx = ctx;
-
-            lastAccessTime = System.currentTimeMillis();
-        }
-
-        @Override
-        public String getId()
-        {
-            return id;
-        }
-
-        @Override
-        public OutputStream getAppendingOutputStream()
-        {
-            lastAccessTime = System.currentTimeMillis();
-
-            return new OutputStream() {
-
-                @Override
-                public void write(int b) throws IOException
-                {
-                    // inefficient, but we don't expect this to be used
-                    byte[] tmp = new byte[1];
-                    tmp[0] = (byte)b;
-                    this.write(tmp);
-                }
-
-                @Override
-                public void write(byte[] b, int off, int len) throws IOException
-                {
-                    blobBuilder.append(b, off, len);
-                }
-            };
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException
-        {
-            assert false : "Not yet implemented";
-            return null;
-            //return new SizeLimitedInputStream(blobBuilder.getBlob().getInputStream(), getCurrentSize());
-        }
-
-        @Override
-        public Object getContext()
-        {
-            return ctx;
-        }
-
-        @Override
-        public void setContext(Object value)
-        {
-            ctx = value;
-        }
-
-        @Override
-        public long getCurrentSize()
-        {
-            return blobBuilder.getTotalBytes();
-        }
-
-        @Override
-        public boolean hasExpectedSize()
-        {
-            return expectedSizeSet;
-        }
-
-        @Override
-        public long getExpectedSize()
-        {
-            assert expectedSizeSet : "Expected size not set";
-            return expectedSize;
-        }
-
-        @Override
-        public void setExpectedSize(long value)
-        {
-            assert !expectedSizeSet : "Expected size already set: " + expectedSize;
-            expectedSize = value;
-            expectedSizeSet = true;
-        }
-
-        private long getLastAccessTime()
-        {
-            return lastAccessTime;
-        }
-    }
 
     public final class StoredBlob extends BlobStore.StoredBlob
     {
@@ -239,8 +137,6 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
     @Override
     public IncomingBlob createIncoming(Object ctx) throws IOException, ServiceException
     {
-        BlobBuilder bb = storeManager.getBlobBuilder().init();
-
         synchronized (incomingBlobs) {
 
             String id;
@@ -249,7 +145,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
                 id = UUID.randomUUID().toString();
             } while (incomingBlobs.containsKey(id));
 
-            IncomingBlob ib = new IncomingBlob(id, bb, ctx);
+            IncomingBlob ib = storeManager.newIncomingBlob(id, ctx);
 
             incomingBlobs.put(id, ib);
             return ib;
@@ -267,10 +163,9 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
 
     // BlobStore API
     @Override
-    public StoredBlob store(BlobStore.IncomingBlob ib, String id, int version) throws IOException, ServiceException
+    public StoredBlob store(IncomingBlob ib, String id, int version) throws IOException, ServiceException
     {
-        IncomingBlob myIb = (IncomingBlob)ib;
-        myIb.blobBuilder.finish();
+        IncomingBlob myIb = ib;
 
         synchronized (incomingBlobs) {
             IncomingBlob existingBlob = incomingBlobs.remove(myIb.getId());
@@ -283,7 +178,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
             assert existingBlob == myIb : "Wrong blob removed: " + myIb.getId();
         }
 
-        Blob blob = myIb.blobBuilder.getBlob();
+        Blob blob = myIb.getBlob();
         StoredBlob sb = new StoredBlob(id, blob, myIb.getContext(), blob.getRawSize());
 
         synchronized (storedBlobs) {
@@ -305,16 +200,16 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
 
     // BlobStore API
     @Override
-    public void deleteIncoming(BlobStore.IncomingBlob ib)
+    public void deleteIncoming(IncomingBlob ib)
     {
-        IncomingBlob myIb = (IncomingBlob)ib;
+        IncomingBlob myIb = ib;
 
         synchronized (incomingBlobs) {
             IncomingBlob existingBlob = incomingBlobs.remove(myIb.getId());
             assert existingBlob == null || existingBlob == myIb : "Wrong blob removed: " + myIb.getId();
         }
 
-        myIb.blobBuilder.dispose();
+        myIb.cancel();
     }
 
     // BlobStore API
@@ -413,7 +308,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
 
                         for (IncomingBlob ib : incomingBlobs.values()) {
                             if (ib.getLastAccessTime() <= cutoffTime) {
-                                reapedBlobs.add(ib.blobBuilder.finish());
+                                ib.cancel();
                                 incomingBlobs.remove(ib.getId());
                             }
                         }
@@ -481,16 +376,14 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob extractIncoming(BlobStore.IncomingBlob ib) throws IOException, ServiceException
+    public Blob extractIncoming(IncomingBlob ib) throws IOException, ServiceException
     {
-        IncomingBlob myIb = (IncomingBlob)ib;
-
         synchronized (incomingBlobs) {
-            IncomingBlob existingBlob = incomingBlobs.remove(myIb.getId());
-            assert existingBlob == null || existingBlob == myIb : "Wrong blob removed: " + myIb.getId();
+            IncomingBlob existingBlob = incomingBlobs.remove(ib.getId());
+            assert existingBlob == null || existingBlob == ib : "Wrong blob removed: " + ib.getId();
         }
 
-        return myIb.blobBuilder.finish();
+        return ib.getBlob();
     }
 
 }

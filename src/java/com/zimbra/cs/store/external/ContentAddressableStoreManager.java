@@ -31,7 +31,7 @@ import com.zimbra.cs.store.StagedBlob;
  * The base implementation here handles the more common cases where blob is cached locally by storeIncoming and then pushed to remote store during stage operation
  * Stores which support resumable upload will also implement (TBD) interface which adds additional functionality for call sites in Octopus which support resume
  */
-public abstract class ContentIdentifiedStoreManager extends ExternalStoreManager {
+public abstract class ContentAddressableStoreManager extends ExternalStoreManager {
 
     @Override
     public String writeStreamToStore(InputStream in, long actualSize,
