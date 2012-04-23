@@ -32,7 +32,7 @@ public class UBIDSearchScope extends ZSearchScope {
 
     public static class UBIDSearchScopeFactory extends ZSearchScope.ZSearchScopeFactory {
         @Override
-        protected ZSearchScope getObjectSearchScope() {
+        protected ZSearchScope getBaseSearchScope() {
             return new UBIDSearchScope(SearchScope.BASE);
         }
         
@@ -44,6 +44,11 @@ public class UBIDSearchScope extends ZSearchScope {
         @Override
         protected ZSearchScope getSubtreeSearchScope() {
             return new UBIDSearchScope(SearchScope.SUB);
+        }
+
+        @Override
+        protected ZSearchScope getChildrenSearchScope() {
+            return new UBIDSearchScope(SearchScope.SUBORDINATE_SUBTREE);
         }
     }
 
