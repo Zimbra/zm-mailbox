@@ -176,12 +176,8 @@ public final class ImapConnection extends MailConnection {
         newRequest(cmd, params).sendCheckStatus();
     }
 
-    public IDInfo id() throws IOException {
-        return id(null);
-    }
-
     public IDInfo id(IDInfo info) throws IOException {
-        ImapRequest req = newRequest(CAtom.ID, info != null ? info : Atom.NIL);
+        ImapRequest req = newRequest(CAtom.ID, info == null ? CAtom.NIL : info);
         List<IDInfo> results = new ArrayList<IDInfo>(1);
         req.setResponseHandler(new BasicResponseHandler(CAtom.ID, results));
         req.sendCheckStatus();

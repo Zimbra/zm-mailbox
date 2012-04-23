@@ -24,6 +24,7 @@ import java.io.IOException;
  * IMAP4 ID extension (RFC 2971) information.
  */
 public final class IDInfo {
+    //ID fields
     public static final String NAME = "name";
     public static final String VERSION = "version";
     public static final String OS = "os";
@@ -37,6 +38,9 @@ public final class IDInfo {
     public static final String ENVIRONMENT = "environment";
     public static final String X_ORIGINATING_IP = "X-ORIGINATING-IP";
     public static final String X_VIA = "X-VIA";
+
+    //value constant(s)
+    public static String DATASOURCE_IMAP_CLIENT_NAME = "ZimbraImapDataSource";
 
     private final Map<String, String> fields = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 

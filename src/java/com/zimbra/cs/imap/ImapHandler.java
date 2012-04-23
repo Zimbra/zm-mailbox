@@ -1865,6 +1865,11 @@ abstract class ImapHandler extends ProtocolHandler {
                     continue;
                 ImapPath path = relativeTo == null ? new ImapPath(owner, folder, mCredentials) : new ImapPath(owner, folder, relativeTo);
                 if (path.isVisible()) {
+                    if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME) 
+                        && folder.isTagged(Flag.ID_FLAG_SYNCFOLDER)) {
+                        //bug 72577 - do not display folders synced with IMAP datasource to downstream IMAP datasource connections
+                        continue;
+                    }
                     boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
                     if (folder instanceof Mountpoint && !alreadyTraversed)
                         accumulatePaths(path.getOwnerMailbox(), owner, path, paths);

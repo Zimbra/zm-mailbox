@@ -23,6 +23,7 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -223,6 +224,9 @@ public class ImapSync extends MailItemImport {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         localRootFolder = getMailbox().getFolderById(dataSource.getFolderId());
+        if (!localRootFolder.isTagged(Flag.ID_FLAG_SYNCFOLDER)) {
+            getMailbox().alterTag(null, localRootFolder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SYNCFOLDER, true, null);
+        }
         trackedFolders = ImapFolder.getFolders(dataSource);
         delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
