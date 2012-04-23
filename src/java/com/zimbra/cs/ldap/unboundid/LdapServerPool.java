@@ -81,8 +81,8 @@ public class LdapServerPool {
                      * 
                      * Set dummy host/port to make SingleServerSet happy
                      */
-                    ldapUrl = ldapUrl + DUMMY_LDAPI_HOST + ":" + DUMMY_LDAPI_PORT;
-                    url = new LDAPURL(ldapUrl);    
+                    url = new LDAPURL(url.getScheme(), DUMMY_LDAPI_HOST, DUMMY_LDAPI_PORT,
+                            url.getBaseDN(), url.getAttributes(), url.getScope(), url.getFilter());    
                 }
                 
                 urls.add(url);
