@@ -37,6 +37,7 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
@@ -175,7 +176,10 @@ final class ConnectionManager {
         throws IOException, ServiceException {
         if (!ds.isOffline() && ic.hasCapability(ImapCapabilities.ID)) {
             try {
-                IDInfo id = ic.id();
+                IDInfo clientId = new IDInfo();
+                clientId.put(IDInfo.NAME, IDInfo.DATASOURCE_IMAP_CLIENT_NAME);
+                clientId.put(IDInfo.VERSION, BuildInfo.VERSION);
+                IDInfo id = ic.id(clientId);
                 if ("Zimbra".equalsIgnoreCase(id.get(IDInfo.NAME))) {
                     String user = id.get("user");
                     String server = id.get("server");

@@ -323,7 +323,7 @@ public class TestImapClient {
         IDInfo id1 = connection.id(id);
         assertNotNull(id1);
         assertEquals("Zimbra", id1.get(IDInfo.NAME));
-        IDInfo id2 = connection.id();
+        IDInfo id2 = connection.id(new IDInfo());
         assertEquals(id1, id2);
     }
 
