@@ -295,7 +295,7 @@ public final class ToXML {
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(elem, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(rp));
+                    encodeRetentionPolicy(elem, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(folder.getAccount(), rp));
                 }
             }
         }
@@ -927,7 +927,7 @@ public final class ToXML {
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(rp));
+                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getAccount(), rp));
                 }
             }
         }

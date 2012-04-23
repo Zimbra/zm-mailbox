@@ -52,6 +52,8 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, Account> name2account = Maps.newHashMap();
 
     private final Map<String, Domain> id2domain = Maps.newHashMap();
+    
+    private final Map<String, Cos> id2cos = Maps.newHashMap();
 
     private final Map<String, List<MimeTypeInfo>> mimeConfig = Maps.newHashMap();
     private final Config config = new Config(new HashMap<String, Object>(), this);
@@ -335,8 +337,20 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Cos createCos(String name, Map<String, Object> attrs) {
-        throw new UnsupportedOperationException();
+    public Cos createCos(String name, Map<String, Object> attrs) throws ServiceException {
+        name = name.trim().toLowerCase();
+        if (get(Key.CosBy.name, name) != null) {
+            throw AccountServiceException.COS_EXISTS(name);
+        }
+
+        String id = (String) attrs.get(A_zimbraId);
+        if (id == null) {
+            attrs.put(A_zimbraId, id = UUID.randomUUID().toString());
+        }
+
+        Cos cos = new Cos(name, id, attrs, this);
+        id2cos.put(id, cos);
+        return cos;
     }
 
     @Override
@@ -351,7 +365,20 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public Cos get(Key.CosBy keyType, String key) {
-        return new MockCos(key, UUID.randomUUID().toString(), new HashMap<String,Object>(), this);
+        switch (keyType) {
+            case id:
+                return id2cos.get(key);
+
+            case name:
+                for (Cos cos : id2cos.values()) {
+                    if (cos.getName().equals(key)) {
+                        return cos;
+                    }
+                }
+                break;
+        }
+
+        return null;
     }
 
     @Override

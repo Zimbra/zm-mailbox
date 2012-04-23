@@ -6067,7 +6067,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1239" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0.0">
+<attr id="1239" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig,cos" since="8.0.0">
   <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
 </attr>
 

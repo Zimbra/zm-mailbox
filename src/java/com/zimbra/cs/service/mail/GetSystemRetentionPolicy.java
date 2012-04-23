@@ -31,7 +31,7 @@ public class GetSystemRetentionPolicy extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         GetSystemRetentionPolicyResponse res = new GetSystemRetentionPolicyResponse(
-            RetentionPolicyManager.getInstance().getSystemRetentionPolicy());
+            RetentionPolicyManager.getInstance().getSystemRetentionPolicy(getRequestedAccount(zsc)));
         return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
     }
 

@@ -2661,7 +2661,9 @@ The system retention policy SOAP APIs allow the administrator to edit
 named system retention policies that users can apply to folders and tags.
 See soap.txt for more details about the <retentionPolicy> element structure.
 
-<GetSystemRetentionPolicyRequest/>
+<GetSystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
+</GetSystemRetentionPolicyRequest>
 
 <GetSystemRetentionPolicyResponse>
   <retentionPolicy xmlns="urn:zimbraMail">
@@ -2676,6 +2678,7 @@ See soap.txt for more details about the <retentionPolicy> element structure.
 
 
 <CreateSystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
   <keep>
     <policy name="{name}" lifetime="{duration}" xmlns="urn:zimbraMail"/>
   </keep> |
@@ -2690,6 +2693,7 @@ See soap.txt for more details about the <retentionPolicy> element structure.
 
 
 <ModifySystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
   <policy id="{id}" [name="{name}"] [lifetime="{duration}"] xmlns="urn:zimbraMail"/>
 </ModifySystemRetentionPolicyRequest>
 
@@ -2699,10 +2703,13 @@ See soap.txt for more details about the <retentionPolicy> element structure.
 
 
 <DeleteSystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
   <policy id="{id}" xmlns="urn:zimbraMail"/>
 </DeleteSystemRetentionPolicyRequest>
 
 <DeleteSystemRetentionPolicyResponse/>
+
+If "cos" element is specified the opeartion create/modify/get/delete gets applied on Cos otherwise globalConfig.
 
 -----------------------------
 <ClearCookieRequest>

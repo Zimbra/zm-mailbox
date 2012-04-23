@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120418-1522 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -15444,6 +15444,88 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailMinPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailMinPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @return zimbraMailPurgeSystemPolicy, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public String getMailPurgeSystemPolicy() {
+        return getAttr(Provisioning.A_zimbraMailPurgeSystemPolicy, null);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param zimbraMailPurgeSystemPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public void setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param zimbraMailPurgeSystemPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public Map<String,Object> setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
+        return attrs;
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public void unsetMailPurgeSystemPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * System purge policy, encoded as metadata. Users can apply these policy
+     * elements to their folders and tags. If the system policy changes, user
+     * settings are automatically updated with the change.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1239)
+    public Map<String,Object> unsetMailPurgeSystemPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
         return attrs;
     }
 

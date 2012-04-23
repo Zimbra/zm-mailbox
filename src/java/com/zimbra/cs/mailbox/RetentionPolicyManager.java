@@ -30,7 +30,10 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.type.Policy;
@@ -57,52 +60,66 @@ public class RetentionPolicyManager {
         return instance;
     }
     
-    private SystemPolicy getCachedSystemPolicy()
+    private SystemPolicy getCachedSystemPolicy(Entry entry)
     throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
-        SystemPolicy sp = (SystemPolicy) config.getCachedData(SYSTEM_POLICY_KEY);
-        if (sp == null) {
-            String xml = config.getMailPurgeSystemPolicy();
-            sp = new SystemPolicy();
-            if (!Strings.isNullOrEmpty(xml)) {
-                ZimbraLog.purge.debug("Parsing system retention policy:\n%s", xml);
-                try {
-                    Element el = Element.parseXML(xml);
-                    RetentionPolicy rp = JaxbUtil.elementToJaxb(el, RetentionPolicy.class);
-                    for (Policy p : rp.getKeepPolicy()) {
-                        assert(p.getId() != null);
-                        sp.keep.put(p.getId(), p);
+        SystemPolicy sp;
+        synchronized (entry) {
+            sp = (SystemPolicy) entry.getCachedData(SYSTEM_POLICY_KEY);
+        
+            if (sp == null) {
+                String xml;
+                if (entry instanceof Config)
+                    xml = ((Config) entry).getMailPurgeSystemPolicy();
+                else if (entry instanceof Cos)
+                    xml = ((Cos) entry).getMailPurgeSystemPolicy();
+                else
+                    throw ServiceException.UNSUPPORTED();
+            
+                sp = new SystemPolicy();
+                if (!Strings.isNullOrEmpty(xml)) {
+                    ZimbraLog.purge.debug("Parsing system retention policy:\n%s", xml);
+                    try {
+                        Element el = Element.parseXML(xml);
+                        RetentionPolicy rp = JaxbUtil.elementToJaxb(el, RetentionPolicy.class);
+                        for (Policy p : rp.getKeepPolicy()) {
+                            assert(p.getId() != null);
+                            sp.keep.put(p.getId(), p);
+                        }
+                        for (Policy p : rp.getPurgePolicy()) {
+                            assert(p.getId() != null);
+                            sp.purge.put(p.getId(), p);
+                        }
+                    } catch (DocumentException e) {
+                        throw ServiceException.FAILURE("Unable to parse system retention policy.", e);
                     }
-                    for (Policy p : rp.getPurgePolicy()) {
-                        assert(p.getId() != null);
-                        sp.purge.put(p.getId(), p);
-                    }
-                } catch (DocumentException e) {
-                    throw ServiceException.FAILURE("Unable to parse system retention policy.", e);
                 }
+                entry.setCachedData(SYSTEM_POLICY_KEY, sp);
             }
-            config.setCachedData(SYSTEM_POLICY_KEY, sp);
         }
         return sp;
     }
     
-    public synchronized Policy createSystemKeepPolicy(String name, String lifetime)
+    public Policy createSystemKeepPolicy(Entry entry, String name, String lifetime)
     throws ServiceException {
         validateLifetime(lifetime);
         Policy p = Policy.newSystemPolicy(generateId(), name, lifetime);
-        SystemPolicy sp = getCachedSystemPolicy();
-        sp.keep.put(p.getId(), p);
-        saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+        synchronized (entry) {
+            SystemPolicy sp = getCachedSystemPolicy(entry);
+            sp.keep.put(p.getId(), p);
+            saveSystemPolicy(entry, new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+        }
         return p;
     }
     
-    public synchronized Policy createSystemPurgePolicy(String name, String lifetime)
+    public Policy createSystemPurgePolicy(Entry entry, String name, String lifetime)
     throws ServiceException {
         validateLifetime(lifetime);
         Policy p = Policy.newSystemPolicy(generateId(), name, lifetime);
-        SystemPolicy sp = getCachedSystemPolicy();
-        sp.purge.put(p.getId(), p);
-        saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+        synchronized (entry) {
+            SystemPolicy sp = getCachedSystemPolicy(entry);
+            sp.purge.put(p.getId(), p);
+            saveSystemPolicy(entry, new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+        }
         return p;
     }
     
@@ -121,22 +138,24 @@ public class RetentionPolicyManager {
      * Updates the properties of the system policy with the given id.
      * @return {@code null} if a {@code Policy} with the given id could not be found
      */
-    public synchronized Policy modifySystemPolicy(String id, String name, String lifetime)
+    public Policy modifySystemPolicy(Entry entry, String id, String name, String lifetime)
     throws ServiceException {
         validateLifetime(lifetime);
-        SystemPolicy sp = getCachedSystemPolicy();
-        if (sp.keep.containsKey(id)) {
-            Policy p = Policy.newSystemPolicy(id, name, lifetime);
-            sp.keep.put(id, p);
-            saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
-            return p;
-        }
+        synchronized (entry) {
+            SystemPolicy sp = getCachedSystemPolicy(entry);
+            if (sp.keep.containsKey(id)) {
+                Policy p = Policy.newSystemPolicy(id, name, lifetime);
+                sp.keep.put(id, p);
+                saveSystemPolicy(entry, new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+                return p;
+            }
         
-        if (sp.purge.containsKey(id)) {
-            Policy p = Policy.newSystemPolicy(id, name, lifetime);
-            sp.purge.put(id, p);
-            saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
-            return p;
+            if (sp.purge.containsKey(id)) {
+                Policy p = Policy.newSystemPolicy(id, name, lifetime);
+                sp.purge.put(id, p);
+                saveSystemPolicy(entry, new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+                return p;
+            }
         }
         return null;
     }
@@ -146,54 +165,80 @@ public class RetentionPolicyManager {
      * @return {@code true} if the policy was successfully deleted, {@code false}
      * if no policy exists with the given id
      */
-    public synchronized boolean deleteSystemPolicy(String id)
+    public boolean deleteSystemPolicy(Entry entry, String id)
     throws ServiceException {
-        SystemPolicy sp = getCachedSystemPolicy();
-        Policy p = sp.keep.remove(id);
-        if (p == null) {
-            p = sp.purge.remove(id);
-        }
-        if (p != null) {
-            saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
-            return true;
+        synchronized (entry) {
+            SystemPolicy sp = getCachedSystemPolicy(entry);
+            Policy p = sp.keep.remove(id);
+            if (p == null) {
+                p = sp.purge.remove(id);
+            }
+            if (p != null) {
+                saveSystemPolicy(entry, new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+                return true;
+            }
         }
         return false;
     }
     
-    private void saveSystemPolicy(RetentionPolicy rp)
+    private void saveSystemPolicy(Entry entry, RetentionPolicy rp)
     throws ServiceException {
         String xml = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory).prettyPrint();
-        Provisioning.getInstance().getConfig().setMailPurgeSystemPolicy(xml);
+        if (entry instanceof Config)
+            ((Config)entry).setMailPurgeSystemPolicy(xml);
+        else if (entry instanceof Cos)
+            ((Cos)entry).setMailPurgeSystemPolicy(xml);
     }
     
     private String generateId() {
         return UUID.randomUUID().toString();
     }
     
-    public synchronized RetentionPolicy getSystemRetentionPolicy()
+    public RetentionPolicy getSystemRetentionPolicy(Entry entry)
     throws ServiceException {
-        SystemPolicy sp = getCachedSystemPolicy();
+        SystemPolicy sp = getCachedSystemPolicy(entry);
         return new RetentionPolicy(sp.keep.values(), sp.purge.values());
     }
 
+    public RetentionPolicy getSystemRetentionPolicy(Account acct)
+    throws ServiceException {
+        // Check CoS first, if not found get from Config
+        RetentionPolicy retentionPolicy = null;
+        Cos cos = acct.getCOS();
+        if (cos != null)
+            retentionPolicy = RetentionPolicyManager.getInstance().getSystemRetentionPolicy(cos);
+        if (retentionPolicy == null || !retentionPolicy.isSet()) {
+            Config config = Provisioning.getInstance().getConfig();
+            retentionPolicy = RetentionPolicyManager.getInstance().getSystemRetentionPolicy(config);
+        }
+        return retentionPolicy;
+    }
+    
     /**
      * Returns a new {@code RetentionPolicy} that has the latest system policy
      * data for any elements in {@code rp} of type {@link Policy.Type#SYSTEM}.
      */
-    public synchronized RetentionPolicy getCompleteRetentionPolicy(RetentionPolicy rp)
+    private RetentionPolicy getCompleteRetentionPolicy(RetentionPolicy master, RetentionPolicy rp)
     throws ServiceException {
         return new RetentionPolicy(
-            getLatestList(rp.getKeepPolicy()), getLatestList(rp.getPurgePolicy()));
+            getLatestList(master, rp.getKeepPolicy()), getLatestList(master, rp.getPurgePolicy()));
+    }
+    
+    public RetentionPolicy getCompleteRetentionPolicy(Account acct, RetentionPolicy rp) throws ServiceException {
+        // Check CoS first, if not found get from Config
+        RetentionPolicy retentionPolicy = RetentionPolicyManager.getInstance().getSystemRetentionPolicy(acct);
+        retentionPolicy = RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(retentionPolicy, rp);
+        return retentionPolicy;
     }
 
-    private List<Policy> getLatestList(Iterable<Policy> list)
+    private List<Policy> getLatestList(RetentionPolicy master, Iterable<Policy> list)
     throws ServiceException {
         List<Policy> latestList = Lists.newArrayList();
         for (Policy policy : list) {
             if (policy.getType() == Policy.Type.USER) {
                 latestList.add(policy);
             } else {
-                Policy latest = getPolicyById(policy.getId());
+                Policy latest = master.getPolicyById(policy.getId());
                 if (latest != null) {
                     latestList.add(latest);
                 }
@@ -202,9 +247,9 @@ public class RetentionPolicyManager {
         return latestList;
     }
     
-    public synchronized Policy getPolicyById(String id)
+    public Policy getPolicyById(Entry entry, String id)
     throws ServiceException {
-        SystemPolicy sp = getCachedSystemPolicy();
+        SystemPolicy sp = getCachedSystemPolicy(entry);
         Policy p = sp.keep.get(id);
         if (p != null) {
             return p;

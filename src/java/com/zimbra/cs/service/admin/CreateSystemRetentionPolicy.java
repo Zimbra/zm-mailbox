@@ -18,9 +18,12 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
@@ -28,6 +31,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateSystemRetentionPolicyRequest;
 import com.zimbra.soap.admin.message.CreateSystemRetentionPolicyResponse;
+import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.mail.type.Policy;
 
 public class CreateSystemRetentionPolicy extends AdminDocumentHandler {
@@ -38,10 +42,24 @@ public class CreateSystemRetentionPolicy extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        // check right
-        checkSetRight(zsc, context, this);
-        
         CreateSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request);
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        // assume default retention policy to be set in globalConfig (for backward compatibility)
+        Entry entry = prov.getConfig();
+        
+        // check if cos is specified
+        CosSelector cosSelector = req.getCos();
+        
+        if (cosSelector != null) {
+            entry = prov.get(Key.CosBy.fromString(cosSelector.getBy().name()), cosSelector.getKey());
+            if (entry == null)
+                throw AccountServiceException.NO_SUCH_COS(cosSelector.getKey());
+        }
+        
+        // check right
+        checkSetRight(entry, zsc, context, this);
         
         Policy keep = req.getKeepPolicy();
         Policy purge = req.getPurgePolicy();
@@ -54,21 +72,20 @@ public class CreateSystemRetentionPolicy extends AdminDocumentHandler {
         
         Policy newPolicy;
         if (keep != null) {
-            newPolicy = RetentionPolicyManager.getInstance().createSystemKeepPolicy(keep.getName(), keep.getLifetime());
+            newPolicy = RetentionPolicyManager.getInstance().createSystemKeepPolicy(entry, keep.getName(), keep.getLifetime());
         } else {
-            newPolicy = RetentionPolicyManager.getInstance().createSystemPurgePolicy(purge.getName(), purge.getLifetime());
+            newPolicy = RetentionPolicyManager.getInstance().createSystemPurgePolicy(entry, purge.getName(), purge.getLifetime());
         }
         CreateSystemRetentionPolicyResponse res = new CreateSystemRetentionPolicyResponse(newPolicy);
         return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
     }
     
-    static void checkSetRight(ZimbraSoapContext zsc, Map<String, Object> context,
+    static void checkSetRight(Entry entry, ZimbraSoapContext zsc, Map<String, Object> context,
             AdminDocumentHandler handler) 
     throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
         AdminAccessControl.SetAttrsRight sar = new AdminAccessControl.SetAttrsRight();
         sar.addAttr(CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);
-        handler.checkRight(zsc, context, config, sar);
+        handler.checkRight(zsc, context, entry, sar);
     }
     
     @Override
