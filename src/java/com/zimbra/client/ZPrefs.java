@@ -234,6 +234,8 @@ public class ZPrefs {
     public boolean getCalendarReminderSendEmail() { return getBool(ZAttrProvisioning.A_zimbraPrefCalendarReminderSendEmail); }
     public boolean getCalendarReminderMobile() { return getBool(ZAttrProvisioning.A_zimbraPrefCalendarReminderMobile); }
     public boolean getCalendarReminderYMessenger() { return getBool(ZAttrProvisioning.A_zimbraPrefCalendarReminderYMessenger); }
+    public boolean getCalendarShowDeclinedMeetings() { return getBool(ZAttrProvisioning.A_zimbraPrefCalendarShowDeclinedMeetings); }
+
 
 	public String getPop3DownloadSince() { return get(ZAttrProvisioning.A_zimbraPrefPop3DownloadSince); }
 }
