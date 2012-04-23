@@ -2702,6 +2702,13 @@
     </rights>
 </right>
 
+<right type="combo" name="adminConsoleUCServiceRights">
+    <desc>Rights for viewing Voice/Chat services through Admin Console</desc>
+    <rights>
+        <r n="listUCService" />
+    </rights>
+</right>
+
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
   <rights>
@@ -2725,6 +2732,7 @@
     <r n="adminConsoleSoftwareUpdatesRights"/>
     <r n="adminConsoleMigrationRights"/>
     <r n="adminConsoleClientUploadRights"/>
+    <r n="adminConsoleUCServiceRights"/>
   </rights>
 </right>
 
