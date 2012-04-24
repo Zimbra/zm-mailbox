@@ -349,6 +349,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             data.flags = this.flags;
             data.tags = this.tags;
             data.subject = this.subject;
+            data.name = this.name;
             data.unreadCount = this.unreadCount;
             return data;
         }
