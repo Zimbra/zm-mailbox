@@ -88,6 +88,7 @@ public final class ParsedDocument {
      */
     private synchronized void performExtraction() {
         try {
+            long start = System.currentTimeMillis();
             MimeHandler handler = MimeHandlerManager.getMimeHandler(contentType, filename);
             assert(handler != null);
 
@@ -127,6 +128,8 @@ public final class ParsedDocument {
             document.addContent(content.toString());
             document.addFrom(new RFC822AddressTokenStream(creator));
             document.addFilename(filename);
+            long elapsed = System.currentTimeMillis() - start;
+            ZimbraLog.doc.debug("ParsedDocument performExtraction elapsed=" + elapsed);
         } catch (MimeHandlerException mhe) {
             if (ConversionException.isTemporaryCauseOf(mhe)) {
                 ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);

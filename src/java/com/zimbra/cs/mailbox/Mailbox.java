@@ -7924,6 +7924,8 @@ public class Mailbox {
 
         boolean success = false;
         try {
+            long start = System.currentTimeMillis();
+
             beginTransaction("createDoc", octxt, redoRecorder);
 
             SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
@@ -7959,6 +7961,8 @@ public class Mailbox {
             index.add(doc);
 
             success = true;
+            long elapsed = System.currentTimeMillis() - start;
+            ZimbraLog.mailbox.debug("createDocument elapsed=" + elapsed);
             return doc;
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error writing document blob", ioe);

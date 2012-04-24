@@ -124,13 +124,8 @@ public class Document extends MailItem {
             }
 
             ParsedDocument pd = null;
-            mMailbox.lock.lock();
-            try {
-                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(),
-                        getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
-            } finally {
-                mMailbox.lock.release();
-            }
+            pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(),
+                    getChangeDate(), getCreator(), getDescription(), isDescriptionEnabled());
 
             if (pd.hasTemporaryAnalysisFailure()) {
                 throw new MailItem.TemporaryIndexingException();

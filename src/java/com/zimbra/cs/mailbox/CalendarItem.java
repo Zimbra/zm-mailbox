@@ -248,9 +248,13 @@ public abstract class CalendarItem extends MailItem {
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         List<IndexDocument> docs = null;
-        synchronized(getMailbox()) {
+        mMailbox.lock.lock();
+        try {
             docs = getIndexDocuments();
+        } finally {
+            mMailbox.lock.release();
         }
+        
         return docs;
     }
 

@@ -1229,7 +1229,8 @@ public class Message extends MailItem {
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             ParsedMessage pm = null;
-            synchronized (getMailbox()) {
+            mMailbox.lock.lock();
+            try {
                 // force the pm's received-date to be the correct one
                 ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
                     .setReceivedDate(getDate())
@@ -1237,7 +1238,11 @@ public class Message extends MailItem {
                     .setSize(getSize())
                     .setDigest(getDigest());
                 pm = new ParsedMessage(opt);
+                
+            } finally {
+                mMailbox.lock.release();
             }
+            
             pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
             if (mMailbox.index.isReIndexInProgress()) {
