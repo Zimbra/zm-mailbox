@@ -761,6 +761,7 @@ public final class LC {
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
     public static final KnownKey pop3_throttle_ip_limit = KnownKey.newKey(200);
     public static final KnownKey pop3_throttle_acct_limit = KnownKey.newKey(200);
+    public static final KnownKey pop3_max_consecutive_error = KnownKey.newKey(5);
 
     public static final KnownKey lmtp_throttle_ip_limit = KnownKey.newKey(0);
 
