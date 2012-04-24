@@ -94,6 +94,7 @@ public final class OutgoingMessageHandler implements FilterHandler {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(defaultFolderId).setConversationId(convId);
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, defaultFlags));
             dopt.setTags(FilterUtil.getTagsUnion(tags, defaultTags));
+            dopt.setNoICal(noICal);
             return mailbox.addMessage(octxt, parsedMessage, dopt, null);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add sent message", e);
