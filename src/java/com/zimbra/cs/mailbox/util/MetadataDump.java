@@ -122,8 +122,13 @@ public final class MetadataDump {
             }
             ps.println();
             if (mMap.get("blob_digest") != null) {
-                short volId = Short.parseShort(mMap.get("volume_id"));
-                Volume vol = VolumeManager.getInstance().getVolume(volId);
+                Volume vol = null;
+                try {
+                    short volId = Short.parseShort(mMap.get("locator"));
+                    vol = VolumeManager.getInstance().getVolume(volId);
+                } catch (NumberFormatException nfe) {
+                    //probably not FileBlobStore
+                }
                 if (vol != null) {
                     int mboxId = Integer.parseInt(mMap.get("mailbox_id"));
                     String itemIdStr = mMap.get("id");

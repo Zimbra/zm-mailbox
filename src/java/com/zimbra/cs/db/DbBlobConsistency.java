@@ -48,28 +48,28 @@ public class DbBlobConsistency {
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
                 " id BETWEEN " + minId + " AND " + maxId +
                 " AND blob_digest IS NOT NULL " +
-                "AND volume_id = " + volumeId +
+                "AND locator = " + volumeId +
                 " UNION " +
                 "SELECT id, mod_content, 0, size " +
                 "FROM " + DbMailItem.getMailItemTableName(mbox, true) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
                 " id BETWEEN " + minId + " AND " + maxId +
                 " AND blob_digest IS NOT NULL " +
-                "AND volume_id = " + volumeId +
+                "AND locator = " + volumeId +
                 " UNION " +
                 "SELECT item_id, mod_content, version, size " +
                 "FROM " + DbMailItem.getRevisionTableName(mbox, false) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
                 " item_id BETWEEN " + minId + " AND " + maxId +
                 " AND blob_digest IS NOT NULL " +
-                "AND volume_id = " + volumeId +
+                "AND locator = " + volumeId +
                 " UNION " +
                 "SELECT item_id, mod_content, version, size " +
                 "FROM " + DbMailItem.getRevisionTableName(mbox, true) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
                 " item_id BETWEEN " + minId + " AND " + maxId +
                 " AND blob_digest IS NOT NULL " +
-                "AND volume_id = " + volumeId);
+                "AND locator = " + volumeId);
             if (!DebugConfig.disableMailboxGroups) {
                 stmt.setInt(1, mbox.getId());
                 stmt.setInt(2, mbox.getId());
