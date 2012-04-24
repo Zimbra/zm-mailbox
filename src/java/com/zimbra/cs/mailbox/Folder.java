@@ -51,7 +51,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 public class Folder extends MailItem {
     public static class FolderOptions {
         private byte attributes;
-        private Type defaultView;
+        private Type defaultView = MailItem.Type.UNKNOWN;
         private int flags;
         private Color color = DEFAULT_COLOR_RGB;
         private String url;
@@ -69,7 +69,9 @@ public class Folder extends MailItem {
         }
 
         public FolderOptions setDefaultView(Type view) {
-            this.defaultView = view;
+            if (view != null) {
+                this.defaultView = view;
+            }
             return this;
         }
 
