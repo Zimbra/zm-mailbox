@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.pop3;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
@@ -66,6 +67,7 @@ abstract class Pop3Handler {
     private String command;
     private long startTime;
     int state;
+    private int errorCount = 0;
 
     private boolean dropConnection;
     Authenticator authenticator;
@@ -143,11 +145,18 @@ abstract class Pop3Handler {
                     ZimbraPerf.POP_TRACKER.addStat(command.toUpperCase(), startTime);
                 }
             }
-
+            errorCount = 0;
             return result;
         } catch (Pop3CmdException e) {
-            sendERR(e.getResponse());
             ZimbraLog.pop.debug(e.getMessage(), e);
+            errorCount++;
+            if (errorCount >= LC.pop3_max_consecutive_error.intValue()) {
+                ZimbraLog.pop.warn("dropping connection due to too many errors");
+                sendERR(e.getResponse() +" : Dropping connection due to too many bad commands");
+                dropConnection = true;
+            } else {
+                sendERR(e.getResponse());
+            }
             return !dropConnection;
         } catch (ServiceException e) {
             sendERR(Pop3CmdException.getResponse(e.getMessage()));
