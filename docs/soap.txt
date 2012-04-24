@@ -305,6 +305,15 @@ JSON request with XML response:
      ...
   }
 
+Names of all MailItem types have the following requirements:
+
+* No longer than 255 characters.
+* Cannot contain ':', '/', '"', '\t', '\r', '\n'.
+* Cannot be "." or "..".
+* Cannot be null or empty.
+
+In addition, the server removes trailing whitespace and characters below 0x20 from item names.
+
 -----------------------------
 
 SOAP 1.2
@@ -1261,8 +1270,7 @@ Folders:
     <retentionPolicy> ... </retentionPolicy>?
   </folder>
 
-  {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
-                   cannot contain ':', '"', '/', or any character below 0x20
+  {folder-name}  = name of folder; whitespace is trimmed by server; 
   {parent-id}    = id of parent folder (absent for root folder)
   {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent, is a s(y)nc folder with external data source, sync is turned on(~), folder does n(o)t allow inferiors / children
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
@@ -1346,8 +1354,7 @@ Mountpoints:
         rid="{id-of-shared-item}" ruuid="{UUID-of-shared-item}" oname="{owner's-name-for-item}" [color="{color}"] [view="{default-type}"]
         reminder="{reminder-enabled}"/>
 
-  {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
-                   cannot contain ':', '"', '/', or any character below 0x20
+  {folder-name}  = name of folder
   {parent-id}    = id of parent folder (absent for root folder)
   {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*)
   {owner's-display-name} = primary email address of the owner of the linked-to resource
@@ -1367,9 +1374,7 @@ Tags:
     [<retentionPolicy> ... </retentionPolicy>]
   </tag>
 
-  {tag-name}    = name of tag; max length 128; whitespace is trimmed by server;
-                  cannot contain ':', '"', '/', or any character below 0x20;
-                  cannot begin with '\' (avoid collsions with IMAP)
+  {tag-name}    = name of tag; cannot begin with '\' (avoid collsions with IMAP)
   {color}       = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}      = number of unread messages with this tag
   {item-count}  = number of items with this flag
