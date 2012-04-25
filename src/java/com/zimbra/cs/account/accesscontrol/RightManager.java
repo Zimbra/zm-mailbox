@@ -46,6 +46,8 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -75,6 +77,8 @@ public class RightManager {
     private static final String E_R            = "r";
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
+    private static final String E_ROOT         = "root";
+    private static final String E_UI           = "ui";
     
     private static final String A_CACHE        = "cache";
     private static final String A_FALLBACK     = "fallback";
@@ -233,7 +237,7 @@ public class RightManager {
         
         String helpName = eDesc.attributeValue(A_NAME);
         if (helpName == null) {
-            throw ServiceException.PARSE_ERROR("missing hep name", null);
+            throw ServiceException.PARSE_ERROR("missing help name", null);
         }
         
         Help help = sHelp.get(helpName);
@@ -243,6 +247,16 @@ public class RightManager {
         }
         
         right.setHelp(help);
+    }
+    
+    private void parseUI(Element eUI, Right right) throws ServiceException {
+        if (right.getUI() != null) {
+            throw ServiceException.PARSE_ERROR("multiple " + E_UI, null);
+        }
+        
+        UI ui = new UI();
+        ui.setDesc(eUI.getText());
+        right.setUI(ui);
     }
     
     private void parseDefault(Element eDefault, Right right) throws ServiceException {
@@ -374,6 +388,8 @@ public class RightManager {
                 parseDesc(elem, right);
             } else if (elem.getName().equals(E_HELP)) {
                 parseHelp(elem, right);
+            } else if (elem.getName().equals(E_UI)) {
+                parseUI(elem, right);
             } else if (elem.getName().equals(E_DEFAULT)) {
                 parseDefault(elem, right);
             } else if (elem.getName().equals(E_ATTRS)) {
@@ -713,31 +729,57 @@ public class RightManager {
                 Admin.R_adminConsoleRights, Admin.R_domainAdminConsoleRights);
         
         for (AdminRight right : rootRights) {
+            Multimap<UI, Right> uiMap = TreeMultimap.create();
+            
+            /*
+             * output the rights XML.  This XML has the root combo right expanded 
+             * down to each atom(preset or attrs) right
+             */
             Document document = DocumentHelper.createDocument();
-            Element root = document.addElement(E_RIGHTS);
-            genAdminDoc(root, right);
             
-            // Pretty print the document to outpur file
-            OutputFormat format = OutputFormat.createPrettyPrint();
+            Element rightsRoot = document.addElement(E_ROOT);
+            genAdminDocByRight(rightsRoot, right, uiMap);
+            writeXML("/Users/pshao/temp/" + right.getName() + ".xml", document);
             
-            BufferedWriter writer = new BufferedWriter(new FileWriter("/Users/pshao/temp/" + right.getName() + ".xml"));
-            XMLWriter xmlWriter = new XMLWriter(writer, format);
-            xmlWriter.write(document);
-            writer.close();
+            /*
+             * output the UI XML.  This XML contains one entry for each UI, sorted by 
+             * the description of the UI.
+             */
+            document = DocumentHelper.createDocument();
+            Element uiRoot = document.addElement(E_ROOT);
+            genAdminDocByUI(uiRoot, uiMap);
+            writeXML("/Users/pshao/temp/" + right.getName() + "-ui" + ".xml", document);
         }
         
     }
     
-    private void genAdminDoc(Element parent, Right right) throws ServiceException {
+    private void writeXML(String fileName, Document document) throws IOException {
+        // Pretty print the document to output file
+        OutputFormat format = OutputFormat.createPrettyPrint();
+        
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+        XMLWriter xmlWriter = new XMLWriter(writer, format);
+        xmlWriter.write(document);
+        writer.close();
+    }
+    
+    private void genAdminDocByRight(Element parent, Right right, Multimap<UI, Right> uiMap) 
+    throws ServiceException {
         Element eRight = parent.addElement(E_RIGHT).
                 addAttribute(A_NAME, right.getName()).
                 addAttribute(A_TYPE, right.getRightType().name());
         eRight.addElement(E_DESC).setText(right.getDesc());
         
+        UI ui = right.getUI();
+        if (ui != null) {
+            eRight.addElement(E_UI).setText(ui.getDesc());
+            uiMap.put(ui, right);
+        }
+        
         if (right.isComboRight()) {
             ComboRight comboRight = (ComboRight)right;
             for (Right childRight : comboRight.getRights()) {
-                genAdminDoc(eRight, childRight);
+                genAdminDocByRight(eRight, childRight, uiMap);
             }
         } else if (right.isPresetRight()) {
             eRight.addAttribute(A_TARGET_TYPE, right.getTargetTypeStr());
@@ -751,6 +793,17 @@ public class RightManager {
                     eAttrs.addElement(E_A).addAttribute(A_N, attr);
                 }
             }
+        }
+    }
+    
+    private void genAdminDocByUI(Element parent, Multimap<UI, Right> uiMap) {
+        for (Map.Entry<UI, Right> entry : uiMap.entries()) {
+            UI ui = entry.getKey();
+            Right right = entry.getValue();
+            
+            Element eUI = parent.addElement(E_UI);
+            eUI.addAttribute(E_DESC, ui.getDesc());
+            eUI.addAttribute(E_RIGHT, right.getName());
         }
     }
     

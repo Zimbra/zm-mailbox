@@ -22,7 +22,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 
-public abstract class Right extends RightConsts {
+public abstract class Right extends RightConsts implements Comparable<Right> {
     
     public enum RightType {
         preset,
@@ -50,6 +50,7 @@ public abstract class Right extends RightConsts {
     protected RightType mRightType;
     private String mDesc;  // a brief description
     private Help mHelp;
+    private UI mUI;
     private Boolean mDefault;
     protected TargetType mTargetType;
     protected TargetType mGrantTargetType;
@@ -74,11 +75,21 @@ public abstract class Right extends RightConsts {
         sb.append("type         = " + mRightType.name() + "\n");
         sb.append("desc         = " + mDesc + "\n");
         sb.append("help         = " + (mHelp==null ? "null" : mHelp.getName()  ) + "\n");
+        sb.append("ui           = " + (mUI==null ? "null" : mUI.getDesc()  ) + "\n");
         sb.append("default      = " + mDefault + "\n");
         sb.append("target Type  = " + mTargetType + "\n");
 
         return sb.toString();
     }
+    
+    /*
+     * for sorting for RightManager.genAdminDocs()
+     */
+    @Override
+    public int compareTo(Right other) {
+        return mName.compareTo(other.mName);
+    }
+
     
     /**
      * returns if this right overlaps the other right
@@ -134,8 +145,16 @@ public abstract class Right extends RightConsts {
         return mHelp;
     }
     
+    public UI getUI() {
+        return mUI;
+    }
+    
     void setHelp(Help help) {
         mHelp = help;
+    }
+    
+    void setUI(UI ui) {
+        mUI = ui;
     }
     
     public Boolean getDefault() {
