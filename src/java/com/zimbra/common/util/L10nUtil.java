@@ -81,6 +81,11 @@ public class L10nUtil {
         calendarResourceConflictScheduledBy,
 
         calendarUserReplyPermissionDenied,
+        
+        // Calendar Forward Notifications
+        calendarForwardNotificationSubject,
+        calendarForwardNotificationBody,
+        calendarForwardNotificationBodyHtml,
 
         // calendar item reminder alerts
         apptReminderEmailSubject,
