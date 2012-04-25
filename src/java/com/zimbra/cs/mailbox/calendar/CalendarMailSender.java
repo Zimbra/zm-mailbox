@@ -63,6 +63,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
@@ -882,11 +883,21 @@ public class CalendarMailSender {
      */
     public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
             ItemId origMsgId, String replyType, String identityId, boolean replyToSender) throws ServiceException {
+        return sendPartial(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender, false);
+    }
+
+    public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, boolean asAdmin) throws ServiceException {
         ItemId id = null;
         try {
             MailSender mailSender = getCalendarMailSender(mbox).setSendPartial(true);
             mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
-            id = mailSender.sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender);
+            if (asAdmin) {
+                mailSender.setSkipHeaderUpdate(true);
+                id = mailSender.sendMimeMessage(octxt, mbox, Boolean.FALSE, mm, uploads, origMsgId, replyType, null, replyToSender);
+            } else {
+                id = mailSender.sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender);
+            }
         } catch (MailServiceException e) {
             if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
                 ZimbraLog.calendar.info("Unable to send to some addresses: " + e);
@@ -1098,6 +1109,58 @@ public class CalendarMailSender {
                                   replySubject, verb, partialAccept, additionalMsgBody, iCal, addSignature);
     }
 
+    public static MimeMessage createForwardNotifyMessage(Account senderAcct, Account toAcct, String to, Address[] rcpts, Invite inv) throws MessagingException, ServiceException {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        Locale lc = toAcct.getLocale();
+        mm.setSubject(L10nUtil.getMessage(MsgKey.calendarForwardNotificationSubject, lc, inv.getName()), MimeConstants.P_CHARSET_UTF8);
+        mm.setSentDate(new Date());
+        String postmaster = senderAcct.getAttr(Provisioning.A_zimbraNewMailNotificationFrom);
+        Map<String, String> vars = new HashMap<String, String>();
+        vars.put("RECIPIENT_DOMAIN", senderAcct.getDomainName());
+        postmaster = StringUtil.fillTemplate(postmaster, vars);        
+        mm.setSender(new JavaMailInternetAddress(postmaster));
+        mm.setFrom(new JavaMailInternetAddress(senderAcct.getName()));
+        mm.setRecipient(RecipientType.TO, new JavaMailInternetAddress(to));
+        
+        MimeMultipart mmp = new ZMimeMultipart("alternative");
+        mm.setContent(mmp);
+        
+        String sender = senderAcct.getCn() + " <" +senderAcct.getName() + ">";
+        String time = FriendlyCalendaringDescription.getTimeDisplayString(inv.getStartTime(), inv.getEndTime(),
+                inv.isRecurrence(), inv.isAllDayEvent(), lc, toAcct);
+        StringBuilder sb = new StringBuilder();
+        StringBuilder sbHtml = new StringBuilder();
+        for (Address rcpt : rcpts) {
+            sb.append(rcpt.toString()).append("\n\t");
+            InternetAddress address = new JavaMailInternetAddress(rcpt.toString());
+            sbHtml.append("<a href=\"mailto:").append(address.getAddress()).append("\">");
+            if (address.getPersonal() != null) {
+                sbHtml.append(address.getPersonal()).append("</a>").append("<br>");
+            } else {
+                sbHtml.append(address.getAddress()).append("</a>").append("<br>");
+            }
+        }
+        String recipients = sb.toString();
+        String recipientsHtml = sbHtml.toString();
+        if (inv.isRecurrence()) {
+            ZRecur zr = FriendlyCalendaringDescription.getRecur(inv);
+            time += " (" + FriendlyCalendaringDescription.getRecurrenceDisplayString(zr, inv.getStartTime().getCalendarCopy(), lc) + ")";
+        }
+        String text = L10nUtil.getMessage(MsgKey.calendarForwardNotificationBody, lc, sender, inv.getName(), time, recipients);
+        MimeBodyPart textPart = new ZMimeBodyPart();
+        textPart.setText(text, MimeConstants.P_CHARSET_UTF8);
+        mmp.addBodyPart(textPart);
+
+        sender = "<a href=\"mailto:" + senderAcct.getName() + "\">" + senderAcct.getCn() + "</a>";
+        String html = L10nUtil.getMessage(MsgKey.calendarForwardNotificationBodyHtml, lc, sender, inv.getName(), time, recipientsHtml);
+        MimeBodyPart htmlPart = new ZMimeBodyPart();
+        htmlPart.setContent(html, MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
+        mmp.addBodyPart(htmlPart);
+
+        mm.saveChanges();
+        return mm;
+    }
+    
     public static void sendResourceAutoReply(final OperationContext octxt, final Mailbox mbox,
                                              final boolean saveToSent, Verb verb, boolean partialAccept,
                                              String additionalMsgBody, CalendarItem calItem,

@@ -37,6 +37,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -71,7 +72,7 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
             ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem,
                 null, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
 
-        MimeMessage mmFwd;
+        Pair<MimeMessage, MimeMessage> msgPair;
         mbox.lock.lock();
         try {
             Message msg = mbox.getMessageById(octxt, iid.getId());
@@ -133,12 +134,18 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
                 }
             }
 
-            mmFwd = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
+            msgPair = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
+            
         } finally {
             mbox.lock.release();
         }
-        sendFwdMsg(octxt, mbox, mmFwd);
-
+        
+        if (msgPair.getFirst() != null) {
+            sendFwdMsg(octxt, mbox, msgPair.getFirst());
+        }
+        if (msgPair.getSecond() != null) {
+            sendFwdNotifyMsg(octxt, mbox, msgPair.getSecond());
+        }
         Element response = getResponseElement(zsc);
         return response;
     }

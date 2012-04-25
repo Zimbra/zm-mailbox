@@ -220,27 +220,29 @@ public class FriendlyCalendaringDescription {
         mHtml.append(StringUtil.escapeHtml(value));
         mHtml.append("</td></tr>\n");
     }
-    
-    private TimeZone getTimeZone(ParsedDateTime date) {
-        if (date.getTimeZone() != null)
-            return date.getTimeZone();
-        else
-            return Util.getAccountTimeZone(mAccount);
-    }
 
     public String getTimeDisplayString(ParsedDateTime start, ParsedDateTime end,
             boolean isRecurrence, boolean isAllDayEvent) throws ServiceException {
+        return getTimeDisplayString(start, end, isRecurrence, isAllDayEvent, mLc, mAccount);
+    }
+    
+    public static String getTimeDisplayString(ParsedDateTime start, ParsedDateTime end,
+            boolean isRecurrence, boolean isAllDayEvent, Locale locale, Account account) throws ServiceException {
         StringBuilder sb = new StringBuilder();
-        TimeZone timeZone = getTimeZone(start);
+        TimeZone timeZone;
+        if (start.getTimeZone() != null)
+            timeZone = start.getTimeZone();
+        else
+            timeZone = Util.getAccountTimeZone(account);
         if (!isRecurrence) {
-            DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, mLc);
+            DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, locale);
             df.setTimeZone(timeZone);
             sb.append(df.format(start.getDate())).append(", ");
         }
         if (isAllDayEvent) {
-            sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsAllDay, mLc));
+            sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsAllDay, locale));
         } else {
-            DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.LONG, mLc);
+            DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.LONG, locale);
             timeFormat.setTimeZone(timeZone);
             sb.append(timeFormat.format(start.getDate())).append(" - ");
             if (!isRecurrence) {
@@ -250,7 +252,7 @@ public class FriendlyCalendaringDescription {
                                     calStart.get(Calendar.MONTH) == calEnd.get(Calendar.MONTH) &&
                                     calStart.get(Calendar.DATE) == calEnd.get(Calendar.DATE);
                 if (!isSameday) {
-                    DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, mLc);
+                    DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, locale);
                     df.setTimeZone(timeZone); // use start date timezone even to format end date.
                     sb.append(df.format(end.getDate())).append(", ");
                 }
