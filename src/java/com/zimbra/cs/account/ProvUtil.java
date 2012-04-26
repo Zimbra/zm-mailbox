@@ -4032,7 +4032,17 @@ public class ProvUtil implements HttpDebugListener {
             }
             MailMode mailMode = Provisioning.MailMode.fromString(mode);
 
-            int backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            boolean isPlain = (mailMode == Provisioning.MailMode.http ||
+                               mailMode == Provisioning.MailMode.mixed ||
+                               mailMode == Provisioning.MailMode.both);
+            
+            int backendPort;
+            if (isPlain) {
+                backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            } else {
+                backendPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            }
+
             String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
             console.println("    server " + serviceName + ":" + backendPort + ";");
             atLeastOne = true;
