@@ -1,0 +1,93 @@
+From: rcpt@zimbra.com
+To: <test@zimbra.com>
+Subject: Accepted: from ajax 1
+Date: Tue, 24 Apr 2012 15:38:01 -0700 (PDT)
+Message-ID: <0bec6dce.0000097c.00000018@zimbra-PC7632>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 14.0
+X-Mailer: Zimbra 8.0.0_BETA4_5065 (ZimbraConnectorForOutlook/7.2.0.509)
+Thread-Index: mD4GLutFc+a2+1WEGtLdKDg2Fv+JFQ==
+X-Originating-IP: [10.16.67.144]
+Thread-Topic: from ajax 1
+Content-Type: multipart/alternative;
+ boundary="------------Boundary-00=_0X90rDhZwyzf3w8CRv6t"
+
+--------------Boundary-00=_0X90rDhZwyzf3w8CRv6t
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
+
+DQo=
+
+--------------Boundary-00=_0X90rDhZwyzf3w8CRv6t
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<=21DOCTYPE HTML PUBLIC =22-//W3C//DTD HTML 3.2//EN=22>
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=3D=22Content-Type=22 CONTENT=3D=22text/html; =
+charset=3Dutf-8=22>
+<META NAME=3D=22Generator=22 CONTENT=3D=22MS Exchange Server version =
+14.02.5004.000=22>
+<TITLE>Accepted: from ajax 1</TITLE>
+</HEAD>
+<BODY>
+<=21-- Converted from text/rtf format -->
+
+<P DIR=3DLTR><SPAN LANG=3D=22en-us=22></SPAN></P>
+
+</BODY>
+</HTML>=
+
+--------------Boundary-00=_0X90rDhZwyzf3w8CRv6t
+Content-Type: text/calendar; method=REPLY; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-us
+
+BEGIN:VCALENDAR
+PRODID:-//Microsoft Corporation//Outlook 14.0 MIMEDIR//EN
+VERSION:2.0
+METHOD:REPLY
+X-MS-OLK-FORCEINSPECTOROPEN:TRUE
+BEGIN:VTIMEZONE
+TZID:America/Los_Angeles
+BEGIN:STANDARD
+DTSTART:16011104T020000
+RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11
+TZOFFSETFROM:-0700
+TZOFFSETTO:-0800
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010311T020000
+RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3
+TZOFFSETFROM:-0800
+TZOFFSETTO:-0700
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+ATTENDEE;PARTSTAT=ACCEPTED:mailto:rcpt@zimbra.com
+CLASS:PUBLIC
+COMMENT:\n
+CREATED:20120424T224611Z
+DTEND;TZID="America/Los_Angeles":20120424T170000
+DTSTAMP:20120424T224611Z
+DTSTART;TZID="America/Los_Angeles":20120424T160000
+LAST-MODIFIED:20120424T224611Z
+LOCATION:location
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:Accepted: from ajax 1
+TRANSP:OPAQUE
+UID:5baee2a1-9064-4356-9b3c-f56b02050088
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN
+ ">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server versi
+ on 14.02.5004.000">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted from t
+ ext/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN></P>\n\n</BODY>\n
+ </HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MS-OLK-AUTOFILLLOCATION:FALSE
+X-MS-OLK-CONFTYPE:0
+END:VEVENT
+END:VCALENDAR
+--------------Boundary-00=_0X90rDhZwyzf3w8CRv6t--

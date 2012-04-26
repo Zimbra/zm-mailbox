@@ -15,8 +15,11 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -26,6 +29,7 @@ import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
@@ -34,18 +38,27 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.zmime.ZContentType;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTest;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.util.JMSession;
 
 public class SendMsgTest {
@@ -59,33 +72,88 @@ public class SendMsgTest {
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        prov.createAccount("test2@zimbra.com", "secret", attrs);
+        prov.createAccount("rcpt@zimbra.com", "secret", attrs);
 
-        // this MailboxManager does everything except actually send mail
-        MailboxManager.setInstance(new MailboxManager() {
-            @Override
-            protected Mailbox instantiateMailbox(MailboxData data) {
-                return new Mailbox(data) {
-                    @Override
-                    public MailSender getMailSender() {
-                        return new MailSender() {
-                            @Override
-                            protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks)
-                            throws SafeMessagingException, IOException {
+        // this MailboxManager does everything except use SMTP to deliver mail
+        MailboxManager.setInstance(new DirectInsertionMailboxManager());
+    }
+
+    public static class NoDeliveryMailboxManager extends MailboxManager {
+        public NoDeliveryMailboxManager() throws ServiceException {
+            super();
+        }
+
+        @Override
+        protected Mailbox instantiateMailbox(MailboxData data) {
+            return new Mailbox(data) {
+                @Override
+                public MailSender getMailSender() {
+                    return new MailSender() {
+                        @Override
+                        protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks)
+                        throws SafeMessagingException, IOException {
+                            try {
+                                Address[] rcptAddresses = getRecipients(mm);
+                                if (rcptAddresses == null || rcptAddresses.length == 0) {
+                                    throw new SendFailedException("No recipient addresses");
+                                }
+                                return Arrays.asList(rcptAddresses);
+                            } catch (MessagingException e) {
+                                throw new SafeMessagingException(e);
+                            }
+                        }
+                    };
+                }
+            };
+        }
+    }
+
+    public static class DirectInsertionMailboxManager extends MailboxManager {
+        public DirectInsertionMailboxManager() throws ServiceException {
+            super();
+        }
+
+        @Override
+        protected Mailbox instantiateMailbox(MailboxData data) {
+            return new Mailbox(data) {
+                @Override
+                public MailSender getMailSender() {
+                    return new MailSender() {
+                        @Override
+                        protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks) {
+                            List<Address> successes = new ArrayList<Address>();
+                            Address[] addresses;
+                            try {
+                                addresses = getRecipients(mm);
+                            } catch (Exception e) {
+                                addresses = new Address[0];
+                            }
+                            DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+                            for (Address addr : addresses) {
                                 try {
-                                    Address[] rcptAddresses = getRecipients(mm);
-                                    if (rcptAddresses == null || rcptAddresses.length == 0)
-                                        throw new SendFailedException("No recipient addresses");
-                                    return Arrays.asList(rcptAddresses);
-                                } catch (MessagingException e) {
-                                    throw new SafeMessagingException(e);
+                                    Account acct = Provisioning.getInstance().getAccountByName(((InternetAddress) addr).getAddress());
+                                    if (acct != null) {
+                                        Mailbox target = MailboxManager.getInstance().getMailboxByAccount(acct);
+                                        target.addMessage(null, new ParsedMessage(mm, false), dopt, null);
+                                        successes.add(addr);
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace(System.out);
                                 }
                             }
-                        };
-                    }
-                };
-            }
-        });
+                            if (successes.isEmpty() && !isSendPartial()) {
+                                for (RollbackData rdata : rollbacks) {
+                                    if (rdata != null) {
+                                        rdata.rollback();
+                                    }
+                                }
+                            }
+                            return successes;
+                        }
+                    };
+                }
+            };
+        }
     }
 
     @Before
@@ -120,7 +188,7 @@ public class SendMsgTest {
     }
 
     @Test
-    public void sendFromDraft() throws Exception {
+    public void testSendFromDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
@@ -147,5 +215,31 @@ public class SendMsgTest {
             Assert.fail("draft message not deleted");
         } catch (NoSuchItemException nsie) {
         }
+    }
+
+    @Test
+    public void sendUpload() throws Exception {
+        Assert.assertTrue("using Zimbra MIME parser", ZMimeMessage.usingZimbraParser());
+
+        Account rcpt = Provisioning.getInstance().getAccountByName("rcpt@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcpt);
+
+        InputStream is = getClass().getResourceAsStream("bug-69862-invite.txt");
+        ParsedMessage pm = new ParsedMessage(ByteUtil.getContent(is, -1), false);
+        mbox.addMessage(null, pm, MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
+
+        is = getClass().getResourceAsStream("bug-69862-reply.txt");
+        FileUploadServlet.Upload up = FileUploadServlet.saveUpload(is, "lslib32.bin", "message/rfc822", rcpt.getId());
+
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addAttribute(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, true).addAttribute(MailConstants.A_NO_SAVE_TO_SENT, true);
+        request.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ATTACHMENT_ID, up.getId());
+        new SendMsg().handle(request, ServiceTestUtil.getRequestContext(rcpt));
+
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        Message msg = (Message) mbox.getItemList(null, MailItem.Type.MESSAGE).get(0);
+        MimeMessage mm = msg.getMimeMessage();
+        Assert.assertEquals("correct top-level MIME type", "multipart/alternative", new ZContentType(mm.getContentType()).getBaseType());
     }
 }

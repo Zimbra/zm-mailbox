@@ -34,6 +34,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
+import com.zimbra.cs.mime.handler.TextCalendarHandler;
 import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.store.MockStoreManager;
@@ -115,16 +116,26 @@ public final class MailboxTestUtil {
         Map<String, MockMimeTypeInfo> map = Maps.newHashMap();
 
         MockMimeTypeInfo plain = new MockMimeTypeInfo();
+        plain.setMimeTypes(MimeConstants.CT_TEXT_PLAIN);
         plain.setHandlerClass(TextPlainHandler.class.getName());
         plain.setIndexingEnabled(true);
         map.put(MimeConstants.CT_TEXT_PLAIN, plain);
 
         MockMimeTypeInfo html = new MockMimeTypeInfo();
+        html.setMimeTypes(MimeConstants.CT_TEXT_HTML);
         html.setHandlerClass(TextHtmlHandler.class.getName());
+        html.setFileExtensions("html", "htm");
         html.setIndexingEnabled(true);
         map.put(MimeConstants.CT_TEXT_HTML, html);
 
+        MockMimeTypeInfo calendar = new MockMimeTypeInfo();
+        calendar.setMimeTypes(MimeConstants.CT_TEXT_CALENDAR);
+        calendar.setHandlerClass(TextCalendarHandler.class.getName());
+        calendar.setIndexingEnabled(true);
+        map.put(MimeConstants.CT_TEXT_CALENDAR, calendar);
+
         MockMimeTypeInfo message = new MockMimeTypeInfo();
+        message.setMimeTypes(MimeConstants.CT_MESSAGE_RFC822);
         message.setHandlerClass(MessageRFC822Handler.class.getName());
         message.setIndexingEnabled(true);
         map.put(MimeConstants.CT_MESSAGE_RFC822, message);

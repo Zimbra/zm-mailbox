@@ -212,12 +212,12 @@ public final class SendMsg extends MailDocumentHandler {
 
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
             ItemId origMsgId, String replyType, String identityId, boolean noSaveToSent,
-            boolean needCalendarSentByFixup) throws ServiceException {
+            boolean needCalendarSentByFixup)
+    throws ServiceException {
 
         boolean isCalendarMessage = false;
         if (needCalendarSentByFixup) {
-            OutlookICalendarFixupMimeVisitor mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox);
-            mv.needFixup(true);
+            OutlookICalendarFixupMimeVisitor mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox).needFixup(true);
             try {
                 mv.accept(mm);
             } catch (MessagingException e) {
@@ -249,28 +249,32 @@ public final class SendMsg extends MailDocumentHandler {
         boolean anySystemMutators = MimeVisitor.anyMutatorsRegistered();
 
         Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
-        if (up == null)
+        if (up == null) {
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
+        }
         (mimeData.uploads = new ArrayList<Upload>(1)).add(up);
         try {
             // if we may need to mutate the message, we can't use the "updateHeaders" hack...
             if (anySystemMutators || needCalendarSentByFixup) {
                 MimeMessage mm = new ZMimeMessage(JMSession.getSession(), up.getInputStream());
-                if (anySystemMutators)
+                if (anySystemMutators) {
                     return mm;
+                }
 
                 OutlookICalendarFixupMimeVisitor.ICalendarModificationCallback callback = new OutlookICalendarFixupMimeVisitor.ICalendarModificationCallback();
-                MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(getRequestedAccount(zsc), getRequestedMailbox(zsc)).setCallback(callback);
+                MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(getRequestedAccount(zsc), getRequestedMailbox(zsc)).needFixup(true).setCallback(callback);
                 try {
                     mv.accept(mm);
                 } catch (MessagingException e) { }
-                if (callback.wouldCauseModification())
+                if (callback.wouldCauseModification()) {
                     return mm;
+                }
             }
 
             // ... but in general, for most installs this is safe
             return new ZMimeMessage(JMSession.getSession(), up.getInputStream()) {
-                @Override protected void updateHeaders() throws MessagingException {
+                @Override
+                protected void updateHeaders() throws MessagingException {
                     setHeader("MIME-Version", "1.0");
                     if (getMessageID() == null)
                         updateMessageID();
@@ -371,8 +375,16 @@ public final class SendMsg extends MailDocumentHandler {
 
         static class ICalendarModificationCallback implements MimeVisitor.ModificationCallback {
             private boolean mWouldModify;
-            public boolean wouldCauseModification()    { return mWouldModify; }
-            @Override public boolean onModification()  { mWouldModify = true; return false; }
+
+            public boolean wouldCauseModification() {
+                return mWouldModify;
+            }
+
+            @Override
+            public boolean onModification() {
+                mWouldModify = true;
+                return false;
+            }
         }
 
         OutlookICalendarFixupMimeVisitor(Account acct, Mailbox mbox) {
@@ -382,8 +394,14 @@ public final class SendMsg extends MailDocumentHandler {
             mDefaultCharset = (acct == null ? null : acct.getPrefMailDefaultCharset());
         }
 
-        public void needFixup(boolean needFixup) { this.needFixup = needFixup; }
-        public boolean isCalendarMessage() { return isCalendarMessage; }
+        public OutlookICalendarFixupMimeVisitor needFixup(boolean fixup) {
+            this.needFixup = fixup;
+            return this;
+        }
+
+        public boolean isCalendarMessage() {
+            return isCalendarMessage;
+        }
 
         @Override protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
             boolean modified = false;
