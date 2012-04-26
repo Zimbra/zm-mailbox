@@ -51,7 +51,6 @@ import com.google.common.collect.TreeMultimap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -99,6 +98,7 @@ public class RightManager {
     private Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();  
     private Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();  
     private Map<String, Help> sHelp = new TreeMap<String, Help>();  
+    private Map<String, UI> sUI = new TreeMap<String, UI>();  
     
     static private class CoreRightDefFiles {
         private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
@@ -230,12 +230,12 @@ public class RightManager {
         right.setDesc(eDesc.getText());
     }
     
-    private void parseHelp(Element eDesc, Right right) throws ServiceException {
+    private void parseHelp(Element eHelp, Right right) throws ServiceException {
         if (right.getHelp() != null) {
             throw ServiceException.PARSE_ERROR("multiple " + E_HELP, null);
         }
         
-        String helpName = eDesc.attributeValue(A_NAME);
+        String helpName = eHelp.attributeValue(A_NAME);
         if (helpName == null) {
             throw ServiceException.PARSE_ERROR("missing help name", null);
         }
@@ -251,11 +251,20 @@ public class RightManager {
     
     private void parseUI(Element eUI, Right right) throws ServiceException {
         if (right.getUI() != null) {
-            throw ServiceException.PARSE_ERROR("multiple " + E_UI, null);
+            throw ServiceException.PARSE_ERROR("multiple " + E_UI + " for right " + right.getName(), null);
         }
         
-        UI ui = new UI();
-        ui.setDesc(eUI.getText());
+        String uiName = eUI.attributeValue(A_NAME);
+        if (uiName == null) {
+            throw ServiceException.PARSE_ERROR("missing ui name", null);
+        }
+        
+        UI ui = sUI.get(uiName);
+        
+        if (ui == null) {
+            throw ServiceException.PARSE_ERROR("no such ui: " + uiName, null);
+        }
+        
         right.setUI(ui);
     }
     
@@ -466,6 +475,8 @@ public class RightManager {
                 loadRight(elem, file, allowPresetRight);
             } else if (elem.getName().equals(E_HELP)) {
                 loadHelp(elem, file);
+            } else if (elem.getName().equals(E_UI)) {
+                loadUI(elem, file);
             } else {
                 throw ServiceException.PARSE_ERROR("unknown element: " + elem.getName(), null);
             }
@@ -527,24 +538,43 @@ public class RightManager {
             }
         }
         
-        // make all required bits are set in hte help
+        // make all required bits are set in the help
         help.validate();
         
         sHelp.put(name, help);
     }
+    
+    private void loadUI(Element eUI, File file) throws ServiceException {
+        String name = eUI.attributeValue(A_NAME);
+        if (name == null) {
+            throw ServiceException.PARSE_ERROR("no name specified", null);
+        }
+        
+        checkName(name);
+        
+        UI ui = new UI(name);
+        
+        String desc = eUI.getText();
+        ui.setDesc(desc);
+        
+        // make all required bits are set in the ui
+        ui.validate();
+        
+        sUI.put(name, ui);
+    }
 
     private void checkName(String name) throws ServiceException {
         
-        // help name cannot be the same as any of the right names because name is the 
-        // key to the generated ZsMsgRights.properties file.
+        // help name and ui name cannot be the same as any of the right names 
+        // because name is the key to the generated ZsMsgRights.properties file.
         // 
-        // Though we currently don't generate helps in ZsMsgRights.properties, because  
+        // Though currently we don't generate helps/UIs in ZsMsgRights.properties, because  
         // all the formatting will be lost and it won't look good in admin console anyway.
         // Enforce uniqueness to keep the option open.
         // 
         if (sUserRights.containsKey(name) || sAdminRights.containsKey(name) ||
-                sHelp.containsKey(name)) {
-            throw ServiceException.PARSE_ERROR("right or help " + name + " is already defined", null);
+                sHelp.containsKey(name) || sUI.containsKey(name)) {
+            throw ServiceException.PARSE_ERROR("right or help or ui " + name + " is already defined", null);
         }
     }
     
@@ -724,9 +754,23 @@ public class RightManager {
         }
     }
     
-    private void genAdminDocs() throws ServiceException, IOException {
+    /**
+     * generates two files in the output directory
+     * 
+     * {right}-expanded.xml: the root combo right fully expanded
+     * {right}-ui.xml: all UI covered by the root combo right
+     * 
+     * @param outputDir
+     * @throws ServiceException
+     * @throws IOException
+     */
+    private void genAdminDocs(String outputDir) throws ServiceException, IOException {
+        if (!outputDir.endsWith("/")) {
+            outputDir = outputDir + "/";
+        }
+        
         List<AdminRight> rootRights = ImmutableList.of(
-                Admin.R_adminConsoleRights, Admin.R_domainAdminConsoleRights);
+                Admin.R_adminConsoleRights);
         
         for (AdminRight right : rootRights) {
             Multimap<UI, Right> uiMap = TreeMultimap.create();
@@ -739,7 +783,7 @@ public class RightManager {
             
             Element rightsRoot = document.addElement(E_ROOT);
             genAdminDocByRight(rightsRoot, right, uiMap);
-            writeXML("/Users/pshao/temp/" + right.getName() + ".xml", document);
+            writeXML(outputDir + right.getName() + "-expanded.xml", document);
             
             /*
              * output the UI XML.  This XML contains one entry for each UI, sorted by 
@@ -748,7 +792,7 @@ public class RightManager {
             document = DocumentHelper.createDocument();
             Element uiRoot = document.addElement(E_ROOT);
             genAdminDocByUI(uiRoot, uiMap);
-            writeXML("/Users/pshao/temp/" + right.getName() + "-ui" + ".xml", document);
+            writeXML(outputDir + right.getName() + "-ui.xml", document);
         }
         
     }
@@ -812,32 +856,36 @@ public class RightManager {
         
         static {
             sOptions.addOption("h", "help", false, 
-                    "display this  usage info");
+                    "display this usage info");
             sOptions.addOption("a", "action", true, 
                     "action, one of genRightConsts, genAdminRights, genUserRights, genMessagePrperties");
             sOptions.addOption("i", "input", true,
                     "rights definition xml input directory");
+            sOptions.addOption("o", "output", true,
+                    "output directory");
             sOptions.addOption("r", "regenerateFile", true, 
-                    "file file to regenerate");
+                    "file to regenerate");
             sOptions.addOption("t", "templateFile", true, 
                     "template file");
         }
         
         private enum Action {
-            genRightConsts(true, true),
-            genAdminRights(true, true),
-            genUserRights(true, true),
-            genDomainAdminSetAttrsRights(true, false),
-            genMessageProperties(true, true),
-            genAdminDocs(false, true),
-            validate(false, true);
+            genRightConsts(true, true, false),
+            genAdminRights(true, true, false),
+            genUserRights(true, true, false),
+            genDomainAdminSetAttrsRights(true, false, false),
+            genMessageProperties(true, true, false),
+            genAdminDocs(false, true, true),
+            validate(false, true, false);
             
             boolean regenFileRequred;
             boolean inputDirRequired;
+            boolean outputDirRequired;
             
-            private Action(boolean regenFileRequred, boolean inputDirRequired) {
+            private Action(boolean regenFileRequred, boolean inputDirRequired, boolean outputDirRequired) {
                 this.regenFileRequred = regenFileRequred;
                 this.inputDirRequired = inputDirRequired;
+                this.outputDirRequired = outputDirRequired;
             }
             
             private boolean regenFileRequred() {
@@ -846,6 +894,10 @@ public class RightManager {
             
             private boolean inputDirRequired() {
                 return inputDirRequired;
+            }
+            
+            private boolean outputDirRequired() {
+                return outputDirRequired;
             }
             
             private static Action fromString(String str) throws ServiceException {
@@ -973,7 +1025,15 @@ public class RightManager {
                 inputDir = cl.getOptionValue('i');
                 rm = RightManager.getInstance(inputDir, false);
             }
-             
+            
+            String outputDir = null;
+            if (action.outputDirRequired()) {
+                if (!cl.hasOption('o')) {
+                    usage("no output dir specified");
+                }
+                outputDir = cl.getOptionValue('o');
+            }
+            
             switch (action) {
                 case genRightConsts:
                     FileGenUtil.replaceJavaFile(regenFile, rm.genRightConsts());
@@ -992,7 +1052,8 @@ public class RightManager {
                     FileGenUtil.replaceFile(regenFile, rm.genMessageProperties());
                     break;
                 case genAdminDocs:
-                    rm.genAdminDocs();
+                    // zmjava com.zimbra.cs.account.accesscontrol.RightManager -a genAdminDocs -i /Users/pshao/p4/main/ZimbraServer/conf/rights -o /Users/pshao/temp
+                    rm.genAdminDocs(outputDir);
                     break;
                 case validate:
                     // do nothing, all we need is that new RightManager(inputDir) works,
