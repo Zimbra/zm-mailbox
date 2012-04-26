@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
@@ -46,12 +47,18 @@ import com.zimbra.cs.servlet.util.AuthUtil;
 public class UserServletUtil {
 
     public static void resolveItems(UserServletContext context) throws ServiceException {
+        if (context == null || context.params == null) {
+            return;
+        }
+
+        String dumpsterParam = (String)context.params.get(UserServlet.QP_DUMPSTER);
+        boolean fromDumpster = (dumpsterParam != null && !dumpsterParam.equals("0") && !dumpsterParam.equalsIgnoreCase("false"));
         for (UserServletContext.Item item : context.requestedItems) {
             try {
                 if (item.versioned)
-                    item.mailItem = context.targetMailbox.getItemRevision(context.opContext, item.id, MailItem.Type.UNKNOWN, item.ver);
+                    item.mailItem = context.targetMailbox.getItemRevision(context.opContext, item.id, MailItem.Type.UNKNOWN, item.ver, fromDumpster);
                 else
-                    item.mailItem = context.targetMailbox.getItemById(context.opContext, item.id, MailItem.Type.UNKNOWN);
+                    item.mailItem = context.targetMailbox.getItemById(context.opContext, item.id, MailItem.Type.UNKNOWN, fromDumpster);
             } catch (NoSuchItemException x) {
                 ZimbraLog.misc.info(x.getMessage());
             } catch (ServiceException x) {
@@ -93,9 +100,21 @@ public class UserServletUtil {
         }
 
         if (context.itemId != null) {
-            context.target = mbox.getItemById(context.opContext,
+            // fetch the 'fromDumpster' from the context
+            String dumpsterParam = (String)context.params.get(UserServlet.QP_DUMPSTER);
+            boolean fromDumpster = (dumpsterParam != null && !dumpsterParam.equals("0") && !dumpsterParam.equalsIgnoreCase("false"));
+            OperationContext opContext = null;
+            if (fromDumpster && context.isUsingAdminPrivileges() ) {
+                //should have the admin rights before to search dumpster 
+                opContext = new OperationContext(context.authToken); // use the authToken passed by invoker to generate a new one
+            } else {
+                opContext = context.opContext; // use the opContext generated from account
+            }
+
+            context.target = mbox.getItemById(opContext,
                                               context.itemId.getId(),
-                                              MailItem.Type.UNKNOWN);
+                                              MailItem.Type.UNKNOWN,
+                                              fromDumpster);
 
             context.itemPath = context.target.getPath();
             if (context.target instanceof Mountpoint || context.extraPath == null || context.extraPath.equals(""))

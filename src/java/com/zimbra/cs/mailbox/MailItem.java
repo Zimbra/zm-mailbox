@@ -804,7 +804,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  or is of a type that does not have a name (e.g. {@link Message}s,
      *  {@link Contact}s, etc.), this method returns <tt>null</tt>. */
     public String getPath() throws ServiceException {
-        String path = getFolder().getPath(), name = getName();
+        Folder folder = !inDumpster() ? getFolder() : getMailbox().getFolderById(Mailbox.ID_FOLDER_TRASH);
+        if (folder == null)
+            return null;
+
+        String path = folder.getPath(), name = getName();
         if (name == null || path == null)
             return null;
         return path + (path.endsWith("/") ? "" : "/") + name;

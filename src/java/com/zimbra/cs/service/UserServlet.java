@@ -203,6 +203,8 @@ public class UserServlet extends ZimbraServlet {
      */
     public static final String QP_MANIFEST = "manifest"; // selects whether server returns patch manifest or not
 
+    public static final String QP_DUMPSTER = "dumpster"; // whether search in dumpster
+
     /**
      * Used by {@link TarFormatter} to specify whether the <tt>.meta</tt>
      * files should be added to the tarball (<tt>meta=1</tt>) or not (<tt>meta=0</tt>).
