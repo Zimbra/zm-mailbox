@@ -133,7 +133,8 @@ public class ToXML {
             }
 
             // Never return password.
-            if (name.equalsIgnoreCase(Provisioning.A_userPassword)) {
+            if (name.equalsIgnoreCase(Provisioning.A_userPassword) || 
+                name.equalsIgnoreCase(Provisioning.A_zimbraUCPassword)) {
                 value = "VALUE-BLOCKED";
             }
             
