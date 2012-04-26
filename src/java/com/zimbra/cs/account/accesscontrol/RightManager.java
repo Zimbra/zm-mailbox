@@ -176,16 +176,14 @@ public class RightManager {
         while (!yetToProcess.isEmpty()) { 
             File file = yetToProcess.get(0);
             
-            if (!file.getPath().endsWith(".xml")) {
-                ZimbraLog.acl.warn("while loading rights, ignoring none .xml file: " + file);
+            if (!file.getPath().endsWith(".xml") || !file.isFile()) {
+                ZimbraLog.acl.warn("while loading rights, ignoring none .xml file or sub folder: " + file);
                 yetToProcess.remove(file);
                 continue;
             }
-            if (!file.isFile()) {
-                ZimbraLog.acl.warn("while loading rights, ignored non-file: " + file);
-            }
+
             try {
-                boolean done = loadSystemRights(file, processed);
+                boolean done = loadSystemRights(file, processed, files);
                 if (done) {
                     processed.add(file);
                     yetToProcess.remove(file);
@@ -432,14 +430,15 @@ public class RightManager {
         return cb;
     }
     
-    private boolean loadSystemRights(File file, List<File> processedFiles) 
+    private boolean loadSystemRights(File file, List<File> processedFiles, File[] allFiles) 
     throws DocumentException, ServiceException {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
         Element root = doc.getRootElement();
-        if (!root.getName().equals(E_RIGHTS))
+        if (!root.getName().equals(E_RIGHTS)) {
             throw ServiceException.PARSE_ERROR("root tag is not " + E_RIGHTS, null);
-
+        }
+        
         // preset rights can only be defined in our core right definition file
         boolean allowPresetRight = CoreRightDefFiles.isCoreRightFile(file);
         
@@ -449,13 +448,27 @@ public class RightManager {
             
             // see if all include files are processed already
             if (elem.getName().equals(E_INCLUDE)) {
-                // all <include>'s have to appear <right>'s
-                if (seenRight)
+                // all <include>'s have to appear before <right>'s
+                if (seenRight) {
                     throw ServiceException.PARSE_ERROR(
                             E_INCLUDE + " cannot appear after any right definition: " + 
                             elem.getName(), null);
+                }
                 
                 String includeFile = elem.attributeValue(A_FILE);
+                
+                // make sure the include file exists
+                boolean foundFile = false;
+                for (File f : allFiles) {
+                    if (f.getName().equals(includeFile)) {
+                        foundFile = true;
+                        break;
+                    }
+                }
+                if (!foundFile) {
+                    throw ServiceException.PARSE_ERROR("cannot find include file " + includeFile, null);
+                }
+                
                 boolean processed = false;
                 for (File f : processedFiles) {
                     if (f.getName().equals(includeFile)) {
@@ -463,10 +476,11 @@ public class RightManager {
                         break;
                     }
                 }
-                if (!processed)
+                if (!processed) {
                     return false;
-                else
+                } else {
                     continue;
+                }
             } else if (elem.getName().equals(E_RIGHT)) {
                 if (!seenRight) {
                     seenRight = true;
