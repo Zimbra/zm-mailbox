@@ -2262,7 +2262,7 @@ e.g.
 
 <CountObjectsRequest type="{count-objects-type}">
     [<domain by="{domain-by}">...</domain>]
-    [<UCService by="{UCService-by}">...</UCService>]
+    [<ucservice by="{ucservice-by}">...</ucservice>]
 </CountObjectsRequest>
 
 {count-objects-type} = userAccount | 
@@ -2283,7 +2283,7 @@ Note: For account/alias/dl, if a <domain> is specified, only entries on the
       specified domain are counted.  If no domain is specified, entries on 
       all domains are counted.
       
-      For accountOnUCService/cosOnUCService/domainOnUCService, <UCService> is required, 
+      For accountOnUCService/cosOnUCService/domainOnUCService, <ucservice> is required, 
       and <domain> cannot be specified.
 
 ---------------------------------------------------------------------------
