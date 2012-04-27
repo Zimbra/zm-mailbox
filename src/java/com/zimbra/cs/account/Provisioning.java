@@ -423,18 +423,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
         Cos cos = (Cos) acct.getCachedData(EntryCacheDataKey.ACCOUNT_COS);
         if (cos == null) {
             String id = acct.getCOSId();
-                if (id != null) cos = get(Key.CosBy.id, id);
+                if (id != null) {
+                    cos = get(Key.CosBy.id, id);
+                }
                 if (cos == null) {
                     Domain domain = getDomain(acct);
-                    String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                    if (domainCosId != null) cos = get(Key.CosBy.id, domainCosId);
+                    String domainCosId = domain != null ? acct.isIsExternalVirtualAccount() ?
+                            domain.getDomainDefaultExternalUserCOSId() : domain.getDomainDefaultCOSId() : null;
+                    if (domainCosId != null) {
+                        cos = get(Key.CosBy.id, domainCosId);
+                    }
                 }
                 if (cos == null) {
-                    cos = get(Key.CosBy.name,
-                              acct.isIsExternalVirtualAccount() ?
-                                      Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME);
+                    cos = get(Key.CosBy.name, acct.isIsExternalVirtualAccount() ?
+                            Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME);
                 }
-                if (cos != null) acct.setCachedData(EntryCacheDataKey.ACCOUNT_COS, cos);
+                if (cos != null) {
+                    acct.setCachedData(EntryCacheDataKey.ACCOUNT_COS, cos);
+                }
         }
         return cos;
     }

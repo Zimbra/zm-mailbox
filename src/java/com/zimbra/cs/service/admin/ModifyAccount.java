@@ -24,6 +24,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key;
@@ -136,8 +137,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         if (!(object instanceof String))
             throw ServiceException.PERM_DENIED("can not modify " +  attrName + "(single valued attribute)");
 
-        String attrNewValue = (String)object;
-        return attrNewValue;
+        return (String) object;
 	}
 
     private void checkQuota(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
@@ -164,15 +164,21 @@ public class ModifyAccount extends AdminDocumentHandler {
     
     private void checkCos(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
         String newCosId = getStringAttrNewValue(Provisioning.A_zimbraCOSId, attrs);
-        if (newCosId == null)
+        if (newCosId == null) {
             return;  // not changing it
+        }
         
         Provisioning prov = Provisioning.getInstance();
         if (newCosId.equals("")) {
             // they are unsetting it, so check the domain
-            newCosId = prov.getDomain(account).getAttr(Provisioning.A_zimbraDomainDefaultCOSId);
-            if (newCosId == null)
-                return;  // no domain cos, use the default COS, which is available to all
+            Domain domain = prov.getDomain(account);
+            if (domain != null) {
+                newCosId = account.isIsExternalVirtualAccount() ?
+                        domain.getDomainDefaultExternalUserCOSId() : domain.getDomainDefaultCOSId();
+                if (newCosId == null) {
+                    return;  // no domain cos, use the default COS, which is available to all
+                }
+            }
         } 
 
         Cos cos = prov.get(Key.CosBy.id, newCosId);
