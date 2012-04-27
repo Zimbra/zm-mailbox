@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -38,6 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -223,6 +227,13 @@ public class SendMsgTest {
 
         Account rcpt = Provisioning.getInstance().getAccountByName("rcpt@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcpt);
+        
+        // Configure test timezones.ics file.
+        File tzFile = File.createTempFile("timezones-", ".ics");
+        BufferedWriter writer= new BufferedWriter(new FileWriter(tzFile));
+        writer.write("BEGIN:VCALENDAR\r\nEND:VCALENDAR");
+        writer.close();
+        LC.timezone_file.setDefault(tzFile.getAbsolutePath());
 
         InputStream is = getClass().getResourceAsStream("bug-69862-invite.txt");
         ParsedMessage pm = new ParsedMessage(ByteUtil.getContent(is, -1), false);
