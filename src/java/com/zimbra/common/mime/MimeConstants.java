@@ -29,21 +29,26 @@ public class MimeConstants {
     public static final String CT_TEXT_XML = "text/xml";
     public static final String CT_TEXT_XML_LEGACY = "application/xml";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
-    public static final String CT_APPLICATION_XHTML = "application/xhtml+xml";
-    public static final String CT_APPLICATION_JSON = "application/json";
-    public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_APPLICATION_BINARY = "application/binary";
+    public static final String CT_APPLICATION_JSON = "application/json";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
-    public static final String CT_APPLICATION_TNEF = "application/ms-tnef";
+    public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_APPLICATION_PDF = "application/pdf";
+    public static final String CT_APPLICATION_PGP = "application/pgp-encrypted";
     public static final String CT_APPLICATION_SHOCKWAVE_FLASH = "application/x-shockwave-flash";
+    public static final String CT_APPLICATION_SMIME = "application/pkcs7-mime";
+    public static final String CT_APPLICATION_TNEF = "application/ms-tnef";
+    public static final String CT_APPLICATION_XHTML = "application/xhtml+xml";
+    public static final String CT_APPLICATION_ZIMBRA_DOC = "application/x-zimbra-doc";
+    public static final String CT_APPLICATION_ZIMBRA_SLIDES = "application/x-zimbra-slides";
+    public static final String CT_APPLICATION_ZIMBRA_SPREADSHEET = "application/x-zimbra-xls";
     public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
     public static final String CT_MULTIPART_DIGEST = "multipart/digest";
+    public static final String CT_MULTIPART_ENCRYPTED = "multipart/encrypted";
     public static final String CT_MULTIPART_MIXED = "multipart/mixed";
     public static final String CT_MULTIPART_REPORT = "multipart/report";
     public static final String CT_MULTIPART_RELATED = "multipart/related";
     public static final String CT_MULTIPART_SIGNED = "multipart/signed";
-    public static final String CT_MULTIPART_ENCRYPTED = "multipart/encrypted";
     public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
     public static final String CT_XML_ZIMBRA_DL_SUBSCRIPTION = "xml/x-zimbra-dl-subscription";
     public static final String CT_MULTIPART_PREFIX = "multipart/";
@@ -59,9 +64,6 @@ public class MimeConstants {
     public static final String CT_TEXT_WILD = "text/.*";
     public static final String CT_XML_WILD = "xml/.*";
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
-    public static final String CT_APPLICATION_ZIMBRA_DOC = "application/x-zimbra-doc";
-    public static final String CT_APPLICATION_ZIMBRA_SLIDES = "application/x-zimbra-slides";
-    public static final String CT_APPLICATION_ZIMBRA_SPREADSHEET = "application/x-zimbra-xls";
 
     // encodings
     public static final String ET_7BIT = "7bit";
@@ -84,10 +86,10 @@ public class MimeConstants {
     public static final String P_CHARSET_SHIFT_JIS = "shift_jis";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
 
-    public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET =
-        new ImmutableSet.Builder<String>().add(CT_APPLICATION_ZIMBRA_DOC,
-                                               CT_APPLICATION_ZIMBRA_SLIDES,
-                                               CT_APPLICATION_ZIMBRA_SPREADSHEET).build();
+    public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = ImmutableSet.of(
+            CT_APPLICATION_ZIMBRA_DOC, CT_APPLICATION_ZIMBRA_SLIDES, CT_APPLICATION_ZIMBRA_SPREADSHEET
+    );
+
     public static boolean isZimbraDocument(String contentType) {
         return ZIMBRA_DOC_CT_SET.contains(contentType);
     }

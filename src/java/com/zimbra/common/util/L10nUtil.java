@@ -81,7 +81,7 @@ public class L10nUtil {
         calendarResourceConflictScheduledBy,
 
         calendarUserReplyPermissionDenied,
-        
+
         // Calendar Forward Notifications
         calendarForwardNotificationSubject,
         calendarForwardNotificationBody,
@@ -105,6 +105,9 @@ public class L10nUtil {
 
         // carddav messages
         carddavAddressbookDescription,
+
+        // default fragment for encrypted mail
+        encryptedMessageFragment,
 
         // share notification
         mail,
@@ -316,14 +319,16 @@ public class L10nUtil {
     public static String getMessage(String basename, String key, Locale lc, Object... args) {
         ResourceBundle rb;
         try {
-            if (lc == null)
+            if (lc == null) {
                 lc = Locale.getDefault();
+            }
             rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
             String fmt = rb.getString(key);
-            if (fmt != null && args != null && args.length > 0)
+            if (fmt != null && args != null && args.length > 0) {
                 return MessageFormat.format(fmt, args);
-            else
+            } else {
                 return fmt;
+            }
         } catch (MissingResourceException e) {
             ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " +
                     "(locale=" + key + ")", e);
@@ -349,12 +354,13 @@ public class L10nUtil {
     public static Set<String> getBundleKeySet(String basename, Locale lc) {
         ResourceBundle rb;
         try {
-            if (lc == null)
+            if (lc == null) {
                 lc = Locale.getDefault();
+            }
             rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
             Set<String> result = new HashSet<String>();
             Enumeration<String> keysEnum =  rb.getKeys();
-            while(keysEnum.hasMoreElements()) {
+            while (keysEnum.hasMoreElements()) {
                 result.add(keysEnum.nextElement());
             }
             return result;
@@ -380,8 +386,9 @@ public class L10nUtil {
         for (File file : dir.listFiles(new MatchingPropertiesFilter(new String[] { MSG_FILE_BASENAME }))) {
             Locale locale = getLocaleForPropertiesFile(file, false);
             if (locale != null) {
-                for (MsgKey key : msgkeys)
+                for (MsgKey key : msgkeys) {
                     messages.add(getMessage(key, locale));
+                }
             }
         }
         messages.remove(null);
@@ -402,11 +409,13 @@ public class L10nUtil {
 
         @Override
         public boolean accept(File dir, String name) {
-            if (!name.endsWith(".properties"))
+            if (!name.endsWith(".properties")) {
                 return false;
+            }
             for (String prefix : prefixes) {
-                if (name.startsWith(prefix))
+                if (name.startsWith(prefix)) {
                     return true;
+                }
             }
             return false;
         }
@@ -418,16 +427,19 @@ public class L10nUtil {
     static Locale getLocaleForPropertiesFile(File file, boolean debug) {
         String[] localeParts = file.getName().split("\\.")[0].split("_");
         if (localeParts.length == 2) {
-            if (debug)
+            if (debug) {
                 ZimbraLog.misc.debug("        found locale: " + localeParts[1]);
+            }
             return new Locale(localeParts[1]);
         } else if (localeParts.length == 3) {
-            if (debug)
+            if (debug) {
                 ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2]);
+            }
             return new Locale(localeParts[1], localeParts[2]);
         } else if (localeParts.length == 4) {
-            if (debug)
+            if (debug) {
                 ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2] + " " + localeParts[3]);
+            }
             return new Locale(localeParts[1], localeParts[2], localeParts[3]);
         }
         return null;
@@ -446,14 +458,16 @@ public class L10nUtil {
                 lc = sLocaleMap.get(name);
                 if (lc == null) {
                     String parts[] = name.indexOf('_') != -1 ? name.split("_") : name.split("-");
-                    if (parts.length == 1)
+                    if (parts.length == 1) {
                         lc = new Locale(parts[0]);
-                    else if (parts.length == 2)
+                    } else if (parts.length == 2) {
                         lc = new Locale(parts[0], parts[1]);
-                    else if (parts.length >= 3)
+                    } else if (parts.length >= 3) {
                         lc = new Locale(parts[0], parts[1], parts[2]);
-                    if (lc != null)
+                    }
+                    if (lc != null) {
                         sLocaleMap.put(name, lc);
+                    }
                 }
             }
         }
