@@ -177,7 +177,7 @@ public class TestDelegatedDL extends SoapTest {
     private static Group createGroupAndAddOwner(String groupName, 
             Multimap<String, String> attrs, String ownerName) 
     throws Exception {
-        boolean dynamic = true;
+        boolean dynamic = false;
         
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
@@ -1599,10 +1599,10 @@ public class TestDelegatedDL extends SoapTest {
      * NO_SUCH_DISTRIBUTION_LIST exception.
      */
     @Test
-    @Bug(bug=72482)
+    @Bug(bug={72482, 73460})
     public void getDistributionListMembersWithGSA() throws Exception {
         // setup GAL sync account
-        GalTestUtil.enableGalSyncAccount(prov, domain.getName());
+        GalTestUtil.enableGalSyncAccount(prov, domain.getName(), "galsync1");
         
         String GROUP_NAME = getAddress(genGroupNameLocalPart());
 
@@ -1614,6 +1614,7 @@ public class TestDelegatedDL extends SoapTest {
         Account memberAcct1 = provUtil.createAccount(genAcctNameLocalPart("member1"), domain);
         Account memberAcct2 = provUtil.createAccount(genAcctNameLocalPart("member2"), domain);
         Account memberAcct3 = provUtil.createAccount(genAcctNameLocalPart("member3"), domain);
+        Account memberAcct4 = provUtil.createAccount(genAcctNameLocalPart("member4"), domain);
         
         prov.addGroupMembers(group, new String[]{
                 memberAcct3.getName(), memberAcct2.getName(), memberAcct1.getName()});
@@ -1660,6 +1661,50 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
         
+        /*
+         * re-sync the GSA, so now non-owner/non member can also see the group.
+         * Too much trouble re-sync the GSA, just disable and enable again.
+         */
+        GalTestUtil.disableGalSyncAccount(prov, domain.getName());
+        GalTestUtil.enableGalSyncAccount(prov, domain.getName(), "galsync2");
+        
+        // now non-owner/non-member can also see the group
+        transport = authUser(nonMemberAcct.getName());
+        resp = invokeJaxb(transport, req); 
+        members = resp.getDlMembers();
+        //make sure members are returned sorted
+        Verify.verifyEquals(
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                members);
+        
+        // add a member
+        prov.addGroupMembers(group, new String[]{memberAcct4.getName()});
+        
+        // owner can see the new member
+        transport = authUser(ownerAcct.getName());
+        resp = invokeJaxb(transport, req); 
+        members = resp.getDlMembers();
+        Verify.verifyEquals(
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName(), memberAcct4.getName()), 
+                members);
+        
+        // member can see the new member
+        transport = authUser(memberAcct1.getName());
+        resp = invokeJaxb(transport, req); 
+        members = resp.getDlMembers();
+        Verify.verifyEquals(
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName(), memberAcct4.getName()), 
+                members);
+        
+        // non-owner, non-member cannot see the new member yet, becasuse the change has not 
+        // yet synced to the GSA.
+        transport = authUser(nonMemberAcct.getName());
+        resp = invokeJaxb(transport, req); 
+        members = resp.getDlMembers();
+        //make sure members are returned sorted
+        Verify.verifyEquals(
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                members);
         
         GalTestUtil.disableGalSyncAccount(prov, domain.getName());
         
@@ -1667,6 +1712,7 @@ public class TestDelegatedDL extends SoapTest {
         provUtil.deleteAccount(memberAcct1);
         provUtil.deleteAccount(memberAcct2);
         provUtil.deleteAccount(memberAcct3); 
+        provUtil.deleteAccount(memberAcct4); 
         provUtil.deleteAccount(nonMemberAcct);
         provUtil.deleteGroup(group);
     }

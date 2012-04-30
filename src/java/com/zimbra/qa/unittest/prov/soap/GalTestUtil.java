@@ -47,12 +47,25 @@ public class GalTestUtil {
         domain.unsetGalAccountId();
     }
 
+    
     public static void enableGalSyncAccount(Provisioning prov, String domainName) 
     throws Exception {
-        GalTestUtil.enableGalSyncAccount(prov, domainName, GSAType.zimbra);
+        enableGalSyncAccount(prov, domainName, (String)null);
+    }
+    
+    public static void enableGalSyncAccount(Provisioning prov, String domainName, 
+            String galSyncAcctLocalpart) 
+    throws Exception {
+        enableGalSyncAccount(prov, domainName, galSyncAcctLocalpart, GSAType.zimbra);
+    }
+    
+    public static void enableGalSyncAccount(Provisioning prov, String domainName, GSAType type) 
+    throws Exception {
+        enableGalSyncAccount(prov, domainName, (String)null, type);
     }
 
-    public static void enableGalSyncAccount(Provisioning prov, String domainName, GSAType type) 
+    public static void enableGalSyncAccount(Provisioning prov, String domainName, 
+            String galSyncAcctLocalpart, GSAType type) 
     throws Exception {
         Domain domain = prov.get(Key.DomainBy.name, domainName);
         String[] galSyncAcctIds = domain.getGalAccountId();
@@ -60,8 +73,11 @@ public class GalTestUtil {
             // already enabled
             return;
         } else {
+            String localpart = galSyncAcctLocalpart == null ? 
+                    GAL_SYNC_ACCOUNT_NAME :
+                    galSyncAcctLocalpart;
             GalTestUtil.createAndSyncGalSyncAccount(
-                    TestUtil.getAddress(GAL_SYNC_ACCOUNT_NAME, domainName), 
+                    TestUtil.getAddress(localpart, domainName), 
                     domainName, type);
         }
     

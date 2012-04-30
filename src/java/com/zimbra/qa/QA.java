@@ -7,6 +7,6 @@ public class QA {
     
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Bug {
-        int bug();
+        int[] bug();
     }
 }
