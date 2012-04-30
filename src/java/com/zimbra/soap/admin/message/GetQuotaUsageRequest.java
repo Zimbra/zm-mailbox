@@ -42,6 +42,14 @@ public class GetQuotaUsageRequest {
     private String domain;
 
     /**
+     * @zm-api-field-tag all-servers
+     * @zm-api-field-description whether to fetch quota usage for all domain accounts from across all mailbox servers,
+     *   default is false, applicable when domain attribute is specified
+     */
+    @XmlAttribute(name=AdminConstants.A_ALL_SERVERS, required=false)
+    private ZmBoolean allServers;
+
+    /**
      * @zm-api-field-description Limit - the number of accounts to return (0 is default and means all)
      */
     @XmlAttribute(name=AdminConstants.A_LIMIT, required=false)
@@ -76,13 +84,13 @@ public class GetQuotaUsageRequest {
     private ZmBoolean refresh;
 
     public GetQuotaUsageRequest() {
-        this((String) null, (Integer) null, (Integer) null,
-                (String) null, (Boolean) null, (Boolean) null);
+        this(null, null, null, null, null, null, null);
     }
 
-    public GetQuotaUsageRequest(String domain, Integer limit, Integer offset,
+    public GetQuotaUsageRequest(String domain, Boolean allServers, Integer limit, Integer offset,
             String sortBy, Boolean sortAscending, Boolean refresh) {
         this.domain = domain;
+        this.allServers = ZmBoolean.fromBool(allServers);
         this.limit = limit;
         this.offset = offset;
         this.sortBy = sortBy;
@@ -91,6 +99,7 @@ public class GetQuotaUsageRequest {
     }
 
     public String getDomain() { return domain; }
+    public Boolean isAllServers() { return ZmBoolean.toBool(allServers); }
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
     public String getSortBy() { return sortBy; }
