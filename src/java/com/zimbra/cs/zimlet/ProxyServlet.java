@@ -36,8 +36,10 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentDisposition;
@@ -162,6 +164,16 @@ public class ProxyServlet extends ZimbraServlet {
         doProxy(req, resp);
     }
 
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        doProxy(req, resp);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        doProxy(req, resp);
+    }
+
     protected boolean isAdminRequest(HttpServletRequest req) {
         return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
     }
@@ -223,13 +235,20 @@ public class ProxyServlet extends ZimbraServlet {
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
             HttpProxyUtil.configureProxy(client);
             String reqMethod = req.getMethod();
-            if (reqMethod.equalsIgnoreCase("GET"))
+            if (reqMethod.equalsIgnoreCase("GET")) {
                 method = new GetMethod(target);
-            else if (reqMethod.equalsIgnoreCase("POST")) {
+            } else if (reqMethod.equalsIgnoreCase("POST")) {
                 PostMethod post = new PostMethod(target);
                 if (body != null)
                     post.setRequestEntity(new ByteArrayRequestEntity(body, req.getContentType()));
                 method = post;
+            } else if (reqMethod.equalsIgnoreCase("PUT")) {
+                PutMethod put = new PutMethod(target);
+                if (body != null)
+                    put.setRequestEntity(new ByteArrayRequestEntity(body, req.getContentType()));
+                method = put;
+            } else if (reqMethod.equalsIgnoreCase("DELETE")) {
+                method = new DeleteMethod(target);
             } else {
                 ZimbraLog.zimlet.info("unsupported request method: " + reqMethod);
                 resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
