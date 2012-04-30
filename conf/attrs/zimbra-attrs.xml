@@ -862,6 +862,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="143" name="zimbraFeatureFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>filter prefs enabled</desc>
 </attr>
 
