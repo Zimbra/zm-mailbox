@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.dom4j.DocumentFactory;
@@ -890,9 +891,15 @@ public abstract class Element implements Cloneable {
                     return mTarget.toString();
             }
 
-            Element asElement() {
+            /**
+             * Converts to an equivalent Element.  Supplying parent information ensures namespaces are handled
+             * correctly - with a null parent, toW3cDom would render the pair as
+             *     {@code <a n="key1" xmlns="">value</a>} instead of {@code <a n="key1">value1</a>}
+             */
+            Element asElement(Element parent) {
                 Element elt = new JSONElement(XMLElement.E_ATTRIBUTE).addAttribute(XMLElement.A_ATTR_NAME, mTarget.mName);
                 elt.mAttributes.putAll(mTarget.mAttributes);
+                elt.mParent = parent;
                 return elt;
             }
         }
@@ -1083,10 +1090,11 @@ public abstract class Element implements Cloneable {
                 if ((name == null || name.equals(XMLElement.E_ATTRIBUTE)) && key.equals(E_ATTRS) && obj instanceof JSONElement) {
                     for (Object attr : ((Element) obj).mAttributes.values()) {
                         if (attr instanceof JSONKeyValuePair)
-                            list.add(((JSONKeyValuePair) attr).asElement());
+                            list.add(((JSONKeyValuePair) attr).asElement(this));
                         else
-                            for (JSONKeyValuePair kvp : (List<JSONKeyValuePair>) attr)
-                                list.add(kvp.asElement());
+                            for (JSONKeyValuePair kvp : (List<JSONKeyValuePair>) attr) {
+                                list.add(kvp.asElement(this));
+                            }
                     }
                 } else if (name == null || name.equals(key)) {
                     if (obj instanceof Element)
