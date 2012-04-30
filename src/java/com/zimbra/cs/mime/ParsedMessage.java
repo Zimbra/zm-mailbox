@@ -624,7 +624,12 @@ public final class ParsedMessage {
         } catch (ServiceException e) {
             LOG.warn("Message analysis failed when getting fragment; fragment is: %s", fragment, e);
         }
-        return encrypted && fragment.isEmpty() ? L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment, lc) : fragment;
+
+        if (encrypted && fragment.isEmpty()) {
+            return Strings.nullToEmpty(L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment, lc));
+        } else {
+            return fragment;
+        }
     }
 
     /** Returns the message ID, or <tt>null</tt> if the message id cannot be

@@ -25,6 +25,7 @@ import org.junit.Test;
 import com.google.common.io.ByteStreams;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.IndexDocument;
@@ -135,14 +136,18 @@ public final class ParsedMessageTest {
 
     @Test
     public void encryptedFragment() throws Exception {
-        String messageWasEncrypted = L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment);
+        String msgWasEncrypted = L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment);
+        if (msgWasEncrypted == null) {
+            ZimbraLog.misc.error("'encryptedMessageFragment' key missing from ZsMsg.properties");
+            msgWasEncrypted = "";
+        }
 
         byte[] raw = ByteStreams.toByteArray(getClass().getResourceAsStream("smime-encrypted.txt"));
         ParsedMessage pm = new ParsedMessage(raw, false);
-        Assert.assertEquals("encrypted-message fragment", messageWasEncrypted, pm.getFragment(null));
+        Assert.assertEquals("encrypted-message fragment", msgWasEncrypted, pm.getFragment(null));
 
         raw = ByteStreams.toByteArray(getClass().getResourceAsStream("smime-signed.txt"));
         pm = new ParsedMessage(raw, false);
-        Assert.assertFalse("normal message fragment", messageWasEncrypted.equals(pm.getFragment(null)));
+        Assert.assertFalse("normal message fragment", pm.getFragment(null).equals(msgWasEncrypted));
     }
 }
