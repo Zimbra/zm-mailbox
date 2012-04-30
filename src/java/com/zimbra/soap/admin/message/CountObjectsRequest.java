@@ -42,19 +42,19 @@ public class CountObjectsRequest {
     /**
      * @zm-api-field-description Object type
      */
-    @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
+    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private CountObjectsType type;
 
     /**
      * @zm-api-field-description Domain
      */
-    @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
+    @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=false)
     private DomainSelector domain;
     
     /**
      * @zm-api-field-description UCService
      */
-    @XmlElement(name=AdminConstants.E_UC_SERVICE, required=false)
+    @XmlElement(name=AdminConstants.E_UC_SERVICE /* ucservice */, required=false)
     private UCServiceSelector usService;
 
     /**
@@ -93,5 +93,13 @@ public class CountObjectsRequest {
 
     public DomainSelector getDomain() {
         return domain;
+    }
+
+    public UCServiceSelector getUsService() {
+        return usService;
+    }
+
+    public void setUsService(UCServiceSelector usService) {
+        this.usService = usService;
     }
 }

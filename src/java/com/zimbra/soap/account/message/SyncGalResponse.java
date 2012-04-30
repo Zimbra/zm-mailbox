@@ -42,20 +42,21 @@ import com.zimbra.soap.type.ZmBoolean;
 public class SyncGalResponse {
 
     /**
+     * @zm-api-field-tag more-flag
      * @zm-api-field-description Flags whether there are more results
      */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
     /**
-     * @zm-api-field-description new-token
+     * @zm-api-field-tag new-token
      * @zm-api-field-description New synchronization token
      */
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
     
     /**
-     * @zm-api-field-description galDefinitionLastModified
+     * @zm-api-field-tag galDefinitionLastModified
      * @zm-api-field-description galDefinitionLastModified is the time at which the GAL definition is last modified.
      * This is returned if the sync does not happen using GAL sync account.
      */

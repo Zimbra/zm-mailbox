@@ -15,12 +15,15 @@
 package com.zimbra.soap.json.jackson;
 
 import java.util.List;
+
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.introspect.AnnotatedMember;
 import org.codehaus.jackson.map.introspect.BasicBeanDescription;
 import org.codehaus.jackson.map.ser.BeanPropertyWriter;
+import org.codehaus.jackson.map.ser.BeanSerializer;
 import org.codehaus.jackson.map.ser.BeanSerializerModifier;
+import org.codehaus.jackson.map.JsonSerializer;
 
 /**
  * We need a {@link BeanSerializerModifier} to replace default <code>BeanSerializer</code>
@@ -55,4 +58,20 @@ public class ZimbraBeanSerializerModifier extends BeanSerializerModifier
         }
         return beanProperties;
     }
+
+    @Override
+    public JsonSerializer<?> modifySerializer(SerializationConfig config,
+            BasicBeanDescription beanDesc, JsonSerializer<?> serializer)
+    {
+        /* First things first: we can only handle real BeanSerializers; question
+         * is, what to do if it's not one: throw exception or bail out?
+         * For now let's do latter.
+         */
+        if (!(serializer instanceof BeanSerializer)) {
+            return serializer;
+        }
+        return new ZimbraBeanSerializer((BeanSerializer) serializer);
+    }
+
+
 }

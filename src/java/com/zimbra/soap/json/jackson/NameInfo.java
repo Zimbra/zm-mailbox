@@ -28,6 +28,7 @@ import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.introspect.AnnotatedMember;
 import com.google.common.collect.Maps;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * Used to store field name information to be used in Zimbra-style JSON related to a JAXB object field.
@@ -41,6 +42,7 @@ public class NameInfo {
     private QName wrapperName = null;
     private QName wrappedName = null;
     private Map <Class<?>,QName> wrappedNameMap = null;
+    private boolean treatAsUniqueElement = false;
 
     public NameInfo(AnnotationIntrospector ai, AnnotatedMember prop, String defaultWrappedName) {
         JsonSerialize jsonSer = prop.getAnnotation(JsonSerialize.class);
@@ -62,6 +64,10 @@ public class NameInfo {
     }
 
     private void setWrappedInfo(AnnotationIntrospector ai, AnnotatedMember prop, String defaultWrappedName) {
+        ZimbraUniqueElement uniqueElemAnnot = prop.getAnnotation(ZimbraUniqueElement.class);
+        if (uniqueElemAnnot != null) {
+            treatAsUniqueElement = uniqueElemAnnot.value();
+        }
         XmlElement elemAnnot = prop.getAnnotation(XmlElement.class);
         if (elemAnnot != null) {
             wrappedName = new QName(elemAnnot.namespace(), elemAnnot.name());
@@ -106,6 +112,10 @@ public class NameInfo {
 
     public QName getWrappedName() {
         return wrappedName;
+    }
+
+    public boolean isTreatAsUniqueElement() {
+        return treatAsUniqueElement;
     }
 
     public Map <Class<?>,QName> getWrappedNameMap() {
