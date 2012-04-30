@@ -677,6 +677,10 @@ abstract class ServersVar extends ProxyConfVar {
                 || mode.equalsIgnoreCase(Provisioning.MailMode.mixed
                         .toString())
                 || mode.equalsIgnoreCase(Provisioning.MailMode.both
+                        .toString())
+                || mode.equalsIgnoreCase(Provisioning.MailMode.redirect
+                        .toString())
+                || mode.equalsIgnoreCase(Provisioning.MailMode.https
                         .toString())) {
             return true;
         } else {
