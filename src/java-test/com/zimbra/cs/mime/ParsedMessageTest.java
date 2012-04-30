@@ -22,6 +22,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.io.ByteStreams;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -130,4 +132,17 @@ public final class ParsedMessageTest {
         Assert.assertEquals("[NORMALIZE] " + description, expected, ParsedMessage.normalize(raw));
     }
 
+
+    @Test
+    public void encryptedFragment() throws Exception {
+        String messageWasEncrypted = L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment);
+
+        byte[] raw = ByteStreams.toByteArray(getClass().getResourceAsStream("smime-encrypted.txt"));
+        ParsedMessage pm = new ParsedMessage(raw, false);
+        Assert.assertEquals("encrypted-message fragment", messageWasEncrypted, pm.getFragment(null));
+
+        raw = ByteStreams.toByteArray(getClass().getResourceAsStream("smime-signed.txt"));
+        pm = new ParsedMessage(raw, false);
+        Assert.assertFalse("normal message fragment", messageWasEncrypted.equals(pm.getFragment(null)));
+    }
 }

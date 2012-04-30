@@ -28,6 +28,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -47,6 +48,7 @@ import org.apache.lucene.document.Document;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
@@ -128,6 +130,7 @@ public final class ParsedMessage {
     private boolean hasAttachments = false;
     private boolean hasTextCalendarPart = false;
     private String fragment = "";
+    private boolean encrypted;
     private long dateHeader = -1;
     private long receivedDate = -1;
     private String subject;
@@ -171,6 +174,7 @@ public final class ParsedMessage {
         if (opt.getAttachmentIndexing() == null) {
             throw ServiceException.FAILURE("Options do not specify attachment indexing state.", null);
         }
+
         if (opt.getMimeMessage() != null) {
             initialize(opt.getMimeMessage(), opt.getReceivedDate(), opt.getAttachmentIndexing());
         } else if (opt.getRawData() != null) {
@@ -351,6 +355,10 @@ public final class ParsedMessage {
         }
     }
 
+    private static final Set<String> ENCRYPTED_PART_TYPES = ImmutableSet.of(
+            MimeConstants.CT_APPLICATION_SMIME, MimeConstants.CT_APPLICATION_PGP, MimeConstants.CT_MULTIPART_ENCRYPTED
+    );
+
     /**
      * Analyze and extract text from all the "body" (non-attachment) parts of the message.
      * This step is required to properly generate the message fragment.
@@ -359,10 +367,12 @@ public final class ParsedMessage {
         if (analyzedBodyParts) {
             return;
         }
+
         analyzedBodyParts = true;
         if (DebugConfig.disableMessageAnalysis) {
             return;
         }
+
         parse();
 
         try {
@@ -371,15 +381,18 @@ public final class ParsedMessage {
             // extract text from the "body" parts
             StringBuilder body = new StringBuilder();
             for (MPartInfo mpi : messageParts) {
-                boolean isMainBody = mpiBodies.contains(mpi);
-                if (isMainBody) {
-                    String toplevelText = analyzePart(isMainBody, mpi);
+                if (mpiBodies.contains(mpi)) {
+                    String toplevelText = analyzePart(true, mpi);
                     if (toplevelText.length() > 0) {
                         appendToContent(body, toplevelText);
                     }
                 }
+                if (ENCRYPTED_PART_TYPES.contains(mpi.mContentType)) {
+                    encrypted = true;
+                }
             }
-            // Calculate the fragment -- requires body content
+
+            // calculate the fragment -- requires body content
             bodyContent = body.toString().trim();
             fragment = Fragment.getFragment(bodyContent, hasTextCalendarPart);
         } catch (ServiceException e) {
@@ -396,10 +409,12 @@ public final class ParsedMessage {
         if (analyzedNonBodyParts) {
             return;
         }
+
         analyzedNonBodyParts = true;
         if (DebugConfig.disableMessageAnalysis) {
             return;
         }
+
         analyzeBodyParts();
 
         try {
@@ -603,13 +618,13 @@ public final class ParsedMessage {
         return normalizedSubject;
     }
 
-    public String getFragment() {
+    public String getFragment(Locale lc) {
         try {
             analyzeBodyParts();
         } catch (ServiceException e) {
             LOG.warn("Message analysis failed when getting fragment; fragment is: %s", fragment, e);
         }
-        return fragment;
+        return encrypted && fragment.isEmpty() ? L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment, lc) : fragment;
     }
 
     /** Returns the message ID, or <tt>null</tt> if the message id cannot be

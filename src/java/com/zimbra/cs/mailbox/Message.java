@@ -527,7 +527,7 @@ public class Message extends MailItem {
                 sentByMe = AccountUtil.addressMatchesAccountOrSendAs(acct, sender);
             }
             try {
-                components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
+                components = Invite.createFromCalendar(acct, pm.getFragment(acct.getLocale()), cal, sentByMe, mbox, id);
                 methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString()).toUpperCase();
                 if (components != null) {
                     flags |= Flag.BITMASK_INVITE;
@@ -556,8 +556,7 @@ public class Message extends MailItem {
             data.parentId = conv.getId();
         }
         data.folderId = folder.getId();
-        data.indexId = !folder.inSpam() || acct.isJunkMessagesIndexingEnabled() ?
-                IndexStatus.DEFERRED.id() : IndexStatus.DONE.id();
+        data.indexId = !folder.inSpam() || acct.isJunkMessagesIndexingEnabled() ? IndexStatus.DEFERRED.id() : IndexStatus.DONE.id();
         data.locator = staged.getLocator();
         data.imapId = id;
         data.date = (int) (date / 1000);
@@ -566,7 +565,7 @@ public class Message extends MailItem {
         data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(pm.getNormalizedSubject());
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, dinfo, null, null).toString();
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, pm.getFragment(acct.getLocale()), dinfo, null, null).toString();
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
@@ -598,8 +597,9 @@ public class Message extends MailItem {
     private void processInvitesAfterCreate(String method, int folderId, boolean applyToCalendar, ParsedMessage pm,
             List<Invite> invites)
     throws ServiceException {
-        if (pm == null)
+        if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage while processing invite in message " + mId, null);
+        }
 
         Account acct = getAccount();
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
@@ -655,8 +655,9 @@ public class Message extends MailItem {
                     canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges());
                 } else {
                     senderEmail = pm.getSenderEmail(false);
-                    if (senderEmail != null)
+                    if (senderEmail != null) {
                         senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
+                    }
                     canInvite = accessMgr.canDo(senderEmail, acct, User.R_invite, false);
                 }
                 if (!canInvite) {
@@ -772,13 +773,13 @@ public class Message extends MailItem {
         }
 
         boolean publicInvites = true;  // used to check if any invite is non-public
-        int calItemFolderId =
-            invites.size() > 0 && invites.get(0).isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+        int calItemFolderId = invites.size() > 0 && invites.get(0).isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
         CalendarItem firstCalItem = null;
         Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
-            if (!cur.isPublic())
+            if (!cur.isPublic()) {
                 publicInvites = false;
+            }
 
             // Bug 38550/41239: If ORGANIZER is missing, set it to email sender.  If that sender
             // is the same user as the recipient, don't set organizer and clear attendees instead.
@@ -820,16 +821,19 @@ public class Message extends MailItem {
                             CalendarItem ci = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
                             if (ci != null) {
                                 Invite inv = ci.getInvite(cur.getRecurId());
-                                if (inv == null)
+                                if (inv == null) {
                                     inv = ci.getDefaultInviteOrNull();
-                                if (inv != null)
+                                }
+                                if (inv != null) {
                                     org = inv.getOrganizer();
+                                }
                             }
                             if (org == null) {
-                                if (intendedForAddress != null)
+                                if (intendedForAddress != null) {
                                     org = new ZOrganizer(intendedForAddress, null);
-                                else
+                                } else {
                                     org = new ZOrganizer(acct.getName(), null);
+                                }
                             }
                             cur.setOrganizer(org);
                             cur.setIsOrganizer(intendedForMe);
@@ -996,12 +1000,14 @@ public class Message extends MailItem {
                     getMailbox().uncache(calItem);
                 }
             }
-            if (firstCalItem == null)
+            if (firstCalItem == null) {
                 firstCalItem = calItem;
+            }
         }
 
-        if (updatedMetadata)
+        if (updatedMetadata) {
             saveMetadata();
+        }
 
 
         // Forward a copy of the message to calendar admin user if preference says so.
@@ -1210,8 +1216,9 @@ public class Message extends MailItem {
     @Override
     MailItem icopy(Folder target, int copyId, String copyUuid) throws IOException, ServiceException {
         Message copy = (Message) super.icopy(target, copyId, copyUuid);
-        if (isDraft())
+        if (isDraft()) {
             copy.setDraftAutoSendTime(0);
+        }
         return copy;
     }
 
@@ -1220,8 +1227,9 @@ public class Message extends MailItem {
     @Override
     boolean move(Folder target) throws ServiceException {
         boolean moved = super.move(target);
-        if (moved && isDraft() && target.inTrash())
+        if (moved && isDraft() && target.inTrash()) {
             setDraftAutoSendTime(0);
+        }
         return moved;
     }
 
@@ -1238,11 +1246,10 @@ public class Message extends MailItem {
                     .setSize(getSize())
                     .setDigest(getDigest());
                 pm = new ParsedMessage(opt);
-                
             } finally {
                 mMailbox.lock.release();
             }
-            
+
             pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
             if (mMailbox.index.isReIndexInProgress()) {
@@ -1267,6 +1274,8 @@ public class Message extends MailItem {
         if (!(data instanceof ParsedMessage)) {
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
         }
+
+        Account acct = getAccount();
         ParsedMessage pm = (ParsedMessage) data;
         MailItem parent = getParent();
 
@@ -1278,7 +1287,7 @@ public class Message extends MailItem {
         mData.setSubject(pm.getNormalizedSubject());
 
         // the fragment may have changed
-        fragment = pm.getFragment();
+        fragment = pm.getFragment(acct.getLocale());
 
         // make sure the "attachments" FLAG is correct
         boolean hadAttachment = mData.isSet(Flag.FlagInfo.ATTACHED);
@@ -1316,8 +1325,8 @@ public class Message extends MailItem {
         }
 
         // rewrite the DB row to reflect our new view
-        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, draftInfo,
-                calendarItemInfos, calendarIntendedFor));
+        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, fragment,
+                draftInfo, calendarItemInfos, calendarIntendedFor));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));
@@ -1330,6 +1339,7 @@ public class Message extends MailItem {
         if (!(parent instanceof Conversation)) {
             return;
         }
+
         if (parent.getSize() <= 1) {
             mMailbox.closeConversation((Conversation) parent, null);
         } else {
@@ -1346,10 +1356,11 @@ public class Message extends MailItem {
     @Override
     void delete(boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
-        if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
+        if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1) {
             parent.delete(writeTombstones);
-        else
+        } else {
             super.delete(writeTombstones);
+        }
     }
 
     @Override
@@ -1394,9 +1405,9 @@ public class Message extends MailItem {
     }
 
     private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,
-            DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
+            String fragment, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, pm.getSender(), pm.getRecipients(),
-                pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo,
+                fragment, pm.getNormalizedSubject(), pm.getSubject(), dinfo,
                 calItemInfos, calIntendedFor);
     }
 

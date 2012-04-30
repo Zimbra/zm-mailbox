@@ -23,18 +23,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SearchParams;
@@ -71,12 +70,13 @@ public final class MessageTest {
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         account.setPrefMailDefaultCharset("ISO-2022-JP");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        DeliveryOptions opt = new DeliveryOptions();
-        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         byte[] raw = ByteStreams.toByteArray(getClass().getResourceAsStream("raw-jis-msg.txt"));
         ParsedMessage pm = new ParsedMessage(raw, false);
-        Message message = mbox.addMessage(null, pm, opt, null);
-        Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment());
+        Message message = mbox.addMessage(null, pm, dopt, null);
+
+        Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment(null));
         List<IndexDocument> docs = message.generateIndexData();
         Assert.assertEquals(2, docs.size());
         String subject = docs.get(0).toDocument().get(LuceneFields.L_H_SUBJECT);
@@ -139,7 +139,7 @@ public final class MessageTest {
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(msg.getId(), result.getNext().getItemId());
     }
-    
+
     @Test
     public void post() throws Exception {
         // Create post.
@@ -161,7 +161,7 @@ public final class MessageTest {
         // Make sure that the post flag is serialized to XML.
         Element eMsg = ToXML.encodeMessageAsMIME(new XMLElement("test"), new ItemIdFormatter(), null, msg, null, false);
         Assert.assertEquals("^", eMsg.getAttribute(MailConstants.A_FLAGS));
-        
+
         // Try unsetting the post flag.
         mbox.setTags(null, msg.getId(), MailItem.Type.MESSAGE, 0, null);
         msg = mbox.getMessageById(null, msg.getId());
@@ -178,7 +178,7 @@ public final class MessageTest {
         Message msg = mbox.addMessage(null, new ParsedMessage(
                 "From: test@zimbra.com\r\nTo: test@zimbra.com".getBytes(), false), opt, null);
         // try setting the post flag
-        mbox.setTags(null, msg.getId(), MailItem.Type.MESSAGE, FlagInfo.POST.toBitmask(), null);        
+        mbox.setTags(null, msg.getId(), MailItem.Type.MESSAGE, FlagInfo.POST.toBitmask(), null);
         msg = mbox.getMessageById(null, msg.getId());
         // make sure post flag is not set
         Assert.assertTrue((msg.getFlagBitmask() & Flag.FlagInfo.POST.toBitmask()) == 0);

@@ -304,8 +304,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             if (aliases != null && aliases.length > 0) {
                 addrs = new String[aliases.length + 1];
                 addrs[0] = acct.getAttr(Provisioning.A_mail);
-                for (int i = 0; i < aliases.length; i++)
+                for (int i = 0; i < aliases.length; i++) {
                     addrs[i + 1] = aliases[i];
+                }
             } else {
                 addrs = new String[1];
                 addrs[0] = acct.getAttr(Provisioning.A_mail);
@@ -318,7 +319,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         ParsedMessage pm = new ParsedMessage(csd.mMm, false);
 
         if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
-            csd.mInvite.setFragment(pm.getFragment());
+            csd.mInvite.setFragment(pm.getFragment(acct.getLocale()));
         }
 
         boolean willNotify = false;
