@@ -17,12 +17,21 @@ package com.zimbra.cs.service.admin;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -33,8 +42,10 @@ import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -63,8 +74,8 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, SORT_TOTAL_USED);
-        final boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, false);
-        final boolean refresh = request.getAttributeBool(AdminConstants.A_REFRESH, false);
+        boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, false);
+        boolean refresh = request.getAttributeBool(AdminConstants.A_REFRESH, false);
 
         if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT) || sortBy.equals(SORT_ACCOUNT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
@@ -97,28 +108,31 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             checkDomainRight(zsc, d, Admin.R_getDomainQuotaUsage);
         else
             checkRight(zsc, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
-        
-        QuotaUsageParams params = new QuotaUsageParams(d, sortBy,sortAscending);
-        ArrayList<AccountQuota> quotas;
-       
-        AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
-        if (session != null) {
-            QuotaUsageParams cachedParams = getCachedQuotaUsage(session);
-            if (cachedParams == null || !cachedParams.equals(params) || refresh) {
-                quotas = params.doSearch();
-                setCachedQuotaUsage(session, params);
-            } else {
-                quotas = cachedParams.doSearch();
-            }
+
+        List<AccountQuota> quotas;
+        if (d != null && request.getAttributeBool(AdminConstants.A_ALL_SERVERS, false)) {
+            quotas = delegateRequestToAllServers(request.clone(), zsc.getRawAuthToken(), sortBy, sortAscending, prov);
         } else {
-            quotas = params.doSearch();
+            QuotaUsageParams params = new QuotaUsageParams(d, sortBy, sortAscending);
+            AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
+            if (session != null) {
+                QuotaUsageParams cachedParams = getCachedQuotaUsage(session);
+                if (cachedParams == null || !cachedParams.equals(params) || refresh) {
+                    quotas = params.doSearch();
+                    setCachedQuotaUsage(session, params);
+                } else {
+                    quotas = cachedParams.doSearch();
+                }
+            } else {
+                quotas = params.doSearch();
+            }
         }
 
         Element response = zsc.createElement(AdminConstants.GET_QUOTA_USAGE_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < quotas.size(); i++) {
             AccountQuota quota = quotas.get(i);
-            
+
             Element account = response.addElement(AdminConstants.E_ACCOUNT);
             account.addAttribute(AdminConstants.A_NAME, quota.name);
             account.addAttribute(AdminConstants.A_ID, quota.id);
@@ -129,7 +143,79 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, quotas.size());
         return response;
     }
-    
+
+    private List<AccountQuota> delegateRequestToAllServers(
+            final Element request, final ZAuthToken authToken, String sortBy, boolean sortAscending, Provisioning prov)
+            throws ServiceException {
+        // first set "allServers" to false
+        request.addAttribute(AdminConstants.A_ALL_SERVERS, false);
+        List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
+        // make number of threads in pool configurable?
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        List<Future<List<AccountQuota>>> futures = new LinkedList<Future<List<AccountQuota>>>();
+        for (final Server server : servers) {
+            futures.add(executor.submit(new Callable<List<AccountQuota>>() {
+                @Override
+                public List<AccountQuota> call() throws Exception {
+                    ZimbraLog.misc.debug("Invoking %s on server %s", AdminConstants.E_GET_QUOTA_USAGE_REQUEST, server.getName());
+                    String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
+                    SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
+                    mTransport.setAuthToken(authToken);
+                    Element resp = mTransport.invoke(request);
+                    List<Element> accountElts = resp.getPathElementList(new String[] { AdminConstants.E_ACCOUNT });
+                    List<AccountQuota> retList = new ArrayList<AccountQuota>();
+                    for (Element accountElt : accountElts) {
+                        AccountQuota quota = new AccountQuota();
+                        quota.name = accountElt.getAttribute(AdminConstants.A_NAME);
+                        quota.id = accountElt.getAttribute(AdminConstants.A_ID);
+                        quota.quotaUsed = accountElt.getAttributeLong(AdminConstants.A_QUOTA_USED);
+                        quota.quotaLimit = accountElt.getAttributeLong(AdminConstants.A_QUOTA_LIMIT);
+                        retList.add(quota);
+                    }
+                    return retList;
+                }
+            }));
+        }
+        shutdownAndAwaitTermination(executor);
+
+        // Aggregate all results
+        List<AccountQuota> retList = new ArrayList<AccountQuota>();
+        for (Future<List<AccountQuota>> future : futures) {
+            List<AccountQuota> result;
+            try {
+                result = future.get();
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Error is getting task execution result", e);
+            }
+            retList.addAll(result);
+        }
+
+        boolean sortByTotal = sortBy.equals(SORT_TOTAL_USED);
+        boolean sortByQuota = sortBy.equals(SORT_QUOTA_LIMIT);
+        boolean sortByAccount = sortBy.equals(SORT_ACCOUNT);
+        Comparator<AccountQuota> comparator =
+                new QuotaComparator(sortByTotal, sortByQuota, sortByAccount, sortAscending);
+        Collections.sort(retList, comparator);
+
+        return retList;
+    }
+
+    private static void shutdownAndAwaitTermination(ExecutorService executor) throws ServiceException {
+        executor.shutdown(); // Disable new tasks from being submitted
+        try {
+            // Wait for existing tasks to terminate
+            // make wait timeout configurable?
+            if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+                throw ServiceException.FAILURE("time out waiting for " +
+                        AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " result", null);
+            }
+        } catch (InterruptedException ie) {
+            executor.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+    }
+
     synchronized static QuotaUsageParams getCachedQuotaUsage(AdminSession session) {
         return (QuotaUsageParams) session.getData(QUOTA_USAGE_CACHE_KEY);
     }
@@ -175,7 +261,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 mSortAscending == other.mSortAscending;
         }
         
-        ArrayList<AccountQuota> doSearch() throws ServiceException {
+        List<AccountQuota> doSearch() throws ServiceException {
             if (mResult != null) return mResult;
 
             ArrayList<AccountQuota> result = new ArrayList<AccountQuota>();
@@ -209,31 +295,46 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 result.add(aq);
             }
 
-            final boolean sortByTotal = mSortBy.equals(SORT_TOTAL_USED);
-            final boolean sortByQuota = mSortBy.equals(SORT_QUOTA_LIMIT);
-            final boolean sortByAccount = mSortBy.equals(SORT_ACCOUNT);
-
-            Comparator<AccountQuota> comparator = new Comparator<AccountQuota>() {
-                public int compare(AccountQuota a, AccountQuota b) {
-                    int comp = 0;
-                    if (sortByTotal) {
-                        if (a.quotaUsed > b.quotaUsed) comp = 1;
-                        else if (a.quotaUsed < b.quotaUsed) comp = -1;
-                    } else if (sortByQuota) {
-                        if (a.sortQuotaLimit > b.sortQuotaLimit) comp = 1;
-                        else if (a.sortQuotaLimit < b.sortQuotaLimit) comp = -1;                            
-                    } else if(sortByAccount) {
-                    	comp=a.name.compareToIgnoreCase(b.name);
-                    } else {
-                        if (a.percentQuotaUsed > b.percentQuotaUsed) comp = 1;
-                        else if (a.percentQuotaUsed < b.percentQuotaUsed) comp = -1;
-                    }
-                    return mSortAscending ? comp : -comp;
-                }
-            };
+            boolean sortByTotal = mSortBy.equals(SORT_TOTAL_USED);
+            boolean sortByQuota = mSortBy.equals(SORT_QUOTA_LIMIT);
+            boolean sortByAccount = mSortBy.equals(SORT_ACCOUNT);
+            Comparator<AccountQuota> comparator =
+                    new QuotaComparator(sortByTotal, sortByQuota, sortByAccount, mSortAscending);
             Collections.sort(result, comparator);
             mResult = result;
             return mResult;
+        }
+    }
+
+    public class QuotaComparator implements Comparator<AccountQuota> {
+        private boolean sortByTotal;
+        private boolean sortByQuota;
+        private boolean sortByAccount;
+        private boolean sortAscending;
+
+        public QuotaComparator(boolean sortByTotal, boolean sortByQuota, boolean sortByAccount, boolean sortAscending) {
+            this.sortByTotal = sortByTotal;
+            this.sortByQuota = sortByQuota;
+            this.sortByAccount = sortByAccount;
+            this.sortAscending = sortAscending;
+        }
+
+        @Override
+        public int compare(AccountQuota a, AccountQuota b) {
+            int comp = 0;
+            if (sortByTotal) {
+                if (a.quotaUsed > b.quotaUsed) comp = 1;
+                else if (a.quotaUsed < b.quotaUsed) comp = -1;
+            } else if (sortByQuota) {
+                if (a.sortQuotaLimit > b.sortQuotaLimit) comp = 1;
+                else if (a.sortQuotaLimit < b.sortQuotaLimit) comp = -1;
+            } else if(sortByAccount) {
+                comp=a.name.compareToIgnoreCase(b.name);
+            } else {
+                if (a.percentQuotaUsed > b.percentQuotaUsed) comp = 1;
+                else if (a.percentQuotaUsed < b.percentQuotaUsed) comp = -1;
+            }
+            return sortAscending ? comp : -comp;
         }
     }
     

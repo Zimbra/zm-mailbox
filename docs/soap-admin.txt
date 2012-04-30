@@ -437,7 +437,7 @@ Access: domain admin sufficient (though a domain admin can't specify "domains" a
 
 -----------------------------
 
-<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"]
+<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"] [allServers="1"]
          [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [refresh="1"]>
 </GetQuotaUsageRequest>
 
@@ -450,6 +450,8 @@ GetQuotaUsageRequest
   limit - the number of accounts to return (0 is default and means all)
   offset - the starting offset (0, 25, etc)
   domain - the domain name to limit the search to
+  allServers - whether to fetch quota usage for all domain accounts from across all mailbox servers (0/1), 0 is default,
+               applicable when domain attribute is specified
   sortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
   sortAscending - whether to sort in ascending order (0/1), 0 is default, so highest quotas are returned first
   refresh - whether to always recalculate the data even when cached values are available.  0 is default.
