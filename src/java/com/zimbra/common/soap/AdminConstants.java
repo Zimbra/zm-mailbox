@@ -1083,6 +1083,7 @@ public final class AdminConstants {
     public static final String A_KEYATTR = "keyAttr";
     public static final String A_DYNAMIC = "dynamic";
     public static final String A_PERSIST_AUTH_TOKEN_COOKIE = "persistAuthTokenCookie";
+    public static final String A_ALL_SERVERS = "allServers";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
