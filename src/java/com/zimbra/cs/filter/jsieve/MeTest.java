@@ -87,7 +87,8 @@ public final class MeTest extends AbstractTest {
         try {
             Set<String> me = AccountUtil.getEmailAddresses(mbox.getAccount());
             for (InternetAddress addr : addrs) {
-                if (me.contains(addr.getAddress().toLowerCase())) {
+                String email = addr.getAddress();
+                if (email != null && me.contains(email.toLowerCase())) {
                     return true;
                 }
             }
