@@ -862,7 +862,8 @@ public final class LC {
     public static final KnownKey zimbra_waitset_nodata_sleep_time = KnownKey.newKey(3000);
 
     public static final KnownKey zimbra_csv_mapping_file = KnownKey.newKey("${zimbra_home}/conf/zimbra-contact-fields.xml");
-    public static final KnownKey zimbra_auth_provider = KnownKey.newKey("zimbra");
+    
+    public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_options = KnownKey.newKey("-Xmx256m");
