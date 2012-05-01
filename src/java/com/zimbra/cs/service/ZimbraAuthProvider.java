@@ -30,10 +30,12 @@ import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.soap.SoapServlet;
 
-public class ZimbraAuthProvider extends AuthProvider{
+public class ZimbraAuthProvider extends AuthProvider {
 
+    public static final String ZIMBRA_AUTH_PROVIDER = "zimbra";
+    
     ZimbraAuthProvider() {
-        super(ZIMBRA_AUTH_PROVIDER);
+        this(ZIMBRA_AUTH_PROVIDER);
     }
     
     protected ZimbraAuthProvider(String name) {

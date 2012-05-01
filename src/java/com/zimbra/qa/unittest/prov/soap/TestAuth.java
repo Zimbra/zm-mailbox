@@ -18,12 +18,10 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,6 +42,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -62,6 +61,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ZimbraOAuthProvider;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Verify;
 import com.zimbra.qa.unittest.prov.soap.SoapDebugListener.Level;
@@ -304,7 +304,7 @@ public class TestAuth extends SoapTest {
         
         com.zimbra.soap.admin.message.AuthRequest reqAdmin = 
             new com.zimbra.soap.admin.message.AuthRequest(admin.getName(), "test123");
-        // reqAdmin.setPersistAuthTokenCookie(Boolean.TRUE);
+        reqAdmin.setPersistAuthTokenCookie(Boolean.TRUE);
         com.zimbra.soap.admin.message.AuthResponse respAdmin = invokeJaxb(transportAdmin, reqAdmin);
         
         /*
@@ -515,6 +515,37 @@ public class TestAuth extends SoapTest {
             result.add(Verify.makeResultStr(attrName, attrValue));
         }
         Verify.verifyEquals(Sets.newHashSet(Verify.makeResultStr(ATTR_NAME, ATTR_VALUE)), result);
+    }
+    
+    @Test
+    public void OAuth() throws Exception {
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
+        
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        
+        Element eAuthReq = Element.create(transport.getRequestProtocol(), 
+                AccountConstants.AUTH_REQUEST);
+        
+        // <authtoken>
+        Element eAuthToken = eAuthReq.addElement(AccountConstants.E_AUTH_TOKEN);
+        eAuthToken.addAttribute(AccountConstants.A_TYPE, "oauth");
+        
+        String accessToken = "whatever";
+        Element eAccessToken = eAuthToken.addElement(AccountConstants.E_A);
+        eAccessToken.addAttribute(AccountConstants.A_N, ZimbraOAuthProvider.OAUTH_ACCESS_TOKEN);
+        eAccessToken.setText(accessToken);
+        
+        // <account>
+        Element eAcct = eAuthReq.addElement(AccountConstants.E_ACCOUNT);
+        eAcct.addAttribute(AccountConstants.A_BY, AccountBy.name.name());
+        eAcct.setText(acct.getName());
+        
+        Element eResp = transport.invoke(eAuthReq);
+        
+        Element eAuthTokenResp = eResp.getElement(AccountConstants.E_AUTH_TOKEN);
+        String authToken = eAuthTokenResp.getText();
+        assertNotNull(authToken);
+        
     }
 }
 

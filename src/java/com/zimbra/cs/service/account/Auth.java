@@ -93,8 +93,7 @@ public class Auth extends AccountDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
             }
             try {
-                String token = authTokenEl.getText();
-                AuthToken at = AuthProvider.getAuthToken(token);
+                AuthToken at = AuthProvider.getAuthToken(authTokenEl, acct);
                 
                 addAccountToLogContextByAuthToken(prov, at);
                 
