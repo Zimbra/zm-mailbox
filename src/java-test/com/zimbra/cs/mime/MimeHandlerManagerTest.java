@@ -33,30 +33,32 @@ public class MimeHandlerManagerTest {
 
     @BeforeClass
     public static void init() {
-        MockProvisioning mock = new MockProvisioning();
+        MockProvisioning prov = new MockProvisioning();
+        prov.clearMimeHandlers();
+
         MockMimeTypeInfo mime = new MockMimeTypeInfo();
         mime.setMimeTypes("text/html");
         mime.setFileExtensions("html", "htm");
         mime.setHandlerClass(TextHtmlHandler.class.getName());
-        mock.addMimeType("text/html", mime);
+        prov.addMimeType("text/html", mime);
 
         mime = new MockMimeTypeInfo();
         mime.setMimeTypes("text/enriched");
         mime.setFileExtensions("txe");
         mime.setHandlerClass(TextEnrichedHandler.class.getName());
-        mock.addMimeType("text/enriched", mime);
+        prov.addMimeType("text/enriched", mime);
 
         mime = new MockMimeTypeInfo();
         mime.setHandlerClass(UnknownTypeHandler.class.getName());
-        mock.addMimeType("all", mime);
+        prov.addMimeType("all", mime);
 
         mime = new MockMimeTypeInfo();
         mime.setMimeTypes("not/exist");
         mime.setFileExtensions("NotExist");
         mime.setHandlerClass("com.zimbra.cs.mime.handler.NotExist");
-        mock.addMimeType("not/exist", mime);
+        prov.addMimeType("not/exist", mime);
 
-        Provisioning.setInstance(mock);
+        Provisioning.setInstance(prov);
     }
 
     @Test

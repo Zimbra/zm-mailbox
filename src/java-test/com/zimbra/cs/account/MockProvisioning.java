@@ -29,12 +29,17 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
+import com.zimbra.cs.mime.handler.MessageRFC822Handler;
+import com.zimbra.cs.mime.handler.TextCalendarHandler;
+import com.zimbra.cs.mime.handler.TextHtmlHandler;
+import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -52,7 +57,7 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, Account> name2account = Maps.newHashMap();
 
     private final Map<String, Domain> id2domain = Maps.newHashMap();
-    
+
     private final Map<String, Cos> id2cos = Maps.newHashMap();
 
     private final Map<String, List<MimeTypeInfo>> mimeConfig = Maps.newHashMap();
@@ -69,6 +74,8 @@ public final class MockProvisioning extends Provisioning {
         attrs.put(A_zimbraMailMode, MailMode.http.toString());
         attrs.put(A_zimbraSmtpPort, "7025");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
+
+        initializeMimeHandlers();
     }
 
     @Override
@@ -138,6 +145,37 @@ public final class MockProvisioning extends Provisioning {
         list.add(info);
     }
 
+    private void initializeMimeHandlers() {
+        MockMimeTypeInfo plain = new MockMimeTypeInfo();
+        plain.setMimeTypes(MimeConstants.CT_TEXT_PLAIN);
+        plain.setHandlerClass(TextPlainHandler.class.getName());
+        plain.setIndexingEnabled(true);
+        addMimeType(MimeConstants.CT_TEXT_PLAIN, plain);
+
+        MockMimeTypeInfo html = new MockMimeTypeInfo();
+        html.setMimeTypes(MimeConstants.CT_TEXT_HTML);
+        html.setHandlerClass(TextHtmlHandler.class.getName());
+        html.setFileExtensions("html", "htm");
+        html.setIndexingEnabled(true);
+        addMimeType(MimeConstants.CT_TEXT_HTML, html);
+
+        MockMimeTypeInfo calendar = new MockMimeTypeInfo();
+        calendar.setMimeTypes(MimeConstants.CT_TEXT_CALENDAR);
+        calendar.setHandlerClass(TextCalendarHandler.class.getName());
+        calendar.setIndexingEnabled(true);
+        addMimeType(MimeConstants.CT_TEXT_CALENDAR, calendar);
+
+        MockMimeTypeInfo message = new MockMimeTypeInfo();
+        message.setMimeTypes(MimeConstants.CT_MESSAGE_RFC822);
+        message.setHandlerClass(MessageRFC822Handler.class.getName());
+        message.setIndexingEnabled(true);
+        addMimeType(MimeConstants.CT_MESSAGE_RFC822, message);
+    }
+
+    public void clearMimeHandlers() {
+        mimeConfig.clear();
+    }
+
     @Override
     public Config getConfig() {
         return config;
@@ -179,7 +217,7 @@ public final class MockProvisioning extends Provisioning {
     public Set<String> getDistributionLists(Account acct) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
     public Set<String> getDirectDistributionLists(Account acct)
             throws ServiceException {
@@ -695,7 +733,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void deleteUCService(String zimbraId) throws ServiceException {
-        throw new UnsupportedOperationException();  
+        throw new UnsupportedOperationException();
     }
 
     @Override
