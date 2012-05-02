@@ -23,10 +23,13 @@ public class VoiceAdminConstants {
     
     public static final String E_GET_ALL_UC_PROVIDERS_REQUEST = "GetAllUCProvidersRequest";
     public static final String E_GET_ALL_UC_PROVIDERS_RESPONSE = "GetAllUCProvidersResponse";
+    public static final String E_UPDATE_PRESENCE_SESSION_ID_REQUEST = "UpdatePresenceSessionIdRequest";
+    public static final String E_UPDATE_PRESENCE_SESSION_ID_RESPONSE = "UpdatePresenceSessionIdResponse";
     
     public static final QName GET_ALL_UC_PROVIDERS_REQUEST = QName.get(E_GET_ALL_UC_PROVIDERS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_UC_PROVIDERS_RESPONSE = QName.get(E_GET_ALL_UC_PROVIDERS_RESPONSE, NAMESPACE);
-    
+    public static final QName UPDATE_PRESENCE_SESSION_ID_REQUEST = QName.get(E_UPDATE_PRESENCE_SESSION_ID_REQUEST, NAMESPACE);
+    public static final QName UPDATE_PRESENCE_SESSION_ID_RESPONSE = QName.get(E_UPDATE_PRESENCE_SESSION_ID_RESPONSE, NAMESPACE);
     
     public static final String E_PROVIDER = "provider";
 }
