@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120430-1955 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -7985,7 +7985,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1410)
     public boolean isDeviceOfflineCacheEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraDeviceOfflineCacheEnabled, false);
     }
@@ -7998,7 +7998,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1410)
     public void setDeviceOfflineCacheEnabled(boolean zimbraDeviceOfflineCacheEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, zimbraDeviceOfflineCacheEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -8014,7 +8014,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1410)
     public Map<String,Object> setDeviceOfflineCacheEnabled(boolean zimbraDeviceOfflineCacheEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, zimbraDeviceOfflineCacheEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -8028,7 +8028,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1410)
     public void unsetDeviceOfflineCacheEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, "");
@@ -8043,7 +8043,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1409)
+    @ZAttr(id=1410)
     public Map<String,Object> unsetDeviceOfflineCacheEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDeviceOfflineCacheEnabled, "");
@@ -25076,7 +25076,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public String[] getMobilePolicyApprovedApplicationList() {
         return getMultiAttr(Provisioning.A_zimbraMobilePolicyApprovedApplicationList);
     }
@@ -25093,7 +25093,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public void setMobilePolicyApprovedApplicationList(String[] zimbraMobilePolicyApprovedApplicationList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
@@ -25113,7 +25113,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public Map<String,Object> setMobilePolicyApprovedApplicationList(String[] zimbraMobilePolicyApprovedApplicationList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
@@ -25132,7 +25132,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public void addMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
@@ -25152,7 +25152,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public Map<String,Object> addMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
@@ -25171,7 +25171,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public void removeMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
@@ -25191,7 +25191,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public Map<String,Object> removeMobilePolicyApprovedApplicationList(String zimbraMobilePolicyApprovedApplicationList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobilePolicyApprovedApplicationList, zimbraMobilePolicyApprovedApplicationList);
@@ -25209,7 +25209,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public void unsetMobilePolicyApprovedApplicationList() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, "");
@@ -25228,7 +25228,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1408)
+    @ZAttr(id=1409)
     public Map<String,Object> unsetMobilePolicyApprovedApplicationList(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyApprovedApplicationList, "");

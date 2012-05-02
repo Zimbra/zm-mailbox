@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120430-1955 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -39780,6 +39780,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetThrottleSafeHosts(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraThrottleSafeHosts, "");
+        return attrs;
+    }
+
+    /**
+     * Designated UC provider of the system
+     *
+     * @return zimbraUCProviderEnabled, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1408)
+    public String getUCProviderEnabled() {
+        return getAttr(Provisioning.A_zimbraUCProviderEnabled, null);
+    }
+
+    /**
+     * Designated UC provider of the system
+     *
+     * @param zimbraUCProviderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1408)
+    public void setUCProviderEnabled(String zimbraUCProviderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCProviderEnabled, zimbraUCProviderEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Designated UC provider of the system
+     *
+     * @param zimbraUCProviderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1408)
+    public Map<String,Object> setUCProviderEnabled(String zimbraUCProviderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCProviderEnabled, zimbraUCProviderEnabled);
+        return attrs;
+    }
+
+    /**
+     * Designated UC provider of the system
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1408)
+    public void unsetUCProviderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCProviderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Designated UC provider of the system
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1408)
+    public Map<String,Object> unsetUCProviderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCProviderEnabled, "");
         return attrs;
     }
 
