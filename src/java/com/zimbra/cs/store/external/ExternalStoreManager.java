@@ -143,7 +143,12 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (mblob == null) {
             return null;
         }
-        return readStreamFromStore(mblob.getLocator(), mblob.getMailbox());
+        InputStream is = readStreamFromStore(mblob.getLocator(), mblob.getMailbox());
+        if (is == null) {
+            throw new IOException("Store " + this.getClass().getName() +" returned null for locator " + mblob.getLocator());
+        } else {
+            return is;
+        }
     }
 
     @Override
@@ -158,10 +163,13 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         }
 
         InputStream is = readStreamFromStore(locator, mbox);
-        cached = localCache.put(locator, is);
-        return new ExternalBlob(cached);
+        if (is == null) {
+            throw new IOException("Store " + this.getClass().getName() +" returned null for locator " + locator);
+        } else {
+            cached = localCache.put(locator, is);
+            return new ExternalBlob(cached);
+        }
     }
-
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) throws ServiceException {
