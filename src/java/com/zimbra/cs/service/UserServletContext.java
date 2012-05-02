@@ -138,12 +138,6 @@ public final class UserServletContext {
         this.resp = response;
         this.servlet = srvlt;
         this.params = HttpUtil.getURIParams(request);
-        try {
-            this.authToken = ZimbraServlet.getAuthTokenFromCookie(req, resp, true);
-        } catch (IOException e) {
-            UserServlet.log.warn("Can not get auth token from cookie, caused by " + e.getMessage());
-            this.authToken = null;
-        }
 
         //rest url override for locale
         String language = this.params.get(UserServlet.QP_LANGUAGE);
