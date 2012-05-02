@@ -603,6 +603,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
+        UPDATE_PRESENCE_SESSION_ID("updatePresenceSessionId", "upsid", "{user server name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2);
 
         private String mName;
@@ -1259,6 +1260,9 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case GET_AUTH_TOKEN_INFO:
                 doGetAuthTokenInfo(args);
+                break;
+            case UPDATE_PRESENCE_SESSION_ID:
+                doUpdatePresenceSessionId(args);
                 break;
             case SOAP:
                 // HACK FOR NOW
@@ -4707,7 +4711,21 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         console.println();
-
+    }
+    
+    private void doUpdatePresenceSessionId(String[] args) throws ServiceException {
+       
+        String idOrName = args[1];
+        String username = args[2];
+        String password = args[3];
+        
+        UCService ucService = lookupUCService(idOrName);
+        
+        /*
+         * soap only
+         */
+        String newSessionId = prov.updatePresenceSessionId(ucService.getId(), username, password);
+        console.println(newSessionId);
     }
 
     private void doGetAllFreeBusyProviders() throws ServiceException, IOException {

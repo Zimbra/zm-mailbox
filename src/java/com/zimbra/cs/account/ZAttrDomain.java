@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120502-1317 */
 
     /**
      * RFC2256: descriptive information
@@ -8953,7 +8953,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public Date getGalDefinitionLastModifiedTime() {
         return getGeneralizedTimeAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null);
     }
@@ -8965,7 +8965,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public String getGalDefinitionLastModifiedTimeAsString() {
         return getAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null);
     }
@@ -8978,7 +8978,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public void setGalDefinitionLastModifiedTime(Date zimbraGalDefinitionLastModifiedTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraGalDefinitionLastModifiedTime));
@@ -8994,7 +8994,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public Map<String,Object> setGalDefinitionLastModifiedTime(Date zimbraGalDefinitionLastModifiedTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraGalDefinitionLastModifiedTime));
@@ -9009,7 +9009,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public void setGalDefinitionLastModifiedTimeAsString(String zimbraGalDefinitionLastModifiedTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime);
@@ -9025,7 +9025,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public Map<String,Object> setGalDefinitionLastModifiedTimeAsString(String zimbraGalDefinitionLastModifiedTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, zimbraGalDefinitionLastModifiedTime);
@@ -9039,7 +9039,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public void unsetGalDefinitionLastModifiedTime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, "");
@@ -9054,7 +9054,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1411)
+    @ZAttr(id=1413)
     public Map<String,Object> unsetGalDefinitionLastModifiedTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalDefinitionLastModifiedTime, "");

@@ -41,7 +41,7 @@ public abstract class ZAttrUCService extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120502-1317 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -605,6 +605,150 @@ public abstract class ZAttrUCService extends NamedEntry {
     public Map<String,Object> unsetUCCallControlURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCCallControlURL, "");
+        return attrs;
+    }
+
+    /**
+     * presence session id for Cisco presence service
+     *
+     * @return zimbraUCCiscoPresenceSessionId, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public String getUCCiscoPresenceSessionId() {
+        return getAttr(Provisioning.A_zimbraUCCiscoPresenceSessionId, null);
+    }
+
+    /**
+     * presence session id for Cisco presence service
+     *
+     * @param zimbraUCCiscoPresenceSessionId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public void setUCCiscoPresenceSessionId(String zimbraUCCiscoPresenceSessionId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, zimbraUCCiscoPresenceSessionId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * presence session id for Cisco presence service
+     *
+     * @param zimbraUCCiscoPresenceSessionId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public Map<String,Object> setUCCiscoPresenceSessionId(String zimbraUCCiscoPresenceSessionId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, zimbraUCCiscoPresenceSessionId);
+        return attrs;
+    }
+
+    /**
+     * presence session id for Cisco presence service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public void unsetUCCiscoPresenceSessionId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * presence session id for Cisco presence service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public Map<String,Object> unsetUCCiscoPresenceSessionId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, "");
+        return attrs;
+    }
+
+    /**
+     * presence service URL for the UC service
+     *
+     * @return zimbraUCPresenceURL, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1406)
+    public String getUCPresenceURL() {
+        return getAttr(Provisioning.A_zimbraUCPresenceURL, null);
+    }
+
+    /**
+     * presence service URL for the UC service
+     *
+     * @param zimbraUCPresenceURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1406)
+    public void setUCPresenceURL(String zimbraUCPresenceURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPresenceURL, zimbraUCPresenceURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * presence service URL for the UC service
+     *
+     * @param zimbraUCPresenceURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1406)
+    public Map<String,Object> setUCPresenceURL(String zimbraUCPresenceURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPresenceURL, zimbraUCPresenceURL);
+        return attrs;
+    }
+
+    /**
+     * presence service URL for the UC service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1406)
+    public void unsetUCPresenceURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPresenceURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * presence service URL for the UC service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1406)
+    public Map<String,Object> unsetUCPresenceURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUCPresenceURL, "");
         return attrs;
     }
 

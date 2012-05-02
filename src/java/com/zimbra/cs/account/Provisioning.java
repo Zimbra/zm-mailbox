@@ -1183,6 +1183,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract UCService get(UCServiceBy keyName, String key) throws ServiceException;
     public abstract List<UCService> getAllUCServices()  throws ServiceException;
     
+    public String updatePresenceSessionId(String zimbraId, String username, String password) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
     /*
      * ==============================
      *

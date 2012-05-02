@@ -2626,6 +2626,15 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
+    
+    @Override
+    public String updatePresenceSessionId(String zimbraId, String username, String password) 
+    throws ServiceException {
+        UpdatePresenceSessionIdRequest req = new UpdatePresenceSessionIdRequest(
+                zimbraId, username, password);
+        UpdatePresenceSessionIdResponse resp = invokeJaxb(req);
+        return resp.getSessionId();
+    }
 
     /* Convert to equivalent JAXB object */
     private static CalendarResourceSelector.CalendarResourceBy toJaxb(

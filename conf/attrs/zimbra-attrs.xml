@@ -7004,28 +7004,36 @@ TODO: delete them permanently from here
   <desc>call control service URL for the UC service</desc>
 </attr>
 
-<attr id="1406" name="zimbraUCUsername" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
+<attr id="1406" name="zimbraUCPresenceURL" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>presence service URL for the UC service</desc>
+</attr>
+
+<attr id="1407" name="zimbraUCCiscoPresenceSessionId" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+  <desc>presence session id for Cisco presence service</desc>
+</attr>
+
+<attr id="1408" name="zimbraUCUsername" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
   <desc>username for the user's UC service</desc>
 </attr>
 
-<attr id="1407" name="zimbraUCPassword" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
+<attr id="1409" name="zimbraUCPassword" type="string" max="256" cardinality="single" optionalIn="account" since="8.0.0">
   <desc>password for the user's UC service</desc>
 </attr>
 
-<attr id="1408" name="zimbraUCProviderEnabled" type="string" max="256" cardinality="single" optionalIn="globalConfig" since="8.0.0">
+<attr id="1410" name="zimbraUCProviderEnabled" type="string" max="256" cardinality="single" optionalIn="globalConfig" since="8.0.0">
   <desc>Designated UC provider of the system</desc>
 </attr>
 
-<attr id="1409" name="zimbraMobilePolicyApprovedApplicationList" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
+<attr id="1411" name="zimbraMobilePolicyApprovedApplicationList" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>This is the internal attr for "zimbraMobilePolicyApprovedApplication" which can only store app hash (to keep consistent with ActiveSync specification. This attr's format is "app_name":"app_hash", and is used for showing both the app name and hash in admin console UI</desc>
 </attr>
 
-<attr id="1410" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1412" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether offline reading of docuemnts on device is allowed</desc>
 </attr>
 
-<attr id="1411" name="zimbraGalDefinitionLastModifiedTime" type="gentime" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1413" name="zimbraGalDefinitionLastModifiedTime" type="gentime" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>the time at which GAL definition is last modified.</desc>
 </attr>
 
