@@ -63,7 +63,8 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     public static final String SORT_QUOTA_LIMIT = "quotaLimit";
     public static final String SORT_ACCOUNT = "account";
     private static final String QUOTA_USAGE_CACHE_KEY = "GetQuotaUsage";
-    
+    private static final String QUOTA_USAGE_ALL_SERVERS_CACHE_KEY = "GetQuotaUsageAllServers";
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -109,22 +110,27 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         else
             checkRight(zsc, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
-        List<AccountQuota> quotas;
-        if (d != null && request.getAttributeBool(AdminConstants.A_ALL_SERVERS, false)) {
-            quotas = delegateRequestToAllServers(request.clone(), zsc.getRawAuthToken(), sortBy, sortAscending, prov);
-        } else {
-            QuotaUsageParams params = new QuotaUsageParams(d, sortBy, sortAscending);
-            AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
-            if (session != null) {
-                QuotaUsageParams cachedParams = getCachedQuotaUsage(session);
-                if (cachedParams == null || !cachedParams.equals(params) || refresh) {
-                    quotas = params.doSearch();
-                    setCachedQuotaUsage(session, params);
-                } else {
-                    quotas = cachedParams.doSearch();
-                }
+        boolean allServers = d != null && request.getAttributeBool(AdminConstants.A_ALL_SERVERS, false);
+
+        List<AccountQuota> quotas = null;
+        QuotaUsageParams params = new QuotaUsageParams(d, sortBy, sortAscending);
+        AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
+        if (session != null) {
+            QuotaUsageParams cachedParams = getCachedQuotaUsage(session, allServers);
+            if (cachedParams != null && cachedParams.equals(params) && !refresh) {
+                quotas = cachedParams.getResult();
+            }
+        }
+        if (quotas == null) {
+            if (allServers) {
+                quotas = delegateRequestToAllServers(request.clone(), zsc.getRawAuthToken(), sortBy, sortAscending, prov);
+                // explicitly set the result
+                params.setResult(quotas);
             } else {
                 quotas = params.doSearch();
+            }
+            if (session != null) {
+                setCachedQuotaUsage(session, params, allServers);
             }
         }
 
@@ -149,6 +155,9 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             throws ServiceException {
         // first set "allServers" to false
         request.addAttribute(AdminConstants.A_ALL_SERVERS, false);
+        // don't set any "limit" in the delegated requests
+        request.addAttribute(AdminConstants.A_LIMIT, 0);
+        request.addAttribute(AdminConstants.A_OFFSET, 0);
         List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
         // make number of threads in pool configurable?
         ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -216,16 +225,17 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         }
     }
 
-    synchronized static QuotaUsageParams getCachedQuotaUsage(AdminSession session) {
-        return (QuotaUsageParams) session.getData(QUOTA_USAGE_CACHE_KEY);
+    synchronized static QuotaUsageParams getCachedQuotaUsage(AdminSession session, boolean allServers) {
+        return (QuotaUsageParams) session.getData(allServers ? QUOTA_USAGE_ALL_SERVERS_CACHE_KEY : QUOTA_USAGE_CACHE_KEY);
     }
     
-    synchronized static void setCachedQuotaUsage(AdminSession session, QuotaUsageParams params) {
-        session.setData(QUOTA_USAGE_CACHE_KEY, params);
+    synchronized static void setCachedQuotaUsage(AdminSession session, QuotaUsageParams params, boolean allServers) {
+        session.setData(allServers ? QUOTA_USAGE_ALL_SERVERS_CACHE_KEY : QUOTA_USAGE_CACHE_KEY, params);
     }
     
     synchronized static void clearCachedQuotaUsage(AdminSession session) {
         session.clearData(QUOTA_USAGE_CACHE_KEY);
+        session.clearData(QUOTA_USAGE_ALL_SERVERS_CACHE_KEY);
     }
     
     public static class AccountQuota {
@@ -238,16 +248,16 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     }
 
     public class QuotaUsageParams {    
-        String mDomainId;
-        String mSortBy;
-        boolean mSortAscending;
+        String domainId;
+        String sortBy;
+        boolean sortAscending;
 
-        ArrayList<AccountQuota> mResult;
+        List<AccountQuota> mResult;
         
         QuotaUsageParams(Domain d, String sortBy, boolean sortAscending) {
-            mDomainId = (d == null) ? "" : d.getId();
-            mSortBy = (sortBy == null) ? "" : sortBy;
-            mSortAscending = sortAscending;
+            domainId = (d == null) ? "" : d.getId();
+            this.sortBy = (sortBy == null) ? "" : sortBy;
+            this.sortAscending = sortAscending;
         }
         
         public boolean equals(Object o) {
@@ -256,9 +266,9 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             
             QuotaUsageParams other = (QuotaUsageParams) o; 
             return 
-                mDomainId.equals(other.mDomainId) &&
-                mSortBy.equals(other.mSortBy) &&
-                mSortAscending == other.mSortAscending;
+                domainId.equals(other.domainId) &&
+                sortBy.equals(other.sortBy) &&
+                sortAscending == other.sortAscending;
         }
         
         List<AccountQuota> doSearch() throws ServiceException {
@@ -273,7 +283,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             searchOpts.setMakeObjectOpt(MakeObjectOpt.NO_SECONDARY_DEFAULTS);
             searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
             
-            Domain d = mDomainId.equals("") ? null : prov.get(Key.DomainBy.id, mDomainId);
+            Domain d = domainId.equals("") ? null : prov.get(Key.DomainBy.id, domainId);
             if (d != null) {
                 searchOpts.setDomain(d);
             }
@@ -295,14 +305,22 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 result.add(aq);
             }
 
-            boolean sortByTotal = mSortBy.equals(SORT_TOTAL_USED);
-            boolean sortByQuota = mSortBy.equals(SORT_QUOTA_LIMIT);
-            boolean sortByAccount = mSortBy.equals(SORT_ACCOUNT);
+            boolean sortByTotal = sortBy.equals(SORT_TOTAL_USED);
+            boolean sortByQuota = sortBy.equals(SORT_QUOTA_LIMIT);
+            boolean sortByAccount = sortBy.equals(SORT_ACCOUNT);
             Comparator<AccountQuota> comparator =
-                    new QuotaComparator(sortByTotal, sortByQuota, sortByAccount, mSortAscending);
+                    new QuotaComparator(sortByTotal, sortByQuota, sortByAccount, sortAscending);
             Collections.sort(result, comparator);
             mResult = result;
             return mResult;
+        }
+
+        List<AccountQuota> getResult() {
+            return mResult;
+        }
+
+        void setResult(List<AccountQuota> result) {
+            mResult = result;
         }
     }
 
