@@ -158,6 +158,7 @@ public class TestLdapHelper extends LdapTest {
         expected.add(dit.globalGrantDN());
         expected.add(dit.configDN());
         expected.add(dit.shareLocatorBaseDN());
+        expected.add(dit.ucServiceBaseDN());
         
         int numFound = 0;
         while (ne.hasMore()) {

@@ -467,7 +467,9 @@ public abstract class ProvTestUtil {
     throws Exception {
         if (attrs == null) {
             attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraUCProvider, "mitel");
         }
+        
         UCService ucService = prov.get(Key.UCServiceBy.name, ucServiceName);
         assertNull(ucService);
         

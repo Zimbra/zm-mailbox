@@ -3056,7 +3056,7 @@ public class LdapProvisioning extends LdapProv {
             }
             
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to delete domain " + zimbraId, e);
+            throw e;
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -3793,7 +3793,7 @@ public class LdapProvisioning extends LdapProv {
 
             zlc.createEntry(entry);
 
-            DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
+            DistributionList dlist = getDLBasic(DistributionListBy.id, zimbraIdStr, zlc);
 
             if (dlist != null) {
                 AttributeManager.getInstance().postModify(listAttrs, dlist, callbackContext);
@@ -5689,6 +5689,12 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public DistributionList getDLBasic(Key.DistributionListBy keyType, String key)
     throws ServiceException {
+        return getDLBasic(keyType, key, null);
+    }
+    
+    private DistributionList getDLBasic(Key.DistributionListBy keyType, String key,
+            ZLdapContext zlc)
+    throws ServiceException {
 
         Group group = getGroupFromCache(keyType, key);
 
@@ -5704,11 +5710,11 @@ public class LdapProvisioning extends LdapProv {
         switch(keyType) {
             case id:
                 dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListById(key), null, BASIC_DL_ATTRS);
+                        filterFactory.distributionListById(key), zlc, BASIC_DL_ATTRS);
                 break;
             case name:
                 dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListByName(key), null, BASIC_DL_ATTRS);
+                        filterFactory.distributionListByName(key), zlc, BASIC_DL_ATTRS);
                 break;
             default:
                return null;
@@ -6239,7 +6245,7 @@ public class LdapProvisioning extends LdapProv {
                 throw ServiceException.INVALID_REQUEST("Cannot add self as a member: " + memberName, null);
 
             // cannot add a dynamic group as member
-            if (getDynamicGroupBasic(Key.DistributionListBy.name, memberName) != null) {
+            if (getDynamicGroupBasic(Key.DistributionListBy.name, memberName, null) != null) {
                 throw ServiceException.INVALID_REQUEST("Cannot add dynamic group as a member: " + memberName, null);
             }
 
@@ -7695,8 +7701,9 @@ public class LdapProvisioning extends LdapProv {
                      * accounts or when a cached account is going thru auth(that'll trigger a reload) they will get
                      * the new COS values(refreshed as a result of FlushCache(cos)).
                      */
-                    if (account != null)
+                    if (account != null) {
                         removeFromCache(account);
+                    }
                 }
             } else {
                 accountCache.clear();
@@ -7788,8 +7795,8 @@ public class LdapProvisioning extends LdapProv {
     public void removeFromCache(Entry entry) {
         if (entry instanceof Account) {
             accountCache.remove((Account)entry);
-        } else if (entry instanceof DistributionList) {
-            groupCache.remove((DistributionList)entry);
+        } else if (entry instanceof Group) {
+            groupCache.remove((Group)entry);
         } else {
             throw new UnsupportedOperationException();
         }
@@ -8608,7 +8615,7 @@ public class LdapProvisioning extends LdapProv {
 
             zlc.createEntry(entry);
 
-            DynamicGroup group = getDynamicGroupById(zimbraId, zlc, false);
+            DynamicGroup group = getDynamicGroupBasic(DistributionListBy.id, zimbraId, zlc);
 
             if (group != null) {
                 AttributeManager.getInstance().postModify(groupAttrs, group, callbackContext);
@@ -8860,8 +8867,8 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private DynamicGroup getDynamicGroupBasic(Key.DistributionListBy keyType, String key)
-    throws ServiceException {
+    private DynamicGroup getDynamicGroupBasic(Key.DistributionListBy keyType, String key, 
+            ZLdapContext zlc) throws ServiceException {
         DynamicGroup dynGroup = getDynamicGroupFromCache(keyType, key);
         if (dynGroup != null) {
             return dynGroup;
@@ -8869,10 +8876,10 @@ public class LdapProvisioning extends LdapProv {
 
         switch(keyType) {
         case id:
-            dynGroup = getDynamicGroupById(key, null, true);
+            dynGroup = getDynamicGroupById(key, zlc, true);
             break;
         case name:
-            dynGroup = getDynamicGroupByName(key, null, true);
+            dynGroup = getDynamicGroupByName(key, zlc, true);
             break;
         }
 
@@ -8988,7 +8995,7 @@ public class LdapProvisioning extends LdapProv {
     private boolean inDynamicGroup(Account acct, String zimbraId) throws ServiceException {
         Set<String> memberOf = acct.getMultiAttrSet(Provisioning.A_zimbraMemberOf);
         if (memberOf.contains(zimbraId)) {
-            DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, zimbraId);
+            DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, zimbraId, null);
             return dynGroup != null && dynGroup.isIsACLGroup();
         }
         return false;
@@ -8999,7 +9006,7 @@ public class LdapProvisioning extends LdapProv {
 
         String[] memberOf = acct.getMultiAttr(Provisioning.A_zimbraMemberOf);
         for (String groupId : memberOf) {
-            DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, groupId);
+            DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, groupId, null);
             if (dynGroup != null && dynGroup.isIsACLGroup()) {
                 groups.add(dynGroup);
             }
