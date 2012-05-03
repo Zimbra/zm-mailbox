@@ -62,7 +62,7 @@ public class LdapDistributionList extends DistributionList implements LdapEntry 
         // created from getDLBasic, which does not bring in members
         if (mIsBasic) {
             DistributionList dl = getProvisioning().get(DistributionListBy.id, getId());
-            return getMultiAttrSet(MEMBER_ATTR);
+            return dl.getMultiAttrSet(MEMBER_ATTR);
         } else {
             return super.getAllMembersSet();
         }

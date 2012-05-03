@@ -3284,7 +3284,7 @@ public class LdapProvisioning extends LdapProv {
 
                 @Override
                 public Account getAccountById(String id) throws ServiceException {
-                    // note: we do NOT want to get a cahed entry
+                    // note: we do NOT want to get a cached entry
                     return ((LdapProvisioning) mProv).getAccountByQuery(
                         mProv.getDIT().mailBranchBaseDN(),
                         ZLdapFilterFactory.getInstance().accountById(id), toZLdapContext(), true);
@@ -3297,7 +3297,7 @@ public class LdapProvisioning extends LdapProv {
                     return ((LdapProvisioning) mProv).getDistributionListByQuery(
                             mDIT.mailBranchBaseDN(),
                             filterFactory.distributionListById(id),
-                            toZLdapContext(), null);
+                            toZLdapContext(), false);
                 }
 
                 @Override
@@ -3824,7 +3824,10 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private DistributionList getDistributionListByQuery(String base, ZLdapFilter filter,
-            ZLdapContext initZlc, String[] returnAttrs) throws ServiceException {
+            ZLdapContext initZlc, boolean basicAttrsOnly) throws ServiceException {
+        
+        String[] returnAttrs = basicAttrsOnly ? BASIC_DL_ATTRS : null;
+        
         DistributionList dl = null;
         try {
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
@@ -3834,7 +3837,7 @@ public class LdapProvisioning extends LdapProv {
                     searchControls, initZlc, LdapServerType.REPLICA);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-                dl = makeDistributionList(sr.getDN(), sr.getAttributes(), false);
+                dl = makeDistributionList(sr.getDN(), sr.getAttributes(), basicAttrsOnly);
             }
             ne.close();
         } catch (ServiceException e) {
@@ -3991,7 +3994,7 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           filterFactory.distributionListById(zimbraId),
-                                          zlc, null);
+                                          zlc, false);
     }
 
     private DistributionList getDistributionListByIdInternal(String zimbraId)
@@ -4060,7 +4063,7 @@ public class LdapProvisioning extends LdapProv {
         listAddress = IDNUtil.toAsciiEmail(listAddress);
 
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                filterFactory.distributionListByName(listAddress), null, null);
+                filterFactory.distributionListByName(listAddress), null, false);
     }
 
     @Override
@@ -5710,11 +5713,11 @@ public class LdapProvisioning extends LdapProv {
         switch(keyType) {
             case id:
                 dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListById(key), zlc, BASIC_DL_ATTRS);
+                        filterFactory.distributionListById(key), zlc, true);
                 break;
             case name:
                 dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListByName(key), zlc, BASIC_DL_ATTRS);
+                        filterFactory.distributionListByName(key), zlc, true);
                 break;
             default:
                return null;
