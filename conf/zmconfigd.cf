@@ -166,6 +166,14 @@ SECTION mta DEPENDS amavis
 	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
 	RESTART mta
 
+SECTION opendkim DEPENDS mta
+	LOCAL ldap_postfix_password
+	LOCAL ldap_starttls_supported
+	LOCAL av_notify_user
+	LOCAL ldap_url
+	REWRITE conf/opendkim.conf.in conf/opendkim.conf
+	RESTART opendkim
+
 SECTION sasl
 	VAR getAllMtaAuthURLs
 	LOCAL sasl_smtpd_mech_list
