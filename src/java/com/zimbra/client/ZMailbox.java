@@ -1328,7 +1328,24 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException
      */
     public ZContact createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
-        return createContact(folderId, tags, attrs, null);
+        return createContact(folderId, tags, attrs, null, null);
+    }
+    /**
+     * Creates a new contact.
+     * @param folderId the new contact's folder id
+     * @param tags tags to set on the contact, or <tt>null</tt>
+     * @param attrs contact attributes (key/value)
+     * @param members members of a contact group
+     * @return the new contact
+     * @throws ServiceException
+     */
+    public ZContact createContactWithMembers(String folderId, String tags, Map<String, String> attrs, Map<String, String> members) throws ServiceException {
+        return createContact(folderId, tags, attrs, null, members);
+    }
+
+
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments) throws ServiceException {
+        return createContact(folderId, tags, attrs, attachments, null);
     }
 
     /**
@@ -1341,7 +1358,7 @@ public class ZMailbox implements ToZJSONObject {
      * @return the new contact
      * @throws ServiceException
      */
-    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments)
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
     throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
@@ -1350,6 +1367,14 @@ public class ZMailbox implements ToZJSONObject {
         if (tags != null)
             cn.addAttribute(MailConstants.A_TAGS, tags);
         addAttrsAndAttachments(cn, attrs, attachments);
+        if (members != null) {
+            for (Map.Entry<String, String> entry : members.entrySet()) {
+                Element memberEl = cn.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, entry.getKey());
+                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, entry.getValue());
+            }
+        }
+
         return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
 
@@ -1381,11 +1406,35 @@ public class ZMailbox implements ToZJSONObject {
      * @param id of contact
      * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
      * @param attrs modified attrs
+     * @param members members of a contact group
+     * @return updated contact
+     * @throws ServiceException on error
+     */
+    public ZContact modifyContactWithMembers(String id, boolean replace, Map<String, String> attrs,  Map<String, String> members) throws ServiceException {
+        return modifyContact(id, replace, attrs, null, members);
+    }
+
+    /**
+     * @param id of contact
+     * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
+     * @param attrs modified attrs
      * @return updated contact
      * @throws ServiceException on error
      */
     public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
-        return modifyContact(id, replace, attrs, null);
+        return modifyContact(id, replace, attrs, null, null);
+    }
+
+    /**
+     * @param id of contact
+     * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
+     * @param attrs modified attrs
+     * @param attachments contact attachments (key/upload id) or <tt>null</tt>
+     * @return updated contact
+     * @throws ServiceException on error
+     */
+    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments) throws ServiceException {
+        return modifyContact(id, replace, attrs, null, null);
     }
 
     /**
@@ -1393,10 +1442,11 @@ public class ZMailbox implements ToZJSONObject {
      * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
      * @param attrs modified attrs, or <tt>null</tt>
      * @param attachments modified attachments , or <tt>null</tt>
+     * @param members members of a contact group
      * @return updated contact
      * @throws ServiceException on error
      */
-    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments)
+    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
     throws ServiceException {
         Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
         if (replace)
@@ -1404,6 +1454,13 @@ public class ZMailbox implements ToZJSONObject {
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, id);
         addAttrsAndAttachments(cn, attrs, attachments);
+        if (members != null) {
+            for (Map.Entry<String, String> entry : members.entrySet()) {
+                Element memberEl = cn.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, entry.getKey());
+                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, entry.getValue());
+            }
+        }
         return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
     }
 
@@ -1444,10 +1501,11 @@ public class ZMailbox implements ToZJSONObject {
      */
     public synchronized ZContact getContact(String id) throws ServiceException {
         ZContact result = mContactCache.get(id);
-        if (result == null) {
+        if (result == null || result.isDirty()) {
             Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
             req.addAttribute(MailConstants.A_SYNC, true);
             req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
+            req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
             result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
             mContactCache.put(id, result);
         }

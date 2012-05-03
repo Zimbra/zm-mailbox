@@ -64,7 +64,6 @@ public class ZContactHit implements ZSearchHit {
         mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
-        mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
 
         HashMap<String, String> attrs = new HashMap<String, String>();
 
@@ -94,6 +93,7 @@ public class ZContactHit implements ZSearchHit {
         mNameSuffix = attrs.get(ContactConstants.A_nameSuffix);
         mCompany= attrs.get(ContactConstants.A_company);
         mPhoneticCompany= attrs.get(ContactConstants.A_phoneticCompany);
+        mType = attrs.get(ContactConstants.A_type);
     }
 
     @Override

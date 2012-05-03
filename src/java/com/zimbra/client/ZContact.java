@@ -85,9 +85,11 @@ public class ZContact implements ZItem, ToZJSONObject {
     private long mDate;
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
+    private Map<String, ZContact> mMembers;
     private Map<String, ZContactAttachmentInfo> mAttachments;
     private boolean mGalContact;
     private ZMailbox mMailbox;
+    private boolean isDirty;
 
     public enum Flag {
         flagged('f'),
@@ -125,6 +127,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
 
     public ZContact(Element e, ZMailbox mailbox) throws ServiceException {
+        isDirty = false;
         mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
@@ -152,6 +155,18 @@ public class ZContact implements ZItem, ToZJSONObject {
 
         mAttrs = Collections.unmodifiableMap(attrs);
         mAttachments = Collections.unmodifiableMap(attachments);
+
+        HashMap<String, ZContact> members = new HashMap<String, ZContact>();
+        for (Element memberEl : e.listElements(MailConstants.E_CONTACT_GROUP_MEMBER)) {
+            String id = memberEl.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE);
+            String type = memberEl.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE);
+            Element cnEl = memberEl.getOptionalElement(MailConstants.E_CONTACT);
+            ZContact contact = null;
+            if (cnEl != null)
+                contact = new ZContact(cnEl, type.equals("G") ? true : false, mailbox);
+            members.put(id, contact);
+        }
+        mMembers = Collections.unmodifiableMap(members);
     }
 
     public ZMailbox getMailbox() {
@@ -180,7 +195,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mGalContact;
     }
 
-    public boolean isGroup() { return getAttrs().get("dlist") != null; }
+    public boolean isGroup() { return (getAttrs().get("type") != null && getAttrs().get("type").equals("group")); }
 
     public boolean getIsGroup() { return isGroup(); }
 
@@ -224,6 +239,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mAttrs;
     }
 
+    public Map<String, ZContact> getMembers() {
+        return mMembers;
+    }
     /**
      * Returns the attachment names, or an empty set.
      */
@@ -281,6 +299,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
     }
 
+    public boolean isDirty() {
+        return isDirty;
+    }
 	@Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyContactEvent) {
@@ -293,6 +314,8 @@ public class ZContact implements ZItem, ToZJSONObject {
                 mMetaDataChangedDate = cevent.getDate(mDate);
                 mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
                 mAttrs = cevent.getAttrs(mAttrs);
+                if(isGroup())
+                    isDirty = true;
             }
         }
 	}
