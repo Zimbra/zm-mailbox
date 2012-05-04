@@ -144,9 +144,4 @@ public class TritonRawStoreManager extends ContentAddressableStoreManager {
 //            delete.releaseConnection();
 //        }
     }
-
-    @Override
-    protected boolean isCentralized() {
-        return true;
-    }
 }

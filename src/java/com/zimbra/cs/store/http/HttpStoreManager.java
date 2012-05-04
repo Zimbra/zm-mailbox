@@ -100,8 +100,4 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
         }
     }
 
-    @Override
-    protected boolean isCentralized() {
-        return true;
-    }
 }

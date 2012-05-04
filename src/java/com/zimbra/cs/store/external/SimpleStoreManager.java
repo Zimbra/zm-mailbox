@@ -85,7 +85,11 @@ public class SimpleStoreManager extends ExternalStoreManager {
     }
 
     @Override
-    protected boolean isCentralized() {
-        return false;
+    public boolean supports(StoreFeature feature) {
+        if (feature == StoreFeature.CENTRALIZED) {
+            return false;
+        } else {
+            return super.supports(feature);
+        }
     }
 }

@@ -174,11 +174,6 @@ public class TritonBlobStoreManager extends ContentAddressableStoreManager {
     }
 
     @Override
-    protected boolean isCentralized() {
-        return true;
-    }
-
-    @Override
     public IncomingBlob newIncomingBlob(String id, Object ctxt) throws IOException, ServiceException {
         return new TritonIncomingBlob(id, url, getBlobBuilder(), ctxt, newDigest(), hashType);
     }

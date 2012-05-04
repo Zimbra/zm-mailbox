@@ -252,15 +252,8 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     public boolean supports(StoreFeature feature) {
         switch (feature) {
             case BULK_DELETE:  return false;
-            case CENTRALIZED:  return isCentralized();
+            case CENTRALIZED:  return true;
             default:           return false;
         }
     }
-
-    /**
-     *
-     * @return true if the store is centralized (i.e. one store for all mailbox servers), false otherwise
-     * used during mailbox move to avoid copying blobs if possible
-     */
-    protected abstract boolean isCentralized();
 }
