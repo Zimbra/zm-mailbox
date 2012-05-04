@@ -29,11 +29,6 @@ import com.zimbra.soap.admin.type.UCServiceSelector;
  * @zm-api-command-description Generate a new Cisco Presence server session ID and persist 
  * the newly generated session id in zimbraUCCiscoPresenceSessionId attribute for the 
  * specified UC service.
- * <br />
- * Notes:
- * <ul>
- * <li>an empty attribute value removes the specified attr
- * </ul>
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=VoiceAdminConstants.E_UPDATE_PRESENCE_SESSION_ID_REQUEST)
