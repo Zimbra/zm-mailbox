@@ -21,9 +21,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.VoiceAdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
+import com.zimbra.soap.admin.type.UCServiceSelector;
+import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-description Generate a new Cisco Presence server session ID and persist 
@@ -41,21 +44,18 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 public class UpdatePresenceSessionIdRequest extends AdminAttrsImpl {
 
     /**
-     * @zm-api-field-tag value-of-zimbra-id
-     * @zm-api-field-description Zimbra ID
+     * @zm-api-field-description the UC service
      */
-    @XmlElement(name=AdminConstants.E_ID, required=true)
-    private String id;
+    @XmlElement(name=AdminConstants.E_UC_SERVICE, required=true)
+    private UCServiceSelector ucService;
     
     /**
-     * @zm-api-field-tag app username 
      * @zm-api-field-description app username
      */
     @XmlElement(name=AdminConstants.E_USERNAME, required=true)
     private String username;
     
     /**
-     * @zm-api-field-tag app password
      * @zm-api-field-description app password
      */
     @XmlElement(name=AdminConstants.E_PASSWORD, required=true)
@@ -64,14 +64,14 @@ public class UpdatePresenceSessionIdRequest extends AdminAttrsImpl {
     public UpdatePresenceSessionIdRequest() {
     }
     
-    public UpdatePresenceSessionIdRequest(String id, String username, String password) {
-        setId(id);
+    public UpdatePresenceSessionIdRequest(UCServiceSelector ucService, String username, String password) {
+        setUCService(ucService);
         setUsername(username);
         setPassword(password);
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setUCService(UCServiceSelector ucService) {
+        this.ucService = ucService;
     }
     
     public void setUsername(String username) {
@@ -82,8 +82,8 @@ public class UpdatePresenceSessionIdRequest extends AdminAttrsImpl {
         this.password = password;
     }
 
-    public String getId() {
-        return id;
+    public UCServiceSelector getId() {
+        return ucService;
     }
     
     public String getUsername() {
