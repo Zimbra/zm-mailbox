@@ -493,6 +493,11 @@ public final class NativeFormatter extends Formatter {
         } catch (UnsupportedEncodingException e1) {
         } catch (ServiceException e) {
         }
+
+        // set Last-Modified header to date when item's content was last modified
+        resp.addDateHeader("Last-Modified", item.getDate());
+        // set ETag header to item's mod_content value
+        resp.addHeader("ETag", String.valueOf(item.getSavedSequence()));
     }
 
     private static final int READ_AHEAD_BUFFER_SIZE = 256;
