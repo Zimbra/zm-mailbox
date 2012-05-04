@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,8 +15,6 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
 import java.util.Map;
@@ -24,22 +22,28 @@ import java.util.Map;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonTypeName;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
 
+/**
+ * Note: Any subclasses that have fields for elements MUST either omit {@link XmlType} or specify a propOrder in it
+ *       naming all fields related to elements.  This is required to ensure correctly generated WSDL.
+ *       Failure to do so will result in an error similar to the following from "ant wsdl-client-support"'s wsimport:
+ *           [WARNING] cos-all-limited.1.2: An all model group must appear in a particle with {min occurs} =
+ *           {max occurs} = 1, and that particle must be part of a pair which constitutes the {content type} of
+ *           a complex type definition.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlType(propOrder = {"attrs"})
 public class AdminAttrsImpl implements AdminAttrs {
 
     /**

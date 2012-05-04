@@ -19,14 +19,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.VoiceAdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.UCServiceSelector;
-import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-description Generate a new Cisco Presence server session ID and persist 
@@ -40,7 +37,6 @@ import com.zimbra.soap.type.AccountSelector;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=VoiceAdminConstants.E_UPDATE_PRESENCE_SESSION_ID_REQUEST)
-@XmlType(propOrder = {})
 public class UpdatePresenceSessionIdRequest extends AdminAttrsImpl {
 
     /**
