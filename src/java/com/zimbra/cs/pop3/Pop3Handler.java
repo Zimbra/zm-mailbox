@@ -150,7 +150,8 @@ abstract class Pop3Handler {
         } catch (Pop3CmdException e) {
             ZimbraLog.pop.debug(e.getMessage(), e);
             errorCount++;
-            if (errorCount >= LC.pop3_max_consecutive_error.intValue()) {
+            int errorLimit = LC.pop3_max_consecutive_error.intValue();
+            if (errorLimit > 0 && errorCount >= errorLimit) {
                 ZimbraLog.pop.warn("dropping connection due to too many errors");
                 sendERR(e.getResponse() +" : Dropping connection due to too many bad commands");
                 dropConnection = true;
