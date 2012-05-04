@@ -17,7 +17,7 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -44,21 +44,21 @@ public class UpdatePresenceSessionIdRequest extends AdminAttrsImpl {
      * @zm-api-field-tag value-of-zimbra-id
      * @zm-api-field-description Zimbra ID
      */
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
+    @XmlElement(name=AdminConstants.E_ID, required=true)
     private String id;
     
     /**
      * @zm-api-field-tag app username 
      * @zm-api-field-description app username
      */
-    @XmlAttribute(name=AdminConstants.E_USERNAME, required=true)
+    @XmlElement(name=AdminConstants.E_USERNAME, required=true)
     private String username;
     
     /**
      * @zm-api-field-tag app password
      * @zm-api-field-description app password
      */
-    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=true)
+    @XmlElement(name=AdminConstants.E_PASSWORD, required=true)
     private String password;
 
     public UpdatePresenceSessionIdRequest() {
