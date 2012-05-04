@@ -186,7 +186,16 @@ public final class MockProvisioning extends Provisioning {
         Map<String, Object> map = entry.getAttrs(false);
         for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {
             if (attr.getValue() != null) {
-                map.put(attr.getKey(), attr.getValue());
+                Object value = attr.getValue();
+                if (value instanceof List) { // Convert list to string array.
+                    List<?> list = (List<?>) value;
+                    String[] strArray = new String[list.size()];
+                    for (int i = 0; i < list.size(); i++) { 
+                        strArray[i] = list.get(i).toString();
+                    }
+                    value = strArray;
+                }
+                map.put(attr.getKey(), value);
             } else {
                 map.remove(attr.getKey());
             }
