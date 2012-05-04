@@ -362,7 +362,7 @@ public abstract class AccessManager {
         throw ServiceException.FAILURE("not supported", null);
     }
     
-    public Map<Right, Set<Entry>> discoverRights(Account credentials, Set<Right> rights) 
+    public Map<Right, Set<Entry>> discoverRights(Account credentials, Set<Right> rights, boolean onMaster) 
     throws ServiceException {
         return Maps.newHashMap();  // return empty result
     }

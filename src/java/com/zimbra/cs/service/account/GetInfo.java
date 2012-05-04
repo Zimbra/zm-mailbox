@@ -413,6 +413,6 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
-        DiscoverRights.discoverRights(account, rights, eRights);
+        DiscoverRights.discoverRights(account, rights, eRights, false);
     }
 }

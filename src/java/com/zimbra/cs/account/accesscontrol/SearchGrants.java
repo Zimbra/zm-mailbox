@@ -45,6 +45,7 @@ public final class SearchGrants {
     
     private final Account acct;
     private final Set<Right> rights;
+    private final boolean onMaster;
     
     private final Set<String> fetchAttrs = Sets.newHashSet(
             Provisioning.A_cn, 
@@ -58,18 +59,20 @@ public final class SearchGrants {
         this.granteeIds = granteeIds;
         this.acct = null;
         this.rights = null;
+        this.onMaster = true;
     }
     
     /*
      * search for rights applied to the acct
      */
     SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Account acct, 
-            Set<Right> rights) {
+            Set<Right> rights, boolean onMaster) {
         this.prov = prov;
         this.targetTypes = targetTypes;
         this.granteeIds = null;
         this.acct = acct;
         this.rights = rights;
+        this.onMaster = onMaster;
     }
 
     void addFetchAttribute(String attr) {
@@ -101,11 +104,13 @@ public final class SearchGrants {
     static final class SearchGrantsResults {
         private final Provisioning prov;
 
-        // map of raw(in ldap data form, quick way for staging grants found in search visitor, because
-        // we don't want to do much processing in the visitor while taking a ldap connection) search results
+        // map of raw(in ldap data form, quick way for staging grants found in search visitor,
+        // because we don't want to do much processing in the visitor while taking a 
+        // ldap connection) search results
         //    key: target id (or name if zimlet)
         //    value: grants on this target
-        private final Map<String, GrantsOnTargetRaw> rawResults = new HashMap<String, GrantsOnTargetRaw>();
+        private final Map<String, GrantsOnTargetRaw> rawResults = 
+            new HashMap<String, GrantsOnTargetRaw>();
 
         // results in the form usable by callers
         private Set<GrantsOnTarget> results;
@@ -166,7 +171,8 @@ public final class SearchGrants {
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraAclTarget)) {
                 tt = TargetType.global;
             } else {
-                throw ServiceException.FAILURE("cannot determine target type from SearchGrantResult. " + sgr, null);
+                throw ServiceException.FAILURE(
+                        "cannot determine target type from SearchGrantResult. " + sgr, null);
             }
             Entry entry = null;
             try {
@@ -293,7 +299,13 @@ public final class SearchGrants {
             }
         }
         query.append("))");
-        LdapProv.getInst().searchLdapOnMaster(base, query.toString(),
-                fetchAttrs.toArray(new String[fetchAttrs.size()]), visitor);
+        
+        if (onMaster) {
+            LdapProv.getInst().searchLdapOnMaster(base, query.toString(),
+                    fetchAttrs.toArray(new String[fetchAttrs.size()]), visitor);
+        } else {
+            LdapProv.getInst().searchLdapOnReplica(base, query.toString(),
+                    fetchAttrs.toArray(new String[fetchAttrs.size()]), visitor);
+        }
     }
 }

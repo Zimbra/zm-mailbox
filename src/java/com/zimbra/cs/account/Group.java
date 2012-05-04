@@ -164,7 +164,7 @@ public abstract class Group extends MailTarget implements AliasedEntry {
             
             Right right = GROUP_OWNER_RIGHT;
             Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(acct, 
-                    Collections.singleton(right));
+                    Collections.singleton(right), true);
             
             Set<Entry> ownerOf = discoveredRights.get(right);
             Set<Group> ownerOfGroups = Sets.newHashSet();

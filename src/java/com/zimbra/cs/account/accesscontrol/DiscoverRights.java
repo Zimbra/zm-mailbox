@@ -25,16 +25,22 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 
+/**
+ * @author pshao
+ */
 public class DiscoverRights {
-    Account acct;
-    Set<Right> rights;
+    private Account acct;
+    private Set<Right> rights;
+    private boolean onMaster;
     
-    DiscoverRights(Account credentials, Set<Right> rights) throws ServiceException {
+    DiscoverRights(Account credentials, Set<Right> rights, boolean onMaster) 
+    throws ServiceException {
         if (rights.size() == 0) {
             throw ServiceException.FAILURE("no right is specified", null);
         }
         this.acct = credentials;
         this.rights = Sets.newHashSet(rights);
+        this.onMaster = onMaster;
     }
     
     /*
@@ -54,7 +60,7 @@ public class DiscoverRights {
             targetTypesToSearch.add(right.getTargetType());
         }
         
-        SearchGrants search = new SearchGrants(prov, targetTypesToSearch, acct, rights);
+        SearchGrants search = new SearchGrants(prov, targetTypesToSearch, acct, rights, onMaster);
         Set<SearchGrants.GrantsOnTarget> searchResults = search.doSearch().getResults();
         
         Map<Right, Set<Entry>> result = Maps.newHashMap();

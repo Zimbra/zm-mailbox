@@ -16,11 +16,9 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
@@ -39,8 +37,10 @@ import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.ldap.LdapUtil;
 
+/**
+ * @author pshao
+ */
 public class ACLAccessManager extends AccessManager implements AdminConsoleCapable {
 
     public ACLAccessManager() throws ServiceException {
@@ -591,9 +591,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     // discover
     // ===========================
     @Override
-    public Map<Right, Set<Entry>> discoverRights(Account credentials, Set<Right> rights) 
-    throws ServiceException {
-        DiscoverRights discoverRights = new DiscoverRights(credentials, rights);
+    public Map<Right, Set<Entry>> discoverRights(Account credentials, Set<Right> rights,
+            boolean onMaster) throws ServiceException {
+        DiscoverRights discoverRights = new DiscoverRights(credentials, rights, onMaster);
         return discoverRights.handle();
     }
     

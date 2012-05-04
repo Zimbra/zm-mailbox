@@ -36,6 +36,9 @@ import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @author pshao
+ */
 public class DiscoverRights extends AccountDocumentHandler {
 
     /* can't do this, RightManager might not have been initialized
@@ -78,7 +81,7 @@ public class DiscoverRights extends AccountDocumentHandler {
         }
 
         Element response = zsc.createElement(AccountConstants.DISCOVER_RIGHTS_RESPONSE);
-        discoverRights(account, rights, response);
+        discoverRights(account, rights, response, true);
 
         return response;
     }
@@ -87,10 +90,10 @@ public class DiscoverRights extends AccountDocumentHandler {
         return DELEGATED_SEND_RIGHTS.contains(right.getName());
     }
     
-    public static void discoverRights(Account account, Set<Right> rights, Element eParent) 
-    throws ServiceException {
+    public static void discoverRights(Account account, Set<Right> rights, Element eParent,
+            boolean onMaster) throws ServiceException {
         AccessManager accessMgr = AccessManager.getInstance();
-        Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(account, rights);
+        Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(account, rights, onMaster);
         
         Locale locale = account.getLocale();
         for (Map.Entry<Right, Set<Entry>> targetsForRight : discoveredRights.entrySet()) {
