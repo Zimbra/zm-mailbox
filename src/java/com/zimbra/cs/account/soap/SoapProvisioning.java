@@ -2630,8 +2630,12 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public String updatePresenceSessionId(String zimbraId, String username, String password) 
     throws ServiceException {
+        
+        UCServiceSelector sel =
+            new UCServiceSelector(SoapProvisioning.toJaxb(Key.UCServiceBy.id), zimbraId);
+        
         UpdatePresenceSessionIdRequest req = new UpdatePresenceSessionIdRequest(
-                zimbraId, username, password);
+                sel, username, password);
         UpdatePresenceSessionIdResponse resp = invokeJaxb(req);
         return resp.getSessionId();
     }
