@@ -418,11 +418,10 @@ final class ImapSessionManager {
         try {
             List<ImapMessage> actual = mbox.openImapFolder(octxt, folder.getId());
             Collections.sort(actual);
-
             if (i4list.size() != actual.size()) {
                 ZimbraLog.imap.error("IMAP session cache consistency check failed: inconsistent list lengths " +
-                        "folder=%s,cache=%d,db=%d,diff={cache:%s,db:%s}", fid, i4list.size(), actual.size(),
-                        diff(i4list, actual), diff(actual, i4list));
+                        "folder=%s,cache=%d,db=%d,diff={cache:%s,db:%s},dupes=%s", fid, i4list.size(), actual.size(),
+                        diff(i4list, actual), diff(actual, i4list), dupeCheck(i4list));
                 clearCache(folder);
                 return actual;
             }
@@ -458,6 +457,17 @@ final class ImapSessionManager {
         Set<ImapMessage> diff = Sets.newHashSet(list1);
         diff.removeAll(list2);
         return diff;
+    }
+
+    private List<ImapMessage> dupeCheck(List<ImapMessage> list) {
+        List<ImapMessage> dupes = new ArrayList<ImapMessage>();
+        for (int i = 0; i < list.size(); i++) {
+            ImapMessage current = list.get(i);
+            if (dupes.contains(current) || list.lastIndexOf(current) != i) {
+                dupes.add(current);
+            }
+        }
+        return dupes;
     }
 
     private static void renumberMessages(OperationContext octxt, Mailbox mbox, List<ImapMessage> i4sorted)

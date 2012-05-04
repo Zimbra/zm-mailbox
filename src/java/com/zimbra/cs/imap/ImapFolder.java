@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -46,8 +47,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @since Apr 30, 2005
@@ -396,8 +397,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      *  increasing IMAP UID order.  Added messages are appended to the end of
      *  the folder's {@link #sequence} message list and inserted into the
      *  {@link #mMessageIds} hash (if the latter hash has been instantiated).
-     * @return the passed-in ImapMessage. */
-    synchronized ImapMessage cache(ImapMessage i4msg, boolean recent) {
+     * @return true if message cached successfully without modification false if a renumber was required. */
+    synchronized boolean cache(ImapMessage i4msg, boolean recent) {
         // provide the information missing from the DB search
         if (folderId == Mailbox.ID_FOLDER_SPAM) {
             i4msg.sflags |= ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED;
@@ -410,16 +411,53 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             }
         }
         // update the folder information
-        if (sequence.size() > 0 && sequence.get(sequence.size() - 1).imapUid == i4msg.imapUid) {
-            ZimbraLog.imap.error("duplicate UID %d will be replaced", i4msg.imapUid, new Exception());
+        ImapMessage last = null;
+        if (sequence.size() > 0 && (last = sequence.get(sequence.size() - 1)).imapUid > i4msg.imapUid) {
+            ZimbraLog.imap.debug("adding out of order UID. prev: %s current: %s", last, i4msg);
+            if (!insertOutOfOrder(i4msg)) {
+                return false;
+            }
+        } else if (last != null && last.imapUid == i4msg.imapUid) {
+            //should never occur, log so we can learn more if it does
+            ZimbraLog.imap.warn("duplicate UID %s %s added to sequence", i4msg, last, new Exception());
             sequence.set(sequence.size() - 1, i4msg);
+            setIndex(i4msg, sequence.size());
         } else {
+            //normal case, last item has lower UID so just add to the end
             sequence.add(i4msg);
+            setIndex(i4msg, sequence.size());
         }
-        setIndex(i4msg, sequence.size());
         // update the tag cache to include only the tags in the folder
         updateTagCache(i4msg);
-        return i4msg;
+        return true;
+    }
+
+    private boolean insertOutOfOrder(ImapMessage i4msg) {
+        LinkedList<ImapMessage> shifted = new LinkedList<ImapMessage>();
+        int idx  = sequence.size() - 1;
+        while (idx > -1) {
+            ImapMessage prev = sequence.get(idx);
+            if (prev.imapUid <= i4msg.imapUid) {
+                break;
+            } else if (prev.isAdded()) {
+                shifted.addFirst(prev);
+                //add to beginning so iteration below starts with lowest UID
+                //this is necessary to ensure that messageIds map holds the highest UID for a given msgId
+                idx--;
+            } else {
+                ZimbraLog.imap.warn("message added out of order occurs before message which is already visible to client. Must renumber %s", i4msg);
+                //prev has higher UID, but it has already been displayed to client
+                //have to renumber this message
+                return false;
+            }
+        }
+        idx++;
+        sequence.add(idx, i4msg);
+        setIndex(i4msg, idx + 1);
+        for (ImapMessage shiftedMsg : shifted) {
+            setIndex(shiftedMsg, shiftedMsg.sequence + 1);
+        }
+        return true;
     }
 
     void updateTagCache(ImapMessage i4msg) {
@@ -915,7 +953,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         for (ListIterator<ImapMessage> lit = sequence.listIterator(); lit.hasNext(); seq++) {
             ImapMessage i4msg = lit.next();
             if (i4msg.isExpunged()) {
-                ZimbraLog.imap.debug("  ** removing: %d", i4msg.msgId);
+                ZimbraLog.imap.debug("  ** removing: %s", i4msg);
                 // uncache() removes pointers to the message from mMessageIds;
                 //   if the message appears again in sequence, it *must* be later and the
                 //   subsequent call to setIndex() will correctly update the mMessageIds mapping
@@ -999,17 +1037,23 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         if (i4msg == null) {
             if (inFolder && !isVirtual()) {
                 added.add(item);
-                ZimbraLog.imap.debug("  ** moved (ntfn): %d", item.getId());
+                ZimbraLog.imap.debug("  ** moved (ntfn) {id: %d UID: %d}", item.getId(), item.getImapUid());
             }
         } else if (!inFolder && !isVirtual()) {
             markMessageExpunged(i4msg);
         } else if ((chg.why & Change.IMAP_UID) != 0) {
             // if the IMAP uid changed, need to bump it to the back of the sequence!
+            if (item.getImapUid() > 0 && i4msg.imapUid > item.getImapUid()) {
+                //this update was the result of renumber which occurred in other session
+                //we need to ignore it or we end up expunging the newest copy of the message (with current UID) and replacing it with an older UID
+                ZimbraLog.imap.debug("IMAP UID changed (ntfn) {id: %d UID: %d} but sequence already contains higher UID %s", item.getId(), item.getImapUid(), i4msg);
+                return;
+            }
             markMessageExpunged(i4msg);
             if (!isVirtual()) {
                 added.add(item);
             }
-            ZimbraLog.imap.debug("  ** imap uid changed (ntfn): %d", item.getId());
+            ZimbraLog.imap.debug("  ** imap uid changed (ntfn) {id: %d UID: %d}", item.getId(), item.getImapUid());
         } else if ((chg.why & (Change.TAGS | Change.FLAGS | Change.UNREAD)) != 0) {
             i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTags(), changeId, this);
         }
@@ -1032,38 +1076,39 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             }
         }
 
+        List<Integer> renumber = new ArrayList<Integer>();
+
         if (added.numbered != null) {
             // if messages have acceptable UIDs, just add 'em
-            StringBuilder addlog = debug ? new StringBuilder("  ** adding messages (ntfn):") : null;
+            StringBuilder addlog = debug ? new StringBuilder("  ** adding messages (ntfn) ") : null;
             for (ImapMessage i4msg : added.numbered) {
-                cache(i4msg, recent);
-                if (debug) {
-                    addlog.append(' ').append(i4msg.msgId);
+                if (cache(i4msg, recent)) {
+                    if (debug) {
+                        addlog.append(i4msg).append(' ');
+                    }
+                    i4msg.setAdded(true);
+                    dirtyMessage(i4msg, changeId);
+                } else {
+                    renumber.add(i4msg.msgId);
                 }
-                i4msg.setAdded(true);
-                dirtyMessage(i4msg, changeId);
             }
             if (debug) {
                 ZimbraLog.imap.debug(addlog);
             }
         }
 
-        if (added.unnumbered != null) {
+
+        if (added.unnumbered != null || renumber.size() > 0) {
             // 2.3.1.1: "Unique identifiers are assigned in a strictly ascending fashion in
             //           the mailbox; as each message is added to the mailbox it is assigned
             //           a higher UID than the message(s) which were added previously."
-            List<Integer> renumber = new ArrayList<Integer>();
-            StringBuilder chglog = debug ? new StringBuilder("  ** moved; changing imap uid (ntfn):") : null;
-            for (ImapMessage i4msg : added.unnumbered) {
-                renumber.add(i4msg.msgId);
-                if (debug) {
-                    chglog.append(' ').append(i4msg.msgId);
+            if (added.unnumbered != null) {
+                for (ImapMessage i4msg : added.unnumbered) {
+                    renumber.add(i4msg.msgId);
                 }
             }
             try {
-                if (debug) {
-                    ZimbraLog.imap.debug(chglog);
-                }
+                ZimbraLog.imap.debug("  ** moved; changing imap uid (ntfn): %s", renumber);
                 // notification will take care of adding to mailbox
                 getMailbox().resetImapUid(null, renumber);
             } catch (ServiceException e) {
@@ -1077,5 +1122,4 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     @Override
     public void finishNotification(int changeId) {
     }
-
 }

@@ -45,6 +45,7 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
@@ -697,7 +698,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     @Override
     public String toString() {
-        return String.valueOf(msgId);
+        return Objects.toStringHelper("").
+            add("m", msgId).
+            add("u", imapUid).toString();
     }
 
     public static void main(String[] args) {
