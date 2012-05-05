@@ -14,9 +14,12 @@
  */
 package com.zimbra.cs.ldap;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.zimbra.common.util.CsvWriter;
 import com.zimbra.cs.account.Provisioning;
 
 /**
@@ -173,17 +176,38 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         }
 
         public String getStatString() {
-            return name() + ": " + template;
+            return LdapOp.SEARCH.name() + "_" + name(); // + ": " + template;
+        }
+        
+        private String getTemplate() {
+            return template;
         }
     }
 
-    public static void main(String[] args) {
-        LdapClient.getInstance();  // init
-
-        for (FilterId filderId : FilterId.values()) {
-            System.out.println(filderId.getStatString());
+    /**
+     * Generate the filter explanation csv file.  Called from build.xml
+     * 
+     * @param args
+     * @throws IOException 
+     */
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.out.println("usage: zmjava " + 
+                    ZLdapFilterFactory.class.getCanonicalName() + " <output file name>");
+            System.exit(1);
         }
-
+        
+        LdapClient.getInstance();  // init
+        
+        String fileName = args[0];
+        CsvWriter writer = new CsvWriter(new FileWriter(fileName));
+        
+        writer.writeRow("filtername", "template");
+        
+        for (FilterId filterId : FilterId.values()) {
+            writer.writeRow(filterId.getStatString(), filterId.getTemplate());
+        }
+        writer.close();
     }
 
     /**

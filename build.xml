@@ -854,6 +854,11 @@
         <copy todir="${dist.dir}/conf" file="${config.dir}/datasource.xml" overwrite="true"/>
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
               file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
+        
+        <java classname="com.zimbra.cs.ldap.ZLdapFilterFactory" fork="true" classpathref="class.path" failonerror="true">
+          <arg line="${dist.dir}/conf/ldap-filters.csv"/>
+        </java>
+        
         <if>
           <not><isset property="is-production"/></not>
           <then>

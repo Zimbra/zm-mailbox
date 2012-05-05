@@ -19,37 +19,19 @@ import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ldap.LdapOp;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.ZLdapElement.StringLdapElementDebugListener;
 
+/**
+ * @author pshao
+ */
 public class UBIDLogger {
     
     private static Log debugLogger = ZimbraLog.ldap;
-    
-    static enum LdapOp {
-        GET_CONN("get a connection from a connection pool"),  
-        REL_CONN("release a connection back to the connection pool"),
-        OPEN_CONN("open a new connection"),
-        CLOSE_CONN("close a connection"),
-        CREATE_ENTRY("create an entry"),
-        DELETE_ENTRY("delete entry"),
-        GET_ENTRY("get entry"),
-        GET_SCHEMA("get schema"),
-        MODIFY_DN("modify DN"),
-        MODIFY_ATTRS("modify attributes"),
-        SEARCH("search"),
-        TEST_AND_MODIFY_ATTRS("test and modify attributes");
-        
-        private String desc;
-        
-        private LdapOp(String desc) {
-            this.desc = desc;
-        }
-        
-    }
     
     static class Timer {
         private long startTime;

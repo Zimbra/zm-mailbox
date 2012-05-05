@@ -31,10 +31,10 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.schema.Schema;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ldap.LdapOp;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
-import com.zimbra.cs.ldap.unboundid.UBIDLogger.LdapOp;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 abstract class UBIDLdapOperation {
@@ -57,9 +57,9 @@ abstract class UBIDLdapOperation {
         stat(startTime, getOp());
     }
     
-    protected void searchStat(long startTime, String param) {
+    protected void searchStat(long startTime, String statString) {
         if (STATS_ENABLED) {
-            ZimbraPerf.LDAP_TRACKER.addStat(getOp().name() + " " + param, startTime);
+            ZimbraPerf.LDAP_TRACKER.addStat(statString, startTime);
         }
     }
     
