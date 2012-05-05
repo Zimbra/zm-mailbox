@@ -88,8 +88,27 @@ class ChartSettings {
     }
 
     public String getTitle() { return mTitle; }
-    public String getCategory() { return mCategory; }
-    public String getOutfile() { return mOutfile; }
+    public String getCategory() { return mCategory; }             
+    public ChartSettings() {
+    }
+    
+    /**
+     * With the introduction of LDAP csv stats (Bug 69751), some of the outfile lengths  can exceed 255 characters. 
+     * This is due to the filename being constructed from the actual metric being measured and LDAP queries can 
+     * be pretty long when also coupled with the FQHN which proceeds the metric name.
+     * For now, check to ensure that the output filename does not cause an exception to be thrown
+     * due to long filenames.  Truncate the filename and add the actual image type at the end.
+     * Ideally the metric should be formatted so that a more pleasant value is presented to the user on the generated
+     * chart, with the ability to view the actual full length LDAP query details with some additional user action 
+     * such as a mouse-over, etc.  
+     * This needs to be cleaned up to either hash the filename for all files, or based on Phoebe's comments in Bug 69751,
+     * use a combination of a formatted "command" name as the filename and add a lookup table to be able to gain more details on 
+     * the full length query.
+     * 
+     */
+    public String getOutfile() { return mOutfile.length() <= 255 ? mOutfile : mOutfile.substring(0, 250) + "." + mImageType.name().toLowerCase(); }
+    
+    
     public String getXAxis() { return mXAxis; }
     public String getYAxis() { return mYAxis; }
     public boolean getAllowLogScale() { return mAllowLogScale; }
