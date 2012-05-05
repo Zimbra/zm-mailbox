@@ -79,7 +79,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
     private static boolean initialized = false;
 
-    static synchronized void initialize() throws LdapException {
+    public static synchronized void initialize() throws LdapException {
         assert(!initialized);
         initialized = true;
 

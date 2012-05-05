@@ -21,6 +21,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.zimbra.common.util.CsvWriter;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.unboundid.UBIDLdapFilterFactory;
 
 /**
  * @author pshao
@@ -189,15 +190,19 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * 
      * @param args
      * @throws IOException 
+     * @throws LdapException 
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, LdapException {
         if (args.length != 1) {
             System.out.println("usage: zmjava " + 
                     ZLdapFilterFactory.class.getCanonicalName() + " <output file name>");
             System.exit(1);
         }
         
-        LdapClient.getInstance();  // init
+        // LdapClient.getInstance();  // init
+        UBIDLdapFilterFactory.initialize();
+        ZLdapFilterFactory filterFactory = new UBIDLdapFilterFactory();
+        ZLdapFilterFactory.setInstance(filterFactory);
         
         String fileName = args[0];
         CsvWriter writer = new CsvWriter(new FileWriter(fileName));
