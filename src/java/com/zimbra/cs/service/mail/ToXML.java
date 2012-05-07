@@ -2392,22 +2392,36 @@ public final class ToXML {
             // Enriched text handling is a little funky because TextEnrichedHandler
             // doesn't use Reader and Writer.  As a result, we truncate
             // the source before converting to HTML.
-            Reader reader = Mime.getContentAsReader(mp, defaultCharset);
-            int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
-            String enriched = ByteUtil.getContent(reader, maxChars, true);
-            if (enriched.length() == maxChars) {
-                // The normal check for truncated data won't work because
-                // the length of the converted text is different than the length
-                // of the source, so set the attr here.
-                wasTruncated = true;
+            InputStream stream = mp.getInputStream();
+            Reader reader = null;
+            try {
+                reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
+                String enriched = ByteUtil.getContent(reader, maxChars, false);
+                if (enriched.length() == maxChars) {
+                    // The normal check for truncated data won't work because
+                    // the length of the converted text is different than the length
+                    // of the source, so set the attr here.
+                    wasTruncated = true;
+                }
+                data = TextEnrichedHandler.convertToHTML(enriched);
+            } finally {
+                ByteUtil.closeStream(stream);
+                Closeables.closeQuietly(reader);
             }
-            data = TextEnrichedHandler.convertToHTML(enriched);
         } else {
-            Reader reader = Mime.getContentAsReader(mp, defaultCharset);
-            int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
-            data = ByteUtil.getContent(reader, maxChars, true);
-            if (data.length() == maxChars) {
-                wasTruncated = true;
+            InputStream stream = mp.getInputStream();
+            Reader reader = null;
+            try {
+                reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
+                data = ByteUtil.getContent(reader, maxChars, false);
+                if (data.length() == maxChars) {
+                    wasTruncated = true;
+                }
+            } finally {
+                ByteUtil.closeStream(stream);
+                Closeables.closeQuietly(reader);
             }
         }
 

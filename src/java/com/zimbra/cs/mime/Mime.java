@@ -545,7 +545,14 @@ public class Mime {
      *  preferred charset and then to the to the system's default charset.
      *  Use this method instead of {@link Part#getContent()} to work around
      *  JavaMail's fascism about proper MIME format and failure to support
-     *  RFC 2184. */
+     *  RFC 2184.
+     *  
+     *  @deprecated Use getTextReader() directly after calling repairTransferEncoding() as it's almost always
+     *  necessary to drain and close the mimepart's input stream.
+     * 
+     */
+
+    @Deprecated
     public static Reader getContentAsReader(MimePart textPart, String defaultCharset) throws IOException, MessagingException {
         repairTransferEncoding(textPart);
         return getTextReader(textPart.getInputStream(), textPart.getContentType(), defaultCharset);
