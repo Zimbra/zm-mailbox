@@ -923,9 +923,9 @@ public final class LC {
     @Supported
     public static final KnownKey httpclient_external_connmgr_max_total_connections = KnownKey.newKey(300);
 
-    public static final KnownKey httpclient_internal_connmgr_keepalive_connections = KnownKey.newKey(true);
-    public static final KnownKey httpclient_external_connmgr_keepalive_connections = KnownKey.newKey(true);
-
+    public static final KnownKey httpclient_internal_connmgr_stale_connection_check = KnownKey.newKey(true);
+    public static final KnownKey httpclient_external_connmgr_stale_connection_check = KnownKey.newKey(true);
+    
     public static final KnownKey httpclient_internal_connmgr_tcp_nodelay = KnownKey.newKey(false);
     public static final KnownKey httpclient_external_connmgr_tcp_nodelay = KnownKey.newKey(false);
 
@@ -945,9 +945,8 @@ public final class LC {
     public static final KnownKey httpclient_external_connmgr_idle_reaper_connection_timeout = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey httpclient_soaphttptransport_retry_count = KnownKey.newKey(2);
-
     public static final KnownKey httpclient_soaphttptransport_so_timeout = KnownKey.newKey(300 * Constants.MILLIS_PER_SECOND);
-
+    public static final KnownKey httpclient_soaphttptransport_keepalive_connections = KnownKey.newKey(true);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
@@ -957,6 +956,7 @@ public final class LC {
 
 
     public static final KnownKey httpclient_convertd_so_timeout = KnownKey.newKey(-1);
+    public static final KnownKey httpclient_convertd_keepalive_connections = KnownKey.newKey(true);
 
     @Supported
     public static final KnownKey client_use_system_proxy = KnownKey.newKey(false);

@@ -61,7 +61,6 @@ public class ZimbraHttpConnectionManager {
         }
         
         abstract long getHttpClientConnectionTimeout();
-        abstract boolean getKeepAlive();
         abstract long getReaperSleepInterval();
         abstract long getReaperConnectionTimeout();
     }
@@ -137,11 +136,14 @@ public class ZimbraHttpConnectionManager {
             connMgrParams.setSoTimeout(LC.httpclient_internal_connmgr_so_timeout.intValue());
              
             //
-            // Determines whether stale connection check is to be used.
+            // Determines whether stale connection check is to be used. 
+            // Disabling stale connection check may result in slight performance improvement 
+            // at the risk of getting an I/O error when executing a request over a connection 
+            // that has been closed at the server side.
             //
             // HttpConnectionParams.STALE_CONNECTION_CHECK
             //
-            connMgrParams.setStaleCheckingEnabled(LC.httpclient_internal_connmgr_keepalive_connections.booleanValue());
+            connMgrParams.setStaleCheckingEnabled(LC.httpclient_internal_connmgr_stale_connection_check.booleanValue());
             
             //
             // Determines whether Nagle's algorithm is to be used.
@@ -155,19 +157,21 @@ public class ZimbraHttpConnectionManager {
         public long getHttpClientConnectionTimeout() {
             return LC.httpclient_internal_client_connection_timeout.longValue();
         }
-
-        @Override
-        boolean getKeepAlive() {
-            return LC.httpclient_internal_connmgr_keepalive_connections.booleanValue();
-        }
         
         @Override
         long getReaperSleepInterval() {
+            //
+            // Sets the interval between closing idle connections. 
+            // Idle connections will be closed every timeoutInterval milliseconds.
+            //
             return LC.httpclient_internal_connmgr_idle_reaper_sleep_interval.longValue();
         }
         
         @Override
         long getReaperConnectionTimeout() {
+            //
+            // Sets the timeout value to use when testing for idle connections.
+            //
             return LC.httpclient_internal_connmgr_idle_reaper_connection_timeout.longValue();
         }
     }    
@@ -183,18 +187,13 @@ public class ZimbraHttpConnectionManager {
             connMgrParams.setMaxTotalConnections(LC.httpclient_external_connmgr_max_total_connections.intValue());
             connMgrParams.setConnectionTimeout(LC.httpclient_external_connmgr_connection_timeout.intValue());
             connMgrParams.setSoTimeout(LC.httpclient_external_connmgr_so_timeout.intValue());
-            connMgrParams.setStaleCheckingEnabled(LC.httpclient_external_connmgr_keepalive_connections.booleanValue());
+            connMgrParams.setStaleCheckingEnabled(LC.httpclient_external_connmgr_stale_connection_check.booleanValue());
             connMgrParams.setTcpNoDelay(LC.httpclient_external_connmgr_tcp_nodelay.booleanValue());
         }
 
         @Override
         public long getHttpClientConnectionTimeout() {
             return LC.httpclient_external_client_connection_timeout.longValue();
-        }
-
-        @Override
-        boolean getKeepAlive() {
-            return LC.httpclient_external_connmgr_keepalive_connections.booleanValue();
         }
         
         @Override
@@ -276,10 +275,6 @@ public class ZimbraHttpConnectionManager {
     
     private HttpConnectionManager getConnMgr() {
         return httpConnMgr;
-    }
-    
-    public boolean getKeepAlive() {
-        return getParams().getKeepAlive();
     }
     
     /**

@@ -62,7 +62,7 @@ public class SoapHttpTransport extends SoapTransport {
     private int mRetryCount = defaultRetryCount;
     private int mTimeout = defaultTimeout;
     private String mUri;
-    private static boolean defaultKeepAlive = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getKeepAlive();
+    private static boolean defaultKeepAlive = LC.httpclient_soaphttptransport_keepalive_connections.booleanValue();
     private static int defaultRetryCount = LC.httpclient_soaphttptransport_retry_count.intValue();
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
 
