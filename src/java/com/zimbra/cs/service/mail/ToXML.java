@@ -2359,8 +2359,8 @@ public final class ToXML {
             Reader reader = null;
 
             try {
+                stream = mp.getInputStream();
                 if (charset != null && !charset.trim().isEmpty()) {
-                    stream = mp.getInputStream();
                     // make sure to feed getTextReader() a full Content-Type header, not just the primary/subtype portion
                     reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                     BrowserDefang defanger = DefangFactory.getDefanger(mp.getContentType());
@@ -2370,14 +2370,13 @@ public final class ToXML {
                     String cte = mp.getEncoding();
                     if (cte != null && !cte.trim().toLowerCase().equals(MimeConstants.ET_7BIT)) {
                         try {
-                            stream = mp.getInputStream();
                             DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
                             data = sw.toString();
                         } catch (IOException e) {
                         }
                     }
                     if (data == null) {
-                        reader = Mime.getContentAsReader(mp, defaultCharset);
+                        reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                         DefangFactory.getDefanger(ctype).defang(reader, neuter, out);
                         data = sw.toString();
                     }
@@ -2386,7 +2385,7 @@ public final class ToXML {
                 if (tw != null) {
                     wasTruncated = tw.wasTruncated();
                 }
-                Closeables.closeQuietly(stream);
+                ByteUtil.closeStream(stream);
                 Closeables.closeQuietly(reader);
             }
         } else if (ctype.equals(MimeConstants.CT_TEXT_ENRICHED)) {
