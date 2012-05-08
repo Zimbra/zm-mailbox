@@ -56,8 +56,12 @@ public class MimeConstants {
     public static final String CT_MESSAGE_PREFIX = "message/";
     public static final String CT_APPLICATION_WILD = "application/.*";
     public static final String CT_IMAGE_WILD = "image/.*";
+    public static final String CT_IMAGE_BMP = "image/bmp";
     public static final String CT_IMAGE_SVG = "image/svg+xml";
     public static final String CT_IMAGE_PNG = "image/png";
+    public static final String CT_IMAGE_GIF = "image/gif";
+    public static final String CT_IMAGE_JPEG = "image/jpeg";
+    public static final String CT_IMAGE_TIFF = "image/tiff";
     public static final String CT_AUDIO_WILD = "audio/.*";
     public static final String CT_VIDEO_WILD = "video/.*";
     public static final String CT_MULTIPART_WILD = "multipart/.*";
