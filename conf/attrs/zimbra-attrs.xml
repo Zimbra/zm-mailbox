@@ -7037,4 +7037,10 @@ TODO: delete them permanently from here
   <desc>the time at which GAL definition is last modified.</desc>
 </attr>
 
+<attr id="1414" name="zimbraVirtualAccountInitialPasswordSet" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo,octopus" since="8.0.0">
+  <desc>
+    Whether virtual user set/changed his password after an external virtual account for him is provisioned.
+    This attribute is applicable for accounts having zimbraIsExternalVirtualAccount set to TRUE.</desc>
+</attr>
+
 </attrs>

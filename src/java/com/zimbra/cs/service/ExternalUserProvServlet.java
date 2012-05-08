@@ -28,7 +28,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.client.ZFolder;
@@ -100,11 +102,17 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             grantee = prov.getAccountByName(mapExtEmailToAcctName(extUserEmail, domain));
             if (grantee == null) {
                 // external virtual account not created yet
-                resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
-                req.setAttribute("extuseremail", extUserEmail);
-                RequestDispatcher dispatcher =
-                        getServletContext().getContext("/zimbra").getRequestDispatcher("/public/extuserprov.jsp");
-                dispatcher.forward(req, resp);
+                if (prov.isOctopus() && DebugConfig.skipVirtualAccountRegistrationPage) {
+                    // provision using 'null' password and display name
+                    // UI will ask the user to set these post provisioning
+                    provisionVirtualAccountAndRedirect(req, resp, null, null, ownerId, extUserEmail);
+                } else {
+                    resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
+                    req.setAttribute("extuseremail", extUserEmail);
+                    RequestDispatcher dispatcher =
+                            getServletContext().getContext("/zimbra").getRequestDispatcher("/public/extuserprov.jsp");
+                    dispatcher.forward(req, resp);
+                }
             } else {
                 // create a new mountpoint in the external user's mailbox if not already created
 
@@ -236,9 +244,15 @@ public class ExternalUserProvServlet extends ZimbraServlet {
 //        String folderId = (String) tokenMap.get("fid");
         String extUserEmail = (String) tokenMap.get("email");
 
+        provisionVirtualAccountAndRedirect(req, resp, displayName, password, ownerId, extUserEmail);
+    }
+
+    private static void provisionVirtualAccountAndRedirect(HttpServletRequest req, HttpServletResponse resp,
+            String displayName, String password, String grantorId, String extUserEmail)
+            throws ServletException {
         Provisioning prov = Provisioning.getInstance();
         try {
-            Account owner = prov.getAccountById(ownerId);
+            Account owner = prov.getAccountById(grantorId);
             Domain domain = prov.getDomain(owner);
             Account grantee = prov.getAccountByName(mapExtEmailToAcctName(extUserEmail, domain));
             if (grantee != null) {
@@ -263,9 +277,14 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             attrs.put(Provisioning.A_zimbraIsExternalVirtualAccount, ProvisioningConstants.TRUE);
             attrs.put(Provisioning.A_zimbraExternalUserMailAddress, extUserEmail);
             attrs.put(Provisioning.A_zimbraMailHost, prov.getLocalServer().getServiceHostname());
-            attrs.put(Provisioning.A_displayName, displayName);
+            if (!StringUtil.isNullOrEmpty(displayName)) {
+                attrs.put(Provisioning.A_displayName, displayName);
+            }
             attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
             attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MailStatus.disabled.toString());
+            if (!StringUtil.isNullOrEmpty(password)) {
+                attrs.put(Provisioning.A_zimbraVirtualAccountInitialPasswordSet, ProvisioningConstants.TRUE);
+            }
             grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
 
             // create external account mailbox
