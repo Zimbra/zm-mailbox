@@ -100,6 +100,9 @@ public class AclPushSerializer {
                 ZimbraLog.misc.info("Error in getting grantee name for grantee id %s", granteeId, e);
             }
         }
+        if (granteeType == ACL.GRANTEE_GUEST && granteeId != null) {
+            granteeId = granteeId.toLowerCase();
+        }
         StringBuilder sb = new StringBuilder().
                 append("granteeId:").append(granteeId).
                 append(";granteeName:").append(granteeName).
