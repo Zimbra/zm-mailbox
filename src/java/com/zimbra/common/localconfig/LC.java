@@ -512,7 +512,7 @@ public final class LC {
     public static final KnownKey mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/mysql_error.log");
 
     @Supported
-    public static final KnownKey mysql_bind_address = KnownKey.newKey("127.0.0.1");
+    public static final KnownKey mysql_bind_address = KnownKey.newKey("localhost");
 
     @Supported
     public static final KnownKey mysql_port = KnownKey.newKey(7306);
@@ -528,31 +528,11 @@ public final class LC {
     public static final KnownKey mysql_read_buffer_size = KnownKey.newKey(null);
     public static final KnownKey mysql_table_cache = KnownKey.newKey(null);
 
-
     @Supported
     public static final KnownKey derby_properties = KnownKey.newKey("${zimbra_home}/conf/derby.properties");
 
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
-
-    @Supported
-    public static final KnownKey logger_mysql_directory = KnownKey.newKey("${zimbra_home}/logger/mysql");
-
-    @Supported
-    public static final KnownKey logger_mysql_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
-
-    @Supported
-    public static final KnownKey logger_mysql_socket = KnownKey.newKey("${zimbra_home}/logger/db/mysql.sock");
-
-    @Supported
-    public static final KnownKey logger_mysql_pidfile = KnownKey.newKey("${zimbra_home}/logger/db/mysql.pid");
-
-    @Supported
-    public static final KnownKey logger_mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/my.logger.cnf");
-    public static final KnownKey logger_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/logger_mysql_error.log");
-    public static final KnownKey logger_mysql_bind_address = KnownKey.newKey("127.0.0.1");
-    public static final KnownKey logger_mysql_port = KnownKey.newKey(7307);
-    public static final KnownKey zimbra_logger_mysql_password = KnownKey.newKey("zimbra").protect();
 
     public static final KnownKey postfix_alias_maps = KnownKey.newKey("hash:/etc/aliases");
     public static final KnownKey postfix_always_add_missing_headers = KnownKey.newKey("yes");
@@ -1115,7 +1095,7 @@ public final class LC {
     public static final KnownKey antispam_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/antispam-mysqld.log");
     public static final KnownKey antispam_mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/antispam-my.cnf");
     public static final KnownKey antispam_mysql_pidfile = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/mysql.pid");
-    public static final KnownKey antispam_mysql_host = KnownKey.newKey("127.0.0.1");
+    public static final KnownKey antispam_mysql_host = KnownKey.newKey("localhost");
     public static final KnownKey antispam_mysql_port = KnownKey.newKey(7308);
     public static final KnownKey antispam_mysql_socket = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/mysql.sock");
     public static final KnownKey antispam_mysql_user = KnownKey.newKey("zimbra");
