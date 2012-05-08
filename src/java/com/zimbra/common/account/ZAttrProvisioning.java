@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120502-1317 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120507-1854 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -11181,22 +11181,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
 
     /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
-
-    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      */
     @ZAttr(id=146)
@@ -11304,6 +11288,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1061)
     public static final String A_zimbraVersionCheckURL = "zimbraVersionCheckURL";
+
+    /**
+     * Whether virtual user set/changed his password after an external
+     * virtual account for him is provisioned. This attribute is applicable
+     * for accounts having zimbraIsExternalVirtualAccount set to TRUE.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1414)
+    public static final String A_zimbraVirtualAccountInitialPasswordSet = "zimbraVirtualAccountInitialPasswordSet";
 
     /**
      * An alias for this domain, used to determine default login domain based

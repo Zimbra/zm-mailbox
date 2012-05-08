@@ -192,6 +192,9 @@ public final class DebugConfig {
     public static final boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);
 
+    public static final boolean skipVirtualAccountRegistrationPage =
+            value("skip_virtual_account_registration_page", false);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
