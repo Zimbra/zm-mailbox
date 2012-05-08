@@ -230,13 +230,17 @@ public class SmtpToLmtp {
             
             public void run() {
                 InputStream in = null;
+                LmtpClient client = null;
                 try {
-                    LmtpClient client = new LmtpClient(lmtpHost, lmtpPort);
+                    client = new LmtpClient(lmtpHost, lmtpPort);
                     in = new FileInputStream(data.file);
                     client.sendMessage(in, data.recipients, data.sender, SmtpToLmtp.class.getSimpleName(), data.file.length());
                 } catch (Throwable e) {
                     ZimbraLog.smtp.warn("Error occurred", e);
                 } finally {
+                    if (client != null) {
+                        client.close();
+                    }
                     ByteUtil.closeStream(in);
                     data.file.delete();
                 }
