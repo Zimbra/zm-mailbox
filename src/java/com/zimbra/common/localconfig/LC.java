@@ -813,6 +813,7 @@ public final class LC {
 
     public static final KnownKey search_disable_database_hints = KnownKey.newKey(false);
     public static final KnownKey search_dbfirst_term_percentage_cutoff = KnownKey.newKey(0.8F);
+    public static final KnownKey search_unread_count_join_query_cutoff = KnownKey.newKey(1000); //beyond this limit server will not use join in the query while fetching unread items
 
     public static final KnownKey zmstat_log_directory = KnownKey.newKey("${zimbra_home}/zmstat");
     public static final KnownKey zmstat_interval = KnownKey.newKey(30);
