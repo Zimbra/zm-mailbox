@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,6 +18,7 @@ package com.zimbra.cs.server;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.zimbra.cs.server.ServerThrottle;
 
 public class ServerThrottleTest {
@@ -28,7 +29,7 @@ public class ServerThrottleTest {
     @Test
     public void throttleIpCount() {
         int numReqs = 100;
-        ServerThrottle throttle = new ServerThrottle();
+        ServerThrottle throttle = new ServerThrottle("test");
         throttle.setIpReqsPerSecond(numReqs);
         long time = System.currentTimeMillis() + 10000000;
         // add timestamps far enough in the future that they don't get pruned.
@@ -48,7 +49,7 @@ public class ServerThrottleTest {
     @Test
     public void throttleIpIgnore() {
         int numReqs = 100;
-        ServerThrottle throttle = new ServerThrottle();
+        ServerThrottle throttle = new ServerThrottle("test");
         throttle.setIpReqsPerSecond(numReqs);
         long time = System.currentTimeMillis() + 10000000;
         Assert.assertFalse(throttle.isIpThrottled(ip));
@@ -65,7 +66,7 @@ public class ServerThrottleTest {
     @Test
     public void throttleIpTime() {
         int numReqs = 1;
-        ServerThrottle throttle = new ServerThrottle();
+        ServerThrottle throttle = new ServerThrottle("test");
         throttle.setIpReqsPerSecond(numReqs);
 
         Assert.assertFalse(throttle.isIpThrottled(ip));
@@ -89,7 +90,7 @@ public class ServerThrottleTest {
     @Test
     public void throttleAcctCount() {
         int numReqs = 100;
-        ServerThrottle throttle = new ServerThrottle();
+        ServerThrottle throttle = new ServerThrottle("test");
         throttle.setAcctReqsPerSecond(numReqs);
         long time = System.currentTimeMillis() + 10000000;
         // add timestamps far enough in the future that they don't get pruned.
@@ -109,7 +110,7 @@ public class ServerThrottleTest {
     @Test
     public void throttleAcctTime() {
         int numReqs = 1;
-        ServerThrottle throttle = new ServerThrottle();
+        ServerThrottle throttle = new ServerThrottle("test");
         throttle.setAcctReqsPerSecond(numReqs);
 
         Assert.assertFalse(throttle.isAccountThrottled(acctId));
@@ -128,5 +129,10 @@ public class ServerThrottleTest {
         Assert.assertFalse(throttle.isAccountThrottled(acctId));
         Assert.assertFalse(throttle.isAccountThrottled(acctId + "foo"));
         Assert.assertFalse(throttle.isIpThrottled(ip));
+    }
+
+    @Test
+    public void testUnknownHost() {
+        ServerThrottle.configureThrottle("IMAP", 1, 1, Sets.newHashSet("nosuchhost", "www.zimbra.com"));
     }
 }
