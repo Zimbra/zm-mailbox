@@ -139,11 +139,9 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 options.setUri(AccountUtil.getSoapUri(grantee));
                 ZMailbox zMailbox = new ZMailbox(options);
                 ZMountpoint zMtpt = null;
-                int parentId = sharedFolderView == MailItem.Type.DOCUMENT ?
-                        Mailbox.ID_FOLDER_BRIEFCASE : Mailbox.ID_FOLDER_USER_ROOT;
                 try {
                     zMtpt = zMailbox.createMountpoint(
-                            Integer.toString(parentId), mountpointName,
+                            String.valueOf(getMptParentFolderId(sharedFolderView)), mountpointName,
                             ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.defaultColor, null,
                             ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
                 } catch (ServiceException e) {
@@ -311,16 +309,15 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     }
                     String sharedFolderPath = shareData.getPath();
                     String mountpointName = getMountpointName(account, grantee, sharedFolderPath);
-                    int parent = shareData.getFolderDefaultViewCode() == MailItem.Type.DOCUMENT ?
-                            Mailbox.ID_FOLDER_BRIEFCASE : Mailbox.ID_FOLDER_USER_ROOT;
+                    MailItem.Type viewType = shareData.getFolderDefaultViewCode();
                     Mountpoint mtpt = granteeMbox.createMountpoint(
-                            null, parent, mountpointName, account.getId(), shareData.getItemId(), shareData.getItemUuid(),
-                            shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
-                    if (shareData.getFolderDefaultViewCode() == MailItem.Type.APPOINTMENT) {
+                            null, getMptParentFolderId(viewType), mountpointName, account.getId(),
+                            shareData.getItemId(), shareData.getItemUuid(), viewType, 0, MailItem.DEFAULT_COLOR, false);
+                    if (viewType == MailItem.Type.APPOINTMENT) {
                         // make sure that the mountpoint is checked in the UI by default
                         granteeMbox.alterTag(null, mtpt.getId(), mtpt.getType(), Flag.FlagInfo.CHECKED, true, null);
                     }
-                    viewTypes.add(shareData.getFolderDefaultViewCode());
+                    viewTypes.add(viewType);
                 }
             }
             enableAppFeatures(grantee, viewTypes);
@@ -331,6 +328,23 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             resp.sendRedirect("/");
         } catch (Exception e) {
             throw new ServletException(e);
+        }
+    }
+
+    private static int getMptParentFolderId(MailItem.Type viewType) {
+        switch (viewType) {
+            case DOCUMENT:
+                return Mailbox.ID_FOLDER_BRIEFCASE;
+            case APPOINTMENT:
+                return Mailbox.ID_FOLDER_CALENDAR;
+            case CONTACT:
+                return Mailbox.ID_FOLDER_CONTACTS;
+            case TASK:
+                return Mailbox.ID_FOLDER_TASKS;
+            case MESSAGE:
+                return Mailbox.ID_FOLDER_INBOX;
+            default:
+                return Mailbox.ID_FOLDER_USER_ROOT;
         }
     }
 
