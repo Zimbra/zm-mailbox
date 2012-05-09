@@ -199,7 +199,17 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
             System.exit(1);
         }
         
-        // LdapClient.getInstance();  // init
+        /*
+         * This tool is called during during dev-dist target, LDAP server 
+         * is not up in production build.
+         * LdapClient.getInstance() will cause attempt to make an LDAP connection,
+         * 
+         * Just use UBID LdapClient directly.  TODO: separate LdapClient.getInstance() 
+         * into two parts: one doesn't require LDAP connection (for initializing 
+         * SearchScope and FilterFactory instances), one does(for initializing LdapContext
+         * class). 
+         */
+        // LdapClient.getInstance();
         UBIDLdapFilterFactory.initialize();
         ZLdapFilterFactory filterFactory = new UBIDLdapFilterFactory();
         ZLdapFilterFactory.setInstance(filterFactory);
