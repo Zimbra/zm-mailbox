@@ -6005,6 +6005,11 @@ public class LdapProvisioning extends LdapProv {
         public void setHasMoreResult(boolean more) {
             this.hasMore = hasMore;
         }
+        
+        @Override
+        public void setGalDefinitionLastModified(String timestamp) {
+            // do nothing
+        }
 
         @Override
         public Element getResponse() {
