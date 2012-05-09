@@ -28,7 +28,6 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -44,6 +43,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 
 /**
  * Search related DAO.
@@ -182,7 +182,7 @@ public final class DbSearch {
             sql.append("mi.mailbox_id = ? AND ");
             params.add(mailbox.getId());
         }
-        encodeConstraint(node, null, false);
+        encodeConstraint(node, null, false, false);
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -235,8 +235,8 @@ public final class DbSearch {
         return Db.forceIndex(index);
     }
 
-    private void encodeSelect(SortBy sort, FetchMode fetch, boolean joinAppt, DbSearchConstraints node,
-            boolean validLIMIT) {
+    private void encodeSelect(SortBy sort, FetchMode fetch, boolean joinAppt, boolean joinTaggedItem,
+            DbSearchConstraints node, boolean validLIMIT) {
         // If you change the first for parameters, you must change the COLUMN_* constants.
         sql.append("SELECT ");
         switch (fetch) {
@@ -265,6 +265,9 @@ public final class DbSearch {
         if (joinAppt) {
             sql.append(", ").append(DbMailItem.getCalendarItemTableName(mailbox, "ap", dumpster));
         }
+        if (joinTaggedItem) {
+            sql.append(", ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
+        }
         sql.append(" WHERE ");
         if (!DebugConfig.disableMailboxGroups) {
             sql.append("mi.mailbox_id = ? AND ");
@@ -278,7 +281,7 @@ public final class DbSearch {
         }
     }
 
-    private void encodeConstraint(DbSearchConstraints node, byte[] calTypes, boolean inCalTable) {
+    private void encodeConstraint(DbSearchConstraints node, byte[] calTypes, boolean inCalTable, boolean isUnreadJoinQuery) {
 
         if (node instanceof DbSearchConstraints.Intersection || node instanceof DbSearchConstraints.Union) {
             boolean first = true;
@@ -288,7 +291,7 @@ public final class DbSearch {
                 if (!first) {
                     sql.append(and ? " AND " : " OR ");
                 }
-                encodeConstraint(child, calTypes, inCalTable);
+                encodeConstraint(child, calTypes, inCalTable, isUnreadJoinQuery);
                 first = false;
             }
             sql.append(") ");
@@ -319,8 +322,8 @@ public final class DbSearch {
 
         encodeType(constraint.excludeTypes, false);
         encode("mi.type", inCalTable, calTypes);
-        encodeTag(constraint.tags, true);
-        encodeTag(constraint.excludeTags, false);
+        encodeTag(constraint.tags, true, isUnreadJoinQuery);
+        encodeTag(constraint.excludeTags, false, false);
         encodeFolder(constraint.folders, true);
         encodeFolder(constraint.excludeFolders, false);
 
@@ -482,6 +485,17 @@ public final class DbSearch {
         }
         return result;
     }
+    
+    private int countUnread(Folder folder) throws ServiceException {
+        int count = folder.getUnreadCount();
+        List<Folder> subFolders = folder.getSubfolders(null);
+        if (subFolders.size() > 0) {
+            for (Folder f : subFolders) {
+                count += countUnread(f);
+            }
+        }
+        return count;
+    }
 
     private List<Result> searchInternal(DbConnection conn, DbSearchConstraints node, SortBy sort, int offset, int limit,
             FetchMode fetch) throws SQLException, ServiceException {
@@ -492,6 +506,27 @@ public final class DbSearch {
             hasMailItemOnlyConstraints = hasMailItemOnlyConstraints(node);
         }
         boolean requiresUnion = hasMailItemOnlyConstraints && hasAppointmentTableConstraints;
+        
+        //HACK!HACK!HACK!
+        //Bug: 68609
+        //slow search "in:inbox is:unread or is:flagged"
+        //its actually cheaper to do a D/B join between mail_item and tagged_item table when 
+        //the unread items are smaller in count.
+        boolean isUnreadJoinQuery = false;
+        if (node instanceof DbSearchConstraints.Leaf && !dumpster) {
+            DbSearchConstraints.Leaf constraint = node.toLeaf();
+            if (constraint.excludeTags.isEmpty() && !constraint.tags.isEmpty() && constraint.tags.size() == 1) {
+                Tag tag = constraint.tags.iterator().next();
+                if (tag.getId() == FlagInfo.UNREAD.toId()) {
+                    //let's make an estimate of # of unread items for this mailbox.
+                    //It doesn't matter which folder(s) the user is trying to search because
+                    //the performance solely depends on the # of unread items
+                    int count = countUnread(mailbox.getFolderById(null, Mailbox.ID_FOLDER_USER_ROOT));
+                    if (count < LC.search_unread_count_join_query_cutoff.intValue())
+                        isUnreadJoinQuery = true;
+                }
+            }
+        }
 
         if (hasMailItemOnlyConstraints) {
             if (requiresUnion) {
@@ -499,7 +534,7 @@ public final class DbSearch {
             }
 
             // SELECT mi.id,... FROM mail_item AS mi [FORCE INDEX (...)] WHERE mi.mailboxid = ? AND
-            encodeSelect(sort, fetch, false, node, hasValidLIMIT);
+            encodeSelect(sort, fetch, false, isUnreadJoinQuery, node, hasValidLIMIT);
 
             /*
              *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
@@ -509,7 +544,7 @@ public final class DbSearch {
              *       ..etc
              *    )
              */
-            encodeConstraint(node, hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null, false);
+            encodeConstraint(node, hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null, false, isUnreadJoinQuery);
 
             if (requiresUnion) {
                 sql.append(orderBy(sort, true));
@@ -526,8 +561,8 @@ public final class DbSearch {
 
         if (hasAppointmentTableConstraints) {
             // SELECT...again...(this time with "appointment as ap")...WHERE...
-            encodeSelect(sort, fetch, true, node, hasValidLIMIT);
-            encodeConstraint(node, APPOINTMENT_TABLE_TYPES, true);
+            encodeSelect(sort, fetch, true, false, node, hasValidLIMIT);
+            encodeConstraint(node, APPOINTMENT_TABLE_TYPES, true, false);
             if (requiresUnion) {
                 sql.append(orderBy(sort, true));
                 // LIMIT ?, ?
@@ -670,10 +705,16 @@ public final class DbSearch {
         }
     }
 
-    private void encodeTag(Set<Tag> tags, boolean bool) {
+    private void encodeTag(Set<Tag> tags, boolean bool, boolean useJoin) {
         if (tags.isEmpty()) {
             return;
         }
+        
+        if (useJoin) {
+            assert !dumpster;
+            assert bool;
+        }
+        
         if (dumpster) { // There is no corresponding table to TAGGED_ITEM in dumpster, hence brute-force search.
             int flags = 0;
             for (Tag tag : tags) {
@@ -700,14 +741,24 @@ public final class DbSearch {
                 params.add(bool ? flags : 0);
             }
         } else if (bool) { // Repeats "EXISTS (SELECT...)" as many times as tags.
-            for (Tag tag : tags) {
-                sql.append(" AND EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
-                sql.append(" WHERE ");
-                if (!DebugConfig.disableMailboxGroups) {
-                    sql.append("mi.mailbox_id = ti.mailbox_id AND ");
-                }
-                sql.append("mi.id = ti.item_id AND ti.tag_id = ?)");
+            if (useJoin) {
+                assert tags.size() == 1;
+                
+                Tag tag = tags.iterator().next();
+                
+                //AND (mi.id = ti.item_id AND mi.mailbox_id = ti.mailbox_id AND ti.tag_id = -10)
+                sql.append(" AND (mi.id = ti.item_id AND mi.mailbox_id = ti.mailbox_id AND ti.tag_id = ?)");
                 params.add(tag.getId());
+            } else {
+                for (Tag tag : tags) {
+                    sql.append(" AND EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
+                    sql.append(" WHERE ");
+                    if (!DebugConfig.disableMailboxGroups) {
+                        sql.append("mi.mailbox_id = ti.mailbox_id AND ");
+                    }
+                    sql.append("mi.id = ti.item_id AND ti.tag_id = ?)");
+                    params.add(tag.getId());
+                }
             }
         } else { // NOT EXISTS (SELECT... WHERE... tag_id IN...)
             sql.append(" AND NOT EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
