@@ -143,7 +143,7 @@ public class MySQL extends Db {
             mPoolSize = 100;
             mRootUrl = "jdbc:mysql://" + LC.mysql_bind_address.value() + ":" + LC.mysql_port.value() + "/";
             mConnectionUrl = mRootUrl + "zimbra";
-            mLoggerUrl = "jdbc:mysql://" + LC.logger_mysql_bind_address.value() + ":" + LC.logger_mysql_port.value() + "/";
+            mLoggerUrl = null;
             mSupportsStatsCallback = true;
             mDatabaseProperties = getMySQLProperties();
 
