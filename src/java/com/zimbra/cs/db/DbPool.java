@@ -439,7 +439,7 @@ public class DbPool {
     public static DbConnection getLoggerConnection() throws ServiceException {
         try {
             String user = LC.zimbra_mysql_user.value();
-            String pwd = LC.zimbra_logger_mysql_password.value();
+            String pwd = null;
             Connection conn = DriverManager.getConnection(sLoggerRootUrl + "?user=" + user + "&password=" + pwd);
             return new DbConnection(conn);
         } catch (SQLException e) {
