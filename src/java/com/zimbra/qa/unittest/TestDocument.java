@@ -14,22 +14,25 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZItem;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.account.Key;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 public class TestDocument extends TestCase {
 
@@ -119,6 +122,56 @@ public class TestDocument extends TestCase {
         
         // make sure moved document has note flag.
         assertEquals(note.getFlags(), doc.getFlagString());
+    }
+    
+    /**
+     * Tests deletion of blob when document revision is deleted.
+     */
+    public void testPurgeRevision()
+    throws Exception {
+        // Create document
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
+        Folder folder = mbox.createFolder(null, "/" + NAME_PREFIX + " testPurgeRevisions", fopt);
+        Document doc = mbox.createDocument(null, folder.getId(), "test1.txt", "text/plain", NAME_PREFIX, "testPurgeRevisions", new ByteArrayInputStream("One".getBytes()));
+        int id = doc.getId();
+        File file1 = doc.getBlob().getLocalBlob().getFile();
+        assertTrue(file1.exists());
+        // Create revisions
+        doc = mbox.addDocumentRevision(null, id, NAME_PREFIX, "test1.txt", "testPurgeRevisions", new ByteArrayInputStream("Two".getBytes()));
+        int version = doc.getVersion();
+        File file2 = doc.getBlob().getLocalBlob().getFile();
+        assertTrue(file2.exists());
+        mbox.addDocumentRevision(null, id, NAME_PREFIX, "test1.txt", "testPurgeRevisions", new ByteArrayInputStream("Three".getBytes()));
+        // remove the first revision
+        mbox.purgeRevision(null, id, version, false);
+        assertTrue(file1.exists());
+        assertFalse(file2.exists());
+    }
+    
+    /**
+     * Tests deletion of blobs when document revisions are deleted.
+     */
+    public void testPurgeRevisions()
+    throws Exception {
+        // Create document
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
+        Folder folder = mbox.createFolder(null, "/" + NAME_PREFIX + " testPurgeRevisions", fopt);
+        Document doc = mbox.createDocument(null, folder.getId(), "test2.txt", "text/plain", NAME_PREFIX, "testPurgeRevisions", new ByteArrayInputStream("One".getBytes()));
+        int id = doc.getId();
+        File file1 = doc.getBlob().getLocalBlob().getFile();
+        assertTrue(file1.exists());
+        // Create revisions
+        doc = mbox.addDocumentRevision(null, id, NAME_PREFIX, "test2.txt", "testPurgeRevisions", new ByteArrayInputStream("Two".getBytes()));
+        int version = doc.getVersion();
+        File file2 = doc.getBlob().getLocalBlob().getFile();
+        assertTrue(file2.exists());
+        mbox.addDocumentRevision(null, id, NAME_PREFIX, "test2.txt", "testPurgeRevisions", new ByteArrayInputStream("Three".getBytes()));
+        // remove the first two revisions
+        mbox.purgeRevision(null, id, version, true);
+        assertFalse(file1.exists());
+        assertFalse(file2.exists());
     }
     
     /**

@@ -2073,7 +2073,21 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void purgeRevision(int version, boolean includeOlderRevisions) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
+        PendingDelete info = new PendingDelete();
+        for (MailItem revision : loadRevisions()) {
+            if (revision.getVersion() == version || (includeOlderRevisions && revision.getVersion() <= version)) {
+                try {
+                    info.blobs.add(revision.getBlob());
+                    info.blobDigests.add(revision.getDigest());
+                    info.size += revision.getSize();
+                } catch (Exception e) {
+                    ZimbraLog.mailbox.error("missing blob for id: " + revision.getId() + ", revision: " + revision.getVersion());
+                }
+            }
+        }
         DbMailItem.purgeRevisions(this, version, includeOlderRevisions);
+        getMailbox().markOtherItemDirty(info);
+        getMailbox().updateSize(-info.size);
         mRevisions = null;
     }
 
