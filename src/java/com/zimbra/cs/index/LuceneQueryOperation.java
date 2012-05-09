@@ -45,6 +45,7 @@ import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -248,6 +249,13 @@ public final class LuceneQueryOperation extends QueryOperation {
             //TODO count results using TotalHitCountCollector
             fetchFirstResults(1000); // some arbitrarily large initial size to fetch
             if (getTotalHitCount() > 1000) { // also arbitrary, just to make very small searches run w/o extra DB check
+                //Bug: 68630
+                //Let's try to avoid the additional D/B lookup; 
+                //We can calculate the number of items contained by the folders to search by getting the total
+                //item counts from the cache. If total items < total lucene hits - its cheaper to do the D/B query first.
+                if (getTotalItemCount(dbOp.getTargetFolders()) < getTotalHitCount())
+                    return true; // run DB-FIRST
+                
                 int dbHitCount = dbOp.getDbHitCount();
                 ZimbraLog.search.debug("EstimatedHits lucene=%d,db=%d", getTotalHitCount(), dbHitCount);
                 if (dbHitCount < getTotalHitCount()) {
@@ -258,6 +266,14 @@ public final class LuceneQueryOperation extends QueryOperation {
         } catch (ServiceException e) {
             return false;
         }
+    }
+    
+    private long getTotalItemCount(Set<Folder> folders) {
+        long total = 0;
+        for (Folder f : folders)
+            total += f.getItemCount();
+        
+        return total;
     }
 
     @Override
