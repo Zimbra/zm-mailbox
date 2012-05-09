@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -84,7 +83,10 @@ public class ChangePassword extends AccountDocumentHandler {
         
 		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
 		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
-        if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword) && !acct.isVirtualAccountInitialPasswordSet()) {
+        if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword)
+                && !acct.isVirtualAccountInitialPasswordSet() && acct.getId().equals(zsc.getAuthtokenAccountId())) {
+            // need a valid auth token in this case
+            AuthProvider.validateAuthToken(prov, zsc.getAuthToken(), false);
             prov.setPassword(acct, newPassword, true);
             acct.setVirtualAccountInitialPasswordSet(true);
         } else {
