@@ -579,11 +579,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="55" name="zimbraPrefIncludeSpamInSearch" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultExternalCOSValue>TRUE</defaultExternalCOSValue>
   <desc>whether or not to include spam in search by default</desc>
 </attr>
 
 <attr id="56" name="zimbraPrefIncludeTrashInSearch" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultExternalCOSValue>TRUE</defaultExternalCOSValue>
   <desc>whether or not to include trash in search by default</desc>
 </attr>
 
