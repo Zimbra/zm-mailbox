@@ -878,6 +878,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 email = req.requestor.getName();
             info = resolver.getServerInfo(email);
             if (info != null) {
+                if (!info.enabled)
+                    throw new FreeBusyUserNotFoundException();
                 if (null == service) {
                     try {
                         Initialize(info);
@@ -889,8 +891,6 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             }
         }
         if (info == null)
-			throw new FreeBusyUserNotFoundException();
-		if (!info.enabled)
 			throw new FreeBusyUserNotFoundException();
         addRequest(info, req);
     }
