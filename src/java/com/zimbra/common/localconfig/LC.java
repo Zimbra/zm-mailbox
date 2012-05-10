@@ -845,7 +845,7 @@ public final class LC {
     public static final KnownKey zimbra_waitset_nodata_sleep_time = KnownKey.newKey(3000);
 
     public static final KnownKey zimbra_csv_mapping_file = KnownKey.newKey("${zimbra_home}/conf/zimbra-contact-fields.xml");
-    
+
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
@@ -1183,9 +1183,10 @@ public final class LC {
     @Supported
     public static final KnownKey external_store_local_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
+    //Triton integration
     public static final KnownKey triton_store_url = KnownKey.newKey("");
-
     public static final KnownKey triton_hash_type = KnownKey.newKey("SHA0");
+    public static final KnownKey triton_upload_buffer_size = KnownKey.newKey(25000);
 
     public static final KnownKey uncompressed_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 

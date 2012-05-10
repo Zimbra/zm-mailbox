@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -177,12 +178,14 @@ public class FileCache<K> {
     }
 
     private static final KeyParser<String> STRING_KEY_PARSER = new KeyParser<String>() {
+        @Override
         public String parse(String keyString) {
             return keyString;
         }
     };
 
     private static final KeyParser<Integer> INTEGER_KEY_PARSER = new KeyParser<Integer>() {
+        @Override
         public Integer parse(String keyString) {
             if (keyString == null) {
                 return null;
@@ -497,6 +500,13 @@ public class FileCache<K> {
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    public synchronized void removeAll() {
+        for (K key :keyToDigest.keySet()) {
+            remove(key);
+        }
     }
 
     private synchronized void prune() {
