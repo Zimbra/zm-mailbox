@@ -207,6 +207,8 @@ public final class Zimbra {
 
         ZimbraHttpConnectionManager.startReaperThread();
 
+        ExtensionUtil.initAll();
+
         try {
             StoreManager.getInstance().startup();
         } catch (IOException e) {
@@ -223,8 +225,6 @@ public final class Zimbra {
         if (app.supports(EhcacheManager.class.getName())) {
             EhcacheManager.getInstance().startup();
         }
-
-        ExtensionUtil.initAll();
 
         // ZimletUtil.loadZimlets();
 

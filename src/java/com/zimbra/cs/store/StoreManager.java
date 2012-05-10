@@ -21,9 +21,10 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.Zimbra;
 
@@ -41,7 +42,11 @@ public abstract class StoreManager {
                 String className = LC.zimbra_class_store.value();
                 try {
                     if (className != null && !className.equals("")) {
-                        sInstance = (StoreManager) Class.forName(className).newInstance();
+                        try {
+                            sInstance = (StoreManager) Class.forName(className).newInstance();
+                        } catch (ClassNotFoundException e) {
+                            sInstance = (StoreManager) ExtensionUtil.findClass(className).newInstance();
+                        }
                     } else {
                         sInstance = new FileBlobStore();
                     }
