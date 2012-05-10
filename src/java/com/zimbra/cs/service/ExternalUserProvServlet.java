@@ -185,6 +185,11 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 if (zAuthToken != null && !zAuthToken.isExpired() && grantee.getId().equals(zAuthToken.getAccountId())) {
                     // external virtual account already logged-in
                     resp.sendRedirect("/");
+                } else if (prov.isOctopus() && !grantee.isVirtualAccountInitialPasswordSet() &&
+                        DebugConfig.skipVirtualAccountRegistrationPage) {
+                    // seems like the virtual user did not set his password during his last visit, after an account was
+                    // provisioned for him
+                    setCookieAndRedirect(req, resp, grantee);
                 } else {
                     req.setAttribute("virtualacctdomain", domain.getName());
                     RequestDispatcher dispatcher =
@@ -322,13 +327,17 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             }
             enableAppFeatures(grantee, viewTypes);
 
-            // set zimbra auth cookie and redirect
-            AuthToken authToken = AuthProvider.getAuthToken(grantee);
-            authToken.encode(resp, false, req.getScheme().equals("https"));
-            resp.sendRedirect("/");
+            setCookieAndRedirect(req, resp, grantee);
         } catch (Exception e) {
             throw new ServletException(e);
         }
+    }
+
+    private static void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, Account grantee)
+            throws ServiceException, IOException {
+        AuthToken authToken = AuthProvider.getAuthToken(grantee);
+        authToken.encode(resp, false, req.getScheme().equals("https"));
+        resp.sendRedirect("/");
     }
 
     private static int getMptParentFolderId(MailItem.Type viewType) {
