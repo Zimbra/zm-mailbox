@@ -6005,7 +6005,7 @@ public class LdapProvisioning extends LdapProv {
         public void setHasMoreResult(boolean more) {
             this.hasMore = hasMore;
         }
-        
+
         @Override
         public void setGalDefinitionLastModified(String timestamp) {
             // do nothing
@@ -8292,7 +8292,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
-        Group group = getGroup(Key.DistributionListBy.id, zimbraId);
+        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
         }
@@ -8306,7 +8306,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void renameGroup(String zimbraId, String newName) throws ServiceException {
-        Group group = getGroup(Key.DistributionListBy.id, zimbraId);
+        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
         }
@@ -8320,7 +8320,13 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
-        return getGroupInternal(keyType, key, false);
+        return getGroup(keyType, key, false);
+    }
+
+    @Override
+    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster)
+    throws ServiceException {
+        return getGroupInternal(keyType, key, false, loadFromMaster);
     }
 
     /*
@@ -8339,7 +8345,7 @@ public class LdapProvisioning extends LdapProv {
         }
 
         // fetch from LDAP
-        group = getGroupInternal(keyType, key, true);
+        group = getGroupInternal(keyType, key, true, false);
 
         // cache it
         if (group != null) {
@@ -8467,34 +8473,39 @@ public class LdapProvisioning extends LdapProv {
         group.removeCachedData(EntryCacheDataKey.GROUP_MEMBERS);
     }
 
-    private Group getGroupInternal(Key.DistributionListBy keyType, String key, boolean basicAttrsOnly)
+    private Group getGroupInternal(Key.DistributionListBy keyType, String key,
+            boolean basicAttrsOnly, boolean loadFromMaster)
     throws ServiceException {
         switch(keyType) {
             case id:
-                return getGroupById(key, null, basicAttrsOnly);
+                return getGroupById(key, null, basicAttrsOnly, loadFromMaster);
             case name:
-                return getGroupByName(key, null, basicAttrsOnly);
+                return getGroupByName(key, null, basicAttrsOnly, loadFromMaster);
             default:
                 return null;
         }
     }
 
-    private Group getGroupById(String zimbraId, ZLdapContext zlc, boolean basicAttrsOnly)
+    private Group getGroupById(String zimbraId, ZLdapContext zlc,
+            boolean basicAttrsOnly, boolean loadFromMaster)
     throws ServiceException {
-        return getGroupByQuery(filterFactory.groupById(zimbraId), zlc, basicAttrsOnly);
+        return getGroupByQuery(filterFactory.groupById(zimbraId), zlc, basicAttrsOnly, loadFromMaster);
     }
 
-    private Group getGroupByName(String groupAddress, ZLdapContext zlc, boolean basicAttrsOnly)
+    private Group getGroupByName(String groupAddress, ZLdapContext zlc,
+            boolean basicAttrsOnly, boolean loadFromMaster)
     throws ServiceException {
         groupAddress = IDNUtil.toAsciiEmail(groupAddress);
-        return getGroupByQuery(filterFactory.groupByName(groupAddress), zlc, basicAttrsOnly);
+        return getGroupByQuery(filterFactory.groupByName(groupAddress), zlc, basicAttrsOnly, loadFromMaster);
     }
 
-    private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly)
+    private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc,
+            boolean basicAttrsOnly, boolean loadFromMaster)
     throws ServiceException {
         try {
             String[] returnAttrs = basicAttrsOnly ? BASIC_GROUP_ATTRS : null;
-            ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
+            ZSearchResultEntry sr = helper.searchForEntry(
+                    mDIT.mailBranchBaseDN(), filter, initZlc, loadFromMaster, returnAttrs);
             if (sr != null) {
                 ZAttributes attrs = sr.getAttributes();
                 List<String> objectclass =

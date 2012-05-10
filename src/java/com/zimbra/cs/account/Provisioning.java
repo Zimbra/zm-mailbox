@@ -226,26 +226,26 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     private static Provisioning sProvisioning;
 
-    
+
     public static enum CacheMode {
         DEFAULT,  // use the Provisioning implementation's default caching mode
         ON,
         OFF
     }
-    
+
     public synchronized static Provisioning getInstance() {
         return getInstance(CacheMode.DEFAULT);
     }
-    
+
     /**
-     * This signature allows callsites to specify whether cache should be used in the 
-     * Provisioning instance returned.  
-     * 
-     * !!!Note!!!: setting useCache to false will hurt performance badly, as ***nothing*** 
-     * is cached.  For LdapProvisionig, each LDAP related method will cost one or more LDAP 
+     * This signature allows callsites to specify whether cache should be used in the
+     * Provisioning instance returned.
+     *
+     * !!!Note!!!: setting useCache to false will hurt performance badly, as ***nothing***
+     * is cached.  For LdapProvisionig, each LDAP related method will cost one or more LDAP
      * trips.  The only usage for useCache=false is zmconfigd. (bug 70975 and 71267)
-     * 
-     * @param useCache 
+     *
+     * @param useCache
      * @return
      */
     public synchronized static Provisioning getInstance(CacheMode cacheMode) {
@@ -253,9 +253,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
             if (cacheMode == null) {
                 cacheMode = CacheMode.DEFAULT;
             }
-            
+
             String className = LC.zimbra_class_provisioning.value();
-            
+
             if (className != null && !className.equals("")) {
                 Class<?> klass = null;
                 try {
@@ -265,23 +265,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
                         // ignore and look in extensions
                         klass = ExtensionUtil.findClass(className);
                     }
-                    
+
                     if (cacheMode != CacheMode.DEFAULT) {
                         try {
                             sProvisioning = (Provisioning) klass.getConstructor(CacheMode.class).newInstance(cacheMode);
                         } catch (NoSuchMethodException e) {
-                            ZimbraLog.account.error("could not find constructor with CacheMode parameter '" + 
+                            ZimbraLog.account.error("could not find constructor with CacheMode parameter '" +
                                     className + "'; defaulting to LdapProvisioning", e);
                         }
                     } else {
                         sProvisioning = (Provisioning) klass.newInstance();
                     }
                 } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + 
+                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" +
                             className + "'; defaulting to LdapProvisioning", e);
                 }
             }
-            
+
             if (sProvisioning == null) {
                 sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning(cacheMode);
                 ZimbraLog.account.error("defaulting to " + sProvisioning.getClass().getCanonicalName());
@@ -298,7 +298,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean idIsUUID() {
         return true;
     }
-    
+
     public boolean isOctopus() throws ServiceException {
         return getConfig().getProduct() == Product.OCTOPUS;
     }
@@ -492,7 +492,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract Set<String> getDistributionLists(Account acct) throws ServiceException;
-    
+
     /**
      * @return set of all the zimbraId's of direct lists this account belongs to
      * @throws ServiceException
@@ -872,9 +872,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** return coses from searchDirectory */
     public static final int SD_COS_FLAG = 0x20;
-    
+
     public static final int SD_SERVER_FLAG = 0x40;
-    
+
     public static final int SD_UC_SERVICE_FLAG = 0x80;
 
     /** return coses from searchDirectory */
@@ -1049,7 +1049,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return null;
         return DomainSelector.fromId(domain.getId());
     }
-    
+
     /**
      * @param ucService
      * @return may return null
@@ -1182,12 +1182,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteUCService(String zimbraId) throws ServiceException;
     public abstract UCService get(UCServiceBy keyName, String key) throws ServiceException;
     public abstract List<UCService> getAllUCServices()  throws ServiceException;
-    
-    public String updatePresenceSessionId(String zimbraId, String username, String password) 
+
+    public String updatePresenceSessionId(String zimbraId, String username, String password)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-    
+
     /*
      * ==============================
      *
@@ -1286,6 +1286,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+
+    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster)
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
 
     /*
      * returns only basic attributes on group, does *not* return members
@@ -1963,7 +1969,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public long countObjects(CountObjectsType type, Domain domain, UCService ucService) 
+    public long countObjects(CountObjectsType type, Domain domain, UCService ucService)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
