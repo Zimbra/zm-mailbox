@@ -26,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
  */
 public class BufferingIncomingBlob extends IncomingBlob
 {
-    private String id;
+    protected final String id;
     protected BlobBuilder blobBuilder;
     private Object ctx;
     private long expectedSize;
@@ -49,7 +49,7 @@ public class BufferingIncomingBlob extends IncomingBlob
     }
 
     @Override
-    public OutputStream getAppendingOutputStream()
+    public OutputStream getAppendingOutputStream() throws IOException
     {
         lastAccessTime = System.currentTimeMillis();
         return new BlobBuilderOutputStream(blobBuilder);
@@ -76,7 +76,7 @@ public class BufferingIncomingBlob extends IncomingBlob
     }
 
     @Override
-    public long getCurrentSize() throws IOException, ServiceException
+    public long getCurrentSize() throws IOException
     {
         return blobBuilder.getTotalBytes();
     }

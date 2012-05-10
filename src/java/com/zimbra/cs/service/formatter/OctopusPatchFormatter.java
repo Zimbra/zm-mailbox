@@ -54,7 +54,7 @@ public class OctopusPatchFormatter extends Formatter
         long storedPatchExpiration = LC.octopus_stored_patch_max_age.intValue() * 60 * 1000;
 
         BlobStore blobStore = new StoreManagerBasedTempBlobStore(StoreManager.getInstance(),
-                incomingPatchExpiration, storedPatchExpiration);
+                incomingPatchExpiration, storedPatchExpiration, true);
 
         patchStore = new PatchStore(blobStore);
     }

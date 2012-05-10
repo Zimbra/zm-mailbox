@@ -17,21 +17,28 @@ package com.zimbra.cs.store.triton;
 import java.io.IOException;
 
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.external.ExternalUploadedBlob;
 
 /**
  * Blob wrapper which includes a previously generated Locator
  * Used to hold locator calculated during streaming upload so stage operation does not need to recalculate it
  *
  */
-public class TritonBlob extends Blob {
-    private String locator;
+public class TritonBlob extends ExternalUploadedBlob {
+    private final String locator;
+    private final MozyServerToken serverToken;
 
-    protected TritonBlob(Blob blob, String locator) throws IOException {
-        super(blob.getFile(), blob.getRawSize(), blob.getDigest());
+    protected TritonBlob(Blob blob, String locator, String uploadUrl, MozyServerToken serverToken) throws IOException {
+        super(blob, uploadUrl);
         this.locator = locator;
+        this.serverToken = serverToken;
     }
 
     public String getLocator() {
         return locator;
+    }
+
+    public MozyServerToken getServerToken() {
+        return serverToken;
     }
 }

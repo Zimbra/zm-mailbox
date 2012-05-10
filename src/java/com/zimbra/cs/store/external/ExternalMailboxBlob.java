@@ -35,7 +35,7 @@ public class ExternalMailboxBlob extends MailboxBlob {
     @Override
     public Blob getLocalBlob() throws IOException {
         ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getInstance();
-        Blob blob = sm.getLocalBlob(getMailbox(), getLocator(), mSize == null ? -1 : mSize.intValue());
+        Blob blob = sm.getLocalBlob(getMailbox(), getLocator());
 
         setSize(blob.getRawSize());
         if (mDigest != null)

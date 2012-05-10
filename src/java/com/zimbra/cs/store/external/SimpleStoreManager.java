@@ -32,13 +32,18 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public class SimpleStoreManager extends ExternalStoreManager {
 
-    String directory = "/tmp/simplestore";
+    String directory = "/tmp/simplestore/blobs";
 
     @Override
     public void startup() throws IOException, ServiceException {
         super.startup();
         ZimbraLog.store.info("Using SimpleStoreManager. If you are seeing this in production you have done something WRONG!");
         FileUtil.mkdirs(new File(directory));
+    }
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
     }
 
     private String dirName(Mailbox mbox) {

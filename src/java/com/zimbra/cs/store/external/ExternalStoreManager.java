@@ -16,17 +16,20 @@
 package com.zimbra.cs.store.external;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.Blob;
@@ -45,7 +48,7 @@ import com.zimbra.cs.store.StoreManager;
 public abstract class ExternalStoreManager extends StoreManager implements ExternalBlobIO {
 
     private final IncomingDirectory incoming = new IncomingDirectory(LC.zimbra_tmp_directory.value() + File.separator + "incoming");
-    private FileCache<String> localCache;
+    protected FileCache<String> localCache;
 
     @Override
     public void startup() throws IOException, ServiceException {
@@ -143,6 +146,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (mblob == null) {
             return null;
         }
+        FileCache.Item cached = localCache.get(mblob.getLocator());
+        if (cached != null) {
+            return new FileInputStream(cached.file);
+        }
+
         InputStream is = readStreamFromStore(mblob.getLocator(), mblob.getMailbox());
         if (is == null) {
             throw new IOException("Store " + this.getClass().getName() +" returned null for locator " + mblob.getLocator());
@@ -156,7 +164,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         return new BlobInputStream(blob);
     }
 
-    Blob getLocalBlob(Mailbox mbox, String locator, long sizeHint) throws IOException {
+    protected Blob getLocalBlob(Mailbox mbox, String locator) throws IOException {
         FileCache.Item cached = localCache.get(locator);
         if (cached != null) {
             return new ExternalBlob(cached);
@@ -201,11 +209,27 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
     @Override
     public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
-        InputStream is = getContent(blob);
-        try {
-            return stage(is, blob.getRawSize(), mbox);
-        } finally {
-            ByteUtil.closeStream(is);
+        if (supports(StoreFeature.RESUMABLE_UPLOAD) && blob instanceof ExternalUploadedBlob) {
+            ZimbraLog.store.debug("blob already uploaded, just need to commit");
+            String locator = ((ExternalResumableUpload) this).finishUpload((ExternalUploadedBlob) blob);
+            if (locator != null) {
+                ZimbraLog.store.debug("wrote to locator %s",locator);
+                localCache.put(locator, getContent(blob));
+            } else {
+                ZimbraLog.store.warn("blob staging returned null locator");
+            }
+            return new ExternalStagedBlob(mbox, blob.getDigest(), blob.getRawSize(), locator);
+        } else {
+            InputStream is = getContent(blob);
+            try {
+                StagedBlob staged = stage(is, blob.getRawSize(), mbox);
+                if (staged != null && staged.getLocator() != null) {
+                    localCache.put(staged.getLocator(), getContent(blob));
+                }
+                return staged;
+            } finally {
+                ByteUtil.closeStream(is);
+            }
         }
     }
 
@@ -229,6 +253,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
         try {
             String locator = writeStreamToStore(pin, actualSize, mbox);
+            if (locator != null) {
+                ZimbraLog.store.debug("wrote to locator %s",locator);
+            } else {
+                ZimbraLog.store.warn("blob staging returned null locator");
+            }
             return new ExternalStagedBlob(mbox, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), locator);
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to stage blob", e);
@@ -239,12 +268,9 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     @Override
     public Blob storeIncoming(InputStream data, boolean storeAsIs) throws IOException,
             ServiceException {
-        //for now, we store incoming locally, then push to remote store in stage/link
-        //this will become optional once we finish Triton integration
         BlobBuilder builder = getBlobBuilder();
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
-
         return builder.init().append(data).finish();
     }
 
@@ -253,7 +279,14 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         switch (feature) {
             case BULK_DELETE:  return false;
             case CENTRALIZED:  return true;
+            case SINGLE_INSTANCE_SERVER_CREATE : return this instanceof SisStore;
+            case RESUMABLE_UPLOAD: return this instanceof ExternalResumableUpload;
             default:           return false;
         }
+    }
+
+    @VisibleForTesting
+    public void clearCache() {
+        localCache.removeAll();
     }
 }

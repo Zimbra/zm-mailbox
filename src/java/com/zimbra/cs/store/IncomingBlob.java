@@ -23,6 +23,9 @@ import com.zimbra.common.service.ServiceException;
 
 /**
  * Represents incoming blob, i.e. blob that may not be yet completely received.
+ * Note that IncomingBlob is not thread-safe; two threads MUST NOT write to the same
+ * IncomingBlob concurrently.
+ *
  */
 public abstract class IncomingBlob {
     /**
@@ -69,6 +72,8 @@ public abstract class IncomingBlob {
     /**
      * Gets the output stream for the incoming blob. The stream is used to write
      * to the end of the incoming blob.
+     *
+     * Note that neither IncomingBlob nor the returned OutputStream is thread-safe.
      *
      * @return the output stream
      */
@@ -118,10 +123,23 @@ public abstract class IncomingBlob {
         return hasExpectedSize() && getExpectedSize() == getCurrentSize();
     }
 
+    /**
+     * Finalize the data and create a local Blob object. No further writes are permitted after calling getBlob()
+     *
+     * @return Blob which holds the local data
+     * @throws IOException
+     * @throws ServiceException
+     */
     public abstract Blob getBlob() throws IOException, ServiceException;
 
+    /**
+     * Cancel an upload
+     */
     public abstract void cancel();
 
+    /**
+     * @return time (in ms) of last access
+     */
     public abstract long getLastAccessTime();
 
 }

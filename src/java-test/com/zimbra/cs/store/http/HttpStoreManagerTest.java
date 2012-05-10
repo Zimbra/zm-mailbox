@@ -53,14 +53,6 @@ public class HttpStoreManagerTest extends AbstractStoreManagerTest {
         }
 
         @Override
-        public boolean supports(StoreFeature feature) {
-            switch (feature) {
-                case CENTRALIZED:  return false;
-                default:           return super.supports(feature);
-            }
-        }
-
-        @Override
         protected String getLocator(PostMethod post, String postDigest, long postSize, Mailbox mbox)
         throws ServiceException {
             String locator = post.getResponseHeader("Location").getValue();
@@ -73,6 +65,7 @@ public class HttpStoreManagerTest extends AbstractStoreManagerTest {
         }
     }
 
+    @Override
     public StoreManager getStoreManager() {
         return new MockHttpStoreManager();
     }

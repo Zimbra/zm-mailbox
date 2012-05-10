@@ -23,9 +23,8 @@ import org.apache.commons.httpclient.HttpMethod;
 public class MozyServerToken {
     private String token;
 
-    public MozyServerToken(String token) {
+    public MozyServerToken() {
         super();
-        this.token = token;
     }
 
     public String getToken() {

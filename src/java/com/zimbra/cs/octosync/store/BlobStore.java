@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.IncomingBlob;
 
 
@@ -21,7 +22,10 @@ import com.zimbra.cs.store.IncomingBlob;
  * Incoming blob is a blob that is being received, and is possibly not yet complete.
  * It can be appended to as the data is being received. This supports resumable uploads.
  * Once complete, it can be turned into stored blob. An incoming blob that never got stored
- * should be automatically purged.
+ * SHOULD be automatically purged. A stored blob MAY be purged; at this time the only way to
+ * ensure blob persistence is to associate it with a Document or other MailItem. Future BlobStore
+ * implementations MAY automatically persist StoredBlob metadata, but no such implementation currently
+ * exists.
  *
  * Incoming blobs are assigned ids by the store. Stored blobs use user supplied ids.
  * Namespaces for both types are separate. Additionally stored blobs support versioning.
@@ -41,6 +45,7 @@ public abstract class BlobStore
     public abstract class StoredBlob
     {
         private String id;
+        protected Blob blob;
 
         /**
          * Gets the stored blob identifier.
@@ -50,6 +55,14 @@ public abstract class BlobStore
         public String getId()
         {
             return id;
+        }
+
+        /**
+         * Gets the local blob instance
+         * @return the blob
+         */
+        public Blob getBlob() {
+            return blob;
         }
 
         /**
@@ -84,9 +97,10 @@ public abstract class BlobStore
          */
         public abstract long getSize();
 
-        protected StoredBlob(String id)
+        protected StoredBlob(String id, Blob blob)
         {
             this.id = id;
+            this.blob = blob;
         }
     }
 
@@ -165,4 +179,20 @@ public abstract class BlobStore
      * @param version The version to delete. No-op if the version does not exist.
      */
     public abstract void delete(StoredBlob sb, int version);
+
+    /**
+     * Determine if the store supports SHA-256 SIS
+     *
+     * @return true if SIS is supported, false if not
+     */
+    public abstract boolean supportsSisCreate();
+
+    /**
+     * Retrieve a previously uploaded blob based on hash. The implementation must track reference count and increment if a blob is found.
+     * @param hash SHA256 hash of the blob
+     * @return StoredBlob which matches hash, or null if no such blob exists
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract StoredBlob getSisBlob(byte[] hash) throws IOException, ServiceException;
 }

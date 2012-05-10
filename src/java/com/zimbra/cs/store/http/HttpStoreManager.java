@@ -99,5 +99,4 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
             delete.releaseConnection();
         }
     }
-
 }

@@ -68,6 +68,8 @@ public final class FileBlobStore extends StoreManager {
         switch (feature) {
             case BULK_DELETE:  return true;
             case CENTRALIZED:  return false;
+            case SINGLE_INSTANCE_SERVER_CREATE : return false;
+            case RESUMABLE_UPLOAD : return false;
             default:           return false;
         }
     }

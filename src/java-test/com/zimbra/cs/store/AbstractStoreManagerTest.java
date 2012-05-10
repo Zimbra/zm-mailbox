@@ -14,8 +14,10 @@
  */
 package com.zimbra.cs.store;
 
+import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Random;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -23,6 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -30,6 +33,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ThreaderTest;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.store.external.ExternalStoreManager;
 import com.zimbra.qa.unittest.TestUtil;
 
 public abstract class AbstractStoreManagerTest {
@@ -86,6 +90,7 @@ public abstract class AbstractStoreManagerTest {
         Assert.assertTrue("mailboxblob content = mime content", TestUtil.bytesEqual(mimeBytes, mblob.getLocalBlob().getInputStream()));
 
         sm.delete(mblob);
+
     }
 
     /**
@@ -107,20 +112,160 @@ public abstract class AbstractStoreManagerTest {
 
         mblob1.getLocalBlob();
         mblob2.getLocalBlob();
+        sm.delete(mblob1);
+        sm.delete(mblob2);
     }
 
     @Test
     public void incoming() throws Exception {
+        Random rand = new Random();
+        byte[] bytes = new byte[1000000];
+        rand.nextBytes(bytes);
+
         StoreManager sm = StoreManager.getInstance();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         IncomingBlob incoming = sm.newIncomingBlob("foo", null);
 
         OutputStream out = incoming.getAppendingOutputStream();
-        out.write(123);
+        out.write(bytes);
+        Assert.assertEquals(bytes.length, incoming.getCurrentSize());
+        Blob blob = incoming.getBlob();
+
+        Assert.assertEquals("blob size = incoming written", bytes.length, blob.getRawSize());
+
+        Assert.assertTrue("blob content = mime content", TestUtil.bytesEqual(bytes, blob.getInputStream()));
+
+        StagedBlob staged = sm.stage(blob, mbox);
+        Assert.assertEquals("staged size = blob size", blob.getRawSize(), staged.getSize());
+
+        MailboxBlob mblob = sm.link(staged, mbox, 0, 0);
+        Assert.assertEquals("link size = staged size", staged.getSize(), mblob.getSize());
+        Assert.assertTrue("link content = mime content", TestUtil.bytesEqual(bytes, mblob.getLocalBlob().getInputStream()));
+
+        mblob = sm.getMailboxBlob(mbox, 0, 0, staged.getLocator());
+        Assert.assertEquals("mblob size = staged size", staged.getSize(), mblob.getSize());
+        Assert.assertTrue("mailboxblob content = mime content", TestUtil.bytesEqual(bytes, mblob.getLocalBlob().getInputStream()));
+
+        sm.delete(mblob);
+    }
+
+    @Test
+    public void incomingMultipost() throws Exception {
+        byte[] bytes = "AAAAStrinGBBB".getBytes();
+        StoreManager sm = StoreManager.getInstance();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        IncomingBlob incoming = sm.newIncomingBlob("foo", null);
+
+        OutputStream out = incoming.getAppendingOutputStream();
+        byte[] b1 = "AAAA".getBytes();
+        byte[] b2 = "StrinG".getBytes();
+        byte[] b3 = "BBB".getBytes();
+        out.write(b1);
+        int written = b1.length;
+        Assert.assertEquals(written, incoming.getCurrentSize());
+        out.close();
+        out = incoming.getAppendingOutputStream();
+        out.write(b2);
+        out.close();
+        written += b2.length;
+        Assert.assertEquals(written, incoming.getCurrentSize());
+        out = incoming.getAppendingOutputStream();
+        out.write(b3);
+        out.close();
+        written += b3.length;
+        Assert.assertEquals(written, incoming.getCurrentSize());
+        Blob blob = incoming.getBlob();
+
+        Assert.assertEquals("blob size = incoming written", bytes.length, blob.getRawSize());
+
+        Assert.assertTrue("blob content = mime content", TestUtil.bytesEqual(bytes, blob.getInputStream()));
+
+        StagedBlob staged = sm.stage(blob, mbox);
+        Assert.assertEquals("staged size = blob size", blob.getRawSize(), staged.getSize());
+
+        MailboxBlob mblob = sm.link(staged, mbox, 0, 0);
+        Assert.assertEquals("link size = staged size", staged.getSize(), mblob.getSize());
+        Assert.assertTrue("link content = mime content", TestUtil.bytesEqual(bytes, mblob.getLocalBlob().getInputStream()));
+
+        mblob = sm.getMailboxBlob(mbox, 0, 0, staged.getLocator());
+        Assert.assertEquals("mblob size = staged size", staged.getSize(), mblob.getSize());
+        Assert.assertTrue("mailboxblob content = mime content", TestUtil.bytesEqual(bytes, mblob.getLocalBlob().getInputStream()));
+
+        sm.delete(mblob);
+    }
+
+    @Test
+    public void incomingByteUtilCopy() throws Exception {
+        //similar to incoming, but uses ByteUtil.copy() which mimics behavior of FileUploaderResource
+        Random rand = new Random();
+        byte[] bytes = new byte[1000000];
+
+        rand.nextBytes(bytes);
+        StoreManager sm = StoreManager.getInstance();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        IncomingBlob incoming = sm.newIncomingBlob("foo", null);
+
+        OutputStream out = incoming.getAppendingOutputStream();
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        ByteUtil.copy(bais, true, out, true);
+        Assert.assertEquals(bytes.length, incoming.getCurrentSize());
 
         Blob blob = incoming.getBlob();
 
-        Assert.assertEquals("blob size = incoming written", 1, blob.getRawSize());
+        Assert.assertEquals("blob size = incoming written", bytes.length, blob.getRawSize());
+
+        Assert.assertTrue("blob content = mime content", TestUtil.bytesEqual(bytes, blob.getInputStream()));
+
+        StagedBlob staged = sm.stage(blob, mbox);
+        Assert.assertEquals("staged size = blob size", blob.getRawSize(), staged.getSize());
+
+        MailboxBlob mblob = sm.link(staged, mbox, 0, 0);
+        Assert.assertEquals("link size = staged size", staged.getSize(), mblob.getSize());
+        Assert.assertTrue("link content = mime content", TestUtil.bytesEqual(bytes, mblob.getLocalBlob().getInputStream()));
+
+        mblob = sm.getMailboxBlob(mbox, 0, 0, staged.getLocator());
+        Assert.assertEquals("mblob size = staged size", staged.getSize(), mblob.getSize());
+        Assert.assertTrue("mailboxblob content = mime content", TestUtil.bytesEqual(bytes, mblob.getLocalBlob().getInputStream()));
+
+        sm.delete(mblob);
+    }
+
+    @Test
+    public void emptyBlob() throws Exception {
+        StoreManager sm = StoreManager.getInstance();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        IncomingBlob incoming = sm.newIncomingBlob("foo", null);
+        Blob blob = incoming.getBlob();
+        Assert.assertEquals("blob size = incoming written", 0, blob.getRawSize());
+        if (sm instanceof ExternalStoreManager) {
+            ((ExternalStoreManager) sm).clearCache();
+        }
+        StagedBlob staged = sm.stage(blob, mbox);
+        Assert.assertEquals("staged size = blob size", blob.getRawSize(), staged.getSize());
+
+        if (sm instanceof ExternalStoreManager) {
+            ((ExternalStoreManager) sm).clearCache();
+        }
+        MailboxBlob mblob = sm.link(staged, mbox, 0, 0);
+        Assert.assertEquals("link size = staged size", staged.getSize(), mblob.getSize());
+
+
+        if (sm instanceof ExternalStoreManager) {
+            ((ExternalStoreManager) sm).clearCache();
+        }
+        mblob = sm.getMailboxBlob(mbox, 0, 0, staged.getLocator());
+        Assert.assertEquals("mblob size = staged size", staged.getSize(), mblob.getSize());
+
+        if (sm instanceof ExternalStoreManager) {
+            ((ExternalStoreManager) sm).clearCache();
+        }
+        Assert.assertEquals(0, mblob.getLocalBlob().getRawSize());
+
+        sm.delete(mblob);
 
     }
 }

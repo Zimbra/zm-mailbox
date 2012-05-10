@@ -12,17 +12,15 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store.triton;
-
-import org.junit.Ignore;
+package com.zimbra.cs.store.external;
 
 import com.zimbra.cs.store.AbstractStoreManagerTest;
 import com.zimbra.cs.store.StoreManager;
 
-@Ignore("requires Triton server")
-public class TritonRawStoreManagerTest extends AbstractStoreManagerTest {
+public class SimpleStreamingStoreManagerTest extends AbstractStoreManagerTest {
+
     @Override
     protected StoreManager getStoreManager() {
-        return new TritonRawStoreManager("http://10.33.30.77");
+        return new SimpleStreamingStoreManager();
     }
 }

@@ -16,6 +16,8 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.IncomingBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.StoreManager.StoreFeature;
+import com.zimbra.cs.store.external.SisStore;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -31,7 +33,8 @@ import com.zimbra.cs.util.Zimbra;
  *
  * IncomingBlob and StoredBlob instances (metadata) are kept in memory. This is okay
  * because the intention is to keep them for short periods of time (minutes-hours).
- * The actual data is stored on disk (or wherever StoreManager keeps it).
+ * The actual data is stored on disk (or wherever StoreManager keeps it), and must be
+ * associated with a Document or other MailItem using Mailbox transactions.
  *
  */
 public class StoreManagerBasedTempBlobStore extends BlobStore
@@ -39,6 +42,11 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
     private static final Log log = LogFactory.getLog(StoreManagerBasedTempBlobStore.class);
 
     private StoreManager storeManager;
+
+    /**
+     * Whether or not to cache StoredBlobs. The PatchStore needs this while it is unnecessary overhead for most other use cases
+     */
+    private boolean storedCached;
 
     /**
      * Tracks incoming blobs metadata.
@@ -66,18 +74,15 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
 
     public final class StoredBlob extends BlobStore.StoredBlob
     {
-        private Blob blob;
         private Object ctx;
         private long lastAccessTime;
         private long size;
 
         protected StoredBlob(String id, Blob blob, Object ctx, long size)
         {
-            super(id);
-            this.blob = blob;
+            super(id, blob);
             this.ctx = ctx;
             this.size = size;
-
             lastAccessTime = System.currentTimeMillis();
         }
 
@@ -119,17 +124,19 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
      *      (note, it is a singleton currently, but let's not hardcode it)
      * @param incomingExpiration the incoming expiration (in ms)
      * @param storedExpiration the stored expiration (in ms)
+     * @param storedCached whether to cache StoredBlob instances or not
      */
     public StoreManagerBasedTempBlobStore(StoreManager storeManager,
             long incomingExpiration,
-            long storedExpiration)
+            long storedExpiration,
+            boolean storedCached)
     {
         this.storeManager = storeManager;
         this.incomingBlobs = new HashMap<String, IncomingBlob>();
         this.storedBlobs = new HashMap<String, TreeMap<Integer, StoredBlob>>();
         this.incomingExpiration = incomingExpiration;
         this.storedExpiration = storedExpiration;
-
+        this.storedCached = storedCached;
         Zimbra.sTimer.schedule(new ReaperTask(), REAPER_INTERVAL_MSEC, REAPER_INTERVAL_MSEC);
     }
 
@@ -180,19 +187,20 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
 
         Blob blob = myIb.getBlob();
         StoredBlob sb = new StoredBlob(id, blob, myIb.getContext(), blob.getRawSize());
+        if (storedCached) {
+            synchronized (storedBlobs) {
+                TreeMap<Integer, StoredBlob> versionMap = storedBlobs.get(id);
 
-        synchronized (storedBlobs) {
-            TreeMap<Integer, StoredBlob> versionMap = storedBlobs.get(id);
+                if (versionMap == null) {
+                    versionMap = new TreeMap<Integer, StoredBlob>();
+                    storedBlobs.put(id, versionMap);
+                }
 
-            if (versionMap == null) {
-                versionMap = new TreeMap<Integer, StoredBlob>();
-                storedBlobs.put(id, versionMap);
+                Integer versionInt = new Integer(version);
+                assert !versionMap.containsKey(versionInt) : "Version " + version + " already exists";
+
+                versionMap.put(versionInt, sb);
             }
-
-            Integer versionInt = new Integer(version);
-            assert !versionMap.containsKey(versionInt) : "Version " + version + " already exists";
-
-            versionMap.put(versionInt, sb);
         }
 
         return sb;
@@ -321,7 +329,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
                     log.info("Removed " + numReapedIncoming + " expired incoming incomplete blobs");
                 }
 
-                if (storedExpiration > 0) {
+                if (storedCached && storedExpiration > 0) {
                     synchronized (storedBlobs) {
 
                         long cutoffTime = System.currentTimeMillis() - storedExpiration;
@@ -364,26 +372,22 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
         }
     }
 
-    /**
-     * Bit of a hack, a special function that extracts underlying Blob instance
-     * (com.zimbra.cs.store.Blob) and removes specified IncomingBlob.
-     * This is a special use to take advantage of "resumability" of PatchStore
-     * in places that require the cs.store.Blob (e.g. NativeFormatter).
-     *
-     * @param ib Incoming blob to extract
-     * @return Underlying Blob instance
-     *
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public Blob extractIncoming(IncomingBlob ib) throws IOException, ServiceException
-    {
-        synchronized (incomingBlobs) {
-            IncomingBlob existingBlob = incomingBlobs.remove(ib.getId());
-            assert existingBlob == null || existingBlob == ib : "Wrong blob removed: " + ib.getId();
-        }
-
-        return ib.getBlob();
+    @Override
+    public boolean supportsSisCreate() {
+        return storeManager.supports(StoreFeature.SINGLE_INSTANCE_SERVER_CREATE);
     }
 
+    @Override
+    public StoredBlob getSisBlob(byte[] hash) throws IOException, ServiceException {
+        SisStore sisStore = (SisStore) storeManager;
+        Blob blob = sisStore.getSisBlob(hash);
+        if (blob != null) {
+            //this store currently requires separate persistence for StoredBlob, so we can just construct one
+            //if StoredBlob was actually persisted internally then we'd need to call store() or equivalent here
+            //empty ID is also OK since we're really just wrapping Blob
+            return new StoredBlob("", blob, null, blob.getRawSize());
+        } else {
+            return null;
+        }
+    }
 }

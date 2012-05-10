@@ -206,6 +206,8 @@ public class BlobBuilder {
         if (finished)
             return blob;
 
+        checkInitialized();
+
         if (useCompression() && !compressionThresholdExceeded) {
             // Data was completely read into the buffer.  Write the uncompressed
             // data to the file.

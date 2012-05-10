@@ -97,7 +97,18 @@ public abstract class StoreManager {
         /** The store is reachable from any {@code mailboxd} host.  When
          *  moving mailboxes between hosts, the store should be left untouched,
          *  as there is no need to move the blobs along with the metadata. */
-        CENTRALIZED
+        CENTRALIZED,
+        /**
+         * The store supports resumable upload
+         */
+        RESUMABLE_UPLOAD,
+        /**
+         * The store supports deduping based on blob content; aka SIS create.
+         * If two users upload the same file, only one copy is stored.
+         * The remote store must track reference count internally
+         * and delete the actual file only when ref-count reaches 0
+         */
+        SINGLE_INSTANCE_SERVER_CREATE
     };
 
     /**

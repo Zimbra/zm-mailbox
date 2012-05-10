@@ -41,5 +41,4 @@ public class BlobBuilderOutputStream extends OutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         blobBuilder.append(b, off, len);
     }
-
 }

@@ -27,7 +27,7 @@ public class PatchStoreTest
         MailboxTestUtil.clearData();
 
         blobStore = new StoreManagerBasedTempBlobStore(
-                StoreManager.getInstance(), 0, 0);
+                StoreManager.getInstance(), 0, 0, true);
 
         patchStore = new PatchStore(blobStore);
     }

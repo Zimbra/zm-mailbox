@@ -72,6 +72,7 @@ public final class MockStoreManager extends StoreManager {
         switch (feature) {
             case BULK_DELETE:  return false;
             case CENTRALIZED:  return false;
+            case SINGLE_INSTANCE_SERVER_CREATE : return false;
             default:           return false;
         }
     }

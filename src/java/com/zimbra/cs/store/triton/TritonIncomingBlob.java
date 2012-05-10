@@ -15,8 +15,8 @@
 package com.zimbra.cs.store.triton;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.security.MessageDigest;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.HttpClient;
@@ -29,77 +29,74 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
-import com.zimbra.cs.store.BufferingIncomingBlob;
+import com.zimbra.cs.store.external.ExternalResumableIncomingBlob;
+import com.zimbra.cs.store.external.ExternalResumableOutputStream;
 import com.zimbra.cs.store.triton.TritonBlobStoreManager.HashType;
 
 /**
  * IncomingBlob implementation which streams data directly to Triton using TritonIncomingOutputStream
  *
  */
-public class TritonIncomingBlob extends BufferingIncomingBlob {
+public class TritonIncomingBlob extends ExternalResumableIncomingBlob {
     private final String baseUrl;
     private final MozyServerToken serverToken;
     private final TritonUploadUrl uploadUrl;
     private final HashType hashType;
     private final MessageDigest digest;
+    private TritonIncomingOutputStream outStream;
+    private AtomicLong written;
 
     public TritonIncomingBlob(String id, String baseUrl, BlobBuilder blobBuilder, Object ctx, MessageDigest digest, HashType hashType) throws ServiceException, IOException {
         super(id, blobBuilder, ctx);
         this.digest = digest;
         this.hashType = hashType;
         this.baseUrl = baseUrl;
-        serverToken = new MozyServerToken("foo");
+        serverToken = new MozyServerToken();
         uploadUrl = new TritonUploadUrl();
+        written = new AtomicLong(0);
     }
 
     @Override
-    public OutputStream getAppendingOutputStream() {
+    protected ExternalResumableOutputStream getAppendingOutputStream(
+                    BlobBuilder blobBuilder) {
         lastAccessTime = System.currentTimeMillis();
-        return new TritonIncomingOutputStream(blobBuilder, digest, hashType, baseUrl, uploadUrl, serverToken);
-    }
-
-    @Override
-    public long getCurrentSize() throws IOException, ServiceException {
-        long internalSize = super.getCurrentSize();
-
-        if (TritonBlobStoreManager.RESUMABLE_IMPLEMENTED) { //TODO: temporary if block; make it permanent once support is available
-            //in normal case will be the same as the size we have locally
-            //if it is different it means something went wrong between HF server and TDS
-            //e.g. client uploads 10 bytes to HF but error causes only 9 to reach TDS
-            //client needs to resume from beginning so we'll throw exception
-            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            HeadMethod head = new HeadMethod(baseUrl + uploadUrl);
-            ZimbraLog.store.info("heading %s", head.getURI());
-            try {
-                head.addRequestHeader(TritonHeaders.SERVER_TOKEN, serverToken.getToken());
-                int statusCode = HttpClientUtil.executeMethod(client, head);
-                if (statusCode == HttpStatus.SC_OK) {
-                    String contentLength = head.getRequestHeader(TritonHeaders.CONTENT_LENGTH).getValue();
-                    try {
-                        long remoteSize = Long.valueOf(contentLength);
-                        if (remoteSize != internalSize) {
-                            //inconsistent sizes between HF and TDS, throw out the download
-                            //could also throw out digest and roll blob builder back to size recorded remotely, but that is premature optimization just now
-                            throw ServiceException.FAILURE("mismatch between local and remote content sizes. Client must restart upload", null);
-                        }
-                    } catch (NumberFormatException nfe) {
-                        throw ServiceException.FAILURE("Content length can't be parsed to Long", nfe);
-                    }
-                    serverToken.setToken(head);
-                } else {
-                    ZimbraLog.store.error("failed with code %d response: %s", statusCode, head.getResponseBodyAsString());
-                    throw ServiceException.FAILURE("unable to store blob "+statusCode + ":" + head.getStatusText(), null);
-                }
-            } finally {
-                head.releaseConnection();
-            }
-        }
-        return internalSize;
+        outStream = new TritonIncomingOutputStream(blobBuilder, digest, hashType, baseUrl, uploadUrl, serverToken, written);
+        return outStream;
     }
 
     @Override
     public Blob getBlob() throws IOException, ServiceException {
+        if (outStream != null) {
+            outStream.close();
+        }
         String locator = Hex.encodeHexString((digest.digest()));
-        return new TritonBlob(blobBuilder.finish(), locator);
+        return new TritonBlob(blobBuilder.finish(), locator, uploadUrl.toString(), serverToken);
+    }
+
+    @Override
+    protected long getRemoteSize() throws IOException {
+        outStream.flush();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HeadMethod head = new HeadMethod(baseUrl + uploadUrl);
+        ZimbraLog.store.info("heading %s", head.getURI());
+        try {
+            head.addRequestHeader(TritonHeaders.SERVER_TOKEN, serverToken.getToken());
+            int statusCode = HttpClientUtil.executeMethod(client, head);
+            if (statusCode == HttpStatus.SC_OK) {
+                String contentLength = head.getResponseHeader(TritonHeaders.CONTENT_LENGTH).getValue();
+                long remoteSize = -1;
+                try {
+                    remoteSize = Long.valueOf(contentLength);
+                } catch (NumberFormatException nfe) {
+                    throw new IOException("Content length can't be parsed to Long", nfe);
+                }
+                return remoteSize;
+            } else {
+                ZimbraLog.store.error("failed with code %d response: %s", statusCode, head.getResponseBodyAsString());
+                throw new IOException("unable to head blob "+statusCode + ":" + head.getStatusText(), null);
+            }
+        } finally {
+            head.releaseConnection();
+        }
     }
 }
