@@ -42,7 +42,7 @@ import com.zimbra.cs.util.AccountUtil;
  */
 public final class MeTest extends AbstractTest {
     private static final String IN = ":in";
-    private List<String> headers;
+    private String[] headers;
 
     @Override
     protected void validateArguments(Arguments args, SieveContext ctx) throws SieveException {
@@ -55,7 +55,7 @@ public final class MeTest extends AbstractTest {
                     if (itr.hasNext()) {
                         arg = itr.next();
                         if (arg instanceof StringListArgument) {
-                            headers = ((StringListArgument) arg).getList();
+                            headers = ((StringListArgument) arg).getList().get(0).split(",");
                         } else {
                             throw ctx.getCoordinate().syntaxException(IN + " is missing an argument");
                         }
