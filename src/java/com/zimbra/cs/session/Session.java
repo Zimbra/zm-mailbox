@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.OperationContext;
 
 /**
  *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
@@ -47,6 +48,7 @@ public abstract class Session {
     private   boolean   mCleanedUp;
     private   boolean   mIsRegistered;
     private   boolean   mAddedToCache;
+    protected OperationContext octxt;
 
 
     /**
@@ -324,6 +326,14 @@ public abstract class Session {
 
     public boolean isDelegatedSession() {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
+    }
+
+    public OperationContext getOperationContext() {
+        return octxt;
+    }
+
+    public void setOperationContext(OperationContext octxt) {
+        this.octxt = octxt;
     }
 
     @Override

@@ -79,7 +79,11 @@ public abstract class Message {
     private static final HashMap<String,Message> messages = new HashMap<String,Message>();
 
     static {
-        messages.put(CrossServerNotification.AppId, new CrossServerNotification());
+        registerMessage(new CrossServerNotification());
+    }
+
+    private static void registerMessage(Message m) {
+        messages.put(m.getAppId(), m);
     }
 
     public static Message create(ByteBuffer buffer) throws IOException {
