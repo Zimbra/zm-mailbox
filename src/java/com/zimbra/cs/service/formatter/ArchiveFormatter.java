@@ -231,6 +231,12 @@ public abstract class ArchiveFormatter extends Formatter {
             if (types != null && !types.equals("")) {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
                 sysTypes = new byte[0];
+                // remove the conversation if specified.
+                int idx = Arrays.binarySearch(searchTypes, MailItem.TYPE_CONVERSATION);
+                if (idx >= 0) {
+                    System.arraycopy(searchTypes, idx+1, searchTypes, idx, searchTypes.length-1-idx);
+                    searchTypes = Arrays.copyOf(searchTypes, searchTypes.length-1);
+                }
             }
             if (lock != null && (lock.equals("1") || lock.equals("t") ||
                     lock.equals("true"))) {
