@@ -255,17 +255,21 @@ public class SendShareNotification extends MailDocumentHandler {
             MailItem item,
             boolean revoke) throws ServiceException {
 
-        Provisioning prov = Provisioning.getInstance();
         MatchingGrant matchingGrant;
 
-        // see if the share specified in the request is real
-        if (Provisioning.onLocalServer(ownerAcct))
-            matchingGrant = getMatchingGrant(octxt, prov, item, granteeType, granteeId, ownerAcct);
-        else
-            matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct, item.getId());
+        Mountpoint mpt = item instanceof Mountpoint ? (Mountpoint) item : null;
 
-        if (!revoke && matchingGrant == null)
+        // see if the share specified in the request is real
+        if (Provisioning.onLocalServer(ownerAcct)) {
+            matchingGrant = getMatchingGrantLocal(octxt, item, granteeType, granteeId, ownerAcct);
+        } else {
+            matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct,
+                    mpt == null ? item.getId() : mpt.getRemoteId());
+        }
+
+        if (!revoke && matchingGrant == null) {
             throw ServiceException.INVALID_REQUEST("no matching grant", null);
+        }
 
         //
         // all is well, setup our ShareInfoData object
@@ -277,8 +281,8 @@ public class SendShareNotification extends MailDocumentHandler {
         sid.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
 
         // folder id/uuid used for mounting
-        sid.setItemId(item.getId());
-        sid.setItemUuid(item.getUuid());
+        sid.setItemId(mpt == null ? item.getId() : mpt.getRemoteId());
+        sid.setItemUuid(mpt == null ? item.getUuid() : mpt.getRemoteUuid());
 
         //
         // just a display name for the shared folder for the grantee to see.
@@ -353,11 +357,20 @@ public class SendShareNotification extends MailDocumentHandler {
         String getPassword() { return mGrant==null ? mSecret : mGrant.getPassword(); }
     }
 
-    private MatchingGrant getMatchingGrant(OperationContext octxt, Provisioning prov, MailItem item,
+    private MatchingGrant getMatchingGrantLocal(OperationContext octxt, MailItem item,
             byte granteeType, String granteeId, Account ownerAcct) throws ServiceException {
+        if (item instanceof Mountpoint) {
+            Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
+            if (ownerMbox == null) {
+                throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
+            }
+            item = ownerMbox.getItemById(octxt, ((Mountpoint) item).getRemoteId(), MailItem.Type.UNKNOWN);
+        }
+
         ACL acl = item.getEffectiveACL();
-        if (acl == null)
+        if (acl == null) {
             return null;
+        }
 
         for (ACL.Grant grant : acl.getGrants()) {
             if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
@@ -516,7 +529,11 @@ public class SendShareNotification extends MailDocumentHandler {
         MsgKey subjectKey = action == null ? MsgKey.shareNotifSubject :
                 action == Action.revoke ? MsgKey.shareRevokeSubject : MsgKey.shareExpireSubject;
         String subject = L10nUtil.getMessage(subjectKey, locale);
-        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), sid.getOwnerNotifName());
+        String ownerAcctDisplayName = ownerAccount.getDisplayName();
+        if (ownerAcctDisplayName == null) {
+            ownerAcctDisplayName = ownerAccount.getName();
+        }
+        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), ownerAcctDisplayName);
         mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
         mm.setSentDate(new Date());
 
