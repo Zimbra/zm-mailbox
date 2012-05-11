@@ -253,7 +253,9 @@ public final class LuceneQueryOperation extends QueryOperation {
                 //Let's try to avoid the additional D/B lookup; 
                 //We can calculate the number of items contained by the folders to search by getting the total
                 //item counts from the cache. If total items < total lucene hits - its cheaper to do the D/B query first.
-                if (getTotalItemCount(dbOp.getTargetFolders()) < getTotalHitCount())
+                long itemCount = getTotalItemCount(dbOp.getTargetFolders());
+                ZimbraLog.search.debug("lucene hits=%d, folders item count=%d", getTotalHitCount(), itemCount);
+                if (itemCount < getTotalHitCount())
                     return true; // run DB-FIRST
                 
                 int dbHitCount = dbOp.getDbHitCount();
