@@ -90,7 +90,6 @@ public class ZContact implements ZItem, ToZJSONObject {
     private boolean mGalContact;
     private ZMailbox mMailbox;
     private boolean isDirty;
-    private String mTypeOfMember;
 
     public enum Flag {
         flagged('f'),
@@ -122,16 +121,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         }
     }
 
-    public ZContact(String id, String type) throws ServiceException {
-        isDirty = false;
-        mId = id;
-        mTypeOfMember = type;
-    }
-
-    public ZContact(Element e, boolean galContact, String type, ZMailbox mailbox) throws ServiceException {
+    public ZContact(Element e, boolean galContact, ZMailbox mailbox) throws ServiceException {
         this(e, mailbox);
         mGalContact = galContact;
-        mTypeOfMember = type;
     }
 
     public ZContact(Element e, ZMailbox mailbox) throws ServiceException {
@@ -171,9 +163,7 @@ public class ZContact implements ZItem, ToZJSONObject {
             Element cnEl = memberEl.getOptionalElement(MailConstants.E_CONTACT);
             ZContact contact = null;
             if (cnEl != null)
-                contact = new ZContact(cnEl, type.equals("G") ? true : false, type, mailbox);
-            else 
-                contact = new ZContact(id, type);
+                contact = new ZContact(cnEl, type.equals("G") ? true : false, mailbox);
             members.put(id, contact);
         }
         mMembers = Collections.unmodifiableMap(members);
@@ -312,11 +302,6 @@ public class ZContact implements ZItem, ToZJSONObject {
     public boolean isDirty() {
         return isDirty;
     }
-    
-    public String getTypeOfMember() {
-       return mTypeOfMember;
-    }
-
 	@Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyContactEvent) {
