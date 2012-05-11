@@ -2091,6 +2091,53 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         mRevisions = null;
     }
 
+    static public int purgeRevisions(Mailbox Mbx, long before) throws ServiceException {
+        HashSet<Integer>  outdatedIds = DbMailItem.getListOfItemsWithOutdatedRevisions( Mbx, (int)(before/1000) );
+
+        for(Iterator<Integer> Iter= outdatedIds.iterator(); Iter.hasNext();)  {
+            MailItem  item = getById(Mbx, Iter.next());
+
+            // Purge revisions and their blobs .
+            if ( item != null && item.getType() == Type.DOCUMENT && item.isTagged(Flag.FlagInfo.VERSIONED)) {
+                List<MailItem> revisions = item.loadRevisions();
+                List<MailItem> toPurge = new ArrayList<MailItem>();
+
+                Folder folder = item.getFolder();
+                for (Iterator<MailItem> it = revisions.iterator(); it.hasNext();) {
+                    MailItem revision = it.next();
+                    if(revision.getDate() < before) {
+                        toPurge.add(revision);
+                        it.remove();
+                    }
+                }
+
+                // The following logic depends on version, mod_metadata and mod_content each being
+                // monotonically increasing in the revisions list. (f(n) <= f(n+1))
+
+                // Filter out blobs that are still in use; mark the rest for deletion.
+                int oldestRemainingSavedSequence =
+                    revisions.isEmpty() ? item.mData.modContent : revisions.get(0).getSavedSequence();
+                for (MailItem revision : toPurge) {
+                    if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
+                        item.mMailbox.updateSize(-revision.getSize());
+                        folder.updateSize(0, 0, -revision.getSize());
+                        revision.markBlobForDeletion();
+                    }
+                }
+
+                // Purge revisions from db.
+                int highestPurgedVer = toPurge.get(toPurge.size() - 1).getVersion();
+                DbMailItem.purgeRevisions(item, highestPurgedVer, true);
+
+                if (revisions.isEmpty()) {
+                    item.tagChanged(item.mMailbox.getFlagById(Flag.ID_VERSIONED), false);
+                }
+            }
+        }
+
+        return 0;
+    }
+
     /** Recalculates the size, metadata, etc. for an existing MailItem and
      *  persists that information to the database.  Maintains any existing
      *  mutable metadata.  Updates mailbox and folder sizes appropriately.

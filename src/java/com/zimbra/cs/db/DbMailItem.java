@@ -2598,6 +2598,46 @@ public class DbMailItem {
         }
     }
 
+    public static HashSet<Integer> getListOfItemsWithOutdatedRevisions(Mailbox mbox, int before)    throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        HashSet<Integer> outdatedIds= new HashSet<Integer>();
+
+        if(before<=0)  return outdatedIds;
+
+        try {
+            StringBuilder constraint = new StringBuilder();
+            String dateColumn = ("date");
+
+            constraint.append(dateColumn).append(" < ? ");
+
+            String orderByDate = " ORDER BY " + dateColumn;
+
+            stmt = conn.prepareStatement("SELECT item_id" +
+                        " FROM " + getRevisionTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + constraint + orderByDate);
+
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, before);
+
+            rs = stmt.executeQuery();
+
+            while (rs.next()){
+                outdatedIds.add(rs.getInt(1));
+            }
+
+            stmt = null;
+            return outdatedIds;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching list of items with outdated revisions for purge", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
                                              Boolean unread, boolean useChangeDate, Integer maxItems)
     throws ServiceException {
