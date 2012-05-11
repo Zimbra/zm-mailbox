@@ -90,6 +90,11 @@ final class SessionMap {
         return Collections.unmodifiableCollection(accountSessionMap.values());
     }
 
+    public synchronized Collection<Session> get(String accountId) {
+        AccountSessionMap m = accountSessionMap.get(accountId);
+        return (m == null) ? null : Collections.unmodifiableCollection(m.values());
+    }
+
     /** Fetches a {@link Session} from the cache by owner and session ID and
      *  returns it.  Returns <tt>null</tt> if no matching <tt>Session</tt> is
      *  found.  As a side-effect, updates the last access time on the returned

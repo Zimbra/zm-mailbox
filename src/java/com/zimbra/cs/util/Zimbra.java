@@ -39,6 +39,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
@@ -290,6 +291,12 @@ public final class Zimbra {
             if (app.supports(ExternalAccountManagerTask.class)) {
                 long interval = server.getExternalAccountStatusCheckInterval();
                 sTimer.schedule(new ExternalAccountManagerTask(), interval, interval);
+            }
+
+            try {
+                MessageChannel.getInstance().startup();
+            } catch (IOException e) {
+                ZimbraLog.misc.warn("can't start notification channels", e);
             }
 
             // should be last, so that other subsystems can add dynamic stats counters

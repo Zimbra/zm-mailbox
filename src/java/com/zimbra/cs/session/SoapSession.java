@@ -33,6 +33,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
@@ -316,13 +317,14 @@ public class SoapSession extends Session {
         }
     }
 
-    static class RemoteNotifications {
+    public static class RemoteNotifications {
         int count = -1;
         String deleted;
         List<Element> created;
         List<Element> modified;
+        List<Element> activities;
 
-        RemoteNotifications(Element eNotify) {
+        public RemoteNotifications(Element eNotify) {
             if (eNotify == null)
                 return;
             Element eSection;
@@ -332,6 +334,8 @@ public class SoapSession extends Session {
                 created = new ArrayList<Element>(eSection.listElements());
             if ((eSection = eNotify.getOptionalElement(ZimbraNamespace.E_MODIFIED)) != null)
                 modified = new ArrayList<Element>(eSection.listElements());
+            if ((eSection = eNotify.getOptionalElement(MailConstants.E_A)) != null)
+                activities = new ArrayList<Element>(eSection.listElements());
         }
 
         RemoteNotifications add(RemoteNotifications rns) {
@@ -348,6 +352,9 @@ public class SoapSession extends Session {
             if (modified == null)           modified = rns.modified;
             else if (rns.modified != null)  modified.addAll(rns.modified);
 
+            if (activities == null)           activities = rns.activities;
+            else if (rns.activities != null)  activities.addAll(rns.activities);
+
             count = (count >= 0 && rns.count >= 0 ? count + rns.count : -1);
             return this;
         }
@@ -358,6 +365,7 @@ public class SoapSession extends Session {
                 if (deleted != null)   count += StringUtil.countOccurrences(deleted, ',') / 4 + 1;
                 if (created != null)   count += created.size();
                 if (modified != null)  count += modified.size();
+                if (activities != null)  count += activities.size();
             }
             return count;
         }
@@ -366,13 +374,14 @@ public class SoapSession extends Session {
             if (deleted != null && !deleted.equals(""))   return true;
             if (created != null && !created.isEmpty())    return true;
             if (modified != null && !modified.isEmpty())  return true;
+            if (activities != null && !activities.isEmpty())  return true;
             return false;
         }
     }
 
     class QueuedNotifications {
         /** ExternalEventNotifications are kept sequentially */
-        List<ExternalEventNotification> mExtraNotifications;
+        List<ExternalEventNotification> mExternalNotifications;
         PendingModifications mMailboxChanges;
         RemoteNotifications mRemoteChanges;
         boolean mHasLocalChanges;
@@ -393,7 +402,7 @@ public class SoapSession extends Session {
                 return true;
             if (!localMailboxOnly && mRemoteChanges != null && mRemoteChanges.hasNotifications())
                 return true;
-            if (mExtraNotifications != null && !mExtraNotifications.isEmpty())
+            if (mExternalNotifications != null && !mExternalNotifications.isEmpty())
                 return true;
             return false;
         }
@@ -404,9 +413,9 @@ public class SoapSession extends Session {
         }
 
         void addNotification(ExternalEventNotification extra) {
-            if (mExtraNotifications == null)
-                mExtraNotifications = new LinkedList<ExternalEventNotification>();
-            mExtraNotifications.add(extra);
+            if (mExternalNotifications == null)
+                mExternalNotifications = new LinkedList<ExternalEventNotification>();
+            mExternalNotifications.add(extra);
         }
 
         void addNotification(PendingModifications pms) {
@@ -457,13 +466,15 @@ public class SoapSession extends Session {
     private List<RemoteSessionInfo> remoteSessions;
     private final boolean asAdmin;
     private boolean isOffline = false;
+    private final SoapProtocol responseProtocol;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
      * @see Session#register() */
-    public SoapSession(String authenticatedId, boolean asAdmin) {
-        super(authenticatedId, Session.Type.SOAP);
-        this.asAdmin = asAdmin;
+    public SoapSession(ZimbraSoapContext zsc) {
+        super(zsc.getAuthtokenAccountId(), zsc.getAuthtokenAccountId(), Session.Type.SOAP);
+        this.asAdmin = zsc.isUsingAdminPrivileges();
+        responseProtocol = zsc.getResponseProtocol();
     }
 
     @Override
@@ -658,7 +669,7 @@ public class SoapSession extends Session {
         }
     }
 
-    protected void addRemoteNotifications(RemoteNotifications rns) {
+    public void addRemoteNotifications(RemoteNotifications rns) {
         changes.addNotification(rns);
     }
 
@@ -742,6 +753,7 @@ public class SoapSession extends Session {
         public int getLastKnownSequence();
         public ZimbraSoapContext getSoapContext();
         public boolean localChangesOnly();
+        public boolean isPersistent();
         public void notificationsReady() throws ServiceException;
     }
 
@@ -765,7 +777,13 @@ public class SoapSession extends Session {
             pushChannel = null;
         }
 
-        if (mailbox == null) {
+        // if the session is mailbox listener, then
+        // the mailbox variable needs to be set.
+        // RemoteSoapSession is not a mailbox listener
+        // and does not require mailbox object as
+        // the DelegateSession's listen for changes
+        // in other's mailboxes.
+        if (isMailboxListener() && mailbox == null) {
             sc.closePushChannel();
             return RegisterNotificationResult.NO_NOTIFY;
         }
@@ -803,7 +821,7 @@ public class SoapSession extends Session {
         }
         try {
             // if we're in a hanging no-op, alert the client that there are changes
-            notifyPushChannel(null, true);
+            notifyPushChannel(null);
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in notifyExternalEvent", e);
         }
@@ -892,7 +910,7 @@ public class SoapSession extends Session {
             // update the set of notifications not yet sent to the client
             cacheNotifications(pms, fromThisSession);
             // if we're in a hanging no-op, alert the client that there are changes
-            notifyPushChannel(pms, true);
+            notifyPushChannel(pms);
             // FIXME: this query result cache purge seems a little aggressive
             clearCachedQueryResults();
         } catch (ServiceException e) {
@@ -951,6 +969,12 @@ public class SoapSession extends Session {
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in forcePush", e);
         }
+    }
+
+    private synchronized void notifyPushChannel(final PendingModifications pms) throws ServiceException {
+        // don't clear the persistent push channels after each use
+        boolean persistent = pushChannel == null ? false : pushChannel.isPersistent();
+        notifyPushChannel(pms, !persistent);
     }
 
     private synchronized void notifyPushChannel(final PendingModifications pms, final boolean clearChannel)
@@ -1441,6 +1465,7 @@ public class SoapSession extends Session {
             }
         }
 
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
         boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
         if (hasLocalModifies || hasRemoteModifies) {
@@ -1450,7 +1475,6 @@ public class SoapSession extends Session {
                     if (chg.why != 0 && chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
 
-                        ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                         try {
                             Element elt = ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
                             if (elt == null) {
@@ -1487,17 +1511,61 @@ public class SoapSession extends Session {
             }
         }
 
-        if (ntfn.mExtraNotifications != null && ntfn.mExtraNotifications.size() > 0) {
-            for (ExternalEventNotification extra : ntfn.mExtraNotifications) {
-                extra.addElement(eNotify);
+        if (rns != null && rns.activities != null && !rns.activities.isEmpty())  {
+            Element activities = eNotify.getOptionalElement(MailConstants.E_A);
+            if (activities == null) {
+                activities = eNotify.addElement(MailConstants.E_A);
+            }
+            for (Element elt : rns.activities) {
+                if (encodingMatches(parent, elt)) {
+                    activities.addElement(elt.clone().detach());
+                } else {
+                    ZimbraLog.session.warn("unable to add remote notification due to mismatched SOAP protocol");
+                }
             }
         }
+
+        putExtraNotifications(ntfn, eNotify, ifmt);
 
         if (deletedIds == null || deletedIds.length() == 0) {
             eDeleted.detach();
         } else {
             eDeleted.addAttribute(A_ID, deletedIds.toString());
         }
+    }
+
+    /*
+     * Octopus should be eventually merged to ZCS so we don't have to use
+     * callbacks as much
+     */
+    private void putExtraNotifications(QueuedNotifications ntfn, Element eNotify, ItemIdFormatter ifmt) {
+
+        // watch notifications are stored on the side as they are not
+        // MailItem based notification
+        if (ntfn.mExternalNotifications != null && ntfn.mExternalNotifications.size() > 0) {
+            for (ExternalEventNotification extra : ntfn.mExternalNotifications) {
+                extra.addElement(eNotify);
+            }
+        }
+
+        // activities
+        if (activityCb != null && ntfn.mMailboxChanges != null) {
+            try {
+                activityCb.putActivities(ntfn.mMailboxChanges, eNotify, ifmt);
+            } catch (ServiceException e) {
+                ZimbraLog.soap.warn("logging activities", e);
+            }
+        }
+    }
+
+    public interface ActivityCallback {
+        public void putActivities(PendingModifications pms, Element notify, ItemIdFormatter ifmt) throws ServiceException;
+    }
+
+    private static ActivityCallback activityCb;
+
+    public static void setActivityCallback(ActivityCallback cb) {
+        activityCb = cb;
     }
 
     private void addDeletedNotification(ModificationKey mkey, StringBuilder deletedIds) {
@@ -1537,6 +1605,10 @@ public class SoapSession extends Session {
         } else {
             return null;
         }
+    }
+
+    public SoapProtocol getResponseProtocol() {
+        return responseProtocol;
     }
 
     @Override
