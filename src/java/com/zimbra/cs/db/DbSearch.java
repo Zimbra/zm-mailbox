@@ -281,7 +281,7 @@ public final class DbSearch {
         }
     }
 
-    private void encodeConstraint(DbSearchConstraints node, byte[] calTypes, boolean inCalTable, boolean isUnreadJoinQuery) {
+    private void encodeConstraint(DbSearchConstraints node, byte[] calTypes, boolean inCalTable, boolean joinTaggedItem) {
 
         if (node instanceof DbSearchConstraints.Intersection || node instanceof DbSearchConstraints.Union) {
             boolean first = true;
@@ -291,7 +291,7 @@ public final class DbSearch {
                 if (!first) {
                     sql.append(and ? " AND " : " OR ");
                 }
-                encodeConstraint(child, calTypes, inCalTable, isUnreadJoinQuery);
+                encodeConstraint(child, calTypes, inCalTable, joinTaggedItem);
                 first = false;
             }
             sql.append(") ");
@@ -322,7 +322,7 @@ public final class DbSearch {
 
         encodeType(constraint.excludeTypes, false);
         encode("mi.type", inCalTable, calTypes);
-        encodeTag(constraint.tags, true, isUnreadJoinQuery);
+        encodeTag(constraint.tags, true, joinTaggedItem);
         encodeTag(constraint.excludeTags, false, false);
         encodeFolder(constraint.folders, true);
         encodeFolder(constraint.excludeFolders, false);
@@ -511,19 +511,25 @@ public final class DbSearch {
         //Bug: 68609
         //slow search "in:inbox is:unread or is:flagged"
         //its actually cheaper to do a D/B join between mail_item and tagged_item table when 
-        //the unread items are smaller in count.
-        boolean isUnreadJoinQuery = false;
+        //the unread items are smaller in count. We can possibly do the same for user tags.
+        boolean joinTaggedItem = false;
         if (node instanceof DbSearchConstraints.Leaf && !dumpster) {
             DbSearchConstraints.Leaf constraint = node.toLeaf();
             if (constraint.excludeTags.isEmpty() && !constraint.tags.isEmpty() && constraint.tags.size() == 1) {
                 Tag tag = constraint.tags.iterator().next();
-                if (tag.getId() == FlagInfo.UNREAD.toId()) {
-                    //let's make an estimate of # of unread items for this mailbox.
-                    //It doesn't matter which folder(s) the user is trying to search because
-                    //the performance solely depends on the # of unread items
-                    int count = countUnread(mailbox.getFolderById(null, Mailbox.ID_FOLDER_USER_ROOT));
-                    if (count < LC.search_unread_count_join_query_cutoff.intValue())
-                        isUnreadJoinQuery = true;
+                if (tag.getId() == FlagInfo.UNREAD.toId() || tag.getId() > 0) {
+                    long count = 0;
+                    if (tag.getId() == FlagInfo.UNREAD.toId()) {
+                        //let's make an estimate of # of unread items for this mailbox.
+                        //It doesn't matter which folder(s) the user is trying to search because
+                        //the performance solely depends on the # of unread items
+                        count = countUnread(mailbox.getFolderById(null, Mailbox.ID_FOLDER_USER_ROOT));
+                    } else if (tag.getId() > 0) {
+                        count = tag.getSize(); //user tag
+                    }
+                    
+                    if (count < LC.search_tagged_item_count_join_query_cutoff.intValue())
+                        joinTaggedItem = true;
                 }
             }
         }
@@ -534,7 +540,7 @@ public final class DbSearch {
             }
 
             // SELECT mi.id,... FROM mail_item AS mi [FORCE INDEX (...)] WHERE mi.mailboxid = ? AND
-            encodeSelect(sort, fetch, false, isUnreadJoinQuery, node, hasValidLIMIT);
+            encodeSelect(sort, fetch, false, joinTaggedItem, node, hasValidLIMIT);
 
             /*
              *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
@@ -544,7 +550,7 @@ public final class DbSearch {
              *       ..etc
              *    )
              */
-            encodeConstraint(node, hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null, false, isUnreadJoinQuery);
+            encodeConstraint(node, hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null, false, joinTaggedItem);
 
             if (requiresUnion) {
                 sql.append(orderBy(sort, true));
