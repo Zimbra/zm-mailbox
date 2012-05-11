@@ -3763,9 +3763,7 @@ public class LdapProvisioning extends LdapProv {
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(listAttrs);
 
-            Set<String> ocs = new HashSet<String>();
-            ocs.add(AttributeClass.OC_zimbraDistributionList);
-            ocs.add(AttributeClass.OC_zimbraMailRecipient);
+            Set<String> ocs = LdapObjectClass.getDistributionListObjectClasses(this);
             entry.addAttr(A_objectClass, ocs);
 
             String zimbraIdStr = LdapUtil.generateUUID();
@@ -8548,10 +8546,21 @@ public class LdapProvisioning extends LdapProv {
      *   Dynamic Groups
      * ==================
      */
+    private static final String DYNAMIC_GROUP_DYNAMIC_UNIT_NAME = "internal";
+    private static final String DYNAMIC_GROUP_STATIC_UNIT_NAME = "external";
+
     @Override
     public DynamicGroup createDynamicGroup(String groupAddress,
             Map<String, Object> groupAttrs) throws ServiceException {
         return createDynamicGroup(groupAddress, groupAttrs, null);
+    }
+
+    private String dynamicGroupDynamicUnitLocalpart(String dynamicGroupLocalpart) {
+        return dynamicGroupLocalpart + ".__internal__";
+    }
+
+    private String dynamicGroupStaticUnitLocalpart(String dynamicGroupLocalpart) {
+        return dynamicGroupLocalpart + ".__external__";
     }
 
     private DynamicGroup createDynamicGroup(String groupAddress,
@@ -8573,7 +8582,19 @@ public class LdapProvisioning extends LdapProv {
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
         callbackContext.setCreatingEntryName(groupAddress);
+
+        // remove zimbraIsACLGroup from attrs if provided, to avoid the immutable check
+        Object providedZimbraIsACLGroup = groupAttrs.get(A_zimbraIsACLGroup);
+        if (providedZimbraIsACLGroup != null) {
+            groupAttrs.remove(A_zimbraIsACLGroup);
+        }
+
         AttributeManager.getInstance().preModify(groupAttrs, null, callbackContext, true);
+
+        // put zimbraIsACLGroup back
+        if (providedZimbraIsACLGroup != null) {
+            groupAttrs.put(A_zimbraIsACLGroup, providedZimbraIsACLGroup);
+        }
 
         ZLdapContext zlc = null;
         try {
@@ -8590,6 +8611,11 @@ public class LdapProvisioning extends LdapProv {
 
             String domainDN = ((LdapDomain) domain).getDN();
 
+            /*
+             * ====================================
+             * create the main dynamic group entry
+             * ====================================
+             */
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(groupAttrs);
 
@@ -8597,13 +8623,18 @@ public class LdapProvisioning extends LdapProv {
             entry.addAttr(A_objectClass, ocs);
 
             String zimbraId = LdapUtil.generateUUID();
+
+            // create a UUID for the static unit entry
+            String staticUnitZimbraId = LdapUtil.generateUUID();
+
+            String createTimestamp = DateUtil.toGeneralizedTime(new Date());
             entry.setAttr(A_zimbraId, zimbraId);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, createTimestamp);
             entry.setAttr(A_mail, groupAddress);
             entry.setAttr(A_dgIdentity, LC.zimbra_ldap_userdn.value());
 
             // unlike accounts (which have a zimbraMailDeliveryAddress for the primary,
-            // and zimbraMailAliases only for aliases), DLs use zibraMailAlias for both.
+            // and zimbraMailAliases only for aliases), DLs use zimbraMailAlias for both.
             // Postfix uses these two attributes to route mail, and zimbraMailDeliveryAddress
             // indicates that something has a physical mailbox, which DLs don't.
             entry.setAttr(A_zimbraMailAlias, groupAddress);
@@ -8614,20 +8645,39 @@ public class LdapProvisioning extends LdapProv {
                     mDIT.domainDNToAccountBaseDN(domainDN), groupAddress);
             */
 
-            // allow users in other domains
-            if (!entry.hasAttribute(Provisioning.A_memberURL)) {
-                String memberURL = DynamicGroup.getDefaultMemberURL(zimbraId);
+            String specifiedIsACLGroup = entry.getAttrString(A_zimbraIsACLGroup);
+            boolean isACLGroup;
+            if (!entry.hasAttribute(A_memberURL)) {
+                String memberURL = DynamicGroup.getDefaultMemberURL(zimbraId, staticUnitZimbraId);
                 entry.setAttr(Provisioning.A_memberURL, memberURL);
+
+                // memberURL is not provided, zimbraIsACLGroup must be either not specified,
+                // or specified to be TRUE;
+                if (specifiedIsACLGroup == null) {
+                    entry.setAttr(A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
+                } else if (ProvisioningConstants.FALSE.equals(specifiedIsACLGroup)) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "No custom " + A_memberURL + " is provided" +
+                            A_zimbraIsACLGroup + " cannot be set to FALSE", null);
+                }
+                isACLGroup = true;
+            } else {
+                // if a custom memberURL is provided, zimbraIsACLGroup must also be specified
+                // and specifically set to FALSE
+                if (!ProvisioningConstants.FALSE.equals(specifiedIsACLGroup)) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "Custom " + A_memberURL + " is provided, " +
+                            A_zimbraIsACLGroup + " must be set to FALSE", null);
+                }
+                isACLGroup = false;
             }
 
-            if (!entry.hasAttribute(Provisioning.A_zimbraIsACLGroup)) {
-                entry.setAttr(A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
-            }
 
             // by default a dynamic group is always created enabled
             if (!entry.hasAttribute(Provisioning.A_zimbraMailStatus)) {
                 entry.setAttr(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
             }
+            String mailStatus = entry.getAttrString(A_zimbraMailStatus);
 
             entry.setAttr(A_cn, localPart);
             // entry.setAttr(A_uid, localPart); need to use uid if we move dynamic groups to the ou=people tree
@@ -8639,6 +8689,59 @@ public class LdapProvisioning extends LdapProv {
 
             zlc.createEntry(entry);
 
+            if (isACLGroup) {
+                /*
+                 * ===========================================================
+                 * create the dynamic group unit entry, for internal addresses
+                 * ===========================================================
+                 */
+                String dynamicUnitLocalpart = dynamicGroupDynamicUnitLocalpart(localPart);
+                String dynamicUnitAddr = EmailAddress.getAddress(dynamicUnitLocalpart, domainName);  // TODO: NAME CLASH
+                entry = LdapClient.createMutableEntry();
+                ocs = LdapObjectClass.getGroupDynamicUnitObjectClasses(this);
+                entry.addAttr(A_objectClass, ocs);
+
+                String dynamicUnitZimbraId = LdapUtil.generateUUID();
+                entry.setAttr(A_cn, DYNAMIC_GROUP_DYNAMIC_UNIT_NAME);
+                entry.setAttr(A_zimbraId, dynamicUnitZimbraId);
+                entry.setAttr(A_zimbraCreateTimestamp, createTimestamp);
+                entry.setAttr(A_mail, dynamicUnitAddr);
+                entry.setAttr(A_zimbraMailAlias, dynamicUnitAddr);
+                entry.setAttr(A_zimbraMailStatus, mailStatus);
+
+                entry.setAttr(A_dgIdentity, LC.zimbra_ldap_userdn.value());
+                String memberURL = DynamicGroup.getDefaultInternlaUnitMemberURL(zimbraId); // use id of the main group
+                entry.setAttr(Provisioning.A_memberURL, memberURL);
+
+                String dynamicUnitDN = mDIT.dynamicGroupUnitNameToDN(
+                        DYNAMIC_GROUP_DYNAMIC_UNIT_NAME, dn);
+                entry.setDN(dynamicUnitDN);
+
+                zlc.createEntry(entry);
+
+                /*
+                 * ==========================================================
+                 * create the static group unit entry, for external addresses
+                 * ==========================================================
+                 */
+                entry = LdapClient.createMutableEntry();
+                ocs = LdapObjectClass.getGroupStaticUnitObjectClasses(this);
+                entry.addAttr(A_objectClass, ocs);
+
+                entry.setAttr(A_cn, DYNAMIC_GROUP_STATIC_UNIT_NAME);
+                entry.setAttr(A_zimbraId, staticUnitZimbraId);
+                entry.setAttr(A_zimbraCreateTimestamp, createTimestamp);
+
+                String staticUnitDN = mDIT.dynamicGroupUnitNameToDN(
+                        DYNAMIC_GROUP_STATIC_UNIT_NAME, dn);
+                entry.setDN(staticUnitDN);
+
+                zlc.createEntry(entry);
+            }
+
+            /*
+             * all is well, get the group by id
+             */
             DynamicGroup group = getDynamicGroupBasic(DistributionListBy.id, zimbraId, zlc);
 
             if (group != null) {
@@ -8656,8 +8759,6 @@ public class LdapProvisioning extends LdapProv {
             throw e;
         } catch (AccountServiceException e) {
             throw e;
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to create group: " + groupAddress, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -8702,7 +8803,10 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DYNAMICGROUP);
-            zlc.deleteEntry(group.getDN());
+
+            String dn = group.getDN();
+            zlc.deleteChildren(dn);
+            zlc.deleteEntry(dn);
 
             // remove zimbraMemberOf if this group from all accounts
             deleteMemberOfOnAccounts(zlc, zimbraId);
@@ -8755,6 +8859,15 @@ public class LdapProvisioning extends LdapProv {
             Map<String, Object> attrs = new HashMap<String, Object>();
             attrs.put("-" + Provisioning.A_zimbraMemberOf, dynGroupId);
             modifyLdapAttrs(acct, zlc, attrs);
+
+            // remove the account from cache
+            // note: cannnot just removeFromCache(acct) because acct only
+            // contains the name, so id/alias/foreignPrincipal cached in NamedCache
+            // won't be cleared.
+            Account cached = getFromCache(AccountBy.name, acct.getName());
+            if (cached != null) {
+                removeFromCache(cached);
+            }
         }
     }
 
@@ -8767,21 +8880,22 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_DYNAMICGROUP);
 
-            LdapDynamicGroup dl = (LdapDynamicGroup) getDynamicGroupById(zimbraId, zlc, false);
-            if (dl == null) {
+            LdapDynamicGroup group = (LdapDynamicGroup) getDynamicGroupById(zimbraId, zlc, false);
+            if (group == null) {
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
             }
 
             // prune cache
-            groupCache.remove(dl);
+            groupCache.remove(group);
 
-            String oldEmail = dl.getName();
+            String oldEmail = group.getName();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
 
             newEmail = newEmail.toLowerCase().trim();
             String[] parts = EmailUtil.getLocalPartAndDomain(newEmail);
-            if (parts == null)
+            if (parts == null) {
                 throw ServiceException.INVALID_REQUEST("bad value for newName", null);
+            }
             String newLocal = parts[0];
             String newDomain = parts[1];
 
@@ -8801,7 +8915,7 @@ public class LdapProvisioning extends LdapProv {
 
             Map<String, Object> attrs = new HashMap<String, Object>();
 
-            ReplaceAddressResult replacedMails = replaceMailAddresses(dl, Provisioning.A_mail, oldEmail, newEmail);
+            ReplaceAddressResult replacedMails = replaceMailAddresses(group, Provisioning.A_mail, oldEmail, newEmail);
             if (replacedMails.newAddrs().length == 0) {
                 // Set mail to newName if the account currently does not have a mail
                 attrs.put(Provisioning.A_mail, newEmail);
@@ -8809,7 +8923,7 @@ public class LdapProvisioning extends LdapProv {
                 attrs.put(Provisioning.A_mail, replacedMails.newAddrs());
             }
 
-            ReplaceAddressResult replacedAliases = replaceMailAddresses(dl, Provisioning.A_zimbraMailAlias, oldEmail, newEmail);
+            ReplaceAddressResult replacedAliases = replaceMailAddresses(group, Provisioning.A_zimbraMailAlias, oldEmail, newEmail);
             if (replacedAliases.newAddrs().length > 0) {
                 attrs.put(Provisioning.A_zimbraMailAlias, replacedAliases.newAddrs());
 
@@ -8821,7 +8935,7 @@ public class LdapProvisioning extends LdapProv {
             }
 
             ReplaceAddressResult replacedAllowAddrForDelegatedSender =
-                replaceMailAddresses(dl, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
+                replaceMailAddresses(group, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
                 oldEmail, newEmail);
             if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
                 attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
@@ -8833,7 +8947,7 @@ public class LdapProvisioning extends LdapProv {
             attrs.put(rdnAttrName, newLocal);
 
             // move over the distribution list entry
-            String oldDn = dl.getDN();
+            String oldDn = group.getDN();
             String newDn = mDIT.dynamicGroupDNRename(oldDn, newLocal, domain.getName());
             boolean dnChanged = (!oldDn.equals(newDn));
 
@@ -8842,7 +8956,7 @@ public class LdapProvisioning extends LdapProv {
             }
 
             // re-get the entry after move
-            dl = (LdapDynamicGroup) getDynamicGroupById(zimbraId, zlc, false);
+            group = (LdapDynamicGroup) getDynamicGroupById(zimbraId, zlc, false);
 
             // rename the distribution list and all it's renamed aliases to the new name in all distribution lists
             // doesn't throw exceptions, just logs
@@ -8853,14 +8967,27 @@ public class LdapProvisioning extends LdapProv {
             // MOVE OVER ALL aliases
             // doesn't throw exceptions, just logs
             if (domainChanged) {
-                String newUid = dl.getAttr(rdnAttrName);
+                String newUid = group.getAttr(rdnAttrName);
                 moveAliases(zlc, replacedAliases, newDomain, newUid, oldDn, newDn, oldDomain, newDomain);
             }
 
             // this is non-atomic. i.e., rename could succeed and updating A_mail
             // could fail. So catch service exception here and log error
             try {
-                modifyAttrsInternal(dl, zlc, attrs);
+                // modify attrs on the mail entry
+                modifyAttrsInternal(group, zlc, attrs);
+
+                // modify attrs on the units
+                String dynamicUnitNewLocal = dynamicGroupDynamicUnitLocalpart(newLocal);
+                String dynamicUnitNewEmail = dynamicUnitNewLocal + "@" + newDomain;
+                String dynamicUnitDN = mDIT.dynamicGroupUnitNameToDN(
+                        DYNAMIC_GROUP_DYNAMIC_UNIT_NAME, newDn);
+
+                ZMutableEntry entry = LdapClient.createMutableEntry();
+                entry.setAttr(A_mail, dynamicUnitNewEmail);
+                entry.setAttr(A_zimbraMailAlias, dynamicUnitNewEmail);
+                zlc.replaceAttributes(dynamicUnitDN, entry.getAttributes());
+
             } catch (ServiceException e) {
                 ZimbraLog.account.error("distribution list renamed to " + newLocal +
                         " but failed to move old name's LDAP attributes", e);
@@ -8878,8 +9005,9 @@ public class LdapProvisioning extends LdapProv {
             LdapClient.closeContext(zlc);
         }
 
-        if (domainChanged)
+        if (domainChanged) {
             PermissionCache.invalidateCache();
+        }
     }
 
     private DynamicGroup getDynamicGroupFromCache(Key.DistributionListBy keyType, String key) {

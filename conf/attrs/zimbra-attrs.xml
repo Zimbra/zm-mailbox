@@ -189,11 +189,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>From Microsoft Schema</desc>
 </attr>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,ucService,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget,shareLocator" flags="domainAdminModifiable,accountInfo">
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,ucService,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget,shareLocator,groupStaticUnit" flags="domainAdminModifiable,accountInfo">
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,cos,domain,server,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry" flags="domainAdminModifiable">
+<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry" flags="domainAdminModifiable">
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
@@ -201,7 +201,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: destination indicator</desc>
 </attr>
 
-<attr name="displayName" type="string" optionalIn="account,distributionList,group" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName">
+<attr name="displayName" type="string" optionalIn="account,distributionList,group,groupDynamicUnit" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName">
     <desc>RFC2798: preferred name to be used when displaying entries</desc>
 </attr>
 
@@ -233,11 +233,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: locality which this object resides in</desc>
 </attr>
 
-<attr name="mail" type="string" immutable="1" optionalIn="account,distributionList,group" flags="idn">
+<attr name="mail" type="string" immutable="1" optionalIn="account,distributionList,group,groupDynamicUnit" flags="idn">
     <desc>RFC1274: RFC822 Mailbox</desc>
 </attr>
 
-<attr name="memberURL" type="string" requiredIn="group" callback="IsACLGroup">
+<attr name="memberURL" type="string" requiredIn="group,groupDynamicUnit" callback="MemberURL">
     <desc>Identifies an URL associated with each member of a group</desc>
 </attr>
 
@@ -338,7 +338,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,ucService,calendarResource,xmppComponent,group" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -385,7 +385,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>dynamic group membership</desc>
 </attr>
 
-<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient" flags="accountInfo,domainAdminModifiable">
+<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient,groupStaticUnit" flags="accountInfo,domainAdminModifiable">
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
@@ -397,7 +397,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>COS zimbraID</desc>
 </attr>
 
-<attr id="15" name="zimbraMailStatus" type="enum" value="enabled,disabled" cardinality="single" optionalIn="mailRecipient,group" flags="domainAdminModifiable">
+<attr id="15" name="zimbraMailStatus" type="enum" value="enabled,disabled" cardinality="single" optionalIn="mailRecipient,group,groupDynamicUnit" flags="domainAdminModifiable">
   <desc>mail delivery status (enabled/disabled)</desc>
 </attr>
 
@@ -418,7 +418,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name of the domain</desc>
 </attr>
 
-<attr id="20" name="zimbraMailAlias" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient,group" flags="accountInfo">
+<attr id="20" name="zimbraMailAlias" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient,group,groupDynamicUnit" flags="accountInfo">
   <desc>RFC822 email address of this recipient for accepting mail</desc>
 </attr>
 
@@ -4120,7 +4120,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,ucService,signature,calendarResource,xmppComponent,zimletEntry,group" since="6.0.0_BETA1">
+<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,ucService,signature,calendarResource,xmppComponent,zimletEntry,group,groupDynamicUnit,groupStaticUnit" since="6.0.0_BETA1">
   <desc>time object was created</desc>
 </attr>
 
@@ -6084,7 +6084,7 @@ TODO: delete them permanently from here
 </attr>
 
 
-<attr id="1242" name="zimbraIsACLGroup" type="boolean" cardinality="single" requiredIn="group" callback="IsACLGroup" since="8.0.0">
+<attr id="1242" name="zimbraIsACLGroup" type="boolean" cardinality="single" requiredIn="group" immutable="1" since="8.0.0">
   <desc>if the dynamic group can be a legitimate grantee for folder grantees; and a legitimate grantee or target for delegated admin grants</desc>
 </attr>
 

@@ -243,13 +243,29 @@
 
 <objectclass id="27" name="zimbraGroup" type="AUXILIARY">
   <sup>top</sup>
-  <desc>AUX oc to hold attributes for dynamic groups</desc>
+  <desc>hold attributes for dynamic groups</desc>
   <comment>
-    AUX oc to hold attributes for dynamic groups
+    hold attributes for dynamic groups
   </comment>
 </objectclass>
 
-<objectclass id="28" name="zimbraShareLocator" type="STRUCTURAL">
+<objectclass id="28" name="zimbraGroupDynamicUnit" type="AUXILIARY">
+  <sup>top</sup>
+  <desc>hold attributes for the dynamic entry of dynamic groups.</desc>
+  <comment>
+    Dynamic entry of a dynamic group is for members provisioned on the system.
+  </comment>
+</objectclass>
+
+<objectclass id="29" name="zimbraGroupStaticUnit" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>hold attributes for the static entry of dynamic groups.</desc>
+  <comment>
+    Static entry of a dynamic group is for members not provisioned on the system.
+  </comment>
+</objectclass>
+
+<objectclass id="30" name="zimbraShareLocator" type="STRUCTURAL">
   <sup>top</sup>
   <desc>Share locator</desc>
   <comment>
@@ -259,7 +275,7 @@
   </comment>
 </objectclass>
 
-<objectclass id="29" name="zimbraUCService" type="STRUCTURAL">
+<objectclass id="31" name="zimbraUCService" type="STRUCTURAL">
   <sup>top</sup>
   <desc>Unified Communication service in the cluster</desc>
   <comment>

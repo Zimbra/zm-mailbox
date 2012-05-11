@@ -481,9 +481,16 @@ public class LdapDIT {
         return NAMING_RDN_ATTR_DYNAMICGROUP;
     }
 
-    public String dynamicGroupNameLocalPartToDN(String name, String domainDN) throws ServiceException {
+    public String dynamicGroupNameLocalPartToDN(String name, String domainDN)
+    throws ServiceException {
         return NAMING_RDN_ATTR_DYNAMICGROUP + "=" + LdapUtil.escapeRDNValue(name) + "," +
             domainDNToDynamicGroupsBaseDN(domainDN);
+    }
+
+    public String dynamicGroupUnitNameToDN(String unitName, String parentDN)
+    throws ServiceException {
+        return NAMING_RDN_ATTR_DYNAMICGROUP + "=" + LdapUtil.escapeRDNValue(unitName) +
+                "," + parentDN;
     }
 
     public String filterDynamicGroupsByDomain(Domain domain, boolean includeObjectClass) {
@@ -565,7 +572,7 @@ public class LdapDIT {
     public String serverNameToDN(String name) {
         return NAMING_RDN_ATTR_SERVER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_SERVER;
     }
-    
+
     /*
      * ==========
      *   UC service
@@ -770,11 +777,11 @@ public class LdapDIT {
         if (coses) {
             addBase(bases, cosBaseDN());
         }
-        
+
         if (servers) {
             addBase(bases, serverBaseDN());
         }
-        
+
         if (ucservices) {
             addBase(bases, ucServiceBaseDN());
         }

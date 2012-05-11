@@ -49,6 +49,8 @@ public enum AttributeClass {
     xmppComponent("zimbraXMPPComponent",        true),
     aclTarget("zimbraAclTarget",                true),
     group("zimbraGroup",                        true),
+    groupDynamicUnit("zimbraGroupDynamicUnit",  false),
+    groupStaticUnit("zimbraGroupStaticUnit",    false),
     shareLocator("zimbraShareLocator",          true);
 
     public static final String OC_zimbraAccount = account.getOCName();
@@ -62,6 +64,8 @@ public enum AttributeClass {
     public static final String OC_zimbraGalDataSource = galDataSource.getOCName();
     public static final String OC_zimbraGlobalConfig = globalConfig.getOCName();
     public static final String OC_zimbraGroup = group.getOCName();
+    public static final String OC_zimbraGroupDynamicUnit = groupDynamicUnit.getOCName();
+    public static final String OC_zimbraGroupStaticUnit = groupStaticUnit.getOCName();
     public static final String OC_zimbraIdentity = identity.getOCName();
     public static final String OC_zimbraImapDataSource = imapDataSource.getOCName();
     public static final String OC_zimbraMailRecipient = mailRecipient.getOCName();
