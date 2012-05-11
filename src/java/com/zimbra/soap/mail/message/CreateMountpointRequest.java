@@ -34,7 +34,7 @@ public class CreateMountpointRequest {
     /**
      * @zm-api-field-description New mountpoint specification
      */
-    @XmlElement(name=MailConstants.E_FOLDER, required=true)
+    @XmlElement(name=MailConstants.E_MOUNT, required=true)
     private final NewMountpointSpec folder;
 
     /**
