@@ -82,8 +82,10 @@ public abstract class Message {
         registerMessage(new CrossServerNotification());
     }
 
-    private static void registerMessage(Message m) {
-        messages.put(m.getAppId(), m);
+    public static void registerMessage(Message m) {
+        synchronized (messages) {
+            messages.put(m.getAppId(), m);
+        }
     }
 
     public static Message create(ByteBuffer buffer) throws IOException {

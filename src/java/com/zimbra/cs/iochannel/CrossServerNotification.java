@@ -99,6 +99,7 @@ public class CrossServerNotification extends Message {
     }
 
     private CrossServerNotification(String aid, String sid, String ntfn) {
+        super();
         accountId = aid;
         sessionId = sid;
         payload = ntfn;
