@@ -24,7 +24,7 @@ import com.zimbra.common.service.ServiceException;
 @XmlEnum
 public enum GranteeType {
     // case must match protocol - keep in sync with com.zimbra.cs.account.accesscontrol.GranteeType
-    usr, grp, egp, all, dom, gst, key, pub;
+    usr, grp, egp, all, dom, gst, key, pub, email;
 
     public static GranteeType fromString(String s) throws ServiceException {
         try {
