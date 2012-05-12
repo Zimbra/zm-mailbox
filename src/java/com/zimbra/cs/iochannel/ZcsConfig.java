@@ -27,10 +27,10 @@ public class ZcsConfig extends Config {
 
     public ZcsConfig() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-
+        Server localServer = prov.getLocalServer();
         peerServers = new HashSet<ServerConfig>();
         // null on hostname in order to bind to all the addresses
-        localConfig = new ServerConfig(prov.getLocalServer().getServiceHostname(), null, servicePort);
+        localConfig = new ServerConfig(localServer.getServiceHostname(), null, localServer.getMessageChannelPort());
         for (Server s : prov.getAllServers()) {
             if (s.hasMailboxService()) {
                 peerServers.add(new ZcsServerConfig(s));
@@ -50,11 +50,10 @@ public class ZcsConfig extends Config {
 
     private final ServerConfig localConfig;
     private final HashSet<ServerConfig> peerServers;
-    private final static int servicePort = 7285;  // temporary
 
     private static final class ZcsServerConfig extends Config.ServerConfig {
         public ZcsServerConfig(Server s) {
-            super(s.getServiceHostname(), s.getServiceHostname(), servicePort);
+            super(s.getServiceHostname(), s.getServiceHostname(), s.getMessageChannelPort());
         }
     }
 }

@@ -7045,4 +7045,9 @@ TODO: delete them permanently from here
     This attribute is applicable for accounts having zimbraIsExternalVirtualAccount set to TRUE.</desc>
 </attr>
 
+<attr id="1415" name="zimbraMessageChannelPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="8.0.0">
+  <globalConfigValue>7285</globalConfigValue>
+  <desc>port number on which message channel should listen</desc>
+</attr>
+
 </attrs>

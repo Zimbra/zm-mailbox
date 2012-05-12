@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120507-1854 */
+    /* build: 8.0.0_BETA1_1111 jylee 20120430-2317 */
 
     /**
      * RFC2256: descriptive information
@@ -20070,6 +20070,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMessageCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMessageCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * port number on which message channel should listen
+     *
+     * @return zimbraMessageChannelPort, or 7285 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1415)
+    public int getMessageChannelPort() {
+        return getIntAttr(Provisioning.A_zimbraMessageChannelPort, 7285);
+    }
+
+    /**
+     * port number on which message channel should listen
+     *
+     * @param zimbraMessageChannelPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1415)
+    public void setMessageChannelPort(int zimbraMessageChannelPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageChannelPort, Integer.toString(zimbraMessageChannelPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which message channel should listen
+     *
+     * @param zimbraMessageChannelPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1415)
+    public Map<String,Object> setMessageChannelPort(int zimbraMessageChannelPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageChannelPort, Integer.toString(zimbraMessageChannelPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which message channel should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1415)
+    public void unsetMessageChannelPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageChannelPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which message channel should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1415)
+    public Map<String,Object> unsetMessageChannelPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageChannelPort, "");
         return attrs;
     }
 
