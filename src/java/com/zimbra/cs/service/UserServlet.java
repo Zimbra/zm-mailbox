@@ -29,8 +29,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.StringUtil;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -47,6 +45,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
@@ -56,6 +55,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -270,13 +270,18 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
+    protected UserServletContext createContext(HttpServletRequest req, HttpServletResponse resp, UserServlet servlet)
+            throws UserServletException, ServiceException {
+        return new UserServletContext(req, resp, servlet);
+    }
+
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserServletContext context = null;
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
         try {
-            context = new UserServletContext(req, resp, this);
+            context = createContext(req, resp, this);
             if (!checkAuthentication(context)) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
@@ -284,7 +289,7 @@ public class UserServlet extends ZimbraServlet {
 
             checkTargetAccountStatus(context);
 
-            if (proxyIfNecessary(req, resp, context)) {
+            if (proxyIfRemoteTargetAccount(req, resp, context)) {
                 return;
             }
             // at this point context.authAccount is set either from the Cookie,
@@ -317,7 +322,7 @@ public class UserServlet extends ZimbraServlet {
         throws IOException, ServletException, UserServletException {
 
         // if they specify /~/, we must auth
-        if (context.targetAccount == null && context.accountPath.equals("~")) {
+        if (context.targetAccount == null && context.accountPath != null && context.accountPath.equals("~")) {
             UserServletUtil.getAccount(context);
             if (context.getAuthAccount() == null) {
                 return false;
@@ -350,7 +355,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private static AuthToken getProxyAuthToken(UserServletContext context) throws ServiceException {
+    protected static AuthToken getProxyAuthToken(UserServletContext context) throws ServiceException {
         String encoded = Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId(), null);
         if (encoded != null) {
             return new ZimbraAuthTokenEncoded(encoded);
@@ -361,7 +366,8 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private boolean proxyIfNecessary(HttpServletRequest req, HttpServletResponse resp, UserServletContext context) throws IOException, ServiceException {
+    protected boolean proxyIfRemoteTargetAccount(HttpServletRequest req, HttpServletResponse resp, UserServletContext context)
+            throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id
 
@@ -458,6 +464,14 @@ public class UserServlet extends ZimbraServlet {
         return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folder.getPath()) , true);
     }
 
+    protected void resolveItems(UserServletContext context) throws ServiceException, IOException {
+        UserServletUtil.resolveItems(context);
+    }
+
+    protected MailItem resolveItem(UserServletContext context) throws ServiceException, IOException {
+        return UserServletUtil.resolveItem(context, true);
+    }
+
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, UserServletContext context)
     throws ServletException, IOException, ServiceException, UserServletException {
         if (log.isDebugEnabled()) {
@@ -472,11 +486,11 @@ public class UserServlet extends ZimbraServlet {
         if (mbox != null) {
             ZimbraLog.addMboxToContext(mbox.getId());
             if (context.reqListIds != null) {
-                UserServletUtil.resolveItems(context);
+                resolveItems(context);
             } else {
-                MailItem item = UserServletUtil.resolveItem(context, true);
-                if (isProxyRequest(req, resp, context, item)) {
-                    // if the target is a mountpoint, proxy the request on to the resolved target
+                MailItem item = resolveItem(context);
+                if (proxyIfMountpoint(req, resp, context, item)) {
+                    // if the target is a mountpoint, the request was already proxied to the resolved target
                     return;
                 }
             }
@@ -523,7 +537,7 @@ public class UserServlet extends ZimbraServlet {
 
             checkTargetAccountStatus(context);
 
-            if (proxyIfNecessary(req, resp, context))
+            if (proxyIfRemoteTargetAccount(req, resp, context))
                 return;
 
             if (context.getAuthAccount() != null) {
@@ -564,8 +578,8 @@ public class UserServlet extends ZimbraServlet {
                         throw MailServiceException.NO_SUCH_FOLDER(context.itemPath);
                 }
 
-                if (isProxyRequest(req, resp, context, folder)) {
-                    // if the target is a mountpoint, proxy the request on to the resolved target
+                if (proxyIfMountpoint(req, resp, context, folder)) {
+                    // if the target is a mountpoint, the request was already proxied to the resolved target
                     return;
                 }
             }
@@ -629,7 +643,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, UserServletContext context, MailItem item)
+    protected boolean proxyIfMountpoint(HttpServletRequest req, HttpServletResponse resp, UserServletContext context, MailItem item)
     throws IOException, ServiceException, UserServletException {
         if (!(item instanceof Mountpoint))
             return false;

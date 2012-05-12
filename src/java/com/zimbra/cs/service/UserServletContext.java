@@ -56,9 +56,8 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
-public final class UserServletContext {
+public class UserServletContext {
     public final HttpServletRequest req;
     public final HttpServletResponse resp;
     public final UserServlet servlet;
@@ -76,6 +75,7 @@ public final class UserServletContext {
     public MailItem target;
     public int[] reqListIds;
     public ArrayList<Item> requestedItems;
+    public boolean fromDumpster;
     public int imapId = -1;
     public boolean sync;
     private Account authAccount;
@@ -132,8 +132,6 @@ public final class UserServletContext {
 
     public UserServletContext(HttpServletRequest request, HttpServletResponse response, UserServlet srvlt)
     throws UserServletException, ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-
         this.req = request;
         this.resp = response;
         this.servlet = srvlt;
@@ -154,6 +152,13 @@ public final class UserServletContext {
                 this.locale = new Locale(language);
             }
         }
+
+        parseParams(request, authToken);
+    }
+
+    protected void parseParams(HttpServletRequest request, AuthToken authToken)
+            throws UserServletException, ServiceException {
+        Provisioning prov = Provisioning.getInstance();
 
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/"))
@@ -230,6 +235,8 @@ public final class UserServletContext {
             }
         }
 
+        String dumpsterParam = params.get(UserServlet.QP_DUMPSTER);
+        fromDumpster = (dumpsterParam != null && !dumpsterParam.equals("0") && !dumpsterParam.equalsIgnoreCase("false"));
     }
 
     public Locale getLocale() {
@@ -320,7 +327,7 @@ public final class UserServletContext {
         }
         return false;
     }
-    
+
     public String getQueryString() {
         return params.get(UserServlet.QP_QUERY);
     }

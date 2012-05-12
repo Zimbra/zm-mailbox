@@ -245,6 +245,14 @@
         </Arg>
         </Call>
         <Call name="addRule">
+        <Arg>
+        <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+            <Set name="pattern">/shf/*</Set>
+            <Set name="replacement">/service/shf/</Set>
+        </New>
+        </Arg>
+        </Call>
+        <Call name="addRule">
 	    <Arg>
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/user/*</Set>

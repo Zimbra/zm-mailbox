@@ -3721,4 +3721,18 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         ++mMetaVersion;
         mData.contentChanged(mMailbox);
     }
+
+    /**
+     * @return the shared folder that this item belongs to, or null if the item is not under a share
+     */
+    public Folder getShare() throws ServiceException {
+        Folder f = getFolder();
+        if (f == null || f.getId() == Mailbox.ID_FOLDER_ROOT) {
+            return null;
+        } else if (f.isTagged(Flag.FlagInfo.NO_INHERIT)) {
+            return f;
+        } else {
+            return f.getShare();
+        }
+    }
 }
