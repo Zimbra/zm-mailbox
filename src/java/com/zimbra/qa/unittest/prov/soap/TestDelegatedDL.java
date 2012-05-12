@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -95,18 +95,18 @@ import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestDelegatedDL extends SoapTest {
-        
+
     private static String DOMAIN_NAME;
     private static String ADMIN;
     private static String USER_CREATOR;
     private static String USER_OWNER;
     private static String USER_NOT_OWNER;
     private static String DL_NAME;
-        
+
     private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
-    
+
     @BeforeClass
     public static void init() throws Exception {
         DOMAIN_NAME = baseDomainName();
@@ -115,48 +115,48 @@ public class TestDelegatedDL extends SoapTest {
         USER_OWNER = TestUtil.getAddress("owner", DOMAIN_NAME);
         USER_NOT_OWNER = TestUtil.getAddress("not-owner", DOMAIN_NAME);
         DL_NAME = TestUtil.getAddress("dl", DOMAIN_NAME);
-        
+
         provUtil = new SoapProvTestUtil();
         prov = provUtil.getProv();
-        
+
         domain = provUtil.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
-        
+
         Account admin = provUtil.createGlobalAdmin(ADMIN);
-        
+
         Account creator = provUtil.createAccount(USER_CREATOR, new HashMap<String, Object>());
-        
+
         Account owner = provUtil.createAccount(USER_OWNER, new HashMap<String, Object>());
-        
+
         Account notOwner = provUtil.createAccount(USER_NOT_OWNER, new HashMap<String, Object>());
-        
-        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, domain.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, creator.getName(), null, 
+
+        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, domain.getName(),
+                GranteeType.GT_USER.getCode(), GranteeBy.name, creator.getName(), null,
                 User.R_createDistList.getName(), null);
-        
+
         // create a DL for get/action tests
         Multimap<String, String> attrs = ArrayListMultimap.create();
-        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy,
                 ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name());
         Group group = createGroupAndAddOwner(DL_NAME, attrs, USER_OWNER);
     }
-    
+
     @AfterClass
     public static void cleanup() throws Exception {
         Cleanup.deleteAll(baseDomainName());
     }
-    
-    private static Group createDelegatedGroup(SoapTransport transport, String groupName, 
-            List<KeyValuePair> attrs) 
+
+    private static Group createDelegatedGroup(SoapTransport transport, String groupName,
+            List<KeyValuePair> attrs)
     throws Exception {
         boolean dynamic = false;
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
-        
+
         CreateDistributionListRequest req = new CreateDistributionListRequest(
                 groupName, attrs, dynamic);
         CreateDistributionListResponse resp = invokeJaxb(transport, req);
-        
+
         group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNotNull(group);
         assertEquals(groupName, group.getName());
@@ -164,94 +164,94 @@ public class TestDelegatedDL extends SoapTest {
 
         return group;
     }
-    
+
     private static Group createGroupAndAddOwner(String groupName) throws Exception {
         return createGroupAndAddOwner(groupName, null, USER_OWNER);
     }
-    
-    private static Group createGroupAndAddOwner(String groupName, String ownerName) 
+
+    private static Group createGroupAndAddOwner(String groupName, String ownerName)
     throws Exception {
         return createGroupAndAddOwner(groupName, null, ownerName);
     }
-    
-    private static Group createGroupAndAddOwner(String groupName, 
-            Multimap<String, String> attrs, String ownerName) 
+
+    private static Group createGroupAndAddOwner(String groupName,
+            Multimap<String, String> attrs, String ownerName)
     throws Exception {
         boolean dynamic = false;
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
-        
+
         SoapTransport transport = authUser(USER_CREATOR);
-        
+
         CreateDistributionListRequest req = new CreateDistributionListRequest(
                 groupName, KeyValuePair.fromMultimap(attrs), dynamic);
         CreateDistributionListResponse resp = invokeJaxb(transport, req);
-        
+
         group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNotNull(group);
         assertEquals(groupName, group.getName());
         assertNotNull(group.getAttr(Provisioning.A_zimbraMailHost));
-        
+
         /*
          * USER_CREATOR is automatically an owner now.
          */
-        
+
         // add ownerName as an owner
         addOwner(transport, groupName, ownerName);
-        
+
         // remove USER_CREATOR from the owner list
         removeOwner(transport, groupName, USER_CREATOR);
-        
+
         /*
         DistributionListAction action = new DistributionListAction(Operation.addOwners);
         DistributionListActionRequest actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, ownerName));
         DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
-        
+
         // remove USER_CREATOR from the owner list
         action = new DistributionListAction(Operation.removeOwners);
         actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, USER_CREATOR));
         actionResp = invokeJaxb(transport, actionReq);
         */
-        
+
         return group;
     }
-    
-    private static void addOwner(SoapTransport transport, String groupName, String ownerName) 
+
+    private static void addOwner(SoapTransport transport, String groupName, String ownerName)
     throws Exception {
         DistributionListAction action = new DistributionListAction(Operation.addOwners);
         DistributionListActionRequest actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, ownerName));
         DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
     }
-    
-    private static void removeOwner(SoapTransport transport, String groupName, String ownerName) 
+
+    private static void removeOwner(SoapTransport transport, String groupName, String ownerName)
     throws Exception {
         DistributionListAction action = new DistributionListAction(Operation.removeOwners);
         DistributionListActionRequest actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, ownerName));
         DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
     }
-    
+
     private String getAddress(String localpart) {
         return TestUtil.getAddress(localpart, DOMAIN_NAME);
     }
-    
-    private void verifyCaughtProxyError(SoapTransport transport, Object jaxbObject) 
+
+    private void verifyCaughtProxyError(SoapTransport transport, Object jaxbObject)
     throws Exception {
         boolean caughtProxyError = false;
         try {
@@ -263,23 +263,23 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertTrue(caughtProxyError);
     }
-    
+
     /*
      * Test the owners element in zimbraAdmin:GetDistributionList
      */
     @Test
     public void getDistributionListAdmin() throws Exception {
         SoapTransport transport = authAdmin(ADMIN);
-        
-        com.zimbra.soap.admin.message.GetDistributionListRequest req = 
+
+        com.zimbra.soap.admin.message.GetDistributionListRequest req =
             new com.zimbra.soap.admin.message.GetDistributionListRequest(
                     com.zimbra.soap.admin.type.DistributionListSelector.fromName(DL_NAME));
-        
+
         com.zimbra.soap.admin.message.GetDistributionListResponse resp = invokeJaxb(transport, req);
         com.zimbra.soap.admin.type.DistributionListInfo dlInfo = resp.getDl();
-        
+
         String dlId = dlInfo.getId();
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         assertNotNull(group);
         assertEquals(group.getId(), dlId);
@@ -291,29 +291,29 @@ public class TestDelegatedDL extends SoapTest {
             System.out.println(attr.getN() + ", " + attr.getValue());
         }
         */
-        
+
         List<GranteeInfo> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
         for (GranteeInfo owner : dlOwners) {
             com.zimbra.soap.type.GranteeType type = owner.getType();
             String id = owner.getId();
             String name = owner.getName();
-            
+
             assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
             assertEquals(USER_OWNER, name);
         }
     }
-    
+
     @Test
     public void createDistributionListPermDenied() throws Exception {
         String dlName = getAddress(genGroupNameLocalPart());
         boolean dynamic = true;
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         CreateDistributionListRequest req = new CreateDistributionListRequest(
                 dlName, null, dynamic);
-        
+
         boolean caughtPermDenied = false;
         try {
             CreateDistributionListResponse resp = invokeJaxb(transport, req);
@@ -323,10 +323,10 @@ public class TestDelegatedDL extends SoapTest {
                 caughtPermDenied = true;
             }
         }
-        
+
         assertTrue(caughtPermDenied);
     }
-    
+
     /*
      * verify the ownDistList right can only be granted on group target,
      * not domain, not globalgrant
@@ -335,22 +335,22 @@ public class TestDelegatedDL extends SoapTest {
     public void ownDistListRightTarget() throws Exception {
         Group group = provUtil.createGroup(genGroupNameLocalPart("group"), domain, false);
         Account acct = provUtil.createAccount(genAcctNameLocalPart("acct"), domain);
-        
+
         String right = Group.GroupOwner.GROUP_OWNER_RIGHT.getName();
-        
+
         // grant on group should work
-        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group.getName(),
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null,
                 right, null);
-        prov.checkRight(TargetType.dl.getCode(), TargetBy.name, group.getName(), 
+        prov.checkRight(TargetType.dl.getCode(), TargetBy.name, group.getName(),
                 GranteeBy.name, acct.getName(), right, null, null);
-        
-        
+
+
         // grant on domain, should fail
         boolean cauchtException  = false;
         try {
-            prov.grantRight(TargetType.domain.getCode(), TargetBy.name, domain.getName(), 
-                    GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+            prov.grantRight(TargetType.domain.getCode(), TargetBy.name, domain.getName(),
+                    GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null,
                     right, null);
         } catch (ServiceException e) {
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
@@ -358,13 +358,13 @@ public class TestDelegatedDL extends SoapTest {
             }
         }
         assertTrue(cauchtException);
-        
-        
+
+
         // grant on globalgrant, should fail
         cauchtException  = false;
         try {
-            prov.grantRight(TargetType.global.getCode(), null, null, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+            prov.grantRight(TargetType.global.getCode(), null, null,
+                    GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null,
                     right, null);
         } catch (ServiceException e) {
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
@@ -373,42 +373,42 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertTrue(cauchtException);
     }
-    
+
     @Test
     public void createDistributionList() throws Exception {
         String dlName = getAddress(genGroupNameLocalPart());
         boolean dynamic = true;
-        
+
         SoapTransport transport = authUser(USER_CREATOR);
-        
+
         CreateDistributionListRequest req = new CreateDistributionListRequest(
                 dlName, null, dynamic);
-        
+
         List<KeyValuePair> attrsCreate = Lists.newArrayList(new KeyValuePair(
-                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy,
                 ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name()));
-        
+
         req.setKeyValuePairs(attrsCreate);
         CreateDistributionListResponse resp = invokeJaxb(transport, req);
         DistributionListInfo dlInfo = resp.getDl();
-        
+
         String dlId = dlInfo.getId();
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, dlName);
         assertNotNull(group);
         assertEquals(group.getId(), dlId);
-        
+
         List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
         for (DistributionListGranteeInfoInterface owner : dlOwners) {
             com.zimbra.soap.type.GranteeType type = owner.getType();
             String id = owner.getId();
             String name = owner.getName();
-            
+
             assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
             assertEquals(USER_CREATOR, name);
         }
-        
+
         boolean seenExpectedMail = false;
         boolean seenExpectedSubsPolicy = false;
         List<? extends KeyValuePair> attrs = dlInfo.getAttrList();
@@ -419,7 +419,7 @@ public class TestDelegatedDL extends SoapTest {
                 assertEquals(group.getName(), value);
                 seenExpectedMail = true;
             }
-            
+
             if (Provisioning.A_zimbraDistributionListSubscriptionPolicy.equals(name)) {
                 assertEquals(ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name(), value);
                 seenExpectedSubsPolicy = true;
@@ -428,23 +428,23 @@ public class TestDelegatedDL extends SoapTest {
         assertTrue(seenExpectedMail);
         assertTrue(seenExpectedSubsPolicy);
     }
-    
+
     @Test
     public void getDistributionList() throws Exception {
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         GetDistributionListRequest req = new GetDistributionListRequest(
                 DistributionListSelector.fromName(DL_NAME), Boolean.TRUE);
-        
+
         GetDistributionListResponse resp = invokeJaxb(transport, req);
-        
+
         DistributionListInfo dlInfo = resp.getDl();
-        
+
         assertTrue(dlInfo.isOwner());
         assertFalse(dlInfo.isMember());
-        
+
         String dlId = dlInfo.getId();
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         assertNotNull(group);
         assertEquals(group.getId(), dlId);
@@ -464,53 +464,53 @@ public class TestDelegatedDL extends SoapTest {
                 assertEquals(ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name(), value);
                 seenSubsPolicy = true;
             }
-            
-            // zimbraDistributionListUnsubscriptionPolicy ia not set.  
+
+            // zimbraDistributionListUnsubscriptionPolicy ia not set.
             // zimbraAccount:GetDistributionListResponse should return the default value, instead of empty.
             if (Provisioning.A_zimbraDistributionListUnsubscriptionPolicy.equals(name)) {
                 assertEquals(ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name(), value);
                 seenUnsubsPolicy = true;
             }
         }
-        
+
         assertTrue(seenMail);
         assertTrue(seenSubsPolicy);
         assertTrue(seenUnsubsPolicy);
-        
+
         List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
         for (DistributionListGranteeInfoInterface owner : dlOwners) {
             com.zimbra.soap.type.GranteeType type = owner.getType();
             String id = owner.getId();
             String name = owner.getName();
-            
+
             assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
             assertEquals(USER_OWNER, name);
         }
     }
-    
+
     /*
-     * verify and request is allowed, but isOwner is false 
+     * verify and request is allowed, but isOwner is false
      */
     @Test
     public void getDistributionListByGlobalAdmin() throws Exception {
         SoapTransport transport = authAdmin(ADMIN);
-        
+
         GetDistributionListRequest req = new GetDistributionListRequest(
                 DistributionListSelector.fromName(DL_NAME), Boolean.TRUE);
-        
+
         GetDistributionListResponse resp = invokeJaxb(transport, req);
-        
+
         DistributionListInfo dlInfo = resp.getDl();
         assertFalse(dlInfo.isOwner());
-        
+
         String dlId = dlInfo.getId();
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         assertNotNull(group);
         assertEquals(group.getId(), dlId);
     }
-    
+
     /*
      * verify rights are returned
      */
@@ -518,52 +518,52 @@ public class TestDelegatedDL extends SoapTest {
     public void getDistributionListRights() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Group group = createGroupAndAddOwner(GROUP_NAME);
-        
+
         String right1 = Right.RT_sendToDistList;
         String right2 = Right.RT_viewDistList;
         Account grantee1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account grantee2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         //
         // grantRights
         //
         DistributionListAction action = new DistributionListAction(Operation.grantRights);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
+
         DistributionListRightSpec dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee2.getName()));
-        
+
         DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
-        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
+        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all,
                 null, null));
-        
+
         action.addRight(dlRight1);
         action.addRight(dlRight2);
         DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
+
         /*
-         * verify rights are returned 
+         * verify rights are returned
          */
         GetDistributionListRequest getDLReq = new GetDistributionListRequest(
                 DistributionListSelector.fromName(GROUP_NAME), Boolean.FALSE,
                 right1 + "," + right2);
         GetDistributionListResponse getDLResp = invokeJaxb(transport, getDLReq);
-        
+
         DistributionListInfo dlInfo = getDLResp.getDl();
         List<? extends DistributionListRightInfo> rights = dlInfo.getRights();
-        
+
         Set<String> right1GranteeNames = Sets.newHashSet();
         Set<String> right2GranteeNames = Sets.newHashSet();
         for (DistributionListRightInfo rightInfo : rights) {
             String right = rightInfo.getRight();
             List<DistributionListGranteeInfo> grantees = rightInfo.getGrantees();
-            
+
             if (right1.equals(right)) {
                 for (DistributionListGranteeInfo grantee : grantees) {
                     right1GranteeNames.add(Verify.makeResultStr(grantee.getType().name(), grantee.getName()));
@@ -578,37 +578,37 @@ public class TestDelegatedDL extends SoapTest {
         Verify.verifyEquals(
                 Sets.newHashSet(
                         Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee1.getName()),
-                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName())), 
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName())),
                 right1GranteeNames);
         Verify.verifyEquals(
                 Sets.newHashSet(
-                        Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), "null")), 
+                        Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), "null")),
                 right2GranteeNames);
     }
 
     @Test
     public void distributionListActionAddRemoveMembers() throws Exception {
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         // addMembers
         DistributionListAction action = new DistributionListAction(Operation.addMembers);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(DL_NAME), action);
-        
+
         Account member1 = provUtil.createAccount(genAcctNameLocalPart("member1"), domain);
         Account member2 = provUtil.createAccount(genAcctNameLocalPart("member2"), domain);
         String MEMBER1 = member1.getName();
         String MEMBER2 = member2.getName();
-        
+
         action.addMember(MEMBER1);
         action.addMember(MEMBER2);
         DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         Set<String> members = group.getAllMembersSet();
-        
+
         Verify.verifyEquals(Sets.newHashSet(MEMBER1, MEMBER2), members);
-        
+
         // removeMembers
         action = new DistributionListAction(Operation.removeMembers);
         req = new DistributionListActionRequest(
@@ -616,37 +616,37 @@ public class TestDelegatedDL extends SoapTest {
         action.addMember(MEMBER1);
         action.addMember(MEMBER2);
         resp = invokeJaxb(transport, req);
-        
+
         group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         members = group.getAllMembersSet();
         assertEquals(0, members.size());
     }
-    
+
     @Test
     public void distributionListActionAddRemoveOwners() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Group group = createGroupAndAddOwner(GROUP_NAME);
-        
+
         Account owner1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account owner2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         //
         // addOwners
         //
         DistributionListAction action = new DistributionListAction(Operation.addOwners);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, USER_OWNER));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner2.getName()));
         DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
+
         //
         // verify owners are added
         //
@@ -663,22 +663,22 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(3, owners.size());
         Verify.verifyEquals(
-                Sets.newHashSet(USER_OWNER, owner1.getName(), owner2.getName()), 
+                Sets.newHashSet(USER_OWNER, owner1.getName(), owner2.getName()),
                 ownerNames);
-        
-        
-        // 
+
+
+        //
         // removeOwners
         //
         action = new DistributionListAction(Operation.removeOwners);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner2.getName()));
         resp = invokeJaxb(transport, req);
-        
+
         //
         // verify owners are removed
         //
@@ -696,35 +696,35 @@ public class TestDelegatedDL extends SoapTest {
         assertEquals(1, owners.size());
         Verify.verifyEquals(Sets.newHashSet(USER_OWNER), ownerNames);
     }
-    
+
     @Test
     public void distributionListActionSetOwners() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Group group = createGroupAndAddOwner(GROUP_NAME);
-        
+
         Account owner1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account owner2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
         Account owner3 = provUtil.createAccount(genAcctNameLocalPart("3"), domain);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         //
         // setOwners
         //
         DistributionListAction action = new DistributionListAction(Operation.setOwners);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, USER_OWNER));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner2.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
                 DistributionListGranteeBy.name, owner3.getName()));
         DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
+
         //
         // verify owners are replaced
         //
@@ -741,66 +741,100 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(4, owners.size());
         Verify.verifyEquals(
-                Sets.newHashSet(USER_OWNER, owner1.getName(), owner2.getName(), owner3.getName()), 
+                Sets.newHashSet(USER_OWNER, owner1.getName(), owner2.getName(), owner3.getName()),
                 ownerNames);
-        
-        
+
+
+        /*
+         * test invalid grantee type for owner
+         */
+        action = new DistributionListAction(Operation.setOwners);
+        req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, "user@external.com"));
+
+        String errCode = null;
+        try {
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            errCode = e.getCode();
+        }
+        assertEquals(ServiceException.INVALID_REQUEST, errCode);
+
+
         // remove all owners
         action = new DistributionListAction(Operation.setOwners);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         resp = invokeJaxb(transport, req);
-        
+
         getDLReq = new GetDistributionListRequest(
                 DistributionListSelector.fromName(GROUP_NAME), Boolean.TRUE);
         getDLResp = invokeJaxb(transport, getDLReq);
         dlInfo = getDLResp.getDl();
         owners = dlInfo.getOwners();
         assertEquals(0, owners.size());
+
     }
-    
+
     @Test
     public void distributionListActionGrantRevokeSetRights() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Group group = createGroupAndAddOwner(GROUP_NAME);
-        
+
         String right1 = Right.RT_sendToDistList;
         String right2 = Right.RT_viewDistList;
         Account grantee1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account grantee2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
-        Group groupGrantee = provUtil.createGroup(genGroupNameLocalPart("3"), domain, false);
-        
+        Group groupGrantee1 = provUtil.createGroup(genGroupNameLocalPart("3"), domain, false);
+
+        // test grantees specified as "email" grantee type
+        Account grantee3 = provUtil.createAccount(genAcctNameLocalPart("4"), domain);
+        Account grantee4 = provUtil.createAccount(genAcctNameLocalPart("5"), domain);
+        Group groupGrantee2 = provUtil.createGroup(genGroupNameLocalPart("6"), domain, false);
+        String GUEST = "user@external.com";
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         //
         // grantRights
         //
         DistributionListAction action = new DistributionListAction(Operation.grantRights);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
+
         DistributionListRightSpec dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee2.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.grp, 
-                DistributionListGranteeBy.name, groupGrantee.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.grp,
+                DistributionListGranteeBy.name, groupGrantee1.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all,
                 null, null));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.pub, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.pub,
                 null, null));
-        
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, grantee3.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, grantee4.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, groupGrantee2.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, GUEST));
+
         DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
-        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee2.getName()));
-        
+
         action.addRight(dlRight1);
         action.addRight(dlRight2);
         DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
+
         //
         // verify rights are granted
         //
@@ -823,17 +857,21 @@ public class TestDelegatedDL extends SoapTest {
                 Sets.newHashSet(
                         Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee1.getName()),
                         Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName()),
-                        Verify.makeResultStr(GranteeType.GT_GROUP.getCode(), groupGrantee.getName()),
+                        Verify.makeResultStr(GranteeType.GT_GROUP.getCode(), groupGrantee1.getName()),
                         Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), ""),
-                        Verify.makeResultStr(GranteeType.GT_PUBLIC.getCode(), "")), 
+                        Verify.makeResultStr(GranteeType.GT_PUBLIC.getCode(), ""),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee3.getName()),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee4.getName()),
+                        Verify.makeResultStr(GranteeType.GT_GROUP.getCode(), groupGrantee2.getName()),
+                        Verify.makeResultStr(GranteeType.GT_GUEST.getCode(), GUEST)),
                 right1GranteeNames);
         Verify.verifyEquals(
                 Sets.newHashSet(
                         Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee1.getName()),
-                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName())), 
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName())),
                 right2GranteeNames);
-        
-        
+
+
         //
         // setRights
         //
@@ -841,16 +879,24 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all,
                 null, null));
-        
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, grantee3.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, grantee4.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, groupGrantee2.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, GUEST));
+
         dlRight2 = new DistributionListRightSpec(right2);
         // don't add any grantee, this should revoke all grants for right2
-        
+
         action.addRight(dlRight1);
         action.addRight(dlRight2);
         resp = invokeJaxb(transport, req);
-        
+
         //
         // verify rights are set
         //
@@ -870,24 +916,37 @@ public class TestDelegatedDL extends SoapTest {
             }
         }
         Verify.verifyEquals(
-                Sets.newHashSet(Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), "")), 
+                Sets.newHashSet(
+                        Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), ""),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee3.getName()),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee4.getName()),
+                        Verify.makeResultStr(GranteeType.GT_GROUP.getCode(), groupGrantee2.getName()),
+                        Verify.makeResultStr(GranteeType.GT_GUEST.getCode(), GUEST)),
                 right1GranteeNames);
         assertEquals(0, right2GranteeNames.size());
-        
-        
-        // 
+
+
+        //
         // revokeRights
         //
         action = new DistributionListAction(Operation.revokeRights);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all,
                 null, null));
-        
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, grantee3.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, grantee4.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, groupGrantee2.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.email,
+                DistributionListGranteeBy.name, GUEST));
+
         action.addRight(dlRight1);
         resp = invokeJaxb(transport, req);
-        
+
         //
         // verify all rights are revoked
         //
@@ -908,35 +967,35 @@ public class TestDelegatedDL extends SoapTest {
         assertEquals(0, right1GranteeNames.size());
         assertEquals(0, right2GranteeNames.size());
     }
-    
+
     /*
-     * verify owner right cann never be altered directly, all modification on 
+     * verify owner right can never be altered directly, all modification on
      * owners must go through addOwners/remvoeOwners/setOwners operations
      */
     @Test
     public void distributionListActionManipulateOwnerRight() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Group group = createGroupAndAddOwner(GROUP_NAME);
-        
+
         String right = Group.GroupOwner.GROUP_OWNER_RIGHT.getName();
         Account grantee = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         //
         // grantRights
         //
         DistributionListAction action = new DistributionListAction(Operation.grantRights);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
+
         DistributionListRightSpec dlRight = new DistributionListRightSpec(right);
-        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee.getName()));
-        
+
         action.addRight(dlRight);
         DistributionListActionResponse resp;
-        
+
         boolean caughtException = false;
         try {
             resp = invokeJaxb(transport, req);
@@ -946,21 +1005,21 @@ public class TestDelegatedDL extends SoapTest {
             }
         }
         assertTrue(caughtException);
-        
-        
+
+
         //
         // revokeRights
         //
         action = new DistributionListAction(Operation.revokeRights);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
+
         dlRight = new DistributionListRightSpec(right);
-        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee.getName()));
-        
+
         action.addRight(dlRight);
-        
+
         caughtException = false;
         try {
             resp = invokeJaxb(transport, req);
@@ -970,21 +1029,21 @@ public class TestDelegatedDL extends SoapTest {
             }
         }
         assertTrue(caughtException);
-        
-        
+
+
         //
         // setRights
         //
         action = new DistributionListAction(Operation.setRights);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
+
         dlRight = new DistributionListRightSpec(right);
-        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, grantee.getName()));
-        
+
         action.addRight(dlRight);
-        
+
         caughtException = false;
         try {
             resp = invokeJaxb(transport, req);
@@ -994,29 +1053,29 @@ public class TestDelegatedDL extends SoapTest {
             }
         }
         assertTrue(caughtException);
-        
+
     }
-    
+
     @Test
     public void distributionListActionModify() throws Exception {
         String ATTR = Provisioning.A_description;
         String VALUE = "test description";
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         DistributionListAction action = new DistributionListAction(Operation.modify);
-        
+
         List<KeyValuePair> attrs = Lists.newArrayList(new KeyValuePair(ATTR, VALUE));
         action.setKeyValuePairs(attrs);
-        
+
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(DL_NAME), action);
-        
+
         DistributionListActionResponse resp = invokeJaxb(transport, req);
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         assertEquals(VALUE, group.getAttr(ATTR));
     }
-    
+
     @Test
     public void distributionListActionRename() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
@@ -1024,17 +1083,17 @@ public class TestDelegatedDL extends SoapTest {
         // create an owner account
         Account ownerAcct = provUtil.createAccount(genAcctNameLocalPart("owner"), domain);
         Group group = createGroupAndAddOwner(GROUP_NAME, ownerAcct.getName());
-        
-        
+
+
         DistributionListAction action = new DistributionListAction(Operation.rename);
         String GROUP_NEW_NAME = getAddress(genGroupNameLocalPart("new-name"));
         action.setNewName(GROUP_NEW_NAME);
-        
+
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
+
         DistributionListActionResponse resp;
-        
+
         SoapTransport transport = authUser(ownerAcct.getName());
         String errorCode = null;
         try {
@@ -1044,7 +1103,7 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
-        
+
         // auth as creator and try again, should still fail
         transport = authUser(USER_CREATOR);
         errorCode = null;
@@ -1054,28 +1113,28 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
-        
+
         // make the creator an owner
         transport = authUser(ownerAcct.getName());
         addOwner(transport, GROUP_NAME, USER_CREATOR);
-        
+
         // now try reanme as the creator (also an owner now), should succeed
         transport = authUser(USER_CREATOR);
         resp = invokeJaxb(transport, req);
-        
+
         group = prov.getGroup(Key.DistributionListBy.name, GROUP_NEW_NAME);
         assertEquals(GROUP_NEW_NAME, group.getName());
-        
+
         // rename into a different domain
         Domain otherDomain = provUtil.createDomain(genDomainName(domain.getName()));
-        String GROUP_NEW_NAME_IN_ANOTHER_DOMAIN = 
+        String GROUP_NEW_NAME_IN_ANOTHER_DOMAIN =
             TestUtil.getAddress(genGroupNameLocalPart(), otherDomain.getName());
-        
+
         action = new DistributionListAction(Operation.rename);
         action.setNewName(GROUP_NEW_NAME_IN_ANOTHER_DOMAIN);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(group.getName()), action);
-        
+
         transport = authUser(USER_CREATOR);
         errorCode = null;
         try {
@@ -1085,7 +1144,7 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
-        
+
         transport = authUser(ownerAcct.getName());
         errorCode = null;
         try {
@@ -1095,38 +1154,38 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
-        
+
         // grant create right on the other domain
-        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, otherDomain.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, USER_CREATOR, null, 
+        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, otherDomain.getName(),
+                GranteeType.GT_USER.getCode(), GranteeBy.name, USER_CREATOR, null,
                 User.R_createDistList.getName(), null);
-        
+
         // do the rename again, should work now
         transport = authUser(USER_CREATOR);
         resp = invokeJaxb(transport, req);
-        
+
         group = prov.getGroup(Key.DistributionListBy.name, GROUP_NEW_NAME_IN_ANOTHER_DOMAIN);
         assertEquals(GROUP_NEW_NAME_IN_ANOTHER_DOMAIN, group.getName());
-        
+
         provUtil.deleteAccount(ownerAcct);
         provUtil.deleteGroup(group);
         provUtil.deleteDomain(otherDomain);
     }
-    
+
     @Test
     public void distributionListActionDelete() throws Exception {
         // create a group for the delete test
         String NAME = getAddress(genGroupNameLocalPart());
         Group group = createGroupAndAddOwner(NAME);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         DistributionListAction action = new DistributionListAction(Operation.delete);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(NAME), action);
-        
+
         DistributionListActionResponse resp;
-        
+
         String errorCode = null;
         try {
             // only people with create right and owner right can delete
@@ -1135,7 +1194,7 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
-        
+
         /*
          * auth as creator and try again, should still fail
          */
@@ -1147,36 +1206,36 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(ServiceException.PERM_DENIED, errorCode);
-        
+
         // make the creator an owner
         transport = authUser(USER_OWNER);
         addOwner(transport, group.getName(), USER_CREATOR);
-        
+
         // now try delete as the creator (also an owner now), should succeed
         transport = authUser(USER_CREATOR);
         resp = invokeJaxb(transport, req);
-    
+
         group = prov.getGroup(Key.DistributionListBy.name, NAME);
         assertNull(null);
     }
-    
+
     @Test
     public void subscribeDistributionList() throws Exception {
         SoapTransport transport = authUser(USER_NOT_OWNER);
-        
+
         // subscribe
         SubscribeDistributionListRequest req = new SubscribeDistributionListRequest(
                 DistributionListSelector.fromName(DL_NAME),
                 DistributionListSubscribeOp.subscribe);
-        
+
         SubscribeDistributionListResponse resp = invokeJaxb(transport, req);
         assertEquals(DistributionListSubscribeStatus.subscribed, resp.getStatus());
-        
+
         // unsubscribe
         req = new SubscribeDistributionListRequest(
                 DistributionListSelector.fromName(DL_NAME),
                 DistributionListSubscribeOp.unsubscribe);
-        
+
         boolean caughtPermDenied = false;
         try {
             resp = invokeJaxb(transport, req);
@@ -1188,7 +1247,7 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertTrue(caughtPermDenied);
     }
-    
+
     @Test
     public void getAccountDistributionLists() throws Exception {
         String GROUP_1_NAME = getAddress(genGroupNameLocalPart("1"));
@@ -1199,47 +1258,47 @@ public class TestDelegatedDL extends SoapTest {
         String GROUP_3_DISPLAY_NAME = "first";
         String GROUP_4_NAME = getAddress(genGroupNameLocalPart("4"));
         String GROUP_4_DISPLAY_NAME = "first";
-        
-        Group group1 = provUtil.createGroup(GROUP_1_NAME, 
+
+        Group group1 = provUtil.createGroup(GROUP_1_NAME,
                 Collections.singletonMap(
                 Provisioning.A_displayName, (Object)GROUP_1_DISPLAY_NAME), false);
-        Group group2 = provUtil.createGroup(GROUP_2_NAME, 
+        Group group2 = provUtil.createGroup(GROUP_2_NAME,
                 Collections.singletonMap(
                 Provisioning.A_displayName, (Object)GROUP_2_DISPLAY_NAME), false);
-        Group group3 = provUtil.createGroup(GROUP_3_NAME, 
+        Group group3 = provUtil.createGroup(GROUP_3_NAME,
                 Collections.singletonMap(
                 Provisioning.A_displayName, (Object)GROUP_3_DISPLAY_NAME), false);
-        Group group4 = provUtil.createGroup(GROUP_4_NAME, 
+        Group group4 = provUtil.createGroup(GROUP_4_NAME,
                 Collections.singletonMap(
                 Provisioning.A_displayName, (Object)GROUP_4_DISPLAY_NAME), false);
-        
+
         // create an account
         String ACCT_NAME = getAddress(genAcctNameLocalPart());
         Account acct = provUtil.createAccount(ACCT_NAME);
-        
+
         // add the account in groups
         prov.addGroupMembers(group1, new String[]{ACCT_NAME});
         prov.addGroupMembers(group2, new String[]{ACCT_NAME});
         prov.addGroupMembers(group3, new String[]{ACCT_NAME});
-        
+
         // make the account owner of groups
-        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group1.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group1.getName(),
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null,
                 Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
-        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group4.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group4.getName(),
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null,
                 Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
-        
+
         SoapTransport transport = authUser(ACCT_NAME);
         GetAccountDistributionListsRequest req = new GetAccountDistributionListsRequest(
-                Boolean.TRUE, MemberOfSelector.all, 
+                Boolean.TRUE, MemberOfSelector.all,
                 Sets.newHashSet(Provisioning.A_zimbraMailStatus,
                         Provisioning.A_zimbraDistributionListSubscriptionPolicy,
                         Provisioning.A_zimbraDistributionListUnsubscriptionPolicy));
         GetAccountDistributionListsResponse resp = invokeJaxb(transport, req);
-        
+
         List<String> result = Lists.newArrayList();
-        
+
         List<DLInfo> groups = resp.getDlList();
         for (DLInfo dlInfo : groups) {
             String id = dlInfo.getId();
@@ -1247,7 +1306,7 @@ public class TestDelegatedDL extends SoapTest {
             String displayName = dlInfo.getDisplayName();
             Boolean isOwner = dlInfo.isOwner();
             Boolean isMember = dlInfo.isMember();
-            
+
             List<? extends KeyValuePair> attrs = dlInfo.getAttrList();
             List<String> attrValues = Lists.newArrayList();
             for (KeyValuePair attr : attrs) {
@@ -1256,49 +1315,49 @@ public class TestDelegatedDL extends SoapTest {
                 attrValues.add(Verify.makeResultStr(key, value));
             }
             Collections.sort(attrValues);
-            
+
             result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember, attrValues));
         }
-        
+
         List<String> expectedAttrValuesOwner = Lists.newArrayList();
         expectedAttrValuesOwner.add(Verify.makeResultStr(
-                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy,
                 ZAttrProvisioning.DistributionListSubscriptionPolicy.REJECT.name()));
         expectedAttrValuesOwner.add(Verify.makeResultStr(
-                Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, 
+                Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
                 ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name()));
         expectedAttrValuesOwner.add(Verify.makeResultStr(
-                Provisioning.A_zimbraMailStatus, 
+                Provisioning.A_zimbraMailStatus,
                 ZAttrProvisioning.MailStatus.enabled.name()));
-        
+
         List<String> expectedAttrValuesNonOwner = Lists.newArrayList();
         expectedAttrValuesNonOwner.add(Verify.makeResultStr(
-                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy,
                 ZAttrProvisioning.DistributionListSubscriptionPolicy.REJECT.name()));
         expectedAttrValuesNonOwner.add(Verify.makeResultStr(
-                Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, 
+                Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
                 ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name()));
 
-        
-        // result should be sorted by displayName.  
+
+        // result should be sorted by displayName.
         // If displayName are the same, sorted by entry.getLabel()
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), 
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(),
                                 Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
-                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), 
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(),
                                 Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
-                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), 
+                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(),
                                 Boolean.TRUE, Boolean.FALSE, expectedAttrValuesOwner),
-                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), 
-                                Boolean.TRUE, Boolean.TRUE, expectedAttrValuesOwner)), 
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(),
+                                Boolean.TRUE, Boolean.TRUE, expectedAttrValuesOwner)),
                 result);
-        
-        
+
+
         // rename group
         String GROUP_NEW_NAME = getAddress(genGroupNameLocalPart("new"));
         prov.renameGroup(group1.getId(), GROUP_NEW_NAME);
-        
+
         // get membership again, should show the new name
         result.clear();
         groups = resp.getDlList();
@@ -1308,7 +1367,7 @@ public class TestDelegatedDL extends SoapTest {
             String displayName = dlInfo.getDisplayName();
             Boolean isOwner = dlInfo.isOwner();
             Boolean isMember = dlInfo.isMember();
-            
+
             List<? extends KeyValuePair> attrs = dlInfo.getAttrList();
             List<String> attrValues = Lists.newArrayList();
             for (KeyValuePair attr : attrs) {
@@ -1317,26 +1376,26 @@ public class TestDelegatedDL extends SoapTest {
                 attrValues.add(Verify.makeResultStr(key, value));
             }
             Collections.sort(attrValues);
-            
+
             result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember, attrValues));
         }
-     
+
         // result should be sorted by displayName
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), 
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(),
                                 Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
-                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), 
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(),
                                 Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
-                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), 
+                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(),
                                 Boolean.TRUE, Boolean.FALSE, expectedAttrValuesOwner),
-                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), 
-                                Boolean.TRUE, Boolean.TRUE, expectedAttrValuesOwner)), 
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(),
+                                Boolean.TRUE, Boolean.TRUE, expectedAttrValuesOwner)),
                 result);
     }
 
     /*
-     * Verify groups without a home server will get PROXY_ERROR for zimbraAccount 
+     * Verify groups without a home server will get PROXY_ERROR for zimbraAccount
      * SOAP calls.
      */
     @Test
@@ -1344,30 +1403,30 @@ public class TestDelegatedDL extends SoapTest {
     public void noHomeServerZimbraAccount() throws Exception {
         String groupName = TestUtil.getAddress(genGroupNameLocalPart(), DOMAIN_NAME);
         Group group = provUtil.createGroup(groupName, false);
-        
+
         // remove zimbraMailHost
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailHost, null);
         prov.modifyAttrs(group, attrs);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         /*
          * GetDistributionList
          */
         GetDistributionListRequest getDLreq = new GetDistributionListRequest(
                 DistributionListSelector.fromName(groupName), Boolean.TRUE);
         verifyCaughtProxyError(transport, getDLreq);
-        
-        
+
+
         /*
          * DistributionListAction
          */
         DistributionListActionRequest DLActionReq = new DistributionListActionRequest(
-                DistributionListSelector.fromName(groupName), 
+                DistributionListSelector.fromName(groupName),
                 new DistributionListAction(Operation.addMembers));
         verifyCaughtProxyError(transport, DLActionReq);
-        
+
         /*
          * SubscribeDistributionList
          */
@@ -1375,12 +1434,12 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(groupName),
                 DistributionListSubscribeOp.subscribe);
         verifyCaughtProxyError(transport, subsDLReq);
-        
+
         provUtil.deleteGroup(group);
     }
-    
+
     /*
-     * Verify groups without a home server will get executed for zimbraAdmin 
+     * Verify groups without a home server will get executed for zimbraAdmin
      * SOAP calls.
      */
     @Test
@@ -1389,16 +1448,16 @@ public class TestDelegatedDL extends SoapTest {
         String groupName = TestUtil.getAddress(genGroupNameLocalPart(), DOMAIN_NAME);
         Group group = provUtil.createGroup(groupName, false);
         String groupId = group.getId();
-        
+
         // remove zimbraMailHost
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailHost, null);
         prov.modifyAttrs(group, attrs);
-        
+
         SoapTransport transport = authAdmin(ADMIN);
         Object req;
         com.zimbra.soap.admin.type.DistributionListInfo dlInfo;
-        
+
         /*
          * GetDistributionList
          */
@@ -1407,7 +1466,7 @@ public class TestDelegatedDL extends SoapTest {
         com.zimbra.soap.admin.message.GetDistributionListResponse getDLResp = invokeJaxb(transport, req);
         dlInfo = getDLResp.getDl();
         assertEquals(groupId, dlInfo.getId());
-        
+
         /*
          * ModifyDistributionList
          */
@@ -1415,35 +1474,35 @@ public class TestDelegatedDL extends SoapTest {
         ModifyDistributionListResponse modifyDLResp = invokeJaxb(transport, req);
         dlInfo = modifyDLResp.getDl();
         assertEquals(groupId, dlInfo.getId());
-        
+
         /*
          * AddDistributionAlias
          */
-        req = new AddDistributionListAliasRequest(groupId, 
+        req = new AddDistributionListAliasRequest(groupId,
                 TestUtil.getAddress(genGroupNameLocalPart("alias"), DOMAIN_NAME));
         AddDistributionListAliasResponse addDLAliasResp = invokeJaxb(transport, req);
-        
+
         /*
          * RemoveDistributionAlias
          */
-        req = new RemoveDistributionListAliasRequest(groupId, 
+        req = new RemoveDistributionListAliasRequest(groupId,
                 TestUtil.getAddress(genGroupNameLocalPart("alias"), DOMAIN_NAME));
         RemoveDistributionListAliasResponse removeDLAliasResp = invokeJaxb(transport, req);
-        
+
         /*
          * AddDistributionListMember
          */
-        req = new AddDistributionListMemberRequest(groupId, 
+        req = new AddDistributionListMemberRequest(groupId,
                 Collections.singleton(TestUtil.getAddress(genAcctNameLocalPart("member"), DOMAIN_NAME)));
         AddDistributionListMemberResponse addDLMemberResp = invokeJaxb(transport, req);
-        
+
         /*
          * RemoveDistributionListMember
          */
-        req = new RemoveDistributionListMemberRequest(groupId, 
+        req = new RemoveDistributionListMemberRequest(groupId,
                 Collections.singleton(TestUtil.getAddress(genAcctNameLocalPart("member"), DOMAIN_NAME)));
         RemoveDistributionListMemberResponse removeDLMemberResp = invokeJaxb(transport, req);
-        
+
         /*
          * DeleteDistributionList
          */
@@ -1451,7 +1510,7 @@ public class TestDelegatedDL extends SoapTest {
         DeleteDistributionListResponse deleteDLResp = invokeJaxb(transport, req);
 
     }
-    
+
     /*
      * owner of a group is a group
      */
@@ -1460,25 +1519,25 @@ public class TestDelegatedDL extends SoapTest {
         boolean dynamic = false;
         Group ownedGroup = provUtil.createGroup(genGroupNameLocalPart("owned"), domain, dynamic);
         Group owningGroup = provUtil.createGroup(genGroupNameLocalPart("owning"), domain, dynamic);
-        
+
         /*
          * add members to owning group
          */
         Account acctInOwningGroup = provUtil.createAccount("acctInOwningGroup", domain);
         prov.addGroupMembers(owningGroup, new String[]{acctInOwningGroup.getName()});
-        
+
         /*
          * grant ownDistList right to owningGroup on ownedGroup
          */
-        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, ownedGroup.getName(), 
-                GranteeType.GT_GROUP.getCode(), GranteeBy.name, owningGroup.getName(), null, 
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, ownedGroup.getName(),
+                GranteeType.GT_GROUP.getCode(), GranteeBy.name, owningGroup.getName(), null,
                 Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
-        
+
         /*
          * auth as acctInOwningGroup
          */
         SoapTransport transport = authUser(acctInOwningGroup.getName());
-        
+
         /*
          * try to add member in ownedGroup
          */
@@ -1486,19 +1545,19 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListAction action = new DistributionListAction(Operation.addMembers);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(ownedGroup.getName()), action);
-        
+
         String MEMBER1 = "member1@test.com";
         String MEMBER2 = "member2@test.com";
         action.addMember(MEMBER1);
         action.addMember(MEMBER2);
         DistributionListActionResponse resp = invokeJaxb(transport, req);
-        
+
         Group group = prov.getGroup(Key.DistributionListBy.name, ownedGroup.getName());
         Set<String> members = group.getAllMembersSet();
         assertEquals(2, members.size());
         assertTrue(members.contains(MEMBER1));
         assertTrue(members.contains(MEMBER2));
-        
+
         provUtil.deleteAccount(acctInOwningGroup);
         provUtil.deleteGroup(owningGroup);
         provUtil.deleteGroup(ownedGroup);
@@ -1509,7 +1568,7 @@ public class TestDelegatedDL extends SoapTest {
     public void hideInGal() throws Exception {
         // setup GAL sync account
         GalTestUtil.enableGalSyncAccount(prov, domain.getName());
-        
+
         String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
         Multimap<String, String> attrs = ArrayListMultimap.create();
         attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
@@ -1517,18 +1576,18 @@ public class TestDelegatedDL extends SoapTest {
         // create an owner account
         Account ownerAcct = provUtil.createAccount(genAcctNameLocalPart("owner"), domain);
         Group group = createGroupAndAddOwner(GROUP_NAME, attrs, ownerAcct.getName());
-        
+
         // create member accounts and add it to the group
         Account memberAcct1 = provUtil.createAccount(genAcctNameLocalPart("member1"), domain);
         Account memberAcct2 = provUtil.createAccount(genAcctNameLocalPart("member2"), domain);
         Account memberAcct3 = provUtil.createAccount(genAcctNameLocalPart("member3"), domain);
-        
+
         prov.addGroupMembers(group, new String[]{
                 memberAcct3.getName(), memberAcct2.getName(), memberAcct1.getName()});
-        
+
         // create a non-member account
         Account nonMemberAcct = provUtil.createAccount(genAcctNameLocalPart("non-member"), domain);
-        
+
         /*
          * Owners should be able to see members even when the list is hideInGal
          */
@@ -1537,53 +1596,53 @@ public class TestDelegatedDL extends SoapTest {
         GetDistributionListMembersRequest req = new GetDistributionListMembersRequest(
                 null, null, group.getName());
 
-        GetDistributionListMembersResponse resp = invokeJaxb(transport, req); 
+        GetDistributionListMembersResponse resp = invokeJaxb(transport, req);
         List<String> members = resp.getDlMembers();
         //make sure members are returned sorted
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()),
                 members);
-        
+
         // add another member, verify cache is updated
         Account memberAcct4 = provUtil.createAccount(genAcctNameLocalPart("member4"), domain);
         prov.addGroupMembers(group, new String[]{memberAcct4.getName()});
-        resp = invokeJaxb(transport, req); 
+        resp = invokeJaxb(transport, req);
         members = resp.getDlMembers();
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        memberAcct1.getName(), memberAcct2.getName(), 
-                        memberAcct3.getName(), memberAcct4.getName()), 
+                        memberAcct1.getName(), memberAcct2.getName(),
+                        memberAcct3.getName(), memberAcct4.getName()),
                 members);
-        
-        
+
+
         String errorCode = null;
-        
+
         /*
          * non owner cannot see members when the list is hideInGal
          */
         transport = authUser(memberAcct1.getName());
         errorCode = null;
         try {
-            invokeJaxb(transport, req); 
+            invokeJaxb(transport, req);
         } catch (ServiceException e) {
             errorCode = e.getCode();
         }
         assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
-        
+
         /*
          * non owner cannot see members when the list is hideInGal
          */
         transport = authUser(nonMemberAcct.getName());
         errorCode = null;
         try {
-            invokeJaxb(transport, req); 
+            invokeJaxb(transport, req);
         } catch (ServiceException e) {
             errorCode = e.getCode();
         }
         assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
-        
+
         GalTestUtil.disableGalSyncAccount(prov, domain.getName());
-        
+
         provUtil.deleteAccount(ownerAcct);
         provUtil.deleteAccount(memberAcct1);
         provUtil.deleteAccount(memberAcct2);
@@ -1592,10 +1651,10 @@ public class TestDelegatedDL extends SoapTest {
         provUtil.deleteAccount(nonMemberAcct);
         provUtil.deleteGroup(group);
     }
-    
+
     /*
      * If GAL sync account is enabled, newly created groups are not synced in the GSA yet.
-     * If a GetDistributionListMembersRequest is issued before it's synced, will get 
+     * If a GetDistributionListMembersRequest is issued before it's synced, will get
      * NO_SUCH_DISTRIBUTION_LIST exception.
      */
     @Test
@@ -1603,25 +1662,25 @@ public class TestDelegatedDL extends SoapTest {
     public void getDistributionListMembersWithGSA() throws Exception {
         // setup GAL sync account
         GalTestUtil.enableGalSyncAccount(prov, domain.getName(), "galsync1");
-        
+
         String GROUP_NAME = getAddress(genGroupNameLocalPart());
 
         // create an owner account
         Account ownerAcct = provUtil.createAccount(genAcctNameLocalPart("owner"), domain);
         Group group = createGroupAndAddOwner(GROUP_NAME, ownerAcct.getName());
-        
+
         // create member accounts and add it to the group
         Account memberAcct1 = provUtil.createAccount(genAcctNameLocalPart("member1"), domain);
         Account memberAcct2 = provUtil.createAccount(genAcctNameLocalPart("member2"), domain);
         Account memberAcct3 = provUtil.createAccount(genAcctNameLocalPart("member3"), domain);
         Account memberAcct4 = provUtil.createAccount(genAcctNameLocalPart("member4"), domain);
-        
+
         prov.addGroupMembers(group, new String[]{
                 memberAcct3.getName(), memberAcct2.getName(), memberAcct1.getName()});
-        
+
         // create a non-member account
         Account nonMemberAcct = provUtil.createAccount(genAcctNameLocalPart("non-member"), domain);
-        
+
         /*
          * Owners should be able to see members even when the list is not in GSA yet
          */
@@ -1630,93 +1689,93 @@ public class TestDelegatedDL extends SoapTest {
         GetDistributionListMembersRequest req = new GetDistributionListMembersRequest(
                 null, null, group.getName());
 
-        GetDistributionListMembersResponse resp = invokeJaxb(transport, req); 
+        GetDistributionListMembersResponse resp = invokeJaxb(transport, req);
         List<String> members = resp.getDlMembers();
         //make sure members are returned sorted
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()),
                 members);
-        
+
         /*
          * members should be able to see members even when the list is not in GSA yet
          */
-        // auth as a member 
+        // auth as a member
         transport = authUser(memberAcct1.getName());
-        resp = invokeJaxb(transport, req); 
+        resp = invokeJaxb(transport, req);
         members = resp.getDlMembers();
         //make sure members are returned sorted
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()),
                 members);
-        
+
         /*
          * non-owner, non-member cannot see members when the list is not in GSA yet
          */
         transport = authUser(nonMemberAcct.getName());
         String errorCode = null;
         try {
-            invokeJaxb(transport, req); 
+            invokeJaxb(transport, req);
         } catch (ServiceException e) {
             errorCode = e.getCode();
         }
         assertEquals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST, errorCode);
-        
+
         /*
          * re-sync the GSA, so now non-owner/non member can also see the group.
          * Too much trouble re-sync the GSA, just disable and enable again.
          */
         GalTestUtil.disableGalSyncAccount(prov, domain.getName());
         GalTestUtil.enableGalSyncAccount(prov, domain.getName(), "galsync2");
-        
+
         // now non-owner/non-member can also see the group
         transport = authUser(nonMemberAcct.getName());
-        resp = invokeJaxb(transport, req); 
+        resp = invokeJaxb(transport, req);
         members = resp.getDlMembers();
         //make sure members are returned sorted
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()),
                 members);
-        
+
         // add a member
         prov.addGroupMembers(group, new String[]{memberAcct4.getName()});
-        
+
         // owner can see the new member
         transport = authUser(ownerAcct.getName());
-        resp = invokeJaxb(transport, req); 
+        resp = invokeJaxb(transport, req);
         members = resp.getDlMembers();
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName(), memberAcct4.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName(), memberAcct4.getName()),
                 members);
-        
+
         // member can see the new member
         transport = authUser(memberAcct1.getName());
-        resp = invokeJaxb(transport, req); 
+        resp = invokeJaxb(transport, req);
         members = resp.getDlMembers();
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName(), memberAcct4.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName(), memberAcct4.getName()),
                 members);
-        
-        // non-owner, non-member cannot see the new member yet, becasuse the change has not 
+
+        // non-owner, non-member cannot see the new member yet, becasuse the change has not
         // yet synced to the GSA.
         transport = authUser(nonMemberAcct.getName());
-        resp = invokeJaxb(transport, req); 
+        resp = invokeJaxb(transport, req);
         members = resp.getDlMembers();
         //make sure members are returned sorted
         Verify.verifyEquals(
-                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()), 
+                Lists.newArrayList(memberAcct1.getName(), memberAcct2.getName(), memberAcct3.getName()),
                 members);
-        
+
         GalTestUtil.disableGalSyncAccount(prov, domain.getName());
-        
+
         provUtil.deleteAccount(ownerAcct);
         provUtil.deleteAccount(memberAcct1);
         provUtil.deleteAccount(memberAcct2);
-        provUtil.deleteAccount(memberAcct3); 
-        provUtil.deleteAccount(memberAcct4); 
+        provUtil.deleteAccount(memberAcct3);
+        provUtil.deleteAccount(memberAcct4);
         provUtil.deleteAccount(nonMemberAcct);
         provUtil.deleteGroup(group);
     }
-    
+
     @Test
     @Bug(bug=72791)
     public void InvalidOwnerEmail() throws Exception {
@@ -1730,37 +1789,37 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(AccountServiceException.NO_SUCH_ACCOUNT, errorCode);
     }
-    
+
     @Test
     @Bug(bug=72791)
     public void distributionListActionSetBadOwners() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart());
         Group group = createGroupAndAddOwner(GROUP_NAME);
-        
+
         Account owner1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account owner2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
         Account owner3 = provUtil.createAccount(genAcctNameLocalPart("3"), domain);
-        
+
         SoapTransport transport = authUser(USER_OWNER);
-        
+
         //
         // setOwners: some good owners an a bogus owner (not a user)
         //
         DistributionListAction action = new DistributionListAction(Operation.setOwners);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, USER_OWNER));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner2.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, owner3.getName()));
-        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr,
                 DistributionListGranteeBy.name, "bogus@bogus.com"));
-        
+
         String errorCode = null;
         try {
             DistributionListActionResponse resp = invokeJaxb(transport, req);
@@ -1768,7 +1827,7 @@ public class TestDelegatedDL extends SoapTest {
             errorCode = e.getCode();
         }
         assertEquals(AccountServiceException.NO_SUCH_ACCOUNT, errorCode);
-        
+
         //
         // verify owners are NOT replaced
         //
@@ -1785,7 +1844,7 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertEquals(1, owners.size());
         Verify.verifyEquals(
-                Sets.newHashSet(USER_OWNER), 
+                Sets.newHashSet(USER_OWNER),
                 ownerNames);
     }
 

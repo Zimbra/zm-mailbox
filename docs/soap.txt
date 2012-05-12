@@ -4189,6 +4189,7 @@ Notes:
      egr - an external AD group
      all - all Zimbra users (by and {name-or-id} are ignored)
      pub - public (by and {name-or-id} are ignored)
+     email - an email address.  Server will lookup in directory and determine the actual grantee
      
 
   <a>       required if op=modify

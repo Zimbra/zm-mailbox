@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataHandler;
 import javax.mail.Address;
@@ -16,6 +17,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
@@ -43,6 +45,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -60,7 +63,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account acct = getAuthenticatedAccount(zsc);
-        
+
         Group group = getGroupBasic(request, prov);
         DistributionListActionHandler handler = new DistributionListActionHandler(
                 group, request, prov, acct);
@@ -87,7 +90,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         protected void handleRequest() throws ServiceException {
             Element eAction = request.getElement(AccountConstants.E_ACTION);
             Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
-            
+
             // all ops need owner right
             // delete and rename ops also need create right, will check in the handlers
             if (!GroupOwner.hasOwnerPrivilege(acct, group)) {
@@ -181,7 +184,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 throw ServiceException.PERM_DENIED(
                         "you do not have sufficient rights to delete this distribution list");
             }
-            
+
             prov.deleteGroup(group.getId());
 
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -229,13 +232,13 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            
+
             Element eNewName = eAction.getElement(AccountConstants.E_NEW_NAME);
             String newName = eNewName.getText();
-            
+
             /*
              * need the create right on the current domain.
-             * 
+             *
              * The create right means being able to create/rename/delete.
              */
             String oldName = group.getName();
@@ -243,7 +246,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 throw ServiceException.PERM_DENIED(
                         "you do not have sufficient rights to rename this distribution list");
             }
-            
+
             /*
              * if domain is different, need the create right on the new domain.
              */
@@ -255,7 +258,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                             "you do not have sufficient rights to rename this distribution list");
                 }
             }
-            
+
             prov.renameGroup(group.getId(), newName);
 
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -283,12 +286,14 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
         };
 
-        protected List<Grantee> parseGrantees(Element parent, String granteeElem) 
+        protected List<Grantee> parseGrantees(Element parent, String granteeElem)
         throws ServiceException {
             List<Grantee> grantees = Lists.newArrayList();
 
+            String domain = prov.getDomain(authedAcct).getName();
             for (Element eGrantee : parent.listElements(granteeElem)) {
-                GranteeType type = GranteeType.fromCode(eGrantee.getAttribute(AccountConstants.A_TYPE));
+                GranteeType type = GranteeType.fromCodeAllowAll(
+                        eGrantee.getAttribute(AccountConstants.A_TYPE));
 
                 GranteeBy by = null;
                 String grantee = null;
@@ -298,12 +303,17 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                     grantee = eGrantee.getText();
                 }
 
+                type = GranteeType.determineGranteeType(type, by, grantee, domain);
+
+                if (type == GranteeType.GT_EXT_GROUP) {
+                    grantee = ExternalGroupInfo.encodeIfExtGroupNameMissingDomain(domain, grantee);
+                }
                 grantees.add(new Grantee(type, by, grantee));
             }
 
             return grantees;
         }
-        
+
         protected void verifyGrantRight(Right right, GranteeType granteeType,
                 Key.GranteeBy granteeBy, String grantee) throws ServiceException {
             RightCommand.verifyGrantRight(prov,
@@ -346,6 +356,17 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     static class AddOwnersHandler extends ModifyRightHandler {
 
+        /*
+         * valid owner types for owner right
+         * owner cannot be external users or public
+         */
+        private static final Set<GranteeType> VALID_GRANTEE_TYPES =
+            ImmutableSet.of(GranteeType.GT_USER,
+                            GranteeType.GT_GROUP,
+                            GranteeType.GT_EXT_GROUP,
+                            GranteeType.GT_DOMAIN,
+                            GranteeType.GT_AUTHUSER);
+
         protected AddOwnersHandler(Element eAction, Group group,
                 Provisioning prov, Account authedAcct) {
             super(eAction, group, prov, authedAcct);
@@ -359,19 +380,24 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
-            
+
             for (Grantee owner : owners) {
                 verifyOwner(this, owner.type, owner.by, owner.grantee);
             }
-            
+
             for (Grantee owner : owners) {
                 addOwner(this, owner.type, owner.by, owner.grantee);
             }
         }
-        
+
         private static void verifyOwner(ModifyRightHandler handler,
                 GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
         throws ServiceException {
+            if (!VALID_GRANTEE_TYPES.contains(granteeType)) {
+                throw ServiceException.INVALID_REQUEST(
+                        "invalid grantee type for groups owner", null);
+            }
+
             handler.verifyGrantRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
                     granteeType, granteeBy, grantee);
         }
@@ -426,8 +452,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
-            
-            // bug 72791: 
+
+            // bug 72791:
             // validate if the grant can be made before actually modifying anything
             for (Grantee owner : owners) {
                 AddOwnersHandler.verifyOwner(this, owner.type, owner.by, owner.grantee);
@@ -716,11 +742,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
             MsgKey msgKey;
             if (accepted) {
-                msgKey = DistributionListSubscribeOp.subscribe == op ? 
+                msgKey = DistributionListSubscribeOp.subscribe == op ?
                         MsgKey.dlSubscribeResponseAcceptedText :
                         MsgKey.dlUnsubscribeResponseAcceptedText;
             } else {
-                msgKey = DistributionListSubscribeOp.subscribe == op ? 
+                msgKey = DistributionListSubscribeOp.subscribe == op ?
                         MsgKey.dlSubscribeResponseRejectedText :
                         MsgKey.dlUnsubscribeResponseRejectedText;
             }
