@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -486,11 +487,20 @@ public class ByteUtil {
             if (encoded[i] == (byte) '/')
                 encoded[i] = (byte) ',';
         }
-        return new String(encoded);
+        try {
+            return new String(encoded, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            return null;  // this shouldn't happen
+        }
     }
 
     public static byte[] decodeFSSafeBase64(String str) {
-        byte[] bytes = str.getBytes();
+        byte[] bytes = null;
+        try {
+            bytes = str.getBytes("utf-8");
+        } catch (UnsupportedEncodingException e) {
+            // this shouldn't happen
+        }
         // Undo the mapping done in encodeFSSafeBase64().
         for (int i = 0; i < bytes.length; i++) {
             if (bytes[i] == (byte) ',')

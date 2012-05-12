@@ -52,6 +52,9 @@ public final class OctopusXmlConstants {
     public static final String E_GET_NOTIFICATIONS_REQUEST = "GetNotificationsRequest";
     public static final String E_GET_NOTIFICATIONS_RESPONSE = "GetNotificationsResponse";
 
+    public static final String E_GET_DOCUMENT_SHARE_URL_REQUEST = "GetDocumentShareURLRequest";
+    public static final String E_GET_DOCUMENT_SHARE_URL_RESPONSE = "GetDocumentShareURLResponse";
+
     public static final QName GET_ACTIVITY_STREAM_REQUEST = QName.get(E_GET_ACTIVITY_STREAM_REQUEST, NAMESPACE);
     public static final QName GET_ACTIVITY_STREAM_RESPONSE = QName.get(E_GET_ACTIVITY_STREAM_RESPONSE, NAMESPACE);
 
@@ -81,6 +84,9 @@ public final class OctopusXmlConstants {
 
     public static final QName GET_NOTIFICATIONS_REQUEST = QName.get(E_GET_NOTIFICATIONS_REQUEST, NAMESPACE);
     public static final QName GET_NOTIFICATIONS_RESPONSE = QName.get(E_GET_NOTIFICATIONS_RESPONSE, NAMESPACE);
+
+    public static final QName GET_DOCUMENT_SHARE_URL_REQUEST = QName.get(E_GET_DOCUMENT_SHARE_URL_REQUEST, NAMESPACE);
+    public static final QName GET_DOCUMENT_SHARE_URL_RESPONSE = QName.get(E_GET_DOCUMENT_SHARE_URL_RESPONSE, NAMESPACE);
 
     public static final String E_OPERATION = "op";
     public static final String A_MARKSEEN = "markSeen";
