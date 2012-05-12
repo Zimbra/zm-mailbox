@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120507-1854 */
+    /* build: 8.0.0_BETA1_1111 jylee 20120430-2317 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6582,6 +6582,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=297)
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
+
+    /**
+     * port number on which message channel should listen
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1415)
+    public static final String A_zimbraMessageChannelPort = "zimbraMessageChannelPort";
 
     /**
      * Number of Message-Id header values to keep in the LMTP dedupe cache.
