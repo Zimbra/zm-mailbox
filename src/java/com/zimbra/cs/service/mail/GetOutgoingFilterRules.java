@@ -36,7 +36,9 @@ public final class GetOutgoingFilterRules extends MailDocumentHandler {
 
         GetOutgoingFilterRulesResponse resp = new GetOutgoingFilterRulesResponse();
         resp.addFilterRule(RuleManager.getOutgoingRulesAsXML(account));
-        return zsc.jaxbToElement(resp);
+        // TODO - At some point we will move to using the Jackson base code completely and
+        //        the method name here will change.
+        return zsc.jaxbToElementUsingJackson(resp);
     }
 
 }
