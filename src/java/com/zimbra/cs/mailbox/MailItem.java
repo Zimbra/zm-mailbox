@@ -2093,7 +2093,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     static public int purgeRevisions(Mailbox mbx, long before) throws ServiceException {
         HashSet<Integer>  outdatedIds = DbMailItem.getItemsWithOutdatedRevisions( mbx, (int)(before/1000) );
-
+        int numberofpurgedrevisions = 0;
         for(Iterator<Integer> iter= outdatedIds.iterator(); iter.hasNext();)  {
             MailItem  item = getById(mbx, iter.next());
 
@@ -2123,6 +2123,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                         folder.updateSize(0, 0, -revision.getSize());
                         revision.markBlobForDeletion();
                     }
+                    numberofpurgedrevisions++;
                 }
 
                 // Purge revisions from db.
@@ -2135,7 +2136,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             }
         }
 
-        return 0;
+        return numberofpurgedrevisions;
     }
 
     /** Recalculates the size, metadata, etc. for an existing MailItem and
