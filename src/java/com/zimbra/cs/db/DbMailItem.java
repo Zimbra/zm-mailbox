@@ -2598,7 +2598,7 @@ public class DbMailItem {
         }
     }
 
-    public static HashSet<Integer> getListOfItemsWithOutdatedRevisions(Mailbox mbox, int before)    throws ServiceException {
+    public static HashSet<Integer> getItemsWithOutdatedRevisions(Mailbox mbox, int before)    throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2608,7 +2608,7 @@ public class DbMailItem {
 
         try {
             StringBuilder constraint = new StringBuilder();
-            String dateColumn = ("date");
+            String dateColumn = "date";
 
             constraint.append(dateColumn).append(" < ? ");
 

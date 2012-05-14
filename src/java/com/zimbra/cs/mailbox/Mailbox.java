@@ -7725,7 +7725,6 @@ public class Mailbox {
             if (userFileVersioningEnabled && userFileVersionLifeTime > 0) {
                 int numPurged = MailItem.purgeRevisions(this, getOperationTimestampMillis() - userFileVersionLifeTime);
                 ZimbraLog.purge.debug("Purged %d revisions", numPurged);
-                //purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
             // Process any folders that have retention policy set.
             for (Folder folder : getFolderList(octxt, SortBy.NONE)) {
