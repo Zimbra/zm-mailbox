@@ -201,14 +201,15 @@ public final class ContactTest {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put("fullName", "Contact Initial Content");
         byte[] attachData = "attachment 1".getBytes();
-        Attachment textAttachment = new Attachment(attachData, "image/png", "customField", "image.png");
+        Attachment textAttachment = new Attachment(attachData, "text/plain", "customField", "file.txt");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Contact contact = mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(textAttachment)), Mailbox.ID_FOLDER_CONTACTS, null);
 
         ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), new ArrayList<Attachment>());
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), pc.getContentStream());
         MimePart mp = Mime.getMimePart(mm, "1");
-        Assert.assertEquals("image/png", mp.getContentType());
+        Assert.assertEquals("text/plain", mp.getContentType());
+        Assert.assertEquals("attachment 1", mp.getContent());
     }
 
     /**

@@ -23,12 +23,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.activation.DataHandler;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.SharedInputStream;
+import javax.mail.util.ByteArrayDataSource;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.json.JSONException;
@@ -229,7 +231,11 @@ public final class ParsedContact {
             MimeBodyPart bp = new ZMimeBodyPart();
             // MimeBodyPart.setDataHandler() invalidates Content-Type and CTE if there is any, so make sure
             // it gets called before setting Content-Type and CTE headers.
-            bp.setDataHandler(attach.getDataHandler());
+            try {
+                bp.setDataHandler(new DataHandler(new ByteArrayDataSource(attach.getContent(), attach.getContentType())));
+            } catch (IOException e) {
+                throw new MessagingException("could not generate mime part content", e);
+            }
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
             bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
