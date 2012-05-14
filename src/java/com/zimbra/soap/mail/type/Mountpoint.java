@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,8 +26,7 @@ import com.zimbra.soap.type.ZmBoolean;
 
  */
 // Root element name needed to differentiate between types of folder
-// MailConstants.E_MOUNT == "link"
-@XmlRootElement(name=MailConstants.E_MOUNT)
+@XmlRootElement(name=MailConstants.E_MOUNT /* link */)
 public class Mountpoint
 extends Folder {
 
@@ -51,6 +50,13 @@ extends Folder {
      */
     @XmlAttribute(name=MailConstants.A_REMOTE_ID /* rid */, required=false)
     private int remoteFolderId;
+
+    /**
+     * @zm-api-field-tag uuid-of-shared-item
+     * @zm-api-field-description UUID of the linked-to resource in the remote mailbox
+     */
+    @XmlAttribute(name=MailConstants.A_REMOTE_UUID /* ruuid */, required=false)
+    private String remoteUuid;
 
     /**
      * @zm-api-field-tag owner-name-for-item
@@ -122,5 +128,13 @@ extends Folder {
 
     public void setBroken(Boolean broken) {
         this.broken = ZmBoolean.fromBool(broken);
+    }
+
+    public String getRemoteUuid() {
+        return remoteUuid;
+    }
+
+    public void setRemoteUuid(String remoteUuid) {
+        this.remoteUuid = remoteUuid;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,9 +32,10 @@ import com.zimbra.soap.mail.type.NewMountpointSpec;
 public class CreateMountpointRequest {
 
     /**
+     * @zm-api-field-tag link
      * @zm-api-field-description New mountpoint specification
      */
-    @XmlElement(name=MailConstants.E_FOLDER, required=true)
+    @XmlElement(name=MailConstants.E_MOUNT /* link */, required=true)
     private final NewMountpointSpec folder;
 
     /**
@@ -51,10 +52,13 @@ public class CreateMountpointRequest {
 
     public NewMountpointSpec getFolder() { return folder; }
 
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("folder", folder);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("folder", folder)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

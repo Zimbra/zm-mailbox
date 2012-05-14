@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,9 +29,10 @@ import com.zimbra.soap.mail.type.Mountpoint;
 public class CreateMountpointResponse {
 
     /**
+     * @zm-api-field-tag link
      * @zm-api-field-description Details of the created mountpoint
      */
-    @XmlElement(name=MailConstants.E_MOUNT)
+    @XmlElement(name=MailConstants.E_MOUNT /* link */, required=true)
     private Mountpoint mount;
 
     public CreateMountpointResponse() {
@@ -40,10 +41,13 @@ public class CreateMountpointResponse {
     public void setMount(Mountpoint mount) { this.mount = mount; }
     public Mountpoint getMount() { return mount; }
 
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("mount", mount);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("mount", mount)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

@@ -122,6 +122,13 @@ public class Folder {
     private String parentId;
 
     /**
+     * @zm-api-field-tag folder-uuid
+     * @zm-api-field-description UUID of parent folder (absent for root folder)
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER_UUID /* luuid */, required=false)
+    private String folderUuid;
+
+    /**
      * @zm-api-field-tag flags
      * @zm-api-field-description Flags - checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*),
      * does not (i)nherit rights from parent, is a s(y)nc folder with external data source,
@@ -396,4 +403,12 @@ public class Folder {
     }
 
     public void setRecursive(Boolean recursive) { this.recursive = ZmBoolean.fromBool(recursive); }
+
+    public String getFolderUuid() {
+        return folderUuid;
+    }
+
+    public void setFolderUuid(String folderUuid) {
+        this.folderUuid = folderUuid;
+    }
 }
