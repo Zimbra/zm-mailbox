@@ -93,7 +93,7 @@ public class DiscoverRights extends AccountDocumentHandler {
     public static void discoverRights(Account account, Set<Right> rights, Element eParent,
             boolean onMaster) throws ServiceException {
         AccessManager accessMgr = AccessManager.getInstance();
-        Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(account, rights, onMaster);
+        Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverUserRights(account, rights, onMaster);
         
         Locale locale = account.getLocale();
         for (Map.Entry<Right, Set<Entry>> targetsForRight : discoveredRights.entrySet()) {

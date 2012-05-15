@@ -51,19 +51,19 @@ public class TestExpandGroupInfo extends SoapTest {
     private static Domain domain;
     private static Account acct;
     private static Group group;
-    
+
     @BeforeClass
     public static void init() throws Exception {
         provUtil = new SoapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName());
-        
+
         acct = provUtil.createAccount("acct", domain);
-        group = provUtil.createGroup("group", domain, false);
-        
+        group = provUtil.createGroup("group", domain, true);
+
         prov.addGroupMembers(group, new String[]{acct.getName()});
     }
-    
+
     @AfterClass
     public static void cleanup() throws Exception {
 
@@ -71,22 +71,22 @@ public class TestExpandGroupInfo extends SoapTest {
         if (acct != null) { // test null in case init failed
             provUtil.deleteAccount(acct);
         }
-        
+
         Cleanup.deleteAll(baseDomainName());
     }
-    
-    private void sendMsg(Account authAcct, String toAddress, String subject, String content) 
+
+    private void sendMsg(Account authAcct, String toAddress, String subject, String content)
     throws Exception {
         SoapTransport transport = authUser(authAcct.getName());
-        
+
         MsgToSend msg = new MsgToSend();
-        
+
         EmailAddrInfo toAddr = new EmailAddrInfo(toAddress);
         toAddr.setAddressType(EmailType.TO.toString());
         msg.addEmailAddresse(toAddr);
-        
+
         msg.setSubject(subject);
-        
+
         MimePartInfo mp = new MimePartInfo();
         mp.setContentType("text/plain");
         mp.setContent(content);
@@ -94,29 +94,29 @@ public class TestExpandGroupInfo extends SoapTest {
 
         SendMsgRequest req = new SendMsgRequest();
         req.setMsg(msg);
-        
+
         SendMsgResponse resp = invokeJaxb(transport, req);
     }
-    
-    private String createAppt(Account authAcct, String toAddress, String subject, String content) 
+
+    private String createAppt(Account authAcct, String toAddress, String subject, String content)
     throws Exception {
         SoapTransport transport = authUser(authAcct.getName());
-        
+
         Msg msg = new Msg();
-        
+
         EmailAddrInfo toAddr = new EmailAddrInfo(toAddress);
         toAddr.setAddressType(EmailType.TO.toString());
         msg.addEmailAddresse(toAddr);
-        
+
         msg.setSubject(subject);
-        
+
         MimePartInfo mp = new MimePartInfo();
         mp.setContentType("multipart/alternative");
         MimePartInfo mpSub = new MimePartInfo();
         mpSub.setContent(content);
         mp.addMimePart(mpSub);
         msg.setMimePart(mp);
-        
+
         InvitationInfo invite = new InvitationInfo();
         InviteComponent invComp = new InviteComponent(ZCalendar.ICalTok.REQUEST.name(), 0, false);
         CalOrganizer organizer  = new CalOrganizer();
@@ -129,19 +129,19 @@ public class TestExpandGroupInfo extends SoapTest {
         invComp.setDtEnd(new DtTimeInfo("20120102"));
         invite.setInviteComponent(invComp);
         msg.setInvite(invite);
-        
+
         CreateAppointmentRequest req = new CreateAppointmentRequest();
         req.setMsg(msg);
         CreateAppointmentResponse resp = invokeJaxb(transport, req);
-        
+
         /*
         String calItemId = resp.getCalItemId();
         return calItemId;
         */
-        
+
         String invId = resp.getCalInvId();
         return invId;
-        
+
         /*
            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
            <soap:Header>
@@ -152,7 +152,7 @@ public class TestExpandGroupInfo extends SoapTest {
                <format xmlns="" type="js"/>
                </context>
            </soap:Header>
-           
+
            <soap:Body>
            <CreateAppointmentRequest xmlns="urn:zimbraMail">
                <m xmlns="" l="10">
@@ -170,12 +170,12 @@ public class TestExpandGroupInfo extends SoapTest {
                            </alarm>
                        </comp>
                    </inv>
-                   
+
                    <e a="user2@phoebe.mbp" t="t"/>
                    <e a="user3@phoebe.mbp" t="t"/>
-                   
+
                    <su>test</su>
-                   
+
                    <mp ct="multipart/alternative">
                        <mp ct="text/plain">
                            <content>The following is a new meeting request: Subject: test Organizer: "Demo User One" &lt;user1@phoebe.mbp&gt; Time: Monday, February 27, 2012, 8:00:00 AM - 8:30:00 AM GMT -08:00 US/Canada Pacific Invitees: user2@phoebe.mbp; user3@phoebe.mbp *~*~*~*~*~*~*~*~*~* </content></mp><mp ct="text/html"><content>&lt;html&gt;&lt;body&gt;&lt;h3&gt;The following is a new meeting request:&lt;/h3&gt; &lt;p&gt; &lt;table border='0'&gt; &lt;tr&gt;&lt;th align=left&gt;Subject:&lt;/th&gt;&lt;td&gt;test &lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th align=left&gt;Organizer:&lt;/th&gt;&lt;td&gt;"Demo User One" &amp;lt;user1@phoebe.mbp&amp;gt; &lt;/td&gt;&lt;/tr&gt; &lt;/table&gt; &lt;p&gt; &lt;table border='0'&gt; &lt;tr&gt;&lt;th align=left&gt;Time:&lt;/th&gt;&lt;td&gt;Monday, February 27, 2012, 8:00:00 AM - 8:30:00 AM GMT -08:00 US/Canada Pacific &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt; &lt;p&gt; &lt;table border='0'&gt; &lt;tr&gt;&lt;th align=left&gt;Invitees:&lt;/th&gt;&lt;td&gt;user2@phoebe.mbp; user3@phoebe.mbp &lt;/td&gt;&lt;/tr&gt; &lt;/table&gt; &lt;div&gt;*~*~*~*~*~*~*~*~*~*&lt;/div&gt;&lt;br&gt;&lt;/body&gt;&lt;/html&gt;</content>
@@ -187,8 +187,8 @@ public class TestExpandGroupInfo extends SoapTest {
 
          */
     }
-    
-    private void verifyGroupInfo(MessageHitInfo hit, 
+
+    private void verifyGroupInfo(MessageHitInfo hit,
             Boolean expectedIsGroup, Boolean expectedCanExpand) {
         List<EmailInfo> emails = hit.getEmails();
         for (EmailInfo emailInfo : emails) {
@@ -202,7 +202,7 @@ public class TestExpandGroupInfo extends SoapTest {
                 return;
             }
         }
-        
+
         fail();  // should never get here
     }
 
@@ -211,16 +211,16 @@ public class TestExpandGroupInfo extends SoapTest {
         // send a to acct, recipient is a group
         String SUBJECT = getTestName();
         sendMsg(acct, group.getName(), SUBJECT, "blah");
-        
+
         SoapTransport transport = authUser(acct.getName());
-        
+
         SearchRequest searchReq = new SearchRequest();
         searchReq.setSearchTypes(MailItem.Type.CONVERSATION.toString());
         searchReq.setQuery(String.format("in:inbox and subject:%s", SUBJECT));
         SearchResponse searchResp = invokeJaxb(transport, searchReq);
         List<SearchHit> searchHits = searchResp.getSearchHits();
         assertEquals(1, searchHits.size());
-        
+
         SearchHit searchHit = searchHits.get(0);
         String convId = searchHit.getId();
 
@@ -233,15 +233,15 @@ public class TestExpandGroupInfo extends SoapTest {
         verifyGroupInfo(hits.get(0), Boolean.TRUE, Boolean.TRUE);
         verifyGroupInfo(hits.get(1), Boolean.TRUE, Boolean.TRUE);
     }
-    
+
     @Test
     public void search() throws Exception {
         // send a to acct, recipient is a group
         String SUBJECT = getTestName();
         sendMsg(acct, group.getName(), SUBJECT, "blah");
-        
+
         SoapTransport transport = authUser(acct.getName());
-        
+
         SearchRequest searchReq = new SearchRequest();
         searchReq.setSearchTypes(MailItem.Type.MESSAGE.toString());
         searchReq.setQuery(String.format("in:inbox and subject:%s", SUBJECT));
@@ -249,9 +249,9 @@ public class TestExpandGroupInfo extends SoapTest {
         SearchResponse searchResp = invokeJaxb(transport, searchReq);
         List<SearchHit> searchHits = searchResp.getSearchHits();
         assertEquals(1, searchHits.size());
-        
+
         verifyGroupInfo((MessageHitInfo) searchHits.get(0), null, null);
-        
+
         /*
          * search again with needExp
          */
@@ -259,26 +259,26 @@ public class TestExpandGroupInfo extends SoapTest {
         searchResp = invokeJaxb(transport, searchReq);
         searchHits = searchResp.getSearchHits();
         assertEquals(1, searchHits.size());
-        
+
         verifyGroupInfo((MessageHitInfo) searchHits.get(0), Boolean.TRUE, Boolean.TRUE);
     }
-    
+
     @Test
     public void getMsg() throws Exception {
         String SUBJECT = getTestName();
         String msgId = createAppt(acct, group.getName(), SUBJECT, "blah");
-        
+
         SoapTransport transport = authUser(acct.getName());
-        
+
         MsgSpec msgSpec = new MsgSpec(msgId);
         msgSpec.setNeedCanExpand(Boolean.TRUE);
         GetMsgRequest req = new GetMsgRequest(msgSpec);
         GetMsgResponse resp = invokeJaxb(transport, req);
-        
+
         MsgWithGroupInfo msg = resp.getMsg();
         InviteWithGroupInfo invite = msg.getInvite();
         List<InviteComponentWithGroupInfo> invComps = invite.getInviteComponents();
-        
+
         for (InviteComponentWithGroupInfo invComp : invComps) {
             List<CalendarAttendeeWithGroupInfo> attendees = invComp.getAttendees();
             for (CalendarAttendeeWithGroupInfo attendee : attendees) {
@@ -288,6 +288,6 @@ public class TestExpandGroupInfo extends SoapTest {
                 assertTrue(canExpandGroupMembers);
             }
         }
-        
+
     }
 }

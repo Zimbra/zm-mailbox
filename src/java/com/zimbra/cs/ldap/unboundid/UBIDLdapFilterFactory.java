@@ -52,6 +52,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_DISTRIBUTION_LISTS;
     private static Filter FILTER_ALL_DOMAINS;
     private static Filter FILTER_ALL_DYNAMIC_GROUPS;
+    private static Filter FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS;
     private static Filter FILTER_ALL_GROUPS;
     private static Filter FILTER_ALL_IDENTITIES;
     private static Filter FILTER_ALL_MIME_ENTRIES;
@@ -130,6 +131,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroup);
 
+        FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS =
+            Filter.createEqualityFilter(
+            LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroupStaticUnit);
+
         FILTER_ALL_IDENTITIES =
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraIdentity);
@@ -141,7 +146,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_SERVERS =
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraServer);
-        
+
         FILTER_ALL_UC_SERVICES =
             Filter.createEqualityFilter(
             LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraUCService);
@@ -173,13 +178,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_hasSubordinates, LdapConstants.LDAP_TRUE);
 
-        FILTER_IS_ARCHIVING_ACCOUNT = 
+        FILTER_IS_ARCHIVING_ACCOUNT =
                 Filter.createPresenceFilter(Provisioning.A_amavisArchiveQuarantineTo);
-            
+
         FILTER_IS_EXTERNAL_ACCOUNT =
                 Filter.createEqualityFilter(
                 Provisioning.A_zimbraIsExternalVirtualAccount, LdapConstants.LDAP_TRUE);
-        
+
         FILTER_IS_SYSTEM_RESOURCE =
                 Filter.createEqualityFilter(
                 Provisioning.A_zimbraIsSystemResource, LdapConstants.LDAP_TRUE);
@@ -224,13 +229,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS_ONLY,
                         Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE));
-        
-        FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS = 
+
+        FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS =
             Filter.createANDFilter(
                     FILTER_ALL_ACCOUNTS_ONLY,
                     Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
                     FILTER_IS_ARCHIVING_ACCOUNT);
-        
+
         FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS =
             Filter.createANDFilter(
                     FILTER_ALL_ACCOUNTS_ONLY,
@@ -371,14 +376,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ALL_NON_SYSTEM_ACCOUNTS,
                 FILTER_ALL_NON_SYSTEM_ACCOUNTS);
     }
-    
+
     @Override
     public ZLdapFilter allNonSystemArchivingAccounts() {
         return new UBIDLdapFilter(
                 FilterId.ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS,
                 FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS);
     }
-    
+
     @Override
     public ZLdapFilter allNonSystemInternalAccounts() {
         return new UBIDLdapFilter(
@@ -470,7 +475,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                                 Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
                                 Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))));
     }
-    
+
     @Override
     public ZLdapFilter accountsOnUCService(String usServiceId) {
         return new UBIDLdapFilter(
@@ -640,7 +645,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_COSES,
                         Filter.createEqualityFilter(Provisioning.A_zimbraMailHostPool, serverId)));
     }
-    
+
     @Override
     public ZLdapFilter cosesOnUCService(String usServiceId) {
         return new UBIDLdapFilter(
@@ -744,6 +749,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_DYNAMIC_GROUPS));
     }
 
+    @Override
+    public ZLdapFilter dynamicGroupsStaticUnitByMemberAddr(String memberAddr) {
+        return new UBIDLdapFilter(
+                FilterId.DISTRIBUTION_LISTS_BY_MEMBER_ADDRS,
+                Filter.createANDFilter(
+                        FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS,
+                        Filter.createEqualityFilter(Provisioning.A_zimbraMailForwardingAddress, memberAddr)));
+    }
 
     /*
      * group (distribution list or dynamic group)
@@ -783,7 +796,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ALL_DOMAINS,
                 FILTER_ALL_DOMAINS);
     }
-    
+
     @Override
     public ZLdapFilter domainAliases(String id) {
         return new UBIDLdapFilter(
@@ -853,7 +866,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createNOTFilter(
                         Filter.createPresenceFilter(Provisioning.A_zimbraAutoProvLock)));
     }
-    
+
     @Override
     public ZLdapFilter domainsOnUCService(String usServiceId) {
         return new UBIDLdapFilter(
@@ -941,7 +954,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_SERVERS,
                         Filter.createEqualityFilter(Provisioning.A_zimbraServiceEnabled, service)));
     }
-    
+
     /*
      * UC service
      */
@@ -960,7 +973,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_UC_SERVICES));
     }
-    
+
 
     /*
      * share locator
@@ -1129,6 +1142,5 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.DN_SUBTREE_MATCH,
                 Filter.createORFilter(filters));
     }
-
 
 }

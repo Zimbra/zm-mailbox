@@ -31,7 +31,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
@@ -101,7 +101,7 @@ public final class MilterHandler implements NioHandler {
     private static final Charset CHARSET = Charsets.US_ASCII;
 
     private final Map<Context, String> context = new EnumMap<Context, String>(Context.class);
-    private final Set<DistributionList> lists = Sets.newHashSetWithExpectedSize(0);
+    private final Set<Group> lists = Sets.newHashSetWithExpectedSize(0);
     private final Provisioning prov;
     private final AccessManager accessMgr;
     private final NioConnection connection;
@@ -297,12 +297,12 @@ public final class MilterHandler implements NioHandler {
             return;
         }
         if (prov.isDistributionList(rcpt)) {
-            DistributionList dl = prov.getDLBasic(Key.DistributionListBy.name, rcpt);
-            if (dl != null && !accessMgr.canDo(sender, dl, User.R_sendToDistList, false)) {
+            Group group = prov.getGroupBasic(Key.DistributionListBy.name, rcpt);
+            if (group != null && !accessMgr.canDo(sender, group, User.R_sendToDistList, false)) {
                 SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
                 return;
             }
-            lists.add(dl);
+            lists.add(group);
         }
         connection.send(new MilterPacket(SMFIR_CONTINUE));
     }
@@ -345,16 +345,16 @@ public final class MilterHandler implements NioHandler {
         ZimbraLog.milter.debug("SMFIC_BodyEOB");
         Set<String> listAddrs = Sets.newHashSetWithExpectedSize(lists.size());
         Set<String> replyToAddrs = Sets.newHashSetWithExpectedSize(lists.size());
-        for (DistributionList dl : lists) {
-            listAddrs.add(dl.getMail());
-            if (dl.isPrefReplyToEnabled()) {
-                String addr = dl.getPrefReplyToAddress();
+        for (Group group : lists) {
+            listAddrs.add(group.getMail());
+            if (group.isPrefReplyToEnabled()) {
+                String addr = group.getPrefReplyToAddress();
                 if (Strings.isNullOrEmpty(addr)) {
-                    addr = dl.getMail(); // fallback to the default email address
+                    addr = group.getMail(); // fallback to the default email address
                 }
-                String disp = dl.getPrefReplyToDisplay();
+                String disp = group.getPrefReplyToDisplay();
                 if (Strings.isNullOrEmpty(disp)) {
-                    disp = dl.getDisplayName(); // fallback to the default display name
+                    disp = group.getDisplayName(); // fallback to the default display name
                 }
                 replyToAddrs.add(new InternetAddress(disp, addr).toString());
             }

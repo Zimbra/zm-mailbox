@@ -18,7 +18,8 @@ public class ProvTest {
         EXTERNAL_AUTH_STATUS_COMMUNICATION_FAILURE("external auth STATUS_COMMUNICATION_FAILURE status is not supported by InMemoryDirectoryServer"),
         EXTERNAL_AUTH_STATUS_CONNECTION_REFUSED("external auth STATUS_CONNECTION_REFUSED status is not supported by InMemoryDirectoryServer"),
         EXTERNAL_AUTH_STATUS_UNKNOWN_HOST("external auth STATUS_UNKNOWN_HOST status is not supported by InMemoryDirectoryServer"),
-        SUBORDINATES_OPERTIONAL_ATTRIBUTE("Subordinates operational attribute is not supported by InMemoryDirectoryServer");
+        SUBORDINATES_OPERTIONAL_ATTRIBUTE("Subordinates operational attribute is not supported by InMemoryDirectoryServer"),
+        DYNAMIC_GROUP_OVERLAY("Dynamic group overlay is not supported by InMemoryDirectoryServer");
 
         private String notes;
         private SkipTestReason(String notes) {

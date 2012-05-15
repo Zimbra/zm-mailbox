@@ -70,6 +70,7 @@ public enum LdapUsage {
     GET_GLOBALCONFIG,
     GET_GLOBALGRANT,
     GET_GROUP_MEMBER,
+    GET_GROUP_UNIT,
     GET_SCHEMA,
     GET_SERVER,
     GET_UCSERVICE,
@@ -116,7 +117,7 @@ public enum LdapUsage {
     UNITTEST,
     UPGRADE,
     // following only used by zmconfigd
-    GENERIC, 
+    GENERIC,
     ADD,
     DELETE,
     MOD,

@@ -51,7 +51,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY(SINGLETON.accountsHomedOnServerAccountsOnly("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         ACCOUNTS_ON_UCSERVICE(SINGLETON.accountsOnUCService("{UCSERVICE-ID}")),
-        
+
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
@@ -87,7 +87,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         COS_BY_ID(SINGLETON.cosById("{COS-ID}")),
         COSES_BY_MAILHOST_POOL(SINGLETON.cosesByMailHostPool("{SERVER-ID}")),
         COSES_ON_UCSERVICE(SINGLETON.cosesOnUCService("{UCSERVICE-ID}")),
-        
+
         CREATED_LATEROREQUAL(SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
         DATA_SOURCE_BY_ID(SINGLETON.dataSourceById("{DATA-SOURCE-ID}")),
         DATA_SOURCE_BY_NAME(SINGLETON.dataSourceByName("{DATA-SOURCE-NAME}")),
@@ -106,9 +106,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DOMAIN_LABEL(SINGLETON.domainLabel()),
         DOMAIN_LOCKED_FOR_AUTO_PROVISION(SINGLETON.domainLockedForEagerAutoProvision()),
         DOMAINS_ON_UCSERVICE(SINGLETON.domainsOnUCService("{UCSERVICE-ID}")),
-        
+
         DYNAMIC_GROUP_BY_ID(SINGLETON.dynamicGroupById("{DYNAMIC-GROUP-ID}")),
         DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
+        DYNAMIC_GROUPS_STATIC_UNIT_BY_MEMBER_ADDR(SINGLETON.dynamicGroupsStaticUnitByMemberAddr("{ADDR}")),
+
         EXTERNAL_ACCOUNTS_HOMED_ON_SERVER(SINGLETON.externalAccountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         GLOBAL_CONFIG(SINGLETON.globalConfig()),
         GROUP_BY_ID(SINGLETON.groupById("{GROUP-ID}")),
@@ -179,7 +181,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         public String getStatString() {
             return LdapOp.SEARCH.name() + "_" + name(); // + ": " + template;
         }
-        
+
         private String getTemplate() {
             return template;
         }
@@ -187,38 +189,38 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
     /**
      * Generate the filter explanation csv file.  Called from build.xml
-     * 
+     *
      * @param args
-     * @throws IOException 
-     * @throws LdapException 
+     * @throws IOException
+     * @throws LdapException
      */
     public static void main(String[] args) throws IOException, LdapException {
         if (args.length != 1) {
-            System.out.println("usage: zmjava " + 
+            System.out.println("usage: zmjava " +
                     ZLdapFilterFactory.class.getCanonicalName() + " <output file name>");
             System.exit(1);
         }
-        
+
         /*
-         * This tool is called during during dev-dist target, LDAP server 
+         * This tool is called during during dev-dist target, LDAP server
          * is not up in production build.
          * LdapClient.getInstance() will cause attempt to make an LDAP connection,
-         * 
-         * Just use UBID LdapClient directly.  TODO: separate LdapClient.getInstance() 
-         * into two parts: one doesn't require LDAP connection (for initializing 
+         *
+         * Just use UBID LdapClient directly.  TODO: separate LdapClient.getInstance()
+         * into two parts: one doesn't require LDAP connection (for initializing
          * SearchScope and FilterFactory instances), one does(for initializing LdapContext
-         * class). 
+         * class).
          */
         // LdapClient.getInstance();
         UBIDLdapFilterFactory.initialize();
         ZLdapFilterFactory filterFactory = new UBIDLdapFilterFactory();
         ZLdapFilterFactory.setInstance(filterFactory);
-        
+
         String fileName = args[0];
         CsvWriter writer = new CsvWriter(new FileWriter(fileName));
-        
+
         writer.writeRow("filtername", "template");
-        
+
         for (FilterId filterId : FilterId.values()) {
             writer.writeRow(filterId.getStatString(), filterId.getTemplate());
         }
@@ -355,7 +357,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter cosById(String id);
     public abstract ZLdapFilter cosesByMailHostPool(String serverId);
     public abstract ZLdapFilter cosesOnUCService(String ucServiceId);
-    
+
     /*
      * data source
      */
@@ -369,7 +371,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allDistributionLists();
     public abstract ZLdapFilter distributionListById(String id);
     public abstract ZLdapFilter distributionListByName(String name);
-    public abstract ZLdapFilter distributionListsByMemberAddrs(String memberAddrs[]);
+    public abstract ZLdapFilter distributionListsByMemberAddrs(String[] memberAddrs);
 
 
     /*
@@ -377,7 +379,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter dynamicGroupById(String id);
     public abstract ZLdapFilter dynamicGroupByName(String name);
-
+    public abstract ZLdapFilter dynamicGroupsStaticUnitByMemberAddr(String memberAddr);
 
     /*
      * groups (distribution list or dynamic group)
@@ -424,7 +426,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allServers();
     public abstract ZLdapFilter serverById(String id);
     public abstract ZLdapFilter serverByService(String service);
-    
+
     /*
      * UC service
      */

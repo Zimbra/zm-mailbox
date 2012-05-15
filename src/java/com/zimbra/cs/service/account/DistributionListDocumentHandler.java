@@ -98,19 +98,6 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
         return group;
     }
 
-    protected static boolean isMember(Provisioning prov, Account acct, Group group)
-    throws ServiceException {
-        boolean isMember = false;
-        List<Group> groups = prov.getGroups(acct, false, null); // all groups the account is a member of
-        for (Group inGroup : groups) {
-            if (inGroup.getId().equalsIgnoreCase(group.getId())) {
-                isMember = true;
-                break;
-            }
-        }
-        return isMember;
-    }
-
     /*
      * Centralized callsite for adding/removing group members in DistributionListAction and
      * SubscribeDistributionList.  The group object passed in is a "basic" group instance,

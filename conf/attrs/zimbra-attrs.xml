@@ -1738,9 +1738,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>display name for resource location</desc>
 </attr>
 
-<attr id="325" name="zimbraGroupId" type="id" immutable="1" cardinality="single" requiredIn="securityGroup" optionalIn="distributionList" deprecatedSince="3.2.0">
-  <desc>Zimbra Systems Unique Group ID</desc>
-  <deprecateDesc>greatly simplify dl/group model</deprecateDesc>
+<!--  leave in securityGroup and distributionList for backward compatibility -->
+<attr id="325" name="zimbraGroupId" type="id" immutable="1" cardinality="single" requiredIn="securityGroup,groupDynamicUnit,groupStaticUnit" optionalIn="distributionList">
+  <desc>zimbraId of the main dynamic group for the dynamic group unit</desc>
 </attr>
 
 <attr id="326" name="zimbraCalResSite" type="string" max="32" cardinality="single" optionalIn="calendarResource" flags="domainAdminModifiable">

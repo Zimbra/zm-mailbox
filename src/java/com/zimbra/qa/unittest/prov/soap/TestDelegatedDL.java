@@ -107,6 +107,8 @@ public class TestDelegatedDL extends SoapTest {
     private static Provisioning prov;
     private static Domain domain;
 
+    private static final boolean DYNAMIC = true;
+
     @BeforeClass
     public static void init() throws Exception {
         DOMAIN_NAME = baseDomainName();
@@ -142,19 +144,17 @@ public class TestDelegatedDL extends SoapTest {
 
     @AfterClass
     public static void cleanup() throws Exception {
-        Cleanup.deleteAll(baseDomainName());
+        // Cleanup.deleteAll(baseDomainName());
     }
 
     private static Group createDelegatedGroup(SoapTransport transport, String groupName,
             List<KeyValuePair> attrs)
     throws Exception {
-        boolean dynamic = false;
-
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
 
         CreateDistributionListRequest req = new CreateDistributionListRequest(
-                groupName, attrs, dynamic);
+                groupName, attrs, DYNAMIC);
         CreateDistributionListResponse resp = invokeJaxb(transport, req);
 
         group = prov.getGroup(Key.DistributionListBy.name, groupName);
@@ -177,15 +177,13 @@ public class TestDelegatedDL extends SoapTest {
     private static Group createGroupAndAddOwner(String groupName,
             Multimap<String, String> attrs, String ownerName)
     throws Exception {
-        boolean dynamic = false;
-
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
 
         SoapTransport transport = authUser(USER_CREATOR);
 
         CreateDistributionListRequest req = new CreateDistributionListRequest(
-                groupName, KeyValuePair.fromMultimap(attrs), dynamic);
+                groupName, KeyValuePair.fromMultimap(attrs), DYNAMIC);
         CreateDistributionListResponse resp = invokeJaxb(transport, req);
 
         group = prov.getGroup(Key.DistributionListBy.name, groupName);
@@ -307,12 +305,10 @@ public class TestDelegatedDL extends SoapTest {
     @Test
     public void createDistributionListPermDenied() throws Exception {
         String dlName = getAddress(genGroupNameLocalPart());
-        boolean dynamic = true;
-
         SoapTransport transport = authUser(USER_OWNER);
 
         CreateDistributionListRequest req = new CreateDistributionListRequest(
-                dlName, null, dynamic);
+                dlName, null, DYNAMIC);
 
         boolean caughtPermDenied = false;
         try {
@@ -333,7 +329,7 @@ public class TestDelegatedDL extends SoapTest {
      */
     @Test
     public void ownDistListRightTarget() throws Exception {
-        Group group = provUtil.createGroup(genGroupNameLocalPart("group"), domain, false);
+        Group group = provUtil.createGroup(genGroupNameLocalPart("group"), domain, DYNAMIC);
         Account acct = provUtil.createAccount(genAcctNameLocalPart("acct"), domain);
 
         String right = Group.GroupOwner.GROUP_OWNER_RIGHT.getName();
@@ -377,12 +373,11 @@ public class TestDelegatedDL extends SoapTest {
     @Test
     public void createDistributionList() throws Exception {
         String dlName = getAddress(genGroupNameLocalPart());
-        boolean dynamic = true;
 
         SoapTransport transport = authUser(USER_CREATOR);
 
         CreateDistributionListRequest req = new CreateDistributionListRequest(
-                dlName, null, dynamic);
+                dlName, null, DYNAMIC);
 
         List<KeyValuePair> attrsCreate = Lists.newArrayList(new KeyValuePair(
                 Provisioning.A_zimbraDistributionListSubscriptionPolicy,
@@ -788,12 +783,12 @@ public class TestDelegatedDL extends SoapTest {
         String right2 = Right.RT_viewDistList;
         Account grantee1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account grantee2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
-        Group groupGrantee1 = provUtil.createGroup(genGroupNameLocalPart("3"), domain, false);
+        Group groupGrantee1 = provUtil.createGroup(genGroupNameLocalPart("3"), domain, DYNAMIC);
 
         // test grantees specified as "email" grantee type
         Account grantee3 = provUtil.createAccount(genAcctNameLocalPart("4"), domain);
         Account grantee4 = provUtil.createAccount(genAcctNameLocalPart("5"), domain);
-        Group groupGrantee2 = provUtil.createGroup(genGroupNameLocalPart("6"), domain, false);
+        Group groupGrantee2 = provUtil.createGroup(genGroupNameLocalPart("6"), domain, DYNAMIC);
         String GUEST = "user@external.com";
 
         SoapTransport transport = authUser(USER_OWNER);
@@ -1261,16 +1256,16 @@ public class TestDelegatedDL extends SoapTest {
 
         Group group1 = provUtil.createGroup(GROUP_1_NAME,
                 Collections.singletonMap(
-                Provisioning.A_displayName, (Object)GROUP_1_DISPLAY_NAME), false);
+                Provisioning.A_displayName, (Object)GROUP_1_DISPLAY_NAME), DYNAMIC);
         Group group2 = provUtil.createGroup(GROUP_2_NAME,
                 Collections.singletonMap(
-                Provisioning.A_displayName, (Object)GROUP_2_DISPLAY_NAME), false);
+                Provisioning.A_displayName, (Object)GROUP_2_DISPLAY_NAME), DYNAMIC);
         Group group3 = provUtil.createGroup(GROUP_3_NAME,
                 Collections.singletonMap(
-                Provisioning.A_displayName, (Object)GROUP_3_DISPLAY_NAME), false);
+                Provisioning.A_displayName, (Object)GROUP_3_DISPLAY_NAME), DYNAMIC);
         Group group4 = provUtil.createGroup(GROUP_4_NAME,
                 Collections.singletonMap(
-                Provisioning.A_displayName, (Object)GROUP_4_DISPLAY_NAME), false);
+                Provisioning.A_displayName, (Object)GROUP_4_DISPLAY_NAME), DYNAMIC);
 
         // create an account
         String ACCT_NAME = getAddress(genAcctNameLocalPart());
@@ -1402,7 +1397,7 @@ public class TestDelegatedDL extends SoapTest {
     @Bug(bug=66412)
     public void noHomeServerZimbraAccount() throws Exception {
         String groupName = TestUtil.getAddress(genGroupNameLocalPart(), DOMAIN_NAME);
-        Group group = provUtil.createGroup(groupName, false);
+        Group group = provUtil.createGroup(groupName, DYNAMIC);
 
         // remove zimbraMailHost
         Map<String, Object> attrs = Maps.newHashMap();
@@ -1446,7 +1441,7 @@ public class TestDelegatedDL extends SoapTest {
     @Bug(bug=66412)
     public void noHomeServerZimbraAdmin() throws Exception {
         String groupName = TestUtil.getAddress(genGroupNameLocalPart(), DOMAIN_NAME);
-        Group group = provUtil.createGroup(groupName, false);
+        Group group = provUtil.createGroup(groupName, DYNAMIC);
         String groupId = group.getId();
 
         // remove zimbraMailHost
@@ -1516,9 +1511,8 @@ public class TestDelegatedDL extends SoapTest {
      */
     @Test
     public void ownerIsGroup() throws Exception {
-        boolean dynamic = false;
-        Group ownedGroup = provUtil.createGroup(genGroupNameLocalPart("owned"), domain, dynamic);
-        Group owningGroup = provUtil.createGroup(genGroupNameLocalPart("owning"), domain, dynamic);
+        Group ownedGroup = provUtil.createGroup(genGroupNameLocalPart("owned"), domain, DYNAMIC);
+        Group owningGroup = provUtil.createGroup(genGroupNameLocalPart("owning"), domain, DYNAMIC);
 
         /*
          * add members to owning group

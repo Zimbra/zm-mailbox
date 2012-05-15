@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,11 +23,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 
 /**
  * Validates recipients and expands distribution lists for the dev
@@ -35,9 +34,9 @@ import com.zimbra.common.account.Key.DistributionListBy;
  */
 public class SmtpRecipientValidator
 implements SmtpToLmtp.RecipientValidator {
-    
+
     private static final Log log = LogFactory.getLog(SmtpRecipientValidator.class);
-    
+
     @Override
     public Iterable<String> validate(String recipient) {
         try {
@@ -46,9 +45,9 @@ implements SmtpToLmtp.RecipientValidator {
             if (account != null) {
                 return Arrays.asList(account.getName());
             } else {
-                DistributionList dl = prov.get(Key.DistributionListBy.name, recipient);
-                if (dl != null) {
-                    return dl.getAllMembersSet();
+                Group group = prov.getGroup(Key.DistributionListBy.name, recipient);
+                if (group != null) {
+                    return Arrays.asList(prov.getGroupMembers(group));
                 }
             }
         } catch (ServiceException e) {

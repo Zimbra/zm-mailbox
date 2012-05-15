@@ -795,7 +795,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             if (memberAcct == null) {
                 throw ServiceException.DEFEND_ACCOUNT_HARVEST(memberEmail);
             }
-            boolean isMember = DistributionListDocumentHandler.isMember(prov, memberAcct, group);
+            boolean isMember = group.isMemberOf(memberAcct);
 
             boolean processed = false;
             if (isMember) {
@@ -861,7 +861,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             if (memberAcct == null) {
                 throw ServiceException.DEFEND_ACCOUNT_HARVEST(memberEmail);
             }
-            boolean isMember = DistributionListDocumentHandler.isMember(prov, memberAcct, group);
+            boolean isMember = group.isMemberOf(memberAcct);
 
             boolean processed = false;
             if (isMember) {

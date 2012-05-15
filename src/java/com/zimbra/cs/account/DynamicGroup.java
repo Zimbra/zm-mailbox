@@ -19,7 +19,10 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 
-public class DynamicGroup extends ZAttrDynamicGroup {
+/**
+ * @author pshao
+ */
+public abstract class DynamicGroup extends ZAttrDynamicGroup {
 
     public DynamicGroup(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
@@ -27,19 +30,6 @@ public class DynamicGroup extends ZAttrDynamicGroup {
 
     public EntryType getEntryType() {
         return EntryType.DYNAMICGROUP;
-    }
-
-    public static String getDefaultMemberURL(String zimbraId, String externalShadowZimbraId) {
-        return String.format("ldap:///??sub?(|(zimbraMemberOf=%s)(zimbraId=%s))", zimbraId, externalShadowZimbraId);
-    }
-
-    public static String getDefaultInternlaUnitMemberURL(String zimbraId) {
-        return String.format("ldap:///??sub?(zimbraMemberOf=%s)", zimbraId);
-    }
-
-    public String getDefaultMemberURL() {
-        return null;  // TODO
-        // return getDefaultMemberURL(getId());
     }
 
     @Override
@@ -81,4 +71,5 @@ public class DynamicGroup extends ZAttrDynamicGroup {
     throws ServiceException {
         return getAllMembers();
     }
+
 }

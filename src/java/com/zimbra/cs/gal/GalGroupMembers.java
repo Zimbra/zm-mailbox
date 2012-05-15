@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -44,42 +44,42 @@ public class GalGroupMembers {
     // common super interface for all the DLMembers classes
     public static abstract class DLMembersResult {
         protected Set<String> mMembersSet;
-        
+
         protected abstract Set<String> getAllMembers() throws ServiceException;
-        
+
         protected Set<String> createMembersSet() {
             return new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         }
     }
-    
+
     public static abstract class DLMembers extends DLMembersResult {
 
         abstract public int getTotal();
-        
+
         abstract public String getDLZimbraId();
-        
+
         /**
-         * 
+         *
          * @param beginIndex the beginning index, inclusive.
-         * @param endIndex   the ending index, exclusive. 
+         * @param endIndex   the ending index, exclusive.
          * @param resp
          */
         abstract public void encodeMembers(int beginIndex, int endIndex, Element resp);
-        
+
         protected Element encodeMember(Element parent, String member) {
             return parent.addElement(AccountConstants.E_DLM).setText(member);
         }
     }
-    
+
     public static class ContactDLMembers extends DLMembers {
         private Contact mContact;
         private JSONArray mMembers;
-        
+
         public ContactDLMembers(Contact contact) {
             mContact = contact;
-            
+
             String members = mContact.get(ContactConstants.A_member);
-            
+
             if (members != null) {
                 try {
                     mMembers = Contact.getMultiValueAttrArray(members);
@@ -88,7 +88,7 @@ public class GalGroupMembers {
                 }
             }
         }
-        
+
         @Override
         public int getTotal() {
             if (mMembers == null)
@@ -96,17 +96,17 @@ public class GalGroupMembers {
             else
                 return mMembers.length();
         }
-        
+
         @Override
         public String getDLZimbraId() {
             return mContact.get(ContactConstants.A_zimbraId);
         }
-        
+
         @Override
         public void encodeMembers(int beginIndex, int endIndex, Element resp) {
             if (mMembers == null)
                 return;
-            
+
             if (endIndex <= getTotal()) {
                 try {
                     for (int i = beginIndex; i < endIndex; i++) {
@@ -117,7 +117,7 @@ public class GalGroupMembers {
                 }
             }
         }
-        
+
         @Override
         public Set<String> getAllMembers() {
             if (mMembersSet != null) {
@@ -125,7 +125,7 @@ public class GalGroupMembers {
             } else {
                 mMembersSet = createMembersSet();
             }
-            
+
             if (mMembers != null) {
                 try {
                     for (int i = 0; i < getTotal(); i++) {
@@ -135,27 +135,27 @@ public class GalGroupMembers {
                     ZimbraLog.account.warn("unable to get members from Contact " + mContact.getId(), e);
                 }
             }
-            
+
             return mMembersSet;
         }
-        
+
     }
-    
+
     private static class GalContactDLMembers extends DLMembers {
         private GalContact mGalContact;
         private String[] mMembers;
         private Set<String> mMembersSet;
-        
+
         private GalContactDLMembers(GalContact galContact) {
             mGalContact = galContact;
-            
+
             Object members = mGalContact.getAttrs().get(ContactConstants.A_member);
             if (members instanceof String)
                 mMembers = new String[]{(String)members};
             else if (members instanceof String[])
                 mMembers = (String[])members;
         }
-        
+
         @Override
         public int getTotal() {
             if (mMembers == null)
@@ -163,24 +163,24 @@ public class GalGroupMembers {
             else
                 return mMembers.length;
         }
-        
+
         @Override
         public String getDLZimbraId() {
             return mGalContact.getSingleAttr(ContactConstants.A_zimbraId);
         }
-        
+
         @Override
         public void encodeMembers(int beginIndex, int endIndex, Element resp) {
             if (mMembers == null)
                 return;
-            
+
             if (endIndex <= getTotal()) {
                 for (int i = beginIndex; i < endIndex; i++) {
                     encodeMember(resp, mMembers[i]);
                 }
-            }        
+            }
         }
-        
+
         @Override
         public Set<String> getAllMembers() {
             if (mMembersSet != null) {
@@ -188,32 +188,32 @@ public class GalGroupMembers {
             } else {
                 mMembersSet = createMembersSet();
             }
-            
+
             if (mMembers != null) {
                 mMembersSet.addAll(Arrays.asList(mMembers));
             }
-            
+
             return mMembersSet;
         }
 
     }
-    
+
     public static class LdapDLMembers extends DLMembers {
         private Group group;
         private String[] allMembers;
-        
+
         public LdapDLMembers(Group group) throws ServiceException {
             this.group = group;
             this.allMembers = Provisioning.getInstance().getGroupMembers(group);
         }
-        
+
         @Override
         public void encodeMembers(int beginIndex, int endIndex, Element resp) {
             if (endIndex <= getTotal()) {
                 for (int i = beginIndex; i < endIndex; i++) {
                     encodeMember(resp, allMembers[i]);
                 }
-            } 
+            }
         }
 
         @Override
@@ -230,22 +230,22 @@ public class GalGroupMembers {
         protected Set<String> getAllMembers() throws ServiceException {
             return group.getAllMembersSet();
         }
-        
+
     }
 
     public static class ProxiedDLMembers extends DLMembersResult {
         private Element mResponse;
         Set<String> mMembersSet;
-        
+
         public ProxiedDLMembers(Element response) {
             mResponse = response;
             mResponse.detach();
         }
-        
+
         public Element getResponse() {
             return mResponse;
         }
-        
+
         @Override
         public Set<String> getAllMembers() {
             if (mMembersSet != null) {
@@ -253,55 +253,55 @@ public class GalGroupMembers {
             } else {
                 mMembersSet = createMembersSet();
             }
-            
+
             for (Element eDLM : mResponse.listElements(AccountConstants.E_DLM)) {
                 mMembersSet.add(eDLM.getText());
             }
-            
+
             return mMembersSet;
         }
     }
-    
+
     private static class GalGroupMembersCallback extends GalSearchResultCallback {
         private DLMembersResult mDLMembers;
-        
+
         GalGroupMembersCallback(GalSearchParams params) {
             super(params);
         }
-        
+
         @Override
         public boolean passThruProxiedGalAcctResponse() {
             return true;
         }
-        
+
         DLMembersResult getDLMembers() {
             return mDLMembers;
         }
-        
+
         @Override
         public void handleProxiedResponse(Element resp) {
             mDLMembers = new ProxiedDLMembers(resp);
         }
-        
+
         @Override
         public Element handleContact(Contact contact) throws ServiceException {
             mDLMembers = new ContactDLMembers(contact);
-            return null; 
+            return null;
         }
-        
+
         @Override
         public void handleContact(GalContact galContact) throws ServiceException {
             mDLMembers = new GalContactDLMembers(galContact);
         }
-        
+
         @Override
         public void handleElement(Element e) throws ServiceException {
             // should never be called
         }
     }
 
-    
-    public static DLMembersResult searchGal(ZimbraSoapContext zsc, Account account, String groupName, Element request) 
+
+    public static DLMembersResult searchGal(ZimbraSoapContext zsc, Account account, String groupName, Element request)
     throws ServiceException {
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setQuery(groupName);
@@ -311,36 +311,37 @@ public class GalGroupMembers {
         params.setRequest(request);
         GalGroupMembersCallback callback = new GalGroupMembersCallback(params);
         params.setResultCallback(callback);
-        
+
         GalSearchControl gal = new GalSearchControl(params);
-        gal.search();  
+        gal.search();
         return callback.getDLMembers();
     }
-    
+
     /**
      * return all members of a GAL group
-     * 
+     *
      * @param groupName
      * @param account    The requested account.  It is needed for getting the GAL configuration.
      * @return
      * @throws ServiceException
      */
     public static Set<String> getGroupMembers(String groupName, Account account) throws ServiceException {
-        
+
         // create a ZimbraSoapContext and request for GAL sync account proxy (in case it has to do so)
         // use the global admin's credentials to bypass any permission check
-        // 
+        //
         AuthToken adminAuthToken = AuthProvider.getAdminAuthToken();
         ZimbraSoapContext zsc = new ZimbraSoapContext(adminAuthToken, account.getId(), SoapProtocol.Soap12, SoapProtocol.Soap12);
-        
+
         Element request = Element.create(SoapProtocol.Soap12, AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_REQUEST);
         Element eDL = request.addElement(AdminConstants.E_DL).setText(groupName);
-        
+
         DLMembersResult dlMembersResult = searchGal(zsc, account, groupName, request);
-        
-        if (dlMembersResult == null)
+
+        if (dlMembersResult == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(groupName);
-        
+        }
+
         return dlMembersResult.getAllMembers();
     }
 

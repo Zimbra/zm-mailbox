@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -74,32 +74,33 @@ import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.qa.unittest.prov.ProvTestUtil;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestACLAll extends LdapTest {
 
-    
+
     private static final String ATTR_ALLOWED_IN_THE_RIGHT = Provisioning.A_description;
     private static final String ATTR_NOTALLOWED_IN_THE_RIGHT = Provisioning.A_objectClass;
-    
+
     private static final String PASSWORD = "test123";
     private static int sequence = 1;
-    
+
     private static List<Right> rights = Lists.newArrayList();
-    
+
     private static class TestGranteeType {
         private static final TestGranteeType GRANTEE_DYNAMIC_GROUP = new TestGranteeType("dgp");
         private static final List<TestGranteeType> TEST_GRANTEE_TYPES = Lists.newArrayList();
-        
+
         static {
             TEST_GRANTEE_TYPES.add(GRANTEE_DYNAMIC_GROUP);
             for (GranteeType granteeType : GranteeType.values()) {
                 TEST_GRANTEE_TYPES.add(new TestGranteeType(granteeType));
             }
         }
-        
+
         private Object granteeType;
-        
+
         static TestGranteeType get(GranteeType gt) {
             for (TestGranteeType testGranteeType : TEST_GRANTEE_TYPES) {
                 Object granteeType = testGranteeType.getGranteeType();
@@ -110,15 +111,15 @@ public class TestACLAll extends LdapTest {
             fail();
             return null;
         }
-        
+
         private TestGranteeType(Object granteeType) {
             this.granteeType = granteeType;
         }
-        
+
         private Object getGranteeType() {
             return granteeType;
         }
-        
+
         private String getCode() {
             if (granteeType instanceof GranteeType) {
                 return ((GranteeType) granteeType).getCode();
@@ -127,7 +128,7 @@ public class TestACLAll extends LdapTest {
             }
         }
     };
-    
+
     static final AccessManager accessMgr = AccessManager.getInstance();
     private static LdapProvTestUtil provUtil;
     private static LdapProv prov;
@@ -135,7 +136,7 @@ public class TestACLAll extends LdapTest {
     private static String BASE_DOMAIN_NAME;
     private static Account globalAdmin;
 
-    
+
     @BeforeClass
     public static void init() throws Exception {
         provUtil = new LdapProvTestUtil();
@@ -143,30 +144,30 @@ public class TestACLAll extends LdapTest {
         baseDomain = provUtil.createDomain(baseDomainName());
         BASE_DOMAIN_NAME = baseDomain.getName();
         globalAdmin = provUtil.createGlobalAdmin("globaladmin", baseDomain);
-        
+
         ACLTestUtil.initTestRights();
         initRights();
-        
+
         // remove all grants on global grant so it will not interfere with later tests
         revokeAllGrantsOnGlobalGrantAndGlobalConfig();
     }
-    
+
     @AfterClass
     public static void cleanup() throws Exception {
         // remove all grants on global grant so it will not interfere with later tests
         revokeAllGrantsOnGlobalGrantAndGlobalConfig();
         Cleanup.deleteAll(baseDomainName());
     }
-    
+
     private static void initRights() throws Exception {
-        
-        rights.add(ACLTestUtil.USER_LOGIN_AS);              
-        rights.add(ACLTestUtil.USER_RIGHT);                    
-        rights.add(ACLTestUtil.USER_RIGHT_DISTRIBUTION_LIST);   
+
+        rights.add(ACLTestUtil.USER_LOGIN_AS);
+        rights.add(ACLTestUtil.USER_RIGHT);
+        rights.add(ACLTestUtil.USER_RIGHT_DISTRIBUTION_LIST);
         rights.add(ACLTestUtil.USER_RIGHT_DOMAIN);
         rights.add(ACLTestUtil.USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE);
-        
-        rights.add(ACLTestUtil.ADMIN_PRESET_LOGIN_AS);          
+
+        rights.add(ACLTestUtil.ADMIN_PRESET_LOGIN_AS);
         rights.add(ACLTestUtil.ADMIN_PRESET_ACCOUNT);
         rights.add(ACLTestUtil.ADMIN_PRESET_CALENDAR_RESOURCE);
         rights.add(ACLTestUtil.ADMIN_PRESET_CONFIG);
@@ -179,7 +180,7 @@ public class TestACLAll extends LdapTest {
         rights.add(ACLTestUtil.ADMIN_PRESET_UC_SERVICE);
         rights.add(ACLTestUtil.ADMIN_PRESET_XMPP_COMPONENT);
         rights.add(ACLTestUtil.ADMIN_PRESET_ZIMLET);
-        
+
         rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_ACCOUNT);
         rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_ACCOUNT);
         rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_ACCOUNT);
@@ -220,7 +221,7 @@ public class TestACLAll extends LdapTest {
         rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_ZIMLET);
         rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_ZIMLET);
         rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_ZIMLET);
-        
+
         rights.add(ACLTestUtil.ADMIN_COMBO_ACCOUNT);
         rights.add(ACLTestUtil.ADMIN_COMBO_CALENDAR_RESOURCE);
         rights.add(ACLTestUtil.ADMIN_COMBO_CONFIG);
@@ -235,211 +236,211 @@ public class TestACLAll extends LdapTest {
         rights.add(ACLTestUtil.ADMIN_COMBO_ZIMLET);
         // sRights.add(ACLTestUtil.ADMIN_COMBO_ALL);
     }
-    
+
     private Config getConfig() throws Exception {
         return prov.getConfig();
     }
-    
+
     private GlobalGrant getGlobalGrant() throws Exception {
         return prov.getGlobalGrant();
     }
-    
+
     private boolean asAdmin(Account acct) {
         // for now return true if the account is an admin account
         // TODO: test cases when the account is an admin account but is not using the admin privelege
         return (acct.isIsAdminAccount() || acct.isIsDelegatedAdminAccount());
     }
-    
+
     private static synchronized String nextSeq() {
         return "" + sequence++;
     }
-    
+
     private String domainName() {
         return nextSeq() + "." + BASE_DOMAIN_NAME;
     }
-    
+
     private String accountName() {
         return "acct-" + nextSeq();
     }
-    
+
     private String calendarResourceName() {
         return "cr-" + nextSeq();
     }
-    
+
     private String distributionListName() {
         return "dl-" + nextSeq();
     }
-    
+
     private String dynamicGroupName() {
         return "group-" + nextSeq();
     }
-    
+
     private String cosName() {
         return "cos-" + nextSeq();
     }
-    
+
     private String serverName() {
         return "server-" + nextSeq();
     }
-    
+
     private String ucServiceName() {
         return "ucservice-" + nextSeq();
     }
-    
+
     private String XMPPComponentName() {
         return "xmpp-" + nextSeq();
     }
-    
+
     private String zimletName() {
         return "zimlet-" + nextSeq();
     }
-    
+
     private Domain createDomain() throws Exception {
         return provUtil.createDomain(domainName());
-    }  
-    
+    }
+
     private Account anonAccount() {
         return GuestAccount.ANONYMOUS_ACCT;
     }
-    
+
     private Account createUserAccount(String localpart, Domain domain) throws Exception {
         if (domain == null) {
             domain = createDomain();
         }
         return provUtil.createAccount(localpart, domain);
     }
-    
+
     private Account createUserAccount(Domain domain) throws Exception {
         String localpart = accountName();
         return createUserAccount(localpart, domain);
     }
 
-    private Account createDelegatedAdminAccount(String localpart, Domain domain) 
+    private Account createDelegatedAdminAccount(String localpart, Domain domain)
     throws Exception {
         if (domain == null) {
             domain = createDomain();
         }
         return provUtil.createDelegatedAdmin(localpart, domain);
     }
-        
+
     private Account createDelegatedAdminAccount(Domain domain) throws Exception {
         String localpart = accountName();
         return createDelegatedAdminAccount(localpart, domain);
     }
-    
+
     private Account createGuestAccount(String email, String password) {
         return new GuestAccount(email, password);
     }
-    
+
     private Account createKeyAccount(String name, String accesKey) {
         AuthToken authToken = new ACLTestUtil.KeyAuthToken(name, accesKey);
         return new GuestAccount(authToken);
     }
-    
-    private CalendarResource createCalendarResource(String localpart, Domain domain) 
+
+    private CalendarResource createCalendarResource(String localpart, Domain domain)
     throws Exception {
         if (domain == null) {
             domain = createDomain();
         }
-        
+
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_displayName, localpart);
         attrs.put(Provisioning.A_zimbraCalResType, "Equipment");
-        
+
         return provUtil.createCalendarResource(localpart, domain, attrs);
     }
-    
+
     private CalendarResource createCalendarResource(Domain domain) throws Exception {
         String localpart = calendarResourceName();
         return createCalendarResource(localpart, domain);
     }
-    
-    private DistributionList createDistributionList(String localpart, Domain domain, 
+
+    private DistributionList createDistributionList(String localpart, Domain domain,
             Map<String, Object> attrs) throws Exception {
         if (domain == null) {
             domain = createDomain();
         }
         return provUtil.createDistributionList(localpart, domain, attrs);
     }
-        
-    private DistributionList createUserDistributionList(String localpart, Domain domain) 
+
+    private DistributionList createUserDistributionList(String localpart, Domain domain)
     throws Exception {
         return createDistributionList(localpart, domain, new HashMap<String, Object>());
     }
-    
+
     private DistributionList createUserDistributionList(Domain domain) throws Exception {
         String localpart = distributionListName();
         return createUserDistributionList(localpart, domain);
     }
 
-    private DistributionList createAdminDistributionList(String localpart, Domain domain) 
+    private DistributionList createAdminDistributionList(String localpart, Domain domain)
     throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         return createDistributionList(localpart, domain, attrs);
     }
-    
+
     private DistributionList createAdminDistributionList(Domain domain) throws Exception {
         String localpart = distributionListName();
         return createAdminDistributionList(localpart, domain);
     }
-    
-    private DynamicGroup createDynamicGroup(String localpart, Domain domain, 
-            Map<String, Object> attrs) 
+
+    private DynamicGroup createDynamicGroup(String localpart, Domain domain,
+            Map<String, Object> attrs)
     throws Exception {
         if (domain == null) {
             domain = createDomain();
         }
         return provUtil.createDynamicGroup(localpart, domain, attrs);
     }
-    
-    private DynamicGroup createUserDynamicGroup(String localpart, Domain domain) 
+
+    private DynamicGroup createUserDynamicGroup(String localpart, Domain domain)
     throws Exception {
         return createDynamicGroup(localpart, domain, new HashMap<String, Object>());
     }
-    
+
     private DynamicGroup createUserDynamicGroup(Domain domain) throws Exception {
         String localpart = dynamicGroupName();
         return createUserDynamicGroup(localpart, domain);
     }
-    
-    private DynamicGroup createAdminDynamicGroup(String localpart, Domain domain) 
+
+    private DynamicGroup createAdminDynamicGroup(String localpart, Domain domain)
     throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         return createDynamicGroup(localpart, domain, attrs);
     }
-    
+
     private DynamicGroup createAdminDynamicGroup(Domain domain) throws Exception {
         String localpart = dynamicGroupName();
         return createAdminDynamicGroup(localpart, domain);
     }
-    
+
     private Cos createCos() throws Exception {
         return provUtil.createCos(cosName());
     }
-    
+
     private Server createServer() throws Exception {
         return provUtil.createServer(serverName());
     }
-    
+
     private UCService createUCService() throws Exception {
         return provUtil.createUCService(ucServiceName());
     }
-    
+
     private Zimlet createZimlet() throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraZimletVersion, "1.0");
         return provUtil.createZimlet(zimletName(), attrs);
     }
 
-    
+
     private boolean expectedIsUserRightGrantableOnTargetType(
-            UserRight userRight, TargetType targetType) 
+            UserRight userRight, TargetType targetType)
     throws Exception {
         TargetType rightTarget = userRight.getTargetType();
         TargetType rightGrantTarget = userRight.getGrantTargetType();
-        
+
         switch (rightTarget) {
         case account:
             if (rightGrantTarget == null) {
@@ -491,7 +492,7 @@ public class TestACLAll extends LdapTest {
             } else {
                 return false;
             }
-        case group:    
+        case group:
         case server:
         case ucservice:
         case xmppcomponent:
@@ -503,7 +504,7 @@ public class TestACLAll extends LdapTest {
         }
         return false;
     }
-    
+
     private void collectGrantableTargetTypes(TargetType rightTarget, Set<TargetType> validTypes) {
         switch (rightTarget) {
             case account:
@@ -533,7 +534,7 @@ public class TestACLAll extends LdapTest {
                 validTypes.add(TargetType.group);
                 validTypes.add(TargetType.domain);
                 validTypes.add(TargetType.global);
-                break;    
+                break;
             case domain:
                 validTypes.add(TargetType.domain);
                 validTypes.add(TargetType.global);
@@ -565,20 +566,20 @@ public class TestACLAll extends LdapTest {
                 fail();
         }
     }
-    
-    private boolean expectedIsPresetRightGrantableOnTargetType(PresetRight presetRight, TargetType targetType) 
+
+    private boolean expectedIsPresetRightGrantableOnTargetType(PresetRight presetRight, TargetType targetType)
     throws Exception {
         Set<TargetType> validTypes = Sets.newHashSet();
         TargetType rightTarget = presetRight.getTargetType();
         collectGrantableTargetTypes(rightTarget, validTypes);
         return validTypes.contains(targetType);
     }
-    
-    private boolean expectedIsAttrRightGrantableOnTargetType(AttrRight attrRight, TargetType targetType) 
+
+    private boolean expectedIsAttrRightGrantableOnTargetType(AttrRight attrRight, TargetType targetType)
     throws Exception {
         Set<TargetType> rightTargets = attrRight.getTargetTypes();
-        
-        // return true if *any* of the applicable target types for the right 
+
+        // return true if *any* of the applicable target types for the right
         // can inherit from targetType
         Set<TargetType> validTypes = Sets.newHashSet();
         for (TargetType rightTarget : rightTargets) {
@@ -587,11 +588,11 @@ public class TestACLAll extends LdapTest {
         }
         return false;
     }
-    
-    private boolean expectedIsComboRightGrantableOnTargetType(ComboRight comboRight, TargetType targetType) 
+
+    private boolean expectedIsComboRightGrantableOnTargetType(ComboRight comboRight, TargetType targetType)
     throws Exception {
         Set<Right> allRights = comboRight.getAllRights();
-        
+
         // each and every right in the combo right must be grantable on the target type
         for (Right right : allRights) {
             if (!expectedIsRightGrantableOnTargetType(right, targetType)) {
@@ -600,12 +601,12 @@ public class TestACLAll extends LdapTest {
         }
         return true;
     }
-    
-    private boolean expectedIsRightGrantableOnTargetType(Right right, TargetType targetType) 
+
+    private boolean expectedIsRightGrantableOnTargetType(Right right, TargetType targetType)
     throws Exception {
         if (targetType.isGroup() && !CheckRight.allowGroupTarget(right))
             return false;
-        
+
         if (right.isUserRight()) {
             return expectedIsUserRightGrantableOnTargetType((UserRight) right, targetType);
         } else if (right.isPresetRight()) {
@@ -618,33 +619,33 @@ public class TestACLAll extends LdapTest {
         fail();
         return false; // just to keep the compiler happy
     }
-    
-    private void skipTest(String note, TargetType grantedOnTargetType, 
-            TestGranteeType testGranteeType, Right right) 
+
+    private void skipTest(String note, TargetType grantedOnTargetType,
+            TestGranteeType testGranteeType, Right right)
     throws Exception {
-        
-        System.out.println("skipping test (" + note + "): " + 
-                "grant target=" + grantedOnTargetType.getCode() + 
+
+        System.out.println("skipping test (" + note + "): " +
+                "grant target=" + grantedOnTargetType.getCode() +
                 ", grantee type=" + testGranteeType.getCode() +
                 ", right=" + right.getName());
     }
-    
-    private void execTest(String note, TargetType grantedOnTargetType, 
-            TestGranteeType testGranteeType, Right right) 
+
+    private void execTest(String note, TargetType grantedOnTargetType,
+            TestGranteeType testGranteeType, Right right)
     throws Exception {
-        
-        System.out.println("testing (" + note + "): " + 
-                "grant target=" + grantedOnTargetType.getCode() + 
+
+        System.out.println("testing (" + note + "): " +
+                "grant target=" + grantedOnTargetType.getCode() +
                 ", grantee type=" + testGranteeType.getCode() +
                 ", right=" + right.getName());
-        
+
         //
         // 1. some basic preparation
         //    create a domain
         //
         Domain domain = createDomain();
         boolean isUserRight = right.isUserRight();
-        
+
         //
         // 2. setup grantee
         //
@@ -653,9 +654,9 @@ public class TestACLAll extends LdapTest {
         NamedEntry grantee = null;
         String granteeName = null;
         String secret = null;
-        
+
         Object gt = testGranteeType.getGranteeType();
-        
+
         GranteeType granteeType = null;
         if (gt instanceof GranteeType) {
             granteeType = (GranteeType) gt;
@@ -672,7 +673,7 @@ public class TestACLAll extends LdapTest {
                         deniedAccts.add(createDelegatedAdminAccount(domain));
                     }
                     granteeName = grantee.getName();
-        
+
                     break;
                 case GT_GROUP:
                     if (isUserRight) {
@@ -680,12 +681,12 @@ public class TestACLAll extends LdapTest {
                         Account allowedAcct = createUserAccount(domain);
                         allowedAccts.add(allowedAcct);
                         prov.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
-                        
+
                         // external members are also honored if the right is a user right
                         Account guestAcct = createGuestAccount("guest@guest.com", "test123");
                         allowedAccts.add(guestAcct);
                         prov.addMembers((DistributionList)grantee, new String[]{guestAcct.getName()});
-                        
+
                         deniedAccts.add(createUserAccount(domain));
                     } else {
                         grantee = createAdminDistributionList(domain);
@@ -701,18 +702,18 @@ public class TestACLAll extends LdapTest {
                     Domain extDomain = createDomain();
                     String extDomainDN = ((LdapDomain) extDomain).getDN();
                     String acctLocalpart = "acct-ext";
-                    
+
                     //
                     // Configure the domain for external AD auth
                     //
                     Map<String, Object> domainAttrs = Maps.newHashMap();
-                    
+
                     if (isUserRight) {
                         domain.setAuthMech(AuthMech.ad.name(), domainAttrs);
                     } else {
                         domain.setAuthMechAdmin(AuthMech.ad.name(), domainAttrs);
                     }
-                    
+
                     /*  ==== mock test ====
                     // setup auth
                     domain.addAuthLdapURL("ldap://localhost:389", domainAttrs);
@@ -724,18 +725,18 @@ public class TestACLAll extends LdapTest {
                     domain.setExternalGroupLdapSearchFilter("(&(objectClass=zimbraGroup)(cn=%u))", domainAttrs);
                     domain.setExternalGroupHandlerClass("com.zimbra.qa.unittest.UnittestGroupHandler", domainAttrs);
                     mProv.modifyAttrs(domain, domainAttrs);
-                    
+
                     // create a group in the external directory and add a member
                     Group extGroup = createUserDynamicGroup(extDomain);  // doesn't matter if the group is user or admin
                     String extGroupName = extGroup.getName();
                     Account extAcct = createUserAccount(acctLocalpart, extDomain);
                     mProv.addGroupMembers(extGroup, new String[]{extAcct.getName()});
-                    
+
                     // create the admin account in Zimbra directory and map it to the external account
                     Account zimbraAcct = createDelegatedAdminAccount(acctLocalpart, domain);
                     allowedAccts.add(zimbraAcct);
                     */
-                    
+
                     domain.addAuthLdapURL("***", domainAttrs);
                     domain.setAuthLdapSearchBindDn("***", domainAttrs);
                     domain.setAuthLdapSearchBindPassword("***", domainAttrs);
@@ -743,15 +744,15 @@ public class TestACLAll extends LdapTest {
                     domain.setExternalGroupLdapSearchFilter("(&(objectClass=group)(mail=%n))", domainAttrs);
                     domain.setExternalGroupHandlerClass("com.zimbra.cs.account.grouphandler.ADGroupHandler", domainAttrs);
                     prov.modifyAttrs(domain, domainAttrs);
-                    
+
                     String extGroupName = "ENG_pao_users_home4@vmware.com"; // "ESPPEnrollment-USA@vmware.com";
-                    
+
                     // create the admin account in Zimbra directory and map it to the external account
                     Account zimbraAcct = createDelegatedAdminAccount(acctLocalpart, domain);
                     zimbraAcct.setAuthLdapExternalDn("CN=Phoebe Shao,OU=PAO_Users,OU=PaloAlto_California_USA,OU=NALA,OU=SITES,OU=Engineering,DC=vmware,DC=com");
                     allowedAccts.add(zimbraAcct);
                     // =======================
-                    
+
                     granteeName = domain.getName() + ":" + extGroupName;
                     break;
                 case GT_AUTHUSER:
@@ -808,13 +809,21 @@ public class TestACLAll extends LdapTest {
             }
         } else {
             // dynamic group
+            assertEquals(TestGranteeType.GRANTEE_DYNAMIC_GROUP, testGranteeType);
+
             granteeType = GranteeType.GT_GROUP;
-            
+
             if (isUserRight) {
                 grantee = createUserDynamicGroup(domain);
                 Account allowedAcct = createUserAccount(domain);
                 allowedAccts.add(allowedAcct);
                 prov.addGroupMembers((DynamicGroup)grantee, new String[]{allowedAcct.getName()});
+
+                // external members are also honored if the right is a user right
+                Account guestAcct = createGuestAccount("guest@guest.com", "test123");
+                allowedAccts.add(guestAcct);
+                prov.addGroupMembers((DynamicGroup)grantee, new String[]{guestAcct.getName()});
+
                 deniedAccts.add(createUserAccount(domain));
             } else {
                 grantee = createAdminDynamicGroup(domain);
@@ -825,37 +834,37 @@ public class TestACLAll extends LdapTest {
             }
             granteeName = grantee.getName();
         }
-        
+
         //
         // 3. setup expectations for the granting action
         //
         boolean expectInvalidRequest = false;
         if (isUserRight) {
             expectInvalidRequest = !expectedIsRightGrantableOnTargetType(right, grantedOnTargetType);
-            
+
         } else {
             // is admin right
             if (!granteeType.allowedForAdminRights()) {
                 expectInvalidRequest = true;
             }
-            
+
             if (!expectInvalidRequest) {
                 if (granteeType == GranteeType.GT_DOMAIN && right != Admin.R_crossDomainAdmin) {
                     expectInvalidRequest = true;
                 }
             }
-            
+
             if (!expectInvalidRequest) {
                 expectInvalidRequest = !expectedIsRightGrantableOnTargetType(right, grantedOnTargetType);
             }
         }
-            
+
         //
         // 4. setup target on which the right is to be granted
         //
         Entry grantedOnTarget = null;
         String targetName = null;
-                
+
         switch (grantedOnTargetType) {
         case account:
             grantedOnTarget = createUserAccount("target-acct", domain);
@@ -905,23 +914,23 @@ public class TestACLAll extends LdapTest {
         default:
             fail();
         }
-           
+
         //
         // grant right on the target
         //
         boolean gotInvalidRequestException = false;
-        try {    
-            // TODO: in a different test, test granting by a different authed account: 
+        try {
+            // TODO: in a different test, test granting by a different authed account:
             //       global admin, delegated admin, user
-            // 
+            //
             Account grantingAccount = globalAdmin;
-            
+
             RightCommand.grantRight(
                     prov, grantingAccount,
                     grantedOnTargetType.getCode(), TargetBy.name, targetName,
                     granteeType.getCode(), Key.GranteeBy.name, granteeName, secret,
                     right.getName(), null);
-            
+
         } catch (ServiceException e) {
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
                 gotInvalidRequestException = true;
@@ -930,50 +939,50 @@ public class TestACLAll extends LdapTest {
                 fail();
             }
         }
-        
+
         //
         // 5. verify the grant
         //
         assertEquals(expectInvalidRequest, gotInvalidRequestException);
-        
-        // reload the entry after the grant.  DistributionList and DynamicGroups are 
-        // not cached after creation.  The object on which the mod for ZimbraACE is 
-        // done will be a different newly created object because it is fetched from 
-        // cache in TargetType.lookupTarget.  Fetch it from the same cache. 
-        // This only needs to be done in this unittest.  In production code, everywhere 
-        // get the target object from cache(getGroupBasic) or LDAP(get(DistributionListBy)); 
-        // in both cases the ACL should be on the entry.  We never do permission check right 
+
+        // reload the entry after the grant.  DistributionList and DynamicGroups are
+        // not cached after creation.  The object on which the mod for ZimbraACE is
+        // done will be a different newly created object because it is fetched from
+        // cache in TargetType.lookupTarget.  Fetch it from the same cache.
+        // This only needs to be done in this unittest.  In production code, everywhere
+        // get the target object from cache(getGroupBasic) or LDAP(get(DistributionListBy));
+        // in both cases the ACL should be on the entry.  We never do permission check right
         // after group creation using the target object returned from the create call.
         if (grantedOnTarget instanceof Group) {
-            grantedOnTarget = prov.getGroupBasic(Key.DistributionListBy.id, 
+            grantedOnTarget = prov.getGroupBasic(Key.DistributionListBy.id,
                     ((Group) grantedOnTarget).getId());
         }
-        
+
         //
         // setup test target and verify result
         //
         if (right.isComboRight()) {
             for (Right rt : ((ComboRight) right).getAllRights()) {
                 setupTargetAndVerify(domain, grantedOnTarget,
-                        grantedOnTargetType, rt, true, allowedAccts, deniedAccts, 
+                        grantedOnTargetType, rt, true, allowedAccts, deniedAccts,
                         !gotInvalidRequestException);
             }
         } else {
             setupTargetAndVerify(domain, grantedOnTarget,
-                    grantedOnTargetType, right, false, allowedAccts, deniedAccts, 
+                    grantedOnTargetType, right, false, allowedAccts, deniedAccts,
                     !gotInvalidRequestException);
         }
 
     }
-    
+
     /*
-     * returns if the grant is inherited, 
+     * returns if the grant is inherited,
      * if the grant is granted on the target entry itself, it is not considered inherited.
      */
     private boolean canGrantBeInheritedForCreate(Entry grantedOnTarget, Entry target) throws Exception {
         TargetType targetType = TargetType.getTargetType(target);
         TargetType grantedOnTargetType = TargetType.getTargetType(grantedOnTarget);
-        
+
         Set<TargetType> inheritableTypes = Sets.newHashSet();
         switch (targetType) {
             case account:
@@ -994,7 +1003,7 @@ public class TestACLAll extends LdapTest {
             case group:
                 inheritableTypes.add(TargetType.domain);
                 inheritableTypes.add(TargetType.global);
-                break;    
+                break;
             case domain:
                 inheritableTypes.add(TargetType.global);
                 break;
@@ -1020,30 +1029,30 @@ public class TestACLAll extends LdapTest {
         }
         return inheritableTypes.contains(grantedOnTargetType);
     }
-    
+
     private void setupTargetAndVerify(Domain domain, Entry grantedOnTarget,
             TargetType grantedOnTargetType, Right right, boolean fromComboRight,
             List<Account> allowedAccts, List<Account> deniedAccts,
-            boolean grantWasValid) 
+            boolean grantWasValid)
     throws Exception {
         // System.out.println("Right: " + right.getName());
-        
+
         List<Entry> goodTargets = Lists.newArrayList();
         List<Entry> badTargets = Lists.newArrayList();
-        
+
         if (right.isPresetRight()) { // including user right
             TargetType targetTypeOfRight = right.getTargetType();
-            setupTarget(goodTargets, badTargets, domain, grantedOnTarget, 
+            setupTarget(goodTargets, badTargets, domain, grantedOnTarget,
                     grantedOnTargetType, targetTypeOfRight, right);
         } else if (right.isAttrRight()) {
             for (TargetType targetTypeOfRight : ((AttrRight) right).getTargetTypes()) {
-                setupTarget(goodTargets, badTargets, domain, grantedOnTarget, 
+                setupTarget(goodTargets, badTargets, domain, grantedOnTarget,
                         grantedOnTargetType, targetTypeOfRight, right);
             }
         } else {
             fail();
         }
-            
+
 
         //
         // 7. check permission
@@ -1057,20 +1066,20 @@ public class TestACLAll extends LdapTest {
             verify(badTarget, canGrantBeInheritedForCreate, allowedAccts, deniedAccts, right, fromComboRight, false);
         }
     }
-    
+
     private void setupTarget(List<Entry> goodTargets, List<Entry> badTargets,
-            Domain domain, Entry grantedOnTarget, TargetType grantedOnTargetType, 
+            Domain domain, Entry grantedOnTarget, TargetType grantedOnTargetType,
             TargetType targetTypeOfRight, Right right) throws Exception {
-        
+
         Entry good = null;
         Entry bad = null;
-        
+
         switch (targetTypeOfRight) {
         case account:
             if (grantedOnTargetType == TargetType.account) {
                 goodTargets.add(grantedOnTarget);
                 badTargets.add(createUserAccount(domain));
-                
+
             } else if (grantedOnTargetType == TargetType.calresource) {
                 if (right.isUserRight()) {
                     goodTargets.add(grantedOnTarget);
@@ -1078,12 +1087,12 @@ public class TestACLAll extends LdapTest {
                 } else {
                     badTargets.add(grantedOnTarget);
                 }
-                
+
             } else if (grantedOnTargetType == TargetType.dl) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createUserAccount(domain);
                     goodTargets.add(good);
-                    
+
                     // create a subgroup of the group on which the right is granted (testing multi levels of dl)
                     DistributionList subGroup = createUserDistributionList(domain);
                     prov.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
@@ -1093,7 +1102,7 @@ public class TestACLAll extends LdapTest {
                     prov.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
-                
+
             } else if (grantedOnTargetType == TargetType.group) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createUserAccount(domain);
@@ -1104,27 +1113,27 @@ public class TestACLAll extends LdapTest {
                     prov.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
-                
+
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTargets.add(createUserAccount(domain));
-                
+
                 Domain anyDomain = createDomain();
                 badTargets.add(createUserAccount(anyDomain));
-                
+
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTargets.add(createUserAccount(anyDomain));
-                
+
             } else {
                 badTargets.add(grantedOnTarget);
             }
 
-            break;    
+            break;
         case calresource:
             if (grantedOnTargetType == TargetType.calresource) {
                 goodTargets.add(grantedOnTarget);
                 badTargets.add(createCalendarResource(domain));
-                
+
             } else if (grantedOnTargetType == TargetType.dl) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createCalendarResource(domain);
@@ -1135,7 +1144,7 @@ public class TestACLAll extends LdapTest {
                     prov.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
-                
+
             } else if (grantedOnTargetType == TargetType.group) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createCalendarResource(domain);
@@ -1146,29 +1155,29 @@ public class TestACLAll extends LdapTest {
                     prov.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
-                
+
             } else if (grantedOnTargetType == TargetType.domain) {
                 good = createCalendarResource(domain);
                 goodTargets.add(good);
-                
+
                 Domain anyDomain = createDomain();
                 bad = createUserAccount(anyDomain);
                 badTargets.add(bad);
-                
+
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTargets.add(createCalendarResource(anyDomain));
             } else {
                 badTargets.add(grantedOnTarget);
             }
-            break;    
+            break;
         case cos:
             if (grantedOnTargetType == TargetType.cos) {
                 good = grantedOnTarget;
             } else if (grantedOnTargetType == TargetType.global) {
                 good = createCos();
             }
-            
+
             if (good == null) {
                 bad = grantedOnTarget;
                 badTargets.add(bad);
@@ -1181,11 +1190,11 @@ public class TestACLAll extends LdapTest {
                 // create a subgroup of the group on which the right is granted (testing multi levels of dl)
                 DistributionList subGroup = createUserDistributionList(domain);
                 prov.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
-                
+
                 goodTargets.add(subGroup);
                 goodTargets.add(grantedOnTarget);
                 badTargets.add(createUserDistributionList(domain));
-            
+
             } else if (grantedOnTargetType == TargetType.group) {
                 // dl rights apply to dynamic groups only for user rights
                 if (right.isUserRight()) {
@@ -1193,54 +1202,54 @@ public class TestACLAll extends LdapTest {
                 } else {
                     badTargets.add(grantedOnTarget);
                 }
-                
+
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTargets.add(createUserDistributionList(domain));
-                
+
                 if (right.isUserRight()) {
                     goodTargets.add(createUserDynamicGroup(domain));
                 } else {
                     badTargets.add(createUserDynamicGroup(domain));
                 }
-                
+
                 Domain anyDomain = createDomain();
                 badTargets.add(createUserDistributionList(anyDomain));
                 badTargets.add(createUserDynamicGroup(anyDomain));
-                
+
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTargets.add(createUserDistributionList(anyDomain));
-                
+
                 if (right.isUserRight()) {
                     goodTargets.add(createUserDynamicGroup(anyDomain));
                 } else {
                     badTargets.add(createUserDynamicGroup(anyDomain));
                 }
-                
+
             } else {
                 badTargets.add(grantedOnTarget);
             }
-            break;  
+            break;
         case group:
             if (grantedOnTargetType == TargetType.dl) {
                 badTargets.add(grantedOnTarget);
-            
+
             } else if (grantedOnTargetType == TargetType.group) {
                 goodTargets.add(grantedOnTarget);
-                
+
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTargets.add(createUserDynamicGroup(domain));
                 badTargets.add(createUserDistributionList(domain));
-                                
+
                 Domain anyDomain = createDomain();
                 badTargets.add(createUserDistributionList(anyDomain));
                 badTargets.add(createUserDynamicGroup(anyDomain));
-                
+
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTargets.add(createUserDynamicGroup(anyDomain));
                 badTargets.add(createUserDistributionList(anyDomain));
-                
+
             } else {
                 badTargets.add(grantedOnTarget);
             }
@@ -1283,7 +1292,7 @@ public class TestACLAll extends LdapTest {
             // ldapProvisioning.getZimlet does not return a cached entry so our grantedOnTarget
             // object does not have the grant
             prov.reload(grantedOnTarget);
-            
+
             if (grantedOnTargetType == TargetType.zimlet) {
                 goodTargets.add(grantedOnTarget);
                 badTargets.add(createZimlet());
@@ -1311,14 +1320,14 @@ public class TestACLAll extends LdapTest {
             fail();
         }
     }
-    
+
     private EffectiveRights getEffectiveRights(Account grantee, Entry target) {
         EffectiveRights effRights = null;
         boolean expectFailure = !grantee.isIsDelegatedAdminAccount();
         try {
             effRights = RightCommand.getEffectiveRights(
                     prov,
-                    TargetType.getTargetType(target).getCode(), 
+                    TargetType.getTargetType(target).getCode(),
                     TargetBy.name, target.getLabel(),
                     Key.GranteeBy.name, grantee.getName(),
                     false, false);
@@ -1330,7 +1339,7 @@ public class TestACLAll extends LdapTest {
                 fail();
             }
         }
-        
+
         if (expectFailure) {
             assertNull(effRights);
         } else {
@@ -1338,7 +1347,7 @@ public class TestACLAll extends LdapTest {
         }
         return effRights;
     }
-    
+
     private AllEffectiveRights getAllEffectiveRights(Account grantee) {
         AllEffectiveRights allEffRights = null;
         boolean expectFailure = !grantee.isIsDelegatedAdminAccount();
@@ -1355,7 +1364,7 @@ public class TestACLAll extends LdapTest {
                 fail();
             }
         }
-        
+
         if (expectFailure) {
             assertNull(allEffRights);
         } else {
@@ -1363,33 +1372,33 @@ public class TestACLAll extends LdapTest {
         }
         return allEffRights;
     }
-    
+
     private EffectiveRights getCreateObjectAttrs(Account grantee, Entry target) {
         EffectiveRights effRights = null;
         boolean expectFailure = false;
-        
+
         try {
             String domainName = TargetType.getTargetDomainName(prov, target);
             TargetType targetType = TargetType.getTargetType(target);
-            
-            expectFailure = !grantee.isIsDelegatedAdminAccount() || 
+
+            expectFailure = !grantee.isIsDelegatedAdminAccount() ||
                 targetType == TargetType.config ||
                 targetType == TargetType.global;
-            
+
             effRights = RightCommand.getCreateObjectAttrs(
-                prov, 
-                TargetType.getTargetType(target).getCode(), 
+                prov,
+                TargetType.getTargetType(target).getCode(),
                 Key.DomainBy.name, domainName,
                 null, null,
                 Key.GranteeBy.name, grantee.getName());
-            
+
         } catch (ServiceException e) {
             if (!expectFailure) {
                 e.printStackTrace();
                 fail();
             }
         }
-        
+
         if (expectFailure) {
             assertNull(effRights);
         } else {
@@ -1397,16 +1406,16 @@ public class TestACLAll extends LdapTest {
         }
         return effRights;
     }
-    
+
     private boolean isPresetRightInEffectiveRights(EffectiveRights effRights, Right right) {
         return effRights.presetRights().contains(right.getName());
     }
-    
+
     private boolean isAttrRightInEffectiveRights(EffectiveRights effRights,
             RightType rightType, boolean allAttrs, Set<String> attrs) {
-        
+
         boolean found = false;
-        
+
         if (rightType == RightType.getAttrs) {
             if (allAttrs) {
                 found = effRights.canGetAllAttrs();
@@ -1426,7 +1435,7 @@ public class TestACLAll extends LdapTest {
         }
         return found;
     }
-    
+
     private boolean isRightInEffectiveRights(EffectiveRights effRights, Right right,
             RightType rightType, boolean allAttrs, Set<String> attrs) {
         boolean found = false;
@@ -1441,25 +1450,25 @@ public class TestACLAll extends LdapTest {
         }
         return found;
     }
-    
+
     /*
      * RightType rightType, boolean allAttrs, Set<String> attrs
-     * are params for attr rights, they are the criteria of rights 
-     * we are looking for.  Would be wrong to just pass the AttrRight 
-     * object from callsites, since that's the granted right.  
-     * 
+     * are params for attr rights, they are the criteria of rights
+     * we are looking for.  Would be wrong to just pass the AttrRight
+     * object from callsites, since that's the granted right.
+     *
      * If we always pass the granted right, can't test negative case like:
-     * if the granted right is a getAttrs right and we want to verify that 
+     * if the granted right is a getAttrs right and we want to verify that
      * set attrs rights are no found)
-     * 
-     * For preset right, currently the right passed is always the granted 
-     * right.  Can change callsites to pass other rights if needed.  We 
+     *
+     * For preset right, currently the right passed is always the granted
+     * right.  Can change callsites to pass other rights if needed.  We
      * currently don't have such test cases.
      */
-    private boolean isRightInRightAggregation(RightAggregation rightAggr, 
-            boolean domainScope, Entry target, Right right, 
+    private boolean isRightInRightAggregation(RightAggregation rightAggr,
+            boolean domainScope, Entry target, Right right,
             RightType rightType, boolean allAttrs, Set<String> attrs) {
-        
+
         EffectiveRights effRights = rightAggr.effectiveRights();
 
         for (String entry : rightAggr.entries()) {
@@ -1477,34 +1486,34 @@ public class TestACLAll extends LdapTest {
             } else {
                 matchTarget = entry.equals(target.getLabel());
             }
-            
+
             if (!matchTarget) {
                 continue;
             }
-            
+
             boolean found = isRightInEffectiveRights(effRights, right,
                     rightType, allAttrs, attrs);
-            
+
             if (found) {
                 return true;
             }
         }
         return false;
     }
-    
+
     private boolean isRightInGetAllEffectiveRights(AllEffectiveRights allEffRights,
-            Account grantee, Entry target, Right right, 
-            RightType rightType, boolean allAttrs, Set<String> attrs) 
+            Account grantee, Entry target, Right right,
+            RightType rightType, boolean allAttrs, Set<String> attrs)
     throws ServiceException {
-        
+
         TargetType targetType = TargetType.getTargetType(target);
-            
+
         Map<TargetType, RightsByTargetType> rbttMap = allEffRights.rightsByTargetType();
         RightsByTargetType rbtt = rbttMap.get(targetType);
-         
+
         if (rbtt != null) {
             boolean found = false;
-              
+
             // all entries
             EffectiveRights effRights = rbtt.all();
             if (effRights != null) {
@@ -1514,7 +1523,7 @@ public class TestACLAll extends LdapTest {
                     return true;
                 }
             }
-            
+
             // check domained entries
             if (rbtt instanceof DomainedRightsByTargetType) {
                 DomainedRightsByTargetType domainedRights = (DomainedRightsByTargetType)rbtt;
@@ -1540,24 +1549,24 @@ public class TestACLAll extends LdapTest {
         return false;
 
     }
-    
+
     private void verifyPresetRight(Account grantee, Entry target, Right right,
             boolean expectedResult) throws ServiceException {
-        
+
         //
         // verify canDo
-        // 
+        //
         boolean allow = false;
         try {
             allow = accessMgr.canDo(grantee, target, right, asAdmin(grantee), null);
         } catch (ServiceException e) {
-            // the only reasonable exception is PERM_DENIED 
+            // the only reasonable exception is PERM_DENIED
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
                 fail();
             }
         }
-        assertEquals(expectedResult, allow); 
-        
+        assertEquals(expectedResult, allow);
+
         //
         // verify getEffectiveRights
         //
@@ -1566,7 +1575,7 @@ public class TestACLAll extends LdapTest {
             allow = isPresetRightInEffectiveRights(effRights, right);
             assertEquals(expectedResult && !right.isUserRight(), allow);
         }
-        
+
         //
         // verify getAllEffectiveRights
         //
@@ -1577,178 +1586,178 @@ public class TestACLAll extends LdapTest {
             assertEquals(expectedResult && !right.isUserRight(), allow);
         }
     }
-    
-    private void verifyGetAttrs(Account grantee, Entry target, AttrRight attrRight, 
-            boolean canGrantBeInheritedForCreate, Set<String> attrs, boolean expectedResult) 
+
+    private void verifyGetAttrs(Account grantee, Entry target, AttrRight attrRight,
+            boolean canGrantBeInheritedForCreate, Set<String> attrs, boolean expectedResult)
     throws ServiceException {
         boolean allow = false;
-        
+
         //
         // verify getAttr
-        // 
+        //
         try {
-            allow = accessMgr.canGetAttrs(grantee, target, attrs, true);  
+            allow = accessMgr.canGetAttrs(grantee, target, attrs, true);
         } catch (ServiceException e) {
-            // the only reasonable exception is PERM_DENIED 
+            // the only reasonable exception is PERM_DENIED
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
                 e.printStackTrace();
                 fail();
             }
         }
-        assertEquals(expectedResult, allow); 
-        
+        assertEquals(expectedResult, allow);
+
         //
         // verify getEffectiveRights
         //
         EffectiveRights effRights = getEffectiveRights(grantee, target);
         if (effRights != null) {
-            allow = isAttrRightInEffectiveRights(effRights, 
+            allow = isAttrRightInEffectiveRights(effRights,
                     RightType.getAttrs, attrRight.allAttrs(), attrs);
-            assertEquals(expectedResult, allow); 
+            assertEquals(expectedResult, allow);
         }
-        
+
         //
         // verify getAllEffectiveRights
         //
         AllEffectiveRights allEffRights = getAllEffectiveRights(grantee);
         if (allEffRights != null) {
             allow = isRightInGetAllEffectiveRights(
-                    allEffRights, grantee, target, attrRight, 
+                    allEffRights, grantee, target, attrRight,
                     RightType.getAttrs, attrRight.allAttrs(), attrs);
             assertEquals(expectedResult, allow);
         }
-        
+
         //
         // verify getCreateObjectAttrs
         //
         EffectiveRights effRightsCreate = getCreateObjectAttrs(grantee, target);
         if (effRightsCreate != null) {
-            // getAttr rights are not returned by getCreateObjectAttrs via SOAP, 
+            // getAttr rights are not returned by getCreateObjectAttrs via SOAP,
             // but they exist in the java object, just verify it.
-            
+
             // Note: only inherited attr rights should be expected
-            allow = isAttrRightInEffectiveRights(effRightsCreate, 
+            allow = isAttrRightInEffectiveRights(effRightsCreate,
                     RightType.getAttrs, attrRight.allAttrs(), attrs);
             assertEquals(expectedResult && canGrantBeInheritedForCreate, allow);
         }
     }
-    
-    private void verifySetAttrs(Account grantee, Entry target, AttrRight attrRight, 
-            boolean canGrantBeInheritedForCreate, Set<String> attrs, boolean expectedResult) 
+
+    private void verifySetAttrs(Account grantee, Entry target, AttrRight attrRight,
+            boolean canGrantBeInheritedForCreate, Set<String> attrs, boolean expectedResult)
     throws ServiceException {
         boolean allow = false;
-        
-        // 
+
+        //
         // verify setAttr
         //
         try {
-            allow = accessMgr.canSetAttrs(grantee, target, attrs, true);  
+            allow = accessMgr.canSetAttrs(grantee, target, attrs, true);
         } catch (ServiceException e) {
-            // the only reasonable exception is PERM_DENIED 
+            // the only reasonable exception is PERM_DENIED
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
                 fail();
             }
         }
-        assertEquals(expectedResult, allow); 
-        
+        assertEquals(expectedResult, allow);
+
         //
         // verify getEffectiveRights
-        // 
+        //
         EffectiveRights effRights = getEffectiveRights(grantee, target);
         if (effRights != null) {
-            allow = isAttrRightInEffectiveRights(effRights, 
+            allow = isAttrRightInEffectiveRights(effRights,
                     RightType.setAttrs, attrRight.allAttrs(), attrs);
-            assertEquals(expectedResult, allow); 
+            assertEquals(expectedResult, allow);
         }
-        
+
         //
         // verify getAllEffectiveRights
         //
         AllEffectiveRights allEffRights = getAllEffectiveRights(grantee);
         if (allEffRights != null) {
             allow = isRightInGetAllEffectiveRights(
-                    allEffRights, grantee, target, attrRight, 
+                    allEffRights, grantee, target, attrRight,
                     RightType.setAttrs, attrRight.allAttrs(), attrs);
             assertEquals(expectedResult, allow);
         }
-        
+
         //
         // verify getCreateObjectAttrs
         //
         EffectiveRights effRightsCreate = getCreateObjectAttrs(grantee, target);
         if (effRightsCreate != null) {
             // Note: only inherited attr rights should be expected
-            allow = isAttrRightInEffectiveRights(effRightsCreate, 
+            allow = isAttrRightInEffectiveRights(effRightsCreate,
                     RightType.setAttrs, attrRight.allAttrs(), attrs);
-            assertEquals(expectedResult && canGrantBeInheritedForCreate, allow); 
+            assertEquals(expectedResult && canGrantBeInheritedForCreate, allow);
         }
     }
-    
+
     private void verifyAttrRight(Account grantee, Entry target, AttrRight attrRight,
-            boolean canGrantBeInheritedForCreate, boolean fromComboRight, boolean expectedResult) 
+            boolean canGrantBeInheritedForCreate, boolean fromComboRight, boolean expectedResult)
     throws ServiceException {
         RightType rightType = attrRight.getRightType();
-        
-        Set<String> attrs = attrRight.allAttrs() ? 
+
+        Set<String> attrs = attrRight.allAttrs() ?
                 TargetType.getAttrsInClass(target) :
-                Sets.newHashSet(ATTR_ALLOWED_IN_THE_RIGHT); 
+                Sets.newHashSet(ATTR_ALLOWED_IN_THE_RIGHT);
         attrs = Collections.unmodifiableSet(attrs);
-             
+
         // setAttr right also covers get
-        verifyGetAttrs(grantee, target, attrRight, 
+        verifyGetAttrs(grantee, target, attrRight,
                 canGrantBeInheritedForCreate, attrs, expectedResult);
-        
+
         // test set attr
         if (rightType == RightType.setAttrs) {
-            verifySetAttrs(grantee, target, attrRight, 
-                    canGrantBeInheritedForCreate, attrs, expectedResult); 
+            verifySetAttrs(grantee, target, attrRight,
+                    canGrantBeInheritedForCreate, attrs, expectedResult);
         } else if (rightType == RightType.getAttrs) {
             // skip this test if this right is part of a combo right,
             // because the combo right might also have a setAttr right
             if (!fromComboRight) {
-                verifySetAttrs(grantee, target, attrRight, 
-                        canGrantBeInheritedForCreate, attrs, false); 
+                verifySetAttrs(grantee, target, attrRight,
+                        canGrantBeInheritedForCreate, attrs, false);
             }
         } else {
             fail(); // no such thing
         }
-        
+
         // verify attr not in the right is denied
         if (!attrRight.allAttrs()) {
-            Set<String> badAttrs = Sets.newHashSet(ATTR_NOTALLOWED_IN_THE_RIGHT);   
+            Set<String> badAttrs = Sets.newHashSet(ATTR_NOTALLOWED_IN_THE_RIGHT);
             badAttrs = Collections.unmodifiableSet(badAttrs);
-            
+
             verifyGetAttrs(grantee, target, attrRight, canGrantBeInheritedForCreate, badAttrs, false);
             verifySetAttrs(grantee, target, attrRight, canGrantBeInheritedForCreate, badAttrs, false);
         }
     }
-    
-    private void verify(Entry target, boolean canGrantBeInheritedForCreate, 
-            List<Account> allowedAccts, List<Account> deniedAccts, 
-            Right right, boolean fromComboRight, boolean allowedExpected) 
+
+    private void verify(Entry target, boolean canGrantBeInheritedForCreate,
+            List<Account> allowedAccts, List<Account> deniedAccts,
+            Right right, boolean fromComboRight, boolean allowedExpected)
     throws Exception {
         if (target == null) {
             return;
         }
-        
+
         for (Account allowedAcct : allowedAccts) {
-            
+
             if (right.isPresetRight()) {
                 verifyPresetRight(allowedAcct, target, right, allowedExpected);
             } else if (right.isAttrRight()) {
-                verifyAttrRight(allowedAcct, target, (AttrRight) right, 
+                verifyAttrRight(allowedAcct, target, (AttrRight) right,
                         canGrantBeInheritedForCreate, fromComboRight, allowedExpected);
             } else {
                 fail();  // not yet implemented
             }
         }
-            
+
         // verify those should be denied
         for (Account deniedAcct : deniedAccts) {
             if (right.isPresetRight()) {
                 verifyPresetRight(deniedAcct, target, right, false);
             } else if (right.isAttrRight()) {
-                verifyAttrRight(deniedAcct, target, (AttrRight) right, 
+                verifyAttrRight(deniedAcct, target, (AttrRight) right,
                         canGrantBeInheritedForCreate, fromComboRight, false);
             } else {
                 fail();  // not yet implemented
@@ -1756,23 +1765,23 @@ public class TestACLAll extends LdapTest {
         }
 
     }
-    
+
     private static void revokeAllGrantsOnGlobalGrantAndGlobalConfig() throws Exception {
-        
+
         Grants grants = RightCommand.getGrants(prov,
-                TargetType.global.getCode(), null, null, 
+                TargetType.global.getCode(), null, null,
                 null, null, null, false);
-        
+
         revokeAllGrants(grants);
-        
+
         grants = RightCommand.getGrants(prov,
-                TargetType.config.getCode(), null, null, 
+                TargetType.config.getCode(), null, null,
                 null, null, null, false);
-        
+
         revokeAllGrants(grants);
     }
-    
-    private static void revokeAllGrants(Grants grants) throws Exception {    
+
+    private static void revokeAllGrants(Grants grants) throws Exception {
         for (RightCommand.ACE ace : grants.getACEs()) {
             RightCommand.revokeRight(prov,
                 globalAdmin,
@@ -1781,30 +1790,30 @@ public class TestACLAll extends LdapTest {
                 ace.right(), ace.rightModifier());
         }
     }
-    
+
     // called from testOne()
-    private void doTest(String note, TargetType grantedOnTargetType, 
-            GranteeType granteeType, Right right) 
+    private void doTest(String note, TargetType grantedOnTargetType,
+            GranteeType granteeType, Right right)
     throws Exception {
         doTest(note, grantedOnTargetType, granteeType, right, false);
     }
-    
+
     // called from testOne()
-    private void doTest(String note, TargetType grantedOnTargetType, 
-            TestGranteeType granteeType, Right right) 
+    private void doTest(String note, TargetType grantedOnTargetType,
+            TestGranteeType granteeType, Right right)
     throws Exception {
         doTest(note, grantedOnTargetType, granteeType, right, false);
     }
-    
-    private void doTest(String note, TargetType grantedOnTargetType, 
+
+    private void doTest(String note, TargetType grantedOnTargetType,
             GranteeType granteeType, Right right, boolean skip) throws Exception {
         TestGranteeType testGranteeType = TestGranteeType.get(granteeType);
-        
+
         doTest(note, grantedOnTargetType, testGranteeType, right, skip);
     }
-    
-    private void doTest(String note, TargetType grantedOnTargetType, 
-            TestGranteeType granteeType, Right right, boolean skip) 
+
+    private void doTest(String note, TargetType grantedOnTargetType,
+            TestGranteeType granteeType, Right right, boolean skip)
     throws Exception {
         try {
             if (skip) {
@@ -1817,41 +1826,37 @@ public class TestACLAll extends LdapTest {
             provUtil.deleteAllEntries();
         }
     }
-    
-    private List<Object> testGranteeTypes = Lists.newArrayList();
-    
+
+    private static final Set<String> EXCLUDE_GRANTEE_TYPES = Sets.newHashSet(
+            GranteeType.GT_EXT_GROUP.getCode(), GranteeType.GT_EMAIL.getCode());
+
     /*
      * full test
      */
     private void testAll() throws Exception {
         SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
-        
-        Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
-        
+
         int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * rights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
             for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
-                boolean skip = false;
-                if (excludeGranteeTypes.contains(granteeType.getCode())) {
-                    skip = true;
-                }
-                
+                boolean skip = EXCLUDE_GRANTEE_TYPES.contains(granteeType.getCode());
+
                 for (Right right : rights) {
                     doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
                 }
             }
         }
     }
-    
+
     /*
      * test a particular target type and a range of rights for all grantee types
      */
     private void testTarget() throws Exception {
         SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
-        
+
         /*
-         *  account 
+         *  account
          *  calresource
          *  cos
          *  dl
@@ -1864,22 +1869,18 @@ public class TestACLAll extends LdapTest {
          *  config
          *  global
          */
-        
+
         TargetType targetType = TargetType.ucservice;
-        Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
-         
+
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive
         int endRight = rights.size() - 1;                            // inclusive
-        
+
         int totalTests = TestGranteeType.TEST_GRANTEE_TYPES.size() * (endRight - beginRight + 1);
         int curTest = 1;
-        
+
         for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
-            boolean skip = false;
-            if (excludeGranteeTypes.contains(granteeType.getCode())) {
-                skip = true;
-            }
-            
+            boolean skip = EXCLUDE_GRANTEE_TYPES.contains(granteeType.getCode());
+
             // for (Right right : sRights) {
             for (int i = beginRight; i <= endRight; i++) {
                 Right right = rights.get(i);
@@ -1887,13 +1888,13 @@ public class TestACLAll extends LdapTest {
             }
         }
     }
-    
+
     /*
      * test a particular grantee type and a range of rights for all target types
      */
     private void testGrantee() throws Exception {
         SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
-                
+
         /*
          * TestGranteeType.GRANTEE_DYNAMIC_GROUP
          * GT_USER
@@ -1905,43 +1906,39 @@ public class TestACLAll extends LdapTest {
          * GT_KEY
          * GT_PUBLIC
          */
-        GranteeType granteeType = GranteeType.GT_EXT_GROUP; 
+        TestGranteeType granteeType = TestGranteeType.GRANTEE_DYNAMIC_GROUP;
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive
         int endRight = rights.size() - 1;                            // inclusive
-        
+
         int totalTests = TargetType.values().length * rights.size();
         int curTest = 1;
-        
+
         for (TargetType targetType : TargetType.values()) {
             for (Right right : rights) {
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, false);
             }
         }
     }
-    
+
     /*
      * test a particular right for all target types and grantee types
      */
     private void testRight() throws Exception {
         SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
 
-        Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
         Right right = ACLTestUtil.ADMIN_COMBO_ACCOUNT;
-        
+
         int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * rights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
             for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
-                boolean skip = false;
-                if (excludeGranteeTypes.contains(granteeType.getCode())) {
-                    skip = true;
-                }
-                
+                boolean skip = EXCLUDE_GRANTEE_TYPES.contains(granteeType.getCode());
+
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
             }
         }
     }
-    
+
     /*
      * do a specific test
      */
@@ -1960,18 +1957,18 @@ public class TestACLAll extends LdapTest {
         // doTest("1/1", TargetType.account, GranteeType.GT_KEY, USER_RIGHT);
         // doTest("1/1", TargetType.account, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_ATTR_GETALL_ACCOUNT);
         // doTest("1/1", TargetType.account, GranteeType.GT_EXT_GROUP, ADMIN_PRESET_ACCOUNT);
-        
+
         // doTest("1/1", TargetType.calresource, GranteeType.GT_USER, USER_RIGHT);
         // doTest("1/1", TargetType.calresource, GranteeType.GT_USER, ADMIN_PRESET_ACCOUNT);
         // doTest("1/1", TargetType.calresource, GranteeType.GT_USER, ADMIN_PRESET_CALENDAR_RESOURCE);
-        
+
         // doTest("1/1", TargetType.config, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_ATTR_GETALL_ACCOUNT);
-       
+
         // doTest("1/1", TargetType.global, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_PRESET_LOGIN_AS);
         // doTest("1/1", TargetType.global, GranteeType.GT_GROUP, ADMIN_PRESET_LOGIN_AS);
         // doTest("1/1", TargetType.global, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_COMBO_ALL);
         // doTest("1/1", TargetType.global, GranteeType.GT_USER, ADMIN_COMBO_ALL);
-        
+
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, USER_LOGIN_AS);
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_RIGHT_ACCOUNT);
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, USER_RIGHT_DISTRIBUTION_LIST);
@@ -1979,36 +1976,41 @@ public class TestACLAll extends LdapTest {
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_ATTR_GETALL_ACCOUNT);
         // doTest("1/1", TargetType.dl, GranteeType.GT_GUEST, USER_RIGHT_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.dl, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ACLTestUtil.ADMIN_PRESET_LOGIN_AS);
-        
+
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, USER_RIGHT_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, ADMIN_PRESET_LOGIN_AS);
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, ADMIN_PRESET_CONFIG);
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, ADMIN_RIGHT_CALENDAR_RESOURCE);
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, ADMIN_ATTR_SETSOME_DISTRIBUTION_LIST);
-        
+
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, USER_LOGIN_AS);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_LOGIN_AS);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DOMAIN);
         // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, ADMIN_PRESET_DOMAIN);
         // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, USER_RIGHT_DOMAIN);
-        doTest("1/1", TargetType.domain, GranteeType.GT_DOMAIN, ACLTestUtil.USER_RIGHT_DOMAIN);
-        
+        // doTest("1/1", TargetType.domain, GranteeType.GT_DOMAIN, ACLTestUtil.USER_RIGHT_DOMAIN);
+
         // doTest("1/1", TargetType.config, GranteeType.GT_EXT_GROUP, ADMIN_ATTR_GETALL_CONFIG);
-               
+
+        doTest("1/1", TargetType.ucservice, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ACLTestUtil.USER_LOGIN_AS);
+
         // doTest("1/1", TargetType.zimlet, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_COMBO_XMPP_COMPONENT);
 
     }
-    
+
     /*
      * test basic target-grantee-right combos
      */
     @Test
     public void test() throws Exception {
-        
-        testAll();
+
+        Config config = Provisioning.getInstance().getConfig();
+        config.setUCProviderEnabled(ProvTestUtil.DEFAULT_UC_PROVIDER);
+
+        // testAll();
         // testTarget();
-        // testGrantee();
+        testGrantee();
         // testOne();
     }
 
