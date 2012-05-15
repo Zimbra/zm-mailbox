@@ -182,11 +182,11 @@ public final class DebugConfig {
 
     public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
-    
-    public static boolean running_unittest = 
+
+    public static boolean running_unittest =
         value("debug_running_unittest", false);
-    
-    public static boolean useInMemoryLdapServer = 
+
+    public static boolean useInMemoryLdapServer =
         value("debug_use_in_memory_ldap_server", false);
 
     public static final boolean disableShareExpirationListener =
@@ -194,6 +194,9 @@ public final class DebugConfig {
 
     public static final boolean skipVirtualAccountRegistrationPage =
             value("skip_virtual_account_registration_page", false);
+
+    public static final boolean ldapNoopSearchSupported =
+        value("ldap_noop_search_supported", true);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
