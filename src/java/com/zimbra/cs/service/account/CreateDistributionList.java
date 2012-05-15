@@ -46,7 +46,7 @@ public class CreateDistributionList extends AccountDocumentHandler {
         Map<String, Object> attrs = AccountService.getKeyValuePairs(
                 request, AccountConstants.E_A, AccountConstants.A_N);
 
-        boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, false);
+        boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, true);
 
         // creator of the group will automatically become the first owner of the group
         Account creator = getAuthenticatedAccount(zsc);

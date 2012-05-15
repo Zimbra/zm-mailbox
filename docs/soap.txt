@@ -4089,7 +4089,7 @@ added to Documents only.
 
 -----------------------------
 
-<CreateDistributionListRequest [dynamic="1"]>
+<CreateDistributionListRequest [dynamic="1|0"]>
   <name>...</name>
   <a n="...">...</a>+
 </CreateDistributionListRequest>
@@ -4103,7 +4103,9 @@ added to Documents only.
 Notes:
   authed account must have the privilege to create dist lists in the domain
 
-  dynamic: create a dynamic distribution list
+  dynamic: 1(default): create a dynamic distribution list
+           0:  create a static distribution list
+           
 
 -----------------------------
 
