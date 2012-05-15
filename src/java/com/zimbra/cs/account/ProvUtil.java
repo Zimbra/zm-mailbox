@@ -196,11 +196,11 @@ public class ProvUtil implements HttpDebugListener {
     private void setOutputBinaryToFile(boolean value) {
         outputBinaryToFile = value;
     }
-    
+
     private void setBatchMode(boolean value) {
         batchMode = value;
     }
-    
+
     private void setAllowMultiValuedAttrReplacement(boolean value) {
         allowMultiValuedAttrReplacement = value;
     }
@@ -603,7 +603,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
-        UPDATE_PRESENCE_SESSION_ID("updatePresenceSessionId", "upsid", "{user server name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap),
+        UPDATE_PRESENCE_SESSION_ID("updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2);
 
         private String mName;
@@ -714,16 +714,16 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     /**
-     * Commands that should always use LdapProv, but for convenience 
+     * Commands that should always use LdapProv, but for convenience
      * don't require the -l option specified.
      *
-     * Commands that must use -l (e.g. gaa) are indicated in the Via field 
+     * Commands that must use -l (e.g. gaa) are indicated in the Via field
      * of the command definition
      */
     private boolean forceLdapButDontRequireUseLdapOption(Command command) {
         return (command == Command.DESCRIBE);
     }
-    
+
     private boolean needProvisioningInstance(Command command) {
         return !(command == Command.HELP);
     }
@@ -1320,14 +1320,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doRenameDomain(String[] args) throws ServiceException {
-        
+
         // bug 56768
-        // if we are not already using master only, force it to use master.  
+        // if we are not already using master only, force it to use master.
         // Note: after rename domain, the zmprov instance will stay in "master only" mode.
         if (!useLdapMaster) {
             ((LdapProv) prov).alwaysUseMaster();
         }
-        
+
         LdapProv lp = (LdapProv) prov;
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
@@ -1665,39 +1665,39 @@ public class ProvUtil implements HttpDebugListener {
         if (batchMode) {
             return true;
         }
-        
+
         console.println(msg);
         console.print("Continue? [Y]es, [N]o: ");
-        
+
         BufferedReader in;
         try {
             in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
             String line = StringUtil.readLine(in);
             if ("y".equalsIgnoreCase(line) || "yes".equalsIgnoreCase(line)) {
                 return true;
-            } 
+            }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         return false;
-        
+
     }
-    
+
     private void doDeleteAccount(String[] args) throws ServiceException {
         if (prov instanceof LdapProv) {
             boolean confirmed = confirm("-l option is specified.  " +
-                    "Only the LDAP entry of the account will be deleted.\n" + 
+                    "Only the LDAP entry of the account will be deleted.\n" +
                     "DB data of the account and associated blobs will not be deleted.\n");
-            
+
             if (!confirmed) {
                 console.println("aborted");
                 return;
             }
         }
-        
+
         String key = args[1];
         Account acct = lookupAccount(key);
         if (key.equalsIgnoreCase(acct.getId()) || key.equalsIgnoreCase(acct.getName()) ||
@@ -1708,19 +1708,19 @@ public class ProvUtil implements HttpDebugListener {
                     "argument to deleteAccount must be an account id or the account's primary name", null);
         }
     }
-    
+
     private void doRenameAccount(String[] args) throws ServiceException {
         if (prov instanceof LdapProv) {
             boolean confirmed = confirm("-l option is specified.  " +
-                    "Only the LDAP portion of the account will be deleted.\n" + 
+                    "Only the LDAP portion of the account will be deleted.\n" +
                     "DB data of the account will not be renamed.\n");
-            
+
             if (!confirmed) {
                 console.println("aborted");
                 return;
             }
         }
-        
+
         prov.renameAccount(lookupAccount(args[1]).getId(), args[2]);
     }
 
@@ -1759,12 +1759,12 @@ public class ProvUtil implements HttpDebugListener {
     private void doGetDistributionListMembership(String[] args) throws ServiceException {
         String key = args[1];
         Group group = lookupGroup(key);
-        
+
         if (group.isDynamic()) {
             throw ServiceException.INVALID_REQUEST(
                     "getDistributionListMembership is not applicable to dynamic group", null);
         }
-        
+
         HashMap<String,String> via = new HashMap<String, String>();
         List<DistributionList> lists = prov.getDistributionLists((DistributionList)group, false, via);
         for (DistributionList dl: lists) {
@@ -1788,7 +1788,7 @@ public class ProvUtil implements HttpDebugListener {
      * prov is always LdapProv here
      */
     private void doGetAllAccounts(LdapProv ldapProv, Domain domain, Server server,
-            final boolean verbose, final boolean applyDefault, final Set<String> attrNames) 
+            final boolean verbose, final boolean applyDefault, final Set<String> attrNames)
     throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
@@ -1809,7 +1809,7 @@ public class ProvUtil implements HttpDebugListener {
             // ldapProv.getAllAccountsNoDefaults(domain, server, visitor);
             options.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
         }
-        
+
         if (server == null) {
             options.setFilter(ZLdapFilterFactory.getInstance().allAccountsOnly());
             ldapProv.searchDirectory(options, visitor);
@@ -1923,7 +1923,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         String domainStr = (String)attrs.get("domain");
-        
+
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(attrsToGet);
         if (domainStr != null) {
             Domain d = lookupDomain(domainStr, prov);
@@ -1932,14 +1932,14 @@ public class ProvUtil implements HttpDebugListener {
         searchOpts.setTypes(typesStr);
         searchOpts.setSortOpt(isSortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         searchOpts.setSortAttr(sortBy);
-        
-        // if LdapClient is not initialized(the case for SoapProvisioning), FilterId 
-        // is not initialized.  Use null for SoapProvisioning, it will be set to 
+
+        // if LdapClient is not initialized(the case for SoapProvisioning), FilterId
+        // is not initialized.  Use null for SoapProvisioning, it will be set to
         // FilterId.ADMIN_SEARCH in SearchDirectory soap handler.
         FilterId filterId = (prov instanceof LdapProv) ? FilterId.ADMIN_SEARCH : null;
         searchOpts.setFilterString(filterId, query);
         searchOpts.setConvertIDNToAscii(true); // query must be already RFC 2254 escaped
-        
+
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
         for (int j=offset; j < offset+limit && j < accounts.size(); j++) {
@@ -1965,7 +1965,7 @@ public class ProvUtil implements HttpDebugListener {
         String token = args.length  == 3 ? args[2] : "";
 
         Domain d = lookupDomain(domain);
-        
+
         SearchGalResult result = null;
         if (prov instanceof LdapProv) {
             GalContact.Visitor visitor = new GalContact.Visitor() {
@@ -1986,7 +1986,7 @@ public class ProvUtil implements HttpDebugListener {
             console.println("\n# token = " + result.getToken() + "\n");
         }
     }
-    
+
     private void doSearchGal(String[] args) throws ServiceException, ArgException {
         if (args.length < 3) {
             usage();
@@ -2003,16 +2003,16 @@ public class ProvUtil implements HttpDebugListener {
         Domain d = lookupDomain(domain);
 
         SearchGalResult result;
-        
+
         if (prov instanceof LdapProv) {
             if (offsetStr != null) {
                 throw ServiceException.INVALID_REQUEST("offset is not supported with -l", null);
             }
-            
+
             if (sortBy != null) {
                 throw ServiceException.INVALID_REQUEST("sortBy is not supported with -l", null);
             }
-            
+
             GalContact.Visitor visitor = new GalContact.Visitor() {
                 @Override
                 public void visit(GalContact gc) throws ServiceException {
@@ -2020,7 +2020,7 @@ public class ProvUtil implements HttpDebugListener {
                 }
             };
             result = prov.searchGal(d, query, GalSearchType.all, limit, visitor);
-            
+
         } else {
             result = ((SoapProvisioning) prov).searchGal(d, query, GalSearchType.all, null, limit, offset, sortBy);
             for (GalContact contact : result.getMatches()) {
@@ -2033,9 +2033,9 @@ public class ProvUtil implements HttpDebugListener {
         String domain = args[1];
         String query = args[2];
         int limit = 100;
-        
+
         Domain d = lookupDomain(domain);
-        
+
         GalContact.Visitor visitor = new GalContact.Visitor() {
             @Override
             public void visit(GalContact gc) throws ServiceException {
@@ -2216,14 +2216,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpGroup(Group group, Set<String> attrNames) throws ServiceException {
-        
+
         String[] members;
         if (group instanceof DynamicGroup) {
             members = ((DynamicGroup)group).getAllMembers(true);
         } else {
             members = group.getAllMembers();
         }
-        
+
         int count = members == null ? 0 : members.length;
         console.println("# distributionList " + group.getName() + " memberCount=" + count);
         Map<String, Object> attrs = group.getAttrs();
@@ -2312,9 +2312,9 @@ public class ProvUtil implements HttpDebugListener {
 
         String targetType = right.getTargetTypeStr();
         console.println(indent + "   target type(s): " + (targetType==null ? "" : targetType));
-        
+
         String grantTargetType = right.getGrantTargetTypeStr();
-        console.println(indent + "grant target type: " + 
+        console.println(indent + "grant target type: " +
                 (grantTargetType==null ? "(default)" : grantTargetType));
 
         console.println(indent + "      right class: " + right.getRightClass().name());
@@ -2337,7 +2337,7 @@ public class ProvUtil implements HttpDebugListener {
             dumpComboRight(comboRight, expandComboRight, indent, new HashSet<String>());
         }
         console.println();
-        
+
         Help help = right.getHelp();
         if (help != null) {
             console.println(help.getDesc());
@@ -2486,7 +2486,7 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
     }
-    
+
     private void doGetAllUCServices(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
@@ -2506,7 +2506,7 @@ public class ProvUtil implements HttpDebugListener {
         dumpAttrs(attrs, attrNames);
         console.println();
     }
-    
+
     private void dumpUCService(UCService ucService, Set<String> attrNames) throws ServiceException {
         console.println("# name "+ucService.getName());
         Map<String, Object> attrs = ucService.getAttrs();
@@ -2817,15 +2817,15 @@ public class ProvUtil implements HttpDebugListener {
         }
         EntrySearchFilter filter = new EntrySearchFilter(multi);
         String filterStr = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        
+
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions();
         searchOpts.setDomain(d);
         searchOpts.setTypes(ObjectType.resources);
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         searchOpts.setFilterString(FilterId.ADMIN_SEARCH, filterStr);
-        
+
         List<NamedEntry> resources = prov.searchDirectory(searchOpts);
-        
+
         // List<NamedEntry> resources = prov.searchCalendarResources(d, filter, null, null, true);
         for (NamedEntry entry : resources) {
             CalendarResource resource = (CalendarResource) entry;
@@ -2933,7 +2933,7 @@ public class ProvUtil implements HttpDebugListener {
             return server;
         }
     }
-    
+
     private UCService lookupUCService(String key) throws ServiceException {
         UCService ucService = prov.get(guessUCServiceBy(key), key);
         if (ucService == null) {
@@ -2985,7 +2985,7 @@ public class ProvUtil implements HttpDebugListener {
             return dl;
         }
     }
-    
+
     private Group lookupGroup(String key) throws ServiceException {
         return lookupGroup(key, true);
     }
@@ -3026,7 +3026,7 @@ public class ProvUtil implements HttpDebugListener {
         }
         return Key.ServerBy.name;
     }
-    
+
     public static Key.UCServiceBy guessUCServiceBy(String value) {
         if (Provisioning.isUUID(value)) {
             return Key.UCServiceBy.id;
@@ -3366,7 +3366,7 @@ public class ProvUtil implements HttpDebugListener {
         if (cl.hasOption('l')) {
             pu.setUseLdap(true, cl.hasOption('m'));
         }
-        
+
         if (cl.hasOption('L')) {
             if (cl.hasOption('l')) {
                 ZimbraLog.toolSetupLog4j("INFO", cl.getOptionValue('L'));
@@ -3467,11 +3467,11 @@ public class ProvUtil implements HttpDebugListener {
                 if (pu.forceLdapButDontRequireUseLdapOption(cmd)) {
                     pu.setUseLdap(true, false);
                 }
-                
+
                 if (pu.needProvisioningInstance(cmd)) {
                     pu.initProvisioning();
                 }
-                
+
                 try {
                     if (!pu.execute(args)) {
                         pu.usage();
@@ -4039,7 +4039,7 @@ public class ProvUtil implements HttpDebugListener {
             boolean isPlain = (mailMode == Provisioning.MailMode.http ||
                                mailMode == Provisioning.MailMode.mixed ||
                                mailMode == Provisioning.MailMode.both);
-            
+
             int backendPort;
             if (isPlain) {
                 backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
@@ -4427,7 +4427,7 @@ public class ProvUtil implements HttpDebugListener {
                 allEffRights.granteeName() + "(" + allEffRights.granteeId() + ")" +
                 " has the following rights:");
 
-        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : 
+        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType :
                 allEffRights.rightsByTargetType().entrySet()) {
             RightCommand.RightsByTargetType rbtt = rightsByTargetType.getValue();
             if (!rbtt.hasNoRight()) {
@@ -4712,15 +4712,15 @@ public class ProvUtil implements HttpDebugListener {
 
         console.println();
     }
-    
+
     private void doUpdatePresenceSessionId(String[] args) throws ServiceException {
-       
+
         String idOrName = args[1];
         String username = args[2];
         String password = args[3];
-        
+
         UCService ucService = lookupUCService(idOrName);
-        
+
         /*
          * soap only
          */
@@ -4935,7 +4935,7 @@ public class ProvUtil implements HttpDebugListener {
                     console.println("Unable to get request URL, error=" + e.getMessage());
                 }
             }
-            
+
             Header[] headers = postMethod.getRequestHeaders();
             for (Header header : headers) {
                 console.println(header.toString().trim()); // trim the ending crlf
