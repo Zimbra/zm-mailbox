@@ -90,6 +90,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     private boolean mGalContact;
     private ZMailbox mMailbox;
     private boolean isDirty;
+    private ContactMemberType mContactMemberType;
 
     public enum Flag {
         flagged('f'),
@@ -121,9 +122,43 @@ public class ZContact implements ZItem, ToZJSONObject {
         }
     }
 
+    public enum ContactMemberType {
+        contact("C"),
+        galContact("G"),
+        inlineContact("I");
+
+        private String contactMemberType;
+        
+        public String getContactMemberType() { return contactMemberType;}
+
+        ContactMemberType(String type) {
+            contactMemberType = type;
+        }
+    }
+
+    /**
+     * Checks the type of the contact member.
+     * @return true if the contact member is an inline contact.
+     */
+    public boolean isTypeI() {
+        return (mContactMemberType == ContactMemberType.inlineContact);
+    }
+
+    /**
+     * Constructor called only in case of inline contacts
+     * @param id email address of the inline contact
+     * @throws ServiceException
+     */
+    public ZContact(String id) throws ServiceException {
+        isDirty = false;
+        mId = id;
+        mContactMemberType = ContactMemberType.inlineContact;
+    }
+
     public ZContact(Element e, boolean galContact, ZMailbox mailbox) throws ServiceException {
         this(e, mailbox);
         mGalContact = galContact;
+        mContactMemberType = galContact ? ContactMemberType.galContact : ContactMemberType.contact;
     }
 
     public ZContact(Element e, ZMailbox mailbox) throws ServiceException {
@@ -164,6 +199,11 @@ public class ZContact implements ZItem, ToZJSONObject {
             ZContact contact = null;
             if (cnEl != null)
                 contact = new ZContact(cnEl, type.equals("G") ? true : false, mailbox);
+            else
+                /**
+                 * Inline contacts only have the email address as value and type as I.
+                 */
+                contact = new ZContact(id);
             members.put(id, contact);
         }
         mMembers = Collections.unmodifiableMap(members);
