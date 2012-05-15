@@ -46,7 +46,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.MailTarget;
@@ -120,7 +119,8 @@ public class SendShareNotification extends MailDocumentHandler {
         return zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
     }
 
-    private Collection<ShareInfoData> validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
+    private Collection<ShareInfoData> validateRequest(ZimbraSoapContext zsc,
+            Map<String, Object> context, OperationContext octxt,
             Mailbox mbox, Element request) throws ServiceException {
 
 
@@ -178,14 +178,17 @@ public class SendShareNotification extends MailDocumentHandler {
                 // if guest, granteeId is the same as granteeEmail
                 granteeId = granteeEmail;
             }
-            shareInfos.add(getShareInfoData(zsc, context, account, octxt, granteeType, granteeEmail, granteeId, granteeDisplayName, item, REVOKE.equals(action)));
+            shareInfos.add(getShareInfoData(zsc, context, account, octxt, granteeType,
+                    granteeEmail, granteeId, granteeDisplayName, item, REVOKE.equals(action)));
         }
 
         return shareInfos;
     }
 
     @Deprecated
-    private ShareInfoData validateShareRecipient(ZimbraSoapContext zsc, Map<String,Object> context, OperationContext octxt, Mailbox mbox, Element eShare) throws ServiceException {
+    private ShareInfoData validateShareRecipient(ZimbraSoapContext zsc,
+            Map<String,Object> context, OperationContext octxt, Mailbox mbox, Element eShare)
+    throws ServiceException {
 
         Provisioning prov = Provisioning.getInstance();
 
@@ -240,7 +243,8 @@ public class SendShareNotification extends MailDocumentHandler {
             folder = mp;
         }
 
-        return getShareInfoData(zsc, context, ownerAcct, octxt, granteeType, granteeEmail, matchingId, granteeDisplayName, folder, false);
+        return getShareInfoData(zsc, context, ownerAcct, octxt, granteeType, granteeEmail,
+                matchingId, granteeDisplayName, folder, false);
     }
 
     private ShareInfoData getShareInfoData(
@@ -382,7 +386,8 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     private MatchingGrant getMatchingGrantRemote(ZimbraSoapContext zsc, Map<String, Object> context,
-            byte granteeType, String granteeId, Account ownerAcct, int remoteFolderId) throws ServiceException {
+            byte granteeType, String granteeId, Account ownerAcct, int remoteFolderId)
+    throws ServiceException {
 
         Element remote = fetchRemoteFolder(zsc, context, ownerAcct.getId(), remoteFolderId);
         Element eAcl = remote.getElement(MailConstants.E_ACL);
@@ -390,8 +395,9 @@ public class SendShareNotification extends MailDocumentHandler {
             for (Element eGrant : eAcl.listElements(MailConstants.E_GRANT)) {
                 try {
                     byte gt = ACL.stringToType(eGrant.getAttribute(MailConstants.A_GRANT_TYPE));
-                    if (gt != granteeType)
+                    if (gt != granteeType) {
                         continue;
+                    }
                     short rights = ACL.stringToRights(eGrant.getAttribute(MailConstants.A_RIGHTS));
 
                     MatchingGrant grant = null;
@@ -415,8 +421,9 @@ public class SendShareNotification extends MailDocumentHandler {
                             grant.setGranteeName(eGrant.getAttribute(MailConstants.A_DISPLAY, null));
                         }
                     }
-                    if (grant != null)
+                    if (grant != null) {
                         return grant;
+                    }
 
                 } catch (ServiceException e) {
                     // for some reason the soap response cannot by parsed as expected
@@ -429,7 +436,8 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
 
-    private Element fetchRemoteFolder(ZimbraSoapContext zsc, Map<String, Object> context, String ownerId, int remoteId)
+    private Element fetchRemoteFolder(ZimbraSoapContext zsc, Map<String, Object> context,
+            String ownerId, int remoteId)
     throws ServiceException {
         Element request = zsc.createRequestElement(MailConstants.GET_FOLDER_REQUEST);
         request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, remoteId);
@@ -451,7 +459,8 @@ public class SendShareNotification extends MailDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    private Pair<NamedEntry, String> getGrantee(ZimbraSoapContext zsc, byte granteeType, String granteeId, String granteeName)
+    private Pair<NamedEntry, String> getGrantee(ZimbraSoapContext zsc, byte granteeType,
+            String granteeId, String granteeName)
     throws ServiceException {
 
         NamedEntry entryById = null;
@@ -471,27 +480,32 @@ public class SendShareNotification extends MailDocumentHandler {
             }
         }
 
-        if (entryById == null && entryByName == null)
+        if (entryById == null && entryByName == null) {
             throw MailServiceException.NO_SUCH_GRANTEE("", null);
+        }
 
         if (entryById != null && entryByName != null &&
-                !entryById.getId().equals(entryByName.getId()))
+                !entryById.getId().equals(entryByName.getId())) {
             throw ServiceException.INVALID_REQUEST("grantee name does not match grantee id", null);
+        }
 
         NamedEntry grantee = (entryById != null)? entryById : entryByName;
 
         String displayName;
-        if (grantee instanceof Account)
+        if (grantee instanceof Account) {
             displayName = ((Account)grantee).getDisplayName();
-        else if (grantee instanceof DistributionList)
-            displayName = ((DistributionList)grantee).getDisplayName();
-        else
-            throw ServiceException.INVALID_REQUEST("unsupported grantee type for sending share notification email", null);
+        } else if (grantee instanceof Group) {
+            displayName = ((Group)grantee).getDisplayName();
+        } else {
+            throw ServiceException.INVALID_REQUEST(
+                    "unsupported grantee type for sending share notification email", null);
+        }
 
         return new Pair<NamedEntry, String>(grantee, displayName);
     }
 
-    private Folder getFolder(OperationContext octxt, Account authAccount, Mailbox mbox, Element eShare) throws ServiceException {
+    private Folder getFolder(OperationContext octxt, Account authAccount, Mailbox mbox, Element eShare)
+    throws ServiceException {
         String folderId = eShare.getAttribute(MailConstants.A_FOLDER, null);
         String folderPath = eShare.getAttribute(MailConstants.A_PATH, null);
 
@@ -518,11 +532,12 @@ public class SendShareNotification extends MailDocumentHandler {
         return folder;
     }
 
-    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid,
-            String notes, Action action)
-            throws ServiceException, MessagingException {
+    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
+            ShareInfoData sid, String notes, Action action)
+    throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
+        String charset = authAccount.getAttr(
+                Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
 
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
 
@@ -584,7 +599,8 @@ public class SendShareNotification extends MailDocumentHandler {
         }
         if (timestamp < f.lastModified()) {
             try {
-                template = new String(ByteUtil.readInput(new FileInputStream(f), (int)f.length(), (int)f.length()), "UTF-8");
+                template = new String(ByteUtil.readInput(
+                        new FileInputStream(f), (int)f.length(), (int)f.length()), "UTF-8");
                 timestamp = f.lastModified();
             } catch (IOException e) {
                 sLog.warn("can't read template", e);
