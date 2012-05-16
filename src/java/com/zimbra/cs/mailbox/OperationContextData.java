@@ -26,10 +26,12 @@ import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 
 public abstract class OperationContextData {
     
-    protected OperationContext mOctxt;
-    
+    protected OperationContext octxt;
+
+    private static final ThreadLocal<GranteeNames> granteeNames = new ThreadLocal<GranteeNames>();
+
     protected OperationContextData(OperationContext octxt) {
-        mOctxt = octxt;
+        this.octxt = octxt;
     }
     
     
@@ -45,7 +47,7 @@ public abstract class OperationContextData {
      *     
      * 
      * @param octxt
-     * @param mbox
+     * @param node
      */
     public static void addGranteeNames(OperationContext octxt, Mailbox.FolderNode node) {
         if (octxt == null || node == null)
@@ -55,8 +57,8 @@ public abstract class OperationContextData {
         data.addRootNode(node);
     }
     
-    public static GranteeNames getGranteeNames(OperationContext octxt) {
-        return (octxt == null) ? null : (GranteeNames)octxt.getCtxtData(GranteeNames.KEY);
+    public static GranteeNames getGranteeNames() {
+        return granteeNames.get();
     }
     
     public static void setNeedGranteeName(OperationContext octxt, boolean needGranteeName) {
@@ -72,7 +74,7 @@ public abstract class OperationContextData {
             return true;
         }
         
-        GranteeNames data = getGranteeNames(octxt);
+        GranteeNames data = getGranteeNames();
         if (data == null) {
             return true;
         }
@@ -81,10 +83,10 @@ public abstract class OperationContextData {
     }
         
     private static GranteeNames getOrInitGranteeNames(OperationContext octxt) {
-        GranteeNames data = getGranteeNames(octxt);
+        GranteeNames data = getGranteeNames();
         if (data == null) {
             data = new GranteeNames(octxt);
-            octxt.setCtxtData(GranteeNames.KEY, data);
+            granteeNames.set(data);
         } 
         return data;
     }
@@ -95,38 +97,36 @@ public abstract class OperationContextData {
      *
      */
     public static class GranteeNames extends OperationContextData {
-        private static final String KEY = "GranteeNames";
-        
         private static final int USR_GRANTEES = 0;
         private static final int GRP_GRANTEES = 1;
         private static final int COS_GRANTEES = 2;
         private static final int DOM_GRANTEES = 3;
         private static final int NUM_GRANTEE_TYPES = 4;
         
-        private boolean mEncounteredLDAPFailure = false;
-        private boolean mNeedGranteeName = true;
+        private boolean encounteredLDAPFailure = false;
+        private boolean needGranteeName = true;
         
-        private Set<Mailbox.FolderNode> mUnresolvedRootNodes; // unresolved root nodes
-        private Set<Mailbox.FolderNode> mResolvedRootNodes;   // resolved root nodes
+        private Set<Mailbox.FolderNode> unresolvedRootNodes; // unresolved root nodes
+        private Set<Mailbox.FolderNode> resolvedRootNodes;   // resolved root nodes
         
         // id-to-name map
-        private Map<String, String>[] mIdsToNamesMap = new Map[NUM_GRANTEE_TYPES];
+        private Map<String, String>[] idsToNamesMap = new Map[NUM_GRANTEE_TYPES];
        
         GranteeNames(OperationContext octxt) {
             super(octxt);
         }
         
         void setNeedGranteeName(boolean needGranteeName) {
-            mNeedGranteeName = needGranteeName;
+            this.needGranteeName = needGranteeName;
         }
         
         boolean needGranteeName() {
-            return mNeedGranteeName;
+            return needGranteeName;
         }
         
         void addRootNode(Mailbox.FolderNode node) {
-            if (mUnresolvedRootNodes == null)
-                mUnresolvedRootNodes = new HashSet<Mailbox.FolderNode>();
+            if (unresolvedRootNodes == null)
+                unresolvedRootNodes = new HashSet<Mailbox.FolderNode>();
             
             /*
              * We resolve the hierarchy lazily.  
@@ -135,8 +135,8 @@ public abstract class OperationContextData {
              */
             
             boolean alreadyResolved = false;
-            if (mResolvedRootNodes != null) {
-                for (Mailbox.FolderNode resolvedNode : mResolvedRootNodes) {
+            if (resolvedRootNodes != null) {
+                for (Mailbox.FolderNode resolvedNode : resolvedRootNodes) {
                     if (resolvedNode.mId == node.mId) {
                         alreadyResolved = true;
                         break;
@@ -146,7 +146,7 @@ public abstract class OperationContextData {
             
             // root node already added but not yet resolved
             boolean alreadyAdded = false;
-            for (Mailbox.FolderNode unresolvedNode : mUnresolvedRootNodes) {
+            for (Mailbox.FolderNode unresolvedNode : unresolvedRootNodes) {
                 if (unresolvedNode.mId == node.mId) {
                     alreadyAdded = true;
                     break;
@@ -155,34 +155,34 @@ public abstract class OperationContextData {
             
             // add it to the unresolved set if it had not been added before
             if (!alreadyResolved && !alreadyAdded) {
-                mUnresolvedRootNodes.add(node);
+                unresolvedRootNodes.add(node);
             }
         }
         
         private void resolveIfNecessary() {
-            if (mUnresolvedRootNodes == null || mUnresolvedRootNodes.isEmpty())
+            if (unresolvedRootNodes == null || unresolvedRootNodes.isEmpty())
                 return;
             
-            for (Mailbox.FolderNode unresolvedNode : mUnresolvedRootNodes) {
+            for (Mailbox.FolderNode unresolvedNode : unresolvedRootNodes) {
                 // get all grantees of this folder and all sub-folders
                 Set[] idHolders = new Set[NUM_GRANTEE_TYPES];
                 collectGranteeIds(unresolvedNode, idHolders);
                     
                 // minus the ids already in our map
                 for (int bucket = 0; bucket < NUM_GRANTEE_TYPES; bucket++) {
-                    if (idHolders[bucket] != null && mIdsToNamesMap[bucket] != null) {
-                        idHolders[bucket] = SetUtil.subtract(idHolders[bucket], mIdsToNamesMap[bucket].keySet());
+                    if (idHolders[bucket] != null && idsToNamesMap[bucket] != null) {
+                        idHolders[bucket] = SetUtil.subtract(idHolders[bucket], idsToNamesMap[bucket].keySet());
                     }
                 }
                 populateIdToNameMaps(idHolders);
             }
             
             // move nodes to resolved set
-            if (mResolvedRootNodes == null) {
-                mResolvedRootNodes = new HashSet<Mailbox.FolderNode>();
+            if (resolvedRootNodes == null) {
+                resolvedRootNodes = new HashSet<Mailbox.FolderNode>();
             }
-            mResolvedRootNodes.addAll(mUnresolvedRootNodes);
-            mUnresolvedRootNodes.clear();
+            resolvedRootNodes.addAll(unresolvedRootNodes);
+            unresolvedRootNodes.clear();
         }
         
         private void populateIdToNameMaps(Set<String>[] idHolders) {
@@ -208,14 +208,14 @@ public abstract class OperationContextData {
                 } catch (ServiceException e) {
                     // log a warning, return an empty map, and let the flow continue
                     ZimbraLog.mailbox.warn("cannot lookup user grantee names", e);
-                    mEncounteredLDAPFailure = true; // so that we don't mark grants invalid
+                    encounteredLDAPFailure = true; // so that we don't mark grants invalid
                 }
                 
                 if (result != null) {
-                    if (mIdsToNamesMap[bucket] == null)
-                        mIdsToNamesMap[bucket] = result;
+                    if (idsToNamesMap[bucket] == null)
+                        idsToNamesMap[bucket] = result;
                     else
-                        mIdsToNamesMap[bucket].putAll(result);
+                        idsToNamesMap[bucket].putAll(result);
                 }
             }
         }
@@ -268,13 +268,13 @@ public abstract class OperationContextData {
             int idx = getGranteeBucket(granteeType);
             if (idx != -1) {
                 // it's one of the grantee types we are responsible for (usr, grp, cos, dom)
-                // mIdsToNamesMap[idx] should not be null, but if for whatever reason 
+                // idsToNamesMap[idx] should not be null, but if for whatever reason
                 // (some callsite missed calling us to populate?),
                 // return null and let caller to look it up.
-                if (mIdsToNamesMap[idx] == null) {
+                if (idsToNamesMap[idx] == null) {
                     return null;
                 } else {
-                    String name = mIdsToNamesMap[idx].get(id);
+                    String name = idsToNamesMap[idx].get(id);
                     // We've searched but didn't find the id, the grantee might have been deleted,
                     // return empty string so caller won't try to search for it again (bug 39804).
                     if (name == null) {
@@ -286,7 +286,7 @@ public abstract class OperationContextData {
                         //   throwing a NamingException, which is caught and returned from our LDAP code 
                         //   as a ServiceException.  
                         // See http://bugzilla.zimbra.com/show_bug.cgi?id=39806#c4 
-                        if (mEncounteredLDAPFailure) {
+                        if (encounteredLDAPFailure) {
                             return EMPTY_NAME;
                         } else {
                             return INVALID_GRANT;

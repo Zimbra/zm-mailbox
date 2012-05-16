@@ -364,7 +364,7 @@ public final class ToXML {
                 name = grant.getGranteeName();
                 if (name == null) {
                     // 2. (for bug 35079), see if the name is already resolved in the in the OperationContextData
-                    OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames(octxt);
+                    OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames();
                     if (granteeNames != null) {
                         name = granteeNames.getNameById(grant.getGranteeId(), granteeType);
                     }
