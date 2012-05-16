@@ -1491,4 +1491,28 @@ public class Folder extends MailItem {
     protected long getMaxAllowedInternalShareLifetime(Account account) {
         return AccountUtil.getMaxInternalShareLifetime(account, getDefaultView());
     }
+
+    /**
+     * Returns true if this folder is a shared folder.
+     * @return
+     */
+    boolean isShare() {
+        return isTagged(Flag.FlagInfo.NO_INHERIT);
+    }
+
+    /**
+     * Returns true if there is a shared folder in this folder's subtree, not including this
+     * folder itself.
+     * @throws ServiceException
+     */
+    boolean containsShare() throws ServiceException {
+        if (subfolders != null) {
+            for (Folder sub : subfolders.values()) {
+                if (sub.isShare() || sub.containsShare()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

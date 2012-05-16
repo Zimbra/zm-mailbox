@@ -94,6 +94,7 @@ public class MailServiceException extends ServiceException {
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
     public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
     public static final String CONTACT_TOO_BIG = "mail.CONTACT_TOO_BIG";
+    public static final String CANNOT_NEST_SHARES = "mail.CANNOT_NEST_SHARES";
 
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
     public static final String INVALID_IMAGE = "mail.INVALID_IMAGE";
@@ -404,6 +405,10 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("cannot set the name on a " + type, CANNOT_RENAME, SENDERS_FAULT);
     }
 
+    public static MailServiceException CANNOT_NEST_SHARES() {
+        return new MailServiceException("cannot nest shares", CANNOT_NEST_SHARES, SENDERS_FAULT);
+    }
+
     public static MailServiceException IS_NOT_CHILD() {
         return new MailServiceException("tried to remove object from non-parent", IS_NOT_CHILD, SENDERS_FAULT);
     }
@@ -576,7 +581,7 @@ public class MailServiceException extends ServiceException {
     public static ServiceException GRANTEE_EXISTS(String message, Throwable cause) {
         return new MailServiceException("grantee already exists "+message, GRANT_EXISTS, SENDERS_FAULT, cause);
     }
-    
+
     public static ServiceException INVALID_IMAGE(String message) {
         return new MailServiceException(message, INVALID_IMAGE, SENDERS_FAULT);
     }

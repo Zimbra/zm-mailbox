@@ -1520,8 +1520,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mMailbox.getItemById(mData.parentId, Type.UNKNOWN);
     }
 
-    /** Returns the item's {@link Folder}.  All items in the system must
-     *  have a containing folder.
+    /** Returns the item's {@link Folder}.  All non-dumpstered items in the system must
+     *  have a containing folder.  Returns null for dumpstered items.
      *
      * @throws ServiceException should never be thrown, as the set of all
      *                          folders must already be cached. */
@@ -3728,12 +3728,33 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      */
     public Folder getShare() throws ServiceException {
         Folder f = getFolder();
-        if (f == null || f.getId() == Mailbox.ID_FOLDER_ROOT) {
-            return null;
-        } else if (f.isTagged(Flag.FlagInfo.NO_INHERIT)) {
-            return f;
-        } else {
-            return f.getShare();
+        while (f != null) {
+            if (f.isShare()) {
+                return f;
+            } else if (f.getId() == Mailbox.ID_FOLDER_ROOT) {  // must check because the ROOT folder is self-parented
+                return null;
+            }
+            f = f.getFolder();
         }
+        return null;
+    }
+
+    /**
+     * @param folderId
+     * @return true if this item is in a subtree under the given folder
+     * @throws ServiceException
+     */
+    boolean isUnder(int folderId) throws ServiceException {
+        Folder f = getFolder();
+        while (f != null) {
+            int fid = f.getId();
+            if (fid == folderId) {
+                return true;
+            } else if (fid == Mailbox.ID_FOLDER_ROOT) {  // must check because the ROOT folder is self-parented
+                return false;
+            }
+            f = f.getFolder();
+        }
+        return false;
     }
 }
