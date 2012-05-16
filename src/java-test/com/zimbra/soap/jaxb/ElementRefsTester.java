@@ -30,7 +30,7 @@ import com.google.common.collect.Lists;
 public class ElementRefsTester {
     @XmlElementRefs({
         @XmlElementRef(name="saivByRef", type=StringAttribIntValue.class),
-        @XmlElementRef(name="eaByRef", type=EnumAttribs.class),
+        @XmlElementRef(name="eaByRef", type=EnumAttribs.class)
     })
     private List<Object> elems = Lists.newArrayList();
 
