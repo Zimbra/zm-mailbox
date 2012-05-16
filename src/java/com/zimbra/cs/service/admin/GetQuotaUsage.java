@@ -170,7 +170,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                     String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
                     SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
                     mTransport.setAuthToken(authToken);
-                    Element resp = mTransport.invoke(request);
+                    Element resp = mTransport.invoke(request.clone());
                     List<Element> accountElts = resp.getPathElementList(new String[] { AdminConstants.E_ACCOUNT });
                     List<AccountQuota> retList = new ArrayList<AccountQuota>();
                     for (Element accountElt : accountElts) {
