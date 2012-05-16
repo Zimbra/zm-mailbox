@@ -106,7 +106,7 @@ public class MimeDetect {
                 }
             }
             buf.append('$');
-            pattern = Pattern.compile(buf.toString());
+            pattern = Pattern.compile(buf.toString(), Pattern.CASE_INSENSITIVE);
         }
         
         public int compareTo(final Glob glob) {
