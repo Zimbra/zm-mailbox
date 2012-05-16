@@ -7010,7 +7010,7 @@ TODO: delete them permanently from here
   <desc>presence service URL for the UC service</desc>
 </attr>
 
-<attr id="1407" name="zimbraUCCiscoPresenceSessionId" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
+<attr id="1407" name="zimbraUCPresenceSessionId" type="string" max="256" cardinality="single" optionalIn="ucService" since="8.0.0">
   <desc>presence session id for Cisco presence service</desc>
 </attr>
 

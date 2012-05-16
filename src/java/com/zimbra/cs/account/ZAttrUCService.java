@@ -41,7 +41,7 @@ public abstract class ZAttrUCService extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jylee 20120430-2317 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120515-1101 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -611,43 +611,43 @@ public abstract class ZAttrUCService extends NamedEntry {
     /**
      * presence session id for Cisco presence service
      *
-     * @return zimbraUCCiscoPresenceSessionId, or null if unset
+     * @return zimbraUCPresenceSessionId, or null if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1407)
-    public String getUCCiscoPresenceSessionId() {
-        return getAttr(Provisioning.A_zimbraUCCiscoPresenceSessionId, null);
+    public String getUCPresenceSessionId() {
+        return getAttr(Provisioning.A_zimbraUCPresenceSessionId, null);
     }
 
     /**
      * presence session id for Cisco presence service
      *
-     * @param zimbraUCCiscoPresenceSessionId new value
+     * @param zimbraUCPresenceSessionId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1407)
-    public void setUCCiscoPresenceSessionId(String zimbraUCCiscoPresenceSessionId) throws com.zimbra.common.service.ServiceException {
+    public void setUCPresenceSessionId(String zimbraUCPresenceSessionId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, zimbraUCCiscoPresenceSessionId);
+        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, zimbraUCPresenceSessionId);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * presence session id for Cisco presence service
      *
-     * @param zimbraUCCiscoPresenceSessionId new value
+     * @param zimbraUCPresenceSessionId new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1407)
-    public Map<String,Object> setUCCiscoPresenceSessionId(String zimbraUCCiscoPresenceSessionId, Map<String,Object> attrs) {
+    public Map<String,Object> setUCPresenceSessionId(String zimbraUCPresenceSessionId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, zimbraUCCiscoPresenceSessionId);
+        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, zimbraUCPresenceSessionId);
         return attrs;
     }
 
@@ -659,9 +659,9 @@ public abstract class ZAttrUCService extends NamedEntry {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1407)
-    public void unsetUCCiscoPresenceSessionId() throws com.zimbra.common.service.ServiceException {
+    public void unsetUCPresenceSessionId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, "");
+        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -674,9 +674,9 @@ public abstract class ZAttrUCService extends NamedEntry {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1407)
-    public Map<String,Object> unsetUCCiscoPresenceSessionId(Map<String,Object> attrs) {
+    public Map<String,Object> unsetUCPresenceSessionId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCiscoPresenceSessionId, "");
+        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, "");
         return attrs;
     }
 

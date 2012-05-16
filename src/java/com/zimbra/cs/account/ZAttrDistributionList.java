@@ -36,7 +36,7 @@ public abstract class ZAttrDistributionList extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jylee 20120430-2317 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120515-1101 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1227,8 +1227,7 @@ public abstract class ZAttrDistributionList extends Group {
     }
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * zimbraId of the main dynamic group for the dynamic group unit
      *
      * @return zimbraGroupId, or null if unset
      */
@@ -1238,8 +1237,7 @@ public abstract class ZAttrDistributionList extends Group {
     }
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * zimbraId of the main dynamic group for the dynamic group unit
      *
      * @param zimbraGroupId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1252,8 +1250,7 @@ public abstract class ZAttrDistributionList extends Group {
     }
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * zimbraId of the main dynamic group for the dynamic group unit
      *
      * @param zimbraGroupId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1267,8 +1264,7 @@ public abstract class ZAttrDistributionList extends Group {
     }
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * zimbraId of the main dynamic group for the dynamic group unit
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1280,8 +1276,7 @@ public abstract class ZAttrDistributionList extends Group {
     }
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * zimbraId of the main dynamic group for the dynamic group unit
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

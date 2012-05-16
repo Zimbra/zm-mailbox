@@ -32,7 +32,7 @@ public abstract class ZAttrShareLocator extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jylee 20120430-2317 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120515-1101 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
