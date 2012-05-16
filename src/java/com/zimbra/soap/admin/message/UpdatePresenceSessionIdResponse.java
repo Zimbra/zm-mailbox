@@ -31,7 +31,7 @@ import com.zimbra.soap.type.KeyValuePair;
 public class UpdatePresenceSessionIdResponse {
 
     /**
-     * @zm-api-field-description Information about ucservice
+     * @zm-api-field-description Newly generated Cisco presence session ID.
      */
     @XmlElement(name=AdminConstants.E_A)
     private KeyValuePair sessionId;
