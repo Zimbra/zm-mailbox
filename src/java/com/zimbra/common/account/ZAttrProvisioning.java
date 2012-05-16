@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jylee 20120430-2317 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120515-1101 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5179,8 +5179,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGlobalConfigExtraObjectClass = "zimbraGlobalConfigExtraObjectClass";
 
     /**
-     * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
-     * Zimbra Systems Unique Group ID
+     * zimbraId of the main dynamic group for the dynamic group unit
      */
     @ZAttr(id=325)
     public static final String A_zimbraGroupId = "zimbraGroupId";
@@ -11117,20 +11116,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraUCCallControlURL = "zimbraUCCallControlURL";
 
     /**
-     * presence session id for Cisco presence service
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1407)
-    public static final String A_zimbraUCCiscoPresenceSessionId = "zimbraUCCiscoPresenceSessionId";
-
-    /**
      * password for the user&#039;s UC service
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1409)
     public static final String A_zimbraUCPassword = "zimbraUCPassword";
+
+    /**
+     * presence session id for Cisco presence service
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1407)
+    public static final String A_zimbraUCPresenceSessionId = "zimbraUCPresenceSessionId";
 
     /**
      * presence service URL for the UC service
@@ -11187,6 +11186,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1404)
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
