@@ -39,6 +39,8 @@ import org.dom4j.Document;
 import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.DocumentSource;
+import org.w3c.dom.Attr;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -1151,15 +1153,34 @@ public final class JaxbUtil {
         if ( (klass == null) || klass.isPrimitive()) {
             return false;
         }
-        return klass.getName().startsWith("com.zimbra.soap") || klass.getName().startsWith("com.zimbra.doc.soap");
+        return klass.getName().startsWith("com.zimbra");
     }
 
     /**
-     * Manipulates a structure under {@link elem} which obeys Zimbra's
-     * SOAP XML structure rules to comply with more stringent JAXB rules.
-     * e.g. Zimbra allows attributes to be specified as elements.
-     * @param klass is the JAXB class for {@link elem} which must be under
-     * the "com.zimbra.soap" package hierarchy.
+     * Manipulates a structure under {@link elem} which obeys Zimbra's SOAP XML structure rules to comply with more
+     * stringent JAXB rules.
+     * <ol>
+     * <li>Zimbra allows attributes to be specified as elements.
+     * <p>One scenario where this happens - {@link XMLElement}'s {@code getAttribute(String key, String defaultValue)}
+     * will look for an attribute with "key" as the name.
+     * If it fails to find that, it looks for an element with "key" as the name and returns the elements text.</p></li>
+     * <li>Zimbra allows elements to be specified as attributes.
+     * <p>One scenario where this happens.
+     * <pre>
+     *      elem.addAttribute("xml-elem-json-attr", "XML elem but JSON attribute", Element.Disposition.CONTENT);
+     * </pre>
+     * Will be serialized to this JSON (i.e. treated as an attribute in JSON) :
+     * <pre>
+     *       "xml-elem-json-attr": "XML elem but JSON attribute"
+     * </pre>
+     * or to this XML (i.e. treated as an element in XML) :
+     * <pre>
+     *       &lt;xml-elem-json-attr>XML elem but JSON attribute&lt;/xml-elem-json-attr>
+     * </pre>
+     * In JAXB, we typically use {@link XmlElement} for the associated field.  Round tripping from XML will result in
+     * an element but round tripping from JSON will result in an attribute.
+     * </ol>
+     * @param klass is the JAXB class for {@code elem} which must be under the "com.zimbra" package hierarchy.
      */
     private static void fixupStructureForJaxb(org.w3c.dom.Element elem, Class<?> klass) {
         if (elem == null) {
@@ -1174,6 +1195,33 @@ public final class JaxbUtil {
         }
 
         JaxbInfo jaxbInfo = JaxbInfo.getFromCache(klass);
+        NamedNodeMap attrs = elem.getAttributes();
+        int numAttrs = attrs.getLength();
+        List<String> orphanAttrs = null;
+
+        // Process each attribute
+        for (int i=0; i<numAttrs; i++) {
+            Attr attr = (Attr)attrs.item(i);
+            // Get attribute name and value
+            String attrName = attr.getNodeName();
+            if (!jaxbInfo.hasAttribute(attrName) && jaxbInfo.hasElement(attrName)) {
+                if (orphanAttrs == null) {
+                    orphanAttrs = Lists.newArrayList();
+                }
+                orphanAttrs.add(attrName);
+                String attrValue = attr.getNodeValue();
+                elem.getNamespaceURI();
+                org.w3c.dom.Element newElem = elem.getOwnerDocument().createElementNS(elem.getNamespaceURI(), attrName);
+                newElem.setTextContent(attrValue);
+                elem.appendChild(newElem);
+            }
+        }
+        if (orphanAttrs != null) {
+            for (String orphan : orphanAttrs) {
+                attrs.removeNamedItem(orphan);
+            }
+        }
+
         NodeList list = elem.getChildNodes();
         List<org.w3c.dom.Element> orphans = null;
         for (int i=0; i < list.getLength(); i++) {

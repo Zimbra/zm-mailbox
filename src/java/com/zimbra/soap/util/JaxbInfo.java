@@ -300,6 +300,9 @@ public class JaxbInfo {
     }
 
     public JaxbNodeInfo getElemNodeInfo(String name) {
+        if (name == null) {
+            return null;
+        }
         for (JaxbNodeInfo entry : jaxbElemNodeInfo) {
             if (entry instanceof JaxbPseudoNodeChoiceInfo) {
                 JaxbPseudoNodeChoiceInfo pseudoNode = (JaxbPseudoNodeChoiceInfo) entry;
@@ -319,6 +322,9 @@ public class JaxbInfo {
     }
 
     private JaxbAttributeInfo getAttrInfo(String name) {
+        if (name == null) {
+            return null;
+        }
         for (JaxbAttributeInfo entry : attrInfo) {
             if (name.equals(entry.getName())) {
                 return entry;

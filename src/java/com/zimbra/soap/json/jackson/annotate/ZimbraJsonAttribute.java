@@ -21,33 +21,43 @@ import java.lang.annotation.Target;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
 
 import org.codehaus.jackson.annotate.JacksonAnnotation;
 
 /**
  * <p>Marker annotation used in Zimbra JAXB classes to affect how they are serialized to Zimbra style JSON.</p>
- * <h1>Notes on {@link JSONElement}:</h1>
- * A JSON element added via {@code addElement} is always serialized as an array, because there could be
- * further {@code addElement} calls with the same element name.  On the other hand, a JSON element added via
- * <br />{@code addUniqueElement}<br />
- * won't be serialized as an array as their is an implicit assumption that there will be only one element with that name.
- * This marker goes with {@link XmlElement} or {@link XmlElementRef} annotations to flag that they should be
- * serialized in the same way as a {@code JSONElement} which has been added via {@code addUniqueElement}
- *
- * A String field with {@link XmlElement} or {@link XmlElementRef} would normally be serialized similarly to:
+ * <h1>Notes on {@link Element}:</h1>
+ * If addAttribute is called with {@link Element.Disposition.CONTENT} similarly to:
  * <pre>
- *    "str-elem": [{ "_content": "element ONE" }]
+ *     elem.addAttribute("soapURL", "http://fun.example.test", Element.Disposition.CONTENT);
  * </pre>
- * If the field also has this {@link ZimbraUniqueElement} annotation, it is serialized similarly to this instead:
+ * then if 'elem' is a {@link XMLElement}, this is serialized as:
  * <pre>
- *    "str-elem": { "_content": "element ONE" }
+ *     &lt;soapURL>https://soap.example.test&lt;/soapURL>
  * </pre>
+ * and if 'elem' is a {@link JSONElement}, this is serialized as:
+ * <pre>
+ *     "soapURL": "https://soap.example.test"
+ * </pre>
+ * In other words, for the XML case, this is treated as adding an element - i.e. the JAXB annotation
+ * {@link XmlElement} (or {@link XmlElementRef}) is appropriate.  However, for Zimbra JSON, string fields in JAXB
+ * classes with the {@link XmlElement} annotation are normally serialized as:
+ * <pre>
+ *    "soapURL": [{ "_content": "http://fun.example.test" }]
+ * </pre>
+ * Adding this {@link ZimbraJsonAttribute} annotation to the field will cause it to be serialized similarly to this
+ * instead:
+ * <pre>
+ *    "soapURL": "http://fun.example.test"
+ * <pre/>
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @JacksonAnnotation
-public @interface ZimbraUniqueElement
+public @interface ZimbraJsonAttribute
 {
     /**
      * Optional argument that defines whether this annotation is active or not. The only use for value 'false' is

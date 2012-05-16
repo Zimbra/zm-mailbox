@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 import javax.xml.bind.annotation.XmlElement;
@@ -33,6 +35,8 @@ import org.codehaus.jackson.map.ser.impl.PropertySerializerMap;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.util.JaxbInfo;
 
@@ -69,10 +73,14 @@ import com.zimbra.soap.util.JaxbInfo;
 public class ZimbraBeanPropertyWriter
     extends BeanPropertyWriter
 {
+    private static final Log LOG = ZimbraLog.soap;
+
     protected final NameInfo nameInfo;
     protected QName wrapperName = null;
     protected QName wrappedName = null;
     protected boolean treatAsUniqueElement = false;
+    protected boolean treatAsAttribute = false;
+    protected boolean mixedAllowed = false;
 
     public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, NameInfo nameInfo) {
         super(wrapped);
@@ -140,20 +148,28 @@ public class ZimbraBeanPropertyWriter
             return;
         }
 
+        mixedAllowed = nameInfo.isMixedAllowed();
         wrapperName = nameInfo.getWrapperName();
         startWrapping(jgen);
         wrappedName = nameInfo.getWrappedName();
         if (wrappedName != null) {
             treatAsUniqueElement = nameInfo.isTreatAsUniqueElement();
+            treatAsAttribute = nameInfo.isTreatAsAttribute();
             serializeInnerField(value, jgen, prov, ser);
         } else {
             /* No specific wrappedName */
             Map<Class<?>, QName> nameMap = nameInfo.getWrappedNameMap();
             if ((nameMap != null) && (value instanceof ArrayList)) {
                 serializeXmlElementsArray((ArrayList<?>)value, jgen, prov, nameMap);
+            } else if (nameInfo.isAnyAttributeAllowed() && java.util.Map.class.isAssignableFrom(value.getClass())) {
+                serializeXmlAnyAttributes((Map<?,?>) value, jgen, prov);
             } else {
-                jgen.writeFieldName(_name);
-                ser.serialize(value, jgen, prov);
+                if (value instanceof ArrayList) {
+                    serializeXmlAnyElementsArray((ArrayList<?>) value, jgen, prov);
+                } else {
+                    jgen.writeFieldName(_name);
+                    ser.serialize(value, jgen, prov);
+                }
             }
             finishWrapping(jgen);
         }
@@ -187,6 +203,10 @@ public class ZimbraBeanPropertyWriter
     public void serializeInnerField(Object value, JsonGenerator jgen, SerializerProvider prov,
         JsonSerializer<Object> ser) throws JsonGenerationException, IOException {
         jgen.writeFieldName(wrappedName.getLocalPart());
+        if (treatAsAttribute) {
+            ser.serialize(value, jgen, prov);
+            return;
+        }
         Class<?> valClass = value.getClass();
         if (JaxbUtil.isJaxbType(valClass)) {
             if (valClass.isEnum()) {
@@ -277,11 +297,54 @@ public class ZimbraBeanPropertyWriter
                 Map<Class<?>, QName> nameMap)
     throws JsonGenerationException, IOException {
         for (Object obj : al) {
-            QName qn = nameMap.get(obj.getClass());
-            jgen.writeFieldName(qn.getLocalPart());
-            jgen.writeStartArray();
-            jgen.writeObject(obj);
-            jgen.writeEndArray();
+            Class<?> objClass = obj.getClass();
+            QName qn = nameMap.get(objClass);
+            if (qn == null) {
+                if (org.w3c.dom.Element.class.isAssignableFrom(objClass)) {
+                    // XmlAnyElement handling
+                    org.w3c.dom.Element w3ce = (org.w3c.dom.Element) obj;
+                    jgen.writeFieldName(w3ce.getLocalName());
+                    JsonSerializer<org.w3c.dom.Element> eleSer = new ZmDomElementJsonSerializer();
+                    eleSer.serialize(w3ce, jgen, prov);
+                    // jgen.writeObject(obj);
+                } else {
+                    if (!mixedAllowed) {
+                        LOG.debug("Unexpected object of class '" + objClass.getName() +
+                                "' in XmlElementsRefs array - ignored");
+                    } else {
+                        jgen.writeFieldName(JSONElement.A_CONTENT /* "_content" */);
+                        jgen.writeObject(obj);
+                    }
+                }
+            } else {
+                jgen.writeFieldName(qn.getLocalPart());
+                jgen.writeStartArray();
+                jgen.writeObject(obj);
+                jgen.writeEndArray();
+            }
+        }
+    }
+
+    private void serializeXmlAnyAttributes(Map<?,?> extraAttribs, JsonGenerator jgen, SerializerProvider prov)
+    throws JsonGenerationException, IOException {
+        for (Entry<?,?> attrib : extraAttribs.entrySet()) {
+            jgen.writeStringField(attrib.getKey().toString(), attrib.getValue().toString());
+        }
+    }
+
+    private void serializeXmlAnyElementsArray(ArrayList<?> al, JsonGenerator jgen, SerializerProvider prov)
+    throws JsonGenerationException, IOException {
+        for (Object obj : al) {
+            Class<?> objClass = obj.getClass();
+            if (org.w3c.dom.Element.class.isAssignableFrom(objClass)) {
+                // XmlAnyElement handling
+                org.w3c.dom.Element w3ce = (org.w3c.dom.Element) obj;
+                jgen.writeFieldName(w3ce.getLocalName());
+                JsonSerializer<org.w3c.dom.Element> eleSer = new ZmDomElementJsonSerializer();
+                eleSer.serialize(w3ce, jgen, prov);
+            } else {
+                LOG.debug("Unexpected object of class '" + objClass.getName() + "' in XmlAnyElements array - ignored");
+            }
         }
     }
 

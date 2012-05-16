@@ -17,18 +17,25 @@ package com.zimbra.soap.json.jackson;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlMixed;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.introspect.AnnotatedMember;
 import com.google.common.collect.Maps;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.util.JaxbInfo;
 
 /**
  * Used to store field name information to be used in Zimbra-style JSON related to a JAXB object field.
@@ -43,6 +50,10 @@ public class NameInfo {
     private QName wrappedName = null;
     private Map <Class<?>,QName> wrappedNameMap = null;
     private boolean treatAsUniqueElement = false;
+    private boolean treatAsAttribute = false;
+    private boolean mixedAllowed = false;
+    private boolean anyElementAllowed = false;
+    private boolean anyAttributeAllowed = false;
 
     public NameInfo(AnnotationIntrospector ai, AnnotatedMember prop, String defaultWrappedName) {
         JsonSerialize jsonSer = prop.getAnnotation(JsonSerialize.class);
@@ -68,14 +79,22 @@ public class NameInfo {
         if (uniqueElemAnnot != null) {
             treatAsUniqueElement = uniqueElemAnnot.value();
         }
+        ZimbraJsonAttribute jsonAttributeAnnot = prop.getAnnotation(ZimbraJsonAttribute.class);
+        if (jsonAttributeAnnot != null) {
+            treatAsAttribute = jsonAttributeAnnot.value();
+        }
+        mixedAllowed = (prop.getAnnotation(XmlMixed.class) != null);
+        anyElementAllowed = (prop.getAnnotation(XmlAnyElement.class) != null);
+        anyAttributeAllowed = (prop.getAnnotation(XmlAnyAttribute.class) != null);
+
         XmlElement elemAnnot = prop.getAnnotation(XmlElement.class);
         if (elemAnnot != null) {
-            wrappedName = new QName(elemAnnot.namespace(), elemAnnot.name());
+            wrappedName = getQName(prop.getName(), elemAnnot.namespace(), elemAnnot.name());
             return;
         }
         XmlElementRef elemRefAnnot = prop.getAnnotation(XmlElementRef.class);
-        if (elemRefAnnot != null) {
-            wrappedName = new QName(elemRefAnnot.namespace(), elemRefAnnot.name());
+        wrappedName = getElementRefName(elemRefAnnot);
+        if (wrappedName != null) {
             return;
         }
         XmlElements elemsAnnot = prop.getAnnotation(XmlElements.class);
@@ -83,7 +102,7 @@ public class NameInfo {
             XmlElement[] elems = elemsAnnot.value();
             wrappedNameMap = Maps.newHashMapWithExpectedSize(elems.length);
             for (XmlElement elem : elems) {
-                QName qn = new QName(elem.namespace(), elem.name());
+                QName qn = getQName(prop.getName(), elem.namespace(), elem.name());
                 Class<?> kls = elem.type();
                 getWrappedNameMap().put(kls, qn);
             }
@@ -94,7 +113,7 @@ public class NameInfo {
             XmlElementRef[] elems = elemRefsAnnot.value();
             wrappedNameMap = Maps.newHashMapWithExpectedSize(elems.length);
             for (XmlElementRef elem : elems) {
-                QName qn = new QName(elem.namespace(), elem.name());
+                QName qn = getElementRefName(elem);
                 Class<?> kls = elem.type();
                 getWrappedNameMap().put(kls, qn);
             }
@@ -106,17 +125,14 @@ public class NameInfo {
         }
     }
 
-    public QName getWrapperName() {
-        return wrapperName;
-    }
+    public QName getWrapperName() { return wrapperName; }
+    public QName getWrappedName() { return wrappedName; }
 
-    public QName getWrappedName() {
-        return wrappedName;
-    }
-
-    public boolean isTreatAsUniqueElement() {
-        return treatAsUniqueElement;
-    }
+    public boolean isTreatAsUniqueElement() { return treatAsUniqueElement; }
+    public boolean isTreatAsAttribute() { return treatAsAttribute; }
+    public boolean isMixedAllowed() { return mixedAllowed; }
+    public boolean isAnyElementAllowed() { return anyElementAllowed; }
+    public boolean isAnyAttributeAllowed() { return anyAttributeAllowed; }
 
     public Map <Class<?>,QName> getWrappedNameMap() {
         return wrappedNameMap;
@@ -125,7 +141,55 @@ public class NameInfo {
     public boolean haveSpecialWrappingInfo() {
         return (wrapperName != null) || (wrappedName != null) || (getWrappedNameMap() != null);
     }
-    
+
+    public boolean needSpecialHandling() {
+        return haveSpecialWrappingInfo() || isMixedAllowed() || isAnyElementAllowed() || isAnyAttributeAllowed();
+    }
+
+    private QName getQName(String fieldName, String namespace, String name) {
+        if ((name == null) || (JaxbInfo.DEFAULT_MARKER.equals(name))) {
+            return new QName(JaxbInfo.DEFAULT_MARKER, fieldName);
+        } else {
+            return new QName(namespace, name);
+        }
+    }
+
+    private QName getElementRefName(XmlElementRef elemRefAnnot) {
+        if (elemRefAnnot == null) {
+            return null;
+        }
+        QName rName = null;
+        Class<?> klass = elemRefAnnot.type();
+        if (klass == null) {
+            return null;
+        }
+        String name = null;
+        String ns = null;
+        /* if {@link XmlElementRef} type=JAXBElement.class then name and ns may be used but if the type is a JAXB
+         * class, then the XmlRootElement on that class is used and any name/ns is ignored (counter intuitive IMHO!)
+         */
+        if (JAXBElement.class.isAssignableFrom(klass)) {
+            name = elemRefAnnot.name();
+            ns = elemRefAnnot.namespace();
+            rName = new QName(ns, name);
+        } else {
+            rName = getRootElementName(klass);
+        }
+        return rName;
+    }
+
+    private QName getRootElementName(Class<?> klass) {
+        if (klass == null) {
+            return null;
+        }
+        QName rName = null;
+        XmlRootElement reAnnot = klass.getAnnotation(XmlRootElement.class);
+        if (reAnnot != null) {
+            rName = new QName(reAnnot.namespace(), reAnnot.name());
+        }
+        return rName;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

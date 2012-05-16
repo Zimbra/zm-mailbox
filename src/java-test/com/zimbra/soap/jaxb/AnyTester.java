@@ -14,18 +14,36 @@
  */
 package com.zimbra.soap.jaxb;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/** Test JAXB class for exercising changes in namespace associated with elements */
+import org.w3c.dom.Element;
+
+import com.google.common.collect.Lists;
+
+/**
+ * Test JAXB class to exercise a field annotated with {@link XmlAnyElement}
+ *
+ */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="ns-delta", namespace="urn:ZimbraTest4")
-public class NamespaceDeltaElem {
-    @XmlElement(name="strAttrStrElem", namespace="urn:ZimbraTest5")
-    private StringAttrStringElem sase;
-    public NamespaceDeltaElem() { }
-    public StringAttrStringElem getSase() { return sase; }
-    public void setSase(StringAttrStringElem sase) { this.sase = sase; }
+@XmlRootElement(name="any-elem-tester")
+public class AnyTester {
+    @XmlElement
+    private String given;
+    
+    @XmlAnyElement
+    private List<Element> elems = Lists.newArrayList();
+
+    public AnyTester() { }
+
+    public List<Element> getElems() { return elems; }
+    public void setElems(List<Element> elems) { this.elems = elems; }
+
+    public String getGiven() { return given; }
+    public void setGiven(String given) { this.given = given; }
 }

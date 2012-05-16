@@ -51,7 +51,7 @@ public class ZimbraBeanSerializerModifier extends BeanSerializerModifier
             BeanPropertyWriter bpw = beanProperties.get(i);
             final AnnotatedMember member = bpw.getMember();
             NameInfo nameInfo = new NameInfo(intr, member, bpw.getName());
-            if (! nameInfo.haveSpecialWrappingInfo()) {
+            if (! nameInfo.needSpecialHandling()) {
                 continue;
             }
             beanProperties.set(i, new ZimbraBeanPropertyWriter(bpw, nameInfo));

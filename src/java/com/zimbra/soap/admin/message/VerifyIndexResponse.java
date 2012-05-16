@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,11 +21,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.json.jackson.ContentSerializer;
-import com.zimbra.soap.json.jackson.ZmBooleanContentSerializer;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -37,16 +33,14 @@ public class VerifyIndexResponse {
      * @zm-api-field-tag verify-result-status
      * @zm-api-field-description Result status of verification.  Valid values "true" and "false" (Not "1" and "0")
      */
-    @XmlElement(name=AdminConstants.E_STATUS, required=true)
-    @JsonSerialize(using=ZmBooleanContentSerializer.class)
+    @XmlElement(name=AdminConstants.E_STATUS /* status */, required=true)
     private final ZmBoolean status;
 
     /**
      * @zm-api-field-tag verification-output
      * @zm-api-field-description Verification output
      */
-    @XmlElement(name=AdminConstants.E_MESSAGE, required=true)
-    @JsonSerialize(using=ContentSerializer.class)
+    @XmlElement(name=AdminConstants.E_MESSAGE /* message */, required=true)
     private final String message;
 
     /**

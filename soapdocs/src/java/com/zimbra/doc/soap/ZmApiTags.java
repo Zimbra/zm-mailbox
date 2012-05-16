@@ -30,7 +30,7 @@ public class ZmApiTags {
      */
     public static final String TAG_COMMAND_NETWORK_ONLY = "@zm-api-command-network-edition";
     /**
-     * Use to flag that a command that is or will be deprecated.  Set to text explaining the nature of the
+     * Use to flag a command that is or will be deprecated.  Set to text explaining the nature of the
      * deprecation
      */
     public static final String TAG_COMMAND_DEPRECATION_INFO = "@zm-api-command-deprecation-info";

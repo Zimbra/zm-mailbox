@@ -168,18 +168,16 @@ public final class JacksonUtil {
         mapper.setAnnotationIntrospector(getZimbraIntrospector());
         mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
         ZimbraJsonModule zimbraModule = new ZimbraJsonModule();
+        // Doesn't appear to work. ZimbraBeanPropertyWriter uses this directly instead.
+        // zimbraModule.addSerializer(org.w3c.dom.Element.class, new ZmDomElementJsonSerializer());
         mapper.registerModule(zimbraModule);
         return mapper;
     }
 
     public static ObjectMapper getWrapRootObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setAnnotationIntrospector(getZimbraIntrospector());
-        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
+        ObjectMapper mapper = getObjectMapper();
         // Enable this next line to get everything wrapped with the name of the root element.
         mapper.enable(SerializationConfig.Feature.WRAP_ROOT_VALUE);
-        ZimbraJsonModule zimbraModule = new ZimbraJsonModule();
-        mapper.registerModule(zimbraModule);
         return mapper;
     }
 }

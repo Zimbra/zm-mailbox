@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,9 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.MailConstants;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DispositionAndText {
@@ -40,7 +38,6 @@ public class DispositionAndText {
      * @zm-api-field-tag text
      * @zm-api-field-description Text
      */
-    @JsonProperty(JSONElement.A_CONTENT)
     @XmlValue
     private String text;
 

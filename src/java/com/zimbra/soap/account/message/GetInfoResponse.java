@@ -58,8 +58,8 @@ import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.type.ZmBoolean;
 
-import com.zimbra.soap.json.jackson.StringListSerializer;
 import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 /**
  * Note that LicenseAdminService and LicenseService both register a handler (the same one) which
@@ -103,7 +103,7 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
      </zimlet>
      ...
    </zimlets>
-   <soapURL>{soap-url}</soapURL>+
+   <soapURL>{soap-url}</soapURL>
    <publicURL>{account-base-public-url}</publicURL>
    <identities>
      <identity name={identity-name} id="...">
@@ -140,12 +140,10 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
-@XmlType(propOrder = {"version", "accountId", "accountName", "crumb",
-        "lifetime", "adminDelegated", "restUrl", "quotaUsed",
-        "previousSessionTime", "lastWriteAccessTime", "recentMessageCount",
-        "cos", "prefs", "attrs", "zimlets", "props", "identities",
-        "signatures", "dataSources", "childAccounts", "discoveredRights",
-        "soapURLs", "publicURL", "changePasswordURL", "license"})
+@XmlType(propOrder = {"version", "accountId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
+        "quotaUsed", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
+        "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
+        "soapURL", "publicURL", "changePasswordURL", "license"})
 public final class GetInfoResponse {
 
     /**
@@ -162,71 +160,70 @@ public final class GetInfoResponse {
     @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT /* docSizeLimit */, required=false)
     private Long documentSizeLimit;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-description Server version:
      *     &lt;major>[.&lt;minor>[.&lt;maintenance>]][build] &lt;release> &lt;date>[&lt;type>]
      */
     @XmlElement(name=AccountConstants.E_VERSION /* version */, required=true)
+    @ZimbraJsonAttribute
     private String version;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag account-id
      * @zm-api-field-description Account ID
      */
     @XmlElement(name=AccountConstants.E_ID /* id */, required=true)
+    @ZimbraJsonAttribute
     private String accountId;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag account-email-address
      * @zm-api-field-description Email address (user@domain)
      */
     @XmlElement(name=AccountConstants.E_NAME /* name */, required=true)
+    @ZimbraJsonAttribute
     private String accountName;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-description Crumb
      */
     @XmlElement(name=AccountConstants.E_CRUMB /* crumb */, required=false)
+    @ZimbraJsonAttribute
     private String crumb;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag lifetime
      * @zm-api-field-description Number of milliseconds until auth token expires
      */
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
+    @ZimbraJsonAttribute
     private long lifetime;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag admin-delegated
      * @zm-api-field-description 1 (true) if the auth token is a delegated auth token issued to an admin account
      */
     @XmlElement(name=AccountConstants.E_ADMIN_DELEGATED /* adminDelegated */, required=false)
+    @ZimbraJsonAttribute
     private ZmBoolean adminDelegated;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag account-base-REST-url
      * @zm-api-field-description Base REST URL for the requested account
      */
     @XmlElement(name=AccountConstants.E_REST /* rest */, required=false)
+    @ZimbraJsonAttribute
     private String restUrl;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag quota-used
      * @zm-api-field-description Mailbox quota used in bytes.
      * <br />Returned only if the command successfully executes on the target user's home mail server
      */
     @XmlElement(name=AccountConstants.E_QUOTA_USED /* used */, required=false)
+    @ZimbraJsonAttribute
     private Long quotaUsed;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag previous-SOAP-session-time
      * @zm-api-field-description Time (in millis) of last write op from this session, or from *any* SOAP session if we
@@ -234,9 +231,9 @@ public final class GetInfoResponse {
      * <br />Returned only if the command successfully executes on the target user's home mail server
      */
     @XmlElement(name=AccountConstants.E_PREVIOUS_SESSION /* prevSession */, required=false)
+    @ZimbraJsonAttribute
     private Long previousSessionTime;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag last-SOAP-write-access-time
      * @zm-api-field-description Time (in millis) of last write op from any SOAP session before this session was
@@ -244,9 +241,9 @@ public final class GetInfoResponse {
      * <br />Returned only if the command successfully executes on the target user's home mail server
      */
     @XmlElement(name=AccountConstants.E_LAST_ACCESS /* accessed */, required=false)
+    @ZimbraJsonAttribute
     private Long lastWriteAccessTime;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag recent-message-count
      * @zm-api-field-description Number of messages received since the previous soap session, or since the last SOAP
@@ -254,6 +251,7 @@ public final class GetInfoResponse {
      * <br />Returned only if the command successfully executes on the target user's home mail server
      */
     @XmlElement(name=AccountConstants.E_RECENT_MSGS /* recent */, required=false)
+    @ZimbraJsonAttribute
     private Integer recentMessageCount;
 
     /**
@@ -337,35 +335,32 @@ public final class GetInfoResponse {
     @XmlElement(name=AccountConstants.E_TARGETS, required=false)
     private List<DiscoverRightsInfo> discoveredRights = Lists.newArrayList();
 
-    // For JSON treat as Attribute
     /**
-     * @zm-api-field-description URL to talk to for soap service for this account. i.e:
-     * <br />
-     * http://server:7070/service/soap/
-     * <br />
-     * <br />
-     * Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
-     * then only one URL will be returned.
+     * @zm-api-field-description URL to talk to for soap service for this account. e.g.:
+     * <pre>
+     *     http://server:7070/service/soap/
+     * </pre>
+     * <p>If both http and https (SSL) are enabled, the https URL will be returned.</p>
      */
     @XmlElement(name=AccountConstants.E_SOAP_URL /* soapURL */, required=false)
-    @JsonSerialize(using=StringListSerializer.class)
-    private List<String> soapURLs = Lists.newArrayList();
+    @ZimbraJsonAttribute
+    private String soapURL;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag account-base-public-url
      * @zm-api-field-description Base public URL for the requested account
      */
     @XmlElement(name=AccountConstants.E_PUBLIC_URL /* publicURL */, required=false)
+    @ZimbraJsonAttribute
     private String publicURL;
 
-    // For JSON treat as Attribute
     /**
      * @zm-api-field-tag change-password-url
      * @zm-api-field-description URL to talk to in order to change a password.  Not returned if not configured
      * via domain attribute <b>zimbraChangePasswordURL</b>
      */
     @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL /* changePasswordURL */, required=false)
+    @ZimbraJsonAttribute
     private String changePasswordURL;
 
     /**
@@ -487,15 +482,8 @@ public final class GetInfoResponse {
         this.discoveredRights.add(discoveredRight);
     }
 
-    public void setSoapURLs(Iterable <String> soapURLs) {
-        this.soapURLs.clear();
-        if (soapURLs != null) {
-            Iterables.addAll(this.soapURLs,soapURLs);
-        }
-    }
-
-    public void addSoapURL(String soapURL) {
-        this.soapURLs.add(soapURL);
+    public void setSoapURL(String soapURL) {
+        this.soapURL = soapURL;
     }
 
     public void setPublicURL(String publicURL) { this.publicURL = publicURL; }
@@ -543,8 +531,8 @@ public final class GetInfoResponse {
     public List<DiscoverRightsInfo> getDiscoveredRights() {
         return Collections.unmodifiableList(discoveredRights);
     }
-    public List<String> getSoapURLs() {
-        return Collections.unmodifiableList(soapURLs);
+    public String getSoapURL() {
+        return soapURL;
     }
     public String getPublicURL() { return publicURL; }
     public String getChangePasswordURL() { return changePasswordURL; }
@@ -587,7 +575,7 @@ public final class GetInfoResponse {
             .add("signatures", signatures)
             .add("dataSources", dataSources)
             .add("childAccounts", childAccounts)
-            .add("soapURLs", soapURLs)
+            .add("soapURL", soapURL)
             .add("publicURL", publicURL)
             .add("changePasswordURL", changePasswordURL)
             .add("license", license);

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,10 +28,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.json.jackson.ContentListSerializer;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -42,21 +39,20 @@ public class GetDistributionListMembersResponse {
      * @zm-api-field-tag more-flag
      * @zm-api-field-description 1 (true) if more members left to return
      */
-    @XmlAttribute(name=AccountConstants.A_MORE, required=false)
+    @XmlAttribute(name=AccountConstants.A_MORE /* more */, required=false)
     private ZmBoolean more;
 
     /**
      * @zm-api-field-tag total
      * @zm-api-field-description total number of distribution lists (not affected by limit/offset)
      */
-    @XmlAttribute(name=AccountConstants.A_TOTAL, required=false)
+    @XmlAttribute(name=AccountConstants.A_TOTAL /* total */, required=false)
     private Integer total;
 
     /**
      * @zm-api-field-description Distribution list members
      */
-    @XmlElement(name=AccountConstants.E_DLM, required=false)
-    @JsonSerialize(using=ContentListSerializer.class)
+    @XmlElement(name=AccountConstants.E_DLM /* dlm */, required=false)
     private List<String> dlMembers = Lists.newArrayList();
 
     public GetDistributionListMembersResponse() {

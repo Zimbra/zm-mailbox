@@ -14,18 +14,28 @@
  */
 package com.zimbra.soap.jaxb;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/** Test JAXB class for exercising changes in namespace associated with elements */
+import com.google.common.collect.Lists;
+
+/** Test JAXB class to exercise a field annotated with {@link XmlElementRefs} and {@link XmlElementRef} */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="ns-delta", namespace="urn:ZimbraTest4")
-public class NamespaceDeltaElem {
-    @XmlElement(name="strAttrStrElem", namespace="urn:ZimbraTest5")
-    private StringAttrStringElem sase;
-    public NamespaceDeltaElem() { }
-    public StringAttrStringElem getSase() { return sase; }
-    public void setSase(StringAttrStringElem sase) { this.sase = sase; }
+@XmlRootElement(name="elem-ref-tester")
+public class ElementRefsTester {
+    @XmlElementRefs({
+        @XmlElementRef(name="saivByRef", type=StringAttribIntValue.class),
+        @XmlElementRef(name="eaByRef", type=EnumAttribs.class),
+    })
+    private List<Object> elems = Lists.newArrayList();
+
+    public ElementRefsTester() { }
+
+    public List<Object> getElems() { return elems; }
+    public void setElems(List<Object> elems) { this.elems = elems; }
 }

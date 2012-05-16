@@ -16,16 +16,18 @@ package com.zimbra.soap.jaxb;
 
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/** Test JAXB class for exercising changes in namespace associated with elements */
+/** Test JAXB class to exercise a field annotated with {@link XmlElementRef} */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="ns-delta", namespace="urn:ZimbraTest4")
-public class NamespaceDeltaElem {
-    @XmlElement(name="strAttrStrElem", namespace="urn:ZimbraTest5")
-    private StringAttrStringElem sase;
-    public NamespaceDeltaElem() { }
-    public StringAttrStringElem getSase() { return sase; }
-    public void setSase(StringAttrStringElem sase) { this.sase = sase; }
+@XmlRootElement(name="elem-ref-tester")
+public class ElementRefTester {
+    @XmlElementRef(name="string-attr-int-value", type=StringAttribIntValue.class)
+    private StringAttribIntValue byRef;
+
+    public ElementRefTester() { }
+
+    public StringAttribIntValue getByRef() { return byRef; }
+    public void setByRef(StringAttribIntValue byRef) { this.byRef = byRef; }
 }

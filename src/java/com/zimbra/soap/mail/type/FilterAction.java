@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,7 +18,6 @@ package com.zimbra.soap.mail.type;
 import com.google.common.base.Objects;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -26,7 +25,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.json.jackson.ContentSerializer;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterAction {
@@ -185,7 +183,6 @@ public class FilterAction {
          * Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
          * (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
          */
-        @JsonSerialize(using=ContentSerializer.class)
         @XmlElement(name=MailConstants.E_CONTENT, required=false)
         private String content;
 
@@ -287,7 +284,6 @@ public class FilterAction {
          * Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
          * (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
          */
-        @JsonSerialize(using=ContentSerializer.class)
         @XmlElement(name=MailConstants.E_CONTENT, required=false)
         private final String content;
 
