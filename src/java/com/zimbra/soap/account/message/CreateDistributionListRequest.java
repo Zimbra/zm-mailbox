@@ -45,7 +45,11 @@ public class CreateDistributionListRequest extends AccountKeyValuePairs {
     private String name;
 
     /**
-     * @zm-api-field-description Create a dynamic distribution list
+     * @zm-api-field-description Flag type of distribution list to create
+     * <table>
+     * <tr> <td> <b>set to 1 (true)</b> [default] </td> <td> create a dynamic distribution list </td> </tr>
+     * <tr> <td> <b>set to 0 (false)</b> </td> <td> create a static distribution list </td> </tr>
+     * </table>
      */
     @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
     private ZmBoolean dynamic;
