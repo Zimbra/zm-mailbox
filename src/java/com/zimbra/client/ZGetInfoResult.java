@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.soap.AccountConstants;
@@ -157,8 +158,14 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getPublicURL();
     }
 
+    /**
+     * Previously, it was assumed that it was possible to get 2 "soapURL"'s in GetInfoResponse, however, they
+     * are added using addAttribute with Element.Disposition.CONTENT (i.e. as an attribute in JSON but as an
+     * element in XML)  This mechanism enforces that only one exists (latest add wins).
+     * Retain list semantics here for backwards compatibility.
+     */
     public List<String> getMailURL() {
-        return data.getSoapURLs();
+        return Lists.newArrayList(data.getSoapURL());
     }
 
     public String getCrumb() {
@@ -193,6 +200,7 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getPublicURL();
     }
     
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", getId());
@@ -209,6 +217,7 @@ public class ZGetInfoResult implements ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZGetInfoResult %s]", getName());
     }
