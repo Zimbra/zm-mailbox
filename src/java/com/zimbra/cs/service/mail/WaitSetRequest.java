@@ -28,6 +28,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -37,7 +38,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -155,7 +155,7 @@ public class WaitSetRequest extends MailDocumentHandler {
         boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
 
         Callback cb = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
-        
+
         if (cb == null) { // Initial
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
             cb = new Callback();
@@ -165,7 +165,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             String defInterestStr = null;
             if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
                 WaitSetMgr.checkRightForAllAccounts(zsc);
-                
+
                 // default interest types required for "All" waitsets
                 defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
                 Set<MailItem.Type> defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr,
@@ -180,9 +180,9 @@ public class WaitSetRequest extends MailDocumentHandler {
 
             WaitSetMgr.checkRightForOwnerAccount(cb.ws, zsc.getRequestedAccountId());
 
-            List<WaitSetAccount> add = parseAddUpdateAccounts(zsc, 
+            List<WaitSetAccount> add = parseAddUpdateAccounts(zsc,
                 request.getOptionalElement(MailConstants.E_WAITSET_ADD), cb.ws.getDefaultInterest());
-            List<WaitSetAccount> update = parseAddUpdateAccounts(zsc, 
+            List<WaitSetAccount> update = parseAddUpdateAccounts(zsc,
                 request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest());
             List<String> remove = parseRemoveAccounts(zsc, request.getOptionalElement(MailConstants.E_WAITSET_REMOVE));
 
@@ -273,7 +273,7 @@ public class WaitSetRequest extends MailDocumentHandler {
     /**
      * @param allowedAccountIds NULL means "all allowed" (admin)
      */
-    static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, Element elt, Set<MailItem.Type> defaultInterest) 
+    static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, Element elt, Set<MailItem.Type> defaultInterest)
     throws ServiceException {
         List<WaitSetAccount> toRet = new ArrayList<WaitSetAccount>();
         if (elt != null) {
@@ -292,7 +292,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 } else {
                     id = a.getAttribute(MailConstants.A_ID);
                 }
-                
+
                 WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
 
                 String tokenStr = a.getAttribute(MailConstants.A_TOKEN, null);
@@ -301,7 +301,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 toRet.add(new WaitSetAccount(id, token, interests));
             }
         }
-        
+
         return toRet;
     }
 
@@ -358,12 +358,13 @@ public class WaitSetRequest extends MailDocumentHandler {
     }
 
     public static enum TypeEnum {
+        f(EnumSet.of(MailItem.Type.FOLDER)),
         m(EnumSet.of(MailItem.Type.MESSAGE)),
         c(EnumSet.of(MailItem.Type.CONTACT)),
         a(EnumSet.of(MailItem.Type.APPOINTMENT)),
         t(EnumSet.of(MailItem.Type.TASK)),
         d(EnumSet.of(MailItem.Type.DOCUMENT)),
-        all(EnumSet.of(MailItem.Type.MESSAGE, MailItem.Type.CONTACT,
+        all(EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.MESSAGE, MailItem.Type.CONTACT,
                        MailItem.Type.APPOINTMENT, MailItem.Type.TASK, MailItem.Type.DOCUMENT));
 
         private final Set<MailItem.Type> types;
@@ -385,6 +386,9 @@ public class WaitSetRequest extends MailDocumentHandler {
         StringBuilder result = new StringBuilder();
         for (MailItem.Type type : interest) {
             switch (type) {
+            case FOLDER:
+                result.append(TypeEnum.f.name());
+                break;
             case MESSAGE:
                 result.append(TypeEnum.m.name());
                 break;
@@ -430,6 +434,9 @@ public class WaitSetRequest extends MailDocumentHandler {
         EnumSet<TypeEnum> result = EnumSet.noneOf(TypeEnum.class);
         for (MailItem.Type type : interests) {
             switch (type) {
+            case FOLDER:
+                result.add(TypeEnum.f);
+                break;
             case MESSAGE:
                 result.add(TypeEnum.m);
                 break;

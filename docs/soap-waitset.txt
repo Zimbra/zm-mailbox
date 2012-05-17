@@ -32,12 +32,13 @@ used to wait on "all accounts".
 
 
 INTEREST_TYPES: comma-separated list.  Currently:
+   f: folders
+   m: messages
    c: contacts
-   m: msgs (and subclasses)
    a: appointments
    t: tasks
    d: documents
-   all: all types (equiv to "c,m,a,t,d")
+   all: all types (equiv to "f,m,c,a,t,d")
 
 
 *************************************
