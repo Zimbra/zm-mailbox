@@ -52,6 +52,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_DISTRIBUTION_LISTS;
     private static Filter FILTER_ALL_DOMAINS;
     private static Filter FILTER_ALL_DYNAMIC_GROUPS;
+    private static Filter FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS;
     private static Filter FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS;
     private static Filter FILTER_ALL_GROUPS;
     private static Filter FILTER_ALL_IDENTITIES;
@@ -130,6 +131,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_DYNAMIC_GROUPS =
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroup);
+
+        FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS =
+            Filter.createEqualityFilter(
+            LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroupDynamicUnit);
 
         FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS =
             Filter.createEqualityFilter(
@@ -750,9 +755,18 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
+    public ZLdapFilter dynamicGroupDynamicUnitByMailAddr(String mailAddr) {
+        return new UBIDLdapFilter(
+                FilterId.DYNAMIC_GROUP_DYNAMIC_UNIT_BY_MAIL_ADDR,
+                Filter.createANDFilter(
+                        FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS,
+                        Filter.createEqualityFilter(Provisioning.A_mail, mailAddr)));
+    }
+
+    @Override
     public ZLdapFilter dynamicGroupsStaticUnitByMemberAddr(String memberAddr) {
         return new UBIDLdapFilter(
-                FilterId.DISTRIBUTION_LISTS_BY_MEMBER_ADDRS,
+                FilterId.DYNAMIC_GROUPS_STATIC_UNIT_BY_MEMBER_ADDR,
                 Filter.createANDFilter(
                         FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS,
                         Filter.createEqualityFilter(Provisioning.A_zimbraMailForwardingAddress, memberAddr)));

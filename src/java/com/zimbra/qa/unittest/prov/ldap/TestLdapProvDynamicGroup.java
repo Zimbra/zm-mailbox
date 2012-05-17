@@ -37,7 +37,7 @@ import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Group.GroupMemberEmailAddrs;
+import com.zimbra.cs.account.Provisioning.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.ldap.entry.LdapAccount;
@@ -62,7 +62,7 @@ public class TestLdapProvDynamicGroup extends LdapTest {
 
     @AfterClass
     public static void cleanup() throws Exception {
-        Cleanup.deleteAll(baseDomainName());
+        // Cleanup.deleteAll(baseDomainName());  // this makes slapd crazy for some reason
     }
 
     private DynamicGroup createDynamicGroup(String localPart) throws Exception {
@@ -134,7 +134,8 @@ public class TestLdapProvDynamicGroup extends LdapTest {
     }
 
 
-    /* ================================================
+    /*
+     * ================================================
      * Testing zimbraIsACLGroup and memeberURL settings
      * ================================================
      */
@@ -670,43 +671,70 @@ public class TestLdapProvDynamicGroup extends LdapTest {
         assertTrue(groupIdList.contains(groupId));
     }
 
+    private void testGetMemberAddrs(boolean dynamic) throws Exception {
+        /*
+         * group has both internal and external members
+         */
+        Group group = provUtil.createGroup(genGroupNameLocalPart(seq), domain, dynamic);
+
+        Account acct1 = provUtil.createAccount(genAcctNameLocalPart(seq), domain);
+        Account acct2 = provUtil.createAccount(genAcctNameLocalPart(seq), domain);
+        String externalAddr1 = "user1@external.com";
+        String externalAddr2 = "user2@external.com";
+
+        prov.addGroupMembers(group, new String[]{
+                acct1.getName(), acct2.getName(), externalAddr1, externalAddr2});
+        GroupMemberEmailAddrs addrs = prov.getMemberAddrs(group);
+        assertNull(addrs.groupAddr());
+        Verify.verifyEquals(
+                Sets.newHashSet(acct1.getName(), acct2.getName()),
+                addrs.internalAddrs());
+        Verify.verifyEquals(
+                Sets.newHashSet(externalAddr1, externalAddr2),
+                addrs.externalAddrs());
+
+        /*
+         * group has only internal members
+         */
+        group = provUtil.createGroup(genGroupNameLocalPart(seq), domain, dynamic);
+        prov.addGroupMembers(group, new String[]{
+                acct1.getName(), acct2.getName()});
+        addrs = prov.getMemberAddrs(group);
+        assertEquals(group.getName(), addrs.groupAddr());
+        assertNull(addrs.internalAddrs());
+        assertNull(addrs.externalAddrs());
+
+        /*
+         * group has only external members
+         */
+        group = provUtil.createGroup(genGroupNameLocalPart(seq), domain, dynamic);
+        prov.addGroupMembers(group, new String[]{
+                externalAddr1, externalAddr2});
+        addrs = prov.getMemberAddrs(group);
+        assertNull(addrs.groupAddr());
+        assertNull(addrs.internalAddrs());
+        Verify.verifyEquals(
+                Sets.newHashSet(externalAddr1, externalAddr2),
+                addrs.externalAddrs());
+
+        /*
+         * group has no member
+         */
+        group = provUtil.createGroup(genGroupNameLocalPart(seq), domain, dynamic);
+        addrs = prov.getMemberAddrs(group);
+        assertEquals(group.getName(), addrs.groupAddr());
+        assertNull(addrs.internalAddrs());
+        assertNull(addrs.externalAddrs());
+    }
+
+
     /*
      * Test dispatching group members into internal/external piles
      */
     @Test
     public void getMemberAddrs() throws Exception {
-
-        /*
-         * dynamic group
-         */
-        String localpart = genGroupNameLocalPart("1");
-        Group group = createDynamicGroup(localpart);
-
-        Account acct = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
-        String externalAddr1 = "user1@external.com";
-        String externalAddr2 = "user2@external.com";
-
-        prov.addGroupMembers(group, new String[]{acct.getName(), externalAddr1, externalAddr2});
-        GroupMemberEmailAddrs addrs = group.getMemberAddrs();
-        Verify.verifyEquals(
-                Sets.newHashSet(localpart + ".__internal__@" + domain.getName()),
-                addrs.internalAddrs());
-        Verify.verifyEquals(
-                Sets.newHashSet(externalAddr1, externalAddr2),
-                addrs.externalAddrs());
-
-        /*
-         * static distribution list
-         */
-        group = provUtil.createGroup(genGroupNameLocalPart("2"), domain, false);
-        prov.addGroupMembers(group, new String[]{acct.getName(), externalAddr1, externalAddr2});
-        addrs = group.getMemberAddrs();
-        Verify.verifyEquals(
-                Sets.newHashSet(acct.getName()),
-                addrs.internalAddrs());
-        Verify.verifyEquals(
-                Sets.newHashSet(externalAddr1, externalAddr2),
-                addrs.externalAddrs());
+        testGetMemberAddrs(true);
+        testGetMemberAddrs(false);
     }
 
 }

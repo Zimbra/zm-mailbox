@@ -86,12 +86,20 @@ public class ProvTest {
         return genName(null);
     }
 
+    protected String genAcctNameLocalPart(String suffix, Sequencer seq) {
+        return "acct-" + genName(suffix, seq);
+    }
+
     protected String genAcctNameLocalPart(String suffix) {
-        return "acct-" + genName(suffix);
+        return genAcctNameLocalPart(suffix, null);
+    }
+
+    protected String genAcctNameLocalPart(Sequencer seq) {
+        return genAcctNameLocalPart(null, seq);
     }
 
     protected String genAcctNameLocalPart() {
-        return genAcctNameLocalPart(null);
+        return genAcctNameLocalPart(null, null);
     }
 
     protected String genCalendarResourceNameLocalPart(String suffix) {

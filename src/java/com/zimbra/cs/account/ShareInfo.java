@@ -556,17 +556,26 @@ public class ShareInfo {
                                                   ACL.RIGHT_ACTION;
 
 
-        public static MimeMultipart genNotifBody(ShareInfoData sid, String notes, Locale locale, Action action)
-                throws MessagingException, ServiceException {
+        public static MimeMultipart genNotifBody(ShareInfoData sid, String notes,
+                Locale locale, Action action, String externalGroupMember)
+        throws MessagingException, ServiceException {
 
             // Body
             MimeMultipart mmp = new ZMimeMultipart("alternative");
 
             String shareAcceptUrl = null;
             String extUserLoginUrl = null;
-            if (action == null && sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
+            String externalGranteeName = null;
+            if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
+                externalGranteeName = sid.getGranteeName();
+            } else if (sid.getGranteeTypeCode() == ACL.GRANTEE_GROUP && externalGroupMember != null) {
+                externalGranteeName = externalGroupMember;
+            }
+            // this mail will go to external email address
+            boolean goesToExternalAddr = (externalGranteeName != null);
+            if (action == null && goesToExternalAddr) {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
-                shareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), sid.getGranteeName());
+                shareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), externalGranteeName);
                 extUserLoginUrl = getExtUserLoginURL(owner);
             }
 
@@ -596,7 +605,7 @@ public class ShareInfo {
             mmp.addBodyPart(htmlPart);
 
             // XML part
-            if (sid.getGranteeTypeCode() != ACL.GRANTEE_GUEST) {
+            if (!goesToExternalAddr) {
                 MimeBodyPart xmlPart = new ZMimeBodyPart();
                 xmlPart.setDataHandler(
                         new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null, action))));
@@ -636,14 +645,15 @@ public class ShareInfo {
         }
 
 
-        private static String genPart(
-                ShareInfoData sid, String senderNotes, String shareAcceptUrl, String extUserLoginUrl,
+        private static String genPart(ShareInfoData sid, String senderNotes,
+                String shareAcceptUrl, String extUserLoginUrl,
                 Locale locale, StringBuilder sb, boolean html) {
             if (sb == null) {
                 sb = new StringBuilder();
             }
             String externalShareInfo = null;
-            if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
+            if (shareAcceptUrl != null) {
+                assert(extUserLoginUrl != null);
                 externalShareInfo = L10nUtil.getMessage(
                         html ? MsgKey.shareNotifBodyExternalShareHtml : MsgKey.shareNotifBodyExternalShareText,
                         locale, shareAcceptUrl, extUserLoginUrl);

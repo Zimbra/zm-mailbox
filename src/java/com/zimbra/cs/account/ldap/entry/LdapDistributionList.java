@@ -21,7 +21,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Group.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
@@ -69,8 +68,4 @@ public class LdapDistributionList extends DistributionList implements LdapEntry 
         }
     }
 
-    @Override
-    public GroupMemberEmailAddrs getMemberAddrs() throws ServiceException {
-        return ((LdapProvisioning)getProvisioning()).getDistributionListMemberAddrs(this);
-    }
 }

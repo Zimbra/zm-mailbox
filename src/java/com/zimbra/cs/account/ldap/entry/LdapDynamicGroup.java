@@ -20,7 +20,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Group.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
@@ -53,6 +52,10 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
     public StaticUnit getStaticUnit() {
         assert(staticUnit != null);
         return staticUnit;
+    }
+
+    public boolean hasExternalMembers() {
+        return staticUnit != null && staticUnit.hasExternalMembers();
     }
 
     @Override
@@ -155,21 +158,4 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
         }
     }
 
-    @Override
-    public GroupMemberEmailAddrs getMemberAddrs() throws ServiceException {
-        GroupMemberEmailAddrs addrs = new GroupMemberEmailAddrs();
-
-        if (isIsACLGroup()) {
-            if (getStaticUnit().hasExternalMembers()) {
-                addrs.addInternalAddr(getDynamicUnit().getEmailAddr());
-                addrs.addExternalAddrs(getStaticUnit().getMembersSet());
-            } else {
-                addrs.addInternalAddr(getName());
-            }
-        } else {
-            addrs.addInternalAddr(getName());
-        }
-
-        return addrs;
-    }
 }

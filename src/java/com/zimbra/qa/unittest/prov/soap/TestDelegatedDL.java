@@ -144,7 +144,7 @@ public class TestDelegatedDL extends SoapTest {
 
     @AfterClass
     public static void cleanup() throws Exception {
-        // Cleanup.deleteAll(baseDomainName());
+        // Cleanup.deleteAll(baseDomainName()); // this makes slapd crazy for some reason
     }
 
     private static Group createDelegatedGroup(SoapTransport transport, String groupName,

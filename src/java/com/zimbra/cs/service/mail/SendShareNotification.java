@@ -22,16 +22,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.ibm.icu.text.MessageFormat;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -53,6 +58,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
+import com.zimbra.cs.account.Provisioning.GroupMemberEmailAddrs;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -68,6 +74,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
@@ -103,14 +110,26 @@ public class SendShareNotification extends MailDocumentHandler {
         // send the messages
         try {
             Account authAccount = getAuthenticatedAccount(zsc);
+            Collection<ShareInfoData> sharesWithGroupGrantee = Lists.newArrayList();
             for (ShareInfoData sid : shareInfos) {
-                MimeMessage mm = generateShareNotification(authAccount, account, sid, notes, action);
-                mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
+                // set aside shares to groups
+                if (ACL.GRANTEE_GROUP == sid.getGranteeTypeCode()) {
+                    sharesWithGroupGrantee.add(sid);
+                } else {
+                    sendNotificationEmail(octxt, mbox, authAccount, account, sid, notes, action, null, null);
+                }
+
                 // also send a copy of the message out to relay MTA
-                if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled() && action!=Action.revoke) {
+                if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled() &&
+                        action!=Action.revoke) {
                     sendExternalNotificationEmail(octxt, authAccount, sid);
                 }
             }
+
+            // send to group grantees
+            sendNotificationEmailToGroupGrantees(octxt, mbox, authAccount, account,
+                    sharesWithGroupGrantee, notes, action);
+
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
                     "Messaging Exception while sending share notification message", e);
@@ -204,8 +223,10 @@ public class SendShareNotification extends MailDocumentHandler {
         String granteeDisplayName; // display name, if set, of the grantee
 
         if (granteeType == ACL.GRANTEE_GUEST) {
-            if (granteeName == null)
-                throw ServiceException.INVALID_REQUEST("must specify grantee name for guest grantee type", null);
+            if (granteeName == null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "must specify grantee name for guest grantee type", null);
+            }
 
             // if guest, matchingId is the same as granteeEmail
             matchingId = granteeName;
@@ -357,8 +378,13 @@ public class SendShareNotification extends MailDocumentHandler {
         short mRights;
         String mSecret;
 
-        short getGrantedRights() { return  mGrant==null ? mRights : mGrant.getGrantedRights(); }
-        String getPassword() { return mGrant==null ? mSecret : mGrant.getPassword(); }
+        short getGrantedRights() {
+            return  mGrant==null ? mRights : mGrant.getGrantedRights();
+        }
+
+        String getPassword() {
+            return mGrant==null ? mSecret : mGrant.getPassword();
+        }
     }
 
     private MatchingGrant getMatchingGrantLocal(OperationContext octxt, MailItem item,
@@ -533,7 +559,8 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
-            ShareInfoData sid, String notes, Action action)
+            ShareInfoData sid, String notes, Action action,
+            Collection<String> internlaRecipients, String externalRecipient)
     throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(
@@ -559,10 +586,23 @@ public class SendShareNotification extends MailDocumentHandler {
         mm.setSender(AccountUtil.getFriendlyEmailAddress(authAccount));
 
         // to the grantee
-        String recipient = sid.getGranteeName();
-        mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
+        if (internlaRecipients != null) {
+            assert(externalRecipient == null);
+            for (String recipient : internlaRecipients) {
+                try {
+                    mm.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
+                } catch (AddressException e) {
+                    sLog.warn("Ignoring error while sending share notification to " + recipient, e);
+                }
+            }
+        } else if (externalRecipient != null) {
+            mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(externalRecipient));
+        } else {
+            String recipient = sid.getGranteeName();
+            mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
+        }
 
-        MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid, notes, locale, action);
+        MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid, notes, locale, action, externalRecipient);
         mm.setContent(mmp);
         mm.saveChanges();
 
@@ -631,5 +671,111 @@ public class SendShareNotification extends MailDocumentHandler {
         mm.saveChanges();
         MailSender.relayMessage(mm);
     }
+
+    private void sendNotificationEmail(OperationContext octxt, Mailbox mbox,
+            Account authAccount, Account ownerAccount,
+            ShareInfoData sid, String notes, Action action,
+            Collection<String> internalRecipients, String externalRecipient)
+    throws ServiceException, MessagingException  {
+        MimeMessage mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
+                internalRecipients, externalRecipient);
+        mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
+    }
+
+    private void sendNotificationEmailToGroupGrantees(OperationContext octxt, Mailbox mbox,
+            Account authAccount, Account ownerAccount, Collection<ShareInfoData> sids,
+            String notes, Action action)
+    throws ServiceException, MessagingException {
+        Provisioning prov = Provisioning.getInstance();
+
+        for (ShareInfoData sid : sids) {
+            String granteeId = sid.getGranteeId();
+            Group group = prov.getGroupBasic(DistributionListBy.id, granteeId);
+            if (group == null) {
+                // huh?  grantee type is GROUP but the group cannot be found by id.
+                // just log a warning and do not send.
+                // This is not likely to happen because validateRequest had already
+                // checked existance of the grantee.
+                sLog.warn("Group not found for sending share notificaiton to: " +
+                        granteeId + "(" + sid.getGranteeNotifName() + ")" +
+                        ", share notification not sent");
+                continue;
+            }
+
+            /*
+             * send to group members
+             */
+            GroupMemberEmailAddrs addrs = prov.getMemberAddrs(group);
+            if (addrs.groupAddr() != null) {
+                // just send to the group's address, no treatment needed for recipients
+                sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
+                        notes, action, null, null);
+            } else {
+                // send one common notif email to all internal members,
+                if (addrs.internalAddrs() != null) {
+                    sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
+                            notes, action, addrs.internalAddrs(), null);
+                }
+
+                // send one personalized notif email to each external member
+                Collection<String> extMembers = addrs.externalAddrs();
+                if (extMembers != null) {
+                    if (extMembers.size() <= DebugConfig.sendGroupShareNotificationSynchronouslyThreshold) {
+                        // send synchronously
+                        sendNotificationEmailToGroupExternalMembers(octxt, mbox,
+                                authAccount, ownerAccount, sid, notes, action, extMembers);
+                    } else {
+                        // send asynchronously in a separate thread to avoid holding up the request
+                        sendNotificationEmailToGroupExternalMembersAsync(octxt, mbox,
+                                authAccount, ownerAccount, sid, notes, action, extMembers);
+                    }
+                }
+            }
+        }
+    }
+
+    private void sendNotificationEmailToGroupExternalMembers(
+            OperationContext octxt, Mailbox mbox,
+            Account authAccount, Account ownerAccount, ShareInfoData sid,
+            String notes, Action action, Collection<String> extMembers) {
+        for (String extMember : extMembers) {
+            try {
+                //================ remove hack
+                if (extMember.equals("guest1@external.com")) {
+                    extMember = "guest1@gmail.com";
+                } else if (extMember.equals("guest2@external.com")) {
+                    extMember = "guest2@gmail.com";
+                }
+                //===========================
+                sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
+                        notes, action, null, extMember);
+            } catch (ServiceException e) {
+                sLog.warn("Ignoring error while sending share notification to external group member " + extMember , e);
+            } catch (MessagingException e) {
+                sLog.warn("Ignoring error while sending share notification to external group member " + extMember , e);
+            }
+        }
+    }
+
+    private void sendNotificationEmailToGroupExternalMembersAsync(
+            final OperationContext octxt, final Mailbox mbox,
+            final Account authAccount, final Account ownerAccount, final ShareInfoData sid,
+            final String notes, final Action action, final Collection<String> extMembers) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    sendNotificationEmailToGroupExternalMembers(octxt, mbox,
+                            authAccount, ownerAccount, sid, notes, action, extMembers);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("OutOfMemoryError while sending share notification to external group members", e);
+                }
+            }
+        };
+        Thread senderThread = new Thread(r, "SendShareNotification");
+        senderThread.setDaemon(true);
+        senderThread.start();
+    }
+
 }
 

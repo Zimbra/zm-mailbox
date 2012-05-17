@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -60,7 +61,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.Group.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AliasedEntry;
 import com.zimbra.cs.account.AttributeClass;
@@ -4235,30 +4235,6 @@ public class LdapProvisioning extends LdapProv {
         return groups;
     }
 
-    public GroupMemberEmailAddrs getDistributionListMemberAddrs(
-            DistributionList dl) throws ServiceException {
-        GroupMemberEmailAddrs addrs = new GroupMemberEmailAddrs();
-
-        // get cached members
-        String[] members = getGroupMembers(dl);
-
-        ZLdapContext zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.SEARCH);
-        try {
-            for (String member : members) {
-                if (addressExists(zlc, new String[]{member})) {
-                    addrs.addInternalAddr(member);
-                } else {
-                    addrs.addExternalAddr(member);
-                }
-            }
-        } finally {
-            LdapClient.closeContext(zlc);
-        }
-
-        // TODO: should we cache it on the object?
-        return addrs;
-    }
-
     @Override
     public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
@@ -8319,7 +8295,8 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    /* ==================
+    /*
+     * ==================
      *   Groups (static/dynamic neutral)
      * ==================
      */
@@ -8508,13 +8485,67 @@ public class LdapProvisioning extends LdapProv {
         return members;
     }
 
+    @Override
+    public GroupMemberEmailAddrs getMemberAddrs(Group group) throws ServiceException {
+        // this is for mail delivery, always relaod the full group from LDAP
+        group = getGroup(DistributionListBy.id, group.getId());
+
+        GroupMemberEmailAddrs addrs = new GroupMemberEmailAddrs();
+        if (group.isDynamic()) {
+            LdapDynamicGroup ldapDynGroup = (LdapDynamicGroup)group;
+            if (ldapDynGroup.isIsACLGroup()) {
+                if (ldapDynGroup.hasExternalMembers()) {
+                    // internal members
+                    final List<String> internalMembers = Lists.newArrayList();
+                    searchDynamicGroupInternalMemberDeliveryAddresses(null, group.getId(), internalMembers);
+                    if (!internalMembers.isEmpty()) {
+                        addrs.setInternalAddrs(internalMembers);
+                    }
+
+                    // external members
+                    addrs.setExternalAddrs(ldapDynGroup.getStaticUnit().getMembersSet());
+                } else {
+                    addrs.setGroupAddr(group.getName());
+                }
+            } else {
+                addrs.setGroupAddr(group.getName());
+            }
+
+        } else {
+            String[] members = getGroupMembers(group);
+            Set<String> internalMembers = Sets.newHashSet();
+            Set<String> externalMembers = Sets.newHashSet();
+            ZLdapContext zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.SEARCH);
+            try {
+                for (String member : members) {
+                    if (addressExists(zlc, new String[]{member})) {
+                        internalMembers.add(member);
+                    } else {
+                        externalMembers.add(member);
+                    }
+                }
+            } finally {
+                LdapClient.closeContext(zlc);
+            }
+            if (!externalMembers.isEmpty()) {
+                if (!internalMembers.isEmpty()) {
+                    addrs.setInternalAddrs(internalMembers);
+                }
+                addrs.setExternalAddrs(externalMembers);
+            } else {
+                addrs.setGroupAddr(group.getName());
+            }
+        }
+        return addrs;
+    }
+
 
     private void cleanGroupMembersCache(Group group) {
         /*
          * Fully loaded DLs(containing members attribute) are not cached
          * (those obtained via Provisioning.getGroup().
          *
-         * if the modified instance (the instance being passwed in) is not the same
+         * if the modified instance (the instance being passed in) is not the same
          * instance in cache, clean the group members cache on the cached instance
          */
         Group cachedInstance = getGroupFromCache(DistributionListBy.id, group.getId());
@@ -9393,6 +9424,35 @@ public class LdapProvisioning extends LdapProv {
     private List<String> searchDynamicGroupMembers(DynamicGroup group) {
         final List<String> members = Lists.newArrayList();
 
+        ZLdapContext zlc = null;
+        try {
+            // always use master to search for dynamic group members
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.SEARCH);
+
+            // search internal members
+            searchDynamicGroupInternalMemberDeliveryAddresses(zlc, group.getId(), members);
+
+            // add external members
+            LdapDynamicGroup.StaticUnit staticUnit = ((LdapDynamicGroup)group).getStaticUnit();
+            // need to refresh, the StaticUnit instance updated by add/remove
+            // dynamic group members may be the cached instance.
+            refreshEntry(staticUnit, zlc);
+            for (String extAddr : staticUnit.getMembers()) {
+                members.add(extAddr);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("unable to search dynamic group members", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+
+
+        return members;
+    }
+
+    private void searchDynamicGroupInternalMemberDeliveryAddresses(
+            ZLdapContext initZlc, String dynGroupId, final Collection<String> result) {
+
         SearchLdapVisitor visitor = new SearchLdapVisitor(false) {
             @Override
             public void visit(String dn, IAttributes ldapAttrs) throws StopIteratingException {
@@ -9403,29 +9463,25 @@ public class LdapProvisioning extends LdapProv {
                     ZimbraLog.account.warn("unable to get attr", e);
                 }
                 if (addr != null) {
-                    members.add(addr);
+                    result.add(addr);
                 }
             }
         };
 
-        // search for internal members
-        ZLdapContext zlc = null;
+        ZLdapContext zlc = initZlc;
         try {
-            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.SEARCH);
-            searchDynamicGroupInternalMembers(zlc, group.getId(), visitor);
+            if (zlc == null) {
+                // always use master to search for dynamic group members
+                zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.SEARCH);
+            }
+            searchDynamicGroupInternalMembers(zlc, dynGroupId, visitor);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("unable to get dynamic group members", e);
+            ZimbraLog.account.warn("unable to search dynamic group members", e);
         } finally {
-            LdapClient.closeContext(zlc);
+            if (initZlc == null) {
+                LdapClient.closeContext(zlc);
+            }
         }
-
-        // add external members
-        LdapDynamicGroup.StaticUnit staticUnit = ((LdapDynamicGroup)group).getStaticUnit();
-        for (String extAddr : staticUnit.getMembers()) {
-            members.add(extAddr);
-        }
-
-        return members;
     }
 
     public String[] getNonDefaultDynamicGroupMembers(DynamicGroup group) {
@@ -9459,16 +9515,15 @@ public class LdapProvisioning extends LdapProv {
         return members.toArray(new String[members.size()]);
     }
 
-    public String[] getDynamicGroupMembers(DynamicGroup dygGroup) {
-        List<String> members = searchDynamicGroupMembers(dygGroup);
+    public String[] getDynamicGroupMembers(DynamicGroup group) {
+        List<String> members = searchDynamicGroupMembers(group);
         return members.toArray(new String[members.size()]);
     }
 
-    public Set<String> getDynamicGroupMembersSet(DynamicGroup dygGroup) {
-        List<String> members = searchDynamicGroupMembers(dygGroup);
+    public Set<String> getDynamicGroupMembersSet(DynamicGroup group) {
+        List<String> members = searchDynamicGroupMembers(group);
         return Sets.newHashSet(members);
     }
-
 
 
     /*
@@ -9476,7 +9531,6 @@ public class LdapProvisioning extends LdapProv {
      * UC service methods
      *
      */
-
     private UCService getUCServiceByQuery(ZLdapFilter filter, ZLdapContext initZlc)
     throws ServiceException {
         try {

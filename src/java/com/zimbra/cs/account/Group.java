@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -257,35 +256,6 @@ public abstract class Group extends MailTarget implements AliasedEntry {
                 }
             }
         }
-    }
-
-    public static class GroupMemberEmailAddrs {
-        private final List<String> internalAddrs = Lists.newArrayList();
-        private final List<String> externalAddrs = Lists.newArrayList();
-
-        public void addInternalAddr(String addr) {
-            internalAddrs.add(addr);
-        }
-
-        public void addExternalAddr(String addr) {
-            externalAddrs.add(addr);
-        }
-
-        public void addExternalAddrs(Set<String> addrs) {
-            externalAddrs.addAll(addrs);
-        }
-
-        public List<String> internalAddrs() {
-            return internalAddrs;
-        }
-
-        public List<String> externalAddrs() {
-            return externalAddrs;
-        }
-    }
-
-    public GroupMemberEmailAddrs getMemberAddrs() throws ServiceException {
-        throw new UnsupportedOperationException();
     }
 
 }

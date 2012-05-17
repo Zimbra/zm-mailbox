@@ -15,6 +15,9 @@
 package com.zimbra.cs.account;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -465,6 +468,81 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
 
         return addr;
+    }
+
+    /**
+     * if the group has only internal members (or don't have any members):
+     *   - groupAddr() returns the group's email address
+     *   - internalAddrs() return null
+     *   - externalAddrs() return null
+     *
+     * if the group has only external members:
+     *   - groupAddr() returns null
+     *   - internalAddrs() return null
+     *   - externalAddrs() return email addrs of all external members
+     *
+     * if the group has both internal and external members:
+     *   - groupAddr() returns null
+     *   - internalAddrs() return email addrs of all internal members
+     *   - externalAddrs() return email addrs of all external members
+     *
+     * Callsite can safely do:
+     * GroupMemberEmailAddrs addrs = Provisioning.getInstance().getMemberAddrs(group);
+     * if (addrs.groupAddr() != null) {
+     *     ...
+     * }
+     * if (addrs.internalAddrs() != null) {
+     *     ...
+     * }
+     * if (addrs.externalAddrs() != null) {
+     *     ...
+     * }
+     *
+     */
+    public static class GroupMemberEmailAddrs {
+        private String groupAddr;
+        private Collection<String> internalAddrs;
+        private Collection<String> externalAddrs;
+
+        public void setGroupAddr(String addr) {
+            groupAddr = addr;
+        }
+
+        public void setInternalAddrs(Collection<String> addrs) {
+            internalAddrs = addrs;
+        }
+
+        public void setExternalAddrs(Collection<String> addrs) {
+            externalAddrs = addrs;
+        }
+
+        /**
+         * if the group has only internal members, returns the group's email address
+         * if the group has external members, return null;
+         */
+        public String groupAddr() {
+            return groupAddr;
+        }
+
+        /**
+         * if the group has only internal or only external members, returns null
+         * otherwise returns internal members of the group
+         */
+        public Collection<String> internalAddrs() {
+            return internalAddrs;
+        }
+
+        /**
+         * if the group has only internal members, returns null
+         * otherwise returns external members of the group
+         */
+        public Collection<String> externalAddrs() {
+            return externalAddrs;
+        }
+    }
+
+    public GroupMemberEmailAddrs getMemberAddrs(Group group) throws ServiceException {
+        throw new UnsupportedOperationException();
     }
 
     /**
