@@ -740,13 +740,6 @@ public class SendShareNotification extends MailDocumentHandler {
             String notes, Action action, Collection<String> extMembers) {
         for (String extMember : extMembers) {
             try {
-                //================ remove hack
-                if (extMember.equals("guest1@external.com")) {
-                    extMember = "guest1@gmail.com";
-                } else if (extMember.equals("guest2@external.com")) {
-                    extMember = "guest2@gmail.com";
-                }
-                //===========================
                 sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
                         notes, action, null, extMember);
             } catch (ServiceException e) {
