@@ -198,6 +198,9 @@ public final class DebugConfig {
     public static final boolean ldapNoopSearchSupported =
         value("ldap_noop_search_supported", true);
 
+    public static final int sendGroupShareNotificationSynchronouslyThreshold =
+        value("send_group_share_notification_synchronously_threshold", 20);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
