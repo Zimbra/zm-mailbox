@@ -223,7 +223,7 @@ public class SharedFolderTest {
         } catch (ServiceException e) {
             exception = e.getCode();
         }
-        Assert.assertEquals("got wrong exception", MailServiceException.CANNOT_GRANT_ADMIN_RIGHT, exception);
+        Assert.assertEquals("got wrong exception", MailServiceException.CANNOT_GRANT, exception);
 
         // don't allow granting admin right to public
         try {
@@ -232,7 +232,7 @@ public class SharedFolderTest {
         } catch (ServiceException e) {
             exception = e.getCode();
         }
-        Assert.assertEquals("got wrong exception", MailServiceException.CANNOT_GRANT_ADMIN_RIGHT, exception);
+        Assert.assertEquals("got wrong exception", MailServiceException.CANNOT_GRANT, exception);
 
         // allow granting non-admin rights to virtual account
         try {

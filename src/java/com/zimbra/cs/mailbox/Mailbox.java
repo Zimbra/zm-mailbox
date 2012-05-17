@@ -7070,12 +7070,12 @@ public class Mailbox {
         if ((rights & ACL.RIGHT_ADMIN) != 0) {
             if (granteeType != ACL.GRANTEE_USER && granteeType != ACL.GRANTEE_GROUP) {
                 // Reject wrong grantee types.
-                throw MailServiceException.CANNOT_GRANT_ADMIN_RIGHT();
+                throw MailServiceException.CANNOT_GRANT("admin right can be granted to users and groups only");
             } else if (granteeType == ACL.GRANTEE_USER) {
                 // Reject external virtual accounts.
                 Account account = Provisioning.getInstance().get(AccountBy.id, grantee);
                 if (account != null && account.isIsExternalVirtualAccount()) {
-                    throw MailServiceException.CANNOT_GRANT_ADMIN_RIGHT();
+                    throw MailServiceException.CANNOT_GRANT("admin right cannot be granted to virtual users");
                 }
             }
         }

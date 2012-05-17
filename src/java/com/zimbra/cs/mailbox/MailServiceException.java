@@ -95,7 +95,7 @@ public class MailServiceException extends ServiceException {
     public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
     public static final String CONTACT_TOO_BIG = "mail.CONTACT_TOO_BIG";
     public static final String CANNOT_NEST_SHARES = "mail.CANNOT_NEST_SHARES";
-    public static final String CANNOT_GRANT_ADMIN_RIGHT = "mail.CANNOT_GRANT_ADMIN_RIGHT";
+    public static final String CANNOT_GRANT = "mail.CANNOT_GRANT";
 
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
     public static final String INVALID_IMAGE = "mail.INVALID_IMAGE";
@@ -410,8 +410,8 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("cannot nest shares", CANNOT_NEST_SHARES, SENDERS_FAULT);
     }
 
-    public static MailServiceException CANNOT_GRANT_ADMIN_RIGHT() {
-        return new MailServiceException("cannot grant admin right", CANNOT_GRANT_ADMIN_RIGHT, SENDERS_FAULT);
+    public static MailServiceException CANNOT_GRANT(String msg) {
+        return new MailServiceException("cannot grant: " + msg, CANNOT_GRANT, SENDERS_FAULT);
     }
 
     public static MailServiceException IS_NOT_CHILD() {
