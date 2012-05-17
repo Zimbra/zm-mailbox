@@ -92,7 +92,7 @@
     %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
 
     <!-- user services connector, SSL with client certificate -->
-    <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
+    <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertMode,-->,Disabled%%
     <Call name="addConnector">
       <Arg>
         <New id="ssl-clientcert" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
@@ -118,7 +118,7 @@
         </New>
       </Arg>
     </Call>
-    %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
+    %%uncomment VAR:zimbraMailSSLClientCertMode,<!--,Disabled%% HTTPSCLIENTCERTEND -->
     
     <!-- =============================================================== -->
     <!-- Admin services connector; requires SSL -->
@@ -314,7 +314,7 @@
           Put this rule after the legacy rules (addRewriteRule) so this rule
           is evaluated after the certauth rule mapping is applied.
         -->
-        <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
+        <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertMode,-->,Disabled%%
         <Call name="addRule">
           <Arg>
             <New id="clientCertPortRule" class="com.zimbra.common.jetty.PortRule">
@@ -325,7 +325,7 @@
             </New>
           </Arg>
         </Call>
-        %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->               
+        %%uncomment VAR:zimbraMailSSLClientCertMode,<!--,Disabled%% HTTPSCLIENTCERTEND -->               
         <!-- stop if we've hit the proper webapps -->
         <Call name="addRule">
 	    <Arg>        
@@ -633,11 +633,11 @@
     </Ref>
     %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
     
-    <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
+    <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertMode,-->,Disabled%%
     <Ref id="ssl-clientcert">
       <Call name="open"/>
     </Ref>
-    %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
+    %%uncomment VAR:zimbraMailSSLClientCertMode,<!--,Disabled%% HTTPSCLIENTCERTEND -->
     
     <Ref id="admin">
       <Call name="open"/>
