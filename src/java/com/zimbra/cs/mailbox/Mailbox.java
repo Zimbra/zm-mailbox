@@ -7066,6 +7066,20 @@ public class Mailbox {
     public ACL.Grant grantAccess(OperationContext octxt, int itemId, String grantee, byte granteeType, short rights,
             String args, long expiry)
     throws ServiceException {
+        // Only internal users and groups can be granted the admin right.
+        if ((rights & ACL.RIGHT_ADMIN) != 0) {
+            if (granteeType != ACL.GRANTEE_USER && granteeType != ACL.GRANTEE_GROUP) {
+                // Reject wrong grantee types.
+                throw MailServiceException.CANNOT_GRANT_ADMIN_RIGHT();
+            } else if (granteeType == ACL.GRANTEE_USER) {
+                // Reject external virtual accounts.
+                Account account = Provisioning.getInstance().get(AccountBy.id, grantee);
+                if (account != null && account.isIsExternalVirtualAccount()) {
+                    throw MailServiceException.CANNOT_GRANT_ADMIN_RIGHT();
+                }
+            }
+        }
+
         GrantAccess redoPlayer = new GrantAccess(mId, itemId, grantee, granteeType, rights, args, expiry);
 
         boolean success = false;

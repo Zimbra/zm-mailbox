@@ -43,6 +43,10 @@ public class SharedFolderTest {
         attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("grantee2@zimbra.com", "secret", attrs);
+        attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraIsExternalVirtualAccount, "TRUE");
+        prov.createAccount("virtual_grantee1@zimbra.com", "secret", attrs);
     }
 
     @Before
@@ -181,6 +185,68 @@ public class SharedFolderTest {
         try {
             exception = null;
             mbox.grantAccess(null, f2.getId(), grantee2.getId(), ACL.GRANTEE_USER, ACL.stringToRights("rwidxa"), null);
+        } catch (ServiceException e) {
+            exception = e.getCode();
+        }
+        Assert.assertEquals("got wrong exception", null, exception);
+    }
+
+    @Test
+    public void adminGrant() throws Exception {
+        Account owner, grantee, virtualGrantee;
+        Provisioning prov = Provisioning.getInstance();
+        owner = prov.get(Key.AccountBy.name, "owner@zimbra.com");
+        grantee = prov.get(Key.AccountBy.name, "grantee1@zimbra.com");
+        virtualGrantee = prov.get(Key.AccountBy.name, "virtual_grantee1@zimbra.com");
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(owner.getId());
+
+        Folder.FolderOptions fopt = new Folder.FolderOptions();
+        fopt.setDefaultView(MailItem.Type.MESSAGE);
+        Folder f1 = mbox.createFolder(null, "/Inbox/f1", fopt);
+
+        String exception;
+
+        // allow granting admin right to internal user
+        try {
+            exception = null;
+            mbox.grantAccess(null, f1.getId(), grantee.getId(), ACL.GRANTEE_USER, ACL.stringToRights("rwidxa"), null);
+        } catch (ServiceException e) {
+            exception = e.getCode();
+        }
+        Assert.assertEquals("got wrong exception", null, exception);
+
+        // don't allow granting admin right to virtual account
+        try {
+            exception = null;
+            mbox.grantAccess(null, f1.getId(), virtualGrantee.getId(), ACL.GRANTEE_USER, ACL.stringToRights("rwidxa"), null);
+        } catch (ServiceException e) {
+            exception = e.getCode();
+        }
+        Assert.assertEquals("got wrong exception", MailServiceException.CANNOT_GRANT_ADMIN_RIGHT, exception);
+
+        // don't allow granting admin right to public
+        try {
+            exception = null;
+            mbox.grantAccess(null, f1.getId(), null, ACL.GRANTEE_PUBLIC, ACL.stringToRights("rwidxa"), null);
+        } catch (ServiceException e) {
+            exception = e.getCode();
+        }
+        Assert.assertEquals("got wrong exception", MailServiceException.CANNOT_GRANT_ADMIN_RIGHT, exception);
+
+        // allow granting non-admin rights to virtual account
+        try {
+            exception = null;
+            mbox.grantAccess(null, f1.getId(), virtualGrantee.getId(), ACL.GRANTEE_USER, ACL.stringToRights("rwidx"), null);
+        } catch (ServiceException e) {
+            exception = e.getCode();
+        }
+        Assert.assertEquals("got wrong exception", null, exception);
+
+        // allow granting non-admin rights to public
+        try {
+            exception = null;
+            mbox.grantAccess(null, f1.getId(), null, ACL.GRANTEE_PUBLIC, ACL.stringToRights("rwidx"), null);
         } catch (ServiceException e) {
             exception = e.getCode();
         }
