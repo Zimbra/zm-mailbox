@@ -1283,8 +1283,14 @@ public class Message extends MailItem {
         if (!getSubject().equals(pm.getSubject())) {
             markItemModified(Change.SUBJECT);
         }
+        
         rawSubject = pm.getSubject();
         mData.setSubject(pm.getNormalizedSubject());
+        
+        markItemModified(Change.METADATA);
+        
+        // recipients may have changed
+        recipients = pm.getRecipients();
 
         // the fragment may have changed
         fragment = pm.getFragment(acct.getLocale());

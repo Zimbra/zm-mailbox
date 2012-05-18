@@ -5640,9 +5640,6 @@ public class Mailbox {
                 throw MailServiceException.MODIFY_CONFLICT();
             }
 
-            //make sure we purged the item from the cache as the item is going to get modified!!
-            uncache(msg);
-
             // content changed, so we're obliged to change the IMAP uid
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
