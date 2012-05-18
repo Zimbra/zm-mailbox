@@ -275,6 +275,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetCustomMetadataResponse.class,
             com.zimbra.soap.mail.message.GetDataSourcesRequest.class,
             com.zimbra.soap.mail.message.GetDataSourcesResponse.class,
+            com.zimbra.soap.mail.message.GetDocumentShareURLRequest.class,
+            com.zimbra.soap.mail.message.GetDocumentShareURLResponse.class,
             com.zimbra.soap.mail.message.GetEffectiveFolderPermsRequest.class,
             com.zimbra.soap.mail.message.GetEffectiveFolderPermsResponse.class,
             com.zimbra.soap.mail.message.GetFilterRulesRequest.class,
