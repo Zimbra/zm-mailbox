@@ -93,12 +93,13 @@ public class WaitSetRequest {
      * @zm-api-field-tag default-interests
      * @zm-api-field-description Default interest types: comma-separated list.  Currently:
      * <table>
+     * <tr> <td> <b>f</b> </td> <td> folders </td> </tr>
+     * <tr> <td> <b>m</b> </td> <td> messages </td> </tr>
      * <tr> <td> <b>c</b> </td> <td> contacts </td> </tr>
-     * <tr> <td> <b>m</b> </td> <td> msgs (and subclasses) </td> </tr>
      * <tr> <td> <b>a</b> </td> <td> appointments </td> </tr>
      * <tr> <td> <b>t</b> </td> <td> tasks </td> </tr>
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
-     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "c,m,a,t,d") * </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
      */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=false)
