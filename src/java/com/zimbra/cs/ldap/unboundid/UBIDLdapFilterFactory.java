@@ -501,16 +501,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
-    public ZLdapFilter accountsByExternalGrant(String granteeEmail) {
-        return new UBIDLdapFilter(
-                FilterId.ACCOUNTS_BY_EXTERNAL_GRANT,
-                Filter.createANDFilter(
-                        FILTER_ALL_ACCOUNTS,
-                        Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem,
-                                "granteeId:" + granteeEmail, null, null)));
-    }
-
-    @Override
     public ZLdapFilter accountsByGrants(List<String> granteeIds,
             boolean includePublicShares, boolean includeAllAuthedShares) {
 

@@ -28,6 +28,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
@@ -47,11 +48,13 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -268,7 +271,12 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                             Provisioning.A_zimbraId,
                             Provisioning.A_displayName,
                             Provisioning.A_zimbraSharedItem });
-            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByExternalGrant(extUserEmail));
+            // get all groups extUserEmail belongs to
+            GuestAccount guestAcct = new GuestAccount(extUserEmail, null);
+            List<String> groupIds = prov.getGroupMembership(guestAcct, false).groupIds();
+            List<String> grantees = Lists.newArrayList(extUserEmail);
+            grantees.addAll(groupIds);
+            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(grantees, false, false));
             List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
             if (accounts.isEmpty()) {
@@ -308,8 +316,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 String[] sharedItems = account.getSharedItem();
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
-                    if (!(shareData.getGranteeTypeCode() == ACL.GRANTEE_GUEST &&
-                            extUserEmail.equalsIgnoreCase(shareData.getGranteeId()))) {
+                    if (!granteeMatchesShare(shareData, grantee)) {
                         continue;
                     }
                     String sharedFolderPath = shareData.getPath();
@@ -330,6 +337,18 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             setCookieAndRedirect(req, resp, grantee);
         } catch (Exception e) {
             throw new ServletException(e);
+        }
+    }
+
+    private static boolean granteeMatchesShare(ShareInfoData shareData, Account acct) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        String grantee = shareData.getGranteeId();
+        byte granteeType = shareData.getGranteeTypeCode();
+        switch (granteeType) {
+            case ACL.GRANTEE_PUBLIC:   return true;
+            case ACL.GRANTEE_GROUP:    return prov.inACLGroup(acct, grantee);
+            case ACL.GRANTEE_GUEST:    return grantee.equalsIgnoreCase(acct.getExternalUserMailAddress());
+            default: return false;
         }
     }
 

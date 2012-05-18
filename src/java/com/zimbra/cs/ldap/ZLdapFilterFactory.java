@@ -45,14 +45,13 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNT_BY_FOREIGN_PRINCIPAL(SINGLETON.accountByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
         ACCOUNT_BY_MEMBEROF(SINGLETON.accountByMemberOf("{DYNAMIC-GROUP-ID}")),
         ACCOUNT_BY_NAME(SINGLETON.accountByName("{ACCOUNT-NAME}")),
-        ACCOUNTS_BY_EXTERNAL_GRANT(SINGLETON.accountsByExternalGrant("{GRANTEE-EMAIL}")),
-        ACCOUNTS_BY_GRANTS(SINGLETON.accountsByGrants(Lists.newArrayList("GRANTEE-ID-1", "GRANTEE-ID-2", "..."), true, true)),
+        ACCOUNTS_BY_GRANTS(SINGLETON.accountsByGrants(Lists.newArrayList("{GRANTEE-ID-1}", "{GRANTEE-ID-2}", "..."), true, true)),
         ACCOUNTS_HOMED_ON_SERVER(SINGLETON.accountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY(SINGLETON.accountsHomedOnServerAccountsOnly("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         ACCOUNTS_ON_UCSERVICE(SINGLETON.accountsOnUCService("{UCSERVICE-ID}")),
 
-        ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
+        ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "{ADDR-2}", "..."})),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
         ALL_ACCOUNTS_ONLY(SINGLETON.allAccountsOnly()),
@@ -330,7 +329,6 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
             String serverServiceHostname, String cosId);
     public abstract ZLdapFilter accountsOnUCService(String ucServiceId);
     public abstract ZLdapFilter externalAccountsHomedOnServer(String serverServiceHostname);
-    public abstract ZLdapFilter accountsByExternalGrant(String granteeEmail);
     public abstract ZLdapFilter accountsByGrants(List<String> granteeIds,
             boolean includePublicShares, boolean includeAllAuthedShares);
     public abstract ZLdapFilter CMBSearchAccountsOnly();

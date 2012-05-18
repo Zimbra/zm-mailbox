@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -85,7 +84,9 @@ public class SendShareNotification extends MailDocumentHandler {
 
     private static final Log sLog = LogFactory.getLog(SendShareNotification.class);
 
-    private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ITEM, MailConstants.A_ID };
+    private static final String[] TARGET_ITEM_PATH = new String[] {
+            MailConstants.E_ITEM, MailConstants.A_ID };
+
     @Override protected String[] getProxiedIdPath(Element request) {
         return TARGET_ITEM_PATH;
     }
@@ -318,7 +319,8 @@ public class SendShareNotification extends MailDocumentHandler {
         // not the folder name in user1's mailbox.
         String path = (item instanceof Folder) ? ((Folder)item).getPath() : item.getName();
         sid.setPath(path);
-        sid.setFolderDefaultView((item instanceof Folder) ? ((Folder)item).getDefaultView() : item.getType());
+        sid.setFolderDefaultView((item instanceof Folder) ?
+                ((Folder)item).getDefaultView() : item.getType());
 
         // grantee
         sid.setGranteeType(granteeType);
@@ -625,7 +627,8 @@ public class SendShareNotification extends MailDocumentHandler {
     private static long timestamp;
     private static String template;
 
-    private void sendExternalNotificationEmail(OperationContext octxt, Account authAccount, ShareInfoData sid)
+    private void sendExternalNotificationEmail(OperationContext octxt, Account authAccount,
+            ShareInfoData sid)
     throws ServiceException, MessagingException {
         // ideally template needs to be stored in globalConfig,
         // but the java generate-getters is having trouble with

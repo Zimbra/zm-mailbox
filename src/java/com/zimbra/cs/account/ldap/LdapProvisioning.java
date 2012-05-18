@@ -9337,6 +9337,8 @@ public class LdapProvisioning extends LdapProv {
 
         if (acct instanceof GuestAccount) {
             memberOf = searchContainingDynamicGroupIdsForExternalAddress(acct.getName(), null);
+        } else if (acct.isIsExternalVirtualAccount()) {
+            memberOf = searchContainingDynamicGroupIdsForExternalAddress(acct.getExternalUserMailAddress(), null);
         } else {
             memberOf = acct.getMultiAttrSet(Provisioning.A_zimbraMemberOf);
         }
@@ -9403,6 +9405,9 @@ public class LdapProvisioning extends LdapProv {
 
     /*
      * remove addrs from all dynamic groups (i.e. static units of dynamic groups)
+     *
+     * Called whenever a new email address is created on the system
+     * (create/rename/add-alias of accounts and static/dynamic groups)
      */
     private void removeExternalAddrsFromAllDynamicGroups(Set<String> addrs, ZLdapContext zlc)
     throws ServiceException {

@@ -1425,9 +1425,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
-     * @param zimbraId the zimbraId of the group (static or dynamic) we are checking for
+     * @param zimbraId zimbraId of the group (static or dynamic) we are checking for
      * @return true if this account is a member of the specified group, and the group
-     *         is eligible as a
+     *         is eligible as a grantee of ACL.
      *         If the group is a static group, also true if this account is a member of a
      *         group that is a member of the specified group.
      * @throws ServiceException

@@ -96,17 +96,10 @@ public abstract class DistributionList extends ZAttrDistributionList implements 
         String aliases[] = getAliases();
         String addrs[] = new String[aliases.length+1];
         addrs[0] = getName();
-        for (int i=0; i < aliases.length; i++)
+        for (int i=0; i < aliases.length; i++) {
             addrs[i+1] = aliases[i];
+        }
         return addrs;
     }
-
-    /*
-    @Override
-    public GroupMemberEmailAddrs getMemberAddrs() {
-        return new GroupMemberEmailAddrs(); // TODO
-    }
-    */
-
 
 }
