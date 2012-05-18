@@ -276,7 +276,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             List<String> groupIds = prov.getGroupMembership(guestAcct, false).groupIds();
             List<String> grantees = Lists.newArrayList(extUserEmail);
             grantees.addAll(groupIds);
-            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(grantees, true, false));
+            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(grantees, false, false));
             List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
             if (accounts.isEmpty()) {
@@ -345,7 +345,6 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         String grantee = shareData.getGranteeId();
         byte granteeType = shareData.getGranteeTypeCode();
         switch (granteeType) {
-            case ACL.GRANTEE_PUBLIC:   return true;
             case ACL.GRANTEE_GROUP:    return prov.inACLGroup(acct, grantee);
             case ACL.GRANTEE_GUEST:    return grantee.equalsIgnoreCase(acct.getExternalUserMailAddress());
             default: return false;
