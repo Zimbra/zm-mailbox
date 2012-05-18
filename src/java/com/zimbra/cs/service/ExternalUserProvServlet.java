@@ -276,7 +276,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             List<String> groupIds = prov.getGroupMembership(guestAcct, false).groupIds();
             List<String> grantees = Lists.newArrayList(extUserEmail);
             grantees.addAll(groupIds);
-            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(grantees, false, false));
+            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(grantees, true, false));
             List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
             if (accounts.isEmpty()) {
