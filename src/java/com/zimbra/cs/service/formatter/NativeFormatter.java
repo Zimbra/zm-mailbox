@@ -110,7 +110,7 @@ public final class NativeFormatter extends Formatter {
     @Override
     public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
-            sendZimbraHeaders(context.resp, context.target);
+            sendZimbraHeaders(context, context.resp, context.target);
             HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
             if (browser == HttpUtil.Browser.IE) {
                 context.resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
@@ -459,7 +459,7 @@ public final class NativeFormatter extends Formatter {
             item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.Type.DOCUMENT, 0);
         }
 
-        sendZimbraHeaders(context.resp, item);
+        sendZimbraHeaders(context, context.resp, item);
     }
 
     private static long getContentLength(HttpServletRequest req)
@@ -470,28 +470,31 @@ public final class NativeFormatter extends Formatter {
         return contentLengthStr != null ? Long.parseLong(contentLengthStr) : -1;
     }
 
-    public static void sendZimbraHeaders(HttpServletResponse resp, MailItem item) {
+    public static void sendZimbraHeaders(UserServletContext context, HttpServletResponse resp, MailItem item) {
         if (resp == null || item == null)
             return;
-        resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
-        resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
-        resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
-        resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
-        resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
-        resp.addHeader("X-Zimbra-ItemType", item.getType().toString());
-        try {
-            String val = item.getName();
-            if (!StringUtil.isAsciiString(val)) {
-                val = MimeUtility.encodeText(val, "utf-8", "B");
+
+        if (context.wantCustomHeaders) {
+            resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
+            resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
+            resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
+            resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
+            resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
+            resp.addHeader("X-Zimbra-ItemType", item.getType().toString());
+            try {
+                String val = item.getName();
+                if (!StringUtil.isAsciiString(val)) {
+                    val = MimeUtility.encodeText(val, "utf-8", "B");
+                }
+                resp.addHeader("X-Zimbra-ItemName", val);
+                val = item.getPath();
+                if (!StringUtil.isAsciiString(val)) {
+                    val = MimeUtility.encodeText(val, "utf-8", "B");
+                }
+                resp.addHeader("X-Zimbra-ItemPath", val);
+            } catch (UnsupportedEncodingException e1) {
+            } catch (ServiceException e) {
             }
-            resp.addHeader("X-Zimbra-ItemName", val);
-            val = item.getPath();
-            if (!StringUtil.isAsciiString(val)) {
-                val = MimeUtility.encodeText(val, "utf-8", "B");
-            }
-            resp.addHeader("X-Zimbra-ItemPath", val);
-        } catch (UnsupportedEncodingException e1) {
-        } catch (ServiceException e) {
         }
 
         // set Last-Modified header to date when item's content was last modified

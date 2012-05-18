@@ -76,6 +76,7 @@ public class UserServletContext {
     public int[] reqListIds;
     public ArrayList<Item> requestedItems;
     public boolean fromDumpster;
+    public boolean wantCustomHeaders = true;
     public int imapId = -1;
     public boolean sync;
     private Account authAccount;

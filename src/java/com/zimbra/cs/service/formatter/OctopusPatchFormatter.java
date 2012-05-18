@@ -169,7 +169,7 @@ public class OctopusPatchFormatter extends Formatter
 
             patchStore.acceptPatch(ip, item.getId(), item.getVersion());
 
-            NativeFormatter.sendZimbraHeaders(context.resp, item);
+            NativeFormatter.sendZimbraHeaders(context, context.resp, item);
 
         } catch (PatchException e) {
             log.error("Patch upload failed: " + e);
@@ -206,7 +206,7 @@ public class OctopusPatchFormatter extends Formatter
                     (version == -1 ? ", latest version" : (", version: " + version)));
         }
 
-        NativeFormatter.sendZimbraHeaders(context.resp, context.target);
+        NativeFormatter.sendZimbraHeaders(context, context.resp, context.target);
 
         HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
         if (browser == HttpUtil.Browser.IE) {
