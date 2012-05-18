@@ -86,12 +86,26 @@ public final class MailboxTestUtil {
         initServer(storeManagerClass, "");
     }
 
+    public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, boolean OctopusInstance) throws Exception {
+        initProvisioning(zimbraServerDir);
+
+        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
+        DbPool.startup();
+        HSQLDB.createDatabase(zimbraServerDir, OctopusInstance);
+
+        MailboxManager.setInstance(null);
+        MailboxIndex.setIndexStoreFactory("lucene");
+
+        LC.zimbra_class_store.setDefault(storeManagerClass.getName());
+        StoreManager.getInstance().startup();
+    }
+
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
         initProvisioning(zimbraServerDir);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
-        HSQLDB.createDatabase(zimbraServerDir);
+        HSQLDB.createDatabase(zimbraServerDir, false);
 
         MailboxManager.setInstance(null);
         MailboxIndex.setIndexStoreFactory("lucene");

@@ -40,7 +40,7 @@ public final class HSQLDB extends Db {
      * Populates ZIMBRA and MBOXGROUP1 schema.
      */
     public static void createDatabase() throws Exception {
-        createDatabase("");
+        createDatabase("", false);
     }
 
     /**
@@ -48,7 +48,7 @@ public final class HSQLDB extends Db {
      * @param zimbraServerDir the directory that contains the ZimbraServer project
      * @throws Exception
      */
-    public static void createDatabase(String zimbraServerDir) throws Exception {
+    public static void createDatabase(String zimbraServerDir, boolean isOctopus) throws Exception {
         zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -62,6 +62,9 @@ public final class HSQLDB extends Db {
             }
             execute(conn, zimbraServerDir + "src/db/hsqldb/db.sql");
             execute(conn, zimbraServerDir + "src/db/hsqldb/create_database.sql");
+            if (isOctopus) {
+                execute(conn, "src/db/hsqldb/create_octopus_tables.sql");
+            }
         } finally {
             DbPool.closeResults(rs);
             DbPool.quietCloseStatement(stmt);
