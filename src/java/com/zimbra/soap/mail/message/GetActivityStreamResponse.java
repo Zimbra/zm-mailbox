@@ -15,10 +15,6 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +25,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.ActivityInfo;
@@ -82,28 +81,38 @@ public class GetActivityStreamResponse {
     private String sessionId;
 
     /**
+     * @zm-api-field-description Count
+     */
+    @XmlAttribute(name=MailConstants.A_COUNT, required=false)
+    private String count;
+
+    /**
      * @zm-api-field-description Operations
      */
     @XmlElement(name=OctopusXmlConstants.E_OPERATION /* op */, required=false)
-    private List<NamedElement> operations = Lists.newArrayList();
+    private final List<NamedElement> operations = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Users
      */
     @XmlElement(name=MailConstants.A_USER /* user */, required=false)
-    private List<IdEmailName> users = Lists.newArrayList();
+    private final List<IdEmailName> users = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Activities
      */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<ActivityInfo> activities = Lists.newArrayList();
+    private final List<ActivityInfo> activities = Lists.newArrayList();
 
     public GetActivityStreamResponse() {
     }
 
     public void setSession(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public void setCount(String count) {
+        this.count = count;
     }
 
     public void setOperations(Iterable <NamedElement> operations) {
@@ -142,6 +151,9 @@ public class GetActivityStreamResponse {
     public String getSession() {
         return sessionId;
     }
+    public String getCount() {
+        return count;
+    }
     public List<NamedElement> getOperations() {
         return Collections.unmodifiableList(operations);
     }
@@ -155,6 +167,7 @@ public class GetActivityStreamResponse {
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("session", sessionId)
+            .add("count", count)
             .add("operations", operations)
             .add("users", users)
             .add("activities", activities);
