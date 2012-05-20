@@ -802,13 +802,16 @@ public abstract class CalendarItem extends MailItem {
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
                                    String uid, long startTime, long endTime, Recurrence.IRecurrence recur,
                                    List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
-        meta.put(Metadata.FN_TZMAP, Util.encodeAsMetadata(tzmap));
+        if (tzmap != null)
+            meta.put(Metadata.FN_TZMAP, Util.encodeAsMetadata(tzmap));
+        
         meta.put(Metadata.FN_UID, uid);
         meta.put(Metadata.FN_CALITEM_START, startTime);
         meta.put(Metadata.FN_CALITEM_END, endTime);
         meta.put(Metadata.FN_NUM_COMPONENTS, invs.size());
 
-        meta.put(Metadata.FN_REPLY_LIST, replyList.encodeAsMetadata());
+        if (replyList != null)
+            meta.put(Metadata.FN_REPLY_LIST, replyList.encodeAsMetadata());
 
         int num = 0;
         for (Invite comp : invs)
