@@ -2172,6 +2172,8 @@ public class ProvUtil implements HttpDebugListener {
                     throw new ArgException("not enough arguments");
                 else
                     rightClass = args[i];
+            } else {
+                throw new ArgException("invalid arg: " + arg);
             }
             i++;
         }
