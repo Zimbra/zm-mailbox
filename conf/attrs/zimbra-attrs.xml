@@ -7050,4 +7050,13 @@ TODO: delete them permanently from here
   <desc>port number on which message channel should listen</desc>
 </attr>
 
+<attr id="1416" name="zimbraClientTypeRegex" type="cstring" max="256" cardinality="multi" optionalIn="globalConfig" flags="octopus" since="8.0.0">
+  <globalConfigValue>Web UI:(.*)ZimbraWebClient(.*)</globalConfigValue>
+  <globalConfigValue>ipad:(.*)iPad(.*)</globalConfigValue>
+  <globalConfigValue>iphone:(.*)iPhone(.*)</globalConfigValue>
+  <globalConfigValue>Android:(.*)Android(.*)</globalConfigValue>
+  <globalConfigValue>SyncClient:(.*)\\((.*)\\)$</globalConfigValue>
+  <desc>Regex for identifying client types</desc>
+</attr>
+
 </attrs>

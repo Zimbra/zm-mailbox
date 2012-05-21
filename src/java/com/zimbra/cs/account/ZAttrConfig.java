@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120516-2244 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120518-1322 */
 
     /**
      * RFC2256: descriptive information
@@ -5582,6 +5582,140 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetChangePasswordURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraChangePasswordURL, "");
+        return attrs;
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @return zimbraClientTypeRegex, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public String[] getClientTypeRegex() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraClientTypeRegex); return value.length > 0 ? value : new String[] {"Web UI:(.*)ZimbraWebClient(.*)","ipad:(.*)iPad(.*)","iphone:(.*)iPhone(.*)","Android:(.*)Android(.*)","SyncClient:(.*)\\((.*)\\)$"};
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param zimbraClientTypeRegex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public void setClientTypeRegex(String[] zimbraClientTypeRegex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClientTypeRegex, zimbraClientTypeRegex);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param zimbraClientTypeRegex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public Map<String,Object> setClientTypeRegex(String[] zimbraClientTypeRegex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClientTypeRegex, zimbraClientTypeRegex);
+        return attrs;
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param zimbraClientTypeRegex new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public void addClientTypeRegex(String zimbraClientTypeRegex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraClientTypeRegex, zimbraClientTypeRegex);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param zimbraClientTypeRegex new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public Map<String,Object> addClientTypeRegex(String zimbraClientTypeRegex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraClientTypeRegex, zimbraClientTypeRegex);
+        return attrs;
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param zimbraClientTypeRegex existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public void removeClientTypeRegex(String zimbraClientTypeRegex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraClientTypeRegex, zimbraClientTypeRegex);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param zimbraClientTypeRegex existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public Map<String,Object> removeClientTypeRegex(String zimbraClientTypeRegex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraClientTypeRegex, zimbraClientTypeRegex);
+        return attrs;
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public void unsetClientTypeRegex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClientTypeRegex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for identifying client types
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public Map<String,Object> unsetClientTypeRegex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClientTypeRegex, "");
         return attrs;
     }
 
