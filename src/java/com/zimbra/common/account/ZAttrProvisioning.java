@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120516-2244 */
+    /* build: 8.0.0_BETA1_1111 pshao 20120518-1322 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2852,6 +2852,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=450)
     public static final String A_zimbraChildVisibleAccount = "zimbraChildVisibleAccount";
+
+    /**
+     * Regex for identifying client types
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1416)
+    public static final String A_zimbraClientTypeRegex = "zimbraClientTypeRegex";
 
     /**
      * Type of HA cluster software in use; &quot;none&quot; by default,
