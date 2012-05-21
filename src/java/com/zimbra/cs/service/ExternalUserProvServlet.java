@@ -54,7 +54,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ZimbraAuthToken;
-import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -144,7 +143,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 ZMountpoint zMtpt = null;
                 try {
                     zMtpt = zMailbox.createMountpoint(
-                            String.valueOf(getMptParentFolderId(sharedFolderView)), mountpointName,
+                            String.valueOf(getMptParentFolderId(sharedFolderView, prov)), mountpointName,
                             ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.defaultColor, null,
                             ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
                 } catch (ServiceException e) {
@@ -323,7 +322,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     String mountpointName = getMountpointName(account, grantee, sharedFolderPath);
                     MailItem.Type viewType = shareData.getFolderDefaultViewCode();
                     Mountpoint mtpt = granteeMbox.createMountpoint(
-                            null, getMptParentFolderId(viewType), mountpointName, account.getId(),
+                            null, getMptParentFolderId(viewType, prov), mountpointName, account.getId(),
                             shareData.getItemId(), shareData.getItemUuid(), viewType, 0, MailItem.DEFAULT_COLOR, false);
                     if (viewType == MailItem.Type.APPOINTMENT) {
                         // make sure that the mountpoint is checked in the UI by default
@@ -358,18 +357,12 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         resp.sendRedirect("/");
     }
 
-    private static int getMptParentFolderId(MailItem.Type viewType) {
+    private static int getMptParentFolderId(MailItem.Type viewType, Provisioning prov) throws ServiceException {
         switch (viewType) {
             case DOCUMENT:
-                return Mailbox.ID_FOLDER_BRIEFCASE;
-            case APPOINTMENT:
-                return Mailbox.ID_FOLDER_CALENDAR;
-            case CONTACT:
-                return Mailbox.ID_FOLDER_CONTACTS;
-            case TASK:
-                return Mailbox.ID_FOLDER_TASKS;
-            case MESSAGE:
-                return Mailbox.ID_FOLDER_INBOX;
+                if (prov.isOctopus()) {
+                    return Mailbox.ID_FOLDER_BRIEFCASE;
+                }
             default:
                 return Mailbox.ID_FOLDER_USER_ROOT;
         }
