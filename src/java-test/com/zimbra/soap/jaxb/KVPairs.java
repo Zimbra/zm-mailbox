@@ -22,26 +22,27 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
+
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.KeyValuePairs;
 
-/** Test JAXB class which implements KeyValuePairs */
+/**
+ * Test JAXB class which implements KeyValuePairs
+ * Also tests {@link ZimbraKeyValuePairs} annotation
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="key-value-pairs")
 public class KVPairs implements KeyValuePairs {
-    @JsonSerialize(using=KeyAndValueListSerializer.class)
-    @JsonProperty(Element.JSONElement.E_ATTRS /* _attrs */)
-    @XmlElement(name="a", required=false)
+    // Note: Can use a different name BUT won't be able to round trip back to JAXB from JSON if you do
+    @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
+    @ZimbraKeyValuePairs
     private List<KeyValuePair> keyValuePairs;
 
     public KVPairs() {}

@@ -59,7 +59,7 @@ public class StatsSpec {
      * or just non-empty text - e.g. "1"
      */
     @XmlElementRefs({
-        @XmlElementRef(name=AdminConstants.E_VALUES, type=StatsValueWrapper.class)
+        @XmlElementRef(/* values */ type=StatsValueWrapper.class)
     })
     @XmlMixed
     private List <Object> content;

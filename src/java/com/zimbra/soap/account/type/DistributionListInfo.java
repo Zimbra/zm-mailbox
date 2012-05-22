@@ -72,14 +72,14 @@ public class DistributionListInfo extends ObjectInfo {
      */
     @XmlElementWrapper(name=AccountConstants.E_DL_OWNERS /* owners */, required=false)
     @XmlElement(name=AccountConstants.E_DL_OWNER /* owner */, required=false)
-    private List<DistributionListGranteeInfo> owners = Lists.newArrayList();
+    private List<DistributionListGranteeInfo> owners;
 
     /**
      * @zm-api-field-description Rights
      */
     @XmlElementWrapper(name=AccountConstants.E_RIGHTS, required=false)
     @XmlElement(name=AccountConstants.E_RIGHT, required=false)
-    private List<DistributionListRightInfo> rights = Lists.newArrayList();
+    private List<DistributionListRightInfo> rights;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -141,11 +141,14 @@ public class DistributionListInfo extends ObjectInfo {
     }
 
     public void addOwner(DistributionListGranteeInfo owner) {
+        if (owners == null) {
+            owners = Lists.newArrayList();
+        }
         owners.add(owner);
     }
 
     public List<? extends DistributionListGranteeInfoInterface> getOwners() {
-        return Collections.unmodifiableList(owners);
+        return (owners == null) ? null : Collections.unmodifiableList(owners);
     }
 
     public void setRights(List<DistributionListRightInfo> rights) {
@@ -153,10 +156,13 @@ public class DistributionListInfo extends ObjectInfo {
     }
 
     public void addRight(DistributionListRightInfo right) {
+        if (rights == null) {
+            rights = Lists.newArrayList();
+        }
         rights.add(right);
     }
 
     public List<? extends DistributionListRightInfo> getRights() {
-        return Collections.unmodifiableList(rights);
+        return (rights == null) ? null : Collections.unmodifiableList(rights);
     }
 }

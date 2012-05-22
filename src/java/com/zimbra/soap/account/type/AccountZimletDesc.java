@@ -93,11 +93,10 @@ public class AccountZimletDesc implements ZimletDesc {
      * @zm-api-field-description Elements
      */
     @XmlElementRefs({
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION /* serverExtension */,
-                type=ZimletServerExtension.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SCRIPT /* include */, type=AccountZimletInclude.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_CSS /* includeCSS */, type=AccountZimletIncludeCSS.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, type=AccountZimletTarget.class)
+        @XmlElementRef(/* serverExtension */ type=ZimletServerExtension.class),
+        @XmlElementRef(/* include */  type=AccountZimletInclude.class),
+        @XmlElementRef(/* includeCSS */  type=AccountZimletIncludeCSS.class),
+        @XmlElementRef(/* target */ type=AccountZimletTarget.class)
     })
     @XmlAnyElement
     private List<Object> elements = Lists.newArrayList();

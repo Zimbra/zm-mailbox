@@ -110,7 +110,7 @@ public class CommentInfo {
      * @zm-api-field-description metadata and the subject as text
      */
     @XmlElementRefs({
-        @XmlElementRef(name=MailConstants.E_METADATA /* meta */, type=MailCustomMetadata.class)
+        @XmlElementRef(/* meta */ type=MailCustomMetadata.class)
     })
     @XmlMixed
     private List<Object> elements = Lists.newArrayList();

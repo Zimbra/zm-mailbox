@@ -14,28 +14,22 @@
  */
 package com.zimbra.soap.jaxb;
 
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.collect.Lists;
+import com.zimbra.soap.account.type.ObjectInfo;
 
-/** Test JAXB class to exercise a field annotated with {@link XmlElementRefs} and {@link XmlElementRef} */
+/**
+ */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="elem-ref-tester")
-public class ElementRefsTester {
-    @XmlElementRefs({
-        @XmlElementRef(type=StringAttribIntValue.class), /* note: name not supplied as would be ignored anyway */
-        @XmlElementRef(type=EnumAttribs.class)
-    })
-    private List<Object> elems = Lists.newArrayList();
-
-    public ElementRefsTester() { }
-
-    public List<Object> getElems() { return elems; }
-    public void setElems(List<Object> elems) { this.elems = elems; }
+@XmlRootElement(name="object-info-tester")
+public class ObjectInfoTester {
+    @XmlElement(name="obj-info", required=true)
+    private ObjectInfo objectInfo;
+    public ObjectInfoTester() { }
+    public ObjectInfoTester(ObjectInfo oi) { setObjectInfo(oi); }
+    public ObjectInfo getObjectInfo() { return objectInfo; }
+    public void setObjectInfo(ObjectInfo objectInfo) { this.objectInfo = objectInfo; }
 }

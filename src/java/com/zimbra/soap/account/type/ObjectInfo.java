@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,12 +26,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 
+/**
+ * Information for an Object - attributes are encoded as Key/Value pairs in JSON - i.e. using "_attrs"
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class ObjectInfo {
@@ -53,8 +54,8 @@ public class ObjectInfo {
     /**
      * @zm-api-field-description Attributes
      */
-    @XmlElement(name=AccountConstants.E_A)
-    @JsonSerialize(using=WrappedAttrListSerializer.class)
+    @ZimbraKeyValuePairs
+    @XmlElement(name=AccountConstants.E_A /* a */, required=false)
     private final List<KeyValuePair> attrList;
 
     /**

@@ -31,8 +31,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.google.common.collect.Multimap;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -58,7 +56,7 @@ import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.type.ZmBoolean;
 
-import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 /**
@@ -263,18 +261,18 @@ public final class GetInfoResponse {
     /**
      * @zm-api-field-description User-settable preferences
      */
+    @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */, required=false)
     @XmlElement(name=AccountConstants.E_PREF /* pref */, required=false)
-    @JsonSerialize(using=WrappedAttrListSerializer.class)
     private List<Pref> prefs = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Account attributes that aren't user-settable, but the front-end needs.
      * Only attributes listed in <b>zimbraAccountClientAttrs</b> will be returned.
      */
+    @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */, required=false)
     @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=false)
-    @JsonSerialize(using=WrappedAttrListSerializer.class)
     private List<Attr> attrs = Lists.newArrayList();
 
     /**

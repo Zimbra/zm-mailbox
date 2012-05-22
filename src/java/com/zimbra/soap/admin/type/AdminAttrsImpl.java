@@ -24,15 +24,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 
 /**
  * Note: Any subclasses that have fields for elements MUST either omit {@link XmlType} or specify a propOrder in it
@@ -49,9 +46,8 @@ public class AdminAttrsImpl implements AdminAttrs {
     /**
      * @zm-api-field-description Attributes
      */
+    @ZimbraKeyValuePairs
     @XmlElement(name=AdminConstants.E_A /* a */, required=false)
-    @JsonSerialize(using=KeyAndValueListSerializer.class)
-    @JsonProperty("_attrs")
     private List<Attr> attrs = Lists.newArrayList();
 
     public AdminAttrsImpl() {

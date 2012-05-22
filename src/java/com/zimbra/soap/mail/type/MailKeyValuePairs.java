@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,9 +23,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -35,7 +32,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.KeyValuePairs;
-import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 
 /*
  * Used for JAXB objects representing elements which have child node(s) of form:
@@ -47,8 +44,7 @@ public class MailKeyValuePairs implements KeyValuePairs {
     /**
      * @zm-api-field-description Key value pairs
      */
-    @JsonSerialize(using=KeyAndValueListSerializer.class)
-    @JsonProperty("_attrs")
+    @ZimbraKeyValuePairs
     @XmlElement(name=MailConstants.E_A)
     private List<KeyValuePair> keyValuePairs;
 

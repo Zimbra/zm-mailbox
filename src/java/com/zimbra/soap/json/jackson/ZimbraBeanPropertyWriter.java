@@ -38,6 +38,7 @@ import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.base.KeyAndValue;
 import com.zimbra.soap.util.JaxbInfo;
 
 /**
@@ -78,9 +79,6 @@ public class ZimbraBeanPropertyWriter
     protected final NameInfo nameInfo;
     protected QName wrapperName = null;
     protected QName wrappedName = null;
-    protected boolean treatAsUniqueElement = false;
-    protected boolean treatAsAttribute = false;
-    protected boolean mixedAllowed = false;
 
     public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, NameInfo nameInfo) {
         super(wrapped);
@@ -148,19 +146,18 @@ public class ZimbraBeanPropertyWriter
             return;
         }
 
-        mixedAllowed = nameInfo.isMixedAllowed();
         wrapperName = nameInfo.getWrapperName();
         startWrapping(jgen);
         wrappedName = nameInfo.getWrappedName();
         if (wrappedName != null) {
-            treatAsUniqueElement = nameInfo.isTreatAsUniqueElement();
-            treatAsAttribute = nameInfo.isTreatAsAttribute();
-            serializeInnerField(value, jgen, prov, ser);
+                serializeInnerField(value, jgen, prov, ser);
         } else {
             /* No specific wrappedName */
             Map<Class<?>, QName> nameMap = nameInfo.getWrappedNameMap();
             if ((nameMap != null) && (value instanceof ArrayList)) {
                 serializeXmlElementsArray((ArrayList<?>)value, jgen, prov, nameMap);
+            } else if ((nameInfo.isKeyValuePairs()) && (value instanceof ArrayList)) {
+                serializeZimbraKeyValuePairs((ArrayList<?>) value, jgen, prov);
             } else if (nameInfo.isAnyAttributeAllowed() && java.util.Map.class.isAssignableFrom(value.getClass())) {
                 serializeXmlAnyAttributes((Map<?,?>) value, jgen, prov);
             } else {
@@ -179,8 +176,10 @@ public class ZimbraBeanPropertyWriter
     throws JsonGenerationException, IOException {
         if (wrapperName != null) {
             jgen.writeFieldName(wrapperName.getLocalPart());
-            // Zimbra wraps the wrapper inside an array
-            jgen.writeStartArray();
+            // Zimbra wraps the wrapper inside an array - except for keyvaluepairs
+            if (!nameInfo.isKeyValuePairs()) {
+                jgen.writeStartArray();
+            }
             jgen.writeStartObject();
         }
     }
@@ -190,7 +189,9 @@ public class ZimbraBeanPropertyWriter
         if (wrapperName != null) {
             jgen.writeEndObject();
             addZimbraJsonNamespaceField(jgen, wrapperName);
-            jgen.writeEndArray();
+            if (!nameInfo.isKeyValuePairs()) {
+                jgen.writeEndArray();
+            }
         }
     }
 
@@ -203,7 +204,7 @@ public class ZimbraBeanPropertyWriter
     public void serializeInnerField(Object value, JsonGenerator jgen, SerializerProvider prov,
         JsonSerializer<Object> ser) throws JsonGenerationException, IOException {
         jgen.writeFieldName(wrappedName.getLocalPart());
-        if (treatAsAttribute) {
+        if (nameInfo.isTreatAsAttribute()) {
             ser.serialize(value, jgen, prov);
             return;
         }
@@ -212,7 +213,7 @@ public class ZimbraBeanPropertyWriter
             if (valClass.isEnum()) {
                 serializeElementTextValue(value, jgen, prov, ser);
             } else {
-                if (!this.treatAsUniqueElement) {
+                if (!nameInfo.isTreatAsUniqueElement()) {
                     jgen.writeStartArray();
                 }
                 if (ser instanceof ZimbraBeanSerializer) {
@@ -221,7 +222,7 @@ public class ZimbraBeanPropertyWriter
                 } else {
                     ser.serialize(value, jgen, prov);
                 }
-                if (!this.treatAsUniqueElement) {
+                if (!nameInfo.isTreatAsUniqueElement()) {
                     jgen.writeEndArray();
                 }
             }
@@ -247,7 +248,7 @@ public class ZimbraBeanPropertyWriter
     private void serializeElementTextValue(Object value, JsonGenerator jgen, SerializerProvider prov,
             JsonSerializer<Object> ser)
     throws JsonGenerationException, IOException {
-        if (!this.treatAsUniqueElement) {
+        if (!nameInfo.isTreatAsUniqueElement()) {
             jgen.writeStartArray();
         }
         jgen.writeStartObject();
@@ -255,7 +256,7 @@ public class ZimbraBeanPropertyWriter
         ser.serialize(value, jgen, prov);
         addZimbraJsonNamespaceField(jgen, wrappedName);
         jgen.writeEndObject();
-        if (!this.treatAsUniqueElement) {
+        if (!nameInfo.isTreatAsUniqueElement()) {
             jgen.writeEndArray();
         }
     }
@@ -306,11 +307,9 @@ public class ZimbraBeanPropertyWriter
                     jgen.writeFieldName(w3ce.getLocalName());
                     JsonSerializer<org.w3c.dom.Element> eleSer = new ZmDomElementJsonSerializer();
                     eleSer.serialize(w3ce, jgen, prov);
-                    // jgen.writeObject(obj);
                 } else {
-                    if (!mixedAllowed) {
-                        LOG.debug("Unexpected object of class '" + objClass.getName() +
-                                "' in XmlElementsRefs array - ignored");
+                    if (!nameInfo.isMixedAllowed()) {
+                        LOG.debug("Unexpected '" + objClass.getName() + "' object in XmlElements(Refs) array - ignored");
                     } else {
                         jgen.writeFieldName(JSONElement.A_CONTENT /* "_content" */);
                         jgen.writeObject(obj);
@@ -323,6 +322,24 @@ public class ZimbraBeanPropertyWriter
                 jgen.writeEndArray();
             }
         }
+    }
+
+    private void serializeZimbraKeyValuePairs(List<?> pairs, JsonGenerator jgen, SerializerProvider prov)
+    throws JsonGenerationException, IOException {
+        if (pairs == null) {
+            return;
+        }
+        jgen.writeObjectFieldStart(Element.JSONElement.E_ATTRS /* _attrs */);
+        for (Object obj : pairs) {
+            Class<?> objClass = obj.getClass();
+            if (KeyAndValue.class.isAssignableFrom(objClass)) {
+                KeyAndValue pair = (KeyAndValue) obj;
+                jgen.writeStringField(pair.getKey(), pair.getValue());
+            } else {
+                LOG.debug("Unexpected '" + objClass.getName() + "' object in @ZimbraKeyValuePairs array - ignored");
+            }
+        }
+        jgen.writeEndObject();
     }
 
     private void serializeXmlAnyAttributes(Map<?,?> extraAttribs, JsonGenerator jgen, SerializerProvider prov)

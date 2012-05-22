@@ -15,7 +15,6 @@
 package com.zimbra.soap.jaxb;
 
 import java.util.Map;
-import javax.xml.namespace.QName;
 
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -36,13 +35,15 @@ public class AnyAttrTester {
     private String given;
 
     @XmlAnyAttribute
-    private Map<QName,Object> extraAttributes = Maps.newHashMap();
+    private Map<javax.xml.namespace.QName,Object> extraAttributes = Maps.newHashMap();
 
     public AnyAttrTester() { }
 
     public String getGiven() { return given; }
     public void setGiven(String given) { this.given = given; }
 
-    public Map<QName,Object> getExtraAttributes() { return extraAttributes; }
-    public void setExtraAttributes(Map<QName,Object> extraAttributes) { this.extraAttributes = extraAttributes; }
+    public Map<javax.xml.namespace.QName,Object> getExtraAttributes() { return extraAttributes; }
+    public void setExtraAttributes(Map<javax.xml.namespace.QName,Object> extraAttributes) {
+        this.extraAttributes = extraAttributes;
+    }
 }

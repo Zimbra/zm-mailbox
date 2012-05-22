@@ -54,27 +54,35 @@ implements JaxbNodeInfo {
         canHaveMultipleElements = JaxbInfo.representsMultipleElements(defaultGenericType);
     }
 
+    /**
+     * Note that unless the collection item type (for collection property) or property type (for single valued
+     * property) is JAXBElement any name and namespace specified in {@link XmlElementRef} are ignored - the actual
+     * values are taken from the {@link XmlRootElement} annotation on the collection item type or property type.
+     */
     public JaxbElementInfo(XmlElementRef annot, String fieldName, Type defaultGenericType) {
-        name = annot.name();
-        namespace = annot.namespace();
-        this.fieldName = fieldName;
-        required = true; // TODO annotation.required() does not exist!
-        if ((name == null) || JaxbInfo.DEFAULT_MARKER.equals(name)) {
-            name = JaxbInfo.getRootElementName(atomClass);
-            if (name == null)
-                name = fieldName;
-        }
-        if (name == null) {
-            throw new RuntimeException(
-                String.format("Ignoring element with annotation %s unable to determine name", annot.toString()));
-        }
-        stamp = String.format("[element=%s]", name);
         atomClass = annot.type();
         if (atomClass == XmlElementRef.DEFAULT.class)
             atomClass = JaxbInfo.classFromType(defaultGenericType);
         if (atomClass == null) {
             LOG.debug("%s Unable to determine name for element with annotation '%s'", stamp, annot);
         }
+        name = JaxbInfo.getRootElementName(atomClass);
+        if (name == null) {
+            name = annot.name();
+            namespace = annot.namespace();
+        } else {
+            namespace = JaxbInfo.getRootElementNamespace(atomClass);
+        }
+        this.fieldName = fieldName;
+        required = true; // TODO annotation.required() does not exist!
+        if ((name == null) || JaxbInfo.DEFAULT_MARKER.equals(name)) {
+            name = fieldName;
+        }
+        if (name == null) {
+            throw new RuntimeException(
+                String.format("Ignoring element with annotation %s unable to determine name", annot.toString()));
+        }
+        stamp = String.format("[element=%s]", name);
         canHaveMultipleElements = JaxbInfo.representsMultipleElements(defaultGenericType);
     }
 

@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="elem-ref-tester")
 public class ElementRefTester {
-    @XmlElementRef(name="string-attr-int-value", type=StringAttribIntValue.class)
+    @XmlElementRef(name="ignored-name-root-elem-name-used-instead", type=StringAttribIntValue.class)
     private StringAttribIntValue byRef;
 
     public ElementRefTester() { }

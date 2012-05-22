@@ -93,11 +93,10 @@ public class AdminZimletDesc implements ZimletDesc {
      * @zm-api-field-description Elements
      */
     @XmlElementRefs({
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION /* serverExtension */,
-                type=ZimletServerExtension.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SCRIPT /* include */, type=AdminZimletInclude.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_CSS /* includeCSS */, type=AdminZimletIncludeCSS.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, type=AdminZimletTarget.class)
+        @XmlElementRef(/* serverExtension */ type=ZimletServerExtension.class),
+        @XmlElementRef(/* include */ type=AdminZimletInclude.class),
+        @XmlElementRef(/* includeCSS */ type=AdminZimletIncludeCSS.class),
+        @XmlElementRef(/* target */ type=AdminZimletTarget.class)
     })
     @XmlAnyElement
     private List<Object> elements = Lists.newArrayList();

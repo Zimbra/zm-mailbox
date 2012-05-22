@@ -97,7 +97,7 @@ public class MailQueueAction {
      * @zm-api-field-description Either <b>&lt;query></b> element or a list of ids
      */
     @XmlElementRefs({
-        @XmlElementRef(name=AdminConstants.E_QUERY /* query */, type=QueueQuery.class)
+        @XmlElementRef(/* query */ type=QueueQuery.class)
     })
     @XmlMixed
     private List <Object> content;

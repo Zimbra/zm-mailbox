@@ -18,30 +18,27 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.collect.Lists;
+import com.zimbra.common.soap.Element;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
+import com.zimbra.soap.type.KeyValuePair;
 
 /**
- * Test JAXB class to exercise a field annotated with {@link XmlAnyElement}
- *
+ * Test {@link ZimbraKeyValuePairs} annotation
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="any-elem-tester")
-public class AnyTester {
-    @XmlElement
-    private String given;
-    
-    @XmlAnyElement
-    private List<org.w3c.dom.Element> elems = Lists.newArrayList();
+@XmlRootElement(name="key-value-pairs-tester")
+public class KeyValuePairsTester {
+    // Note: Can use a different name BUT won't be able to round trip back to JAXB from JSON if you do
+    @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
+    @ZimbraKeyValuePairs
+    private List<KeyValuePair> attrList;
 
-    public AnyTester() { }
+    public KeyValuePairsTester() { }
+    public KeyValuePairsTester(List<KeyValuePair> attrs) { setAttrList(attrs); }
 
-    public List<org.w3c.dom.Element> getElems() { return elems; }
-    public void setElems(List<org.w3c.dom.Element> elems) { this.elems = elems; }
-
-    public String getGiven() { return given; }
-    public void setGiven(String given) { this.given = given; }
+    public List<KeyValuePair> getAttrList() { return attrList; }
+    public void setAttrList(List<KeyValuePair> attrList) { this.attrList = attrList; }
 }

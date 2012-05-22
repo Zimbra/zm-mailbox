@@ -85,6 +85,7 @@ public class JaxbInfo {
     private Class<?> superClass = null;
     private String stamp = null;
     private String rootElementName = null;
+    private String rootElementNamespace = null;
     private XmlAccessType accessType = null;
     private XmlType xmlType = null;
     
@@ -278,6 +279,24 @@ public class JaxbInfo {
             rootElementName = getRootElementName(jaxbClass);
         }
         return rootElementName;
+    }
+
+    public static String getRootElementNamespace(Class<?> kls) {
+        String namespace = null;
+        if (kls == null)
+            return null;
+        XmlRootElement re = kls.getAnnotation(XmlRootElement.class);
+        if (re != null) {
+            namespace = re.namespace();
+        }
+        return namespace;
+    }
+
+    public String getRootElementNameSpace() {
+        if (rootElementNamespace == null) {
+            rootElementNamespace = getRootElementName(jaxbClass);
+        }
+        return rootElementNamespace;
     }
 
     public Class<?> getClassForElement(String name) {
