@@ -64,6 +64,13 @@ public class ActivityInfo {
     private Integer version;
 
     /**
+     * @zm-api-field-tag user-agent
+     * @zm-api-field-description user-agent
+     */
+    @XmlAttribute(name=MailConstants.A_USER_AGENT /* ver */, required=false)
+    private String userAgent;
+
+    /**
      * @zm-api-field-tag email-address-of-user-performing-action
      * @zm-api-field-description Email address of user performing action
      */
@@ -96,6 +103,7 @@ public class ActivityInfo {
     }
 
     public void setVersion(Integer version) { this.version = version; }
+    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
     public void setEmail(String email) { this.email = email; }
     public void setArgs(Iterable <NamedValue> args) {
         this.args.clear();
@@ -120,6 +128,7 @@ public class ActivityInfo {
     public long getTimeStamp() { return timeStamp; }
     public String getItemId() { return itemId; }
     public Integer getVersion() { return version; }
+    public String getUserAgent() {return userAgent; }
     public String getEmail() { return email; }
     public List<NamedValue> getArgs() { return args; }
 
@@ -129,6 +138,7 @@ public class ActivityInfo {
             .add("timeStamp", timeStamp)
             .add("itemId", itemId)
             .add("version", version)
+            .add("client", userAgent)
             .add("email", email)
             .add("args", args);
     }
