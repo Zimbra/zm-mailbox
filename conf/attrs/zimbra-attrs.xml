@@ -6762,7 +6762,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1360" name="zimbraReverseProxySSLToUpstreamEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
-  <globalConfigValue>FALSE</globalConfigValue>
+  <globalConfigValue>TRUE</globalConfigValue>
   <desc>If set as TRUE, proxy will use SSL to connect to the upstream mail servers for web and mail proxy. Note admin console proxy always use https no matter how this attr is set.</desc>
 </attr>
 
