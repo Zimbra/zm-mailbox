@@ -311,6 +311,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetRecurResponse.class,
             com.zimbra.soap.mail.message.GetSearchFolderRequest.class,
             com.zimbra.soap.mail.message.GetSearchFolderResponse.class,
+            com.zimbra.soap.mail.message.GetShareDetailsRequest.class,
+            com.zimbra.soap.mail.message.GetShareDetailsResponse.class,
             com.zimbra.soap.mail.message.GetShareNotificationsRequest.class,
             com.zimbra.soap.mail.message.GetShareNotificationsResponse.class,
             com.zimbra.soap.mail.message.GetSpellDictionariesRequest.class,
