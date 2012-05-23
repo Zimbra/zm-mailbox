@@ -24,6 +24,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.names.NameUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -459,6 +460,20 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     public UCService getUCService() throws ServiceException {
         String ucServiceId = getAttr(Provisioning.A_zimbraUCServiceId);
         return (ucServiceId == null ? null : getProvisioning().get(Key.UCServiceBy.id, ucServiceId));
+    }
+
+    @Override
+    public String getUCUsername() {
+        String ucUsername = super.getUCUsername();
+        if (ucUsername == null) {
+            try {
+                NameUtil.EmailAddress emailAddr = new NameUtil.EmailAddress(getName());
+                ucUsername = emailAddr.getLocalPart();
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("ignoring exception while getting localpart of primary email address", e);
+            }
+        }
+        return ucUsername;
     }
 
     public String getDecryptedUCPassword() throws ServiceException {
