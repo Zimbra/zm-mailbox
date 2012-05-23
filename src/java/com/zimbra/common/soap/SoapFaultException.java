@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,7 +31,7 @@ public class SoapFaultException extends ServiceException {
     private Element mDetail;
     private Element mFault;
     private boolean mIsLocal;
-    
+
     // in case catcher of SoapFaultException wants to see the request/response
     private String mRequest;
     private String mResponse;
@@ -62,16 +62,16 @@ public class SoapFaultException extends ServiceException {
         }
     }
 
+    /** used by the document handler proxy mechanism */
+    public SoapFaultException(String message, boolean isLocal, Element fault) {
+        this(message, fault.getOptionalElement("Detail"), false, fault);
+        mIsLocal = isLocal;
+    }
+
     /** used by transports and stub mCode */
     public SoapFaultException(String message, Element fault) {
         super(message, UNKNOWN, false);
         mFault = fault;
-    }
-
-    /** used by transports and stub mCode */
-    public SoapFaultException(String message, boolean isLocal, Element fault) {
-        this(message, fault);
-        mIsLocal = isLocal;
     }
 
 
@@ -110,7 +110,7 @@ public class SoapFaultException extends ServiceException {
     public boolean isSourceLocal() {
         return mIsLocal;
     }
-    
+
     /**
      * Attache the request that caused this exception for downstream consumption
      * @param request
@@ -118,7 +118,7 @@ public class SoapFaultException extends ServiceException {
     public void setFaultRequest(String request) {
     	mRequest = request;
     }
-    
+
     /**
      * Attache the response that contains this exception for downstream consumption
      * @param response
@@ -126,7 +126,7 @@ public class SoapFaultException extends ServiceException {
     public void setFaultResponse(String response) {
     	mResponse = response;
     }
-    
+
     /**
      * Retrieves the request that caused this exception
      * @return the request, null if not available
@@ -134,7 +134,7 @@ public class SoapFaultException extends ServiceException {
     public String getFaultRequest() {
     	return mRequest;
     }
-    
+
     /**
      * Retrieves the response that contains this exception
      * @return the response, null if not available
@@ -170,7 +170,7 @@ public class SoapFaultException extends ServiceException {
         if (errorEl == null) {
             return Collections.emptyList();
         }
-        
+
         List<ServiceException.Argument> args = Lists.newArrayList();
         for (Element argEl : errorEl.listElements(ZimbraNamespace.E_ARGUMENT.getName())) {
             String name = argEl.getAttribute(ZimbraNamespace.A_ARG_NAME, null);
@@ -179,7 +179,7 @@ public class SoapFaultException extends ServiceException {
             String value = argEl.getText();
             args.add(new ServiceException.Argument(name, value, type));
         }
-        
+
         return args;
     }
 }
