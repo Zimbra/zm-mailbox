@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,7 +17,7 @@ package com.zimbra.cs.account.ldap.upgrade;
 import com.zimbra.common.service.ServiceException;
 
 public enum UpgradeTask {
-    
+
     BUG_11562(BUG_11562.class),
     BUG_14531(BUG_14531.class),
     BUG_18277(BUG_18277.class),
@@ -61,20 +61,21 @@ public enum UpgradeTask {
     BUG_65070(BUG_65070.class),
     BUG_66001(BUG_66001.class),
     BUG_68190(BUG_68190.class),
+    BUG_68394(BUG_68394.class),
     BUG_68831(BUG_68831.class),
     BUG_68891(BUG_68891.class),
     BUG_72007(BUG_72007.class),
     BUG_72056(BUG_72056.class);  // Octopus only
-    
+
 
     private static final String NAME_PREFIX = "BUG_";
-    
+
     private Class<? extends UpgradeOp> upgradeOpClass;
-    
+
     private UpgradeTask(Class<? extends UpgradeOp> upgradeOpClass) {
         this.upgradeOpClass = upgradeOpClass;
     }
-    
+
     UpgradeOp getUpgradeOp() throws ServiceException {
         try {
             return upgradeOpClass.newInstance();
@@ -84,17 +85,17 @@ public enum UpgradeTask {
             throw ServiceException.FAILURE("InstantiationException: " + upgradeOpClass.getCanonicalName(), e);
         }
     }
-    
+
     static UpgradeTask getTaskByBug(String bugNumber) throws ServiceException {
         String bug = NAME_PREFIX + bugNumber;
-        
+
         try {
             return UpgradeTask.valueOf(bug);
         } catch (IllegalArgumentException e) {
             return null;
         }
     }
-    
+
     // from unittest
     public String getBug() {
         return name().substring(NAME_PREFIX.length());
