@@ -72,7 +72,14 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
                     String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
                     SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
                     mTransport.setAuthToken(zsc.getRawAuthToken());
-                    Element resp = mTransport.invoke(req);
+                    Element resp;
+                    try {
+                        resp = mTransport.invoke(req);
+                    } catch (Exception e) {
+                        throw new Exception("Error in invoking " +
+                                AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " on server " +
+                                server.getName(), e);
+                    }
                     List<Element> domainElts = resp.getPathElementList(new String[] { AdminConstants.E_DOMAIN });
                     Map<String, Long> retMap = new HashMap<String, Long>();
                     for (Element domainElt : domainElts) {
@@ -91,7 +98,7 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
             try {
                 result = future.get();
             } catch (Exception e) {
-                throw ServiceException.FAILURE("Error is getting task execution result", e);
+                throw ServiceException.FAILURE("Error in getting task execution result", e);
             }
             for (String domainId : result.keySet()) {
                 Long delta = result.get(domainId);
@@ -153,7 +160,7 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
                     Transport.send(out);
                 } catch (Exception e) {
                     ZimbraLog.misc.warn(
-                            "error during sending aggregate quota warning msg for domain %s", domain.getName(), e);
+                            "Error in sending aggregate quota warning msg for domain %s", domain.getName(), e);
                 }
             }
         });
@@ -165,7 +172,7 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
             // Wait for existing tasks to terminate
             // make wait timeout configurable?
             if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
-                throw ServiceException.FAILURE("time out waiting for " +
+                throw ServiceException.FAILURE("Time out waiting for " +
                         AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " result", null);
             }
         } catch (InterruptedException ie) {
