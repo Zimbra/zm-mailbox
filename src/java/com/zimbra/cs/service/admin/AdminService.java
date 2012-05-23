@@ -79,7 +79,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ALL_SERVERS_REQUEST, new GetAllServers());
         dispatcher.registerHandler(AdminConstants.MODIFY_SERVER_REQUEST, new ModifyServer());
         dispatcher.registerHandler(AdminConstants.DELETE_SERVER_REQUEST, new DeleteServer());
-        
+
         dispatcher.registerHandler(AdminConstants.CREATE_UC_SERVICE_REQUEST, new CreateUCService());
         dispatcher.registerHandler(AdminConstants.GET_UC_SERVICE_REQUEST, new GetUCService());
         dispatcher.registerHandler(AdminConstants.GET_ALL_UC_SERVICES_REQUEST, new GetAllUCServices());
@@ -125,7 +125,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
         dispatcher.registerHandler(AdminConstants.RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
         dispatcher.registerHandler(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, new GetDistributionListMembership());
-        
+
         dispatcher.registerHandler(AdminConstants.AUTO_PROV_ACCOUNT_REQUEST, new AutoProvAccount());
         dispatcher.registerHandler(AdminConstants.AUTO_PROV_TASK_CONTROL_REQUEST, new AutoProvTaskControl());
         dispatcher.registerHandler(AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_REQUEST, new SearchAutoProvDirectory());
@@ -133,7 +133,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
         dispatcher.registerHandler(AdminConstants.GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
         dispatcher.registerHandler(AdminConstants.GET_ATTRIBUTE_INFO_REQUEST, new GetAttributeInfo());
-        
+
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
         dispatcher.registerHandler(AdminConstants.VERIFY_INDEX_REQUEST, new VerifyIndex());
         dispatcher.registerHandler(AdminConstants.RECALCULATE_MAILBOX_COUNTS_REQUEST, new RecalculateMailboxCounts());
@@ -207,7 +207,7 @@ public class AdminService implements DocumentService {
 
         dispatcher.registerHandler(AdminConstants.COUNT_ACCOUNT_REQUEST, new CountAccount());
         dispatcher.registerHandler(AdminConstants.COUNT_OBJECTS_REQUEST, new CountObjects());
-        
+
         dispatcher.registerHandler(AdminConstants.GET_SHARE_INFO_REQUEST, new GetShareInfo());
 
         dispatcher.registerHandler(AdminConstants.GET_SERVER_NIFS_REQUEST, new GetServerNIFs());
@@ -264,10 +264,10 @@ public class AdminService implements DocumentService {
 
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
-        
+
         // clear cookie
         dispatcher.registerHandler(AdminConstants.CLEAR_COOKIE_REQUEST, new ClearCookie());
-        
+
         // Retention policy
         dispatcher.registerHandler(AdminConstants.GET_SYSTEM_RETENTION_POLICY_REQUEST, new GetSystemRetentionPolicy());
         dispatcher.registerHandler(AdminConstants.CREATE_SYSTEM_RETENTION_POLICY_REQUEST, new CreateSystemRetentionPolicy());
@@ -276,7 +276,7 @@ public class AdminService implements DocumentService {
 
         // store manager verifier
         dispatcher.registerHandler(AdminConstants.VERIFY_STORE_MANAGER_REQUEST, new VerifyStoreManager());
-        
+
         // Skins
         dispatcher.registerHandler(AdminConstants.GET_ALL_SKINS_REQUEST, new GetAllSkins());
 
@@ -305,7 +305,8 @@ public class AdminService implements DocumentService {
      * @return
      * @throws ServiceException
      */
-    public static Map<String, Object> getAttrs(Element request, boolean ignoreEmptyValues) throws ServiceException {
+    public static Map<String, Object> getAttrs(Element request, boolean ignoreEmptyValues)
+    throws ServiceException {
         Map<String, Object> result = new HashMap<String, Object>();
         for (Element a : request.listElements(AdminConstants.E_A)) {
             String name = a.getAttribute(AdminConstants.A_N);

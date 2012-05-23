@@ -2689,7 +2689,13 @@ public class LdapProvisioning extends LdapProv {
         allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {
             for (Map.Entry<String, Object> e : cosAttrs.entrySet()) {
-                allAttrs.put(e.getKey(), e.getValue());
+                String attr = e.getKey();
+                Object value = e.getValue();
+                if (value instanceof String && Strings.isNullOrEmpty((String)value)) {
+                    allAttrs.remove(attr);
+                } else {
+                    allAttrs.put(attr, value);
+                }
             }
         }
 
