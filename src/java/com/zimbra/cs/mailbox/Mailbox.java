@@ -7087,16 +7087,6 @@ public class Mailbox {
             MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
 
-            if (false) {  // comment out for now
-            // Don't allow nested shares.
-            if (item instanceof Folder) {
-                Folder f = (Folder) item;
-                if (f.getShare() != null || f.containsShare()) {
-                    throw MailServiceException.CANNOT_NEST_SHARES();
-                }
-            }
-            }
-
             grant = item.grantAccess(grantee, granteeType, rights, args, expiry);
             success = true;
         } finally {

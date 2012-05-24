@@ -94,7 +94,6 @@ public class MailServiceException extends ServiceException {
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
     public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
     public static final String CONTACT_TOO_BIG = "mail.CONTACT_TOO_BIG";
-    public static final String CANNOT_NEST_SHARES = "mail.CANNOT_NEST_SHARES";
     public static final String CANNOT_GRANT = "mail.CANNOT_GRANT";
 
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
@@ -404,10 +403,6 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException CANNOT_RENAME(MailItem.Type type) {
         return new MailServiceException("cannot set the name on a " + type, CANNOT_RENAME, SENDERS_FAULT);
-    }
-
-    public static MailServiceException CANNOT_NEST_SHARES() {
-        return new MailServiceException("cannot nest shares", CANNOT_NEST_SHARES, SENDERS_FAULT);
     }
 
     public static MailServiceException CANNOT_GRANT(String msg) {
