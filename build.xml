@@ -522,6 +522,15 @@
           <include name="asm-*.jar"/>
           <include name="jackson-*.jar"/>
           <include name="jsr*.jar"/>
+          <include name="gmbal-api-only-*.jar"/>
+          <include name="jaxb-api-*.jar"/>
+          <include name="jaxb-impl-*.jar"/>
+          <include name="jaxws-api-*.jar"/>
+          <include name="jaxws-rt-*.jar"/>
+          <include name="jsr181-api-*.jar"/>
+          <include name="policy-*.jar"/>
+          <include name="stax-ex-*.jar"/>
+          <include name="streambuffer-*.jar"/>
         </lib>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
