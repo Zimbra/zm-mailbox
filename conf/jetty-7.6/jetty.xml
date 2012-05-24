@@ -469,6 +469,9 @@
         <Arg>
            <Array type="java.lang.String">
               <Item>java.</Item>
+              <Item>-com.sun.xml.bind.</Item>
+              <Item>-com.sun.xml.ws.</Item>
+              <Item>-javax.xml.ws.</Item>
               <Item>javax.</Item>
               <Item>org.xml.</Item>
               <Item>org.w3c.</Item>
@@ -504,6 +507,9 @@
               <Item>-org.eclipse.jetty.security.</Item>
               <Item>-org.eclipse.jetty.util.</Item>
               <Item>org.eclipse.jetty.</Item>
+              <Item>com.sun.xml.bind.</Item>
+              <Item>javax.xml.ws.</Item>
+              <Item>com.sun.xml.ws.</Item>
            </Array>    
         </Arg>
     </Call>
