@@ -2780,6 +2780,15 @@ If "cos" element is specified the opeartion create/modify/get/delete gets applie
 
 ----------------------------
 
+<RenameUCServiceRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-name}</newName>
+</RenameUCServiceRequest>
+
+<RenameUCServiceResponse />
+
+-----------------------------
+
 <VerifyStoreManagerRequest [num="{numberOfBlobs}"] [fileSize="{fileSize}"]/>
 
 <VerifyStoreManagerResponse linkTime="{linkTime}" incomingTime="{incomingTime}" fetchTime="{fetchTime}"

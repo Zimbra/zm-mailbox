@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -752,6 +752,11 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<UCService> getAllUCServices() throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void renameUCService(String zimbraId, String newName) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

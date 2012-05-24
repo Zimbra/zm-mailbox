@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -9694,6 +9694,26 @@ public class LdapProvisioning extends LdapProv {
         }
         Collections.sort(result);
         return result;
+    }
+
+    @Override
+    public void renameUCService(String zimbraId, String newName) throws ServiceException {
+        LdapUCService ucService = (LdapUCService) getUCServiceById(zimbraId, null, false);
+        if (ucService == null) {
+            throw AccountServiceException.NO_SUCH_UC_SERVICE(zimbraId);
+        }
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_UCSERVICE);
+            String newDn = mDIT.ucServiceNameToDN(newName);
+            zlc.renameEntry(ucService.getDN(), newDn);
+            ucServiceCache.remove(ucService);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to rename ucservice: "+zimbraId, e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
     }
 
 }

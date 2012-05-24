@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120413-1510 */
+    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
 
 
     public static AdminRight R_accessGAL;
@@ -124,6 +124,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleServerStatusRights;
     public static AdminRight R_adminConsoleServerVolumesTabRights;
     public static AdminRight R_adminConsoleSoftwareUpdatesRights;
+    public static AdminRight R_adminConsoleUCServiceRights;
     public static AdminRight R_adminConsoleZimletACLTabRights;
     public static AdminRight R_adminConsoleZimletRights;
     public static AdminRight R_adminLoginAs;
@@ -291,6 +292,7 @@ public class AdminRights {
     public static AdminRight R_renameCos;
     public static AdminRight R_renameDistributionList;
     public static AdminRight R_renameGroup;
+    public static AdminRight R_renameUCService;
     public static AdminRight R_restoreAccount;
     public static AdminRight R_rolloverRedoLog;
     public static AdminRight R_setAccountPassword;
@@ -547,6 +549,7 @@ public class AdminRights {
         R_adminConsoleServerStatusRights       = rm.getAdminRight(Right.RT_adminConsoleServerStatusRights);
         R_adminConsoleServerVolumesTabRights   = rm.getAdminRight(Right.RT_adminConsoleServerVolumesTabRights);
         R_adminConsoleSoftwareUpdatesRights    = rm.getAdminRight(Right.RT_adminConsoleSoftwareUpdatesRights);
+        R_adminConsoleUCServiceRights          = rm.getAdminRight(Right.RT_adminConsoleUCServiceRights);
         R_adminConsoleZimletACLTabRights       = rm.getAdminRight(Right.RT_adminConsoleZimletACLTabRights);
         R_adminConsoleZimletRights             = rm.getAdminRight(Right.RT_adminConsoleZimletRights);
         R_adminLoginAs                         = rm.getAdminRight(Right.RT_adminLoginAs);
@@ -714,6 +717,7 @@ public class AdminRights {
         R_renameCos                            = rm.getAdminRight(Right.RT_renameCos);
         R_renameDistributionList               = rm.getAdminRight(Right.RT_renameDistributionList);
         R_renameGroup                          = rm.getAdminRight(Right.RT_renameGroup);
+        R_renameUCService                      = rm.getAdminRight(Right.RT_renameUCService);
         R_restoreAccount                       = rm.getAdminRight(Right.RT_restoreAccount);
         R_rolloverRedoLog                      = rm.getAdminRight(Right.RT_rolloverRedoLog);
         R_setAccountPassword                   = rm.getAdminRight(Right.RT_setAccountPassword);

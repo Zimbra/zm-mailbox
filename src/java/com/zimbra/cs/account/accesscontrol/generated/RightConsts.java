@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120413-1510 */
+    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
 
 
     /*
@@ -491,7 +491,7 @@ public class RightConsts {
     public static final String RT_adminConsoleRights = "adminConsoleRights";
 
     /**
-     * Admin Console Extension Rights
+     * Admin Console Saved Search Rights
      */
     public static final String RT_adminConsoleSavedSearchRights = "adminConsoleSavedSearchRights";
 
@@ -555,6 +555,11 @@ public class RightConsts {
      * Admin Console
      */
     public static final String RT_adminConsoleSoftwareUpdatesRights = "adminConsoleSoftwareUpdatesRights";
+
+    /**
+     * Rights for viewing Voice/Chat services through Admin Console
+     */
+    public static final String RT_adminConsoleUCServiceRights = "adminConsoleUCServiceRights";
 
     /**
      * Admin Console rights for Zimlet ACL Tab
@@ -1395,6 +1400,11 @@ public class RightConsts {
     public static final String RT_renameGroup = "renameGroup";
 
     /**
+     * rename UC service
+     */
+    public static final String RT_renameUCService = "renameUCService";
+
+    /**
      * restore accounts on a server
      */
     public static final String RT_restoreAccount = "restoreAccount";
@@ -1660,7 +1670,7 @@ public class RightConsts {
     public static final String RT_setAdminConsoleServerACLTab = "setAdminConsoleServerACLTab";
 
     /**
-     * Admin Console set attr rights for Server ACL Tab
+     * Admin Console set attr rights for Server backup/restore Tab
      */
     public static final String RT_setAdminConsoleServerBackupRestoreTab = "setAdminConsoleServerBackupRestoreTab";
 
@@ -1690,12 +1700,12 @@ public class RightConsts {
     public static final String RT_setAdminConsoleServerServicesTab = "setAdminConsoleServerServicesTab";
 
     /**
-     * Admin Console set attr rights for Server ACL Tab
+     * Admin Console set attr rights for Server Volumes Tab
      */
     public static final String RT_setAdminConsoleServerVolumesTab = "setAdminConsoleServerVolumesTab";
 
     /**
-     * Admin Console view attr rights for accounts contact tab
+     * Admin Console view attr rights for software updates tab
      */
     public static final String RT_setAdminConsoleSoftwareUpdatesConfigAttrs = "setAdminConsoleSoftwareUpdatesConfigAttrs";
 
@@ -2072,7 +2082,7 @@ public class RightConsts {
     public static final String RT_viewAdminConsoleServerACLTab = "viewAdminConsoleServerACLTab";
 
     /**
-     * Admin Console view attr rights for Server ACL Tab
+     * Admin Console view attr rights for Server backup/restore Tab
      */
     public static final String RT_viewAdminConsoleServerBackupRestoreTab = "viewAdminConsoleServerBackupRestoreTab";
 
@@ -2107,17 +2117,17 @@ public class RightConsts {
     public static final String RT_viewAdminConsoleServerStatus = "viewAdminConsoleServerStatus";
 
     /**
-     * Admin Console view attr rights for Server ACL Tab
+     * Admin Console view attr rights for Server Volumes Tab
      */
     public static final String RT_viewAdminConsoleServerVolumesTab = "viewAdminConsoleServerVolumesTab";
 
     /**
-     * Admin Console view attr rights for accounts contact tab
+     * Admin Console view attr rights for software updates tab
      */
     public static final String RT_viewAdminConsoleSoftwareUpdatesConfigAttrs = "viewAdminConsoleSoftwareUpdatesConfigAttrs";
 
     /**
-     * Admin Console view attr rights for accounts contact tab
+     * Admin Console view attr rights for software updates tab
      */
     public static final String RT_viewAdminConsoleSoftwareUpdatesServerAttrs = "viewAdminConsoleSoftwareUpdatesServerAttrs";
 

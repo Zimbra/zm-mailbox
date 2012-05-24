@@ -585,6 +585,7 @@ public class ProvUtil implements HttpDebugListener {
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
+        RENAME_UCSERVICE("renameUCService", "rucs", "{name|id} {newName}", Category.UCSERVICE, 2, 2),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [,type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE, null, new ReindexCommandHelp()),
         VERIFY_INDEX("verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {[-]right}", Category.RIGHT, 3, 5, null, new RightCommandHelp()),
@@ -1088,6 +1089,9 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case RENAME_DOMAIN:
                 doRenameDomain(args);
+                break;
+            case RENAME_UCSERVICE:
+                prov.renameUCService(lookupUCService(args[1]).getId(), args[2]);
                 break;
             case SET_ACCOUNT_COS:
                 prov.setCOS(lookupAccount(args[1]),lookupCos(args[2]));
