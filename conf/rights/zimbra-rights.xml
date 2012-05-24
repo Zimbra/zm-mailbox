@@ -633,6 +633,9 @@
   <desc>delete UC service</desc>
 </right>
 
+<right name="renameUCService" type="preset" targetType="ucservice">
+  <desc>rename UC service</desc>
+</right>
 
 <!-- 
 ========================================================
