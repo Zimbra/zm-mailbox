@@ -170,7 +170,13 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                     String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
                     SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
                     mTransport.setAuthToken(authToken);
-                    Element resp = mTransport.invoke(request.clone());
+                    Element resp;
+                    try {
+                        resp = mTransport.invoke(request.clone());
+                    } catch (Exception e) {
+                        throw new Exception("Error in invoking " + AdminConstants.E_GET_QUOTA_USAGE_REQUEST +
+                                " on server " + server.getName(), e);
+                    }
                     List<Element> accountElts = resp.getPathElementList(new String[] { AdminConstants.E_ACCOUNT });
                     List<AccountQuota> retList = new ArrayList<AccountQuota>();
                     for (Element accountElt : accountElts) {
@@ -194,7 +200,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             try {
                 result = future.get();
             } catch (Exception e) {
-                throw ServiceException.FAILURE("Error is getting task execution result", e);
+                throw ServiceException.FAILURE("Error in getting task execution result", e);
             }
             retList.addAll(result);
         }
@@ -215,7 +221,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             // Wait for existing tasks to terminate
             // make wait timeout configurable?
             if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
-                throw ServiceException.FAILURE("time out waiting for " +
+                throw ServiceException.FAILURE("Time out waiting for " +
                         AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " result", null);
             }
         } catch (InterruptedException ie) {
