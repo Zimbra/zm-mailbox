@@ -774,7 +774,8 @@ public class JaxbToElementTest {
                 deniedAttr, XMLElement.mFactory);
         String eXml2 = elem2.toString();
         LOG.info("XML from JAXB denied attr\n" + eXml2);
-        Assert.assertEquals("XML from JAXB denied attr\n",
-                "<a pd=\"1\" name=\"keyDenied\" xmlns=\"urn:zimbraAccount\"/>", eXml2);
+        Assert.assertEquals("XML from JAXB Attr top name", AccountConstants.E_A, elem2.getName());
+        Assert.assertEquals("XML from JAXB Attr pd", "1", elem2.getAttribute("pd"));
+        Assert.assertEquals("XML from JAXB Attr name", "keyDenied", elem2.getAttribute("name"));
     }
 }

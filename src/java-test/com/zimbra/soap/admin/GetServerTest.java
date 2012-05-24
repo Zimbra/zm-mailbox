@@ -61,6 +61,6 @@ public class GetServerTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         marshaller.marshal(gsr, out);
         String xml = out.toString("UTF-8");
-        Assert.assertTrue("Marshalled XML should contain '</GetServerRequest>'", xml.indexOf("</GetServerRequest>") > 0);
+        Assert.assertTrue("Marshalled XML should end with 'GetServerRequest>'", xml.endsWith("GetServerRequest>"));
     }
 }

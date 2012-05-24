@@ -66,58 +66,42 @@ public class DumpSessionsTest {
 
     private static void checkImapSession(SessionInfo session,
             boolean nameAndIdPresent) {
-        Assert.assertEquals("Create Date",
-                1300295279211L, session.getCreatedDate());
-        Assert.assertEquals("Last Access Date",
-                1300295279212L, session.getLastAccessedDate());
+        Assert.assertEquals("Create Date", 1300295279211L, session.getCreatedDate());
+        Assert.assertEquals("Last Access Date", 1300295279212L, session.getLastAccessedDate());
         if (nameAndIdPresent) {
-            Assert.assertEquals("Session Name",
-                    "user1@gren-elliots-macbook-pro.local", session.getName());
-            Assert.assertEquals("Session Zimbra Id",
-                    "006584ae-cba0-400a-8414-f764ba3c7418", session.getZimbraId());
+            Assert.assertEquals("Session Name", "user1@gren-elliots-macbook-pro.local", session.getName());
+            Assert.assertEquals("Session Zimbra Id", "006584ae-cba0-400a-8414-f764ba3c7418", session.getZimbraId());
         } else {
             Assert.assertNull("Session Name", session.getName());
             Assert.assertNull("Session Zimbra Id", session.getZimbraId());
         }
-        Assert.assertEquals("Session Id",
-                "223", session.getSessionId());
+        Assert.assertEquals("Session Id", "223", session.getSessionId());
         Map<QName, Object> extraAttribs = session.getExtraAttributes();
-        Assert.assertEquals("Number of extra Attribs",
-                0, extraAttribs.size());
+        Assert.assertEquals("Number of extra Attribs", 0, extraAttribs.size());
         List<Element> extraElements = session.getExtraElements();
         Assert.assertNotNull("Extra Elements", extraElements);
-        Assert.assertEquals("Number of extra Elements",
-                1, extraElements.size());
+        Assert.assertEquals("Number of extra Elements", 1, extraElements.size());
         Element elem = extraElements.get(0);
-        Assert.assertEquals("imap Element nodeName",
-                "imap", elem.getNodeName());
+        Assert.assertEquals("imap Element nodeName", "imap", elem.getNodeName());
     }
 
     @Test
     public void unmarshallDumpSessionsResponseTest()
     throws Exception {
-        InputStream is = 
-                getClass().getResourceAsStream(
-                        "DumpSessionsResponse-listSess.xml");
-        DumpSessionsResponse resp =
-            (DumpSessionsResponse) unmarshaller.unmarshal(is);
-        Assert.assertEquals("Total active sessions",
-                1, resp.getTotalActiveSessions());
+        InputStream is = getClass().getResourceAsStream("DumpSessionsResponse-listSess.xml");
+        DumpSessionsResponse resp = (DumpSessionsResponse) unmarshaller.unmarshal(is);
+        Assert.assertEquals("Total active sessions", 1, resp.getTotalActiveSessions());
         Assert.assertNull("Admin Sessions", resp.getAdminSessions());
         Assert.assertNull("Soap Sessions", resp.getSoapSessions());
         Assert.assertNull("Wiki Sessions", resp.getWikiSessions());
         Assert.assertNull("Waitset Sessions", resp.getWaitsetSessions());
         InfoForSessionType imapInfo = resp.getImapSessions();
-        Assert.assertEquals("Imap active accounts",
-            new Integer(1), imapInfo.getActiveAccounts());
-        Assert.assertEquals("Imap active sessions",
-                1, imapInfo.getActiveSessions());
+        Assert.assertEquals("Imap active accounts", new Integer(1), imapInfo.getActiveAccounts());
+        Assert.assertEquals("Imap active sessions", 1, imapInfo.getActiveSessions());
         List<SessionInfo> sessions = imapInfo.getSessions();
         List<AccountSessionInfo> accts = imapInfo.getAccounts();
-        Assert.assertEquals("Number of top level accts",
-                0, accts.size());
-        Assert.assertEquals("Number of top level sessionInfos",
-                1, sessions.size());
+        Assert.assertEquals("Number of top level accts", 0, accts.size());
+        Assert.assertEquals("Number of top level sessionInfos", 1, sessions.size());
         SessionInfo session = sessions.get(0);
         checkImapSession(session, true);
     }
@@ -125,32 +109,23 @@ public class DumpSessionsTest {
     @Test
     public void unmarshallDumpSessionsResponseGroupedTest()
     throws Exception {
-        InputStream is = 
-                getClass().getResourceAsStream(
-                        "DumpSessionsResponse-grouped.xml");
-        DumpSessionsResponse resp =
-            (DumpSessionsResponse) unmarshaller.unmarshal(is);
-        Assert.assertEquals("Total active sessions",
-                1, resp.getTotalActiveSessions());
+        InputStream is = getClass().getResourceAsStream("DumpSessionsResponse-grouped.xml");
+        DumpSessionsResponse resp = (DumpSessionsResponse) unmarshaller.unmarshal(is);
+        Assert.assertEquals("Total active sessions", 1, resp.getTotalActiveSessions());
         Assert.assertNull("Admin Sessions", resp.getAdminSessions());
         Assert.assertNull("Soap Sessions", resp.getSoapSessions());
         Assert.assertNull("Wiki Sessions", resp.getWikiSessions());
         Assert.assertNull("Waitset Sessions", resp.getWaitsetSessions());
         InfoForSessionType imapInfo = resp.getImapSessions();
-        Assert.assertEquals("Imap active accounts",
-            new Integer(1), imapInfo.getActiveAccounts());
-        Assert.assertEquals("Imap active sessions",
-                1, imapInfo.getActiveSessions());
+        Assert.assertEquals("Imap active accounts", new Integer(1), imapInfo.getActiveAccounts());
+        Assert.assertEquals("Imap active sessions", 1, imapInfo.getActiveSessions());
         List<SessionInfo> sessions = imapInfo.getSessions();
-        Assert.assertEquals("Number of top level sessionInfos",
-                0, sessions.size());
+        Assert.assertEquals("Number of top level sessionInfos", 0, sessions.size());
         List<AccountSessionInfo> accts = imapInfo.getAccounts();
-        Assert.assertEquals("Number of top level accts",
-                1, accts.size());
+        Assert.assertEquals("Number of top level accts", 1, accts.size());
         AccountSessionInfo acct = accts.get(0);
         sessions = acct.getSessions();
-        Assert.assertEquals("Number of top level sessionInfos",
-                1, sessions.size());
+        Assert.assertEquals("Number of top level sessionInfos", 1, sessions.size());
         SessionInfo session = sessions.get(0);
         checkImapSession(session, false);
     }
@@ -162,11 +137,9 @@ public class DumpSessionsTest {
                             .newDocumentBuilder();
         DumpSessionsResponse gsr = new DumpSessionsResponse(1);
         InfoForSessionType imapSessions = new InfoForSessionType(1,1);
-        AccountSessionInfo account = new AccountSessionInfo(
-                "user1@gren-elliots-macbook-pro.local", 
+        AccountSessionInfo account = new AccountSessionInfo("user1@gren-elliots-macbook-pro.local",
                 "006584ae-cba0-400a-8414-f764ba3c7418");
-        SessionInfo session = new SessionInfo(null, null, "223",
-                1300295279211L, 1300295279212L);
+        SessionInfo session = new SessionInfo(null, null, "223", 1300295279211L, 1300295279212L);
         org.w3c.dom.Document doc = w3DomBuilder.newDocument();
         org.w3c.dom.Element extraElement = doc.createElementNS("urn:zimbraAdmin", "imap");
         extraElement.setAttribute("folder", "INBOX");
@@ -187,14 +160,9 @@ public class DumpSessionsTest {
         String xml = out.toString("UTF-8");
         if (LOG.isInfoEnabled())
             LOG.info("Xml:\n" + xml);
+        Assert.assertTrue("Marshalled XML should contain 'push=\"true\"'", xml.indexOf("push=\"true\"") > 0);
+        Assert.assertTrue("Marshalled XML should contain 'size=\"222\"'", xml.indexOf("size=\"222\"") > 0);
         Assert.assertTrue(
-                "Marshalled XML should contain 'push=\"true\"'",
-                xml.indexOf("push=\"true\"") > 0);
-        Assert.assertTrue(
-                "Marshalled XML should contain 'size=\"222\"'",
-                xml.indexOf("size=\"222\"") > 0);
-        Assert.assertTrue(
-                "Marshalled XML should contain '</DumpSessionsResponse>'",
-                xml.indexOf("</DumpSessionsResponse>") > 0);
+                "Marshalled XML should end with 'DumpSessionsResponse>'", xml.endsWith("DumpSessionsResponse>"));
     }
 }

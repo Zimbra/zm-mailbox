@@ -65,21 +65,15 @@ public class MailQueueActionTest {
     @Test
     public void unmarshallMailQueueActionRequestByIdTest()
     throws Exception {
-        InputStream is = 
-                getClass().getResourceAsStream("MailQueueActionRequestIds.xml");
-        MailQueueActionRequest result =
-            (MailQueueActionRequest) unmarshaller.unmarshal(is);
+        InputStream is = getClass().getResourceAsStream("MailQueueActionRequestIds.xml");
+        MailQueueActionRequest result = (MailQueueActionRequest) unmarshaller.unmarshal(is);
         ServerWithQueueAction svr = result.getServer();
-        Assert.assertEquals("server - 'name' attribute",
-                "fun.example.test", svr.getName());
+        Assert.assertEquals("server - 'name' attribute", "fun.example.test", svr.getName());
         MailQueueWithAction q = svr.getQueue();
-        Assert.assertEquals("queue - 'name' attribute",
-                "queueName", q.getName());
+        Assert.assertEquals("queue - 'name' attribute", "queueName", q.getName());
         MailQueueAction action = q.getAction();
-        Assert.assertEquals("action - 'op' attribute",
-                MailQueueAction.QueueAction.requeue, action.getOp());
-        Assert.assertEquals("action - 'by' attribute",
-                MailQueueAction.QueueActionBy.id, action.getBy());
+        Assert.assertEquals("action - 'op' attribute", MailQueueAction.QueueAction.requeue, action.getOp());
+        Assert.assertEquals("action - 'by' attribute", MailQueueAction.QueueActionBy.id, action.getBy());
         Assert.assertEquals("action - content", "id1,id2,id3", action.getIds());
         Assert.assertNull("action - query", action.getQuery());
     }
@@ -87,55 +81,42 @@ public class MailQueueActionTest {
     @Test
     public void unmarshallMailQueueActionRequestByQueryTest()
     throws Exception {
-        InputStream is = 
-                getClass().getResourceAsStream(
-                        "MailQueueActionRequestQuery.xml");
-        MailQueueActionRequest result =
-            (MailQueueActionRequest) unmarshaller.unmarshal(is);
+        InputStream is = getClass().getResourceAsStream("MailQueueActionRequestQuery.xml");
+        MailQueueActionRequest result = (MailQueueActionRequest) unmarshaller.unmarshal(is);
         ServerWithQueueAction svr = result.getServer();
-        Assert.assertEquals("server - 'name' attribute",
-                "fun.example.test", svr.getName());
+        Assert.assertEquals("server - 'name' attribute", "fun.example.test", svr.getName());
         MailQueueWithAction q = svr.getQueue();
-        Assert.assertEquals("queue - 'name' attribute",
-                "queueName", q.getName());
+        Assert.assertEquals("queue - 'name' attribute", "queueName", q.getName());
         MailQueueAction action = q.getAction();
-        Assert.assertEquals("action - 'op' attribute",
-                MailQueueAction.QueueAction.requeue, action.getOp());
-        Assert.assertEquals("action - 'by' attribute",
-                MailQueueAction.QueueActionBy.query, action.getBy());
+        Assert.assertEquals("action - 'op' attribute", MailQueueAction.QueueAction.requeue, action.getOp());
+        Assert.assertEquals("action - 'by' attribute", MailQueueAction.QueueActionBy.query, action.getBy());
         QueueQuery query = action.getQuery();
         Assert.assertNotNull("action - query", query);
         Assert.assertNull("query - limit", query.getLimit());
         Assert.assertNull("query - offset", query.getOffset());
         QueueQueryField qqf = query.getFields().get(0);
         Assert.assertNotNull("field", qqf);
-        Assert.assertEquals("field - 'name' attribute",
-                "fieldName", qqf.getName());
+        Assert.assertEquals("field - 'name' attribute", "fieldName", qqf.getName());
         ValueAttrib match0 = qqf.getMatches().get(0);
-        Assert.assertEquals("match - 'value' attribute",
-                "matchValue", match0.getValue());
+        Assert.assertEquals("match - 'value' attribute", "matchValue", match0.getValue());
 
         Assert.assertNull("action - content", action.getIds());
     }
 
     @Test
     public void marshallMailQueueActionRequestByIdTest() throws Exception {
-        MailQueueAction action = new MailQueueAction(
-                MailQueueAction.QueueAction.requeue, 
+        MailQueueAction action = new MailQueueAction(MailQueueAction.QueueAction.requeue,
                 MailQueueAction.QueueActionBy.id, "id1,id2,id3", null);
-        MailQueueWithAction mqwa =
-            new MailQueueWithAction("queueName", action);
-        ServerWithQueueAction server =
-            new ServerWithQueueAction("fun.example.test", mqwa);
+        MailQueueWithAction mqwa = new MailQueueWithAction("queueName", action);
+        ServerWithQueueAction server = new ServerWithQueueAction("fun.example.test", mqwa);
         MailQueueActionRequest gsr = new MailQueueActionRequest(server);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         marshaller.marshal(gsr, out);
         String xml = out.toString("UTF-8");
         if (LOG.isInfoEnabled())
             LOG.info("Xml:\n" + xml);
-        Assert.assertTrue(
-                "Marshalled XML should contain '</MailQueueActionRequest>'",
-                xml.indexOf("</MailQueueActionRequest>") > 0);
+        Assert.assertTrue("Marshalled XML should end with 'MailQueueActionRequest>'",
+                xml.endsWith("MailQueueActionRequest>"));
     }
 
     @Test
@@ -144,21 +125,17 @@ public class MailQueueActionTest {
         QueueQueryField qqf = new QueueQueryField("fieldName");
         qqf.addMatch(new ValueAttrib("matchValue"));
         qq.addField(qqf);
-        MailQueueAction action = new MailQueueAction(
-                MailQueueAction.QueueAction.requeue, 
+        MailQueueAction action = new MailQueueAction(MailQueueAction.QueueAction.requeue,
                 MailQueueAction.QueueActionBy.id, null, qq);
-        MailQueueWithAction mqwa =
-            new MailQueueWithAction("queueName", action);
-        ServerWithQueueAction server =
-            new ServerWithQueueAction("fun.example.test", mqwa);
+        MailQueueWithAction mqwa = new MailQueueWithAction("queueName", action);
+        ServerWithQueueAction server = new ServerWithQueueAction("fun.example.test", mqwa);
         MailQueueActionRequest gsr = new MailQueueActionRequest(server);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         marshaller.marshal(gsr, out);
         String xml = out.toString("UTF-8");
         if (LOG.isInfoEnabled())
             LOG.info("Xml:\n" + xml);
-        Assert.assertTrue(
-                "Marshalled XML should contain '</MailQueueActionRequest>'",
-                xml.indexOf("</MailQueueActionRequest>") > 0);
+        Assert.assertTrue("Marshalled XML should end with 'MailQueueActionRequest>'",
+                xml.endsWith("MailQueueActionRequest>"));
     }
 }
