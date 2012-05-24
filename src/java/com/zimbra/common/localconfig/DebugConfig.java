@@ -193,7 +193,7 @@ public final class DebugConfig {
             value("debug_disable_share_expiration_listener", false);
 
     public static final boolean skipVirtualAccountRegistrationPage =
-            value("skip_virtual_account_registration_page", true);
+            value("skip_virtual_account_registration_page", false);
 
     public static final boolean ldapNoopSearchSupported =
         value("ldap_noop_search_supported", true);
