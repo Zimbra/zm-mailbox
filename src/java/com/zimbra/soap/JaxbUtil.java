@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010-2011 Zimbra, Inc.
+ * Copyright (C) 2010-2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -851,6 +851,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.RenameDistributionListResponse.class,
             com.zimbra.soap.admin.message.RenameLDAPEntryRequest.class,
             com.zimbra.soap.admin.message.RenameLDAPEntryResponse.class,
+            com.zimbra.soap.admin.message.RenameUCServiceRequest.class,
+            com.zimbra.soap.admin.message.RenameUCServiceResponse.class,
             com.zimbra.soap.admin.message.ResetAllLoggersRequest.class,
             com.zimbra.soap.admin.message.ResetAllLoggersResponse.class,
             com.zimbra.soap.admin.message.RestoreRequest.class,
