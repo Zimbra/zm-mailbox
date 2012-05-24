@@ -126,6 +126,8 @@ public final class AdminConstants {
     public static final String E_GET_ALL_UC_SERVICES_RESPONSE = "GetAllUCServicesResponse";
     public static final String E_MODIFY_UC_SERVICE_REQUEST = "ModifyUCServiceRequest";
     public static final String E_MODIFY_UC_SERVICE_RESPONSE = "ModifyUCServiceResponse";
+    public static final String E_RENAME_UC_SERVICE_REQUEST = "RenameUCServiceRequest";
+    public static final String E_RENAME_UC_SERVICE_RESPONSE = "RenameUCServiceResponse";
 
     public static final String E_GET_CONFIG_REQUEST = "GetConfigRequest";
     public static final String E_GET_CONFIG_RESPONSE = "GetConfigResponse";
@@ -589,6 +591,8 @@ public final class AdminConstants {
     public static final QName GET_ALL_UC_SERVICES_RESPONSE = QName.get(E_GET_ALL_UC_SERVICES_RESPONSE, NAMESPACE);
     public static final QName MODIFY_UC_SERVICE_REQUEST = QName.get(E_MODIFY_UC_SERVICE_REQUEST, NAMESPACE);
     public static final QName MODIFY_UC_SERVICE_RESPONSE = QName.get(E_MODIFY_UC_SERVICE_RESPONSE, NAMESPACE);
+    public static final QName RENAME_UC_SERVICE_REQUEST = QName.get(E_RENAME_UC_SERVICE_REQUEST, NAMESPACE);
+    public static final QName RENAME_UC_SERVICE_RESPONSE = QName.get(E_RENAME_UC_SERVICE_RESPONSE, NAMESPACE);
 
     public static final QName GET_CONFIG_REQUEST = QName.get(E_GET_CONFIG_REQUEST, NAMESPACE);
     public static final QName GET_CONFIG_RESPONSE = QName.get(E_GET_CONFIG_RESPONSE, NAMESPACE);
