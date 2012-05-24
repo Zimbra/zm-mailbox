@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Create a contact
@@ -38,13 +39,14 @@ public class CreateContactRequest {
      * @zm-api-field-description If set (defaults to unset) The returned <b>&lt;cn></b> is just a placeholder
      * containing the new contact ID (i.e. <b>&lt;cn id="{id}"/></b>)
      */
-    @XmlAttribute(name=MailConstants.A_VERBOSE, required=false)
+    @XmlAttribute(name=MailConstants.A_VERBOSE /* verbose */, required=false)
     private ZmBoolean verbose;
 
     /**
      * @zm-api-field-description Contact specification
      */
-    @XmlElement(name=MailConstants.E_CONTACT, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=true)
     private final ContactSpec contact;
 
     /**

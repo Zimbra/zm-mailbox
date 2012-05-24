@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_RESPONSE)
@@ -38,6 +39,7 @@ public class AuthResponse {
      * @zm-api-field-tag auth-lifetime
      * @zm-api-field-description Life time for the authorization
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=AdminConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
 

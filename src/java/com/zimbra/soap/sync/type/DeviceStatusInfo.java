@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DeviceStatusInfo {
@@ -102,6 +103,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag provisionable
      * @zm-api-field-description Flag whether device is provisionable or not.
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_PROVISIONABLE /* provisionable */, required=true)
     private ZmBoolean provisionable;
 
@@ -117,6 +119,7 @@ public class DeviceStatusInfo {
      * <tr> <td> <b>4</b> </td> <td> remote wipe complete </td> </tr>
      * </table>
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_STATUS /* status */, required=true)
     private Byte status;
 
@@ -125,6 +128,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag first-req-recv
      * @zm-api-field-description When this device first registered with the server
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_FIRST_REQ_RECEIVED /* firstReqReceived */, required=true)
     private Integer firstReqReceived;
 
@@ -133,6 +137,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag last-policy-update
      * @zm-api-field-description When policy was last updated on this device
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_LAST_POLICY_UPDATE /* lastPolicyUpdate */, required=false)
     private Integer lastPolicyUpdate;
 
@@ -141,6 +146,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag remote-wipe-req-time
      * @zm-api-field-description Time (seconds since epoch) when remote wipe was initiated
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_REMOTE_WIPE_REQ_TIME /* remoteWipeReqTime */, required=false)
     private Integer remoteWipeReqTime;
 
@@ -149,6 +155,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag remote-wipe-ack-time
      * @zm-api-field-description Time (seconds since epoch) when device confirmed the remote wipe
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_REMOTE_WIPE_ACK_TIME /* remoteWipeAckTime */, required=false)
     private Integer remoteWipeAckTime;
 
@@ -157,6 +164,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag recovery-password
      * @zm-api-field-description Recovery password
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_RECOVERY_PASSWORD /* recoveryPassword */, required=false)
     private String recoveryPassword;
 
@@ -165,6 +173,7 @@ public class DeviceStatusInfo {
      * @zm-api-field-tag last-used-date
      * @zm-api-field-description Date when the device was last used (the date is stored in server's time zone)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SyncConstants.E_LAST_USED_DATE /* lastUsedDate */, required=false)
     private String lastUsedDate;
 

@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.SharedReminderMount;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Enable/disable reminders for shared appointments/tasks on a mountpoint
@@ -34,6 +35,7 @@ public class EnableSharedReminderRequest {
     /**
      * @zm-api-field-description Specification for mountpoint
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MOUNT /* link */, required=true)
     private final SharedReminderMount mount;
 

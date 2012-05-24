@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FolderActionSelector extends ActionSelector {
@@ -82,6 +83,7 @@ public class FolderActionSelector extends ActionSelector {
      * @zm-api-field-tag
      * @zm-api-field-description
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private ActionGrantSelector grant;
 

@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "content", "metadatas" })
@@ -123,6 +124,7 @@ public class NoteInfo {
      * @zm-api-field-tag content
      * @zm-api-field-description Content
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private String content;
 

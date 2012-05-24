@@ -34,6 +34,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /*
 <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
@@ -275,6 +276,7 @@ public class Folder {
     /**
      * @zm-api-field-description ACL for sharing
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACL /* acl */, required=false)
     private Acl acl;
 
@@ -282,9 +284,9 @@ public class Folder {
      * @zm-api-field-description Subfolders
      */
     @XmlElements({
-        @XmlElement(name="folder", type=Folder.class),
-        @XmlElement(name="link", type=Mountpoint.class),
-        @XmlElement(name="search", type=SearchFolder.class)
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=Folder.class),
+        @XmlElement(name=MailConstants.E_MOUNT /* link */, type=Mountpoint.class),
+        @XmlElement(name=MailConstants.E_SEARCH /* search */, type=SearchFolder.class)
     })
     private List<Folder> subfolders = new ArrayList<Folder>();
 

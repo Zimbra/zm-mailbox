@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.ExportMailboxSelector;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-network-edition
@@ -40,6 +41,7 @@ public class ExportMailboxRequest {
     /**
      * @zm-api-field-description Export Mailbox details
      */
+    @ZimbraUniqueElement
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private final ExportMailboxSelector account;
 

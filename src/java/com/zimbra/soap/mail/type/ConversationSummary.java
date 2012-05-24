@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
@@ -119,6 +120,7 @@ public class ConversationSummary {
      * @zm-api-field-tag conversation-subject
      * @zm-api-field-description Subject of conversation
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
@@ -126,6 +128,7 @@ public class ConversationSummary {
      * @zm-api-field-tag fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 

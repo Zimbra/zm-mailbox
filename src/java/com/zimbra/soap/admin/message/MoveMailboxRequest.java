@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.MoveMailboxInfo;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-network-edition
@@ -48,6 +49,7 @@ public class MoveMailboxRequest {
     /**
      * @zm-api-field-description Specification for the account move
      */
+    @ZimbraUniqueElement
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
     private MoveMailboxInfo account;
 

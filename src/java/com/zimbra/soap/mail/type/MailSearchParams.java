@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.base.SearchParameters;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.CursorInfo;
 import com.zimbra.soap.type.ZmBoolean;
@@ -90,7 +91,8 @@ public class MailSearchParams implements SearchParameters {
      * @zm-api-field-tag query-string
      * @zm-api-field-description Query string
      */
-    @XmlAttribute(name=MailConstants.E_QUERY /* query */, required=false)
+    @ZimbraJsonAttribute
+    @XmlElement(name=MailConstants.E_QUERY /* query */, required=false)
     private String query;
 
     /**

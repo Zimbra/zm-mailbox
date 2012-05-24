@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.NamedValue;
 
 /**
@@ -45,6 +46,7 @@ public class GetAccountInfoResponse {
      * @zm-api-field-tag account-email-address
      * @zm-api-field-description Account name - an email address (user@domain)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.A_NAME /* name */, required=true)
     private final String name;
 
@@ -56,6 +58,7 @@ public class GetAccountInfoResponse {
      * <tr><td> <b>displayName</b>    </td><td> display name for the account </td></tr>
      * </table>
      */
+    @ZimbraKeyValuePairs
     @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
     private List<NamedValue> attrs = Lists.newArrayList();
 

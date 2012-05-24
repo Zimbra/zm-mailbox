@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ItemSpec;
 
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 /**
  * @zm-api-command-description Get item
  * <br />
@@ -43,6 +44,7 @@ public class GetItemRequest {
     /**
      * @zm-api-field-description Item specification
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
     private ItemSpec item;
 

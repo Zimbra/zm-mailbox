@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-network-edition
@@ -37,6 +38,7 @@ public class PurgeMovedMailboxRequest {
     /**
      * @zm-api-field-description Mailbox specification
      */
+    @ZimbraUniqueElement
     @XmlElement(name=BackupConstants.E_MAILBOX /* mbox */, required=true)
     private final Name mailbox;
 

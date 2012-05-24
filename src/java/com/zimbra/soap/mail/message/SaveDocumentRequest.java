@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.DocumentSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Save Document
@@ -94,6 +95,7 @@ public class SaveDocumentRequest {
     /**
      * @zm-api-field-description Document specification
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=true)
     private DocumentSpec doc;
 

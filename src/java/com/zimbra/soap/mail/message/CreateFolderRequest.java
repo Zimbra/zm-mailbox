@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.NewFolderSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Create folder
@@ -34,7 +35,8 @@ public class CreateFolderRequest {
     /**
      * @zm-api-field-description New folder specification
      */
-    @XmlElement(name=MailConstants.E_FOLDER, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_FOLDER /* folder */, required=true)
     private final NewFolderSpec folder;
 
     /**

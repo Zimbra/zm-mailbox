@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlElements;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.UrlAndValue;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class MsgWithGroupInfo extends MessageCommon {
@@ -110,6 +112,7 @@ public class MsgWithGroupInfo extends MessageCommon {
      * @zm-api-field-tag fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
@@ -165,6 +168,7 @@ public class MsgWithGroupInfo extends MessageCommon {
     /**
      * @zm-api-field-description Content
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=false)
     private UrlAndValue content;
 

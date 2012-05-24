@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Conv Action
@@ -34,7 +35,8 @@ public class ConvActionRequest {
     /**
      * @zm-api-field-description Action selector
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     protected ActionSelector action;
 
     /**

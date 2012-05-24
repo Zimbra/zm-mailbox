@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.IdAndOperation;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_DOCUMENT_ACTION_RESPONSE)
@@ -32,9 +33,11 @@ public class DocumentActionResponse {
     /**
      * @zm-api-field-description Details of action
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private IdAndOperation action;
 
+    @SuppressWarnings("unused")
     private DocumentActionResponse() {
     }
 

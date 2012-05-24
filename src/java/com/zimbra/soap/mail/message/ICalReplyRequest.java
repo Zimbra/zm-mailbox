@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Do an iCalendar Reply
@@ -34,6 +35,7 @@ public class ICalReplyRequest {
      * @zm-api-field-tag reply-ical
      * @zm-api-field-description iCalendar text containing components with method REPLY
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_CAL_ICAL /* ical */, required=true)
     private final String ical;
 

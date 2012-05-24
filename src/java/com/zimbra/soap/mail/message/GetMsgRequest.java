@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MsgSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Get Message
@@ -34,6 +35,7 @@ public class GetMsgRequest {
     /**
      * @zm-api-field-description Message specification
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final MsgSpec msg;
 

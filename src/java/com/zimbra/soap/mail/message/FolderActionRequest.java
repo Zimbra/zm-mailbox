@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FolderActionSelector;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Perform an action on a folder
@@ -121,7 +122,8 @@ public class FolderActionRequest {
     /**
      * @zm-api-field-description Select action to perform on folder
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private final FolderActionSelector action;
 
     /**

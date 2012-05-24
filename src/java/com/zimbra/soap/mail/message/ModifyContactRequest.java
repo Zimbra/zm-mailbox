@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Modify Contact
@@ -56,6 +57,7 @@ public class ModifyContactRequest {
     /**
      * @zm-api-field-description Specification of contact modifications
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=true)
     private final ContactSpec contact;
 

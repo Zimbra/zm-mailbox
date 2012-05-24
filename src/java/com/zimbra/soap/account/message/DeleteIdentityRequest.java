@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.NameId;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Delete an Identity
@@ -37,7 +38,8 @@ public class DeleteIdentityRequest {
     /**
      * @zm-api-field-description Details of the identity to delete.
      */
-    @XmlElement(name=AccountConstants.E_IDENTITY, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=AccountConstants.E_IDENTITY /* identity */, required=true)
     private final NameId identity;
 
     /**

@@ -34,6 +34,7 @@ import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.base.InviteInfoInterface;
 import com.zimbra.soap.base.MessageInfoInterface;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
@@ -117,6 +118,7 @@ implements MessageInfoInterface {
      * @zm-api-field-tag msg-fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
@@ -130,6 +132,7 @@ implements MessageInfoInterface {
      * @zm-api-field-tag msg-subject
      * @zm-api-field-description Subject
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
@@ -137,6 +140,7 @@ implements MessageInfoInterface {
      * @zm-api-field-tag message-id
      * @zm-api-field-description Message ID
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_MSG_ID_HDR /* mid */, required=false)
     private String messageIdHeader;
 
@@ -144,6 +148,7 @@ implements MessageInfoInterface {
      * @zm-api-field-tag in-reply-to-msg-id
      * @zm-api-field-description Message-ID header for message being replied to
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_IN_REPLY_TO /* irt */, required=false)
     private String inReplyTo;
 

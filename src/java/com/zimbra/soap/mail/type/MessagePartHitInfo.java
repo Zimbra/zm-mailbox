@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.SearchHit;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -101,13 +102,16 @@ public class MessagePartHitInfo implements SearchHit {
      * @zm-api-field-tag subject
      * @zm-api-field-description Subject
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
     public MessagePartHitInfo() {
     }
 
+    @Override
     public void setId(String id) { this.id = id; }
+    @Override
     public void setSortField(String sortField) { this.sortField = sortField; }
     public void setSize(Long size) { this.size = size; }
     public void setDate(Long date) { this.date = date; }
@@ -124,7 +128,9 @@ public class MessagePartHitInfo implements SearchHit {
     public void setPart(String part) { this.part = part; }
     public void setEmail(EmailInfo email) { this.email = email; }
     public void setSubject(String subject) { this.subject = subject; }
+    @Override
     public String getId() { return id; }
+    @Override
     public String getSortField() { return sortField; }
     public Long getSize() { return size; }
     public Long getDate() { return date; }

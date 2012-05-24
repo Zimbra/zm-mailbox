@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.TagActionSelector;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Perform an action on a tag
@@ -40,6 +41,7 @@ public class TagActionRequest {
      * <br />
      * If op="update", the caller can specify "name" and/or "color"
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private final TagActionSelector action;
 

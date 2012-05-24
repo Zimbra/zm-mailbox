@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"organizer", "categories", "geo", "fragment", "instances", "alarmData"})
@@ -66,6 +67,7 @@ implements CalendaringDataInterface {
      * @zm-api-field-tag fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 

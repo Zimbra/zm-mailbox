@@ -26,6 +26,7 @@ import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.soap.replication.type.ReplicationMasterStatus;
 import com.zimbra.soap.replication.type.ReplicationSlaveStatus;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ReplicationConstants.E_REPLICATION_STATUS_RESPONSE)
@@ -57,12 +58,14 @@ public class ReplicationStatusResponse {
     /**
      * @zm-api-field-description Master replication status.  Only one of masterStatus and slaveStatus can be present
      */
+    @ZimbraUniqueElement
     @XmlElement(name=ReplicationConstants.E_MASTER_STATUS /* masterStatus */, required=false)
     private ReplicationMasterStatus masterStatus;
 
     /**
      * @zm-api-field-description Slave replication status
      */
+    @ZimbraUniqueElement
     @XmlElement(name=ReplicationConstants.E_SLAVE_STATUS /* slaveStatus */, required=false)
     private ReplicationSlaveStatus slaveStatus;
 

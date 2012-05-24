@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Create mountpoint
@@ -35,6 +36,7 @@ public class CreateMountpointRequest {
      * @zm-api-field-tag link
      * @zm-api-field-description New mountpoint specification
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MOUNT /* link */, required=true)
     private final NewMountpointSpec folder;
 

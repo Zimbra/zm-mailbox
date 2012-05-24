@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Perform an action on an item
@@ -34,7 +35,8 @@ public class ItemActionRequest {
     /**
      * @zm-api-field-description Specify the action to perform
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
+    @ZimbraUniqueElement
     private final ActionSelector action;
 
     /**

@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "metadatas", "subject", "messages"})
@@ -89,6 +90,7 @@ public class ConversationInfo {
      * @zm-api-field-tag subject
      * @zm-api-field-description Subject
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 

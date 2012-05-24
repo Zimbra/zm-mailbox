@@ -65,9 +65,9 @@ public class ActivityInfo {
 
     /**
      * @zm-api-field-tag user-agent
-     * @zm-api-field-description user-agent
+     * @zm-api-field-description User agent
      */
-    @XmlAttribute(name=MailConstants.A_USER_AGENT /* ver */, required=false)
+    @XmlAttribute(name=MailConstants.A_USER_AGENT /* ua */, required=false)
     private String userAgent;
 
     /**

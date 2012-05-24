@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 /**
 <ChangePasswordResponse>
@@ -36,12 +37,13 @@ public class ChangePasswordResponse {
      * @zm-api-field-tag new-auth-token
      * @zm-api-field-description New authToken, as old authToken is invalidated on password change.
      */
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=true)
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
     /**
      * @zm-api-field-description Life time associated with <b>{new-auth-token}</b>
      */
-    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
+    @ZimbraJsonAttribute
+    @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
 
     public ChangePasswordResponse() {

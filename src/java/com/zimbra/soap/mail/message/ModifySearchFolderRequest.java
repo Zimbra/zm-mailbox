@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ModifySearchFolderSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Modify Search Folder
@@ -34,7 +35,8 @@ public class ModifySearchFolderRequest {
     /**
      * @zm-api-field-description Specification of Search folder modifications
      */
-    @XmlElement(name=MailConstants.E_SEARCH, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_SEARCH /* search */, required=true)
     private final ModifySearchFolderSpec searchFolder;
 
     /**

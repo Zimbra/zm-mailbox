@@ -28,6 +28,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"organizer", "categories", "geo",
@@ -43,6 +45,7 @@ implements CalendaringDataInterface {
     /**
      * @zm-api-field-description Organizer
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
 
@@ -63,6 +66,7 @@ implements CalendaringDataInterface {
      * @zm-api-field-tag fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 

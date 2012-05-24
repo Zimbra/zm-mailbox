@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class SetCalendarItemInfo {
@@ -43,6 +44,7 @@ public class SetCalendarItemInfo {
     /**
      * @zm-api-field-description Message
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private Msg msg;
 

@@ -32,6 +32,9 @@ import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
 
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
+
 
 /*
 <AuthResponse">
@@ -53,44 +56,48 @@ public class AuthResponse {
     /**
      * @zm-api-field-description The authorization token
      */
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=true)
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
     /**
      * @zm-api-field-description Life time for the authorization
      */
-    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
+    @ZimbraJsonAttribute
+    @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
     /**
      * @zm-api-field-description Session information
      */
-    @XmlElement(name=HeaderConstants.E_SESSION)
+    @XmlElement(name=HeaderConstants.E_SESSION /* session */, required=false)
     private Session session;
     /**
      * @zm-api-field-description host additional SOAP requests should be directed to.
      * Always returned, might be same as original host request was sent to.
      */
-    @XmlElement(name=AccountConstants.E_REFERRAL)
+    @ZimbraJsonAttribute
+    @XmlElement(name=AccountConstants.E_REFERRAL /* refer */, required=false)
     private String refer;
     /**
      * @zm-api-field-description if requestedSkin specified, the name of the skin to use
      * Always returned, might be same as original host request was sent to.
      */
-    @XmlElement(name=AccountConstants.E_SKIN)
+    @XmlElement(name=AccountConstants.E_SKIN /* skin */, required=false)
     private String skin;
     
     /**
      * @zm-api-field-description Requested preference settings.
      */
-    @XmlElementWrapper(name=AccountConstants.E_PREFS)
-    @XmlElement(name=AccountConstants.E_PREF)
+    @ZimbraKeyValuePairs
+    @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */)
+    @XmlElement(name=AccountConstants.E_PREF /* pref */)
     private List<Pref> prefs = new ArrayList<Pref>();
     
     /**
      * @zm-api-field-description Requested attribute settings.  Only attributes that are allowed to be returned by
      * GetInfo will be returned by this call
      */
-    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
-    @XmlElement(name=AccountConstants.E_ATTR)
+    @ZimbraKeyValuePairs
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */)
+    @XmlElement(name=AccountConstants.E_ATTR /* attr */)
     private List<Attr> attrs = new ArrayList<Attr>();
     
     public AuthResponse() {

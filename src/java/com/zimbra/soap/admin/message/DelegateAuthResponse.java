@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DELEGATE_AUTH_RESPONSE)
@@ -36,6 +37,7 @@ public class DelegateAuthResponse {
     /**
      * @zm-api-field-description Life time for the authorization
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=AdminConstants.E_LIFETIME, required=true)
     private long lifetime;
 

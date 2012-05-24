@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FolderActionResult;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_FOLDER_ACTION_RESPONSE)
@@ -31,7 +32,8 @@ public class FolderActionResponse {
     /**
      * @zm-api-field-description Folder action result
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private final FolderActionResult action;
 
     /**

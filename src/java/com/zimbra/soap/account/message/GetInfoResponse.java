@@ -56,8 +56,9 @@ import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.type.ZmBoolean;
 
-import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * Note that LicenseAdminService and LicenseService both register a handler (the same one) which
@@ -255,6 +256,7 @@ public final class GetInfoResponse {
     /**
      * @zm-api-field-description Class of service
      */
+    @ZimbraUniqueElement
     @XmlElement(name=AccountConstants.E_COS /* cos */, required=false)
     private Cos cos;
 
@@ -364,6 +366,7 @@ public final class GetInfoResponse {
     /**
      * @zm-api-field-description License information.  Only present for Network Edition
      */
+    @ZimbraUniqueElement
     @XmlElement(name=AccountConstants.E_LICENSE /* license */, required=false)
     private LicenseInfo license;
 

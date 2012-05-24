@@ -38,6 +38,7 @@ import com.zimbra.soap.base.GeoInfoInterface;
 import com.zimbra.soap.base.InviteComponentInterface;
 import com.zimbra.soap.base.RecurrenceInfoInterface;
 import com.zimbra.soap.base.XPropInterface;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "categories", "comments", "contacts", "geo",
@@ -100,6 +101,7 @@ implements InviteComponentInterface
      * @zm-api-field-tag invite-comp-fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 

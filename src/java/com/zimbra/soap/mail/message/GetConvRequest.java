@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ConversationSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Get Conversation
@@ -43,7 +44,8 @@ public class GetConvRequest {
     /**
      * @zm-api-field-description Conversation specification
      */
-    @XmlElement(name=MailConstants.E_CONV, required=true)
+    @XmlElement(name=MailConstants.E_CONV /* c */, required=true)
+    @ZimbraUniqueElement
     private final ConversationSpec conversation;
 
     /**

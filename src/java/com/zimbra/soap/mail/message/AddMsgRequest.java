@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AddMsgSpec;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Add a message
@@ -44,6 +45,7 @@ public class AddMsgRequest {
     /**
      * @zm-api-field-description Specification of the message to add
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final AddMsgSpec msg;
 

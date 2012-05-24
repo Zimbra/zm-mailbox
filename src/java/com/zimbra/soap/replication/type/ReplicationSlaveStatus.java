@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.ReplicationConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ReplicationSlaveStatus {
@@ -28,6 +29,7 @@ public class ReplicationSlaveStatus {
     /**
      * @zm-api-field-description Catchup status
      */
+    @ZimbraUniqueElement
     @XmlElement(name=ReplicationConstants.E_CATCHUP_STATUS /* catchupStatus */, required=false)
     private ReplicationSlaveCatchupStatus catchupStatus;
 

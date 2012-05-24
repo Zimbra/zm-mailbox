@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.TagSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Create a tag
@@ -34,7 +35,8 @@ public class CreateTagRequest {
     /**
      * @zm-api-field-description Tag specification
      */
-    @XmlElement(name=MailConstants.E_TAG, required=false)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_TAG /* tag */, required=false)
     private TagSpec tag;
 
     public CreateTagRequest() {

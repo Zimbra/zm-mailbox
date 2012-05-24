@@ -33,6 +33,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalReply;
 import com.zimbra.soap.mail.type.SetCalendarItemInfo;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 //   TODO: need way to link message to appointment after the fact
 /**
@@ -103,6 +104,7 @@ public class SetAppointmentRequest {
     /**
      * @zm-api-field-description Default calendar item information
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.A_DEFAULT /* default */, required=false)
     private SetCalendarItemInfo defaultId;
 

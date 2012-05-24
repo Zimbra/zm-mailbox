@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ContactActionSelector;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-description Contact Action
@@ -34,7 +35,8 @@ public class ContactActionRequest {
     /**
      * @zm-api-field-description Contact action selector
      */
-    @XmlElement(name=MailConstants.E_ACTION, required=true)
+    @ZimbraUniqueElement
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private final ContactActionSelector action;
 
     /**

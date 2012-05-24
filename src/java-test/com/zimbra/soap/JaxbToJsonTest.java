@@ -1128,14 +1128,12 @@ header="X-Spam-Score"/>
      *        "authToken": [{
      *            "_content": "authenticationtoken"
      *          }],
-     *        "lifetime": [{
-     *            "_content": 3000
-     *          }],
+     *        "lifetime": 3000,
      *        "_jsns": "urn:zimbraAdmin"
      *      }
      */
     @Test
-    public void stringElemAndlongElem() throws Exception {
+    public void stringElemAndZimbraJsonlongAttr() throws Exception {
         final long lifetime = 3000;
         final String lifetimeStr = new Long(lifetime).toString();
         final String authToken = "authenticationtoken";
@@ -1148,7 +1146,7 @@ header="X-Spam-Score"/>
         AuthResponse roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, AuthResponse.class);
         logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        Assert.assertEquals("JSONElement lifetime", lifetimeStr, jsonJaxbElem.getElement("lifetime").getText());
+        Assert.assertEquals("JSONElement lifetime", lifetimeStr, jsonJaxbElem.getAttribute("lifetime"));
         Assert.assertEquals("JSONElement authToken", authToken, jsonJaxbElem.getElement("authToken").getText());
         Assert.assertEquals("roundtripped lifetime", lifetime, roundtripped.getLifetime());
         Assert.assertEquals("roundtripped authToken", authToken, roundtripped.getAuthToken());

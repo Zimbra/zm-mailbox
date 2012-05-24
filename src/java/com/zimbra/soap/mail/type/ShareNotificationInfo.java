@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ShareNotificationInfo {
@@ -51,12 +52,14 @@ public class ShareNotificationInfo {
     /**
      * @zm-api-field-description Grantor information
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_GRANTOR /* grantor */, required=true)
     private final Grantor grantor;
 
     /**
      * @zm-api-field-description Link information
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MOUNT /* link */, required=true)
     private final LinkInfo link;
 

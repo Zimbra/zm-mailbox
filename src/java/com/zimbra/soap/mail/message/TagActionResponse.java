@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.TagActionInfo;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_TAG_ACTION_RESPONSE)
@@ -32,6 +33,7 @@ public class TagActionResponse {
      * @zm-api-field-description The <b>&lt;action></b> element contains information about the tags affected by
      * the operation if and only if the operation was successful
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
     private TagActionInfo action;
 

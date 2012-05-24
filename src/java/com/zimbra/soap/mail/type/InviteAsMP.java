@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 // See mail.ToXML.encodeInviteAsMP
 
@@ -71,6 +72,7 @@ public class InviteAsMP extends MessageCommon {
      * @zm-api-field-tag subject
      * @zm-api-field-description Subject
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
 
@@ -78,6 +80,7 @@ public class InviteAsMP extends MessageCommon {
      * @zm-api-field-tag msg-id-header
      * @zm-api-field-description Message ID header
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_MSG_ID_HDR /* mid */, required=false)
     private String messageIdHeader;
 

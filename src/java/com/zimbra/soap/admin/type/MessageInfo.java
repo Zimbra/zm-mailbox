@@ -34,6 +34,7 @@ import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.base.InviteInfoInterface;
 import com.zimbra.soap.base.MessageInfoInterface;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
@@ -117,6 +118,7 @@ implements MessageInfoInterface {
      * @zm-api-field-tag msg-fragment
      * @zm-api-field-description First few bytes of the message (probably between 40 and 100 bytes)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
 
