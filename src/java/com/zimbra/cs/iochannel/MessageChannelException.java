@@ -27,4 +27,8 @@ public class MessageChannelException extends IOChannelException {
     public static MessageChannelException NoSuchMessage(String message) {
         return new MessageChannelException("message doesn't exist " + message);
     }
+
+    public static MessageChannelException CannotCreate(String error) {
+        return new MessageChannelException(error);
+    }
 }

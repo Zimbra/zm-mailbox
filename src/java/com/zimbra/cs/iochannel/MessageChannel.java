@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import com.zimbra.common.iochannel.Client;
+import com.zimbra.common.iochannel.Client.PeerServer;
 import com.zimbra.common.iochannel.IOChannelException;
 import com.zimbra.common.iochannel.Server;
 import com.zimbra.common.service.ServiceException;
@@ -78,11 +79,15 @@ public class MessageChannel {
                 return;
             }
             com.zimbra.cs.account.Server targetServer = targetAccount.getServer();
-            if (targetServer == null) {
+            String peerHostname;
+            PeerServer peer;
+            if (targetServer == null ||
+                    (peerHostname = targetServer.getServiceHostname()) == null ||
+                    (peer = client.getPeer(peerHostname)) == null) {
                 log.error("can't find server for account %s", accountId);
                 return;
             }
-            client.getPeer(targetServer.getServiceHostname()).sendMessage(message.serialize());
+            peer.sendMessage(message.serialize());
         } catch (ServiceException e) {
             log.error("can't send notification", e);
         } catch (IOChannelException e) {

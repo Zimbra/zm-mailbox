@@ -23,9 +23,11 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.LruMap;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.iochannel.CrossServerNotification;
 import com.zimbra.cs.iochannel.MessageChannel;
+import com.zimbra.cs.iochannel.MessageChannelException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -118,8 +120,14 @@ public class RemoteSoapSession extends SoapSession {
         }
 
         @Override
-        public void notificationsReady() throws ServiceException {
-            CrossServerNotification ntfn = CrossServerNotification.create(RemoteSoapSession.this, authUserCtxt);
+        public void notificationsReady() {
+            CrossServerNotification ntfn;
+            try {
+                ntfn = CrossServerNotification.create(RemoteSoapSession.this, authUserCtxt);
+            } catch (MessageChannelException e) {
+                ZimbraLog.session.warn("unable to create CrossServerNotification", e);
+                return;
+            }
             if (!checkDuplicateNotification(ntfn)) {
                 MessageChannel.getInstance().sendMessage(ntfn);
             }

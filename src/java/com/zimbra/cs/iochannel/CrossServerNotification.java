@@ -26,7 +26,6 @@ import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -37,15 +36,23 @@ public class CrossServerNotification extends Message {
 
     public static final String AppId = "xsn";
 
-    public static CrossServerNotification create(SoapSession session, ZimbraSoapContext zsc) throws ServiceException {
-        Element soapElement = Element.create(SoapProtocol.Soap12, "base");
+    public static CrossServerNotification create(SoapSession session, ZimbraSoapContext zsc) throws MessageChannelException {
+        Element soapElement;
+        try {
+            soapElement = Element.create(SoapProtocol.Soap12, "base");
+        } catch (ServiceException e) {
+            throw MessageChannelException.CannotCreate("element");
+        }
         session.putNotifications(soapElement, zsc, 0);
         Element notifyElement = soapElement.getOptionalElement(ZimbraNamespace.E_NOTIFY);
+        if (notifyElement == null) {
+            throw MessageChannelException.CannotCreate("no notification");
+        }
         StringBuilder soap = new StringBuilder();
         try {
             notifyElement.marshal(soap);
         } catch (IOException e) {
-            ZimbraLog.session.warn("cannot marshal notification", e);
+            throw MessageChannelException.CannotCreate("marshall");
         }
         String accountId = zsc.getAuthtokenAccountId();
         return new CrossServerNotification(accountId, "", soap.toString());
