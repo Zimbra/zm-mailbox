@@ -9709,6 +9709,12 @@ public class LdapProvisioning extends LdapProv {
             String newDn = mDIT.ucServiceNameToDN(newName);
             zlc.renameEntry(ucService.getDN(), newDn);
             ucServiceCache.remove(ucService);
+        } catch (LdapEntryAlreadyExistException nabe) {
+            throw AccountServiceException.UC_SERVICE_EXISTS(newName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to rename ucservice: "+zimbraId, e);
         } finally {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -68,6 +68,7 @@ public class AccountServiceException extends ServiceException {
     public static final String SHARE_LOCATOR_EXISTS = "account.SHARE_LOCATOR_EXISTS";
     public static final String ZIMLET_EXISTS      = "account.ZIMLET_EXISTS";
     public static final String DISTRIBUTION_LIST_EXISTS = "account.DISTRIBUTION_LIST_EXISTS";
+    public static final String UC_SERVICE_EXISTS  = "account.UC_SERVICE_EXISTS";
     public static final String MAINTENANCE_MODE   = "account.MAINTENANCE_MODE";
     public static final String ACCOUNT_INACTIVE   = "account.ACCOUNT_INACTIVE";
     public static final String IDENTITY_EXISTS     = "account.IDENTITY_EXISTS";
@@ -311,6 +312,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException IDENTITY_EXISTS(String name) {
         return new AccountServiceException("identity already exists: " + name, IDENTITY_EXISTS, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException UC_SERVICE_EXISTS(String name) {
+        return new AccountServiceException("uc service already exists: " + name, UC_SERVICE_EXISTS, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException TOO_MANY_IDENTITIES() {

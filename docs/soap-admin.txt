@@ -2785,6 +2785,10 @@ If "cos" element is specified the opeartion create/modify/get/delete gets applie
   <newName>{new-name}</newName>
 </RenameUCServiceRequest>
 
+<RenameUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
 <RenameUCServiceResponse />
 
 -----------------------------

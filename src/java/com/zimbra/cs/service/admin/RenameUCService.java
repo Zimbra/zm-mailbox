@@ -62,6 +62,7 @@ public class RenameUCService extends AdminDocumentHandler {
             throw ServiceException.FAILURE("unabled to get renamed uc service: " + id, null);
         }
         Element response = lc.createElement(AdminConstants.RENAME_UC_SERVICE_RESPONSE);
+        GetUCService.encodeUCService(response, ucService, null, null);
         return response;
     }
 
