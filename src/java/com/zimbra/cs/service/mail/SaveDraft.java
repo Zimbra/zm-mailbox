@@ -122,9 +122,9 @@ public class SaveDraft extends MailDocumentHandler {
 
             ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
 
-            Account acct = mbox.getAccount();
-            long acctQuota = AccountUtil.getEffectiveQuota(acct);
             if (autoSendTime != 0) {
+                Account acct = mbox.getAccount();
+                long acctQuota = AccountUtil.getEffectiveQuota(acct);
                 if (acct.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
                     throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
                 }
