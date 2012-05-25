@@ -1128,7 +1128,7 @@ public class SoapSession extends Session {
                 getDelegateSession(mpt.getOwnerId());
             }
         } catch (ServiceException e) {
-            return;
+            mountpoints.put(iidTarget, new Pair<Boolean, Element>(true, null));
         }
     }
 
