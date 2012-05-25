@@ -529,6 +529,9 @@ public final class LC {
     public static final KnownKey mysql_table_cache = KnownKey.newKey(null);
 
     @Supported
+    public static final KnownKey mysql_backup_retention = KnownKey.newKey(0);
+
+    @Supported
     public static final KnownKey derby_properties = KnownKey.newKey("${zimbra_home}/conf/derby.properties");
 
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
@@ -1102,6 +1105,9 @@ public final class LC {
     public static final KnownKey antispam_mysql_user = KnownKey.newKey("zimbra");
     public static final KnownKey antispam_mysql_root_password = KnownKey.newKey("");
     public static final KnownKey antispam_mysql_password = KnownKey.newKey("");
+
+    @Supported
+    public static final KnownKey antispam_backup_retention = KnownKey.newKey(0);
 
     // LDAP Custom DIT base DN for LDAP app admin entries
     public static final KnownKey ldap_dit_base_dn_appadmin      = KnownKey.newKey("");
