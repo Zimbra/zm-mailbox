@@ -16,7 +16,6 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,16 +33,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -63,7 +55,6 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.BrowseTerm;
-import com.zimbra.cs.index.CassandraIndex;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
@@ -76,11 +67,6 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.global.GlobalIndex;
-import com.zimbra.cs.index.global.GlobalIndexSweeper;
-import com.zimbra.cs.index.global.GlobalSearchHit;
-import com.zimbra.cs.index.global.GlobalSearchQuery;
-import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
@@ -105,9 +91,6 @@ public final class MailboxIndex {
     private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
             0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             new ThreadFactoryBuilder().setNameFormat("ReIndex-%d").setDaemon(true).build());
-    private static GlobalIndex globalIndex;
-    @SuppressWarnings("unused")
-    private static GlobalIndexSweeper globalIndexSweeper;
     private static IndexStore.Factory indexStoreFactory;
     static {
         setIndexStoreFactory(LC.index_store.value());
@@ -136,21 +119,7 @@ public final class MailboxIndex {
 
     @VisibleForTesting
     static void setIndexStoreFactory(String name) {
-        if ("cassandra".equals(name)) {
-            indexStoreFactory = new CassandraIndex.Factory();
-        } else if ("hbase".equals(name)) {
-            indexStoreFactory = new HBaseIndex.Factory();
-        } else {
-            indexStoreFactory = new LuceneIndex.Factory();
-            if (LC.global_index_enabled.booleanValue()) {
-                globalIndex = new HBaseIndex.Factory().getGlobalIndex();
-                try {
-                    globalIndexSweeper = new GlobalIndexSweeper(globalIndex);
-                } catch (ServiceException e) {
-                    ZimbraLog.index.fatal("Could not start global index sweeper..." + e);
-                }
-            }
-        }
+        indexStoreFactory = new LuceneIndex.Factory();
         ZimbraLog.index.info("Using %s", indexStoreFactory.getClass().getDeclaringClass().getSimpleName());
     }
 
@@ -170,7 +139,7 @@ public final class MailboxIndex {
     }
 
     void open() throws ServiceException {
-        indexStore = indexStoreFactory.getIndexStore(mailbox);
+        indexStore = indexStoreFactory.getInstance(mailbox);
     }
 
     public final IndexStore getIndexStore() {
@@ -281,51 +250,6 @@ public final class MailboxIndex {
         return results;
     }
 
-    public List<GlobalSearchHit> search(GlobalSearchQuery params) throws ServiceException {
-        try {
-            Query query = toQuery(params);
-            if (query == null) { // empty after trimming stop words
-                return Collections.emptyList();
-            }
-            if (globalIndex != null) {
-                return globalIndex.search(mailbox.getAccountId(), query);
-            } else {
-                return indexStoreFactory.getGlobalIndex().search(mailbox.getAccountId(), query);
-            }
-        } catch (UnsupportedOperationException e) { // only supported by HBase backend
-            throw ServiceException.UNSUPPORTED();
-        } catch (IOException e) {
-            throw MailServiceException.FAILURE("Failed to search global index", e);
-        }
-    }
-
-    private Query toQuery(GlobalSearchQuery query) throws IOException {
-        TokenStream stream = analyzer.tokenStream(LuceneFields.L_CONTENT, new StringReader(query.getQueryString()));
-        List<String> tokens = new ArrayList<String>(1);
-        try {
-            CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
-            stream.reset();
-            while (stream.incrementToken()) {
-                tokens.add(termAttr.toString());
-            }
-            stream.end();
-        } finally {
-            Closeables.closeQuietly(stream);
-        }
-        switch (tokens.size()) {
-            case 0:
-                return null;
-            case 1:
-                return new TermQuery(new Term(LuceneFields.L_CONTENT, tokens.get(0)));
-            default:
-                BooleanQuery bool = new BooleanQuery();
-                for (String token : tokens) {
-                    bool.add(new TermQuery(new Term(LuceneFields.L_CONTENT, token)), BooleanClause.Occur.MUST);
-                }
-                return bool;
-        }
-    }
-
     /**
      * Returns true if any of the specified email addresses exists in contacts, otherwise false.
      */
@@ -382,8 +306,6 @@ public final class MailboxIndex {
 
     public void deleteIndex() throws IOException {
         indexStore.deleteIndex();
-        if (globalIndex != null)
-            globalIndex.delete(mailbox.getAccountId());
     }
 
     /**
@@ -816,8 +738,6 @@ public final class MailboxIndex {
             Indexer indexer = indexStore.openIndexer();
             try {
                 indexer.addDocument(item.getFolder(), item, docs);
-                if (globalIndex != null)
-                    globalIndex.addDocument(item.getFolder(), item, docs);
             } finally {
                 indexer.close();
             }
@@ -847,8 +767,6 @@ public final class MailboxIndex {
 
         try {
             indexer.deleteDocument(ids);
-            if (globalIndex != null)
-                globalIndex.delete(mailbox.getAccountId(), ids);
         } catch (IOException e) {
             ZimbraLog.index.warn("Failed to delete index documents", e);
         } finally {
@@ -892,8 +810,6 @@ public final class MailboxIndex {
 
                 try {
                     indexer.addDocument(entry.item.getFolder(), entry.item, entry.documents);
-                    if (globalIndex != null)
-                        globalIndex.addDocument(entry.item.getFolder(), entry.item, entry.documents);
                 } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();

@@ -20,7 +20,6 @@ import java.io.PrintStream;
 import org.apache.lucene.search.IndexSearcher;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.global.GlobalIndex;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -61,8 +60,7 @@ public interface IndexStore {
     boolean verify(PrintStream out) throws IOException;
 
     interface Factory {
-        IndexStore getIndexStore(Mailbox mbox) throws ServiceException;
-        GlobalIndex getGlobalIndex();
+        IndexStore getInstance(Mailbox mbox) throws ServiceException;
         void destroy();
     }
 

@@ -53,7 +53,6 @@ import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.global.GlobalIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -678,15 +677,10 @@ public final class LuceneIndex implements IndexStore {
         public Factory() {
             BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
         }
-
+        
         @Override
-        public LuceneIndex getIndexStore(Mailbox mbox) throws ServiceException {
+        public LuceneIndex getInstance(Mailbox mbox) throws ServiceException {
             return new LuceneIndex(mbox);
-        }
-
-        @Override
-        public GlobalIndex getGlobalIndex() {
-            throw new UnsupportedOperationException();
         }
 
         @Override
