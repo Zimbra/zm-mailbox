@@ -1959,7 +1959,8 @@ public class LdapProvisioning extends LdapProv {
         boolean needDomainName = true;
         boolean needZimbraACE = true;
         boolean needCn = ((flags & Provisioning.SD_COS_FLAG) != 0) || ((flags & Provisioning.SD_DYNAMIC_GROUP_FLAG) != 0);
-
+        boolean needIsExternalVirtualAccount = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
+        boolean needExternalUserMailAddress = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
 
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
@@ -1980,6 +1981,10 @@ public class LdapProvisioning extends LdapProv {
                 needZimbraACE = false;
             else if (Provisioning.A_cn.equalsIgnoreCase(returnAttrs[i]))
                 needCn = false;
+            else if (Provisioning.A_zimbraIsExternalVirtualAccount.equalsIgnoreCase(returnAttrs[i]))
+                needIsExternalVirtualAccount = false;
+            else if (Provisioning.A_zimbraExternalUserMailAddress.equalsIgnoreCase(returnAttrs[i]))
+                needExternalUserMailAddress = false;
         }
 
         int num = (needUID ? 1 : 0) +
@@ -1990,7 +1995,9 @@ public class LdapProvisioning extends LdapProv {
                   (needCalendarUserType ? 1 : 0) +
                   (needDomainName ? 1 : 0) +
                   (needZimbraACE ? 1 : 0) +
-                  (needCn ? 1 : 0);
+                  (needCn ? 1 : 0) +
+                  (needIsExternalVirtualAccount ? 1 : 0) +
+                  (needExternalUserMailAddress ? 1 : 0);
 
         if (num == 0) return returnAttrs;
 
@@ -2005,6 +2012,8 @@ public class LdapProvisioning extends LdapProv {
         if (needDomainName) result[i++] = Provisioning.A_zimbraDomainName;
         if (needZimbraACE) result[i++] = Provisioning.A_zimbraACE;
         if (needCn) result[i++] = Provisioning.A_cn;
+        if (needIsExternalVirtualAccount) result[i++] = Provisioning.A_zimbraIsExternalVirtualAccount;
+        if (needExternalUserMailAddress) result[i++] = Provisioning.A_zimbraExternalUserMailAddress;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }
