@@ -1131,14 +1131,13 @@ public final class JaxbUtil {
     }
 
     /**
-     * This appears to work if e is an XMLElement but sometimes fails badly if
-     * e is a JSONElement - get:
-     * javax.xml.bind.UnmarshalException: Namespace URIs and local names
-     *      to the unmarshaller needs to be interned.
+     * Method left in place to discourage future attempts to use dom4j as a basis for Element to JAXB - unless the
+     * underlying issue is understood and resolved.
+     * This sometimes fails badly whether e is a JSONElement or an XMLElement - get:
+     *    "javax.xml.bind.UnmarshalException: Namespace URIs and local names to the unmarshaller needs to be interned."
      * and that seems to make the unmarshaller unstable from then on :-(
-     * Note that this method does NOT support Zimbra's greater flexibility
-     * for Xml structure.  Something similar to {@link fixupStructureForJaxb}
-     * will be needed to add such support.
+     * Note that this method does NOT support Zimbra's greater flexibility for Xml structure.
+     * Something similar to {@link fixupStructureForJaxb} would be needed to add such support.
      */
     @Deprecated
     @SuppressWarnings("unchecked")
