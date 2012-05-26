@@ -670,12 +670,6 @@ public final class LC {
     public static final KnownKey zimlet_directory = KnownKey.newKey("${zimbra_home}/zimlets-deployed");
 
     @Supported
-    public static final KnownKey wiki_enabled = KnownKey.newKey(false);
-
-    @Supported
-    public static final KnownKey wiki_user = KnownKey.newKey("wiki");
-
-    @Supported
     public static final KnownKey calendar_outlook_compatible_allday_events = KnownKey.newKey(false);
 
     @Supported
