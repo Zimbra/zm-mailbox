@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AnnotatedCosInfo;
+import com.zimbra.soap.admin.type.CosInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_COS_RESPONSE)
@@ -31,14 +31,14 @@ public class GetCosResponse {
      * @zm-api-field-description Information about Class of Service (COS)
      */
     @XmlElement(name=AdminConstants.E_COS)
-    private AnnotatedCosInfo cos;
+    private CosInfo cos;
 
     public GetCosResponse() {
     }
 
-    public void setCos(AnnotatedCosInfo cos) {
+    public void setCos(CosInfo cos) {
         this.cos = cos;
     }
 
-    public AnnotatedCosInfo getCos() { return cos; }
+    public CosInfo getCos() { return cos; }
 }

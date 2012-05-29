@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlRootElement(name=MailConstants.E_RETENTION_POLICY, namespace=MailConstants.NAMESPACE_STR)
 @XmlAccessorType(XmlAccessType.NONE)
@@ -38,6 +39,7 @@ public class RetentionPolicy {
     /**
      * @zm-api-field-description "Keep" retention policies
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_KEEP, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
     private List<Policy> keep = Lists.newArrayList();
@@ -45,6 +47,7 @@ public class RetentionPolicy {
     /**
      * @zm-api-field-description "Purge" retention policies
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_PURGE, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
     private List<Policy> purge = Lists.newArrayList();
@@ -112,6 +115,7 @@ public class RetentionPolicy {
             .add("purge", purge).toString();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof RetentionPolicy)) {
             return false;

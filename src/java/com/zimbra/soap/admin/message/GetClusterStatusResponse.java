@@ -33,6 +33,8 @@ import com.zimbra.common.soap.ClusterConstants;
 import com.zimbra.soap.admin.type.ClusterServerInfo;
 import com.zimbra.soap.admin.type.ClusterServiceInfo;
 
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ClusterConstants.E_GET_CLUSTER_STATUS_RESPONSE)
 @XmlType(propOrder = {})
@@ -47,6 +49,7 @@ public class GetClusterStatusResponse {
     /**
      * @zm-api-field-description Information on cluster servers
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=ClusterConstants.A_CLUSTER_SERVERS /* servers */, required=false)
     @XmlElement(name=ClusterConstants.A_CLUSTER_SERVER /* server */, required=false)
     private List<ClusterServerInfo> servers = Lists.newArrayList();
@@ -54,6 +57,7 @@ public class GetClusterStatusResponse {
     /**
      * @zm-api-field-description Information on cluster services
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=ClusterConstants.A_CLUSTER_SERVICES /* services */, required=false)
     @XmlElement(name=ClusterConstants.A_CLUSTER_SERVICE /* service */, required=false)
     private List<ClusterServiceInfo> services = Lists.newArrayList();

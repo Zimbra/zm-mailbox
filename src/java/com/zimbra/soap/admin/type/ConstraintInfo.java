@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ConstraintInfo {
@@ -46,6 +47,7 @@ public class ConstraintInfo {
     /**
      * @zm-api-field-description Acceptable Values
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_VALUES, required=false)
     @XmlElement(name=AdminConstants.E_VALUE, required=false)
     private List <String> values = Lists.newArrayList();

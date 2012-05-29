@@ -18,6 +18,9 @@ package com.zimbra.soap.account.message;
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,8 +33,6 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-
-import com.google.common.collect.Multimap;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
@@ -59,7 +60,6 @@ import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
-
 /**
  * Note that LicenseAdminService and LicenseService both register a handler (the same one) which
  * extends com.zimbra.cs.service.account.GetInfo - this adds the "license" element
@@ -143,6 +143,9 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
         "quotaUsed", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
         "soapURL", "publicURL", "changePasswordURL", "license"})
+@JsonPropertyOrder({"version", "id", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
+        "rest", "used", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
+        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license"})
 public final class GetInfoResponse {
 
     /**

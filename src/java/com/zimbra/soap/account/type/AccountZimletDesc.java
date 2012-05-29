@@ -19,6 +19,8 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +37,8 @@ import com.zimbra.soap.base.ZimletDesc;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
+@JsonPropertyOrder({ "description", "name", "target", "label", "version", "include", "handlerObject",
+    "serverExtension", "contentObject"})
 public class AccountZimletDesc implements ZimletDesc {
 
     // Turning schema validation on for WSDL clients using WSDL derived

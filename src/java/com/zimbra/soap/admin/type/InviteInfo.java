@@ -34,6 +34,7 @@ import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.base.CalendarReplyInterface;
 import com.zimbra.soap.base.InviteComponentInterface;
 import com.zimbra.soap.base.InviteInfoInterface;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"timezones", "inviteComponent", "calendarReplies"})
@@ -63,6 +64,7 @@ implements InviteInfoInterface {
     /**
      * @zm-api-field-description List of replies received from attendees.
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalendarReply> calendarReplies = Lists.newArrayList();

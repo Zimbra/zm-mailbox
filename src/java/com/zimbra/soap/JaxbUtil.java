@@ -58,6 +58,7 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.json.JacksonUtil;
 import com.zimbra.soap.util.JaxbInfo;
 
 public final class JaxbUtil {
@@ -982,7 +983,7 @@ public final class JaxbUtil {
      */
     public static Element jaxbToElement(Object o, Element.ElementFactory factory, boolean removePrefixes)
     throws ServiceException {
-        return jaxbToElement(o, factory, removePrefixes, true);
+        return jaxbToElement(o, factory, removePrefixes, true /* useContextMarshaller */);
     }
 
     /**
@@ -1001,6 +1002,9 @@ public final class JaxbUtil {
     throws ServiceException {
         if (o == null) {
             return null;
+        }
+        if (Element.JSONElement.mFactory.equals(factory)) {
+            return JacksonUtil.jaxbToJSONElement(o);
         }
         try {
             Marshaller marshaller;
@@ -1023,6 +1027,7 @@ public final class JaxbUtil {
                     o.getClass().getName() + " to Element", e);
         }
     }
+
     /**
      * @param o - associated JAXB class must have an @XmlRootElement annotation
      * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
@@ -1073,9 +1078,11 @@ public final class JaxbUtil {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Element jaxbToNamedElement(String name, String namespace,
-            Object o, Element.ElementFactory factory)
+    public static Element jaxbToNamedElement(String name, String namespace, Object o, Element.ElementFactory factory)
     throws ServiceException {
+        if (Element.JSONElement.mFactory.equals(factory)) {
+            return JacksonUtil.jaxbToJSONElement(o, org.dom4j.QName.get(name, namespace));
+        }
         try {
             Marshaller marshaller = createMarshaller(o.getClass());
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -1091,8 +1098,7 @@ public final class JaxbUtil {
         }
     }
 
-    public static Element addChildElementFromJaxb(Element parent,
-                String name, String namespace, Object o) {
+    public static Element addChildElementFromJaxb(Element parent, String name, String namespace, Object o) {
         Element.ElementFactory factory;
         if (parent instanceof XMLElement) {
             factory = XMLElement.mFactory;

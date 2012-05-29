@@ -25,7 +25,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.service.ServiceException;
@@ -33,38 +32,22 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.type.KeyValuePair;
-import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_A)
 public class Attr extends KeyValuePair {
 
-    /**
-     * @zm-api-field-tag is-cos-attr
-     * @zm-api-field-description Flags that this is a Class Of Service (COS) attribute.
-     */
-    @XmlAttribute(name=AdminConstants.A_C /* c */, required=false)
-    private ZmBoolean isCosAttr;
-
     public Attr() {
-        this(null, null, null);
+        this(null, null);
     }
 
     public Attr(String key, String value) {
-        this(key, value, null);
-    }
-
-    public Attr(String key, String value, Boolean isCosAttr) {
         super(key, value);
-        this.isCosAttr = ZmBoolean.fromBool(isCosAttr);
     }
 
     public static Attr fromNameValue(String key, String value) {
         return new Attr(key, value);
     }
-
-    public void setIsCosAttr(Boolean isCosAttr) { this.isCosAttr = ZmBoolean.fromBool(isCosAttr); }
-    public Boolean getIsCosAttr() { return ZmBoolean.toBool(isCosAttr); }
 
     public static List <Attr> mapToList(Map<String, ? extends Object> attrs)
     throws ServiceException {
@@ -106,16 +89,12 @@ public class Attr extends KeyValuePair {
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
-        return helper
-            .add("isCosAttr", isCosAttr);
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper = super.addToStringInfo(helper);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

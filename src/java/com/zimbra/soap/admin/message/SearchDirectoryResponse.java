@@ -31,8 +31,8 @@ import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.admin.type.AdminObjectInfo;
 import com.zimbra.soap.admin.type.AccountInfo;
+import com.zimbra.soap.admin.type.AdminObjectInterface;
 import com.zimbra.soap.admin.type.AliasInfo;
 import com.zimbra.soap.admin.type.CalendarResourceInfo;
 import com.zimbra.soap.admin.type.CosInfo;
@@ -70,12 +70,12 @@ public class SearchDirectoryResponse {
         @XmlElement(name=AdminConstants.E_DOMAIN, type=DomainInfo.class),
         @XmlElement(name=AdminConstants.E_COS, type=CosInfo.class)
     })
-    private List<AdminObjectInfo> entries = Lists.newArrayList();
+    private List<AdminObjectInterface> entries = Lists.newArrayList();
 
     public SearchDirectoryResponse() {
     }
 
-    public SearchDirectoryResponse setEntries(Collection<AdminObjectInfo> entries) {
+    public SearchDirectoryResponse setEntries(Collection<AdminObjectInterface> entries) {
         this.entries.clear();
         if (entries != null) {
             this.entries.addAll(entries);
@@ -91,12 +91,12 @@ public class SearchDirectoryResponse {
         this.searchTotal = searchTotal;
     }
 
-    public SearchDirectoryResponse addEntry(AdminObjectInfo entry) {
+    public SearchDirectoryResponse addEntry(AdminObjectInterface entry) {
         entries.add(entry);
         return this;
     }
 
-    public List<AdminObjectInfo> getEntries() {
+    public List<AdminObjectInterface> getEntries() {
         return Collections.unmodifiableList(entries);
     }
 
@@ -105,7 +105,7 @@ public class SearchDirectoryResponse {
 
     public List<CalendarResourceInfo> getCalendarResources() {
         List<CalendarResourceInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof CalendarResourceInfo)
                 subset.add((CalendarResourceInfo) entry);
         }
@@ -114,7 +114,7 @@ public class SearchDirectoryResponse {
 
     public List<DistributionListInfo> getDistributionLists() {
         List<DistributionListInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof DistributionListInfo)
                 subset.add((DistributionListInfo) entry);
         }
@@ -123,7 +123,7 @@ public class SearchDirectoryResponse {
 
     public List<AliasInfo> getAliases() {
         List<AliasInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof AliasInfo)
                 subset.add((AliasInfo) entry);
         }
@@ -132,7 +132,7 @@ public class SearchDirectoryResponse {
 
     public List<AccountInfo> getAccounts() {
         List<AccountInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof AccountInfo)
                 subset.add((AccountInfo) entry);
         }
@@ -141,7 +141,7 @@ public class SearchDirectoryResponse {
 
     public List<DomainInfo> getDomains() {
         List<DomainInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof DomainInfo)
                 subset.add((DomainInfo) entry);
         }
@@ -150,7 +150,7 @@ public class SearchDirectoryResponse {
 
     public List<CosInfo> getCOSes() {
         List<CosInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof CosInfo)
                 subset.add((CosInfo) entry);
         }

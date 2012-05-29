@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.type.NamedElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -43,15 +44,17 @@ public class CmdRightsInfo {
     /**
      * @zm-api-field-description Rights
      */
-    @XmlElementWrapper(name=AdminConstants.E_RIGHTS, required=true)
-    @XmlElement(name=AdminConstants.E_RIGHT, required=false)
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=AdminConstants.E_RIGHTS /* rights */, required=true)
+    @XmlElement(name=AdminConstants.E_RIGHT /* right */, required=false)
     private List <NamedElement> rights = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Notes
      */
-    @XmlElementWrapper(name=AdminConstants.E_DESC, required=true)
-    @XmlElement(name=AdminConstants.E_NOTE, required=false)
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=AdminConstants.E_DESC /* desc */, required=true)
+    @XmlElement(name=AdminConstants.E_NOTE /* note */, required=false)
     private List <String> notes = Lists.newArrayList();
 
     /**

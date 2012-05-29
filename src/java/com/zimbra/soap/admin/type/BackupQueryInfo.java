@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class BackupQueryInfo {
@@ -113,6 +114,7 @@ public class BackupQueryInfo {
     /**
      * @zm-api-field-description Statistics.  Returned if request specified stats="1" (true)
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=BackupConstants.E_STATS /* stats */, required=false)
     @XmlElement(name=BackupConstants.E_COUNTER /* counter */, required=false)
     private List<BackupQueryCounter> stats = Lists.newArrayList();

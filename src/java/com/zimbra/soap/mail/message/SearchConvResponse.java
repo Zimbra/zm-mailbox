@@ -38,6 +38,7 @@ import com.zimbra.soap.mail.type.SuggestedQueryString;
 import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_CONV_RESPONSE)
@@ -97,6 +98,7 @@ public class SearchConvResponse {
      * unset then the wildcard was not specific enough and therefore no wildcard matches are included
      * (exact-match <b>is</b> included in results).
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_INFO /* info */, required=false)
     @XmlElements({
         @XmlElement(name=MailConstants.E_SUGEST /* suggest */, type=SuggestedQueryString.class),

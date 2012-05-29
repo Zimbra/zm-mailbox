@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.PackageRightsInfo;
 import com.zimbra.soap.admin.type.DomainAdminRight;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_RIGHTS_DOC_RESPONSE)
@@ -38,7 +39,7 @@ public class GetRightsDocResponse {
     /**
      * @zm-api-field-description Information for packages
      */
-    @XmlElement(name=AdminConstants.E_PACKAGE, required=false)
+    @XmlElement(name=AdminConstants.E_PACKAGE /* package */, required=false)
     private List <PackageRightsInfo> pkgs = Lists.newArrayList();
 
     /**
@@ -50,10 +51,9 @@ public class GetRightsDocResponse {
     /**
      * @zm-api-field-description Domain admin rights
      */
-    @XmlElementWrapper(
-            name="domainAdmin-copypaste-to-zimbra-rights-domainadmin-xml-template",
-            required=true)
-    @XmlElement(name=AdminConstants.E_RIGHT, required=false)
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name="domainAdmin-copypaste-to-zimbra-rights-domainadmin-xml-template", required=true)
+    @XmlElement(name=AdminConstants.E_RIGHT /* right */, required=false)
     private List <DomainAdminRight> rights = Lists.newArrayList();
 
     public GetRightsDocResponse() {
@@ -91,5 +91,16 @@ public class GetRightsDocResponse {
 
     public List <DomainAdminRight> getRights() {
         return Collections.unmodifiableList(rights);
+    }
+
+    public List <String> getNotUsed() {
+        return notUsed;
+    }
+
+    public void setNotUsed(List <String> notUsed) {
+        this.notUsed.clear();
+        if (notUsed != null) {
+            this.notUsed.addAll(notUsed);
+        }
     }
 }

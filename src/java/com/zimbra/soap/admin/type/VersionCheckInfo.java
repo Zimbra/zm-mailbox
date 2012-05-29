@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
@@ -46,6 +47,7 @@ public class VersionCheckInfo {
     /**
      * @zm-api-field-description Version check update information
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_UPDATES /* updates */, required=false)
     @XmlElement(name=AdminConstants.E_UPDATE /* update */, required=false)
     private List<VersionCheckUpdateInfo> updates = Lists.newArrayList();

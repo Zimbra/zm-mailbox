@@ -195,31 +195,25 @@ public class JaxbToElementTest {
                 String expectedFile, String actualFile) {
         if (!actual.equals(expected)) {
             try{
-                OutputStreamWriter out = new OutputStreamWriter(
-                        new FileOutputStream(actualFile),"UTF-8");
+                OutputStreamWriter out = new OutputStreamWriter( new FileOutputStream(actualFile),"UTF-8");
                 out.write(actual);
                 out.close();
             }catch (Exception e){//Catch exception if any
-              System.err.println("validateLongString:Error writing to " +
-                      actualFile + " : " + e.getMessage());
+              System.err.println("validateLongString:Error writing to " + actualFile + " : " + e.getMessage());
             }
-            Assert.fail(message + "\nexpected=" + expectedFile +
-                    "\nactual=" + actualFile);
+            Assert.fail(message + "\nexpected=" + expectedFile + "\nactual=" + actualFile);
         }
     }
 
     @Test
     public void jaxBToJSONElementTest() throws Exception {
-            Element el = JaxbUtil.jaxbToElement(
-                    getInfoRespJaxb, JSONElement.mFactory);
+            Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb, JSONElement.mFactory);
             // el.toString() and el.prettyPrint() don't provide the
             // name of the element - that only happens when it is a
             // child of other elements (the "soap" envelop)
             String actual = el.prettyPrint();
-            Assert.assertEquals("Top level Element name",
-                    "GetInfoResponse", el.getName());
-            validateLongString("JSON response differs from expected\n",
-                getInfoResponseJSON, actual,
+            Assert.assertEquals("Top level Element name", "GetInfoResponse", el.getName());
+            validateLongString("JSON response differs from expected\n", getInfoResponseJSON, actual,
                         "GetInfoResponse.json", "/tmp/GetInfoResponse.json");
     }
 
@@ -228,12 +222,10 @@ public class JaxbToElementTest {
         Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
         org.w3c.dom.Document doc = el.toW3cDom();
         if (LOG.isDebugEnabled())
-            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" +
-                    JaxbUtil.domToString(doc));
+            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + JaxbUtil.domToString(doc));
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
-            Assert.assertEquals("Account name", "user1@ysasaki.local",
-                 getInfoResp.getAccountName());
+            Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
         }
     }
 
@@ -273,7 +265,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     public void elementToJaxbUsingDom4jTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(getInfoRespElem);
-            Assert.assertEquals("Account name", "user1@ysasaki.local", getInfoResp.getAccountName());
+            Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
         }
     }
 
@@ -283,7 +275,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     public void elementToJaxbUsingByteArrayTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxbUsingByteArray(getInfoRespElem);
-            Assert.assertEquals("Account name", "user1@ysasaki.local", getInfoResp.getAccountName());
+            Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
         }
     }
 
@@ -295,7 +287,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         if (LOG.isDebugEnabled())
             LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + JaxbUtil.domToString(doc));
         GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(el);
-        Assert.assertEquals("Account name", "user1@ysasaki.local", getInfoResp.getAccountName());
+        Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
     }
 
     /*
@@ -309,7 +301,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
             Element env = Element.parseJSON(getInfoResponseJSONwithEnv);
             Element el = env.listElements().get(0);
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(el);
-            Assert.assertEquals("Account name", "user1@ysasaki.local", getInfoResp.getAccountName());
+            Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
         }
     }
 

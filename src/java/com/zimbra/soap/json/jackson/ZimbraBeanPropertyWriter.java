@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.xml.namespace.QName;
 import javax.xml.bind.annotation.XmlElement;
@@ -176,8 +175,7 @@ public class ZimbraBeanPropertyWriter
     throws JsonGenerationException, IOException {
         if (wrapperName != null) {
             jgen.writeFieldName(wrapperName.getLocalPart());
-            // Zimbra wraps the wrapper inside an array - except for keyvaluepairs
-            if (!nameInfo.isKeyValuePairs()) {
+            if (nameInfo.isWrapperIsArray()) {
                 jgen.writeStartArray();
             }
             jgen.writeStartObject();
@@ -189,7 +187,7 @@ public class ZimbraBeanPropertyWriter
         if (wrapperName != null) {
             jgen.writeEndObject();
             addZimbraJsonNamespaceField(jgen, wrapperName);
-            if (!nameInfo.isKeyValuePairs()) {
+            if (nameInfo.isWrapperIsArray()) {
                 jgen.writeEndArray();
             }
         }

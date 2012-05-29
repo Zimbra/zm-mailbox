@@ -18,36 +18,20 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
-
-import com.zimbra.common.soap.Element.JSONElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.codehaus.jackson.annotate.JacksonAnnotation;
 
 /**
  * <p>Marker annotation used in Zimbra JAXB classes to affect how they are serialized to Zimbra style JSON.</p>
- * <h1>Notes on {@link JSONElement}:</h1>
- * A JSON element added via {@code addElement} is always serialized as an array, because there could be
- * further {@code addElement} calls with the same element name.  On the other hand, a JSON element added via
- * <br />{@code addUniqueElement}<br />
- * won't be serialized as an array as there is an implicit assumption that there will be only one element with that name.
- * This marker goes with {@link XmlElement} or {@link XmlElementRef} annotations to flag that they should be
- * serialized in the same way as a {@code JSONElement} which has been added via {@code addUniqueElement}
- *
- * A String field with {@link XmlElement} or {@link XmlElementRef} would normally be serialized similarly to:
- * <pre>
- *    "str-elem": [{ "_content": "element ONE" }]
- * </pre>
- * If the field also has this {@link ZimbraUniqueElement} annotation, it is serialized similarly to this instead:
- * <pre>
- *    "str-elem": { "_content": "element ONE" }
- * </pre>
+ * Used in conjunction with {@link XmlElementWrapper} to indicate that the property for the wrapper should be treated
+ * as an array.  {@link ZimbraJsonArrayForWrapper} should only be used in JAXB for legacy API compatibility where
+ * wrapper elements were added with {@code addElement} instead of {@code addUniqueElement}.
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @JacksonAnnotation
-public @interface ZimbraUniqueElement
+public @interface ZimbraJsonArrayForWrapper
 {
     /**
      * Optional argument that defines whether this annotation is active or not. The only use for value 'false' is

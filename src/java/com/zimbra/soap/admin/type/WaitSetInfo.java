@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.IdAndType;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // soap-waitset.txt implies a lot of these attributes are directly unser QueryWaitSetResponse.  They aren't.
 @XmlAccessorType(XmlAccessType.NONE)
@@ -81,6 +82,7 @@ public class WaitSetInfo {
     /**
      * @zm-api-field-description Error information
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_ERRORS /* errors */, required=false)
     @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
     private List<IdAndType> errors = Lists.newArrayList();
@@ -116,6 +118,7 @@ public class WaitSetInfo {
     /**
      * @zm-api-field-description Buffered commit information
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name="buffered", required=false)
     @XmlElement(name="commit", required=false)
     private List<BufferedCommitInfo> bufferedCommits = Lists.newArrayList();

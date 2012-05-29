@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_WHITE_BLACK_LIST_RESPONSE)
@@ -39,6 +40,7 @@ public class GetWhiteBlackListResponse {
     /**
      * @zm-api-field-description White list
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AccountConstants.E_WHITE_LIST, required=true)
     @XmlElement(name=AccountConstants.E_ADDR, required=false)
     private List<String> whiteListEntries = Lists.newArrayList();
@@ -46,6 +48,7 @@ public class GetWhiteBlackListResponse {
     /**
      * @zm-api-field-description Black list
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AccountConstants.E_BLACK_LIST, required=true)
     @XmlElement(name=AccountConstants.E_ADDR, required=false)
     private List<String> blackListEntries = Lists.newArrayList();

@@ -26,16 +26,16 @@ import javax.xml.bind.annotation.XmlAttribute;
 public class Cos {
 
     /**
-     * @zm-api-field-tag cos-name
-     * @zm-api-field-description Class of Service (COS) name
-     */
-    @XmlAttribute private String name;
-
-    /**
      * @zm-api-field-tag cos-id
      * @zm-api-field-description Class of Service (COS) ID
      */
     @XmlAttribute private String id;
+
+    /**
+     * @zm-api-field-tag cos-name
+     * @zm-api-field-description Class of Service (COS) name
+     */
+    @XmlAttribute private String name;
 
     public Cos() {
     }

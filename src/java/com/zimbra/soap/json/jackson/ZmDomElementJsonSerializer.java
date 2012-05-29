@@ -15,6 +15,10 @@
 package com.zimbra.soap.json.jackson;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
@@ -26,6 +30,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import com.zimbra.common.soap.Element.JSONElement;
 
@@ -39,16 +46,31 @@ extends SerializerBase<Element>
     @Override
     public void serialize(Element value, JsonGenerator jgen, SerializerProvider provider)
     throws IOException, JsonGenerationException {
+        jgen.writeStartArray();
+        serializeInner(value, jgen, provider, null /* parent namespaceURI */);
+        jgen.writeEndArray();
+    }
+
+    private void serializeInner(Element value, JsonGenerator jgen, SerializerProvider provider, String parentNs)
+    throws IOException, JsonGenerationException {
+        String namespaceURI = value.getNamespaceURI();
         jgen.writeStartObject();
         NamedNodeMap attributes = value.getAttributes();
         if (attributes != null && attributes.getLength() > 0) {
             for (int i = 0; i < attributes.getLength(); i++) {
                 Attr attribute = (Attr) attributes.item(i);
-                jgen.writeStringField(attribute.getName(), attribute.getValue());
-                // TODO: Not supporting attributes in different namespaces
+                if ("xmlns".equals(attribute.getName())) {
+                    if (!attribute.getValue().startsWith("urn:zimbra")) {
+                        jgen.writeStringField(attribute.getName(), attribute.getValue());
+                    }
+                } else {
+                    jgen.writeStringField(attribute.getName(), attribute.getValue());
+                }
+                // Not supporting attributes in different namespaces
             }
         }
 
+        Map<String,List<Element>> elemMap = Maps.newTreeMap();
         NodeList children = value.getChildNodes();
         if (children != null && children.getLength() > 0) {
             for (int i = 0; i < children.getLength(); i++) {
@@ -56,18 +78,37 @@ extends SerializerBase<Element>
                 switch (child.getNodeType()) {
                     case Node.CDATA_SECTION_NODE:
                     case Node.TEXT_NODE:
-                        jgen.writeStringField(JSONElement.A_CONTENT /* "_content" */, child.getNodeValue());
+                        String txt = child.getNodeValue();
+                        if ((txt == null) || ((txt.startsWith("\n")) && (txt.trim().length() == 0))) {
+                            break;  // Almost certainly only formatting text
+                        }
+                        jgen.writeStringField(JSONElement.A_CONTENT /* "_content" */, txt);
                         break;
                     case Node.ELEMENT_NODE:
                         Element elem = (Element) child;
-                        jgen.writeFieldName(elem.getLocalName());
-                        serialize(elem, jgen, provider);
+                        String eleName = elem.getLocalName();
+                        List<Element> elems = elemMap.get(eleName);
+                        if (elems == null) {
+                            elems = Lists.newArrayList();
+                            elemMap.put(eleName, elems);
+                        }
+                        elems.add(elem);
                         break;
                 }
             }
+            for (Entry<String, List<Element>> entry : elemMap.entrySet()) {
+                jgen.writeArrayFieldStart(entry.getKey());
+                for (Element elem : entry.getValue()) {
+                    serializeInner(elem, jgen, provider, namespaceURI);
+                }
+                jgen.writeEndArray();
+            }
         }
-        if (value.getNamespaceURI() != null) {
-            jgen.writeStringField(JSONElement.A_NAMESPACE, value.getNamespaceURI());
+
+        if ((namespaceURI != null) && (!namespaceURI.equals(parentNs))) {
+            if (!namespaceURI.startsWith("urn:zimbra")) {
+                jgen.writeStringField(JSONElement.A_NAMESPACE, namespaceURI);
+            }
         }
         jgen.writeEndObject();
     }

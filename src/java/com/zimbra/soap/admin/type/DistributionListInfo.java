@@ -29,8 +29,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DL)
@@ -51,6 +51,7 @@ public class DistributionListInfo extends AdminObjectInfo {
     /**
      * @zm-api-field-description Owner information
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_DL_OWNERS /* owners */, required=false)
     @XmlElement(name=AdminConstants.E_DL_OWNER /* owner */, required=false)
     private List<GranteeInfo> owners = Lists.newArrayList();

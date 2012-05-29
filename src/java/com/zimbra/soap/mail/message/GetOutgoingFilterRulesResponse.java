@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_OUTGOING_FILTER_RULES_RESPONSE)
@@ -38,6 +39,7 @@ public final class GetOutgoingFilterRulesResponse {
     /**
      * @zm-api-field-description Filter rules
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_FILTER_RULES /* filterRules */, required=true)
     @XmlElement(name=MailConstants.E_FILTER_RULE /* filterRule */, required=false)
     private final List<FilterRule> rules = Lists.newArrayList();

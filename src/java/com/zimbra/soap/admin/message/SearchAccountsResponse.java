@@ -30,8 +30,8 @@ import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.admin.type.AdminObjectInfo;
 import com.zimbra.soap.admin.type.AccountInfo;
+import com.zimbra.soap.admin.type.AdminObjectInterface;
 import com.zimbra.soap.admin.type.AliasInfo;
 import com.zimbra.soap.admin.type.CalendarResourceInfo;
 import com.zimbra.soap.admin.type.CosInfo;
@@ -63,15 +63,14 @@ public class SearchAccountsResponse {
      * @zm-api-field-description Search hits
      */
     @XmlElements({
-        @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE,
-                    type=CalendarResourceInfo.class),
+        @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE, type=CalendarResourceInfo.class),
         @XmlElement(name=AdminConstants.E_DL, type=DistributionListInfo.class),
         @XmlElement(name=AdminConstants.E_ALIAS, type=AliasInfo.class),
         @XmlElement(name=AdminConstants.E_ACCOUNT, type=AccountInfo.class),
         @XmlElement(name=AdminConstants.E_DOMAIN, type=DomainInfo.class),
         @XmlElement(name=AdminConstants.E_COS, type=CosInfo.class)
     })
-    private List<AdminObjectInfo> entries = Lists.newArrayList();
+    private List<AdminObjectInterface> entries = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -86,8 +85,7 @@ public class SearchAccountsResponse {
         this.searchTotal = searchTotal;
     }
 
-    public SearchAccountsResponse setEntries(
-                        Collection<AdminObjectInfo> entries) {
+    public SearchAccountsResponse setEntries(Collection<AdminObjectInterface> entries) {
         this.entries.clear();
         if (entries != null) {
             this.entries.addAll(entries);
@@ -95,12 +93,12 @@ public class SearchAccountsResponse {
         return this;
     }
 
-    public SearchAccountsResponse addEntry(AdminObjectInfo entry) {
+    public SearchAccountsResponse addEntry(AdminObjectInterface entry) {
         entries.add(entry);
         return this;
     }
 
-    public List<AdminObjectInfo> getEntries() {
+    public List<AdminObjectInterface> getEntries() {
         return Collections.unmodifiableList(entries);
     }
 
@@ -109,7 +107,7 @@ public class SearchAccountsResponse {
 
     public List<CalendarResourceInfo> getCalendarResources() {
         List<CalendarResourceInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof CalendarResourceInfo)
                 subset.add((CalendarResourceInfo) entry);
         }
@@ -118,7 +116,7 @@ public class SearchAccountsResponse {
 
     public List<DistributionListInfo> getDistributionLists() {
         List<DistributionListInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof DistributionListInfo)
                 subset.add((DistributionListInfo) entry);
         }
@@ -127,7 +125,7 @@ public class SearchAccountsResponse {
 
     public List<AliasInfo> getAliases() {
         List<AliasInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof AliasInfo)
                 subset.add((AliasInfo) entry);
         }
@@ -136,7 +134,7 @@ public class SearchAccountsResponse {
 
     public List<AccountInfo> getAccounts() {
         List<AccountInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof AccountInfo)
                 subset.add((AccountInfo) entry);
         }
@@ -145,7 +143,7 @@ public class SearchAccountsResponse {
 
     public List<DomainInfo> getDomains() {
         List<DomainInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof DomainInfo)
                 subset.add((DomainInfo) entry);
         }
@@ -154,7 +152,7 @@ public class SearchAccountsResponse {
 
     public List<CosInfo> getCOSes() {
         List<CosInfo> subset = Lists.newArrayList();
-        for (AdminObjectInfo entry : entries) {
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof CosInfo)
                 subset.add((CosInfo) entry);
         }

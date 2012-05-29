@@ -33,6 +33,7 @@ import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.introspect.AnnotatedMember;
 import com.google.common.collect.Maps;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
@@ -51,6 +52,7 @@ public class NameInfo {
     private QName wrappedName = null;
     private Map <Class<?>,QName> wrappedNameMap = null;
     private boolean treatAsUniqueElement = false;
+    private boolean wrapperIsArray = false;
     private boolean treatAsAttribute = false;
     private boolean mixedAllowed = false;
     private boolean anyElementAllowed = false;
@@ -80,6 +82,10 @@ public class NameInfo {
         ZimbraUniqueElement uniqueElemAnnot = prop.getAnnotation(ZimbraUniqueElement.class);
         if (uniqueElemAnnot != null) {
             treatAsUniqueElement = uniqueElemAnnot.value();
+        }
+        ZimbraJsonArrayForWrapper arrayForWrapperAnnot = prop.getAnnotation(ZimbraJsonArrayForWrapper.class);
+        if (arrayForWrapperAnnot != null) {
+            wrapperIsArray = arrayForWrapperAnnot.value();
         }
         ZimbraKeyValuePairs kvpAnnot = prop.getAnnotation(ZimbraKeyValuePairs.class);
         if (kvpAnnot != null) {
@@ -141,18 +147,19 @@ public class NameInfo {
     public boolean isAnyElementAllowed() { return anyElementAllowed; }
     public boolean isAnyAttributeAllowed() { return anyAttributeAllowed; }
     public boolean isKeyValuePairs() { return keyValuePairs; }
+    public boolean isWrapperIsArray() { return wrapperIsArray; }
 
     public Map <Class<?>,QName> getWrappedNameMap() {
         return wrappedNameMap;
     }
 
-    public boolean haveSpecialWrappingInfo() {
+    private boolean haveSpecialWrappingInfo() {
         return (wrapperName != null) || (wrappedName != null) || (getWrappedNameMap() != null);
     }
 
     public boolean needSpecialHandling() {
         return haveSpecialWrappingInfo() || isMixedAllowed() || isAnyElementAllowed() || isAnyAttributeAllowed() ||
-                isKeyValuePairs();
+                isKeyValuePairs() || isWrapperIsArray();
     }
 
     private QName getQName(String fieldName, String namespace, String name) {

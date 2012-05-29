@@ -30,7 +30,7 @@ import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class AdminObjectInfo {
+public class AdminObjectInfo implements AdminObjectInterface {
 
     /**
      * @zm-api-field-tag name
@@ -69,8 +69,11 @@ public class AdminObjectInfo {
         }
     }
 
+    @Override
     public String getName() { return name; }
+    @Override
     public String getId() { return id; }
+    @Override
     public List<Attr> getAttrList() {
         return Collections.unmodifiableList(attrList);
     }

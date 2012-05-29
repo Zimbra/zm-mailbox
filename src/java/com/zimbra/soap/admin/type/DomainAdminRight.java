@@ -27,9 +27,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.RightWithName;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DomainAdminRight {
@@ -57,6 +57,7 @@ public class DomainAdminRight {
     /**
      * @zm-api-field-description Rights
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_RIGHTS, required=true)
     @XmlElement(name=AdminConstants.E_R, required=false)
     private List <RightWithName> rights = Lists.newArrayList();

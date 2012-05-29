@@ -34,7 +34,7 @@ public class DeleteMailboxResponse {
      * <br />
      * Tthe <b>&lt;mbox></b> element is left out of the response if no mailbox existed for that account
      */
-    @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
+    @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
     private MailboxWithMailboxId mbox;
 
     public DeleteMailboxResponse() {

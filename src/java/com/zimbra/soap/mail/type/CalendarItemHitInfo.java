@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -117,6 +118,7 @@ public abstract class CalendarItemHitInfo
     /**
      * @zm-api-field-description Replies
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalReply> replies = Lists.newArrayList();
@@ -124,6 +126,7 @@ public abstract class CalendarItemHitInfo
     public CalendarItemHitInfo() {
     }
 
+    @Override
     public void setSortField(String sortField) { this.sortField = sortField; }
     public void setDate(long date) { this.date = date; }
     public void setContentMatched(Boolean contentMatched) {
@@ -186,6 +189,7 @@ public abstract class CalendarItemHitInfo
         return this;
     }
 
+    @Override
     public String getSortField() { return sortField; }
     public long getDate() { return date; }
     public Boolean getContentMatched() { return ZmBoolean.toBool(contentMatched); }
@@ -207,6 +211,7 @@ public abstract class CalendarItemHitInfo
         return Collections.unmodifiableList(replies);
     }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper

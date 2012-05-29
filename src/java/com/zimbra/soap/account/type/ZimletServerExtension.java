@@ -21,11 +21,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletServerExtensionInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION)
+@JsonPropertyOrder({ "extensionClass", "hasKeyword", "regex" })
 public class ZimletServerExtension
 implements ZimletServerExtensionInterface {
 

@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ConstraintInfo;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class EffectiveAttrInfo {
@@ -49,6 +50,7 @@ public class EffectiveAttrInfo {
     /**
      * @zm-api-field-description Inherited default value(or values if the attribute is multi-valued)
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_DEFAULT /* default */, required=false)
     @XmlElement(name=AdminConstants.E_VALUE /* v */, required=false)
     private List <String> values = Lists.newArrayList();
