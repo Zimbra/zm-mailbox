@@ -614,7 +614,7 @@
     <!-- extra options                                               -->
     <!-- =========================================================== -->
     <Set name="stopAtShutdown">true</Set>
-    <Set name="sendServerVersion">true</Set>
+    <Set name="sendServerVersion">false</Set>
     <Set name="sendDateHeader">true</Set>
 
     <!-- =========================================================== -->
