@@ -293,10 +293,12 @@ public final class Zimbra {
                 sTimer.schedule(new ExternalAccountManagerTask(), interval, interval);
             }
 
-            try {
-                MessageChannel.getInstance().startup();
-            } catch (IOException e) {
-                ZimbraLog.misc.warn("can't start notification channels", e);
+            if (prov.getLocalServer().isMessageChannelEnabled()) {
+                try {
+                    MessageChannel.getInstance().startup();
+                } catch (IOException e) {
+                    ZimbraLog.misc.warn("can't start notification channels", e);
+                }
             }
 
             // should be last, so that other subsystems can add dynamic stats counters
