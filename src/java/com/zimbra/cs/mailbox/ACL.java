@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.util.StringUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.common.service.ServiceException;
@@ -429,7 +430,8 @@ public final class ACL {
             for (Grant grant : mGrants) {
                 if (grant.isGrantee(zimbraId)) {
                     if (grant.getGrantedRights() == rights &&
-                            ((type != GRANTEE_GUEST && type != GRANTEE_KEY) || grant.getPassword().equals(secret)) &&
+                            ((type != GRANTEE_GUEST && type != GRANTEE_KEY) ||
+                                    StringUtil.equal(grant.getPassword(), secret)) &&
                             (grant.getExpiry() == expiry)) {
                         // same grant is already in the ACL
                         throw MailServiceException.GRANTEE_EXISTS(zimbraId, null);
