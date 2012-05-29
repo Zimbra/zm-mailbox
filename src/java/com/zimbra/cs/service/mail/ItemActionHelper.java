@@ -28,26 +28,44 @@ import javax.mail.internet.MimeMessage;
 
 import org.dom4j.QName;
 
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactGroup.Member;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.util.TagUtil;
@@ -59,10 +77,6 @@ import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.client.ZContact;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
 
 public class ItemActionHelper {
 
@@ -577,7 +591,20 @@ public class ItemActionHelper {
                     ZMailbox.ZAttachmentInfo info = new ZMailbox.ZAttachmentInfo().setAttachmentId(attachmentId);
                     attachments.put(att.getName(), info);
                 }
-                ZContact contact = zmbx.createContact(folderStr, null, ct.getFields(), attachments);
+                Map<String, String> fields = ct.getFields();
+                Map<String, String> members = new HashMap<String, String>();
+                for (String key : fields.keySet()) {
+                    if (ContactConstants.A_groupMember.equals(key)) {
+                        String memberEncoded = fields.get(key);
+                        ContactGroup group = ContactGroup.init(memberEncoded);
+                        for (Member m : group.getMembers()) {
+                            members.put(m.getValue(), m.getType().getSoapEncoded());
+                        }
+                        break;
+                    }
+                }
+                fields.remove(ContactConstants.A_groupMember);
+                ZContact contact = zmbx.createContact(folderStr, null, fields, attachments, members);
                 createdId = contact.getId();
                 mCreatedIds.add(createdId);
                 break;
