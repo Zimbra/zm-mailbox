@@ -932,24 +932,11 @@ public abstract class ArchiveFormatter extends Formatter {
     private static final String[] NO_TAGS = new String[0];
 
     @VisibleForTesting
-    static String[] getTagNames(OperationContext octxt, Mailbox mbox, ItemData id)
-    throws IOException {
+    static String[] getTagNames(ItemData id) {
         if (Strings.isNullOrEmpty(id.tags)) {
             return NO_TAGS;
         }
-
-        try {
-            String serialized = id.tags;
-
-            // pre 6.0.6 versions had numeric tags strings, not names
-            if (Character.isDigit(serialized.charAt(0)) && serialized.indexOf(':') == -1) {
-                return TagUtil.tagIdStringToNames(mbox, octxt, serialized);
-            } else {
-                return ItemData.getTagNames(serialized);
-            }
-        } catch (Exception e) {
-            throw new IOException("tag error: " + e);
-        }
+        return ItemData.getTagNames(id.tags);
     }
 
     private static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
@@ -1414,7 +1401,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem)) {
                     mbox.setTags(octxt, newItem.getId(), newItem.getType(), Flag.toBitmask(id.flags),
-                            getTagNames(octxt, mbox, id), null);
+                            getTagNames(id), null);
                 }
             } else if (oldItem != null && r == Resolve.Modify) {
                 if (mi.getColor() != oldItem.getColor()) {
@@ -1422,7 +1409,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (!id.flags.equals(oldItem.getFlagString()) || !id.tagsEqual(oldItem)) {
                     mbox.setTags(octxt, oldItem.getId(), oldItem.getType(), Flag.toBitmask(id.flags),
-                            getTagNames(octxt, mbox, id), null);
+                            getTagNames(id), null);
                 }
             }
         } catch (MailServiceException e) {

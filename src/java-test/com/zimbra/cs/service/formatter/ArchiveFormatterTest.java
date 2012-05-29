@@ -49,33 +49,33 @@ public class ArchiveFormatterTest {
         ItemData id = new ItemData(mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX));
 
         id.tags = null;
-        String[] tags = ArchiveFormatter.getTagNames(null, mbox, id);
+        String[] tags = ArchiveFormatter.getTagNames(id);
         Assert.assertNotNull(tags);
         Assert.assertEquals("null -> no tags", 0, tags.length);
 
         tags = new String[] { "foo" };
         id.tags = ItemData.getTagString(tags);
         Assert.assertEquals("single tag encoding", "foo", id.tags);
-        Assert.assertArrayEquals("single tag", tags, ArchiveFormatter.getTagNames(null, mbox, id));
+        Assert.assertArrayEquals("single tag", tags, ArchiveFormatter.getTagNames(id));
 
         tags = new String[] { "fo:o" };
         id.tags = ItemData.getTagString(tags);
         Assert.assertEquals("single tag encoding w/colon", "fo\\:o", id.tags);
-        Assert.assertArrayEquals("single tag w/colon", tags, ArchiveFormatter.getTagNames(null, mbox, id));
+        Assert.assertArrayEquals("single tag w/colon", tags, ArchiveFormatter.getTagNames(id));
 
         tags = new String[] { "foo", "bar" };
         id.tags = ItemData.getTagString(tags);
         Assert.assertEquals("two tag encoding", "foo:bar", id.tags);
-        Assert.assertArrayEquals("two tags", tags, ArchiveFormatter.getTagNames(null, mbox, id));
+        Assert.assertArrayEquals("two tags", tags, ArchiveFormatter.getTagNames(id));
 
         tags = new String[] { "fo:o", "ba\\r" };
         id.tags = ItemData.getTagString(tags);
         Assert.assertEquals("two tag encoding w/colon, backslash", "fo\\:o:ba\\\\r", id.tags);
-        Assert.assertArrayEquals("two tags w/colon, backslash", tags, ArchiveFormatter.getTagNames(null, mbox, id));
+        Assert.assertArrayEquals("two tags w/colon, backslash", tags, ArchiveFormatter.getTagNames(id));
 
-        // old-style tag IDs
-        int tagId = mbox.createTag(null, "tag1", (byte) 0).getId();
-        id.tags = Integer.toString(tagId);
-        Assert.assertArrayEquals("numeric tag ID", new String[] { "tag1" }, ArchiveFormatter.getTagNames(null, mbox, id));
+        tags = new String[] { "1-Tag", "2-Tag" };
+        id.tags = ItemData.getTagString(tags);
+        Assert.assertEquals("Tags starting with numerics", "1-Tag:2-Tag", id.tags);
+        Assert.assertArrayEquals("Tags starting with numerics", tags, ArchiveFormatter.getTagNames(id));
     }
 }
