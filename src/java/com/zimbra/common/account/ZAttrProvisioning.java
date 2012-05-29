@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120518-1322 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6591,6 +6591,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
 
     /**
+     * whether message channel servie is enabled on this server
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1417)
+    public static final String A_zimbraMessageChannelEnabled = "zimbraMessageChannelEnabled";
+
+    /**
      * port number on which message channel should listen
      *
      * @since ZCS 8.0.0
@@ -11194,22 +11202,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1404)
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
