@@ -106,7 +106,7 @@ import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
-import com.zimbra.soap.admin.type.AdminObjectInfo;
+import com.zimbra.soap.admin.type.AdminObjectInterface;
 import com.zimbra.soap.admin.type.AliasInfo;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
@@ -1768,8 +1768,8 @@ public class SoapProvisioning extends Provisioning {
         // TODO: handle ApplyCos, limit, offset?
         SearchDirectoryResponse resp = invokeJaxb(req);
 
-        List<AdminObjectInfo> entries = resp.getEntries();
-        for (AdminObjectInfo entry : entries) {
+        List<AdminObjectInterface> entries = resp.getEntries();
+        for (AdminObjectInterface entry : entries) {
             if (entry instanceof AccountInfo) {
                 result.add(new SoapAccount((AccountInfo) entry, this));
             } else if (entry instanceof CalendarResourceInfo) {

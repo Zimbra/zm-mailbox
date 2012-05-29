@@ -670,30 +670,8 @@ public final class ZimbraSoapContext {
     /**
      * Only use this for response objects (or requests)
      * {@link jaxbToNamedElement} should be used for all other cases.
-     * For JSON responses, the Element tree is constructed from the XML
-     * that would be used for XML responses.  This doesn't always work
-     * correctly, so use with care.  See also {@link jaxbToElementUsingJackson}
-     * TODO: when the Jackson based marshaler is fully functional, replace
-     *       this with the contents of {@link jaxbToElementUsingJackson}
      */
     public Element jaxbToElement(Object resp) throws ServiceException {
-        return JaxbUtil.jaxbToElement(resp, mResponseProtocol.getFactory());
-    }
-
-    /**
-     * Only use this for response objects (or requests)
-     * For JSON responses, marshaling to JSON is done using Jackson.  This
-     * technique is a bit smarter than the default mechanism which uses XML
-     * as an intermediate step but the JAXB objects often need additional
-     * annotations, hence why this has not yet completely superseded
-     * {@link jaxbToElement}
-     * TODO: when the Jackson based marshaler is fully functional, replace
-     *       {@link jaxbToElement} with the contents of this.
-     */
-    public Element jaxbToElementUsingJackson(Object resp) throws ServiceException {
-        if (mResponseProtocol.getFactory() == Element.JSONElement.mFactory) {
-            return JacksonUtil.jaxbToJSONElement(resp);
-        }
         return JaxbUtil.jaxbToElement(resp, mResponseProtocol.getFactory());
     }
 
@@ -704,8 +682,7 @@ public final class ZimbraSoapContext {
      */
     public Element jaxbToNamedElement(String name, String namespace,
             Object o) throws ServiceException {
-        return JaxbUtil.jaxbToNamedElement(name, namespace, o,
-                mResponseProtocol.getFactory());
+        return JaxbUtil.jaxbToNamedElement(name, namespace, o, mResponseProtocol.getFactory());
     }
 
     /**

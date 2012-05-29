@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,9 +36,7 @@ public final class GetOutgoingFilterRules extends MailDocumentHandler {
 
         GetOutgoingFilterRulesResponse resp = new GetOutgoingFilterRulesResponse();
         resp.addFilterRule(RuleManager.getOutgoingRulesAsXML(account));
-        // TODO - At some point we will move to using the Jackson base code completely and
-        //        the method name here will change.
-        return zsc.jaxbToElementUsingJackson(resp);
+        return zsc.jaxbToElement(resp);
     }
 
 }
