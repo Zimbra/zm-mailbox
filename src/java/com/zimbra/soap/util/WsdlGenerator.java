@@ -97,11 +97,11 @@ public class WsdlGenerator {
     public static Document makeWsdlDoc(List<WsdlInfoForNamespace> nsInfos, String serviceName, String targetNamespace) {
         Namespace nsSvc = new Namespace(svcPrefix, targetNamespace);
 
-        final QName svcTypes = QName.get("types", nsSvc);
+        final QName svcTypes = QName.get("types", nsWsdl);
 
         Document document = DocumentHelper.createDocument();
-        Map<WsdlServiceInfo, Element> bindElems = Maps.newHashMap();
-        Map<WsdlServiceInfo, Element> portTypeElems = Maps.newHashMap();
+        Map<WsdlServiceInfo, Element> bindElems = Maps.newTreeMap();
+        Map<WsdlServiceInfo, Element> portTypeElems = Maps.newTreeMap();
         Element root = document.addElement(QName.get("definitions", nsWsdl));
         root.add(nsSvc);
         for (WsdlInfoForNamespace wsdlNsInfo : nsInfos) {

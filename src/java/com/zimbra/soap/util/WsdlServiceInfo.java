@@ -19,7 +19,7 @@ package com.zimbra.soap.util;
  * Key details related to a WSDL Service advertised at a particular URL
  *
  */
-public final class WsdlServiceInfo {
+public final class WsdlServiceInfo implements Comparable<WsdlServiceInfo> {
 
     private static final String zcsServiceName = "zcsService";
     private static final String zcsAdminServiceName = "zcsAdminService";
@@ -65,5 +65,10 @@ public final class WsdlServiceInfo {
 
     public String getServiceName() {
         return serviceName;
+    }
+
+    @Override
+    public int compareTo(WsdlServiceInfo o) {
+        return getServiceName().compareTo(o.getServiceName());
     }
 }
