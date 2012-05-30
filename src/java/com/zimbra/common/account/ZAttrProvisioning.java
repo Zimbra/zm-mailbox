@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 administrator 20120529-1036 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1188,10 +1188,14 @@ public class ZAttrProvisioning {
 
     public static enum ReverseProxyLogLevel {
         warn("warn"),
+        debug_http("debug_http"),
         error("error"),
         crit("crit"),
         debug("debug"),
+        debug_mail("debug_mail"),
         notice("notice"),
+        debug_zimbra("debug_zimbra"),
+        debug_core("debug_core"),
         info("info");
         private String mValue;
         private ReverseProxyLogLevel(String value) { mValue = value; }
@@ -1203,10 +1207,14 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isWarn() { return this == warn;}
+        public boolean isDebug_http() { return this == debug_http;}
         public boolean isError() { return this == error;}
         public boolean isCrit() { return this == crit;}
         public boolean isDebug() { return this == debug;}
+        public boolean isDebug_mail() { return this == debug_mail;}
         public boolean isNotice() { return this == notice;}
+        public boolean isDebug_zimbra() { return this == debug_zimbra;}
+        public boolean isDebug_core() { return this == debug_core;}
         public boolean isInfo() { return this == info;}
     }
 
