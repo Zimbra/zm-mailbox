@@ -665,6 +665,8 @@ public final class LC {
     public static final KnownKey ssl_allow_mismatched_certs = KnownKey.newKey(true);
 
     public static final KnownKey ssl_allow_accept_untrusted_certs = KnownKey.newKey(true);
+    
+    public static final KnownKey ssl_disable_DH_cipher_suite = KnownKey.newKey(true);
 
     @Supported
     public static final KnownKey zimlet_directory = KnownKey.newKey("${zimbra_home}/zimlets-deployed");

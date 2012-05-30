@@ -58,6 +58,9 @@ class CustomSSLSocket extends SSLSocket {
         this.factory = factory;
         this.sslSocket = sslSocket;
         this.host = host;
+        if (LC.ssl_disable_DH_cipher_suite.booleanValue()) {
+            this.sslSocket.setEnabledCipherSuites(filterDHcipher(sslSocket.getEnabledCipherSuites()));
+        }
     }
 
     CustomSSLSocket(CustomSSLSocketFactory factory, Socket socket) {
@@ -124,6 +127,16 @@ class CustomSSLSocket extends SSLSocket {
         }
         return enableSessionCreation;
     }
+    
+    private String[] filterDHcipher(String[] suites) {
+        List<String> list = new ArrayList<String>();
+        for (String suite : suites) {
+            if(!suite.contains("_DHE_")) {
+                list.add(suite);
+            }
+        }
+        return list.toArray(new String[0]);
+    }
 
     @Override
     public String[] getEnabledCipherSuites() {
@@ -131,7 +144,11 @@ class CustomSSLSocket extends SSLSocket {
             return sslSocket.getEnabledCipherSuites();
         }
         if (enabledCipherSuites == null) {
-            enabledCipherSuites = sampleSSLSocket().getEnabledCipherSuites();
+            if (LC.ssl_disable_DH_cipher_suite.booleanValue()) {
+                enabledCipherSuites = filterDHcipher(sampleSSLSocket().getEnabledCipherSuites());
+            } else {
+                enabledCipherSuites = sampleSSLSocket().getEnabledCipherSuites();
+            }
         }
         return enabledCipherSuites;
     }
