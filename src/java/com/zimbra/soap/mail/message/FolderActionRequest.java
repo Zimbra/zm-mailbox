@@ -105,9 +105,9 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
  *                                    IMAP subscribed (*) state
  *           &lt;acl>&lt;grant ...>*&lt;/acl>  to replace the folder's existing ACL with a new ACL
  *
- *   {list} = on input, list of folders to act on, on output, list of
- *            folders that were acted on;
- *            list may only have 1 element for action "rename" or "empty"
+ *     {list} = on input, list of folders to act on, on output, list of folders that were acted on;
+ *              list may only have 1 element for actions empty, sync, fb, check, !check, url, import, grant,
+ *              !grant, revokeorphangrants, !flag, !tag, syncon, !syncon, retentionpolicy
  *
  * output of "grant" action includes the zimbra id the rights were granted on
  *
