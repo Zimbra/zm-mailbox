@@ -106,7 +106,7 @@ public class CosInfo implements AdminObjectInterface {
         if (params == null)
             return null;
         List <Attr> newList = Lists.newArrayList();
-        // TODO Iterables.addAll(newList, params);
+        Iterables.addAll(newList, params);
         return Collections.unmodifiableList(newList);
     }
 }
