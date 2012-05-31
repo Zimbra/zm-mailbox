@@ -15,14 +15,12 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
-
 import com.zimbra.soap.type.GrantGranteeType;
 
 /*
@@ -38,7 +36,7 @@ public class Grant {
     /**
      * @zm-api-field-tag rights
      * @zm-api-field-description Rights - Some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister,
-     * workflow action (x), view (p)rivate, view (f)reebusy
+     * workflow action (x), view (p)rivate, view (f)reebusy, (c)reate subfolder
      */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
     private String perm;
@@ -47,9 +45,9 @@ public class Grant {
      * @zm-api-field-tag grantee-type
      * @zm-api-field-description The type of Grantee:
      * <pre>
-     *     "usr", 
-     *     "grp", 
-     *     "dom" (domain), 
+     *     "usr",
+     *     "grp",
+     *     "dom" (domain),
      *     "cos",
      *     "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
      *     "guest" (non-Zimbra email address and password),
