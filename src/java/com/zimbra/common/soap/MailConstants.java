@@ -62,8 +62,6 @@ public final class MailConstants {
     public static final String E_SEARCH_CONV_RESPONSE = "SearchConvResponse";
     public static final String E_BROWSE_REQUEST = "BrowseRequest";
     public static final String E_BROWSE_RESPONSE = "BrowseResponse";
-    public static final String E_GLOBAL_SEARCH_REQUEST = "GlobalSearchRequest";
-    public static final String E_GLOBAL_SEARCH_RESPONSE = "GlobalSearchResponse";
     public static final String E_EMPTY_DUMPSTER_REQUEST = "EmptyDumpsterRequest";
     public static final String E_EMPTY_DUMPSTER_RESPONSE = "EmptyDumpsterResponse";
     public static final String E_GET_ITEM_REQUEST = "GetItemRequest";
@@ -284,8 +282,6 @@ public final class MailConstants {
     public static final QName SEARCH_CONV_RESPONSE = QName.get(E_SEARCH_CONV_RESPONSE, NAMESPACE);
     public static final QName BROWSE_REQUEST = QName.get(E_BROWSE_REQUEST, NAMESPACE);
     public static final QName BROWSE_RESPONSE = QName.get(E_BROWSE_RESPONSE, NAMESPACE);
-    public static final QName GLOBAL_SEARCH_REQUEST = QName.get(E_GLOBAL_SEARCH_REQUEST, NAMESPACE);
-    public static final QName GLOBAL_SEARCH_RESPONSE = QName.get(E_GLOBAL_SEARCH_RESPONSE, NAMESPACE);
 
     // dumpster
     public static final QName EMPTY_DUMPSTER_REQUEST = QName.get(E_EMPTY_DUMPSTER_REQUEST, NAMESPACE);
