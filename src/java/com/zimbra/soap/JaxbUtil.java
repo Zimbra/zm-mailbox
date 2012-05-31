@@ -336,8 +336,6 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetYahooAuthTokenResponse.class,
             com.zimbra.soap.mail.message.GetYahooCookieRequest.class,
             com.zimbra.soap.mail.message.GetYahooCookieResponse.class,
-            com.zimbra.soap.mail.message.GlobalSearchRequest.class,
-            com.zimbra.soap.mail.message.GlobalSearchResponse.class,
             com.zimbra.soap.mail.message.GrantPermissionRequest.class,
             com.zimbra.soap.mail.message.GrantPermissionResponse.class,
             com.zimbra.soap.mail.message.ICalReplyRequest.class,
