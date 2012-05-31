@@ -370,7 +370,7 @@ public final class NativeFormatter extends Formatter {
         // defang when the html and svg attachment was requested with disposition inline
         if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
-            String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), false);
+            String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), true);
             resp.setContentType(contentType);
             String charset = Mime.getCharset(contentType);
             resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
