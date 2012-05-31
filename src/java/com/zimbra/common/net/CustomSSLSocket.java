@@ -58,7 +58,7 @@ class CustomSSLSocket extends SSLSocket {
         this.factory = factory;
         this.sslSocket = sslSocket;
         this.host = host;
-        if (LC.ssl_disable_DH_cipher_suite.booleanValue()) {
+        if (LC.ssl_disable_dh_cipher_suite.booleanValue()) {
             this.sslSocket.setEnabledCipherSuites(filterDHcipher(sslSocket.getEnabledCipherSuites()));
         }
     }
@@ -144,7 +144,7 @@ class CustomSSLSocket extends SSLSocket {
             return sslSocket.getEnabledCipherSuites();
         }
         if (enabledCipherSuites == null) {
-            if (LC.ssl_disable_DH_cipher_suite.booleanValue()) {
+            if (LC.ssl_disable_dh_cipher_suite.booleanValue()) {
                 enabledCipherSuites = filterDHcipher(sampleSSLSocket().getEnabledCipherSuites());
             } else {
                 enabledCipherSuites = sampleSSLSocket().getEnabledCipherSuites();
