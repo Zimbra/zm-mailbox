@@ -65,6 +65,10 @@ public class MessageChannel {
         running = false;
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
     /**
      * Sends the message to peer server that hosts Account identified
      * in Message.getRecipientAccountId().

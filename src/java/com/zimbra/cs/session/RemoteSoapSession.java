@@ -46,7 +46,9 @@ public class RemoteSoapSession extends SoapSession {
     @Override
     public RemoteSoapSession register() throws ServiceException {
         super.register();
-        registerNotificationConnection(new CrossMailboxPushChannel());
+        if (MessageChannel.getInstance().isRunning()) {
+            registerNotificationConnection(new CrossMailboxPushChannel());
+        }
         return this;
     }
 
