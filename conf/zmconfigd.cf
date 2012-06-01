@@ -309,7 +309,7 @@ SECTION ldap
 
 SECTION cbpolicyd
 	REWRITE conf/cbpolicyd.conf.in conf/cbpolicyd.conf
-	VAR zimbraLocalBindAddress
+	VAR zimbraInetMode
 	LOCAL cbpolicyd_pid_file
 	LOCAL cbpolicyd_log_file
 	LOCAL cbpolicyd_db_file
