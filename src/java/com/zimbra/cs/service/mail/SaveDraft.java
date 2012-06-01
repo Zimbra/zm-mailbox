@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -39,6 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
@@ -86,10 +88,11 @@ public class SaveDraft extends MailDocumentHandler {
         // allow the caller to update the draft's metadata at the same time as they save the draft
         String folderId = msgElem.getAttribute(MailConstants.A_FOLDER, null);
         ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
-        if (!iidFolder.belongsTo(mbox))
+        if (!iidFolder.belongsTo(mbox)) {
             throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-        else if (folderId != null && iidFolder.getId() <= 0)
+        } else if (folderId != null && iidFolder.getId() <= 0) {
             throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+        }
         String flags = msgElem.getAttribute(MailConstants.A_FLAGS, null);
         String[] tags = TagUtil.parseTags(msgElem, mbox, octxt);
         Color color = ItemAction.getColor(msgElem);
@@ -97,15 +100,16 @@ public class SaveDraft extends MailDocumentHandler {
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         long autoSendTime = new Long(msgElem.getAttribute(MailConstants.A_AUTO_SEND_TIME, "0"));
-        
+
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         Message msg;
         try {
             MimeMessage mm;
-            if (attachment != null)
+            if (attachment != null) {
                 mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
-            else
+            } else {
                 mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+            }
 
             long date = System.currentTimeMillis();
             try {
@@ -135,8 +139,7 @@ public class SaveDraft extends MailDocumentHandler {
                 }
             }
 
-            String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ?
-                mbox.getAccountId() : account);
+            String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ? mbox.getAccountId() : account);
 
             msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
         } catch (IOException e) {
@@ -149,8 +152,9 @@ public class SaveDraft extends MailDocumentHandler {
         }
 
         // we can now purge the uploaded attachments
-        if (mimeData.uploads != null)
+        if (mimeData.uploads != null) {
             FileUploadServlet.deleteUploads(mimeData.uploads);
+        }
 
         // try to set the metadata on the new/revised draft
         if (folderId != null || flags != null || !ArrayUtil.isEmpty(tags) || color != null) {
@@ -176,13 +180,42 @@ public class SaveDraft extends MailDocumentHandler {
             }
         }
 
-        Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
-        // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
-        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false);
-        return response;
+        return generateResponse(zsc, ifmt, octxt, mbox, msg);
     }
 
     protected boolean schedulesAutoSendTask() {
         return true;
+    }
+
+    protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg)
+    throws ServiceException {
+        int changeId = msg.getSavedSequence();
+        while (true) {
+            Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
+            try {
+                // FIXME: semi-inefficient -- this re-fetches the MimeMessage (but SaveDraft is called rarely)
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false);
+                return response;
+            } catch (ServiceException e) {
+                // problem writing the message structure to the response
+                //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
+                try {
+                    msg = mbox.getMessageById(octxt, msg.getId());
+                    if (msg.getSavedSequence() != changeId) {
+                        // if the draft was re-saved and we failed because the old blob was deleted
+                        //   out from under us, just fetch the new MimeMessage and try again
+                        changeId = msg.getSavedSequence();
+                        continue;
+                    }
+                } catch (NoSuchItemException nsie) {
+                    // the draft has been deleted, so don't include draft data in the response
+                    return zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
+                }
+                // we're kinda screwed here -- the draft was saved, but we weren't able to write the message structure
+                //   and it's not clear what went wrong.  best we can do now is send back what we got and apologize.
+                ZimbraLog.soap.warn("could not serialize full draft structure in response", e);
+                return response;
+            }
+        }
     }
 }

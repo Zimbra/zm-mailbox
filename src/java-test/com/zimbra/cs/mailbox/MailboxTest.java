@@ -272,40 +272,42 @@ public final class MailboxTest {
 
     @Test
     public void deleteMailbox() throws Exception {
+        MockStoreManager sm = (MockStoreManager) StoreManager.getInstance();
+
         // first test normal mailbox delete
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
+        Assert.assertEquals("start with no blobs in the store", 0, sm.size());
 
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
-        Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
+        Assert.assertEquals("1 blob in the store", 1, sm.size());
 
         mbox.deleteMailbox();
-        Assert.assertEquals("end with no blobs in the store", 0, MockStoreManager.size());
+        Assert.assertEquals("end with no blobs in the store", 0, sm.size());
 
 
         // then test mailbox delete without store delete
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
+        Assert.assertEquals("start with no blobs in the store", 0, sm.size());
 
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
-        Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
+        Assert.assertEquals("1 blob in the store", 1, sm.size());
 
         mbox.deleteMailbox(Mailbox.DeleteBlobs.NEVER);
-        Assert.assertEquals("end with 1 blob in the store", 1, MockStoreManager.size());
-        MockStoreManager.purge();
+        Assert.assertEquals("end with 1 blob in the store", 1, sm.size());
+        sm.purge();
 
 
         // then do it contingent on whether the store is centralized or local
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
+        Assert.assertEquals("start with no blobs in the store", 0, sm.size());
 
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
-        Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
+        Assert.assertEquals("1 blob in the store", 1, sm.size());
 
         mbox.deleteMailbox(Mailbox.DeleteBlobs.UNLESS_CENTRALIZED);
         int expected = StoreManager.getInstance().supports(StoreManager.StoreFeature.CENTRALIZED) ? 1 : 0;
-        Assert.assertEquals("end with " + expected + " blob(s) in the store", expected, MockStoreManager.size());
-        MockStoreManager.purge();
+        Assert.assertEquals("end with " + expected + " blob(s) in the store", expected, sm.size());
+        sm.purge();
     }
 
     @Test

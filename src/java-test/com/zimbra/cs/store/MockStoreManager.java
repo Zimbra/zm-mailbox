@@ -31,7 +31,6 @@ import com.google.common.io.ByteStreams;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -42,14 +41,10 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class MockStoreManager extends StoreManager {
 
-    private static final Map<Integer, MockMailboxBlob> BLOBS = new HashMap<Integer, MockMailboxBlob>();
+    private final Map<String, MockMailboxBlob> blobs = new HashMap<String, MockMailboxBlob>();
 
     public MockStoreManager() {
 //        DebugConfig.disableMessageStoreFsync = true;
-    }
-
-    public static void setBlob(MailItem item, byte[] data) {
-        BLOBS.put(item.getId(), new MockMailboxBlob(item.getMailbox(), item.getId(), item.getVersion(), null, data));
     }
 
     @Override
@@ -70,19 +65,23 @@ public final class MockStoreManager extends StoreManager {
     @Override
     public boolean supports(StoreFeature feature) {
         switch (feature) {
-            case BULK_DELETE:  return false;
-            case CENTRALIZED:  return false;
-            case SINGLE_INSTANCE_SERVER_CREATE : return false;
-            default:           return false;
+            case BULK_DELETE:
+                return false;
+            case CENTRALIZED:
+                return false;
+            case SINGLE_INSTANCE_SERVER_CREATE:
+                return false;
+            default:
+                return false;
         }
     }
 
-    public static void purge() {
-        BLOBS.clear();
+    public void purge() {
+        blobs.clear();
     }
 
-    public static int size() {
-        return BLOBS.size();
+    public int size() {
+        return blobs.size();
     }
 
     @Override
@@ -96,8 +95,7 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox)
-    throws IOException {
+    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox) throws IOException {
         return new MockStagedBlob(mbox, ByteStreams.toByteArray(data));
     }
 
@@ -106,27 +104,28 @@ public final class MockStoreManager extends StoreManager {
         return new MockStagedBlob(mbox, ((MockBlob) blob).content);
     }
 
+    private String blobKey(int itemId, int revision) {
+        return itemId + "-" + revision;
+    }
+
     @Override
     public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
-                src.getLocator(), ((MockMailboxBlob) src).content);
-        BLOBS.put(destItemId, blob);
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockMailboxBlob) src).content);
+        blobs.put(blobKey(destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
-                src.getLocator(), ((MockStagedBlob) src).content);
-        BLOBS.put(destItemId, blob);
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
+        blobs.put(blobKey(destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
     public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
-                src.getLocator(), ((MockStagedBlob) src).content);
-        BLOBS.put(destItemId, blob);
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
+        blobs.put(blobKey(destItemId, destRevision), blob);
         return blob;
     }
 
@@ -136,7 +135,7 @@ public final class MockStoreManager extends StoreManager {
             File file = blob.getFile();
             if (file != null) {
                 ZimbraLog.store.debug("Deleting %s.", file.getPath());
-                BlobInputStream.getFileDescriptorCache().remove(file.getPath());  // Prevent stale cache read.
+                BlobInputStream.getFileDescriptorCache().remove(file.getPath()); // Prevent stale cache read.
                 boolean deleted = file.delete();
                 if (deleted) {
                     return true;
@@ -158,14 +157,14 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public boolean delete(MailboxBlob mblob) throws IOException {
-        BLOBS.remove(mblob.getItemId());
+        blobs.remove(blobKey(mblob.getItemId(), mblob.getRevision()));
         delete(((MockMailboxBlob) mblob).blob);
         return true;
     }
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
-        return BLOBS.get(Integer.valueOf(itemId));
+        return blobs.get(blobKey(itemId, revision));
     }
 
     @Override
@@ -179,9 +178,9 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException {
-        assert blobs != null : "we require a blob iterator for testing purposes";
-        for (MailboxBlob mblob : blobs) {
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> mblobs) throws IOException {
+        assert mblobs != null : "we require a blob iterator for testing purposes";
+        for (MailboxBlob mblob : mblobs) {
             delete(mblob);
         }
         return true;

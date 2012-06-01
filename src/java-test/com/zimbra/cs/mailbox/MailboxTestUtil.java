@@ -133,9 +133,10 @@ public final class MailboxTestUtil {
         if (index.isDirectory()) {
             Files.deleteDirectoryContents(index);
         }
-        if (StoreManager.getInstance() instanceof MockStoreManager) {
-            MockStoreManager.purge();
-        } else if (StoreManager.getInstance() instanceof MockHttpStoreManager) {
+        StoreManager sm = StoreManager.getInstance();
+        if (sm instanceof MockStoreManager) {
+            ((MockStoreManager) sm).purge();
+        } else if (sm instanceof MockHttpStoreManager) {
             MockHttpStore.purge();
         }
     }
