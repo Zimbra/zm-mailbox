@@ -1086,7 +1086,7 @@ public final class LC {
     public static final KnownKey out_of_disk_error_windows = KnownKey.newKey("There is not enough space on the disk");
 
     @Supported
-    public static final KnownKey antispam_mysql_enabled = KnownKey.newKey("");
+    public static final KnownKey antispam_mysql_enabled = KnownKey.newKey(false);
     public static final KnownKey antispam_mysql_directory = KnownKey.newKey("${zimbra_home}/mta/mysql");
     public static final KnownKey antispam_mysql_data_directory = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/data");
     public static final KnownKey antispam_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/antispam-mysqld.log");
