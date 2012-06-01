@@ -1824,7 +1824,7 @@ public class LdapProvisioning extends LdapProv {
             try {
                 doVisit(dn, ldapAttrs);
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("entry skipped, encountered error while processing entry at:" + dn);
+                ZimbraLog.account.warn("entry skipped, encountered error while processing entry at:" + dn, e);
             }
         }
 
@@ -8483,6 +8483,13 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public String[] getGroupMembers(Group group) throws ServiceException {
+        if (group instanceof DynamicGroup) {
+            DynamicGroup dynGroup = (DynamicGroup)group;
+            if (!dynGroup.isIsACLGroup()) {
+                return new String[0];
+            }
+        }
+
         EntryCacheDataKey cacheKey = EntryCacheDataKey.GROUP_MEMBERS;
 
         String[] members = (String[])group.getCachedData(cacheKey);
@@ -9271,6 +9278,11 @@ public class LdapProvisioning extends LdapProv {
 
     private void removeDynamicGroupMembers(LdapDynamicGroup group, String[] members, boolean externalOnly)
     throws ServiceException {
+        if (!group.isIsACLGroup()) {
+            throw ServiceException.INVALID_REQUEST(
+                    "cannot remove members from dynamic group with custom memberURL", null);
+        }
+
         String groupId = group.getId();
 
         List<Account> accts = new ArrayList<Account>();
@@ -9441,7 +9453,12 @@ public class LdapProvisioning extends LdapProv {
     /*
      * returns all internal and external member addresses of the DynamicGroup
      */
-    private List<String> searchDynamicGroupMembers(DynamicGroup group) {
+    private List<String> searchDynamicGroupMembers(DynamicGroup group) throws ServiceException {
+        if (!group.isIsACLGroup()) {
+            throw ServiceException.INVALID_REQUEST(
+                    "cannot search members to dynamic group with custom memberURL", null);
+        }
+
         final List<String> members = Lists.newArrayList();
 
         ZLdapContext zlc = null;
@@ -9535,12 +9552,12 @@ public class LdapProvisioning extends LdapProv {
         return members.toArray(new String[members.size()]);
     }
 
-    public String[] getDynamicGroupMembers(DynamicGroup group) {
+    public String[] getDynamicGroupMembers(DynamicGroup group) throws ServiceException {
         List<String> members = searchDynamicGroupMembers(group);
         return members.toArray(new String[members.size()]);
     }
 
-    public Set<String> getDynamicGroupMembersSet(DynamicGroup group) {
+    public Set<String> getDynamicGroupMembersSet(DynamicGroup group) throws ServiceException {
         List<String> members = searchDynamicGroupMembers(group);
         return Sets.newHashSet(members);
     }
