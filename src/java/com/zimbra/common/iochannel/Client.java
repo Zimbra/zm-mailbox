@@ -95,6 +95,7 @@ public class Client implements Runnable {
          * Called by Client when this peer is ready to be connected.
          */
         private void connect() {
+            connected = false;
             try {
                 channel = SocketChannel.open();
                 channel.configureBlocking(false);
@@ -112,7 +113,7 @@ public class Client implements Runnable {
         private long write() throws IOException {
             long bytesWritten = 0;
             synchronized (this) {
-                if (isBacklogEmpty()) {
+                if (!connected || isBacklogEmpty()) {
                     return bytesWritten;
                 } else {
                     if (current == null) {
@@ -162,6 +163,9 @@ public class Client implements Runnable {
         }
 
         private void setActive() {
+            if (!connected) {
+                return;
+            }
             synchronized (clientThread) {
                 if (!activeSet.contains(this)) {
                     activeSet.add(this);
@@ -171,23 +175,30 @@ public class Client implements Runnable {
         }
 
         /*
-         * The peer is active when there is a message to send.
+         * The peer is connected to the remote server
          */
-        private boolean isActive() {
-            if (isBacklogEmpty()) {
-                unsetActive();
-                return false;
-            }
-            setActive();
-            return true;
+        private void finishConnect() throws IOException {
+            channel.finishConnect();               // prepare the channel
+            channel.socket().setTcpNoDelay(true);  // disable Nagling for better latency
+            connected = true;                      // change the status
+            setActive();                           // make itself available as active
         }
 
+        @Override
+        public String toString() {
+            StringBuilder buf = new StringBuilder(id);
+            buf.append(" (").append(hostname).append(":").append(port).append(")");
+            return buf.toString();
+        }
+
+        private boolean connected;
         private Packet current;
         private final String id;
         private final String hostname;
         private final int port;
         private SocketChannel channel;
         private final ConcurrentLinkedQueue<Packet> backlog;
+
     }
 
     /**
@@ -253,7 +264,7 @@ public class Client implements Runnable {
     private final HashMap<String,PeerServer> peers;
     private final HashSet<PeerServer> activeSet;
 
-    private static final int waitInterval = 1000;
+    private static final int waitInterval = 10000;  // 10s
 
     private boolean hasBusyPeer() {
         return !activeSet.isEmpty();
@@ -279,13 +290,11 @@ public class Client implements Runnable {
                         PeerServer peer = (PeerServer)key.attachment();
                         try {
                             if (key.isConnectable()) {
-                                SocketChannel channel = (SocketChannel)key.channel();
                                 log.debug("client:connecting to %s %s:%d", peer.id, peer.hostname, peer.port);
-                                channel.finishConnect();
-                                channel.socket().setTcpNoDelay(true);  // disable Nagling for better latency
-                                peer.setActive();
+                                peer.finishConnect();
                             }
-                            if (!peer.isActive()) {
+                            if (peer.isBacklogEmpty()) {
+                                peer.unsetActive();
                                 continue;
                             }
                             if (key.isWritable()) {
