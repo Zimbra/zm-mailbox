@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.cs.session.Session;
@@ -48,6 +49,7 @@ public class CrossServerNotification extends Message {
         if (notifyElement == null) {
             throw MessageChannelException.CannotCreate("no notification");
         }
+        notifyElement.addAttribute(HeaderConstants.A_SEQNO, (String)null);
         StringBuilder soap = new StringBuilder();
         try {
             notifyElement.marshal(soap);

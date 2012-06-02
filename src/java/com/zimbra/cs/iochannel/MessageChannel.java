@@ -95,7 +95,7 @@ public class MessageChannel {
         } catch (ServiceException e) {
             log.error("can't send notification", e);
         } catch (IOChannelException e) {
-            log.error("can't find the client", e);
+            log.warn("MessageChannel: " + e.getMessage());
         } catch (IOException e) {
             log.error("can't send notification", e);
         }

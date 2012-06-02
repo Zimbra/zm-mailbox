@@ -32,7 +32,7 @@ public class ZcsConfig extends Config {
         // null on hostname in order to bind to all the addresses
         localConfig = new ServerConfig(localServer.getServiceHostname(), null, localServer.getMessageChannelPort());
         for (Server s : prov.getAllServers()) {
-            if (s.hasMailboxService() && s.isMessageChannelEnabled()) {
+            if (!s.isLocalServer() && s.hasMailboxService() && s.isMessageChannelEnabled()) {
                 peerServers.add(new ZcsServerConfig(s));
             }
         }
