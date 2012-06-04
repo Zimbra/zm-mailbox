@@ -320,10 +320,10 @@ public class PlaybackUtil {
     public PlaybackUtil(Params params) {
         mParams = params;
         if (mParams.mboxId != Params.MBOX_ID_UNSET || mParams.threads == 1)
-            mPlayer = new RedoPlayer(false, true, !mParams.stopOnError, false);
+            mPlayer = new RedoPlayer(false, true, !mParams.stopOnError, false, true);
         else
             mPlayer = new ParallelRedoPlayer(false, true, !mParams.stopOnError, false,
-                                             mParams.threads, mParams.queueCapacity);
+                                             mParams.threads, mParams.queueCapacity, true);
     }
 
     public void playback() throws Throwable {

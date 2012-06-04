@@ -61,20 +61,25 @@ public class CreateMailbox extends RedoableOp {
         int opMboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId, false);
 
-        if (mbox != null) {
-            int mboxId = mbox.getId();
-            if (opMboxId == mboxId) {
-                mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
-                return;
-            } else {
-                throw new MailboxIdConflictException(mAccountId, opMboxId, mboxId, this);
-            }
-        } else {
+        if (mbox == null) {
             Account account = Provisioning.getInstance().get(AccountBy.id, mAccountId);
-            if (account == null)
+            if (account == null) { 
                 throw new RedoException("Account " + mAccountId + " does not exist", this);
+            }
 
             mbox = MailboxManager.getInstance().createMailbox(getOperationContext(), account);
+            if (mbox == null) {
+                //something went really wrong
+                throw new RedoException("unable to create mailbox for accountId " + mAccountId, this);
+            }
+        }
+
+        int mboxId = mbox.getId();
+        if (opMboxId == mboxId) {
+            mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
+            return;
+        } else {
+            throw new MailboxIdConflictException(mAccountId, opMboxId, mboxId, this);
         }
     }
 }

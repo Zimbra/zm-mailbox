@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,6 +33,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DesktopMailboxTest {
 
@@ -45,7 +46,7 @@ public class DesktopMailboxTest {
                 //mock the behaviors we need to test in DesktopMailbox
                 return new Mailbox(data) {
                     @Override
-                    protected boolean needRedo(OperationContext octxt) {
+                    protected boolean needRedo(OperationContext octxt, RedoableOp recorder) {
                         return false;
                     }
                 };
@@ -71,7 +72,7 @@ public class DesktopMailboxTest {
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
 
     private void useMVCC(Mailbox mbox) throws ServiceException, SQLException {
-        //tell HSQLDB to use multiversion so our asserts can read while write is open 
+        //tell HSQLDB to use multiversion so our asserts can read while write is open
         PreparedStatement stmt = null;
         ResultSet rs = null;
         DbConnection conn = DbPool.getConnection(mbox);
@@ -104,13 +105,13 @@ public class DesktopMailboxTest {
             DbPool.quietClose(conn);
         }
     }
-    
+
     @Test
     public void nestedTxn() throws Exception {
         Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         useMVCC(mbox);
-        
+
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.lock.lock();
         try {
@@ -125,7 +126,7 @@ public class DesktopMailboxTest {
 
             //nothing committed yet
             Assert.assertEquals(0, countInboxMessages(mbox));
-            
+
             mbox.beginTransaction("inner2", null);
             mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
 
@@ -135,7 +136,7 @@ public class DesktopMailboxTest {
 
             //nothing committed yet
             Assert.assertEquals(0, countInboxMessages(mbox));
-            
+
             mbox.endTransaction(true); //outer
 
             //committed

@@ -16,7 +16,6 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,10 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-
-import com.zimbra.common.util.ZimbraLog;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.LogWriter;
 import com.zimbra.cs.redolog.op.AbortTxn;
@@ -57,17 +57,21 @@ public class RedoPlayer {
     private boolean mUnloggedReplay;
     private boolean mIgnoreReplayErrors;
     private boolean mSkipDeleteOps;
+    protected boolean handleMailboxConflict;
+    protected ConcurrentMap<Integer, Integer> mailboxConflicts = new ConcurrentHashMap<Integer, Integer>();
 
     public RedoPlayer(boolean writable) {
-        this(writable, false, false, false);
+        this(writable, false, false, false, false);
     }
 
-    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors, boolean skipDeleteOps) {
+    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors, boolean skipDeleteOps, 
+        boolean handleMailboxConflict) {
         mOpsMap = new LinkedHashMap<TransactionId, RedoableOp>(INITIAL_MAP_SIZE);
         mWritable = writable;
         mUnloggedReplay = unloggedReplay;
         mIgnoreReplayErrors = ignoreReplayErrors;
         mSkipDeleteOps = skipDeleteOps;
+        this.handleMailboxConflict = handleMailboxConflict;
     }
 
     public void shutdown() {
@@ -344,7 +348,26 @@ public class RedoPlayer {
      * @throws Exception
      */
     protected void playOp(RedoableOp op) throws Exception {
-        op.redo();
+        if (handleMailboxConflict) {
+            redoOpWithMboxConflict(op);
+        } else {
+            op.redo();
+        }
+    }
+    
+    protected void redoOpWithMboxConflict(RedoableOp op) throws Exception {
+        try {
+            Integer newId = mailboxConflicts.get(op.getMailboxId());
+            
+            if (newId != null) {
+                ZimbraLog.redolog.warn("mailbox conflict, mapping old ID %d to %d", op.getMailboxId(), newId);
+                op.setMailboxId(newId);
+            }
+            op.redo();
+        } catch (MailboxIdConflictException mice) {
+            ZimbraLog.redolog.warn("found mismatched mailboxId %d expected %d", mice.getFoundId(), mice.getExpectedId());
+            mailboxConflicts.put(mice.getExpectedId(), mice.getFoundId());
+        }
     }
 
     /**

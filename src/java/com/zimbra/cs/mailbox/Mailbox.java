@@ -149,6 +149,7 @@ import com.zimbra.cs.redolog.op.CreateContact;
 import com.zimbra.cs.redolog.op.CreateFolder;
 import com.zimbra.cs.redolog.op.CreateFolderPath;
 import com.zimbra.cs.redolog.op.CreateInvite;
+import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.redolog.op.CreateLink;
 import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.CreateMountpoint;
@@ -1462,7 +1463,7 @@ public class Mailbox {
             setOperationConnection(conn);
         }
 
-        boolean needRedo = needRedo(octxt);
+        boolean needRedo = needRedo(octxt, recorder);
         // have a single, consistent timestamp for anything affected by this operation
         currentChange.setTimestamp(time);
         if (recorder != null && needRedo) {
@@ -1995,8 +1996,8 @@ public class Mailbox {
                 }
             }
 
-            boolean needRedo = needRedo(null);
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
+            boolean needRedo = needRedo(null, redoRecorder);
             boolean success = false;
             try {
                 beginTransaction("deleteMailbox", null, redoRecorder);
@@ -5214,8 +5215,8 @@ public class Mailbox {
             conversationId = ID_AUTO_INCREMENT;
         }
 
-        boolean needRedo = needRedo(octxt);
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
+        boolean needRedo = needRedo(octxt, redoPlayer);
         boolean isRedo = redoPlayer != null;
 
         Blob blob = dctxt.getIncomingBlob();
@@ -8334,10 +8335,11 @@ public class Mailbox {
         }
     }
 
-    protected boolean needRedo(OperationContext octxt) {
+    protected boolean needRedo(OperationContext octxt, RedoableOp recorder) {
         // Don't generate redo data for changes made during mailbox version migrations.
-        if (!open)
+        if (!open && !(recorder instanceof CreateMailbox)) {
             return false;
+        }
         return octxt == null || octxt.needRedo();
     }
 
@@ -8400,8 +8402,8 @@ public class Mailbox {
                 return;
             }
 
-            boolean needRedo = needRedo(currentChange.octxt);
             RedoableOp redoRecorder = currentChange.recorder;
+            boolean needRedo = needRedo(currentChange.octxt, redoRecorder);
             // Log the change redo record for main transaction.
             if (redoRecorder != null && needRedo) {
                 redoRecorder.log(true);

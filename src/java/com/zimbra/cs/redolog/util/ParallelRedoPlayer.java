@@ -28,14 +28,10 @@ public class ParallelRedoPlayer extends RedoPlayer {
 
     private PlayerThread[] mPlayerThreads;
 
-    public ParallelRedoPlayer(boolean writable, int numThreads, int queueCapacity) {
-        this(writable, false, false, false, numThreads, queueCapacity);
-    }
-
     public ParallelRedoPlayer(boolean writable, boolean unloggedReplay,
                               boolean ignoreReplayErrors, boolean skipDeleteOps,
-                              int numThreads, int queueCapacity) {
-        super(writable, unloggedReplay, ignoreReplayErrors, skipDeleteOps);
+                              int numThreads, int queueCapacity, boolean handleMailboxConflict) {
+        super(writable, unloggedReplay, ignoreReplayErrors, skipDeleteOps, handleMailboxConflict);
         ZimbraLog.redolog.debug("Starting ParallelRedoPlayer");
         numThreads = Math.max(numThreads, 1);
         mPlayerThreads = new PlayerThread[numThreads];
@@ -169,9 +165,14 @@ public class ParallelRedoPlayer extends RedoPlayer {
 
                 RedoableOp op = task.getOp();
                 try {
-                    if (ZimbraLog.redolog.isDebugEnabled())
+                    if (ZimbraLog.redolog.isDebugEnabled()) {
                         ZimbraLog.redolog.info("Executing: " + op.toString());
-                    op.redo();
+                    }
+                    if (handleMailboxConflict) {
+                        redoOpWithMboxConflict(op);
+                    } else {
+                        op.redo();
+                    }
                 } catch (OutOfMemoryError oome) {
                     Zimbra.halt("Out of memory while executing redo op", oome);
                 } catch (Throwable e) {
