@@ -103,7 +103,7 @@ public class SpamHandler {
             Strings.nullToEmpty(sr.accountName), isSpamString, Strings.nullToEmpty(sr.action),
             Strings.nullToEmpty(sr.sourceFolder), Strings.nullToEmpty(sr.destFolder),
             Strings.nullToEmpty(sr.destAccountName));
-        infoPart.setContent(body, "text/plain");
+        infoPart.setText(body);
         mmp.addBodyPart(infoPart);
 
         MailboxBlob blob = msg.getBlob();
