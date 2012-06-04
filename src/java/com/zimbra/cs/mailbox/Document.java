@@ -26,7 +26,6 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
-import com.zimbra.cs.service.ProfileServlet;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
@@ -404,13 +403,5 @@ public class Document extends MailItem {
     @Override
     protected long getMaxAllowedInternalShareLifetime(Account account) {
         return account.getFileShareLifetime();
-    }
-
-    @Override
-    protected void checkItemCreationAllowed() throws ServiceException {
-        // allow profile images
-        if (getFolderId() != Mailbox.ID_FOLDER_PROFILE || !ProfileServlet.IMAGE_URI.equals(getName())) {
-            super.checkItemCreationAllowed();
-        }
     }
 }
