@@ -208,18 +208,18 @@ public class BlobConsistencyUtil {
         for (Element mboxEl : response.listElements(AdminConstants.E_MAILBOX)) {
             // Print results.
             BlobConsistencyChecker.Results results = new BlobConsistencyChecker.Results(mboxEl);
-            for (BlobInfo blob : results.missingBlobs) {
+            for (BlobInfo blob : results.missingBlobs.values()) {
                 System.out.format("Mailbox %d, item %d, rev %d, volume %d, %s: blob not found.\n",
                     results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path);
             }
-            for (BlobInfo blob : results.incorrectSize) {
+            for (BlobInfo blob : results.incorrectSize.values()) {
                 System.out.format(
                     "Mailbox %d, item %d, rev %d, volume %d, %s: incorrect data size.  Expected %d, was %d.  File size is %d.\n",
                     results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path,
                     blob.dbSize, blob.fileDataSize,
                     blob.fileSize);
             }
-            for (BlobInfo blob : results.unexpectedBlobs) {
+            for (BlobInfo blob : results.unexpectedBlobs.values()) {
                 System.out.format(
                     "Mailbox %d, volume %d, %s: unexpected blob.  File size is %d.\n",
                     results.mboxId, blob.volumeId, blob.path, blob.fileSize);
@@ -227,7 +227,7 @@ public class BlobConsistencyUtil {
                     mUnexpectedBlobWriter.println(blob.path);
                 }
             }
-            for (BlobInfo blob : results.incorrectModContent) {
+            for (BlobInfo blob : results.incorrectModContent.values()) {
                 System.out.format(
                     "Mailbox %d, item %d, rev %d, volume %d, %s: file has incorrect revision.\n",
                     results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path);
@@ -238,7 +238,7 @@ public class BlobConsistencyUtil {
                 exportAndDelete(prov, results);
             }
             if (mIncorrectRevisionRenameFile) {
-                for (BlobInfo blob : results.incorrectModContent) {
+                for (BlobInfo blob : results.incorrectModContent.values()) {
                     File file = new File(blob.path);
                     File dir = file.getParentFile();
                     if (dir != null) {
@@ -263,7 +263,7 @@ public class BlobConsistencyUtil {
         request.addAttribute(AdminConstants.A_EXPORT_DIR, mExportDir);
         request.addAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, "mbox" + results.mboxId + "_");
         Element mboxEl = request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, results.mboxId);
-        for (BlobInfo blob : results.missingBlobs) {
+        for (BlobInfo blob : results.missingBlobs.values()) {
             mboxEl.addElement(AdminConstants.E_ITEM).addAttribute(AdminConstants.A_ID, blob.itemId);
         }
         prov.invoke(request);
