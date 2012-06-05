@@ -2310,7 +2310,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>disabled IMAP SSL capabilities.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
 </attr>
 
-<attr id="445" name="zimbraFeatureVoiceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="445" name="zimbraFeatureVoiceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Voicemail features enabled</desc>
 </attr>
