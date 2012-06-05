@@ -5,7 +5,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -767,14 +766,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             Duration duration = new Duration();
             DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
 
-            Date start = new Date(req.get(0).start);
-            GregorianCalendar gregorianCalStart = new GregorianCalendar();
-            gregorianCalStart.setTime(start);
+            GregorianCalendar gregorianCalStart = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+            gregorianCalStart.setTimeInMillis(req.get(0).start);
             duration.setStartTime(datatypeFactory.newXMLGregorianCalendar(gregorianCalStart));
 
-            Date end = new Date(req.get(0).end);
-            GregorianCalendar gregorianCalEnd = new GregorianCalendar();
-            gregorianCalEnd.setTime(end);
+            GregorianCalendar gregorianCalEnd = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+            gregorianCalEnd.setTimeInMillis(req.get(0).end);
             duration.setEndTime(datatypeFactory.newXMLGregorianCalendar(gregorianCalEnd));
 
             FreeBusyViewOptionsType availabilityOpts =
@@ -787,8 +784,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 new GetUserAvailabilityRequestType();
             // TODO: check if we need to set request timezone
             SerializableTimeZone timezone = new SerializableTimeZone();
-            timezone.setBias(TimeZone.getDefault().getRawOffset() / 1000 / 60 *
-                -1);
+            timezone.setBias(0);
             SerializableTimeZoneTime standardTime =
                 new SerializableTimeZoneTime();
             standardTime.setTime("00:00:00");
