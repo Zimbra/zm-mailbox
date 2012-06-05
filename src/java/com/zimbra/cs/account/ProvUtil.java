@@ -545,7 +545,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 2, 7, null, new RightCommandHelp()),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),
-        GET_RIGHT("getRight", "gr", "{right} [-e]", Category.RIGHT, 1, 2),
+        GET_RIGHT("getRight", "gr", "{right} [-e] (whether to expand combo rights recursively)", Category.RIGHT, 1, 2),
         GET_RIGHTS_DOC("getRightsDoc", "grd", "[java packages]", Category.RIGHT, 0, Integer.MAX_VALUE),
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_UC_SERVICES("getUCService", "gucs", "[-e] {name|id} [attr1 [attr2...]]", Category.UCSERVICE, 1, Integer.MAX_VALUE),
