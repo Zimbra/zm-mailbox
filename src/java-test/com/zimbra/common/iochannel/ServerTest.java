@@ -105,7 +105,7 @@ public class ServerTest {
         CountDownLatch latch = new CountDownLatch(1);
         s1.registerCallback(new CountDownCallback(latch));
         c.getPeer("self").sendMessage(messages[0]);
-        latch.await(2, TimeUnit.SECONDS);
+        latch.await(20, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -118,7 +118,7 @@ public class ServerTest {
         c.getPeer("copy2").sendMessage(messages[1]);
         c.getPeer("self").sendMessage(messages[2]);
         c.getPeer("copy2").sendMessage(messages[2]);
-        latch.await(2, TimeUnit.SECONDS);
+        latch.await(10, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -131,8 +131,8 @@ public class ServerTest {
         c.getPeer("peer2").sendMessage(messages[1]);
         c.getPeer("peer1").sendMessage(messages[2]);
         c.getPeer("peer2").sendMessage(messages[3]);
-        latch1.await(2, TimeUnit.SECONDS);
-        latch2.await(2, TimeUnit.SECONDS);
+        latch1.await(10, TimeUnit.SECONDS);
+        latch2.await(10, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch1.getCount());
         Assert.assertEquals(0, latch2.getCount());
     }
@@ -145,7 +145,7 @@ public class ServerTest {
         CountDownLatch latch = new CountDownLatch(1);
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s1.registerCallback(new CountDownCallback(latch));
-        latch.await(5, TimeUnit.SECONDS);
+        latch.await(20, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -153,7 +153,7 @@ public class ServerTest {
         CountDownLatch latch = new CountDownLatch(1);
         s1.registerCallback(new CountDownCallback(latch));
         c.getPeer("self").sendMessage(messages[0]);
-        latch.await(2, TimeUnit.SECONDS);
+        latch.await(10, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
         s1.shutdown();
         Thread.sleep(2000);
@@ -162,7 +162,7 @@ public class ServerTest {
         latch = new CountDownLatch(1);
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s1.registerCallback(new CountDownCallback(latch));
-        latch.await(5, TimeUnit.SECONDS);
+        latch.await(20, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -181,8 +181,8 @@ public class ServerTest {
         Thread.sleep(2000);
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s1.registerCallback(new CountDownCallback(latch1));
-        latch1.await(5, TimeUnit.SECONDS);
-        latch2.await(5, TimeUnit.SECONDS);
+        latch1.await(20, TimeUnit.SECONDS);
+        latch2.await(20, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch1.getCount());
         Assert.assertEquals(0, latch2.getCount());
     }
