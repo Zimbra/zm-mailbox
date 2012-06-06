@@ -334,8 +334,8 @@ public class SoapSession extends Session {
                 created = new ArrayList<Element>(eSection.listElements());
             if ((eSection = eNotify.getOptionalElement(ZimbraNamespace.E_MODIFIED)) != null)
                 modified = new ArrayList<Element>(eSection.listElements());
-            if ((eSection = eNotify.getOptionalElement(MailConstants.E_A)) != null)
-                activities = new ArrayList<Element>(eSection.listElements());
+            activities = eNotify.listElements(MailConstants.E_A);
+            if (activities.isEmpty()) activities = null;
         }
 
         RemoteNotifications add(RemoteNotifications rns) {
@@ -1512,13 +1512,9 @@ public class SoapSession extends Session {
         }
 
         if (rns != null && rns.activities != null && !rns.activities.isEmpty())  {
-            Element activities = eNotify.getOptionalElement(MailConstants.E_A);
-            if (activities == null) {
-                activities = eNotify.addElement(MailConstants.E_A);
-            }
             for (Element elt : rns.activities) {
                 if (encodingMatches(parent, elt)) {
-                    activities.addElement(elt.clone().detach());
+                    eNotify.addElement(elt.clone().detach());
                 } else {
                     ZimbraLog.session.warn("unable to add remote notification due to mismatched SOAP protocol");
                 }
