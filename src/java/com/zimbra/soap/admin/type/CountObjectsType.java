@@ -25,7 +25,8 @@ public enum CountObjectsType {
     domain(true, false),
     cos(false, false),
     server(false, false),
-    
+    calresource(true, false),
+
     // UC service objects
     accountOnUCService(false, true),
     cosOnUCService(false, true),
