@@ -16,7 +16,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -354,8 +353,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     ByteUtil.closeStream(os);
                     os = null;
         
-                    is = new FileInputStream(tempMmFile);
-                    csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
+                    is = new ZSharedFileInputStream(tempMmFile);
+                    csd.mMm = new FixedMimeMessage(JMSession.getSmtpSession(acct), is);
                 } catch (IOException e) {
                     if (tempMmFile != null)
                         tempMmFile.delete();
