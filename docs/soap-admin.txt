@@ -2271,6 +2271,7 @@ e.g.
                        account | 
                        alias | 
                        dl |
+                       calresource |
                        domain |
                        cos | 
                        server |

@@ -7975,6 +7975,10 @@ public class LdapProvisioning extends LdapProv {
                     filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
                 }
                 break;
+            case calresource:
+                types.add(ObjectType.resources);
+                filter = filterFactory.allCalendarResources();
+                break;
             case domain:
                 types.add(ObjectType.domains);
                 filter = filterFactory.allDomains();
