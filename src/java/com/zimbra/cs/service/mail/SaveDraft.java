@@ -14,6 +14,14 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -37,14 +45,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
 
 /**
  * @since Jun 11, 2005
@@ -187,35 +187,15 @@ public class SaveDraft extends MailDocumentHandler {
         return true;
     }
 
-    protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg)
-    throws ServiceException {
-        int changeId = msg.getSavedSequence();
-        while (true) {
-            Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
-            try {
-                // FIXME: semi-inefficient -- this re-fetches the MimeMessage (but SaveDraft is called rarely)
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false);
-                return response;
-            } catch (ServiceException e) {
-                // problem writing the message structure to the response
-                //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
-                try {
-                    msg = mbox.getMessageById(octxt, msg.getId());
-                    if (msg.getSavedSequence() != changeId) {
-                        // if the draft was re-saved and we failed because the old blob was deleted
-                        //   out from under us, just fetch the new MimeMessage and try again
-                        changeId = msg.getSavedSequence();
-                        continue;
-                    }
-                } catch (NoSuchItemException nsie) {
-                    // the draft has been deleted, so don't include draft data in the response
-                    return zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
-                }
-                // we're kinda screwed here -- the draft was saved, but we weren't able to write the message structure
-                //   and it's not clear what went wrong.  best we can do now is send back what we got and apologize.
-                ZimbraLog.soap.warn("could not serialize full draft structure in response", e);
-                return response;
-            }
+    protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg) {
+        Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
+        try {
+            ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false);
+        } catch (NoSuchItemException nsie) {
+            ZimbraLog.soap.info("draft was deleted while serializing response; omitting <m> from response");
+        } catch (ServiceException e) {
+            ZimbraLog.soap.warn("problem serializing draft structure to response", e);
         }
+        return response;
     }
 }

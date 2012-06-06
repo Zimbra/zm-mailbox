@@ -113,6 +113,7 @@ import com.zimbra.cs.mailbox.Link;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -1153,19 +1154,72 @@ public final class ToXML {
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo)
     throws ServiceException {
-        boolean wholeMessage = part == null || part.trim().isEmpty();
-
-        Element m;
-        if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
-            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
-        } else {
-            m = parent.addElement(MailConstants.E_MSG);
-            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
-            m.addAttribute(MailConstants.A_PART, part);
+        Mailbox mbox = msg.getMailbox();
+        int changeId = msg.getSavedSequence();
+        while (true) {
+            try {
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, null, -1, true, true, null, true, false, false);
+            } catch (ServiceException e) {
+                // problem writing the message structure to the response
+                //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
+                try {
+                    msg = mbox.getMessageById(octxt, msg.getId());
+                    if (msg.getSavedSequence() != changeId) {
+                        // if a draft was re-saved and we failed because the old blob was deleted
+                        //   out from under us, just fetch the new MimeMessage and try again
+                        changeId = msg.getSavedSequence();
+                        ZimbraLog.soap.info("caught message content change while serializing; will retry");
+                        continue;
+                    }
+                } catch (NoSuchItemException nsie) {
+                    // the message has been deleted, so don't include draft data in the response
+                    throw nsie;
+                }
+                // we're kinda screwed here -- we weren't able to write the message structure and it's not clear what went wrong.
+                //   best we can do now is send back what we got and apologize.
+                ZimbraLog.soap.warn("could not serialize full message structure in response", e);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, null, -1, true, true, null, true, false, true);
+            }
         }
+    }
 
+    /** Encodes a Message object into <m> element with <mp> elements for
+     *  message body.
+     * @param parent  The Element to add the new <tt>&lt;m></tt> to.
+     * @param ifmt    The formatter to sue when serializing item ids.
+     * @param msg     The Message to serialize.
+     * @param part    If non-null, serialize this message/rfc822 subpart of
+     *                the Message instead of the Message itself.
+     * @param maxSize TODO
+     * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
+     *                  <tt>false</tt> to prefer text/plain parts.
+     * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
+     * @param headers Extra message headers to include in the returned element.
+     * @param serializeType If <tt>false</tt>, always serializes as an
+     *                      <tt>&lt;m></tt> element.
+     * @param bestEffort  If <tt>true</tt>, errors serializing part content
+     *                    are swallowed.
+     * @return The newly-created <tt>&lt;m></tt> Element, which has already
+     *         been added as a child to the passed-in <tt>parent</tt>.
+     * @throws ServiceException */
+    private static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
+            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+            boolean bestEffort)
+    throws ServiceException {
+        Element m = null;
+        boolean success = false;
         try {
+            boolean wholeMessage = part == null || part.trim().isEmpty();
+            if (wholeMessage) {
+                m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
+                m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+            } else {
+                m = parent.addElement(MailConstants.E_MSG);
+                m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+                m.addAttribute(MailConstants.A_PART, part);
+            }
+
             MimeMessage mm = msg.getMimeMessage();
             if (!wholeMessage) {
                 MimePart mp = Mime.getMimePart(mm, part);
@@ -1218,8 +1272,8 @@ public final class ToXML {
 
             if (wholeMessage && msg.isDraft()) {
                 if (!msg.getDraftOrigId().isEmpty()) {
-                    m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(new ItemId(msg.getDraftOrigId()
-                            , msg.getMailbox().getAccountId())));
+                    ItemId origId = new ItemId(msg.getDraftOrigId(), msg.getMailbox().getAccountId());
+                    m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(origId));
                 }
                 if (!msg.getDraftReplyType().isEmpty()) {
                     m.addAttribute(MailConstants.A_REPLY_TYPE, msg.getDraftReplyType());
@@ -1272,7 +1326,7 @@ public final class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg));
+                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort);
             }
 
             if (wantExpandGroupInfo) {
@@ -1281,13 +1335,18 @@ public final class ToXML {
                 encodeAddrsWithGroupInfo(m, requestedAcct, authedAcct);
             }
 
+            success = true;
+            return m;
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
         } catch (MessagingException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
+        } finally {
+            // don't leave turds around if we're going to retry
+            if (!success && !bestEffort && m != null) {
+                m.detach();
+            }
         }
-
-        return m;
     }
 
     /**
@@ -1295,7 +1354,7 @@ public final class ToXML {
      */
     public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt, OperationContext octxt,
             CalendarItem calItem, int fields, boolean encodeInvites, boolean includeContent, boolean neuter)
-            throws ServiceException {
+    throws ServiceException {
         recordItemTags(calItemElem, calItem, octxt, fields);
 
         calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
@@ -1351,12 +1410,14 @@ public final class ToXML {
     }
 
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem cal, Invite inv, boolean neuter) throws ServiceException {
+            CalendarItem cal, Invite inv, boolean neuter)
+    throws ServiceException {
         return encodeInvite(parent, ifmt, octxt, cal, inv, false, neuter);
     }
 
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem cal, Invite inv, boolean includeContent, boolean neuter) throws ServiceException {
+            CalendarItem cal, Invite inv, boolean includeContent, boolean neuter)
+    throws ServiceException {
         Element ie = parent.addElement(MailConstants.E_INVITE);
         setCalendarItemType(ie, cal.getType());
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
@@ -1384,7 +1445,7 @@ public final class ToXML {
                     throw ServiceException.FAILURE(ex.getMessage(), ex);
                 }
                 if (parts != null && !parts.isEmpty()) {
-                    addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal));
+                    addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal), true);
                 }
             }
         }
@@ -1584,7 +1645,7 @@ public final class ToXML {
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                    addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem));
+                    addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem), true);
                 }
             }
 
@@ -2019,7 +2080,8 @@ public final class ToXML {
     }
 
     private static Element encodeInvitesForMessage(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, int fields, boolean neuter) throws ServiceException {
+            Message msg, int fields, boolean neuter)
+    throws ServiceException {
         if (fields != NOTIFY_FIELDS && !needToOutput(fields, Change.INVITE)) {
             return parent;
         }
@@ -2112,6 +2174,7 @@ public final class ToXML {
                     }
                 }
             }
+
             if (invite != null) {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
@@ -2142,7 +2205,8 @@ public final class ToXML {
     private enum VisitPhase { PREVISIT, POSTVISIT }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
-            boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
+            boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions)
+    throws ServiceException {
         MPartInfo mpi = mpiRoot;
         LinkedList<Pair<Element, LinkedList<MPartInfo>>> queue = new LinkedList<Pair<Element, LinkedList<MPartInfo>>>();
         Pair<Element, LinkedList<MPartInfo>> level = new Pair<Element, LinkedList<MPartInfo>>(root, new LinkedList<MPartInfo>());
@@ -2159,7 +2223,7 @@ public final class ToXML {
 
             mpi = parts.getFirst();
             Element child = addPart(phase, level.getFirst(), root, mpi, bodies, prefix, maxSize, neuter,
-                    excludeCalendarParts, defaultCharset);
+                    excludeCalendarParts, defaultCharset, swallowContentExceptions);
             if (phase == VisitPhase.PREVISIT && child != null && mpi.hasChildren()) {
                 queue.addLast(new Pair<Element, LinkedList<MPartInfo>>(child, new LinkedList<MPartInfo>(mpi.getChildren())));
             } else {
@@ -2168,8 +2232,10 @@ public final class ToXML {
         }
     }
 
-    private static Element addPart(VisitPhase phase, Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies,
-            String prefix, int maxSize, boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
+    private static Element addPart(VisitPhase phase, Element parent, Element root, MPartInfo mpi,
+            Set<MPartInfo> bodies, String prefix, int maxSize, boolean neuter, boolean excludeCalendarParts,
+            String defaultCharset, boolean swallowContentExceptions)
+    throws ServiceException {
         if (phase == VisitPhase.POSTVISIT) {
             return null;
         }
@@ -2201,8 +2267,15 @@ public final class ToXML {
             try {
                 addContent(shr, mpi, maxSize, defaultCharset);
             } catch (IOException e) {
-                LOG.warn("error writing body part", e);
+                if (!swallowContentExceptions) {
+                    throw ServiceException.FAILURE("error serializing share XML", e);
+                } else {
+                    LOG.warn("error writing body part", e);
+                }
             } catch (MessagingException e) {
+                if (!swallowContentExceptions) {
+                    throw ServiceException.FAILURE("error serializing share XML", e);
+                }
             }
         } else if (MimeConstants.CT_XML_ZIMBRA_DL_SUBSCRIPTION.equals(ctype)) {
             // the <dlSubs> dl subscription info goes underneath the top-level <m>
@@ -2210,14 +2283,20 @@ public final class ToXML {
             try {
                 addContent(dlSubs, mpi, maxSize, defaultCharset);
             } catch (IOException e) {
-                LOG.warn("error writing body part", e);
+                if (!swallowContentExceptions) {
+                    throw ServiceException.FAILURE("error serializing DL subscription", e);
+                } else {
+                    LOG.warn("error writing body part", e);
+                }
             } catch (MessagingException e) {
+                if (!swallowContentExceptions) {
+                    throw ServiceException.FAILURE("error serializing DL subscription", e);
+                }
             }
         } else if (MimeConstants.CT_TEXT_ENRICHED.equals(ctype)) {
             // we'll be replacing text/enriched with text/html
             ctype = MimeConstants.CT_TEXT_HTML;
-        } else if (fname != null && (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(ctype) ||
-                MimeConstants.CT_APPLICATION_TNEF.equals(ctype))) {
+        } else if (fname != null && (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(ctype) || MimeConstants.CT_APPLICATION_TNEF.equals(ctype))) {
             String guess = MimeDetect.getMimeDetect().detect(fname);
             if (guess != null) {
                 ctype = guess;
@@ -2241,8 +2320,7 @@ public final class ToXML {
             String disp = mp.getHeader("Content-Disposition", null);
             if (disp != null) {
                 ContentDisposition cdisp = new ContentDisposition(MimeUtility.decodeText(disp));
-                el.addAttribute(MailConstants.A_CONTENT_DISPOSTION,
-                        StringUtil.stripControlCharacters(cdisp.getDisposition()));
+                el.addAttribute(MailConstants.A_CONTENT_DISPOSTION, StringUtil.stripControlCharacters(cdisp.getDisposition()));
             }
         } catch (MessagingException e) {
         } catch (UnsupportedEncodingException e) {
@@ -2288,8 +2366,15 @@ public final class ToXML {
             try {
                 addContent(el, mpi, maxSize, neuter, defaultCharset);
             } catch (IOException e) {
-                LOG.warn("error writing body part",  e);
+                if (!swallowContentExceptions) {
+                    throw ServiceException.FAILURE("error serializing part content", e);
+                } else {
+                    LOG.warn("error writing body part", e);
+                }
             } catch (MessagingException me) {
+                if (!swallowContentExceptions) {
+                    throw ServiceException.FAILURE("error serializing part content", me);
+                }
             }
         }
 

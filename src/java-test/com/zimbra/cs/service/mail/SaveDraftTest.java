@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.Map;
-
 import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
@@ -24,16 +22,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -80,13 +75,12 @@ public class SaveDraftTest {
 
         Element response = new SaveDraft() {
             @Override
-            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg)
-            throws ServiceException {
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg) {
                 // trigger the failure case by deleting the draft before it's serialized out
                 try {
                     mbox.delete(null, msg.getId(), MailItem.Type.MESSAGE);
                 } catch (Exception e) {
-                    throw ServiceException.FAILURE("error creating/saving interrupt draft", e);
+                    return null;
                 }
                 return super.generateResponse(zsc, ifmt, octxt, mbox, msg);
             }
@@ -107,8 +101,7 @@ public class SaveDraftTest {
 
         Element response = new SaveDraft() {
             @Override
-            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg)
-            throws ServiceException {
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg) {
                 // trigger the failure case by re-saving the draft before it's serialized out
                 try {
                     msg = (Message) msg.snapshotItem();
@@ -118,7 +111,7 @@ public class SaveDraftTest {
                     mm.saveChanges();
                     mbox.saveDraft(null, new ParsedMessage(mm, false), msg.getId());
                 } catch (Exception e) {
-                    throw ServiceException.FAILURE("error creating/saving interrupt draft", e);
+                    return null;
                 }
                 return super.generateResponse(zsc, ifmt, octxt, mbox, msg);
             }
