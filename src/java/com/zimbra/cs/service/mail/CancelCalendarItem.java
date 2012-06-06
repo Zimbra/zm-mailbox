@@ -84,6 +84,8 @@ public class CancelCalendarItem extends CalendarRequest {
             if (inv == null)
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
 
+        MailSendQueue sendQueue = new MailSendQueue();
+        try {
             Element recurElt = request.getOptionalElement(MailConstants.E_INSTANCE);
             if (recurElt != null) {
                 TimeZoneMap tzmap = inv.getTimeZoneMap();
@@ -101,7 +103,7 @@ public class CancelCalendarItem extends CalendarRequest {
                         calItem.getUid(), recurId.getDtZ());
 
                 Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
-                cancelInstance(zsc, octxt, msgElem, acct, mbox, calItem, inv, recurId, inv.getAttendees());
+                cancelInstance(zsc, octxt, msgElem, acct, mbox, calItem, inv, recurId, inv.getAttendees(), sendQueue);
             } else {
                 // if recur is not set, then we're canceling the entire calendar item...
 
@@ -132,29 +134,31 @@ public class CancelCalendarItem extends CalendarRequest {
                                         List<ZAttendee> ats = CalendarUtils.getRemovedAttendees(atsExcept, atsSeries, false, acct);
                                         if (!ats.isEmpty()) {
                                             // notify ats
-                                            cancelInstance(zsc, octxt, null, acct, mbox, calItem, exceptInv, exceptInv.getRecurId(), ats);
+                                            cancelInstance(zsc, octxt, null, acct, mbox, calItem, exceptInv, exceptInv.getRecurId(), ats, sendQueue);
                                         }
                                     }
                                 }
                             }
                         }
-
+    
                         // Finally, cancel the series.
                         Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
-                        cancelInvite(zsc, octxt, msgElem, acct, mbox, calItem, seriesInv);
+                        cancelInvite(zsc, octxt, msgElem, acct, mbox, calItem, seriesInv, sendQueue);
                     }
                     // disable change constraint checking since we've just successfully done a modify
                     octxt = new OperationContext(octxt).unsetChangeConstraint();
                 }
             }
-        //} // synchronized on mailbox
-        
+        } finally {
+            sendQueue.send();
+        }
+
         Element response = getResponseElement(zsc);
         return response;
     }
 
     void cancelInstance(ZimbraSoapContext zsc, OperationContext octxt, Element msgElem, Account acct, Mailbox mbox,
-            CalendarItem calItem, Invite inv, RecurId recurId, List<ZAttendee> toNotify) 
+            CalendarItem calItem, Invite inv, RecurId recurId, List<ZAttendee> toNotify, MailSendQueue sendQueue)
     throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
@@ -191,21 +195,12 @@ public class CancelCalendarItem extends CalendarRequest {
                     calItem, cancelInvite, text, iCal);
         }
         
-        if (!inv.isOrganizer()) {
-            try {
-                Address[] rcpts = dat.mMm.getAllRecipients();
-                if (rcpts != null && rcpts.length > 0) {
-                    throw MailServiceException.MUST_BE_ORGANIZER("CancelCalendarItem");
-                }
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
-            }
-        }
-        
-        sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, true);
+		doRecipientsCheck(dat, inv.isOrganizer(), mbox);
+        sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, true, sendQueue);
     }
 
-    protected void cancelInvite(ZimbraSoapContext zsc, OperationContext octxt, Element msgElem, Account acct, Mailbox mbox, CalendarItem calItem, Invite inv)
+    protected void cancelInvite(ZimbraSoapContext zsc, OperationContext octxt, Element msgElem, Account acct, Mailbox mbox,
+            CalendarItem calItem, Invite inv, MailSendQueue sendQueue)
     throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
@@ -244,17 +239,28 @@ public class CancelCalendarItem extends CalendarRequest {
                     calItem, inv, text, iCal);
         }
         
-        if (!inv.isOrganizer()) {
-            try {
-                Address[] rcpts = csd.mMm.getAllRecipients();
-                if (rcpts != null && rcpts.length > 0) {
-                    throw MailServiceException.MUST_BE_ORGANIZER("CancelCalendarItem");
-                }
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+        doRecipientsCheck(csd, inv.isOrganizer(), mbox);
+        sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, csd, true, sendQueue);
+    }
+
+    private void doRecipientsCheck(CalSendData dat, boolean isOrganizer, Mailbox mbox) throws ServiceException {
+        boolean hasRecipients = false;
+        try {
+            Address[] rcpts = dat.mMm.getAllRecipients();
+            hasRecipients = rcpts != null && rcpts.length > 0;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+        }
+        if (hasRecipients) {
+            if (isOrganizer) {
+                // Ensure we can send cancel notice email before canceling own appointment.
+                // Canceling own appointment then failing to notify will leave attendees with appointments
+                // that can't be cancelled by organizer any more.
+                mbox.getMailSender().checkMTAConnection();
+            } else {
+                // Only the organizer may send cancel notice.
+                throw MailServiceException.MUST_BE_ORGANIZER("CancelCalendarItem");
             }
         }
-        
-        sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, csd, true);
     }
 }

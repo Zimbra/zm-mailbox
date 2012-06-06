@@ -799,14 +799,14 @@ public class CalendarMailSender {
     public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm,
                                      List<InternetAddress> newContacts, List<Upload> uploads,
                                      ItemId origMsgId, String replyType, String identityId,
-                                     boolean replyToSender)
+                                     boolean replyToSender, boolean suppressPartialAddressFailureException)
     throws ServiceException {
         ItemId id = null;
         try {
             id = mbox.getMailSender().setSendPartial(true).sendMimeMessage(
                 octxt, mbox, mm, newContacts, uploads, origMsgId, replyType, identityId, replyToSender);
         } catch (MailServiceException e) {
-            if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
+            if (suppressPartialAddressFailureException && e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
                 ZimbraLog.calendar.info("Unable to send to some addresses: " + e);
             } else {
                 throw e;

@@ -103,43 +103,48 @@ public class ModifyCalendarItem extends CalendarRequest {
             iidFolder = new ItemId(folderStr, zsc);
             isInterMboxMove = !iidFolder.belongsTo(mbox);
         }
-        
+
+        MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        synchronized(mbox) {
-            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-            if (calItem == null) {
+        try {
+            synchronized(mbox) {
+                CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-            }
-
-            // Reject the request if calendar item is under trash or is being moved to trash.
-            if (calItem.inTrash())
-                throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
-            if (!isInterMboxMove && iidFolder != null) {
-                if (iidFolder.getId() != calItem.getFolderId()) {
-                    Folder destFolder = mbox.getFolderById(octxt, iidFolder.getId());
-                    if (destFolder.inTrash())
-                        throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
                 }
-            }
 
-            // Conflict detection.  Do it only if requested by client.  (for backward compat)
-            int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
-            int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
-            if (modSeq != 0 && revision != 0 &&
-                (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence()))
-                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                // Reject the request if calendar item is under trash or is being moved to trash.
+                if (calItem.inTrash())
+                    throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
+                if (!isInterMboxMove && iidFolder != null) {
+                    if (iidFolder.getId() != calItem.getFolderId()) {
+                        Folder destFolder = mbox.getFolderById(octxt, iidFolder.getId());
+                            if (destFolder.inTrash())
+                                throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
+                    }
+                }
 
-            Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
-            if (inv == null) {
-                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                // Conflict detection.  Do it only if requested by client.  (for backward compat)
+                int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
+                int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
+                if (modSeq != 0 && revision != 0 &&
+                        (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence()))
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+
+                Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
+                if (inv == null) {
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                }
+                Invite seriesInv = calItem.getDefaultInviteOrNull();
+                int folderId = calItem.getFolderId();
+                if (!isInterMboxMove && iidFolder != null)
+                    folderId = iidFolder.getId();
+                modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
+                               response, isInterMboxMove, sendQueue);
             }
-            Invite seriesInv = calItem.getDefaultInviteOrNull();
-            int folderId = calItem.getFolderId();
-            if (!isInterMboxMove && iidFolder != null)
-                folderId = iidFolder.getId();
-            modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
-                               response, isInterMboxMove);
+        } finally {
+            sendQueue.send();
         }
 
         // Inter-mailbox move if necessary.
@@ -156,7 +161,8 @@ public class ModifyCalendarItem extends CalendarRequest {
     private Element modifyCalendarItem(
             ZimbraSoapContext zsc, OperationContext octxt, Element request,
             Account acct, Mailbox mbox, int folderId,
-            CalendarItem calItem, Invite inv, Invite seriesInv, Element response, boolean isInterMboxMove)
+            CalendarItem calItem, Invite inv, Invite seriesInv, Element response, boolean isInterMboxMove,
+            MailSendQueue sendQueue)
     throws ServiceException {
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
@@ -221,7 +227,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
             if (!inv.isNeverSent()) {  // No need to notify for a draft appointment.
                 if (!atsCanceled.isEmpty()) {
-                    notifyRemovedAttendees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+                    notifyRemovedAttendees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled, sendQueue);
                 }
             }
 
@@ -247,7 +253,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                                 List<ZAttendee> toNotify = CalendarUtils.getRemovedAttendees(
                                         except.getAttendees(), seriesInv.getAttendees(), false, acct);
                                 if (!toNotify.isEmpty()) {
-                                    notifyRemovedAttendees(zsc, octxt, acct, mbox, calItem, except, toNotify);
+                                    notifyRemovedAttendees(zsc, octxt, acct, mbox, calItem, except, toNotify, sendQueue);
                                 }
                             }
                         }
@@ -255,7 +261,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                 }
 
                 // Save the change to the series as specified by the client.
-                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, sendQueue);
 
                 // Echo the updated inv in the response.
                 if (echo && dat.mAddInvData != null) {
@@ -271,13 +277,13 @@ public class ModifyCalendarItem extends CalendarRequest {
 
                 // Send notifications.
                 if (hasRecipients) {
-                    notifyCalendarItem(zsc, octxt, acct, mbox, inv.getCalendarItem(), notifyAllAttendees, atsAdded, ignorePastExceptions);
+                    notifyCalendarItem(zsc, octxt, acct, mbox, inv.getCalendarItem(), notifyAllAttendees, atsAdded, ignorePastExceptions, sendQueue);
                 }
             } else {
                 // Modifying a one-off appointment or an exception instance.  There are no
                 // complications like in the series update case.  Just update the invite with the
                 // data supplied by the client, and let the built-in notification take place.
-                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, sendQueue);
 
                 // Echo the updated inv in the response.
                 if (echo && dat.mAddInvData != null) {
@@ -286,7 +292,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
         } else {  // not organizer
             // Apply the change.
-            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, sendQueue);
 
             // Echo the updated inv in the response.
             if (echo && dat.mAddInvData != null) {
