@@ -1117,6 +1117,9 @@ public interface DbSearchConstraints extends Cloneable {
         @Override
         public StringBuilder toQueryString(StringBuilder out) {
             boolean first = true;
+            if (children.size() > 1) {
+                out.append('(');
+            }
             for (DbSearchConstraints child : children) {
                 if (!first) {
                     out.append(" OR ");
@@ -1125,6 +1128,9 @@ public interface DbSearchConstraints extends Cloneable {
                 child.toQueryString(out);
                 out.append(')');
                 first = false;
+            }
+            if (children.size() > 1) {
+                out.append(')');
             }
             return out;
         }
