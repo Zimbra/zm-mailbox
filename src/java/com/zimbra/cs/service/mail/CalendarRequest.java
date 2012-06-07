@@ -494,7 +494,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     // for each invite are notified.  (Some invites may have more attendees than others.)
     protected static void notifyCalendarItem(
             ZimbraSoapContext zsc, OperationContext octxt, Account acct, Mailbox mbox, CalendarItem calItem,
-            boolean notifyAllAttendees, List<ZAttendee> addedAttendees, boolean ignorePastExceptions)
+            boolean notifyAllAttendees, List<ZAttendee> addedAttendees, boolean ignorePastExceptions, MailSendQueue sendQueue)
     throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
@@ -574,8 +574,11 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 }
                 if (rcpts != null && !rcpts.isEmpty()) {
                     MimeMessage mmModify = CalendarMailSender.createCalendarMessage(authAcct, from, sender, rcpts, mmInv, inv, cal, true);
-                    CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
-                            new ItemId(mbox, inv.getMailItemId()), null, null, false);
+                    CalSendData csd = new CalSendData();
+                    csd.mMm = mmModify;
+                    csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
+                    MailSendQueueEntry entry = new MailSendQueueEntry(octxt, mbox, csd, null);
+                    sendQueue.add(entry);
                 }
             }
         } finally {

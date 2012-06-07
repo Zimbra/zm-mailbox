@@ -280,7 +280,7 @@ public class ModifyCalendarItem extends CalendarRequest {
 
                 // Send notifications.
                 if (hasRecipients) {
-                    notifyCalendarItem(zsc, octxt, acct, mbox, inv.getCalendarItem(), notifyAllAttendees, atsAdded, ignorePastExceptions);
+                    notifyCalendarItem(zsc, octxt, acct, mbox, inv.getCalendarItem(), notifyAllAttendees, atsAdded, ignorePastExceptions, sendQueue);
                 }
             } else {
                 // Modifying a one-off appointment or an exception instance.  There are no
