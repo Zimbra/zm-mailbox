@@ -61,14 +61,14 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				res instanceof HttpServletResponse);
 	}
 
-	private AuthToken getAuthTokenForApp(HttpServletRequest req, HttpServletResponse resp)
+	private AuthToken getAuthTokenForApp(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
 			throws IOException, ServiceException {
 		Config config = Provisioning.getInstance().getConfig();
 		int adminPort = config.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
 		if (adminPort == req.getLocalPort()) {
-			return getAdminAuthTokenFromCookie(req, resp);
+			return getAdminAuthTokenFromCookie(req, resp, doNotSendHttpError);
 		}
-		return getAuthTokenFromCookie(req, resp, true);
+		return getAuthTokenFromCookie(req, resp, doNotSendHttpError);
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response,
@@ -81,7 +81,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
         AuthToken authToken;
 		try {
-        	authToken = getAuthTokenForApp(req, resp);
+        	authToken = getAuthTokenForApp(req, resp, false);
 		} catch (ServiceException se) {
         	ZimbraLog.zimlet.info("can't get authToken: "+se.getMessage());
         	resp.sendError(HttpServletResponse.SC_FORBIDDEN);
