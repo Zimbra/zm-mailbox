@@ -38,6 +38,7 @@ import java.util.regex.PatternSyntaxException;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -56,6 +57,7 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -434,6 +436,33 @@ public class LdapProvisioning extends LdapProv {
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
         AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
+    }
+
+    @Override
+    public void restoreAccountAttrs(Account acct, Map<String, ? extends Object> backupAttrs)
+    throws ServiceException {
+        Map<String, Object> attrs = Maps.newHashMap(backupAttrs);
+
+        Object ocsInBackupObj = backupAttrs.get(A_objectClass);
+        String[] ocsInBackup = StringUtil.toStringArray(ocsInBackupObj);
+
+        String[] ocsOnAcct = acct.getMultiAttr(A_objectClass);
+
+        // replace A_objectClass in backupAttrs with only OCs that is not a
+        // super OC of LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC, then merge them with
+        // OCs added during restoreAccount.
+        List<String> needOCs = Lists.newArrayList(ocsOnAcct);
+        for (String oc : ocsInBackup) {
+            if (!LdapObjectClassHierarchy.isSuperiorOC(this, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC, oc)) {
+                if (!needOCs.contains(oc)) {
+                    needOCs.add(oc);
+                }
+            }
+        }
+
+        attrs.put(A_objectClass, needOCs.toArray(new String[needOCs.size()]));
+
+        modifyAttrs(acct, attrs, false, false);
     }
 
     /**
@@ -1091,15 +1120,7 @@ public class LdapProvisioning extends LdapProv {
              */
             if (restoring && origAttrs != null) {
                 Object ocsInBackupObj = origAttrs.get(A_objectClass);
-                String[] ocsInBackup;
-                if (ocsInBackupObj instanceof String) {
-                    ocsInBackup = new String[1];
-                    ocsInBackup[0] = (String)ocsInBackupObj;
-                } else if (ocsInBackupObj instanceof String[]) {
-                    ocsInBackup = (String[])ocsInBackupObj;
-                } else {
-                    throw ServiceException.FAILURE("internal error", null);
-                }
+                String[] ocsInBackup = StringUtil.toStringArray(ocsInBackupObj);
 
                 String mostSpecificOC = LdapObjectClassHierarchy.getMostSpecificOC(
                         this, ocsInBackup, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC);

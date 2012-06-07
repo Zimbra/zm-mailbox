@@ -352,6 +352,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
                                      boolean allowCallback)
     throws ServiceException;
 
+    public void restoreAccountAttrs(Account acct, Map<String, ? extends Object> backupAttrs)
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     /**
      * reload/refresh the entry.
      *
