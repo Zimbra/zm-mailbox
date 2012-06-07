@@ -172,6 +172,7 @@ SECTION opendkim DEPENDS mta
 	LOCAL av_notify_user
 	LOCAL ldap_url
 	VAR zimbraMtaMyNetworks
+	VAR zimbraIPMode
 	REWRITE conf/opendkim.conf.in conf/opendkim.conf
 	REWRITE conf/opendkim-localnets.conf.in conf/opendkim-localnets.conf
 	RESTART opendkim
