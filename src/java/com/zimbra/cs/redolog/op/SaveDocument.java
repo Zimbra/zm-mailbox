@@ -40,7 +40,7 @@ public class SaveDocument extends CreateMessage {
         mOperation = MailboxOperation.SaveDocument;
     }
 
-    public SaveDocument(int mailboxId, String digest, int msgSize, int folderId, int flags) {
+    public SaveDocument(int mailboxId, String digest, long msgSize, int folderId, int flags) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, flags, null);
         mOperation = MailboxOperation.SaveDocument;
     }
@@ -92,11 +92,11 @@ public class SaveDocument extends CreateMessage {
     public void setDescription(String d) {
         mDescription = d;
     }
-    
+
     public boolean isDescriptionEnabled() {
         return mDescEnabled;
     }
-    
+
     public void setDescriptionEnabled(boolean descEnabled) {
         mDescEnabled = descEnabled;
     }

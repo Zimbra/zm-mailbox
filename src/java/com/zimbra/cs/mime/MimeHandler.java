@@ -58,7 +58,7 @@ public abstract class MimeHandler {
     private String filename;
     private DataSource dataSource;
     private String contentType;
-    private int size = -1;
+    private long size = -1;
     private String defaultCharset;
     private String partName; // dotted-number part name
 
@@ -133,11 +133,11 @@ public abstract class MimeHandler {
         return dataSource;
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 
-    public void setSize(int value) {
+    public void setSize(long value) {
         size = value;
     }
 

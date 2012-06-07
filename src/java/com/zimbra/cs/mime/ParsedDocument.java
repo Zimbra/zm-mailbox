@@ -14,8 +14,8 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,8 +25,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
-import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.store.Blob;
@@ -37,7 +37,7 @@ import com.zimbra.cs.store.StoreManager;
  */
 public final class ParsedDocument {
     private final Blob blob;
-    private final int size;
+    private final long size;
     private final String digest;
     private final String contentType;
     private final String filename;
@@ -71,7 +71,7 @@ public final class ParsedDocument {
     public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator,
             String description, boolean descEnabled) throws IOException {
         this.blob = blob;
-        this.size = (int) blob.getRawSize();
+        this.size = blob.getRawSize();
         this.digest = blob.getDigest();
         this.contentType = ctype;
         this.filename = StringUtil.sanitizeFilename(filename);
@@ -164,7 +164,7 @@ public final class ParsedDocument {
         }
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 

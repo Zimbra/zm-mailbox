@@ -66,7 +66,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                                     // mailbox may be addressed using any of the defined aliases
     private boolean mShared;        // whether message is shared with other mailboxes
     private String mDigest;         // Message blob is referenced by digest rather than blob ID.
-    protected int mMsgSize;         // original, uncompressed message size in bytes
+    protected long mMsgSize;        // original, uncompressed message size in bytes
     private int mMsgId;             // ID assigned to newly created message
     private int mFolderId;          // folder to which the message belongs
     private int mConvId;            // conversation to which the message belongs; may be newly created
@@ -99,13 +99,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     }
 
     protected CreateMessage(int mailboxId, String rcptEmail, boolean shared,
-                            String digest, int msgSize, int folderId, boolean noICal,
+                            String digest, long msgSize, int folderId, boolean noICal,
                             int flags, String[] tags) {
         this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest, msgSize, folderId, noICal, flags, tags, null);
     }
 
     public CreateMessage(int mailboxId, String rcptEmail, long receivedDate,
-                         boolean shared, String digest, int msgSize, int folderId,
+                         boolean shared, String digest, long msgSize, int folderId,
                          boolean noICal, int flags, String[] tags, CustomMetadata extended) {
         super(MailboxOperation.CreateMessage);
         setMailboxId(mailboxId);
@@ -331,7 +331,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
         out.writeBoolean(mShared);
         out.writeUTF(mDigest);
-        out.writeInt(mMsgSize);
+        out.writeLong(mMsgSize);
         out.writeInt(mMsgId);
         out.writeInt(mFolderId);
         out.writeInt(mConvId);
@@ -390,7 +390,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
         mShared = in.readBoolean();
         mDigest = in.readUTF();
-        mMsgSize = in.readInt();
+        if (getVersion().atLeast(1, 42)) {
+            mMsgSize = in.readLong();
+        } else {
+            mMsgSize = in.readInt();
+        }
         mMsgId = in.readInt();
         mFolderId = in.readInt();
         mConvId = in.readInt();
