@@ -1192,7 +1192,6 @@ public final class LC {
     public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
 
     public static final KnownKey octopus_public_static_folder = KnownKey.newKey("${zimbra_home}/jetty/static");
-    public static final KnownKey octopus_share_notification_template = KnownKey.newKey("${zimbra_home}/conf/notification-template.html");
 
     static {
         // Automatically set the key name with the variable name.
