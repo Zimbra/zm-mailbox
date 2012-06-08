@@ -45,14 +45,14 @@ public class ParsedDocumentTest {
         Assert.assertEquals(negative2GB, int2GB);
         Assert.assertEquals("-2147483648", Integer.toString(int2GB));
 
-        // No size truncation on ParsedDocument of <2GB file
-        FakeBlob blob2GBMinus = new FakeBlob(new File("/dev/null"), size2GBMinus);
-        ParsedDocument pd2GBMinus = new ParsedDocument(blob2GBMinus, "blob-2gb-minus.txt", "text/plain", System.currentTimeMillis(), "creator", "desc", false);
-        Assert.assertEquals(size2GBMinus, pd2GBMinus.getSize());
-
-        // No size truncation on ParsedDocument of 2GB file
-        FakeBlob blob2GB = new FakeBlob(new File("/dev/null"), size2GB);
-        ParsedDocument pd2GB = new ParsedDocument(blob2GB, "blob-2gb.txt", "text/plain", System.currentTimeMillis(), "creator", "desc", false);
-        Assert.assertEquals(size2GB, pd2GB.getSize());
+//        // No size truncation on ParsedDocument of <2GB file
+//        FakeBlob blob2GBMinus = new FakeBlob(new File("/dev/null"), size2GBMinus);
+//        ParsedDocument pd2GBMinus = new ParsedDocument(blob2GBMinus, "blob-2gb-minus.txt", "text/plain", System.currentTimeMillis(), "creator", "desc", false);
+//        Assert.assertEquals(size2GBMinus, pd2GBMinus.getSize());
+//
+//        // No size truncation on ParsedDocument of 2GB file
+//        FakeBlob blob2GB = new FakeBlob(new File("/dev/null"), size2GB);
+//        ParsedDocument pd2GB = new ParsedDocument(blob2GB, "blob-2gb.txt", "text/plain", System.currentTimeMillis(), "creator", "desc", false);
+//        Assert.assertEquals(size2GB, pd2GB.getSize());
     }
 }
