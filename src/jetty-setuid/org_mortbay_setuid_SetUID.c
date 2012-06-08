@@ -74,7 +74,7 @@ Java_org_mortbay_setuid_SetUID_getpwnam(JNIEnv * env, jclass j, jstring name)
     if (!pw) 
     {
         char strErr[255];
-        sprintf(strErr, "User %s is not found!!!", pname);
+        snprintf(strErr, sizeof(strErr), "User %s is not found!!!", pname);
         throwNewJavaSecurityException(env, strErr);
         return NULL;
     }
@@ -135,7 +135,7 @@ Java_org_mortbay_setuid_SetUID_getpwuid(JNIEnv * env, jclass j, jint uid)
     if (!pw) 
     {
         char strErr[255];
-        sprintf(strErr, "User with uid %d is not found!!!", uid);
+        snprintf(strErr, sizeof(strErr), "User with uid %d is not found!!!", uid);
         throwNewJavaSecurityException(env, strErr);
         return NULL;
     }
@@ -200,7 +200,7 @@ Java_org_mortbay_setuid_SetUID_getgrnam(JNIEnv * env, jclass j, jstring name)
     if (!gr) 
     {
         char strErr[255];
-        sprintf(strErr, "Group %s is not found!!!", pname);
+        snprintf(strErr, sizeof(strErr), "Group %s is not found!!!", pname);
         throwNewJavaSecurityException(env, strErr);
         return NULL;
     }
@@ -283,7 +283,7 @@ Java_org_mortbay_setuid_SetUID_getgrgid(JNIEnv * env, jclass j, jint gid)
     if (!gr) 
     {
         char strErr[255];
-        sprintf(strErr, "Group with gid %d is not found!!!", gid);
+        snprintf(strErr, sizeof(strErr), "Group with gid %d is not found!!!", gid);
         throwNewJavaSecurityException(env, strErr);
         return NULL;
     }
@@ -429,7 +429,7 @@ jmethodID getJavaMethodId(JNIEnv *env, jclass clazz, const char *name, const cha
     if(!methodId)
     {
         char strErr[255];
-        sprintf(strErr, "Java Method is not found: %s !!!", name);
+        snprintf(strErr, sizeof(strErr), "Java Method is not found: %s !!!", name);
         throwNewJavaSecurityException(env, strErr);
         return NULL;
     }
@@ -445,7 +445,7 @@ int getJavaFieldInt(JNIEnv *env, jobject obj, const char *name)
     if(!fieldId)
     {
         char strErr[255];
-        sprintf(strErr, "Java Object Field is not found: int %s !!!", name);
+        snprintf(strErr, sizeof(strErr), "Java Object Field is not found: int %s !!!", name);
         throwNewJavaSecurityException(env, strErr);
     }
     int val = (*env)->GetIntField(env, obj, fieldId);
@@ -461,7 +461,7 @@ void setJavaFieldInt(JNIEnv *env, jobject obj, const char *name, int value)
     if(!fieldId)
     {
         char strErr[255];
-        sprintf(strErr, "Java Object Field is not found: int %s !!!", name);
+        snprintf(strErr, sizeof(strErr), "Java Object Field is not found: int %s !!!", name);
         throwNewJavaSecurityException(env, strErr);
     }
     
@@ -478,7 +478,7 @@ void setJavaFieldLong(JNIEnv *env, jobject obj, const char *name, long value)
     if(!fieldId)
     {
         char strErr[255];
-        sprintf(strErr, "Java Object Field is not found: long %s !!!", name);
+        snprintf(strErr, sizeof(strErr), "Java Object Field is not found: long %s !!!", name);
         throwNewJavaSecurityException(env, strErr);
     }
     
@@ -496,7 +496,7 @@ void setJavaFieldString(JNIEnv *env, jobject obj, const char *name, const char *
     if(!fieldId)
     {
         char strErr[255];
-        sprintf(strErr, "Java Object Field is not found: String %s !!!", name);
+        snprintf(strErr, sizeof(strErr), "Java Object Field is not found: String %s !!!", name);
         throwNewJavaSecurityException(env, strErr);
     }
     
