@@ -2288,7 +2288,7 @@ u,n attributes present iff count > 0
 +  can set priority high (!) or low (?) on sent message by specifying "f" attr on <m>
 +  if "did" is specified, then the draft item will be removed if the SendMsg is successful.
 
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [noSave="0|1"]>
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"] [noSave="0|1"]>
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
@@ -2309,7 +2309,7 @@ u,n attributes present iff count > 0
    or, if you want to compose the message remotely, upload it via
    FileUploadServlet, and submit it through our server:
 
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"]>
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"]>
   <m aid="{uploaded-MIME-body-ID}" [origid="..." rt="r|w"]/>
 </SendMsgRequest>
 
@@ -2318,7 +2318,7 @@ Composing the message based on existing draft:
 If you want to compose the message based on existing draft use the following. The parameter sfd="1" (sendFromDraft) instructs
 the server to construct message based on the "did" (id of the draft). The draft item will be removed if the SendMsg is successful.
     
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [noSave="0|1"]>
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"]  [isCalendarForward="0|1"] [noSave="0|1"]>
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] did="{saved-draft-id}" sfd="1"/>
 </SendMsgRequest>   
 
@@ -2340,6 +2340,9 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
                           properties in iCalendar part when sending message
                           on behalf of another user
                           default is 0
+
+isCalendarForward - Indicates whether this a forward of calendar invitation in which
+                    case the server sends Forward Invitation Notification, default is 0.
 
   {send-uid} - an optional client-generated unique identifier string for the send
                if the SendMsg request is re-sent but the message has not been modified, the client should use
