@@ -92,8 +92,8 @@ public final class RFC822AddressTokenStreamTest {
 
     @Test
     public void limit() throws Exception {
-        TokenStream stream = new RFC822AddressTokenStream("<" + Strings.repeat("x.", 200) + "x@zimbra.com>");
-        Assert.assertEquals(100, ZimbraAnalyzerTest.toTokens(stream).size());
+        TokenStream stream = new RFC822AddressTokenStream("<" + Strings.repeat("x.", 600) + "x@zimbra.com>");
+        Assert.assertEquals(512, ZimbraAnalyzerTest.toTokens(stream).size());
     }
 
     @Test
