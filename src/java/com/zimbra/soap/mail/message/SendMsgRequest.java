@@ -64,6 +64,14 @@ public class SendMsgRequest {
      */
     @XmlAttribute(name=MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP /* needCalendarSentByFixup */, required=false)
     private ZmBoolean needCalendarSentbyFixup;
+    
+    /**
+     * @zm-api-field-tag calendar-forward
+     * @zm-api-field-description Indicates whether this a forward of calendar invitation in which
+     * case the server sends Forward Invitation Notification, default is unset.
+     */
+    @XmlAttribute(name=MailConstants.A_IS_CALENDAR_FORWARD /* isCalendarForward */, required=false)
+    private ZmBoolean isCalendarForward;
 
     /**
      * @zm-api-field-tag no-save
@@ -93,12 +101,18 @@ public class SendMsgRequest {
     public void setNeedCalendarSentbyFixup(Boolean needCalendarSentbyFixup) {
         this.needCalendarSentbyFixup = ZmBoolean.fromBool(needCalendarSentbyFixup);
     }
+    
+    public void setIsCalendarForward(Boolean isCalendarForward) {
+        this.isCalendarForward = ZmBoolean.fromBool(isCalendarForward);
+    }
+
     public void setNoSaveToSent(Boolean noSaveToSent) {
         this.noSaveToSent = ZmBoolean.fromBool(noSaveToSent);
     }
     public void setSendUid(String sendUid) { this.sendUid = sendUid; }
     public void setMsg(MsgToSend msg) { this.msg = msg; }
     public Boolean getNeedCalendarSentbyFixup() { return ZmBoolean.toBool(needCalendarSentbyFixup); }
+    public Boolean getIsCalendarForward() { return ZmBoolean.toBool(isCalendarForward); }
     public Boolean getNoSaveToSent() { return ZmBoolean.toBool(noSaveToSent); }
     public String getSendUid() { return sendUid; }
     public MsgToSend getMsg() { return msg; }
@@ -106,6 +120,7 @@ public class SendMsgRequest {
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("needCalendarSentbyFixup", needCalendarSentbyFixup)
+            .add("isCalendarForward", isCalendarForward)
             .add("noSaveToSent", noSaveToSent)
             .add("sendUid", sendUid)
             .add("msg", msg);
