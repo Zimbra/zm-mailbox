@@ -927,6 +927,7 @@ public final class MailConstants {
     public static final String A_CAL_ALARM_INSTANCE_START = "alarmInstStart";
     public static final String A_CAL_INCLUDE_CONTENT = "includeContent";
     public static final String A_NEED_CALENDAR_SENTBY_FIXUP = "needCalendarSentByFixup";
+    public static final String A_IS_CALENDAR_FORWARD = "isCalendarForward";
     public static final String A_UID = "uid";
     public static final String A_SUMMARY = "summary";
     public static final String A_CAL_ID = "calItemId";
