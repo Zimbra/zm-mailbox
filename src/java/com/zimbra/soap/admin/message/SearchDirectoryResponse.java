@@ -46,17 +46,24 @@ import com.zimbra.soap.type.ZmBoolean;
 public class SearchDirectoryResponse {
 
     /**
+     * @zm-api-field-tag count number
+     * @zm-api-field-description number of counts
+     */
+    @XmlAttribute(name=AdminConstants.A_NUM, required=false)
+    private long num;
+
+    /**
      * @zm-api-field-tag more-flag
      * @zm-api-field-description <b>1 (true)</b> if more accounts left to return
      */
-    @XmlAttribute(name=AdminConstants.A_MORE, required=true)
+    @XmlAttribute(name=AdminConstants.A_MORE, required=false)
     private ZmBoolean more;
 
     /**
      * @zm-api-field-tag search-total
      * @zm-api-field-description Total number of accounts that matched search (not affected by limit/offset)
      */
-    @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
+    @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=false)
     private long searchTotal;
 
     /**
@@ -81,6 +88,10 @@ public class SearchDirectoryResponse {
             this.entries.addAll(entries);
         }
         return this;
+    }
+
+    public void setNum(long num) {
+        this.num = num;
     }
 
     public void setMore(boolean more) {

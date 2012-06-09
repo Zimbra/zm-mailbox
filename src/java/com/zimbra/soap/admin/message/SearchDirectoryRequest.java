@@ -106,6 +106,13 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
     private ZmBoolean sortAscending;
 
+    /**
+     * @zm-api-field-tag isCountOnly
+     * @zm-api-field-description Whether response should be count only. Default is <b>0 (false)</b> 
+     */
+    @XmlAttribute(name=AdminConstants.A_COUNT_ONLY, required=false)
+    private ZmBoolean isCountOnly;
+
     public SearchDirectoryRequest() {
     }
 
@@ -149,6 +156,10 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
         this.sortAscending = ZmBoolean.fromBool(sortAscending);
     }
 
+    public void setCountOnly(Boolean countOnly) {
+        this.isCountOnly = ZmBoolean.fromBool(countOnly);
+    }
+
     public String getQuery() { return query; }
     public Integer getMaxResults() { return maxResults; }
     public Integer getLimit() { return limit; }
@@ -159,4 +170,5 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
     public String getSortBy() { return sortBy; }
     public String getTypes() { return types; }
     public Boolean getSortAscending() { return ZmBoolean.toBool(sortAscending); }
+    public Boolean getCountOnly() {return ZmBoolean.toBool(isCountOnly); }
 }
