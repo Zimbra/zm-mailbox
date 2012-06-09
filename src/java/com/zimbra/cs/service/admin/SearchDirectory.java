@@ -90,10 +90,11 @@ public class SearchDirectory extends AdminDocumentHandler {
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, null);
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
+        boolean isCountOnly = request.getAttributeBool(AdminConstants.A_COUNT_ONLY, false);
 
         Set<SearchDirectoryOptions.ObjectType> objTypes = SearchDirectoryOptions.ObjectType.fromCSVString(types);
-        
-        // cannot specify a domain with the "coses" flag 
+
+        // cannot specify a domain with the "coses" flag
         if (objTypes.contains(SearchDirectoryOptions.ObjectType.coses) &&
             (domain != null)) {
             throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
@@ -179,32 +180,37 @@ public class SearchDirectory extends AdminDocumentHandler {
             accounts = prov.searchDirectory(options);
             accounts = rightChecker.getAllowed(accounts);
         }
-        
-        // use originally requested attrs for encoding
-        String[] origAttrs = origAttrsStr == null ? null : origAttrsStr.split(",");
-        Set<String> origReqAttrs = origAttrs == null ? null : new HashSet(Arrays.asList(origAttrs));
-        
-        int i, limitMax = offset+limit;
-        for (i=offset; i < limitMax && i < accounts.size(); i++) {
-            NamedEntry entry = (NamedEntry) accounts.get(i);
-            
-            boolean applyDefault = true;
-            
-            if (entry instanceof Account) {
-                applyDefault = applyCos;
-                setAccountDefaults((Account)entry);
-            } else if (entry instanceof Domain) {
-                applyDefault = applyConfig;
-            }
-            
-            encodeEntry(prov, response, entry, applyDefault, origReqAttrs, aac);
-        }          
 
-        response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
-        response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
+        if (isCountOnly) {
+            response.addAttribute(AdminConstants.A_NUM, accounts.size());
+        } else {
+            // use originally requested attrs for encoding
+            String[] origAttrs = origAttrsStr == null ? null : origAttrsStr.split(",");
+            Set<String> origReqAttrs = origAttrs == null ? null : new HashSet(Arrays.asList(origAttrs));
+
+            int i, limitMax = offset+limit;
+            for (i=offset; i < limitMax && i < accounts.size(); i++) {
+                NamedEntry entry = (NamedEntry) accounts.get(i);
+
+                boolean applyDefault = true;
+
+                if (entry instanceof Account) {
+                    applyDefault = applyCos;
+                    setAccountDefaults((Account)entry);
+                } else if (entry instanceof Domain) {
+                    applyDefault = applyConfig;
+                }
+
+                encodeEntry(prov, response, entry, applyDefault, origReqAttrs, aac);
+            }
+
+            response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
+            response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
+        }
+
         return response;
     }
-    
+
     private void setAccountDefaults(Account entry) throws ServiceException {
        
         Boolean isDefaultSet = (Boolean)entry.getCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA);

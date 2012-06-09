@@ -388,11 +388,11 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
 -----------------------------
 
 <SearchDirectoryRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"] [maxResults="..."]
-         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [types="{type}"]>
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [types="{type}"] [countOnly="{if-count-only}"]>
   <query>...</query>
 </SearchDirectoryRequest>
 
-<SearchDirectoryResponse more="{more-flag}" [searchTotal="{search-total}"]>
+<SearchDirectoryResponse [num={number-count}] [more="{more-flag}"] [searchTotal="{search-total}"]>
   <account name="{name}" id="{id}" isExternal="1|0">
     <a n="...">...</a>+
   </account>*
