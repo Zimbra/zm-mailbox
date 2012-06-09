@@ -1351,4 +1351,6 @@ public final class AdminConstants {
 
     //StoreManager verification
     public static final String A_CHECK_BLOBS = "checkBlobs";
+
+    public static final String A_COUNT_ONLY = "countOnly";
 }
