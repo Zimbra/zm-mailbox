@@ -118,7 +118,8 @@ public class UrlNamespace {
         if (uc.user == null || uc.path == null)
             throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
         DavResource rs = getResourceAt(ctxt, uc.user, uc.path);
-        rs.mUri = uc.path;
+        if (rs != null)
+            rs.mUri = uc.path;
         return rs;
     }
 
