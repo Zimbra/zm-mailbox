@@ -193,6 +193,7 @@ public class GalSearchControl {
                     logCurrentSyncClients();
                     // return "no change".
                     mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+                    mParams.getResultCallback().setThrottled(true);
                     return;
                 }
                 if (galAcct == null)
