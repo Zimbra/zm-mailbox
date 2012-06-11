@@ -840,6 +840,7 @@ public final class MailConstants {
     public static final String A_CALENDAR_CUTOFF = "calCutoff";
     public static final String A_MSG_CUTOFF = "msgCutoff";
     public static final String A_GAL_DEFINITION_LAST_MODIFIED = "galDefinitionLastModified";
+    public static final String A_GALSYNC_THROTTLED = "throttled";
 
     // filter rules
     public static final String A_LHS = "k0";
