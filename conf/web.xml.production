@@ -197,6 +197,15 @@
   </servlet>
 
   <servlet>
+    <servlet-name>WsdlServlet</servlet-name>
+    <servlet-class>com.zimbra.soap.WsdlServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
     <servlet-name>ContentServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.ContentServlet</servlet-class>
     <init-param>
@@ -424,6 +433,11 @@
   <servlet-mapping>
     <servlet-name>AdminServlet</servlet-name>
     <url-pattern>/admin/soap/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>WsdlServlet</servlet-name>
+    <url-pattern>/wsdl/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
