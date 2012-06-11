@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,18 +23,16 @@ public final class WsdlServiceInfo implements Comparable<WsdlServiceInfo> {
 
     private static final String zcsServiceName = "zcsService";
     private static final String zcsAdminServiceName = "zcsAdminService";
-    private static final String localhostSoapHttpURL = "http://localhost:7070/service/soap";
-    private static final String localhostSoapAdminHttpsURL = "https://localhost:7071/service/admin/soap";
+    public static final String localhostSoapHttpURL = "http://localhost:7070/service/soap";
+    public static final String localhostSoapAdminHttpsURL = "https://localhost:7071/service/admin/soap";
     private static final String zcsPortTypeName = "zcsPortType";
     private static final String zcsAdminPortTypeName = "zcsAdminPortType";
     private static final String zcsBindingName = "zcsPortBinding";
     private static final String zcsAdminBindingName = "zcsAdminPortBinding";
     
-    public static WsdlServiceInfo zcsService = WsdlServiceInfo.create(
-            zcsServiceName, localhostSoapHttpURL, zcsPortTypeName, zcsBindingName);
-    public static WsdlServiceInfo zcsAdminService = WsdlServiceInfo.create(
-            zcsAdminServiceName, localhostSoapAdminHttpsURL, zcsAdminPortTypeName, zcsAdminBindingName);
-
+    public static WsdlServiceInfo zcsService = WsdlServiceInfo.createForSoap(localhostSoapHttpURL);
+    public static WsdlServiceInfo zcsAdminService = WsdlServiceInfo.createForAdmin(localhostSoapAdminHttpsURL);
+    
     private String serviceName;
     private String soapAddressURL;
     private String portTypeName;
@@ -47,8 +45,12 @@ public final class WsdlServiceInfo implements Comparable<WsdlServiceInfo> {
         this.bindingName = bindingName;
     }
 
-    public static WsdlServiceInfo create(String svcName, String soapAddressURL, String portTypeName, String bindingName) {
-        return new WsdlServiceInfo(svcName, soapAddressURL, portTypeName, bindingName);
+    public static WsdlServiceInfo createForAdmin(String soapAddressURL) {
+        return new WsdlServiceInfo(zcsAdminServiceName, soapAddressURL, zcsAdminPortTypeName, zcsAdminBindingName);
+    }
+
+    public static WsdlServiceInfo createForSoap(String soapAddressURL) {
+        return new WsdlServiceInfo(zcsServiceName, soapAddressURL, zcsPortTypeName, zcsBindingName);
     }
 
     public String getSoapAddressURL() {
