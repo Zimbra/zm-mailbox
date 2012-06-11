@@ -273,6 +273,11 @@ public final class DbSearch {
             sql.append("mi.mailbox_id = ? AND ");
             params.add(mailbox.getId());
         }
+        //Bug: 74521
+        //for rcptAsc order make sure that the RECIPIENTS col is NOT null
+        if (sort != null && sort.equals(SortBy.RCPT_ASC)) {
+            sql.append("(mi.recipients is NOT NULL) AND ");
+        }
         if (joinAppt) {
             if (!DebugConfig.disableMailboxGroups) {
                 sql.append("mi.mailbox_id = ap.mailbox_id AND ");
