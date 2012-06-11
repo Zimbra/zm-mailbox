@@ -1459,7 +1459,8 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
-        boolean organizerChanged = organizerChangeCheck(newInvite, isCancel);
+        // Do not allow organizer to be changed. (bug 74400)
+        boolean organizerChanged = organizerChangeCheck(newInvite, true);
         ZOrganizer newOrganizer = newInvite.getOrganizer();
 
         // If we got a cancel request, check if this cancel will result in canceling the entire appointment.
