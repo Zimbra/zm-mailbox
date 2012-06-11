@@ -86,6 +86,30 @@ public class WaitSetMgr {
      */
     public static Pair<String, List<WaitSetError>> create(String ownerAccountId, boolean allowMultiple,
             Set<MailItem.Type> defaultInterest, boolean allAccts, List<WaitSetAccount> add) throws ServiceException {
+
+        // generate an appropriate ID for the new WaitSet
+        String id;
+        if (allAccts) {
+//                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
+            id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
+        } else {
+            id = "WaitSet-"+LdapUtil.generateUUID();
+        }
+
+        // create the proper kind of WaitSet
+        WaitSetBase ws;
+        List<WaitSetError> errors = null;
+        if (allAccts) {
+            AllAccountsWaitSet aws = AllAccountsWaitSet.create(ownerAccountId, id, defaultInterest);
+            ws = aws;
+            errors = new ArrayList<WaitSetError>();
+        } else {
+            SomeAccountsWaitSet sws = new SomeAccountsWaitSet(ownerAccountId, id, defaultInterest);
+            errors = sws.addAccounts(add);
+            MailboxManager.getInstance().addListener(sws);
+            ws = sws;
+        }
+
         synchronized(sWaitSets) {
             if (!allowMultiple) {
                 List<String> list = sWaitSetsByAccountId.get(ownerAccountId);
@@ -95,8 +119,8 @@ public class WaitSetMgr {
                         long oldestTime = Long.MAX_VALUE;
                         String oldestId = null;
                         for (String wsid : list) {
-                            WaitSetBase ws = lookupInternal(wsid);
-                            long time = ws.getLastAccessedTime();
+                            WaitSetBase existingWs = lookupInternal(wsid);
+                            long time = existingWs.getLastAccessedTime();
                             if (time < oldestTime) {
                                 oldestTime = time;
                                 oldestId = wsid;
@@ -105,29 +129,6 @@ public class WaitSetMgr {
                         destroy(null, ownerAccountId, oldestId);
                     }
                 }
-            }
-
-            // generate an appropriate ID for the new WaitSet
-            String id;
-            if (allAccts) {
-//                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
-                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
-            } else {
-                id = "WaitSet-"+LdapUtil.generateUUID();
-            }
-
-            // create the proper kind of WaitSet
-            WaitSetBase ws;
-            List<WaitSetError> errors = null;
-            if (allAccts) {
-                AllAccountsWaitSet aws = AllAccountsWaitSet.create(ownerAccountId, id, defaultInterest);
-                ws = aws;
-                errors = new ArrayList<WaitSetError>();
-            } else {
-                SomeAccountsWaitSet sws = new SomeAccountsWaitSet(ownerAccountId, id, defaultInterest);
-                errors = sws.addAccounts(add);
-                MailboxManager.getInstance().addListener(sws);
-                ws = sws;
             }
 
             // bookkeeping: update access time, add to static wait set maps
@@ -148,7 +149,7 @@ public class WaitSetMgr {
 
     /**
      * Destroy the referenced WaitSet.
-     * 
+     *
      * @param zsc ZimbraSoapContext or permission checking.  If null, permission checking is skipped
      * @param requestingAcctId
      * @param id
@@ -170,7 +171,7 @@ public class WaitSetMgr {
                     checkRightForOwnerAccount(ws, requestingAcctId);
                 }
             }
-            
+
             //remove from the by-id map
             List<String> list = sWaitSetsByAccountId.get(ws.getOwnerAccountId());
             assert(list != null);
@@ -331,7 +332,7 @@ public class WaitSetMgr {
                 activeSets, activeSessions, withCallback);
         }
     }
-    
+
     /*
      * ensure that the authenticated account is allowed to create/destroy/access a waitset on
      * all accounts
@@ -339,21 +340,21 @@ public class WaitSetMgr {
     public static void checkRightForAllAccounts(ZimbraSoapContext zsc) throws ServiceException {
         AdminDocumentHandler.checkRight(zsc, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
     }
-    
+
     /*
-     * ensure that the authenticated account must be able to access the additionally specified 
-     * account in order to add/delete it to/from a waitset 
+     * ensure that the authenticated account must be able to access the additionally specified
+     * account in order to add/delete it to/from a waitset
      */
-    public static void checkRightForAdditionalAccount(String acctId, ZimbraSoapContext zsc) 
+    public static void checkRightForAdditionalAccount(String acctId, ZimbraSoapContext zsc)
     throws ServiceException {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.id, acctId);
         if (acct == null)
             throw ServiceException.DEFEND_ACCOUNT_HARVEST(acctId);
-            
+
         if (!AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), acct, zsc.isUsingAdminPrivileges()))
             throw ServiceException.PERM_DENIED("cannot access account " + acct.getName());
     }
-    
+
     /*
      * ensure that the requesting account must be the owner(creator) of the waitset
      */

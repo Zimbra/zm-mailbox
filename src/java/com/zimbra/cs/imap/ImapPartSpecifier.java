@@ -116,13 +116,14 @@ class ImapPartSpecifier {
     }
 
     void write(PrintStream ps, OutputStream os, Object obj) throws IOException, BinaryDecodingException, ServiceException {
-        Pair<Long, InputStream> contents = getContent(obj);
-        InputStream is = contents == null ? null : contents.getSecond();
-        long length = contents == null ? -1 : contents.getFirst();
-
-        ps.print(this);  ps.write(' ');
-
+        InputStream is = null;
         try {
+            Pair<Long, InputStream> contents = getContent(obj);
+            is = contents == null ? null : contents.getSecond();
+            long length = contents == null ? -1 : contents.getFirst();
+
+            ps.print(this);  ps.write(' ');
+
             if (is == null) {
                 ps.print("NIL");
             } else if (mCommand.equals("BINARY.SIZE")) {

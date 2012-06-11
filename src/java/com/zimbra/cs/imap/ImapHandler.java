@@ -2070,7 +2070,7 @@ abstract class ImapHandler {
                 ImapPath path = relativeTo == null ? new ImapPath(owner, folder, credentials) :
                     new ImapPath(owner, folder, relativeTo);
                 if (path.isVisible()) {
-                    if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME) 
+                    if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME)
                         && folder.isTagged(Flag.FlagInfo.SYNCFOLDER)) {
                         //bug 72577 - do not display folders synced with IMAP datasource to downstream IMAP datasource connections
                         continue;
@@ -3632,75 +3632,70 @@ abstract class ImapHandler {
                 boolean empty = true;
                 MailItem item = null;
                 MimeMessage mm;
-                try {
-                    if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                        mbox.lock.lock();
-                        try {
-                            item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
-                        } catch (NoSuchItemException nsie) {
-                            // just in case we're out of sync, force this message back into sync
-                            i4folder.markMessageExpunged(i4msg);
-                            fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
-                            continue;
-                        }
+                if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
+                    try {
+                        item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                    } catch (NoSuchItemException nsie) {
+                        // just in case we're out of sync, force this message back into sync
+                        i4folder.markMessageExpunged(i4msg);
+                        fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
+                        continue;
                     }
+                }
 
-                    if ((attributes & FETCH_UID) != 0) {
-                        result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);
-                        empty = false;
-                    }
-                    if ((attributes & FETCH_INTERNALDATE) != 0) {
-                        result.print((empty ? "" : " ") + "INTERNALDATE \"" +
-                                DateUtil.toImapDateTime(new Date(item.getDate())) + '"');
-                        empty = false;
-                    }
-                    if ((attributes & FETCH_RFC822_SIZE) != 0) {
-                        result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));
-                        empty = false;
-                    }
-                    if ((attributes & FETCH_BINARY_SIZE) != 0) {
-                        result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));
-                        empty = false;
-                    }
+                if ((attributes & FETCH_UID) != 0) {
+                    result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);
+                    empty = false;
+                }
+                if ((attributes & FETCH_INTERNALDATE) != 0) {
+                    result.print((empty ? "" : " ") + "INTERNALDATE \"" +
+                            DateUtil.toImapDateTime(new Date(item.getDate())) + '"');
+                    empty = false;
+                }
+                if ((attributes & FETCH_RFC822_SIZE) != 0) {
+                    result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));
+                    empty = false;
+                }
+                if ((attributes & FETCH_BINARY_SIZE) != 0) {
+                    result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));
+                    empty = false;
+                }
 
-                    if (!fullMessage.isEmpty()) {
-                        for (ImapPartSpecifier pspec : fullMessage) {
-                            result.print(empty ? "" : " ");
-                            pspec.write(result, output, item);
-                            empty = false;
-                        }
+                if (!fullMessage.isEmpty()) {
+                    for (ImapPartSpecifier pspec : fullMessage) {
+                        result.print(empty ? "" : " ");
+                        pspec.write(result, output, item);
+                        empty = false;
                     }
+                }
 
-                    if ((parts != null && !parts.isEmpty()) || (attributes & FETCH_FROM_MIME) != 0) {
-                        mm = ImapMessage.getMimeMessage(item);
-                        if ((attributes & FETCH_BODY) != 0) {
+                if ((parts != null && !parts.isEmpty()) || (attributes & FETCH_FROM_MIME) != 0) {
+                    mm = ImapMessage.getMimeMessage(item);
+                    if ((attributes & FETCH_BODY) != 0) {
+                        result.print(empty ? "" : " ");
+                        result.print("BODY ");
+                        ImapMessage.serializeStructure(result, mm, false);
+                        empty = false;
+                    }
+                    if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
+                        result.print(empty ? "" : " ");
+                        result.print("BODYSTRUCTURE ");
+                        ImapMessage.serializeStructure(result, mm, true);
+                        empty = false;
+                    }
+                    if ((attributes & FETCH_ENVELOPE) != 0) {
+                        result.print(empty ? "" : " ");
+                        result.print("ENVELOPE ");
+                        ImapMessage.serializeEnvelope(result, mm);
+                        empty = false;
+                    }
+                    if (parts != null) {
+                        for (ImapPartSpecifier pspec : parts) {
                             result.print(empty ? "" : " ");
-                            result.print("BODY ");
-                            ImapMessage.serializeStructure(result, mm, false);
+                            pspec.write(result, output, mm);
                             empty = false;
-                        }
-                        if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
-                            result.print(empty ? "" : " ");
-                            result.print("BODYSTRUCTURE ");
-                            ImapMessage.serializeStructure(result, mm, true);
-                            empty = false;
-                        }
-                        if ((attributes & FETCH_ENVELOPE) != 0) {
-                            result.print(empty ? "" : " ");
-                            result.print("ENVELOPE ");
-                            ImapMessage.serializeEnvelope(result, mm);
-                            empty = false;
-                        }
-                        if (parts != null) {
-                            for (ImapPartSpecifier pspec : parts) {
-                                result.print(empty ? "" : " ");
-                                pspec.write(result, output, mm);
-                                empty = false;
-                            }
                         }
                     }
-                } finally {
-                    mbox.lock.release();
                 }
 
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
@@ -3728,12 +3723,20 @@ abstract class ImapHandler {
                 result = null;
                 throw new ImapParseException(tag, "UNKNOWN-CTE", command + "failed: unknown content-type-encoding", false);
             } catch (ServiceException e) {
-                ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
-                continue;
+                Throwable cause = e.getCause();
+                if (cause instanceof IOException) {
+                    fetchException(cause);
+                } else {
+                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
+                    continue;
+                }
             } catch (MessagingException e) {
                 ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                 continue;
-            } finally {
+            } catch (IOException ioe) {
+                fetchException(ioe);
+            }
+            finally {
                 if (result != null) {
                     result.write(')');
                     output.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
@@ -3747,6 +3750,15 @@ abstract class ImapHandler {
             sendOK(tag, command + " completed");
         }
         return true;
+    }
+
+    private void fetchException(Throwable cause) throws ImapIOException {
+        if (ZimbraLog.imap.isDebugEnabled()) {
+            ZimbraLog.imap.debug("IOException fetching IMAP message, closing connection",cause);
+        } else {
+            ZimbraLog.imap.warn("IOException fetching IMAP message, closing connection");
+        }
+        throw new ImapIOException("IOException during message fetch", cause);
     }
 
     private void fetchStub(ImapMessage i4msg, ImapFolder i4folder, int attributes, List<ImapPartSpecifier> parts, List<ImapPartSpecifier> fullMessage, PrintStream result)
