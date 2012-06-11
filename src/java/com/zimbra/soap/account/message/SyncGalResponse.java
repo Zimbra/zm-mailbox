@@ -62,6 +62,14 @@ public class SyncGalResponse {
      */
     @XmlAttribute(name=MailConstants.A_GAL_DEFINITION_LAST_MODIFIED /* galDefinitionLastModified */, required=false)
     private String galDefinitionLastModified;
+    
+    /**
+     * @zm-api-field-tag throttled-flag
+     * @zm-api-field-description True if the SyncGal request is throttled
+     */
+    @XmlAttribute(name=MailConstants.A_GALSYNC_THROTTLED /* throttled */, required=false)
+    private ZmBoolean throttled;
+    
     /**
      * @zm-api-field-description Details of contact.  For element names <b>&lt;deleted</b> - gives details of deleted
      * entries.
@@ -78,6 +86,7 @@ public class SyncGalResponse {
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
     public void setGalDefinitionLastModified(String timestamp) { this.galDefinitionLastModified = timestamp; }
+    public void setThrottled(Boolean throttled) { this.throttled = ZmBoolean.fromBool(throttled); }
     public void setHits(Iterable <Object> hits) {
         this.hits.clear();
         if (hits != null) {
@@ -90,6 +99,7 @@ public class SyncGalResponse {
     }
 
     public Boolean getMore() { return ZmBoolean.toBool(more); }
+    public Boolean getThrottled() { return ZmBoolean.toBool(throttled); }
     public String getToken() { return token; }
     public String getGalDefinitionLastModified() { return galDefinitionLastModified; }
     public List<Object> getHits() {
@@ -102,6 +112,7 @@ public class SyncGalResponse {
             .add("more", more)
             .add("token", token)
             .add("galDefinitionLastModified", galDefinitionLastModified)
+            .add("throttled", throttled)
             .add("hits", hits);
     }
 
