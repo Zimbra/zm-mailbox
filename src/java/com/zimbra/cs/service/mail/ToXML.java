@@ -2006,8 +2006,8 @@ public final class ToXML {
             Reader reader = null;
 
             try {
-                if (charset != null && !charset.trim().equals("")) {
-                    stream = mp.getInputStream();
+                stream = mp.getInputStream();
+                if (charset != null && !charset.trim().isEmpty()) {
                     // make sure to feed getTextReader() a full Content-Type header, not just the primary/subtype portion
                     reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                     BrowserDefang defanger = DefangFactory.getDefanger(mp.getContentType());
@@ -2017,13 +2017,12 @@ public final class ToXML {
                     String cte = mp.getEncoding();
                     if (cte != null && !cte.trim().toLowerCase().equals(MimeConstants.ET_7BIT)) {
                         try {
-                            stream = mp.getInputStream();
                             DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
                             data = sw.toString();
                         } catch (IOException ioe) { }
                     }
                     if (data == null) {
-                        reader = Mime.getContentAsReader(mp, defaultCharset);
+                        reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                         DefangFactory.getDefanger(ctype).defang(reader, neuter, out);
                         data = sw.toString();
                     }
@@ -2032,29 +2031,43 @@ public final class ToXML {
                 if (tw != null) {
                     wasTruncated = tw.wasTruncated();
                 }
-                Closeables.closeQuietly(stream);
+                ByteUtil.closeStream(stream);
                 Closeables.closeQuietly(reader);
             }
         } else if (ctype.equals(MimeConstants.CT_TEXT_ENRICHED)) {
             // Enriched text handling is a little funky because TextEnrichedHandler
             // doesn't use Reader and Writer.  As a result, we truncate
             // the source before converting to HTML.
-            Reader reader = Mime.getContentAsReader(mp, defaultCharset);
-            int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
-            String enriched = ByteUtil.getContent(reader, maxChars, true);
-            if (enriched.length() == maxChars) {
-                // The normal check for truncated data won't work because
-                // the length of the converted text is different than the length
-                // of the source, so set the attr here.
-                wasTruncated = true;
+            InputStream stream = mp.getInputStream();
+            Reader reader = null;
+            try {
+                reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
+                String enriched = ByteUtil.getContent(reader, maxChars, false);
+                if (enriched.length() == maxChars) {
+                    // The normal check for truncated data won't work because
+                    // the length of the converted text is different than the length
+                    // of the source, so set the attr here.
+                    wasTruncated = true;
+                }
+                data = TextEnrichedHandler.convertToHTML(enriched);
+            } finally {
+                ByteUtil.closeStream(stream);
+                Closeables.closeQuietly(reader);
             }
-            data = TextEnrichedHandler.convertToHTML(enriched);
         } else {
-            Reader reader = Mime.getContentAsReader(mp, defaultCharset);
-            int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
-            data = ByteUtil.getContent(reader, maxChars, true);
-            if (data.length() == maxChars) {
-                wasTruncated = true;
+            InputStream stream = mp.getInputStream();
+            Reader reader = null;
+            try {
+                reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
+                data = ByteUtil.getContent(reader, maxChars, false);
+                if (data.length() == maxChars) {
+                    wasTruncated = true;
+                }
+            } finally {
+                ByteUtil.closeStream(stream);
+                Closeables.closeQuietly(reader);
             }
         }
 

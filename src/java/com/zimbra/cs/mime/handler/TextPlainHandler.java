@@ -15,6 +15,7 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 
 import javax.activation.DataSource;
@@ -52,12 +53,17 @@ public class TextPlainHandler extends MimeHandler {
     protected String getContentImpl() throws MimeHandlerException {
         if (content == null) {
             DataSource source = getDataSource();
-            String ctype = source.getContentType();
-            try {
-                Reader reader = Mime.getTextReader(source.getInputStream(), ctype, getDefaultCharset());
-                content = ByteUtil.getContent(reader, MimeHandlerManager.getIndexedTextLimit(), true);
-            } catch (IOException e) {
-                throw new MimeHandlerException(e);
+            if (source != null) {
+                String ctype = source.getContentType();
+                InputStream is = null;
+                try {
+                    Reader reader = Mime.getTextReader(is = source.getInputStream(), ctype, getDefaultCharset());
+                    content = ByteUtil.getContent(reader, MimeHandlerManager.getIndexedTextLimit(), false);
+                } catch (IOException e) {
+                    throw new MimeHandlerException(e);
+                } finally {
+                    ByteUtil.closeStream(is);
+                }
             }
         }
         if (content == null) {
