@@ -158,8 +158,8 @@ public final class RFC822AddressTokenStream extends TokenStream {
     }
 
     private void add(String token) {
-        if (token.length() <= LC.zimbra_index_RFC822Address_max_token_length.intValue() &&
-                tokens.size() < LC.zimbra_index_RFC822Address_max_token_count.intValue()) {
+        if (token.length() <= LC.zimbra_index_rfc822address_max_token_length.intValue() &&
+                tokens.size() < LC.zimbra_index_rfc822address_max_token_count.intValue()) {
             tokens.add(token);
         }
     }
