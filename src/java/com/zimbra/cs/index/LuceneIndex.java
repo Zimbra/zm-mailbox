@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -96,6 +97,11 @@ public final class LuceneIndex implements IndexStore {
                              // should ideally be avoided by using google "Optional" collection.
             }
         });
+    
+    // Bug: 60631
+    // cache lucene index of GAL sync account separately with no automatic eviction
+    private static final ConcurrentHashMap<Integer, IndexSearcherImpl> GAL_SEARCHER_CACHE =
+        new ConcurrentHashMap<Integer, IndexSearcherImpl> ();
 
     private final Mailbox mailbox;
     private final LuceneDirectory luceneDirectory;
@@ -158,7 +164,11 @@ public final class LuceneIndex implements IndexStore {
     public synchronized void deleteIndex() throws IOException {
         assert(writerRef == null);
         ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
-        SEARCHER_CACHE.asMap().remove(mailbox.getId());
+        if (mailbox.isGalSyncMailbox()) {
+            Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId()));
+        } else {
+            SEARCHER_CACHE.asMap().remove(mailbox.getId());
+        }
 
         String[] files;
         try {
@@ -181,7 +191,8 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public synchronized void warmup() {
-        if (SEARCHER_CACHE.asMap().containsKey(mailbox.getId())) {
+        if (SEARCHER_CACHE.asMap().containsKey(mailbox.getId()) ||
+                GAL_SEARCHER_CACHE.contains(mailbox.getId())) {
             return; // already warmed up
         }
         long start = System.currentTimeMillis();
@@ -203,7 +214,11 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public void evict() {
-        SEARCHER_CACHE.asMap().remove(mailbox.getId());
+        if (mailbox.isGalSyncMailbox()) {
+            Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId())); 
+        } else {
+            SEARCHER_CACHE.asMap().remove(mailbox.getId());
+        }
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -291,7 +306,11 @@ public final class LuceneIndex implements IndexStore {
     public synchronized IndexSearcher openSearcher() throws IOException {
         IndexSearcherImpl searcher = null;
         try {
-            searcher = SEARCHER_CACHE.get(mailbox.getId());
+            if (mailbox.isGalSyncMailbox()) {
+                searcher = GAL_SEARCHER_CACHE.get(mailbox.getId());
+            } else {
+                searcher = SEARCHER_CACHE.get(mailbox.getId());
+            }
         } catch (Exception e) {
             if (!(e instanceof NullPointerException))
                 ZimbraLog.search.warn(e);
@@ -326,7 +345,11 @@ public final class LuceneIndex implements IndexStore {
 
         ZimbraLog.search.debug("OpenLuceneSearcher %s,elapsed=%d", searcher, System.currentTimeMillis() - start);
         searcher.inc();
-        SEARCHER_CACHE.asMap().put(mailbox.getId(), searcher);
+        if (mailbox.isGalSyncMailbox()) {
+            Closeables.closeQuietly(GAL_SEARCHER_CACHE.put(mailbox.getId(), searcher));
+        } else {
+            SEARCHER_CACHE.asMap().put(mailbox.getId(), searcher);
+        }
         return searcher;
     }
 
@@ -686,6 +709,11 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public void destroy() {
             SEARCHER_CACHE.asMap().clear();
+            
+            for (IndexSearcherImpl searcher : GAL_SEARCHER_CACHE.values()) {
+                Closeables.closeQuietly(searcher);
+            }
+            GAL_SEARCHER_CACHE.clear();
         }
     }
 
@@ -701,7 +729,11 @@ public final class LuceneIndex implements IndexStore {
             writer.index.commitWriter();
             IndexSearcher searcher = null;
             try {
-                searcher = SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
+                if (writer.getIndex().mailbox.isGalSyncMailbox()) {
+                    searcher = GAL_SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
+                } else {
+                    searcher = SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
+                }
             } catch (Exception e) {
                 if (!(e instanceof NullPointerException))
                     ZimbraLog.search.warn(e);
@@ -709,12 +741,18 @@ public final class LuceneIndex implements IndexStore {
             if (searcher != null) {
                 IndexReader newReader = searcher.getIndexReader().reopen(true);
                 if (newReader != searcher.getIndexReader()) {
-                    // Bug: 69870
-                    // No need to close the previous value associated with the key here.
-                    // CacheBuilder sends a callback using removalListener onRemoval(..)
-                    // which eventually closes IndexSearcher
-                    SEARCHER_CACHE.asMap().put(writer.getIndex().mailbox.getId(),
+                    if (writer.getIndex().mailbox.isGalSyncMailbox()) {
+                        //make sure that we close the previous value associated with the key
+                        Closeables.closeQuietly(GAL_SEARCHER_CACHE.put(writer.getIndex().mailbox.getId(),
+                                new IndexSearcherImpl(newReader)));
+                    } else {
+                        // Bug: 69870
+                        // No need to close the previous value associated with the key here.
+                        // CacheBuilder sends a callback using removalListener onRemoval(..)
+                        // which eventually closes IndexSearcher
+                        SEARCHER_CACHE.asMap().put(writer.getIndex().mailbox.getId(),
                             new IndexSearcherImpl(newReader));
+                    }
                 }
             }
         }
