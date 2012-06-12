@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.zimbra.common.util.BEncoding.BEncodingException;
 
 /**
  * A thread-safe file cache.  Files are stored in the filesystem.  The cache
@@ -261,10 +262,13 @@ public class FileCache<K> {
 
                     // Parse keys.
                     String keysString = props.getProperty(PROP_KEYS, "");
-                    for (String keyString : keysString.split(",")) {
+                    List<String> keyList = BEncoding.decode(keysString);
+                    for (String keyString : keyList) {
                         keys.add(keyParser.parse(keyString));
                     }
                 } catch (IOException e) {
+                    log.warn("Unable to load %s", propFile, e);
+                } catch (BEncodingException e) {
                     log.warn("Unable to load %s", propFile, e);
                 } finally {
                     ByteUtil.closeStream(in);
@@ -439,24 +443,15 @@ public class FileCache<K> {
     private synchronized Properties makeProperties(K newKey, Map<String, String> userProps, String digest) {
         Properties props = new Properties();
 
-        // Add digest and keys.
-        StringBuilder keysValue = new StringBuilder();
-        boolean firstTime = true;
-        Set<K> keys = Sets.newHashSet(digestToKeys.get(digest));
-        keys.add(newKey);
-        for (K key : keys) {
-            String s = key.toString();
-            if (s.contains(",")) {
-                throw new IllegalStateException("Invalid key '" + s + "'.  Key values cannot contain a comma.");
-            }
-            if (firstTime) {
-                firstTime = false;
-            } else {
-                keysValue.append(',');
-            }
-            keysValue.append(s);
+        // Add digest and keys.  We need to convert the keys to strings, since BEncoding
+        // encodes a list of strings differently than a list of integers.
+        List<String> keys = Lists.newArrayList();
+        for (K key : digestToKeys.get(digest)) {
+            keys.add(key.toString());
         }
-        props.put(PROP_KEYS, keysValue.toString());
+        keys.add(newKey.toString());
+        String encoded = BEncoding.encode(keys);
+        props.put(PROP_KEYS, encoded);
 
         // Add user properties.
         if (userProps == null) {

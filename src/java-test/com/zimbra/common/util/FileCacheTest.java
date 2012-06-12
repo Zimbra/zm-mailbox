@@ -33,9 +33,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.FileCache;
-import com.zimbra.common.util.FileUtil;
 
 public class FileCacheTest {
 
@@ -279,13 +276,13 @@ public class FileCacheTest {
         assertFalse(dataFile.exists());
         assertFalse(propFile.exists());
     }
-    
+
     @Test
     public void cleanUpFiles() throws IOException {
         cleanUpFiles(true); //make sure expiration works in both cases
         cleanUpFiles(false); //also confirm by proxy that non-persistent cache is not writing propFiles
     }
-    
+
     private void storePersistentCache() throws IOException {
         FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, true).build();
         byte[] data = getRandomBytes(100);
@@ -309,7 +306,7 @@ public class FileCacheTest {
     @Test
     public void reload() throws IOException {
         storePersistentCache();
-        
+
         // Reload cache and compare content.
         FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, true).build();
         assertEquals(1, cache.getNumFiles());
@@ -322,21 +319,37 @@ public class FileCacheTest {
 
         assertEquals(item, cache.get(2));
     }
-    
+
     @Test
     public void reloadEmpty() throws IOException {
         storePersistentCache();
 
-        // build cache with persistent - false. it must contain no entries 
+        // build cache with persistent - false. it must contain no entries
         FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
 
         assertEquals(0, cache.getNumFiles());
         assertEquals(0, cache.getNumKeys());
         File dataDir = new File(tmpDir, "data");
         File propDir = new File(tmpDir, "properties");
-        
+
         assertEquals(0, dataDir.list().length);
         assertEquals(0, propDir.list().length);
+    }
+
+    @Test
+    public void testKeyWithComma() throws IOException {
+        FileCache<String> cache = FileCache.Builder.createWithStringKey(tmpDir, true).build();
+        byte[] data = getRandomBytes(100);
+        String key1 = "a,b";
+        String key2 = "c,d";
+        cache.put(key1, new ByteArrayInputStream(data));
+        cache.put(key2, new ByteArrayInputStream(data));
+
+        assertTrue(cache.contains(key1));
+        assertTrue(cache.contains(key2));
+        FileCache.Item item = cache.get(key1);
+        assertEquals(item, cache.get(key2));
+        assertArrayEquals(data, ByteUtil.getContent(item.file));
     }
 
     private static byte[] getRandomBytes(int size) {
