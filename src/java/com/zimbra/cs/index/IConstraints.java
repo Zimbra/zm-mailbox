@@ -29,7 +29,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  * DB-backed data in a search request.
  * 
  */
-interface IConstraints extends DbSearchConstraintsNode, Cloneable {
+public interface IConstraints extends DbSearchConstraintsNode, Cloneable {
     
 	/**
      * Used during query optimization: the optimizer is saying "make sure this query subtree

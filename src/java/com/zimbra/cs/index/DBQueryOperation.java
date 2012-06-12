@@ -42,6 +42,7 @@ import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxSearchHelper;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
@@ -707,29 +708,10 @@ public class DBQueryOperation extends QueryOperation {
         return context.getResults().getSortBy();
     }
 
-    private void fetch(final List<SearchResult> results, final Connection conn,
+    private void fetch(final List<SearchResult> results,
             final SortBy sort, final int offset, final int size) throws ServiceException {
         final boolean inDumpster = searchInDumpster();
-        // if fetching items, do it within a mailbox transaction.
-        if (mExtra == SearchResult.ExtraData.MAIL_ITEM) {
-            context.getMailbox().execute(new Mailbox.TransactionCallback() {
-                @Override
-                protected void doInTransaction(Mailbox mbox) throws ServiceException {
-                    DbSearch.search(results, conn, mConstraints, mbox, sort,
-                            offset, size, mExtra, inDumpster);
-                    // convert to MailItem before leaving this transaction
-                    // otherwise you can poison MailItem cache with stale data
-                    for (SearchResult result : results) {
-                        //TODO refactor extraData because it's not type safe
-                        result.extraData = toItem(
-                                (MailItem.UnderlyingData) result.extraData);
-                    }
-                }
-            });
-        } else {
-            DbSearch.search(results, conn, mConstraints, context.getMailbox(),
-                    sort, offset, size, mExtra, inDumpster);
-        }
+        MailboxSearchHelper.fetch(results, context.getMailbox(), sort, offset, size, mConstraints, mExtra, inDumpster);
     }
 
     private boolean shouldExecuteDbFirst() throws ServiceException {
@@ -746,13 +728,21 @@ public class DBQueryOperation extends QueryOperation {
         return mConstraints.tryDbFirst(context.getMailbox());
     }
 
-    private void noLuceneGetNextChunk(Connection conn, SortBy sort) throws ServiceException {
+    private void noLuceneGetNextChunk(SortBy sort) throws ServiceException {
         if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
-            mSizeEstimate = DbSearch.countResults(conn, mConstraints,
-                    context.getMailbox(), searchInDumpster());
+            Mailbox mbox = context.getMailbox();
+            synchronized (DbMailItem.getSynchronizer(mbox)) {
+                Connection conn = DbPool.getConnection(mbox);
+                try {
+                    mSizeEstimate = DbSearch.countResults(conn, mConstraints,
+                            mbox, searchInDumpster());
+                } finally {
+                    DbPool.quietClose(conn);
+                }
+            }
         }
 
-        fetch(mDBHits, conn, sort, mCurHitsOffset, mHitsPerChunk);
+        fetch(mDBHits, sort, mCurHitsOffset, mHitsPerChunk);
 
         if (mDBHits.size() < mHitsPerChunk) {
             mEndOfHits = true;
@@ -768,7 +758,7 @@ public class DBQueryOperation extends QueryOperation {
         return context.getParams().inDumpster();
     }
 
-    private void dbFirstGetNextChunk(Connection conn, SortBy sort) throws ServiceException {
+    private void dbFirstGetNextChunk(SortBy sort) throws ServiceException {
         long overallStart = 0;
         if (ZimbraLog.index_search.isDebugEnabled()) {
             ZimbraLog.index_search.debug("Fetching a DB-FIRST chunk");
@@ -782,11 +772,19 @@ public class DBQueryOperation extends QueryOperation {
         do {
             // (1) Get the next chunk of results from the DB
             if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
-                mSizeEstimate = DbSearch.countResults(conn, mConstraints,
-                        context.getMailbox(), searchInDumpster());
+                Mailbox mbox = context.getMailbox();
+                synchronized (DbMailItem.getSynchronizer(mbox)) {
+                    Connection conn = DbPool.getConnection(mbox);
+                    try {
+                        mSizeEstimate = DbSearch.countResults(conn, mConstraints,
+                                context.getMailbox(), searchInDumpster());
+                    } finally {
+                        DbPool.quietClose(conn);
+                    }
+                }
             }
             List<SearchResult> dbResults = new ArrayList<SearchResult>();
-            fetch(dbResults, conn, sort, mOffset, MAX_HITS_PER_CHUNK);
+            fetch(dbResults, sort, mOffset, MAX_HITS_PER_CHUNK);
 
             if (dbResults.size() < MAX_HITS_PER_CHUNK) {
                 mEndOfHits = true;
@@ -853,7 +851,7 @@ public class DBQueryOperation extends QueryOperation {
         }
     }
 
-    private void luceneFirstGetNextChunk(Connection conn, SortBy sort) throws ServiceException {
+    private void luceneFirstGetNextChunk(SortBy sort) throws ServiceException {
         long overallStart = 0;
         if (ZimbraLog.index_search.isDebugEnabled()) {
             ZimbraLog.index_search.debug("Fetching a LUCENE-FIRST chunk");
@@ -881,9 +879,16 @@ public class DBQueryOperation extends QueryOperation {
                 sc.indexIds = new HashSet<Integer>();
                 int dbResultCount;
 
-                dbResultCount = DbSearch.countResults(conn, mConstraints,
-                        context.getMailbox(), searchInDumpster());
-
+                Mailbox mbox = context.getMailbox();
+                synchronized (DbMailItem.getSynchronizer(mbox)) {
+                    Connection conn = DbPool.getConnection(mbox);
+                    try {
+                        dbResultCount = DbSearch.countResults(conn, mConstraints,
+                                context.getMailbox(), searchInDumpster());
+                    } finally {
+                        DbPool.quietClose(conn);
+                    }
+                }
                 int numTextHits = mLuceneOp.countHits();
 
                 if (ZimbraLog.index.isDebugEnabled())
@@ -913,7 +918,7 @@ public class DBQueryOperation extends QueryOperation {
                 long dbStart = System.currentTimeMillis();
 
                 // must not ask for offset,limit here b/c of indexId constraints!,
-                fetch(mDBHits, conn, sort, -1, -1);
+                fetch(mDBHits, sort, -1, -1);
 
                 ZimbraLog.index_search.debug("Fetched DB-second chunk in %d ms", System.currentTimeMillis() - dbStart);
             }
@@ -960,29 +965,20 @@ public class DBQueryOperation extends QueryOperation {
             SortBy sort = getSortOrder();
             mDBHits = new ArrayList<SearchResult>();
 
-            Mailbox mbox = context.getMailbox();
-            synchronized (DbMailItem.getSynchronizer(mbox)) {
-                Connection conn = DbPool.getConnection(mbox);
-                try {
-                    switch (mExecuteMode) {
-                        case NO_RESULTS:
-                            assert(false); // notreached
-                            break;
-                        case NO_LUCENE:
-                            noLuceneGetNextChunk(conn, sort);
-                            break;
-                        case DB_FIRST:
-                            dbFirstGetNextChunk(conn, sort);
-                            break;
-                        case LUCENE_FIRST:
-                            luceneFirstGetNextChunk(conn, sort);
-                            break;
-                    }
-                } finally {
-                    DbPool.quietClose(conn);
-                }
+            switch (mExecuteMode) {
+                case NO_RESULTS:
+                    assert(false); // notreached
+                    break;
+                case NO_LUCENE:
+                    noLuceneGetNextChunk(sort);
+                    break;
+                case DB_FIRST:
+                    dbFirstGetNextChunk(sort);
+                    break;
+                case LUCENE_FIRST:
+                    luceneFirstGetNextChunk(sort);
+                    break;
             }
-
             if (mDBHits.size() == 0) {
                 mDBHitsIter = null;
                 mDBHits = null;

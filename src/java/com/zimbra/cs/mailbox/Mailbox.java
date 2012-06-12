@@ -64,14 +64,14 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
@@ -108,22 +108,22 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
+import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AlterItemTag;
@@ -190,14 +190,14 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
-import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.service.util.SyncToken;
+import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
@@ -207,9 +207,9 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
@@ -2372,47 +2372,9 @@ public class Mailbox {
         return item;
     }
 
-    /**
-     * Executes the callback within a mailbox transaction.
-     * <p>
-     * This method is intented to be used by search code. The search code
-     * directly fetch item data from DB. When it converts those bare data to
-     * {@link MailItem}, it must be within a mailbox transaction because they
-     * access {@link MailItem} cache.
-     *
-     * @param cb callback
-     */
-    public synchronized void execute(TransactionCallback cb) throws ServiceException {
-        cb.mailbox = this;
-        boolean success = false;
-        try {
-            beginTransaction("callback", null);
-            cb.doInTransaction(this);
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    /**
-     * @see #doInTransaction(Mailbox)
-     */
-    public static abstract class TransactionCallback {
-        private Mailbox mailbox;
-
-        protected abstract void doInTransaction(Mailbox mbox) throws ServiceException;
-
-        /**
-         * Translates the DB representation to a {@link MailItem} object.
-         *
-         * @param data DB representation of {@link MailItem}
-         * @return item
-         * @throws ServiceException if an error occurred
-         */
-        protected final MailItem toItem(MailItem.UnderlyingData data)  throws ServiceException {
-            assert(mailbox.mCurrentChange.isActive());
-            return mailbox.getItem(data);
-        }
+    protected final MailItem toItem(MailItem.UnderlyingData data)  throws ServiceException {
+        assert(mCurrentChange.isActive());
+        return getItem(data);
     }
 
     /** translate from the DB representation of an item to its Mailbox abstraction */
