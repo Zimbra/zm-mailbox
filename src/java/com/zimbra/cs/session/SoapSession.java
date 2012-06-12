@@ -220,7 +220,6 @@ public class SoapSession extends Session {
 
             OperationContext octxt = new OperationContext(getAuthenticatedAccountId());
             PendingModifications filtered = new PendingModifications();
-            filtered.accountId = pms.accountId;
             filtered.changedTypes = pms.changedTypes;
             if (pms.deleted != null && !pms.deleted.isEmpty()) {
                 filtered.recordDeleted(pms.deleted);
@@ -255,10 +254,10 @@ public class SoapSession extends Session {
                                 visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                         boolean moved = (chg.why & Change.FOLDER) != 0;
                         if (item instanceof Conversation) {
-                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when,
-                                                    (MailItem) chg.preModifyObj);
+                            filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS,
+                                    (MailItem) chg.preModifyObj);
                         } else if (isVisible) {
-                            filtered.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                            filtered.recordModified(item, chg.why, (MailItem) chg.preModifyObj);
                             // if it's an unmoved visible message and it had a tag/flag/unread change,
                             // make sure the conv shows up in the modified or created list
                             if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0)) {
@@ -267,7 +266,7 @@ public class SoapSession extends Session {
                                         moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
                             }
                         } else if (moved) {
-                            filtered.recordDeleted((MailItem) chg.preModifyObj, chg.op, chg.when);
+                            filtered.recordDeleted((MailItem) chg.preModifyObj);
                             // if it's a message and it's moved, make sure the conv shows up in the
                             // modified or created list
                             if (item instanceof Message) {
@@ -277,7 +276,7 @@ public class SoapSession extends Session {
                         }
                     } else if (chg.what instanceof Mailbox) {
                         if (((Mailbox) chg.what).hasFullAccess(new OperationContext(getAuthenticatedAccountId()))) {
-                            filtered.recordModified(chg.op, (Mailbox) chg.what, chg.why, chg.when);
+                            filtered.recordModified((Mailbox) chg.what, chg.why);
                         }
                     }
                 }
@@ -295,11 +294,11 @@ public class SoapSession extends Session {
             if (pms.created != null && pms.created.containsKey(mkey)) {
                 // do nothing
             } else if (pms.modified != null && (existing = pms.modified.get(mkey)) != null) {
-                filtered.recordModified(existing.op, (MailItem) existing.what, existing.why | changeMask,
-                                        existing.when, (MailItem) existing.preModifyObj);
+                filtered.recordModified((MailItem) existing.what, existing.why | changeMask,
+                        (MailItem) existing.preModifyObj);
             } else {
                 try {
-                    filtered.recordModified(chg.op, mbox.getConversationById(null, convId), changeMask, chg.when);
+                    filtered.recordModified(mbox.getConversationById(null, convId), changeMask);
                 } catch (ServiceException e) {
                     ZimbraLog.session.warn("exception during forceConversationModification", e);
                 }

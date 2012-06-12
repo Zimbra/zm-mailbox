@@ -44,10 +44,8 @@ public class FilterListener extends MailboxListener {
 
     @Override
     public void notify(ChangeNotification notification) {
-        if (notification.mods.modified != null) {
+        if (notification.mods.modified != null && EVENTS.contains(notification.op)) {
             for (PendingModifications.Change change : notification.mods.modified.values()) {
-                if (!EVENTS.contains(change.op))
-                    continue;
                 if (change.what instanceof Folder) {
                     if ((change.why & Change.PARENT) == 0 && (change.why & Change.NAME) == 0) {
                         continue;

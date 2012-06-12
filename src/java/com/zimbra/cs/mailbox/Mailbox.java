@@ -1156,7 +1156,7 @@ public class Mailbox {
             checkSizeChange(size);
         }
 
-        currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp);
+        currentChange.dirty.recordModified(this, Change.SIZE);
         currentChange.size = size;
     }
 
@@ -1290,7 +1290,7 @@ public class Mailbox {
         if (itemSnapshot == null) {
             markItemDeleted(item.getType(), item.getId());
         } else {
-            currentChange.dirty.recordDeleted(itemSnapshot, currentChange.getOperation(), currentChange.timestamp);
+            currentChange.dirty.recordDeleted(itemSnapshot);
         }
     }
 
@@ -1299,14 +1299,14 @@ public class Mailbox {
      * @param type item type
      * @param itemId  The id of the item being deleted. */
     void markItemDeleted(MailItem.Type type, int itemId) {
-        currentChange.dirty.recordDeleted(mData.accountId, itemId, type, currentChange.getOperation(), currentChange.timestamp);
+        currentChange.dirty.recordDeleted(mData.accountId, itemId, type);
     }
 
     /** Adds the items to the current change's list of items deleted during the transaction.
      *
      * @param idlist  The ids of the items being deleted. */
     void markItemDeleted(TypedIdList idlist) {
-        currentChange.dirty.recordDeleted(mData.accountId, idlist, currentChange.getOperation(), currentChange.timestamp);
+        currentChange.dirty.recordDeleted(mData.accountId, idlist);
     }
 
     /** Adds the item to the current change's list of items modified during
@@ -1320,7 +1320,7 @@ public class Mailbox {
         if (item.inDumpster()) {
             throw MailServiceException.IMMUTABLE_OBJECT(item.getId());
         }
-        currentChange.dirty.recordModified(currentChange.getOperation(), item, reason, currentChange.timestamp);
+        currentChange.dirty.recordModified(item, reason);
     }
 
     /** Returns whether the given item has been marked dirty for a particular
@@ -1575,7 +1575,7 @@ public class Mailbox {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
-            currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp);
+            currentChange.dirty.recordModified(this, Change.CONFIG);
             currentChange.config = new Pair<String,Metadata>(section, config);
             DbMailbox.updateConfig(this, section, config);
             success = true;
@@ -1875,7 +1875,7 @@ public class Mailbox {
             boolean persist = stats != null;
             if (stats != null) {
                 if (mData.size != stats.size) {
-                    currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp);
+                    currentChange.dirty.recordModified(this, Change.SIZE);
                     ZimbraLog.mailbox.debug("setting mailbox size to %d (was %d) for mailbox %d", stats.size, mData.size, mId);
                     mData.size = stats.size;
                 }
@@ -2110,7 +2110,7 @@ public class Mailbox {
 
             // remove the deprecated ZIMBRA.MAILBOX_METADATA version value, if present
             if (mData.configKeys != null && mData.configKeys.contains(MailboxVersion.MD_CONFIG_VERSION)) {
-                currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp);
+                currentChange.dirty.recordModified(this, Change.CONFIG);
                 currentChange.config = new Pair<String, Metadata>(MailboxVersion.MD_CONFIG_VERSION, null);
                 DbMailbox.updateConfig(this, MailboxVersion.MD_CONFIG_VERSION, null);
             }
@@ -2330,7 +2330,6 @@ public class Mailbox {
 
         PendingModifications snapshot = new PendingModifications();
 
-        snapshot.accountId = pms.accountId;
         if (pms.deleted != null && !pms.deleted.isEmpty()) {
             snapshot.recordDeleted(pms.deleted);
         }
@@ -2373,17 +2372,17 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
                         folder = (Folder) item;
                     }
-                    snapshot.recordModified(chg.op, folder, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                    snapshot.recordModified(folder, chg.why, (MailItem) chg.preModifyObj);
                 } else if (item instanceof Tag) {
                     if (((Tag) item).isListed()) {
-                        snapshot.recordModified(chg.op, snapshotItem(item), chg.why, chg.when, (MailItem) chg.preModifyObj);
+                        snapshot.recordModified(snapshotItem(item), chg.why, (MailItem) chg.preModifyObj);
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     if (cache != null && cache.contains(item)) {
                         item = snapshotItem(item);
                     }
-                    snapshot.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                    snapshot.recordModified(item, chg.why, (MailItem) chg.preModifyObj);
                 }
             }
         }
@@ -8613,11 +8612,6 @@ public class Mailbox {
         if (change.dirty != null && change.dirty.hasNotifications()) {
             dirty = change.dirty;
             change.dirty = new PendingModifications();
-            if (change.octxt == null || change.octxt.getAuthenticatedUser() == null) {
-                dirty.accountId = mData.accountId;
-            } else {
-                dirty.accountId = change.octxt.getAuthenticatedUser().getId();
-            }
         }
 
         Session source = change.octxt == null ? null : change.octxt.getSession();
@@ -8679,7 +8673,7 @@ public class Mailbox {
                 }
                 try {
                     notification = new ChangeNotification(
-                            getAccount(), dirty, change.octxt, mData.lastChangeId, change.timestamp);
+                            getAccount(), dirty, change.octxt, mData.lastChangeId, change.getOperation(), change.timestamp);
                 } catch (ServiceException e) {
                     ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
                 }

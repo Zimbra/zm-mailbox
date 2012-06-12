@@ -40,13 +40,16 @@ public abstract class MailboxListener {
         public OperationContext ctxt;
         public int lastChangeId;
         public PendingModifications mods;
+        public MailboxOperation op;
         public long timestamp;
 
-        public ChangeNotification(Account account, PendingModifications mods, OperationContext ctxt, int lastChangeId, long timestamp) {
+        public ChangeNotification(Account account, PendingModifications mods, OperationContext ctxt, int lastChangeId,
+                MailboxOperation op, long timestamp) {
             this.mailboxAccount = account;
             this.mods = mods;
             this.ctxt = ctxt;
             this.lastChangeId = lastChangeId;
+            this.op = op;
             this.timestamp = timestamp;
         }
     }

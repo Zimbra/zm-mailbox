@@ -608,7 +608,7 @@ public class ImapSession extends Session {
 
         private synchronized void queueDelete(int changeId, int itemId, Change chg) {
             getQueuedNotifications(changeId).recordDeleted(
-                    getTargetAccountId(), itemId, (MailItem.Type) chg.what, chg.op, chg.when);
+                    getTargetAccountId(), itemId, (MailItem.Type) chg.what);
         }
 
         private synchronized void queueCreate(int changeId, MailItem item) {
@@ -617,7 +617,7 @@ public class ImapSession extends Session {
 
         private synchronized void queueModify(int changeId, Change chg) {
             getQueuedNotifications(changeId).recordModified(
-                    chg.op, (MailItem) chg.what, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                    (MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
         }
 
         synchronized void replay() {

@@ -48,6 +48,9 @@ public class ShareExpirationListener extends MailboxListener {
 
     @Override
     public void notify(ChangeNotification notification) {
+        if (notification.op == MailboxOperation.ExpireAccess) {
+            return;
+        }
         if (notification.mods.created != null) {
             for (MailItem created : notification.mods.created.values()) {
                 if (created instanceof Folder || created instanceof Document) {
@@ -60,7 +63,7 @@ public class ShareExpirationListener extends MailboxListener {
         if (notification.mods.modified != null) {
             for (Change change : notification.mods.modified.values()) {
                 if ((change.what instanceof Folder || change.what instanceof Document) && 
-                        (change.why & Change.ACL) != 0 && change.op != MailboxOperation.ExpireAccess) {
+                        (change.why & Change.ACL) != 0) {
                     scheduleExpireAccessOpIfReq((MailItem) change.what);
                 }
             }
