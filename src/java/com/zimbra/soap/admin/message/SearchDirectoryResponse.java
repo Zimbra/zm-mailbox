@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -49,33 +49,33 @@ public class SearchDirectoryResponse {
      * @zm-api-field-tag count number
      * @zm-api-field-description number of counts
      */
-    @XmlAttribute(name=AdminConstants.A_NUM, required=false)
-    private long num;
+    @XmlAttribute(name=AdminConstants.A_NUM /* num */, required=false)
+    private Long num;
 
     /**
      * @zm-api-field-tag more-flag
      * @zm-api-field-description <b>1 (true)</b> if more accounts left to return
      */
-    @XmlAttribute(name=AdminConstants.A_MORE, required=false)
+    @XmlAttribute(name=AdminConstants.A_MORE /* more */, required=false)
     private ZmBoolean more;
 
     /**
      * @zm-api-field-tag search-total
      * @zm-api-field-description Total number of accounts that matched search (not affected by limit/offset)
      */
-    @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=false)
-    private long searchTotal;
+    @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL /* searchTotal */, required=false)
+    private Long searchTotal;
 
     /**
      * @zm-api-field-description Search hits
      */
     @XmlElements({
-        @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE, type=CalendarResourceInfo.class),
-        @XmlElement(name=AdminConstants.E_DL, type=DistributionListInfo.class),
-        @XmlElement(name=AdminConstants.E_ALIAS, type=AliasInfo.class),
-        @XmlElement(name=AdminConstants.E_ACCOUNT, type=AccountInfo.class),
-        @XmlElement(name=AdminConstants.E_DOMAIN, type=DomainInfo.class),
-        @XmlElement(name=AdminConstants.E_COS, type=CosInfo.class)
+        @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE /* calresource */, type=CalendarResourceInfo.class),
+        @XmlElement(name=AdminConstants.E_DL /* dl */, type=DistributionListInfo.class),
+        @XmlElement(name=AdminConstants.E_ALIAS /* alias */, type=AliasInfo.class),
+        @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, type=AccountInfo.class),
+        @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, type=DomainInfo.class),
+        @XmlElement(name=AdminConstants.E_COS /* cos */, type=CosInfo.class)
     })
     private List<AdminObjectInterface> entries = Lists.newArrayList();
 
@@ -90,15 +90,17 @@ public class SearchDirectoryResponse {
         return this;
     }
 
-    public void setNum(long num) {
+    public void setNum(Long num) {
         this.num = num;
     }
+
+    public Long getNum() { return num; }
 
     public void setMore(boolean more) {
         this.more = ZmBoolean.fromBool(more);
     }
 
-    public void setSearchTotal(long searchTotal) {
+    public void setSearchTotal(Long searchTotal) {
         this.searchTotal = searchTotal;
     }
 
@@ -111,7 +113,7 @@ public class SearchDirectoryResponse {
         return Collections.unmodifiableList(entries);
     }
 
-    public long getSearchTotal() { return searchTotal; }
+    public Long getSearchTotal() { return searchTotal; }
     public boolean isMore() { return ZmBoolean.toBool(more); }
 
     public List<CalendarResourceInfo> getCalendarResources() {
