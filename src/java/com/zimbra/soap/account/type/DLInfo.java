@@ -30,6 +30,13 @@ import com.zimbra.soap.type.ZmBoolean;
 public class DLInfo extends ObjectInfo {
 
     /**
+     * @zm-api-field-tag dl-ldap-dn
+     * @zm-api-field-description ldap dn of the DL.
+     */
+    @XmlAttribute(name=AccountConstants.A_REF, required=true)
+    private final String ref;
+
+    /**
      * @zm-api-field-tag dl-display-name
      * @zm-api-field-description Display name of group
      */
@@ -79,17 +86,22 @@ public class DLInfo extends ObjectInfo {
      */
     @SuppressWarnings("unused")
     private DLInfo() {
-        this(null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null);
     }
 
-    public DLInfo(String id, String name, String displayName, Boolean dynamic, String via,
+    public DLInfo(String id, String ref, String name, String displayName, Boolean dynamic, String via,
             Boolean isOwner, Boolean isMember) {
         super(id, name, null);
+        this.ref = ref;
         this.displayName = displayName;
         this.dynamic = ZmBoolean.fromBool(dynamic);
         this.via = via;
         this.isOwner = ZmBoolean.fromBool(isOwner);
         this.isMember = ZmBoolean.fromBool(isMember);
+    }
+
+    public String getRef() {
+        return ref;
     }
 
     public String getDisplayName() {
