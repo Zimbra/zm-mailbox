@@ -4246,7 +4246,7 @@ Notes:
 </GetAccountDistributionListsRequest>
 
 <GetAccountDistributionListsResponse>
-  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]>
+  <dl name="{name}" id="{id}" ref="{dl-ldap-dn}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]>
     [<a n="...">...</a>+]
   </dl>+
 </GetAccountDistributionListsResponse>

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -27,6 +27,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
+import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.MemberOfSelector;
 
@@ -102,15 +104,20 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         
         for (Entry entry: sortedGroups) {
             Group group = (Group) entry;
-            
+
             Element eDL = response.addElement(AccountConstants.E_DL);
             eDL.addAttribute(AccountConstants.A_NAME, group.getName());
+            if (group.isDynamic()) {
+                eDL.addAttribute(AccountConstants.A_REF, ((LdapDynamicGroup) group).getDN());
+            } else {
+                eDL.addAttribute(AccountConstants.A_REF, ((LdapDistributionList) group).getDN());
+            }
             eDL.addAttribute(AccountConstants.A_ID, group.getId());
             eDL.addAttribute(AccountConstants.A_DISPLAY, group.getDisplayName());
             eDL.addAttribute(AccountConstants.A_DYNAMIC, group.isDynamic());
-            
+
             boolean isOwner = ownerOfGroupIds.contains(group.getId());
-            
+
             if (needOwnerOf) {
                 eDL.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
             }
