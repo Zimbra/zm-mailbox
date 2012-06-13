@@ -2730,6 +2730,16 @@ public class LdapProvisioning extends LdapProv {
         }
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+
+        //get rid of deprecated attrs
+        Map<String, Object> allNewAttrs = new HashMap<String, Object>(allAttrs);
+        for (String attr : allAttrs.keySet()) {
+            AttributeInfo info = AttributeManager.getInstance().getAttributeInfo(attr);
+            if (info.isDeprecated()) {
+                allNewAttrs.remove(attr);
+            }
+        }
+        allAttrs = allNewAttrs;
         AttributeManager.getInstance().preModify(allAttrs, null, callbackContext, true);
 
         ZLdapContext zlc = null;
