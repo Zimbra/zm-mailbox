@@ -604,7 +604,7 @@ public class Mailbox {
     public void setGalSyncMailbox(boolean galSyncMailbox) {
         this.galSyncMailbox = galSyncMailbox;
     }
-    
+
     public boolean isGalSyncMailbox() {
         return galSyncMailbox;
     }
@@ -7707,7 +7707,7 @@ public class Mailbox {
                 acct.getMailSpamLifetimeAsString(),
                 acct.getMailMessageLifetimeAsString(),
                 acct.getMailDumpsterLifetimeAsString());
-            ZimbraLog.purge.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s, Versions=%s, VersionsEnabled=%d" ,
+            ZimbraLog.purge.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s, Versions=%s, VersionsEnabled=%s" ,
                 acct.getPrefInboxReadLifetimeAsString(),
                 acct.getPrefInboxUnreadLifetimeAsString(),
                 acct.getPrefSentLifetimeAsString(),
