@@ -826,6 +826,8 @@ public final class LC {
     public static final KnownKey zimbra_waitset_min_request_timeout = KnownKey.newKey(30);
     public static final KnownKey zimbra_waitset_max_request_timeout = KnownKey.newKey(1200);
     public static final KnownKey zimbra_waitset_max_per_account = KnownKey.newKey(5);
+    public static final KnownKey zmdisklog_warn_threshold = KnownKey.newKey(85);
+    public static final KnownKey zmdisklog_critical_threshold = KnownKey.newKey(95);
 
     // *_disable_tiemout settings are here for bug 56458
     // This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade
