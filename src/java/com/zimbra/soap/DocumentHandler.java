@@ -162,8 +162,12 @@ public abstract class DocumentHandler {
     }
 
     public static Mailbox getRequestedMailbox(ZimbraSoapContext zsc) throws ServiceException {
+        return getRequestedMailbox(zsc, true);
+    }
+
+    public static Mailbox getRequestedMailbox(ZimbraSoapContext zsc, boolean autoCreate) throws ServiceException {
         String id = zsc.getRequestedAccountId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(id);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(id, autoCreate);
         if (mbox != null) {
             ZimbraLog.addMboxToContext(mbox.getId());
         }

@@ -435,7 +435,7 @@ public class SoapEngine {
             }
         } catch (AuthFailedServiceException e) {
             response = soapProto.soapFault(e);
-            
+
             if (LOG.isDebugEnabled()) {
                 LOG.debug("handler exception: %s%s", e.getMessage(), e.getReason(", %s"), e);
             } else {
@@ -550,7 +550,7 @@ public class SoapEngine {
                     String explicitAcct = requestedAccountId.equals(authAccountId) ? null : requestedAccountId;
                     // send the <change> block
                     // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-                    Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);
+                    Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc, false);
                     if (mbox != null) {
                         ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
                             .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
