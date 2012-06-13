@@ -38,7 +38,7 @@ import com.zimbra.common.soap.Element;
 public class Alarm {
 
     public static enum Action {
-        DISPLAY, AUDIO, EMAIL, PROCEDURE,
+        DISPLAY, AUDIO, EMAIL, PROCEDURE, NONE,
         // Yahoo calendar reminder custom actions
         X_YAHOO_CALENDAR_ACTION_IM, X_YAHOO_CALENDAR_ACTION_MOBILE;
 
@@ -579,6 +579,7 @@ public class Alarm {
         case AUDIO: str = "a"; break;
         case EMAIL: str = "e"; break;
         case PROCEDURE: str = "p"; break;
+        case NONE: str = "n"; break;
         default: str = action.toString();
         }
         return str;
@@ -594,6 +595,7 @@ public class Alarm {
         case 'a': action = Action.AUDIO; break;
         case 'e': action = Action.EMAIL; break;
         case 'p': action = Action.PROCEDURE; break;
+        case 'n': action = Action.NONE; break;
         default:
             action = Action.lookup(abbrev);
             if (action == null)
