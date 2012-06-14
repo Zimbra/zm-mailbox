@@ -2642,6 +2642,29 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleSubDomainRights">
+  <desc ui="">Admin Console Sub Domain Rights</desc>
+  <ui name="Configure-Domains"/>
+  <rights>
+    <!-- View Accounts Button ?-->
+    <r n="adminConsoleDomainInfoTabRights"/>
+    <r n="adminConsoleDomainGALTabRights"/>
+    <r n="adminConsoleDomainAuthenticationTabRights"/>
+    <r n="adminConsoleDomainVirtualHostsTabRights"/>
+    <r n="adminConsoleDomainDocumentsTabRights"/>
+    <r n="adminConsoleDomainFreebusyTabRights"/>
+    <r n="adminConsoleDomainZimletsTabRights"/>
+    <r n="adminConsoleDomainThemesTabRights"/>
+    <r n="adminConsoleDomainLimitsTabRights"/>
+    <r n="adminConsoleDomainACLTabRights"/>
+    <r n="listAlias"/>
+    <r n="listDomain"/>
+    <r n="deleteDomain"/>
+    <r n="countAccount"/>
+    <r n="checkDomainMXRecord"/>
+  </rights>
+</right>
+
 <right type="combo" name="adminConsoleSavedSearchRights">
   <desc>Admin Console Saved Search Rights</desc>
   <ui name="Search-SavedSearches-SavedSearch-Edit"/>
