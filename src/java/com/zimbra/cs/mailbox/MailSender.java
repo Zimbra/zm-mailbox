@@ -18,7 +18,7 @@ package com.zimbra.cs.mailbox;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ConnectException;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +42,9 @@ import javax.mail.internet.MimeMessage;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
@@ -59,8 +62,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Threader.ThreadIndex;
@@ -69,14 +70,13 @@ import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
-import com.zimbra.client.ZMailbox;
 
 public class MailSender {
 
@@ -111,7 +111,7 @@ public class MailSender {
         FAILURE,
         DELAY
     }
-    
+
     public MailSender setDsnNotifyOptions(DsnNotifyOption... dsnNotifyOptions) {
         if (dsnNotifyOptions == null || dsnNotifyOptions.length == 0) {
             mDsn = null;
@@ -123,7 +123,7 @@ public class MailSender {
         }
         return this;
     }
-    
+
     /**
      * Specifies the uploads to attach to the outgoing message.
      * @param uploads the uploads or <tt>null</tt>
@@ -234,7 +234,7 @@ public class MailSender {
      * that will be used to send the message from the account's
      * domain.  The default behavior is to use SMTP settings from
      * the <tt>Session<tt> on the {@link MimeMessage}.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public MailSender setSession(Account account) throws ServiceException {
         try {
@@ -516,7 +516,7 @@ public class MailSender {
 
             LinkedList<RollbackData> rollbacks = new LinkedList<RollbackData>();
             Object authMailbox = isDelegatedRequest ? null : mbox;
-            
+
             // Bug: 66823
             // createAutoContact() uses Lucene search to determine whether the address to be added in emailed contact;
             // If the user has SaveInSent preference set, a copy of the message is stored on Sent folder. With
@@ -607,7 +607,7 @@ public class MailSender {
                 mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
                 mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
             }
-            
+
             // If DSN is specified, set it in the JavaMail session.
             if (mDsn != null && mSession != null)
                 mSession.getProperties().setProperty("mail.smtp.dsn.notify", mDsn);
@@ -646,7 +646,7 @@ public class MailSender {
                 if (authuser.isPrefAutoAddAddressEnabled()) {
                     //intersect the lists;
                     newAddrs.retainAll(sentAddresses);
-                    
+
                     // convert JavaMail Address to Zimbra InternetAddress
                     List<com.zimbra.common.mime.InternetAddress> iaddrs =
                         new ArrayList<com.zimbra.common.mime.InternetAddress>(newAddrs.size());
@@ -685,7 +685,7 @@ public class MailSender {
             throw ServiceException.FAILURE("Unable to send message", ioe);
         } catch (MessagingException me) {
             Exception chained = me.getNextException();
-            if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
+            if (chained instanceof SocketException || chained instanceof UnknownHostException) {
                 throw MailServiceException.TRY_AGAIN("Unable to connect to the MTA", chained);
             } else {
                 throw ServiceException.FAILURE("Unable to send message", me);
@@ -993,7 +993,7 @@ public class MailSender {
 
             if (rcptAddresses == null || rcptAddresses.length == 0)
                 throw new SendFailedException("No recipient addresses");
-            
+
             while (true) {
                 try {
                     logMessage(mm, hostname, mOriginalMessageId, mUploads, mReplyType);
@@ -1008,7 +1008,7 @@ public class MailSender {
                     throw sfe;
                 } catch (MessagingException e) {
                     Exception chained = e.getNextException();
-                    if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
+                    if (chained instanceof SocketException || chained instanceof UnknownHostException) {
                         String hostString = (hostname != null ? " " + hostname : "");
                         ZimbraLog.smtp.warn("Unable to connect to SMTP server%s: %s.", hostString, chained.toString());
 
@@ -1110,7 +1110,7 @@ public class MailSender {
                 return;  // Good, we have an MTA that we can connect to.
             } catch (MessagingException e) {
                 Exception chained = e.getNextException();
-                if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
+                if (chained instanceof SocketException || chained instanceof UnknownHostException) {
                     if (connectError == null) {
                         connectError = e;
                     }
