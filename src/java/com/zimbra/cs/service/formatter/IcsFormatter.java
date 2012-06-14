@@ -120,7 +120,16 @@ public class IcsFormatter extends Formatter {
         boolean htmlFormat = !mayAttach(context) && Browser.IE.equals(browser); // Use only htmlFormat when the file isn't supposed to be downloaded (ie. it's supposed to be shown in the browser). Mangles the code so it can be displayed correctly, especially by IE
 
         context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
-        context.resp.setContentType(htmlFormat ? MimeConstants.CT_TEXT_HTML : getContentType(context, MimeConstants.CT_TEXT_CALENDAR));
+
+        String contentType;
+        if (htmlFormat) {
+            contentType = MimeConstants.CT_TEXT_HTML;
+        } else if (mayAttach(context)) {
+            contentType = MimeConstants.CT_TEXT_CALENDAR;
+        } else {
+            contentType = MimeConstants.CT_TEXT_PLAIN;
+        }
+        context.resp.setContentType(contentType);
 
         OperationContext octxt = new OperationContext(context.getAuthAccount(), context.isUsingAdminPrivileges());
         FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
