@@ -54,7 +54,7 @@ public abstract class Session {
      */
     public enum Type {
         NULL(0, 0), // unused dummy session type
-        SOAP(1, 5),
+        SOAP(1, LC.zimbra_session_limit_soap.intValue()),
         IMAP(2, Math.max(0, LC.zimbra_session_limit_imap.intValue())),
         ADMIN(3, 5),
         WIKI(4, 0),
