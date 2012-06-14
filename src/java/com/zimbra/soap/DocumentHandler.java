@@ -617,19 +617,21 @@ public abstract class DocumentHandler {
     protected static Version zimbraConnectorClientVersion(ZimbraSoapContext zsc) {
         final String UA_ZCO = "ZimbraConnectorForOutlook";
         final String UA_ZCB = "ZimbraConnectorForBES";
+        final String UA_MIGRATION = "ZimbraMigration";
 
         String ua = zsc.getUserAgent();
 
         // user agent is in the format of: name + "/" + version;
         // ZCO: ZimbraConnectorForOutlook/7.0.0.0
         // ZCB: ZimbraConnectorForBES/7.0.0.0
+        // MIGRATION: ZimbraMigration/8.0.0.x (where x is latest build number)
         if (ua != null) {
             String[] parts = ua.split("/");
             if (parts.length == 2) {
                 String app = parts[0];
                 String version = parts[1];
 
-                if (UA_ZCO.equalsIgnoreCase(app) || UA_ZCB.equalsIgnoreCase(app)) {
+                if (UA_ZCO.equalsIgnoreCase(app) || UA_ZCB.equalsIgnoreCase(app) || UA_MIGRATION.equalsIgnoreCase(app)) {
                     try {
                         return new Version(version, false);
                     } catch (ServiceException e) {
