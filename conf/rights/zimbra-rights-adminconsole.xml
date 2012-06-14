@@ -86,8 +86,6 @@
     <a n="st"/>
     <a n="postalCode"/>
     <a n="co"/>
-    <a n="title"/>
-    <a n="facsimileTelephoneNumber"/>
   </attrs>
 </right>
 
@@ -104,8 +102,6 @@
     <a n="st"/>
     <a n="postalCode"/>
     <a n="co"/>
-    <a n="title"/>
-    <a n="facsimileTelephoneNumber"/>
   </attrs>
 </right>
 
