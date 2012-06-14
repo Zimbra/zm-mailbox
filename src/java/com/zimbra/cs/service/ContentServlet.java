@@ -277,7 +277,7 @@ public class ContentServlet extends ZimbraServlet {
             }
 
             String filename = up.getName();
-            ContentDisposition cd = new ContentDisposition(Part.INLINE).setParameter("filename", filename == null ? "unknown" : filename);
+            ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT).setParameter("filename", filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd.toString());
             sendbackOriginalDoc(up.getInputStream(), up.getContentType(), resp);
 
@@ -318,7 +318,7 @@ public class ContentServlet extends ZimbraServlet {
         String filename = Mime.getFilename(mp);
         if (filename == null)
             filename = "unknown";
-        String cd = HttpUtil.createContentDisposition(req, Part.INLINE, filename);
+        String cd = HttpUtil.createContentDisposition(req, Part.ATTACHMENT, filename);
         resp.addHeader("Content-Disposition", cd);
         String desc = mp.getDescription();
         if (desc != null)
