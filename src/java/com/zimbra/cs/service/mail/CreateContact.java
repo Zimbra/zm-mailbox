@@ -428,17 +428,24 @@ public class CreateContact extends MailDocumentHandler  {
     }
     
     static boolean needToMigrateDlist(ZimbraSoapContext zsc) throws ServiceException {
-        Version zcoZcbVersion = DocumentHandler.zimbraConnectorClientVersion(zsc);
-        if (zcoZcbVersion != null) {
-            // ZCO/ZCB version in that the new contact group API is supported
-            // TODO: change 9.0.0 to the real ZCO/ZCB version when bug 61593 is 
-            // implemented/fixed.
-            Version newContactGroupAPISupported = new Version("9.0.0"); 
-            if (zcoZcbVersion.compareTo(newContactGroupAPISupported) < 0) {
-                return true;
+        String ua = zsc.getUserAgent();
+        //bug 73326, backward compatible for migrating contact group. 
+        //This is only for the *old* migration client, the *new* migration client will eventually use new API.
+        if ("Zimbra Systems Client".equals(ua)) {
+            return true;
+        } else {
+            Version zcoZcbVersion = DocumentHandler.zimbraConnectorClientVersion(zsc);
+            if (zcoZcbVersion != null) {
+                // ZCO/ZCB version in that the new contact group API is supported
+                // TODO: change 9.0.0 to the real ZCO/ZCB version when bug 61593 is 
+                // implemented/fixed.
+                Version newContactGroupAPISupported = new Version("9.0.0"); 
+                if (zcoZcbVersion.compareTo(newContactGroupAPISupported) < 0) {
+                    return true;
+                }
             }
+            return false;   
         }
-        return false;
     }
     
     static void migrateFromDlist(ParsedContact pc) throws ServiceException {
