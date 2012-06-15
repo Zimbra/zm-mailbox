@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -1158,7 +1158,7 @@ public final class ToXML {
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, null, -1, true, true, null, true, false, false);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, null, -1, true, true, null, true, wantExpandGroupInfo, false);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1178,7 +1178,7 @@ public final class ToXML {
                 // we're kinda screwed here -- we weren't able to write the message structure and it's not clear what went wrong.
                 //   best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, null, -1, true, true, null, true, false, true);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, null, -1, true, true, null, true, wantExpandGroupInfo, true);
             }
         }
     }
