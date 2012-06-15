@@ -16,12 +16,17 @@ package com.zimbra.cs.mime;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
+import java.util.Set;
 
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.zimbra.cs.util.JMSession;
 
 /**
  * Unit test for {@link Mime}.
@@ -62,6 +67,33 @@ public class MimeTest {
         InternetAddress[] addrs = Mime.parseAddressHeader("\" <test@zimbra.com>");
         Assert.assertEquals(1, addrs.length);
         // Only verify an exception is not thrown. The new parser and the old parser don't get the same result.
+    }
+
+    @Test
+    public void multipartReport() throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), getClass().getResourceAsStream("NDR.txt"));
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(8, parts.size());
+
+        Set<MPartInfo> bodies = Mime.getBody(parts, true);
+        Assert.assertEquals(2, bodies.size());
+        boolean foundFirstBody = false;
+        boolean foundSecondBody = false;
+        for (MPartInfo body : bodies) {
+            Object content = body.getMimePart().getContent();
+            Assert.assertTrue(content instanceof String);
+            String text = (String) content;
+            if (body.getPartNum() == 1 && text.startsWith("This is an automated message")) {
+                foundFirstBody = true;
+            } else if (body.getPartNum() == 2 && text.startsWith("<badaddress@gmailllllll.com>")) {
+                foundSecondBody = true;
+            }
+        }
+
+        Assert.assertTrue("first body found", foundFirstBody);
+        Assert.assertTrue("second body found", foundSecondBody);
+
     }
 
 }

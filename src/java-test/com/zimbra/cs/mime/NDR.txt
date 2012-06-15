@@ -1,0 +1,115 @@
+Received: from example.com (LHLO example.com)
+ (1.2.3.4) by example.com with LMTP; Wed, 16 May 2012
+ 11:47:27 -0400 (EDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by example.com (Postfix) with ESMTP id D1EF416099A
+	for <user@example.com>; Wed, 16 May 2012 11:47:27 -0400 (EDT)
+X-Quarantine-ID: <sPAZeDuN0RIq>
+Received: from example.com ([127.0.0.1])
+	by localhost (example.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id sPAZeDuN0RIq for <user@example.com>;
+	Wed, 16 May 2012 11:47:27 -0400 (EDT)
+Received: from example.com (example.com [1.2.3.4])
+	by example.com (Postfix) with ESMTPS id BA593160986
+	for <user@example.com>; Wed, 16 May 2012 11:47:27 -0400 (EDT)
+Received: from example.com (5.6.7.8) by
+ example.com (6.5.7.8) with Microsoft SMTP Server id
+ 8.3.83.0; Wed, 16 May 2012 11:47:27 -0400
+Received: by example.com (Extensible Content Security)	id
+ 375B2D117758F36F; Wed, 16 May 2012 11:47:27 -0400 (EDT)
+Date: Wed, 16 May 2012 11:47:27 -0400
+From: Mail Delivery System <MAILER-DAEMON@example.com>
+Subject: Undelivered Mail Returned to Sender
+To: <user@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="53DA3F30735A29F0.1337183247/example.com"
+Message-ID: <19740412024625.375B2D117758F36F@example.com>
+Received-SPF: none
+
+--53DA3F30735A29F0.1337183247/example.com
+Content-Description: Notification
+Content-Type: text/plain; charset="utf-8"
+
+This is an automated message from the Extensible Content Security
+at host example.com.
+
+The message returned below could not be delivered to its 
+intended
+destinations.
+
+For further assistance, please send mail to <postmaster@example.com>.
+
+If you do so, please include this problem report. You can delete
+your own text from the message returned below.
+
+Reason:
+
+
+--53DA3F30735A29F0.1337183247/example.com
+Content-Type: text/plain
+
+<badaddress@gmailllllll.com>: Host or domain name not found. Name service error
+    for name=gmailllllll.com type=A: Host not found
+
+--53DA3F30735A29F0.1337183247/example.com
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; example.com
+X-Extensible-Content-Security-Queue-ID: 53DA3F30735A29F0
+X-Extensible-Content-Security-Sender: rfc822; user@example.com
+Arrival-Date: Wed, 16 May 2012 11:47:27 -0400 (EDT)
+
+Final-Recipient: rfc822; badaddress@gmailllllll.com
+Action: failed
+Status: 5.0.0
+Diagnostic-Code: X-Extensible-Content-Security; Host or domain name not found.
+    Name service error for name=gmailllllll.com type=A: Host not found
+
+--53DA3F30735A29F0.1337183247/example.com
+Content-Description: Undelivered Message
+Content-Type: message/rfc822
+Content-Transfer-Encoding: Quoted-Printable
+
+Date: Wed, 16 May 2012 11:47:27 -0400
+From: Example User <user@example.com>
+To: badaddress@gmailllllll.com
+Subject: test
+Message-ID: <99f8e5ee-919f-4d41-846c-7c69a85bfcf3@str1.example.com>
+Content-Type: multipart/alternative;
+	boundary="=_b64d626a-a218-43fd-a4f0-d522f0f84355"
+MIME-Version: 1.0
+X-Mailer: Zimbra 7.1.3_GA_3374 (ZimbraWebClient - IE7 (Win)/7.1.3_GA_3346)
+
+--=_b64d626a-a218-43fd-a4f0-d522f0f84355
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+test 
+
+
+
+____________________________________ 
+
+ExampleC2=A0=C2=A0 USer
+
+Systems Administrator 
+
+Example Company
+
+--=_b64d626a-a218-43fd-a4f0-d522f0f84355
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+<html><head><style type='text/css'>p { margin: 0; }</style></head><body><div style='font-family: Times New Roman; font-size: 12pt; color: #000000'>test<BR><BR>
+<DIV><SPAN name="x"></SPAN>
+<P style="MARGIN: 0in 0in 0pt; mso-layout-grid-align: none" class=MsoNormal><SPAN style="FONT-FAMILY: Arial; COLOR: gray; mso-no-proof: yes">____________________________________</SPAN><SPAN style="FONT-FAMILY: Arial; mso-no-proof: yes"><?xml:namespace prefix = o ns = "urn:schemas-microsoft-com:office:office" /><o:p></o:p></SPAN></P>
+<P style="MARGIN: 0in 0in 0pt; mso-layout-grid-align: none" class=MsoNormal><SPAN style="COLOR: gray; FONT-SIZE: 14pt; mso-no-proof: yes">Example&nbsp;&nbsp; User</SPAN><SPAN style="FONT-FAMILY: Candara; mso-no-proof: yes; mso-bidi-font-family: Candara"><o:p></o:p></SPAN></P>
+<P style="MARGIN: 0in 0in 0pt; mso-layout-grid-align: none" class=MsoNormal><SPAN style="COLOR: gray; FONT-SIZE: 10pt; mso-no-proof: yes">Systems Administrator</SPAN><SPAN style="FONT-SIZE: 10pt; mso-no-proof: yes"><o:p></o:p></SPAN></P>
+<P style="MARGIN: 0in 0in 0pt; mso-layout-grid-align: none" class=MsoNormal><SPAN style="COLOR: gray; FONT-SIZE: 10pt; mso-no-proof: yes">Example Company</SPAN><SPAN style="FONT-SIZE: 10pt; mso-no-proof: yes"><o:p></o:p></SPAN></P>
+<P style="MARGIN: 0in 0in 0pt; mso-layout-grid-align: none" class=MsoNormal><SPAN style="COLOR: gray; FONT-SIZE: 10pt; mso-no-proof: yes">555-555-1234</SPAN><SPAN style="FONT-FAMILY: Arial; mso-no-proof: yes"><o:p></o:p></SPAN></P><SPAN name="x"></SPAN><BR></DIV></div></body></html>
+--=_b64d626a-a218-43fd-a4f0-d522f0f84355--
+
+--53DA3F30735A29F0.1337183247/example.com--
+

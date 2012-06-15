@@ -546,10 +546,10 @@ public class Mime {
      *  Use this method instead of {@link Part#getContent()} to work around
      *  JavaMail's fascism about proper MIME format and failure to support
      *  RFC 2184.
-     *  
+     *
      *  @deprecated Use getTextReader() directly after calling repairTransferEncoding() as it's almost always
      *  necessary to drain and close the mimepart's input stream.
-     * 
+     *
      */
 
     @Deprecated
@@ -1206,14 +1206,17 @@ public class Mime {
 
         String ctype = base.getContentType();
         List<MPartInfo> children;
-        if (ctype.equals(MimeConstants.CT_MULTIPART_ALTERNATIVE))
+        if (ctype.equals(MimeConstants.CT_MULTIPART_ALTERNATIVE)) {
             return getAlternativeBodySubpart(base.getChildren(), preferHtml);
-        else if (ctype.equals(MimeConstants.CT_MULTIPART_RELATED))
+        } else if (ctype.equals(MimeConstants.CT_MULTIPART_RELATED)) {
             return getRelatedBodySubpart(base.getChildren(), preferHtml, base.getContentTypeParameter("start"));
-        else if (ctype.equals(MimeConstants.CT_MULTIPART_MIXED) || !KNOWN_MULTIPART_TYPES.contains(ctype))
+        } else if (ctype.equals(MimeConstants.CT_MULTIPART_REPORT)) {
+            return getReportBodySubpart(base.getChildren(), preferHtml);
+        } else if (ctype.equals(MimeConstants.CT_MULTIPART_MIXED) || !KNOWN_MULTIPART_TYPES.contains(ctype)) {
             children = base.getChildren();
-        else
+        } else {
             children = Arrays.asList(base.getChildren().get(0));
+        }
 
         Set<MPartInfo> bodies = null;
         for (MPartInfo mpi : children) {
@@ -1300,6 +1303,37 @@ public class Mime {
             return null;
         return setContaining(first);
     }
+
+    private static Set<MPartInfo> getReportBodySubpart(List<MPartInfo> children, boolean preferHtml) {
+        //get all text subparts which match the preferHtml argument
+        //if none match, return all alternative text subparts
+        Set<MPartInfo> subparts = new HashSet<MPartInfo>();
+        Set<MPartInfo> alternatives = new HashSet<MPartInfo>();
+        for (MPartInfo mpi : children) {
+            boolean isAttachment = mpi.getDisposition().equals(Part.ATTACHMENT);
+            // the Content-Type we want and the one we'd settle for...
+            String wantType = preferHtml ? MimeConstants.CT_TEXT_HTML : MimeConstants.CT_TEXT_PLAIN;
+            Set<String> altTypes = preferHtml ? HTML_ALTERNATES : TEXT_ALTERNATES;
+
+            String ctype = mpi.getContentType();
+            if (!isAttachment && ctype.equals(wantType)) {
+                subparts.add(mpi);
+            } else if (!isAttachment && altTypes.contains(ctype)) {
+                alternatives.add(mpi);
+            } else if (mpi.isMultipart()) {
+                Set<MPartInfo> body;
+                if ((body = getBodySubparts(mpi, preferHtml)) != null)
+                    subparts.addAll(body);
+            }
+        }
+
+        if (subparts.size() == 0) {
+            return (alternatives.size() == 0 ? null : alternatives);
+        } else {
+            return subparts;
+        }
+    }
+
 
     public static void main(String[] args) throws MessagingException, IOException {
         String s = URLDecoder.decode("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt", "utf-8");
