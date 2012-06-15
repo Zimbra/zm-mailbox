@@ -117,17 +117,23 @@ public class ProfileServlet extends ZimbraServlet {
             } catch (ServiceException e) {
                 if (e instanceof MailServiceException.NoSuchItemException) {
                     // return default image;
-                    File defaultImage = new File(LC.default_profile_image.value());
-                    String contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(defaultImage));
-                    resp.setContentType(contentType);
-                    NativeFormatter.sendbackBinaryData(req, resp, new FileInputStream(defaultImage), contentType, null, null, defaultImage.length());
+                    try {
+                        File defaultImage = new File(LC.default_profile_image.value());
+                        String contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(defaultImage));
+                        resp.setContentType(contentType);
+                        NativeFormatter.sendbackBinaryData(req, resp, new FileInputStream(defaultImage), contentType, null, null, defaultImage.length());
+                    } catch (Exception ex) {
+                        log.debug("No profile image set and problem returning default profile image", ex);
+                        throw e;
+                    }
                 } else {
                     throw e;
                 }
             }
         } catch (ServiceException e) {
+            // Log real error but throw generic error to avoid providing server specific information
             log.error("can't handle profile request", e);
-            throw new ServletException(e);
+            throw new ServletException("No profile image found");
         }
     }
 }
