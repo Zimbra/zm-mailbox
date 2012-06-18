@@ -94,6 +94,9 @@ public final class NativeFormatter extends Formatter {
     private static final Set<String> SCRIPTABLE_CONTENT_TYPES = ImmutableSet.of(MimeConstants.CT_TEXT_HTML,
                                                                                 MimeConstants.CT_APPLICATION_XHTML,
                                                                                 MimeConstants.CT_TEXT_XML,
+                                                                                MimeConstants.CT_APPLICATION_ZIMBRA_DOC,
+                                                                                MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES,
+                                                                                MimeConstants.CT_APPLICATION_ZIMBRA_SPREADSHEET,
                                                                                 MimeConstants.CT_IMAGE_SVG);
 
     @Override

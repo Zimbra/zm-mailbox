@@ -50,7 +50,10 @@ public class DefangFactory {
             return noopDefang;
         }
         String contentTypeLowerCase = contentType.toLowerCase();
-        if(contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML)) {
+        if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) ||
+            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) ||
+            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES) ||
+            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_SPREADSHEET)) {
             return htmlDefang;
         }
 
