@@ -202,17 +202,29 @@ public class ProxyPurgeUtil
                 routes.add("route:proto=http;user=" + a);
                 routes.add("route:proto=imap;user=" + a);
                 routes.add("route:proto=pop3;user=" + a);
+                routes.add("route:proto=httpssl;user=" + a);
+                routes.add("route:proto=imapssl;user=" + a);
+                routes.add("route:proto=pop3ssl;user=" + a);
+                routes.add("route:proto=httpssl;admin=1;user=" + a);
             } else {
                 String uid = account.getUid();
                 routes.add("route:proto=http;id=" + account.getId());
                 routes.add("route:proto=http;user=" + uid);
                 routes.add("route:proto=imap;user=" + uid);
                 routes.add("route:proto=pop3;user=" + uid);
+                routes.add("route:proto=httpssl;user=" + uid);
+                routes.add("route:proto=imapssl;user=" + uid);
+                routes.add("route:proto=pop3ssl;user=" + uid);
+                routes.add("route:proto=httpssl;admin=1;user=" + uid);
                 
                 String domain = account.getDomainName();
                 routes.add("route:proto=http;user=" + uid + "@" + domain);
                 routes.add("route:proto=imap;user=" + uid + "@" + domain);
                 routes.add("route:proto=pop3;user=" + uid + "@" + domain);
+                routes.add("route:proto=httpssl;user=" + uid + "@" + domain);
+                routes.add("route:proto=imapssl;user=" + uid + "@" + domain);
+                routes.add("route:proto=pop3ssl;user=" + uid + "@" + domain);
+                routes.add("route:proto=httpssl;admin=1;user=" + uid + "@" + domain);
                 routes.add("alias:user=" + uid + ";ip=" + domain);
                 
                 Domain d = prov.get(Key.DomainBy.name, domain);
@@ -222,25 +234,35 @@ public class ProxyPurgeUtil
                     routes.add("route:proto=http;user=" + uid + "@" + vip);
                     routes.add("route:proto=imap;user=" + uid + "@" + vip);
                     routes.add("route:proto=pop3;user=" + uid + "@" + vip);
+                    routes.add("route:proto=httpssl;user=" + uid + "@" + vip);
+                    routes.add("route:proto=imapssl;user=" + uid + "@" + vip);
+                    routes.add("route:proto=pop3ssl;user=" + uid + "@" + vip);
+                    routes.add("route:proto=httpssl;admin=1;user=" + uid + "@" + vip);
                     routes.add("alias:user=" + uid + ";ip=" + vip);
                 }
                 
                 String[] aliases = account.getMailAlias();
                 // for each alias add routes for it's domain and all virtual IPs for that domain
                 // I think, all the http routes are stored by user id, or, uid or, uid@domain. 
-                // I haven't found any alias in the http routes. Hence skipping it.
+                // I haven't found any alias in the http/httpssl routes. Hence skipping it.
                 for (String alias : aliases) {
                     routes.add("route:proto=imap;user=" + alias);
                     routes.add("route:proto=pop3;user=" + alias);
+                    routes.add("route:proto=imapssl;user=" + alias);
+                    routes.add("route:proto=pop3ssl;user=" + alias);
                     
                     routes.add("route:proto=imap;user=" + alias + "@" + domain);
                     routes.add("route:proto=pop3;user=" + alias + "@" + domain);
+                    routes.add("route:proto=imapssl;user=" + alias + "@" + domain);
+                    routes.add("route:proto=pop3ssl;user=" + alias + "@" + domain);
                     routes.add("alias:user=" + alias + ";ip=" + domain);
                     
                     for (String vip : vips) {
                         // for each virtual ip add the routes to the list. 
                         routes.add("route:proto=imap;user=" + alias + "@" + vip);
                         routes.add("route:proto=pop3;user=" + alias + "@" + vip);
+                        routes.add("route:proto=imapssl;user=" + alias + "@" + vip);
+                        routes.add("route:proto=pop3ssl;user=" + alias + "@" + vip);
                         routes.add("alias:user=" + alias + ";ip=" + vip);
                     }
                 }
