@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,7 +33,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Accumulator;
 import com.zimbra.common.stats.Counter;
@@ -206,7 +205,8 @@ public class ZimbraPerf {
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
-    
+    public static final ActivityTracker SYNC_TRACKER = new ActivityTracker("sync.csv");
+
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
     private static JmxServerStats jmxServerStats;
@@ -468,7 +468,8 @@ public class ZimbraPerf {
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(LDAP_TRACKER, CSV_DUMP_FREQUENCY);
-        
+        StatsDumper.schedule(SYNC_TRACKER, CSV_DUMP_FREQUENCY);
+
         ThreadStats threadStats = new ThreadStats("threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
 
