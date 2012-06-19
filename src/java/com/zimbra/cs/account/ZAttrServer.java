@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20120319-1235 */
+    /* build: 7.0.0_BETA1_1111 pburgu 20120605-1057 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3191,6 +3191,88 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetHsmAge(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHsmAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of items to move during a single HSM operation. If the
+     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * items are moved.
+     *
+     * @return zimbraHsmBatchSize, or 10000 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1316)
+    public int getHsmBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraHsmBatchSize, 10000);
+    }
+
+    /**
+     * Maximum number of items to move during a single HSM operation. If the
+     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * items are moved.
+     *
+     * @param zimbraHsmBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1316)
+    public void setHsmBatchSize(int zimbraHsmBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmBatchSize, Integer.toString(zimbraHsmBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of items to move during a single HSM operation. If the
+     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * items are moved.
+     *
+     * @param zimbraHsmBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1316)
+    public Map<String,Object> setHsmBatchSize(int zimbraHsmBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmBatchSize, Integer.toString(zimbraHsmBatchSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of items to move during a single HSM operation. If the
+     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * items are moved.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1316)
+    public void unsetHsmBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of items to move during a single HSM operation. If the
+     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * items are moved.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1316)
+    public Map<String,Object> unsetHsmBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmBatchSize, "");
         return attrs;
     }
 
@@ -15788,13 +15870,13 @@ public class ZAttrServer extends NamedEntry {
      * client CA, ...). This attr has to be set as &quot;TRUE&quot; to enable
      * the features like cert per domain.
      *
-     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or false if unset
+     * @return zimbraReverseProxyGenConfigPerVirtualHostname, or true if unset
      *
      * @since ZCS 7.2.0
      */
     @ZAttr(id=1374)
     public boolean isReverseProxyGenConfigPerVirtualHostname() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, true);
     }
 
     /**
