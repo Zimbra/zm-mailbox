@@ -3201,7 +3201,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraHsmBatchSize, or 10000 if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public int getHsmBatchSize() {
@@ -3216,7 +3216,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraHsmBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public void setHsmBatchSize(int zimbraHsmBatchSize) throws com.zimbra.common.service.ServiceException {
@@ -3234,7 +3234,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public Map<String,Object> setHsmBatchSize(int zimbraHsmBatchSize, Map<String,Object> attrs) {
@@ -3250,7 +3250,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public void unsetHsmBatchSize() throws com.zimbra.common.service.ServiceException {
@@ -3267,7 +3267,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public Map<String,Object> unsetHsmBatchSize(Map<String,Object> attrs) {

@@ -4162,7 +4162,7 @@ public class ZAttrProvisioning {
      * limit is exceeded, the HSM operation is repeated until all qualifying
      * items are moved.
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public static final String A_zimbraHsmBatchSize = "zimbraHsmBatchSize";

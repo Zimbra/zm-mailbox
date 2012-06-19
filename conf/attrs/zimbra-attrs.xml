@@ -5675,7 +5675,7 @@ TODO: delete them permerntly from here
   <desc>whether zimlets that send sensitive data are disabled in "mixed" zimbraMailMode</desc>
 </attr>
 
-<attr id="1316" name="zimbraHsmBatchSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+<attr id="1316" name="zimbraHsmBatchSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="7.2.1">
   <globalConfigValue>10000</globalConfigValue>
   <desc>Maximum number of items to move during a single HSM operation.  If the limit is exceeded, the HSM operation is repeated until all qualifying items are moved.</desc>
 </attr>
