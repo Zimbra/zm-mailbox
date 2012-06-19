@@ -678,6 +678,7 @@ public class ItemActionHelper {
                 // Takeover as organizer if we're doing a MOVE and source mailbox is the organizer.
                 // Don't takeover in a COPY operation.
                 boolean takeoverAsOrganizer = false;
+                boolean blockMove = false;
                 if (Op.MOVE.equals(mOperation)) {
                     Invite inv = invDefault;
                     if (inv == null) {
@@ -687,6 +688,12 @@ public class ItemActionHelper {
                             inv = invs[0];
                     }
                     takeoverAsOrganizer = inv != null && inv.isOrganizer();
+                    blockMove =  takeoverAsOrganizer && inv.hasOtherAttendees();
+                }
+                
+                if (blockMove) {
+                    throw MailServiceException.INVALID_REQUEST(
+                        "This operation requires change of organizer and it is not permitted", null);
                 }
 
                 if (invDefault != null) {
@@ -704,13 +711,6 @@ public class ItemActionHelper {
 
                 createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
                 mCreatedIds.add(createdId);
-
-                if (takeoverAsOrganizer) {
-                    // Announce organizer change to attendees.
-                    request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST);
-                    request.addAttribute(MailConstants.A_ID, createdId);
-                    zmbx.invoke(request);
-                }
                 break;
             default:
                 throw MailServiceException.CANNOT_COPY(item.getId());
