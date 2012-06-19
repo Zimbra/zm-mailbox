@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120529-1036 */
+    /* build: 8.0.0_BETA1_1111 dywang 20120618-1302 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -33770,11 +33770,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
-     * @return zimbraPrefShowSelectionCheckbox, or true if unset
+     * @return zimbraPrefShowSelectionCheckbox, or false if unset
      */
     @ZAttr(id=471)
     public boolean isPrefShowSelectionCheckbox() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefShowSelectionCheckbox, true);
+        return getBooleanAttr(Provisioning.A_zimbraPrefShowSelectionCheckbox, false);
     }
 
     /**

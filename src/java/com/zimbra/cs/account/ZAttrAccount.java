@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120529-1036 */
+    /* build: 8.0.0_BETA1_1111 dywang 20120618-1302 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -44471,11 +44471,11 @@ public abstract class ZAttrAccount  extends MailTarget {
      * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
-     * @return zimbraPrefShowSelectionCheckbox, or true if unset
+     * @return zimbraPrefShowSelectionCheckbox, or false if unset
      */
     @ZAttr(id=471)
     public boolean isPrefShowSelectionCheckbox() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefShowSelectionCheckbox, true);
+        return getBooleanAttr(Provisioning.A_zimbraPrefShowSelectionCheckbox, false);
     }
 
     /**

@@ -2442,7 +2442,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="471" name="zimbraPrefShowSelectionCheckbox" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>show selection checkbox for selecting email, contact, voicemail items in a list view for batch operations</desc>
 </attr>
 
