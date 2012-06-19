@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120529-1036 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5254,7 +5254,7 @@ public class ZAttrProvisioning {
      * limit is exceeded, the HSM operation is repeated until all qualifying
      * items are moved.
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public static final String A_zimbraHsmBatchSize = "zimbraHsmBatchSize";
