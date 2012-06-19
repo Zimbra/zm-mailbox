@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120529-1036 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
 
     /**
      * RFC2256: descriptive information
@@ -12205,7 +12205,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraHsmBatchSize, or 10000 if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public int getHsmBatchSize() {
@@ -12220,7 +12220,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraHsmBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public void setHsmBatchSize(int zimbraHsmBatchSize) throws com.zimbra.common.service.ServiceException {
@@ -12238,7 +12238,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public Map<String,Object> setHsmBatchSize(int zimbraHsmBatchSize, Map<String,Object> attrs) {
@@ -12254,7 +12254,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public void unsetHsmBatchSize() throws com.zimbra.common.service.ServiceException {
@@ -12271,7 +12271,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.1
      */
     @ZAttr(id=1316)
     public Map<String,Object> unsetHsmBatchSize(Map<String,Object> attrs) {
