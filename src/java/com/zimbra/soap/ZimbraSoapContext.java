@@ -31,6 +31,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -43,7 +44,6 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SoapSession.PushChannel;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.soap.json.JacksonUtil;
 
 /**
  * This class models the soap context (the data from the soap envelope)
@@ -297,25 +297,39 @@ public final class ZimbraSoapContext {
             if (key == null) {
                 mRequestedAccountId = null;
             } else if (key.equals(HeaderConstants.BY_NAME)) {
+                if (mAuthToken == null) {
+                    throw ServiceException.AUTH_REQUIRED();
+                }
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
                 if (account == null) {
-                    if (mAuthToken == null || !mAuthToken.isAdmin())
+                    if (!mAuthToken.isAdmin()) {
                         throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
-                    else
+                    } else {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+                    }
                 }
 
                 mRequestedAccountId = account.getId();
+                if (isDelegatedRequest() && !AccessManager.getInstance().canAccessAccount(mAuthToken, account)) {
+                    throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                }
             } else if (key.equals(HeaderConstants.BY_ID)) {
+                if (mAuthToken == null) {
+                    throw ServiceException.AUTH_REQUIRED();
+                }
                 Account account = prov.get(AccountBy.id, value, mAuthToken);
                 if (account == null) {
-                    if (mAuthToken == null || !mAuthToken.isAdmin())
+                    if (!mAuthToken.isAdmin()) {
                         throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
-                    else
+                    } else {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+                    }
                 }
 
                 mRequestedAccountId = value;
+                if (isDelegatedRequest() && !AccessManager.getInstance().canAccessAccount(mAuthToken, account)) {
+                    throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                }
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
