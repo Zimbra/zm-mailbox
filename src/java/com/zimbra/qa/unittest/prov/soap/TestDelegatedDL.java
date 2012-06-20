@@ -385,24 +385,13 @@ public class TestDelegatedDL extends SoapTest {
 
         req.setKeyValuePairs(attrsCreate);
         CreateDistributionListResponse resp = invokeJaxb(transport, req);
-        DistributionListInfo dlInfo = resp.getDl();
+        DLInfo dlInfo = resp.getDl();
 
         String dlId = dlInfo.getId();
 
         Group group = prov.getGroup(Key.DistributionListBy.name, dlName);
         assertNotNull(group);
         assertEquals(group.getId(), dlId);
-
-        List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
-        assertEquals(1, dlOwners.size());
-        for (DistributionListGranteeInfoInterface owner : dlOwners) {
-            com.zimbra.soap.type.GranteeType type = owner.getType();
-            String id = owner.getId();
-            String name = owner.getName();
-
-            assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
-            assertEquals(USER_CREATOR, name);
-        }
 
         boolean seenExpectedMail = false;
         boolean seenExpectedSubsPolicy = false;
