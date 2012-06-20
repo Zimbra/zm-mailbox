@@ -46,10 +46,15 @@ public class ChildAccount extends AttributeCallback {
         
         MultiValueMod visibleChildrenMod = multiValueMod(attrsToModify, Provisioning.A_zimbraPrefChildVisibleAccount);
         MultiValueMod allChildrenMod = multiValueMod(attrsToModify, Provisioning.A_zimbraChildAccount);
-        
+
         Set<String> visibleChildren = newValuesToBe(visibleChildrenMod, entry, Provisioning.A_zimbraPrefChildVisibleAccount);
         Set<String> allChildren = newValuesToBe(allChildrenMod, entry, Provisioning.A_zimbraChildAccount);
-        
+
+        //if child account has already been deleted, let it go
+        if (allChildren != null && !allChildren.contains(value)) {
+            return;
+        }
+
         if (allChildrenMod != null && allChildrenMod.deleting()) {
             attrsToModify.put(Provisioning.A_zimbraPrefChildVisibleAccount, "");
         } else {
@@ -68,11 +73,11 @@ public class ChildAccount extends AttributeCallback {
                         throw ServiceException.INVALID_REQUEST("visible child id " + vid + " is not one of " + Provisioning.A_zimbraChildAccount, null);
                 }
             }
-    
+
             if (vidsToRemove.size() > 0)
                 attrsToModify.put("-" + Provisioning.A_zimbraPrefChildVisibleAccount, vidsToRemove.toArray(new String[vidsToRemove.size()]));
         }
-        
+
         // check circular relationship
         if (entry instanceof Account) {
             Provisioning prov = Provisioning.getInstance();
@@ -82,7 +87,7 @@ public class ChildAccount extends AttributeCallback {
                 Account childAcct = prov.get(AccountBy.id, childId);
                 if (childAcct == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(childId);
-                
+
                 String[] children = childAcct.getChildAccount();
                 for (String child : children) {
                     if (child.equals(parentId))
