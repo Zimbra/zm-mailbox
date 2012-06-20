@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.DistributionListInfo;
+import com.zimbra.soap.account.type.DLInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_CREATE_DISTRIBUTION_LIST_RESPONSE)
@@ -31,19 +31,19 @@ public class CreateDistributionListResponse {
      * @zm-api-field-description Information about created distribution list
      */
     @XmlElement(name=AccountConstants.E_DL, required=true)
-    private final DistributionListInfo dl;
+    private final DLInfo dl;
 
     /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
     private CreateDistributionListResponse() {
-        this((DistributionListInfo)null);
+        this((DLInfo)null);
     }
 
-    public CreateDistributionListResponse(DistributionListInfo dl) {
+    public CreateDistributionListResponse(DLInfo dl) {
         this.dl = dl;
     }
 
-    public DistributionListInfo getDl() { return dl; }
+    public DLInfo getDl() { return dl; }
 }
