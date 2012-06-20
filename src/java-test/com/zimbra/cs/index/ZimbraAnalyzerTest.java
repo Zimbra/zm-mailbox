@@ -67,6 +67,13 @@ public final class ZimbraAnalyzerTest {
         stream.end();
         stream.close();
     }
+    
+    @Test
+    public void phraseQuery() throws Exception {
+        String src = "three^two";
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(LuceneFields.L_CONTENT, new StringReader(src));
+        Assert.assertEquals(Arrays.asList("three", "two"), toTokens(stream));
+    }
 
     public static List<String> toTokens(TokenStream stream) throws IOException {
         List<String> result = new ArrayList<String>();
