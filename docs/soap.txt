@@ -4099,7 +4099,7 @@ added to Documents only.
 </CreateDistributionListRequest>
 
 <CreateDistributionListResponse>
-  <dl name="{name}" id="{id}">
+  <dl name="{name}" id="{id}" ref="{dl-ldap-dn}">
     <a n="...">...</a>+
   </dl>
 </CreateDistributionListResponse>

@@ -17,21 +17,22 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
+import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
+            throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -53,14 +54,20 @@ public class CreateDistributionList extends AccountDocumentHandler {
         Group group = prov.createDelegatedGroup(name, attrs, dynamic, creator);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                 new String[] {"cmd", "CreateDistributionList", "name", name}, attrs));
+                 new String[] { "cmd", "CreateDistributionList", "name", name }, attrs));
 
         Element response = zsc.createElement(AccountConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
-
-        com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(response, group);
+        Element eDL = response.addElement(AccountConstants.E_DL);
+        eDL.addAttribute(AccountConstants.A_NAME, group.getName());
+        if (group.isDynamic()) {
+            eDL.addAttribute(AccountConstants.A_REF, ((LdapDynamicGroup) group).getDN());
+        } else {
+            eDL.addAttribute(AccountConstants.A_REF, ((LdapDistributionList) group).getDN());
+        }
+        eDL.addAttribute(AccountConstants.A_ID, group.getId());
+        GetDistributionList.encodeAttrs(group, eDL, null);
 
         return response;
     }
 
 }
-
