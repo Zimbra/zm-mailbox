@@ -16,7 +16,7 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -31,14 +31,14 @@ public class RenameUCServiceRequest {
      * @zm-api-field-tag value-of-zimbra-id
      * @zm-api-field-description Zimbra ID
      */
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    @XmlElement(name=AdminConstants.E_ID, required=true)
     private final String id;
 
     /**
      * @zm-api-field-tag new-uc-service-name
      * @zm-api-field-description new UC Service name
      */
-    @XmlAttribute(name=AdminConstants.E_NEW_NAME, required=true)
+    @XmlElement(name=AdminConstants.E_NEW_NAME, required=true)
     private final String newName;
 
     /**

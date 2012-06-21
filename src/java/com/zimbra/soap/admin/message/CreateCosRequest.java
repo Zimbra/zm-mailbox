@@ -20,14 +20,14 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import com.zimbra.soap.admin.type.Attr;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
+import com.zimbra.soap.admin.type.Attr;
 
 /**
  * @zm-api-command-description Create a Class of Service (COS)
@@ -45,7 +45,7 @@ public class CreateCosRequest extends AdminAttrsImpl {
      * @zm-api-field-tag cos-name
      * @zm-api-field-description Name
      */
-    @XmlAttribute(name=AdminConstants.E_NAME, required=true)
+    @XmlElement(name=AdminConstants.E_NAME, required=true)
     private String name;
 
     public CreateCosRequest() {

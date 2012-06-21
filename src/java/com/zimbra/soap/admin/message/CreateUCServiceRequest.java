@@ -20,7 +20,7 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -41,7 +41,7 @@ public class CreateUCServiceRequest extends AdminAttrsImpl {
      * @zm-api-field-tag new-ucservice-name
      * @zm-api-field-description New ucservice name
      */
-    @XmlAttribute(name=AdminConstants.E_NAME, required=true)
+    @XmlElement(name=AdminConstants.E_NAME, required=true)
     private String name;
 
     public CreateUCServiceRequest() {
