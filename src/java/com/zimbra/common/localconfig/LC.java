@@ -257,7 +257,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
-    
+
     public static final KnownKey zimbra_index_rfc822address_max_token_length = KnownKey.newKey(256);
     public static final KnownKey zimbra_index_rfc822address_max_token_count = KnownKey.newKey(512);
 
@@ -671,7 +671,7 @@ public final class LC {
     public static final KnownKey ssl_allow_mismatched_certs = KnownKey.newKey(true);
 
     public static final KnownKey ssl_allow_accept_untrusted_certs = KnownKey.newKey(true);
-    
+
     public static final KnownKey ssl_disable_dh_cipher_suite = KnownKey.newKey(true);
 
     @Supported
@@ -887,6 +887,8 @@ public final class LC {
     public static final KnownKey javamail_imap_enable_starttls = KnownKey.newKey(true);
     public static final KnownKey javamail_smtp_enable_starttls = KnownKey.newKey(true);
 
+    public static final KnownKey mime_promote_empty_multipart = KnownKey.newKey(true);
+
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
     public static final KnownKey purge_initial_sleep_ms = KnownKey.newKey(30 * Constants.MILLIS_PER_MINUTE);
@@ -908,7 +910,7 @@ public final class LC {
 
     public static final KnownKey httpclient_internal_connmgr_stale_connection_check = KnownKey.newKey(true);
     public static final KnownKey httpclient_external_connmgr_stale_connection_check = KnownKey.newKey(true);
-    
+
     public static final KnownKey httpclient_internal_connmgr_tcp_nodelay = KnownKey.newKey(false);
     public static final KnownKey httpclient_external_connmgr_tcp_nodelay = KnownKey.newKey(false);
 
