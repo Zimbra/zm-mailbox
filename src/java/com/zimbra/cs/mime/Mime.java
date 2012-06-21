@@ -64,6 +64,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -75,6 +76,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZInternetHeader;
+import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.common.zmime.ZMimePart;
@@ -150,7 +152,19 @@ public class Mime {
      * @throws MessagingException
      */
     public static List<MPartInfo> getParts(MimeMessage mm) throws IOException, MessagingException {
-        List<MPartInfo> parts = listParts(mm);
+        return getParts(mm, null);
+    }
+
+    /**
+     * return complete List of MPartInfo objects.
+     * @param mm
+     * @param defaultCharset - user's default charset for cases where it is needed
+     * @return
+     * @throws IOException
+     * @throws MessagingException
+     */
+    public static List<MPartInfo> getParts(MimeMessage mm, String defaultCharset) throws IOException, MessagingException {
+        List<MPartInfo> parts = listParts(mm, defaultCharset);
         Set<MPartInfo> bodies = getBody(parts, true);
         for (MPartInfo mpi : parts) {
             mpi.mIsFilterableAttachment = isFilterableAttachment(mpi, bodies);
@@ -160,12 +174,13 @@ public class Mime {
         return parts;
     }
 
-    private static List<MPartInfo> listParts(MimePart root) throws MessagingException, IOException {
+    private static List<MPartInfo> listParts(MimePart root, String defaultCharset) throws MessagingException, IOException {
         List<MPartInfo> parts = new ArrayList<MPartInfo>();
 
         LinkedList<MPartInfo> queue = new LinkedList<MPartInfo>();
         queue.add(generateMPartInfo(root, null, "", 0));
 
+        MimeMultipart emptyMultipart = null;
         while (!queue.isEmpty()) {
             MPartInfo mpart = queue.removeFirst();
             MimePart mp = mpart.getMimePart();
@@ -183,6 +198,9 @@ public class Mime {
                 }
                 MimeMultipart multi = getMultipartContent(mp, cts);
                 if (multi != null) {
+                    if (emptyMultipart == null && multi.getCount() == 0) {
+                        emptyMultipart = multi;
+                    }
                     mpart.mChildren = new ArrayList<MPartInfo>(multi.getCount());
                     for (int i = 1; i <= multi.getCount(); i++) {
                         mpart.mChildren.add(generateMPartInfo((MimePart) multi.getBodyPart(i - 1), mpart, prefix + i, i));
@@ -199,6 +217,20 @@ public class Mime {
             } else {
                 // nothing to do at this stage
             }
+        }
+
+        if (emptyMultipart != null && LC.mime_promote_empty_multipart.booleanValue() && parts.size() == 1) {
+            ZimbraLog.misc.debug("single multipart with no children. promoting the preamble into a single text part");
+            parts.remove(0);
+            MPartInfo mpart = new MPartInfo();
+            ZMimeBodyPart mp = new  ZMimeBodyPart();
+            String text = emptyMultipart.getPreamble();
+            mp.setText(text, defaultCharset);
+            mpart.mPart = mp;
+            mpart.mContentType = mp.getContentType();
+            mpart.mDisposition = "";
+            mpart.mPartName = "1";
+            parts.add(mpart);
         }
 
         return parts;
@@ -559,7 +591,7 @@ public class Mime {
     }
 
     public static void recursiveRepairTransferEncoding(MimeMessage mm) throws MessagingException, IOException {
-        for (MPartInfo mpi : listParts(mm)) {
+        for (MPartInfo mpi : listParts(mm, null)) {
             repairTransferEncoding(mpi.mPart);
         }
     }

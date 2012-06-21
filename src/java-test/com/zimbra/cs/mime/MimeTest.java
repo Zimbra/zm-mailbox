@@ -96,4 +96,16 @@ public class MimeTest {
 
     }
 
+    @Test
+    public void emptyMultipart() throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), getClass().getResourceAsStream("bug50275.txt"));
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(1, parts.size());
+        MPartInfo mpart = parts.get(0);
+        Assert.assertEquals("text/plain", mpart.getContentType());
+        Assert.assertTrue(((String) mpart.getMimePart().getContent()).indexOf("por favor visite http://www.linux-magazine.es/Readers/Newsletter.") > -1);
+
+    }
+
 }

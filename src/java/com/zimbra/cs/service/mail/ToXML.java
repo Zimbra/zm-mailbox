@@ -1323,7 +1323,7 @@ public final class ToXML {
                 }
             }
 
-            List<MPartInfo> parts = Mime.getParts(mm);
+            List<MPartInfo> parts = Mime.getParts(mm, getDefaultCharset(msg));
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
                 addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort);
@@ -1438,7 +1438,7 @@ public final class ToXML {
             if (mm != null) {
                 List<MPartInfo> parts;
                 try {
-                    parts = Mime.getParts(mm);
+                    parts = Mime.getParts(mm, getDefaultCharset(cal));
                 } catch (IOException ex) {
                     throw ServiceException.FAILURE(ex.getMessage(), ex);
                 } catch (MessagingException ex) {
@@ -1642,7 +1642,7 @@ public final class ToXML {
                     }
                 }
 
-                List<MPartInfo> parts = Mime.getParts(mm);
+                List<MPartInfo> parts = Mime.getParts(mm, getDefaultCharset(calItem));
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
                     addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem), true);
