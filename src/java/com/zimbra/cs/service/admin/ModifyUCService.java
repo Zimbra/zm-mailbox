@@ -39,7 +39,7 @@ public final class ModifyUCService extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminConstants.E_ID);
+        String id = request.getElement(AdminConstants.E_ID).getText();
         Map<String, Object> attrs = AdminService.getAttrs(request);
 
         UCService ucService = prov.get(Key.UCServiceBy.id, id);

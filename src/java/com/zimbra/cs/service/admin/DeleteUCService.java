@@ -40,8 +40,8 @@ public class DeleteUCService extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminConstants.E_ID);
-        
+        String id = request.getElement(AdminConstants.E_ID).getText();
+
         UCService ucService = prov.get(UCServiceBy.id, id);
         if (ucService == null) {
             throw AccountServiceException.NO_SUCH_UC_SERVICE(id);

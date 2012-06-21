@@ -37,8 +37,8 @@ public class RenameUCService extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminConstants.E_ID);
-        String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
+        String id = request.getElement(AdminConstants.E_ID).getText();
+        String newName = request.getElement(AdminConstants.E_NEW_NAME).getText();
 
         UCService ucService = prov.get(UCServiceBy.id, id);
         if (ucService == null) {

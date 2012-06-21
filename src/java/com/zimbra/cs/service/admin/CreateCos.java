@@ -42,7 +42,7 @@ public class CreateCos extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
+	    String name = request.getElement(AdminConstants.E_NAME).getText().toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 
 	    checkRight(zsc, context, null, Admin.R_createCos);

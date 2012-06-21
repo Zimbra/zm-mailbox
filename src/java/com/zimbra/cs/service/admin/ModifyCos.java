@@ -21,17 +21,16 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -44,7 +43,7 @@ public class ModifyCos extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminConstants.E_ID);
+	    String id = request.getElement(AdminConstants.E_ID).getText();
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
 	    Cos cos = prov.get(Key.CosBy.id, id);
