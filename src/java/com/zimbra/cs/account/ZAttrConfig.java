@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20210,13 +20210,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * whether message channel servie is enabled on this server
      *
-     * @return zimbraMessageChannelEnabled, or true if unset
+     * @return zimbraMessageChannelEnabled, or false if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1417)
     public boolean isMessageChannelEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraMessageChannelEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraMessageChannelEnabled, false);
     }
 
     /**

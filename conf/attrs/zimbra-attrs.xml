@@ -7060,7 +7060,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1417" name="zimbraMessageChannelEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
-  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether message channel servie is enabled on this server</desc>
 </attr>
 
