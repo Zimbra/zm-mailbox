@@ -1,0 +1,33 @@
+Return-Path: foo@example.com
+Received: from csb-2-eng-dhcp170.eng.vmware.com (LHLO localhost)
+ (10.33.30.170) by zqa-062.eng.vmware.com with LMTP; Thu, 7 Jun 2012
+ 16:27:48 -0700 (PDT)
+Date: Tue, 15 Nov 2011 17:10:42 -0800 (PST)
+From: foo@example.com
+To: bar@example.com
+Subject: subject13214016621403
+Content-Type: multipart/alternative;
+ boundary="=_169984f8-32cb-424f-b79d-befb3997c0ea"
+MIME-Version: 1.0
+
+--=_169984f8-32cb-424f-b79d-befb3997c0ea
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+
+The Ming Dynasty, also Empire of the Great Ming, was the ruling dynasty of 
+China from 1368 to 1644, following the collapse of the Mongol-led Yuan 
+Dynasty. The Ming, "one of the greatest eras of orderly government and 
+social stability in human history",[2] was the last dynasty in China ruled 
+by ethnic Han Chinese. Although the Ming capital Beijing fell in 1644 to a 
+rebellion led by Li Zicheng who established the Shun Dynasty, which was soon 
+replaced by the Manchu-led Qing Dynasty, regimes loyal to the Ming throne 
+(collectively called the Southern Ming) survived until 1662.
+
+
+--=_169984f8-32cb-424f-b79d-befb3997c0ea
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<html><head><style type='text/css'>p { margin: 0; }</style></head><body><div style='font-family: arial,helvetica,sans-serif; font-size: 12pt; color: #000000' ><div><strong>Bold</strong> and <em>Italics</em><br><br></div></div></body></html>
+--=_169984f8-32cb-424f-b79d-befb3997c0ea--
