@@ -839,7 +839,6 @@ public class CalendarMailSender {
             public void run() {
                 try {
                     MailSender mailSender = getCalendarMailSender(mbox).setSendPartial(true);
-                    mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
                     mailSender.sendMimeMessage(octxt, mbox, true, mm, null, origMsgId, MailSender.MSGTYPE_REPLY, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -864,7 +863,6 @@ public class CalendarMailSender {
                         .setOriginalMessageId(origMsgId).setReplyType(MailSender.MSGTYPE_REPLY)
                         .setSendPartial(true);
                     sender.setRedirectMode(true);  // Preserve original From and Sender to avoid confusing the delegate user.
-                    sender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
                     sender.sendMimeMessage(octxt, mbox, mm);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -891,7 +889,6 @@ public class CalendarMailSender {
         ItemId id = null;
         try {
             MailSender mailSender = getCalendarMailSender(mbox).setSendPartial(true);
-            mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
             if (asAdmin) {
                 mailSender.setSkipHeaderUpdate(true);
                 id = mailSender.sendMimeMessage(octxt, mbox, Boolean.FALSE, mm, uploads, origMsgId, replyType, null, replyToSender);
@@ -1178,7 +1175,6 @@ public class CalendarMailSender {
             public void run() {
                 try {
                     MailSender mailSender = getCalendarMailSender(mbox).setSendPartial(true);
-                    mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
                     mailSender.sendMimeMessage(octxt, mbox, saveToSent, mm, null, new ItemId(mbox, invId), replyType, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline reply", e);

@@ -278,6 +278,7 @@ public final class FilterUtil {
             if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
                 if (isDeliveryStatusNotification(msg) && LC.filter_null_env_sender_for_dsn_redirect.booleanValue()) {
                     sender.setEnvelopeFrom("<>");
+                    sender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
                 } else {
                     // Set envelope sender to the account name (bug 31309).
                     Account account = sourceMbox.getAccount();
@@ -290,7 +291,6 @@ public final class FilterUtil {
                     sender.setEnvelopeFrom(address);
                 }
             }
-            sender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
             sender.setRecipients(destinationAddress);
             sender.sendMimeMessage(octxt, sourceMbox, outgoingMsg);
         } catch (MessagingException e) {

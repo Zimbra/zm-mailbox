@@ -48,7 +48,6 @@ public class DeclineCounterCalendarItem extends CalendarRequest {
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
 
         MailSender mailSender = mbox.getMailSender();
-        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
         mailSender.sendMimeMessage(octxt, mbox, dat.mMm);
         Element response = getResponseElement(zsc);
         return response;

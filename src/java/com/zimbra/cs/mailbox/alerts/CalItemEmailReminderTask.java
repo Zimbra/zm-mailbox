@@ -80,7 +80,6 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         mm.saveChanges();
 
         MailSender mailSender = calItem.getMailbox().getMailSender();
-        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
         mailSender.sendMimeMessage(null, calItem.getMailbox(), mm);
     }
 

@@ -54,7 +54,6 @@ public class SendVerificationCode extends MailDocumentHandler {
         mm.saveChanges();
         MailSender mailSender = mbox.getMailSender();
         mailSender.setSaveToSent(false);
-        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
         mailSender.sendMimeMessage(null, mbox, mm);
     }
 
