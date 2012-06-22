@@ -310,7 +310,8 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = account.getId();
-                if (isDelegatedRequest() && !AccessManager.getInstance().canAccessAccount(mAuthToken, account)) {
+                if (isDelegatedRequest() && !AccessManager.getInstance().canAccessAccount(mAuthToken, account)
+                    && !account.getAttr(Provisioning.A_zimbraSharedItem, "").contains(mAuthTokenAccountId)) {
                     throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
                 }
             } else if (key.equals(HeaderConstants.BY_ID)) {
@@ -327,7 +328,8 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = value;
-                if (isDelegatedRequest() && !AccessManager.getInstance().canAccessAccount(mAuthToken, account)) {
+                if (isDelegatedRequest() && !AccessManager.getInstance().canAccessAccount(mAuthToken, account)
+                    && !account.getAttr(Provisioning.A_zimbraSharedItem, "").contains(mAuthTokenAccountId)) {
                     throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
                 }
             } else {
