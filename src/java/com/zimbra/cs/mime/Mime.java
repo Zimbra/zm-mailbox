@@ -198,8 +198,14 @@ public class Mime {
                 }
                 MimeMultipart multi = getMultipartContent(mp, cts);
                 if (multi != null) {
-                    if (emptyMultipart == null && multi.getCount() == 0) {
-                        emptyMultipart = multi;
+                    if (multi.getCount() == 0 && LC.mime_promote_empty_multipart.booleanValue()) {
+                        if (emptyMultipart == null) {
+                            emptyMultipart = multi;
+                        }
+                        if (MimeConstants.CT_MULTIPART_APPLEDOUBLE.equalsIgnoreCase(getContentType(mp))) {
+                            ZimbraLog.misc.debug("appledouble with no children; assuming it is malformed and really applefile");
+                            mpart.mContentType = mpart.mContentType.replace(MimeConstants.CT_MULTIPART_APPLEDOUBLE, MimeConstants.CT_APPLEFILE);
+                        }
                     }
                     mpart.mChildren = new ArrayList<MPartInfo>(multi.getCount());
                     for (int i = 1; i <= multi.getCount(); i++) {
@@ -219,7 +225,7 @@ public class Mime {
             }
         }
 
-        if (emptyMultipart != null && LC.mime_promote_empty_multipart.booleanValue() && parts.size() == 1) {
+        if (emptyMultipart != null && parts.size() == 1) {
             ZimbraLog.misc.debug("single multipart with no children. promoting the preamble into a single text part");
             parts.remove(0);
             MPartInfo mpart = new MPartInfo();
