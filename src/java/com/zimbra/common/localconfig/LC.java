@@ -199,13 +199,16 @@ public final class LC {
     public static final KnownKey zimbra_reindex_threads = KnownKey.newKey(10);
 
     @Supported
-    public static final KnownKey zimbra_index_max_readers = KnownKey.newKey(30);
+    public static final KnownKey zimbra_index_max_readers = KnownKey.newKey(35);
 
     @Supported
     public static final KnownKey zimbra_index_max_writers = KnownKey.newKey(100);
 
     @Supported
     public static final KnownKey zimbra_index_reader_cache_size = KnownKey.newKey(20);
+    
+    @Supported
+    public static final KnownKey zimbra_galsync_index_reader_cache_size = KnownKey.newKey(5);
 
     @Supported
     public static final KnownKey zimbra_index_reader_cache_ttl = KnownKey.newKey(300);
