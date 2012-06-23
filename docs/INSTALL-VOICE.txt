@@ -34,13 +34,13 @@ Step 4: Extensions can be configured both from admin UI and command line. Here i
         $ zmprov mcf zimbraUCProviderEnabled mitel
         $ zmprov cucs mitel-1 zimbraUCProvider mitel zimbraUCUserURL https://vuca.cloudmitel.com/ucs/ws/service/ucs zimbraUCVoicemailURL https://vuca.cloudmitel.com/ucs/ws/service/NpViewService zimbraUCCallControlURL https://vuca.cloudmitel.com/ucs/ws/services/csta
         $ zmprov ca user1@localhost.local {account_password}
-        $ zmprov ma user1@localhost.local zimbraUCUsername voiceAccount_Username zimbraUCServiceId service-ID (skip the above step if the account is already set-up)
-        $ zmsoap -v -z -m user1@localhost.local -t voice ChangeUCPasswordRequest/password=voiceAccount_password
+        $ zmprov ma qauser1@bostonceltics.local zimbraUCUsername voiceAccount_Username zimbraUCServiceId service-ID (skip the above step if the account is already set-up)
+        $ zmsoap -v -z -m qauser1@bostonceltics.local -t voice ChangeUCPasswordRequest/password=voiceAccount_password
 
         NOTE: Mitel doesn't support presence
 
 Step 6: Voice License - We need to install voice license to enable the voice feature.
-        $ zmprov ma user1@localhost.local zimbraFeatureVoiceEnabled TRUE
+        $ zmprov ma qauser1@bostonceltics.local zimbraFeatureVoiceEnabled TRUE
         $ cd ~/p4/main/ZimbraLicenseExtension
         $ ant deploy-dev
         $ Restart jetty
@@ -55,4 +55,5 @@ Step 5: If there are any proxy issues, run the below commands.
 
        2. set ssl_allow_untrusted_certs=true in zmlocalconfig
        3. Set client_use_system_proxy=true in zmlocalconfig
-       4. Restart the jetty server
+       4. zmprov ms SERVERNAME zimbraHttpProxyURL proxyURL    (proxyURL is like http://proxyhost:proxyport)
+       5. Restart the jetty server
