@@ -1013,7 +1013,8 @@
         <include name="commons-io*.jar"/>
         <include name="commons-lang-*.jar"/>
         <include name="commons-logging.jar"/>
-        <include name="commons-pool*.jar"/>
+	<include name="commons-pool*.jar"/>
+	<include name="concurrentlinkedhashmap-lru*.jar"/>
         <include name="yuicompressor*jar"/>
         <include name="dom4j*.jar"/>
         <include name="ganymed-ssh2*.jar"/>

@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +51,8 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.io.Closeables;
 import com.google.common.io.NullOutputStream;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -100,8 +102,16 @@ public final class LuceneIndex implements IndexStore {
     
     // Bug: 60631
     // cache lucene index of GAL sync account separately with no automatic eviction
-    private static final ConcurrentHashMap<Integer, IndexSearcherImpl> GAL_SEARCHER_CACHE =
-        new ConcurrentHashMap<Integer, IndexSearcherImpl> ();
+    private static final ConcurrentMap<Integer, IndexSearcherImpl> GAL_SEARCHER_CACHE = 
+        new ConcurrentLinkedHashMap.Builder<Integer, IndexSearcherImpl>()
+        .maximumWeightedCapacity(LC.zimbra_galsync_index_reader_cache_size.intValue())
+        .listener(new EvictionListener<Integer, IndexSearcherImpl>() {
+            @Override 
+            public void onEviction(Integer mboxId, IndexSearcherImpl searcher) {
+                Closeables.closeQuietly(searcher);
+            }
+        })
+        .build();
 
     private final Mailbox mailbox;
     private final LuceneDirectory luceneDirectory;
@@ -192,7 +202,7 @@ public final class LuceneIndex implements IndexStore {
     @Override
     public synchronized void warmup() {
         if (SEARCHER_CACHE.asMap().containsKey(mailbox.getId()) ||
-                GAL_SEARCHER_CACHE.contains(mailbox.getId())) {
+                GAL_SEARCHER_CACHE.containsKey(mailbox.getId())) {
             return; // already warmed up
         }
         long start = System.currentTimeMillis();
