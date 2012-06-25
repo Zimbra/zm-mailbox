@@ -59,7 +59,6 @@ public interface DataSource {
     public void setDefaultSignature(String defaultSignature);
     public void setForwardReplySignature(String forwardReplySignature);
     public void setFromDisplay(String fromDisplay);
-    public void setFromAddress(String fromAddress);
     public void setReplyToAddress(String replyToAddress);
     public void setReplyToDisplay(String replyToDisplay);
     public void setImportClass(String importClass);
@@ -85,7 +84,6 @@ public interface DataSource {
     public String getDefaultSignature();
     public String getForwardReplySignature();
     public String getFromDisplay();
-    public String getFromAddress();
     public String getReplyToAddress();
     public String getReplyToDisplay();
     public String getImportClass();

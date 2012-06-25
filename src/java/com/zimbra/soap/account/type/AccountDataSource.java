@@ -166,13 +166,6 @@ implements DataSource {
     private String fromDisplay;
 
     /**
-     * @zm-api-field-tag data-source-from-address
-     * @zm-api-field-description Email address to put in the from header
-     */
-    @XmlAttribute(name=MailConstants.A_DS_FROM_ADDRESS /* fromAddress */, required=false)
-    private String fromAddress;
-
-    /**
      * @zm-api-field-tag data-source-replyto-address
      * @zm-api-field-description Email address to put in the reply-to header
      */
@@ -241,7 +234,6 @@ implements DataSource {
         defaultSignature = from.getDefaultSignature();
         forwardReplySignature = from.getForwardReplySignature();
         fromDisplay = from.getFromDisplay();
-        fromAddress = from.getFromAddress();
         replyToAddress = from.getReplyToAddress();
         replyToDisplay = from.getReplyToDisplay();
         importClass = from.getImportClass();
@@ -285,8 +277,6 @@ implements DataSource {
     public void setForwardReplySignature(String forwardReplySignature) { this.forwardReplySignature = forwardReplySignature; }
     @Override
     public void setFromDisplay(String fromDisplay) { this.fromDisplay = fromDisplay; }
-    @Override
-    public void setFromAddress(String fromAddress) { this.fromAddress = fromAddress; }
     @Override
     public void setReplyToAddress(String replyToAddress) { this.replyToAddress = replyToAddress; }
     @Override
@@ -342,8 +332,6 @@ implements DataSource {
     @Override
     public String getFromDisplay() { return fromDisplay; }
     @Override
-    public String getFromAddress() { return fromAddress; }
-    @Override
     public String getReplyToAddress() { return replyToAddress; }
     @Override
     public String getReplyToDisplay() { return replyToDisplay; }
@@ -387,7 +375,6 @@ implements DataSource {
             .add("defaultSignature", defaultSignature)
             .add("forwardReplySignature", forwardReplySignature)
             .add("fromDisplay", fromDisplay)
-            .add("fromAddress", fromAddress)
             .add("replyToAddress", replyToAddress)
             .add("replyToDisplay", replyToDisplay)
             .add("importClass", importClass)
