@@ -17,6 +17,7 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -34,9 +35,16 @@ import com.zimbra.soap.admin.type.ServerSelector;
 @XmlRootElement(name=AdminConstants.E_GET_SERVER_NIFS_REQUEST)
 public class GetServerNIfsRequest {
 
+	/**
+	 * @zm-api-field-description specifics the ipAddress type (ipV4/ipV6/both). default is ipv4
+	 */
+	@XmlAttribute(name=AdminConstants.A_TYPE, required=false)
+	private final String type;
+
     /**
      * @zm-api-field-description Server
      */
+
     @XmlElement(name=AdminConstants.E_SERVER, required=true)
     private final ServerSelector server;
 
@@ -45,12 +53,14 @@ public class GetServerNIfsRequest {
      */
     @SuppressWarnings("unused")
     private GetServerNIfsRequest() {
-        this((ServerSelector) null);
+        this((String) null, (ServerSelector) null);
     }
 
-    public GetServerNIfsRequest(ServerSelector server) {
+    public GetServerNIfsRequest(String type, ServerSelector server) {
+        this.type = type;
         this.server = server;
     }
 
+    public String getType() { return type; }
     public ServerSelector getServer() { return server; }
 }
