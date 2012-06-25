@@ -2361,7 +2361,7 @@ Note: For account/alias/dl, if a <domain> is specified, only entries on the
 ----------------------------------------
 
 <CheckExchangeAuthRequest>
-  <auth url="{url-to-exchange-server}" user="{exchange-user-name}" pass="{exchange-password}" scheme="basic|form" />
+  <auth url="{url-to-exchange-server}" user="{exchange-user-name}" pass="{exchange-password}" scheme="basic|form" [type="webdav|ews"]/>
 </CheckExchangeAuthRequest>
 
 <CheckExchangeAuthResponse>

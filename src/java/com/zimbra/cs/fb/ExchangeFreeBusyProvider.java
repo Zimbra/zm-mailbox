@@ -254,12 +254,22 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         return getServerInfo(email) != null;
     }
     
+    private long getTimeInterval(String attr, String accountId, long defaultValue) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        if (accountId != null) {
+            Account acct = prov.get(AccountBy.id, accountId);
+            if (acct != null) {
+                return acct.getTimeInterval(attr, defaultValue);
+            }
+        }
+        return prov.getConfig().getTimeInterval(attr, defaultValue);
+    }
+    
     @Override
-    public long cachedFreeBusyStartTime() {
+    public long cachedFreeBusyStartTime(String accountId) {
         Calendar cal = GregorianCalendar.getInstance();
         try {
-            Config config = Provisioning.getInstance().getConfig();
-            long dur = config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 0);
+            long dur = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, accountId, 0);
             cal.setTimeInMillis(System.currentTimeMillis() - dur);
         } catch (ServiceException se) {
             // set to 1 week ago
@@ -273,20 +283,29 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
     }
 
     @Override
-    public long cachedFreeBusyEndTime() {
+    public long cachedFreeBusyEndTime(String accountId) {
         long duration = Constants.MILLIS_PER_MONTH * 2;
         Calendar cal = GregorianCalendar.getInstance();
         try {
-            Config config = Provisioning.getInstance().getConfig();
-            duration = config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, duration);
+            duration = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, accountId, duration);
         } catch (ServiceException se) {
         }
-        cal.setTimeInMillis(cachedFreeBusyStartTime() + duration);
+        cal.setTimeInMillis(cachedFreeBusyStartTime(accountId) + duration);
         // normalize the time to 00:00:00
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         return cal.getTimeInMillis();
+    }
+    
+    @Override
+    public long cachedFreeBusyStartTime() {
+        return cachedFreeBusyStartTime(null);
+    }
+
+    @Override
+    public long cachedFreeBusyEndTime() {
+        return cachedFreeBusyEndTime(null);
     }
 
     @Override

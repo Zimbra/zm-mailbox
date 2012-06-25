@@ -108,7 +108,7 @@ public class Check {
     	return new Provisioning.Result(STATUS_OK, "", null);
     }
     
-    public static Provisioning.Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
+    public static Provisioning.Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) {
     	try {
         	int code = ExchangeEWSFreeBusyProvider.checkAuth(sinfo, acct);
         	switch (code) {
@@ -119,13 +119,13 @@ public class Check {
         	case 403:
                 return new Provisioning.Result(STATUS_AUTH_FAILED, "", null);
         	}
-    	} catch (IOException e) {
+    	} catch (Exception e) {
     	    return toResult(e, "");
         }
     	return new Provisioning.Result(STATUS_OK, "", null);
     }    
     
-    public static Provisioning.Result toResult(IOException e, String dn) {
+    public static Provisioning.Result toResult(Exception e, String dn) {
         if (e instanceof UnknownHostException) {
             return new Provisioning.Result(STATUS_UNKNOWN_HOST, e, dn);
         } else if (e instanceof ConnectException) {
