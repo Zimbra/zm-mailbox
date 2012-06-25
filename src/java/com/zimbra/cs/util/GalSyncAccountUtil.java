@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -53,9 +53,9 @@ public class GalSyncAccountUtil {
 	private static final String TRICKLE_SYNC_COMMAND = "tricklesync";
 	private static final String FULL_SYNC_COMMAND = "fullsync";
 	private static final String FORCE_SYNC_COMMAND = "forcesync";
-	
+
 	private static Map<String,Integer> mCommands;
-	
+
 	private static void usage() {
 		System.out.println("zmgsautil: {command}");
 		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap -s {server} [-f {folder-name}] [-p {polling-interval}]");
@@ -66,19 +66,19 @@ public class GalSyncAccountUtil {
 		System.out.println("\tforceSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
 		System.exit(1);
 	}
-	
+
 	private static void addCommand(String cmd, int cmdId) {
-		mCommands.put(cmd, new Integer(cmdId));
+		mCommands.put(cmd, Integer.valueOf(cmdId));
 	}
-	
+
 	private static int lookupCmd(String cmd) {
-		Integer i = (Integer) mCommands.get(cmd.toLowerCase());
+		Integer i = mCommands.get(cmd.toLowerCase());
 		if (i == null) {
 			usage();
 		}
 		return i.intValue();
 	}
-	
+
 	private static void setup() {
 		mCommands = new HashMap<String,Integer>();
 		addCommand(CREATE_ACCOUNT_COMMAND, CREATE_ACCOUNT);
@@ -88,7 +88,7 @@ public class GalSyncAccountUtil {
 		addCommand(FULL_SYNC_COMMAND, FULL_SYNC);
 		addCommand(FORCE_SYNC_COMMAND, FORCE_SYNC);
 	}
-	
+
 	private String mUsername;
 	private String mPassword;
 	private String mAdminURL;
@@ -120,7 +120,7 @@ public class GalSyncAccountUtil {
 	private boolean mFullSync;
 	private boolean mForceSync;
 	private String mServer;
-	
+
 	private void syncGalAccount() throws ServiceException, IOException {
 		checkArgs();
         mTransport = null;
@@ -140,12 +140,12 @@ public class GalSyncAccountUtil {
     			ds.addAttribute(AdminConstants.A_FULLSYNC, "TRUE");
     		if (mForceSync)
     			ds.addAttribute(AdminConstants.A_RESET, "TRUE");
-    			
+
     		mTransport.invoke(req);
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
-        }                        
+        }
 	}
 	private Element createGalSyncAccount(String accountName, String dsName, String domain, String type, String folder, String pollingInterval, String mailHost) throws ServiceException, IOException {
         mTransport = null;
@@ -165,12 +165,12 @@ public class GalSyncAccountUtil {
     		acct.setText(accountName);
     		if (pollingInterval != null)
     			req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
-    			
+
     		return mTransport.invokeWithoutSession(req);
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
-        }                        
+        }
 	}
 	private Element addGalSyncDataSource(String accountName, String dsName, String domain, String type, String folder, String pollingInterval) throws ServiceException, IOException {
 	    mTransport = null;
@@ -189,12 +189,12 @@ public class GalSyncAccountUtil {
 	        acct.setText(accountName);
 	        if (pollingInterval != null)
 	            req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
-	                
+
 	        return mTransport.invokeWithoutSession(req);
 	    } finally {
 	        if (mTransport != null)
 	            mTransport.shutdown();
-	    }                        
+	    }
 	}
 	private Element deleteGalSyncAccount(String name, String id) throws ServiceException, IOException {
         mTransport = null;
@@ -219,7 +219,7 @@ public class GalSyncAccountUtil {
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
-        }                        
+        }
 	}
 	private void setAccountId(String aid) {
 		mAccountId = aid;
@@ -246,7 +246,7 @@ public class GalSyncAccountUtil {
 		Element resp = mTransport.invoke(req);
 		mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		if (args.length < 1)
 			usage();
@@ -299,7 +299,7 @@ public class GalSyncAccountUtil {
 				cli.setForceSync();
 				cli.syncGalAccount();
 				break;
-			case CREATE_ACCOUNT:    
+			case CREATE_ACCOUNT:
 				String acctName = cl.getOptionValue('a');
 				String dsName = cl.getOptionValue('n');
 				String domain = cl.getOptionValue('x');

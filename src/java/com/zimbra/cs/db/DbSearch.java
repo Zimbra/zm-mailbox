@@ -429,7 +429,7 @@ public final class DbSearch {
         }
         return node.toLeaf().hasAppointmentTableConstraints();
     }
-    
+
     private static List<Result> intersectSortedLists(List<Result> toRet, List<List<Result>> lists) {
         if (lists.size() < 0) {
             return toRet;
@@ -441,7 +441,7 @@ public final class DbSearch {
                 return l1.size() - l2.size();
             }
         });
-        
+
         for (Result result : lists.get(0)) {
             boolean intersect = true;
             for (int i = 1; i < lists.size(); i++) {
@@ -480,7 +480,7 @@ public final class DbSearch {
             Collections.sort(result, new ResultComparator(sort));
         } else if (node instanceof DbSearchConstraints.Intersection) {
             List<List<Result>> resultLists = new ArrayList<List<Result>>();
-            
+
             for (DbSearchConstraints child : node.getChildren()) {
                 resultLists.add(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
             }
@@ -490,7 +490,7 @@ public final class DbSearch {
         }
         return result;
     }
-    
+
     private int countUnread(Folder folder) throws ServiceException {
         int count = folder.getUnreadCount();
         List<Folder> subFolders = folder.getSubfolders(null);
@@ -511,11 +511,11 @@ public final class DbSearch {
             hasMailItemOnlyConstraints = hasMailItemOnlyConstraints(node);
         }
         boolean requiresUnion = hasMailItemOnlyConstraints && hasAppointmentTableConstraints;
-        
+
         //HACK!HACK!HACK!
         //Bug: 68609
         //slow search "in:inbox is:unread or is:flagged"
-        //its actually cheaper to do a D/B join between mail_item and tagged_item table when 
+        //its actually cheaper to do a D/B join between mail_item and tagged_item table when
         //the unread items are smaller in count. We can possibly do the same for user tags.
         boolean joinTaggedItem = false;
         if (node instanceof DbSearchConstraints.Leaf && !dumpster) {
@@ -532,7 +532,7 @@ public final class DbSearch {
                     } else if (tag.getId() > 0) {
                         count = tag.getSize(); //user tag
                     }
-                    
+
                     if (count < LC.search_tagged_item_count_join_query_cutoff.intValue())
                         joinTaggedItem = true;
                 }
@@ -666,10 +666,10 @@ public final class DbSearch {
             case PRIORITY:
                 return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
             case SIZE:
-                return new Long(rs.getInt(SORT_COLUMN_ALIAS));
+                return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS));
             case DATE:
             default:
-                return new Long(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
+                return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
         }
     }
 
@@ -720,12 +720,12 @@ public final class DbSearch {
         if (tags.isEmpty()) {
             return;
         }
-        
+
         if (useJoin) {
             assert !dumpster;
             assert bool;
         }
-        
+
         if (dumpster) { // There is no corresponding table to TAGGED_ITEM in dumpster, hence brute-force search.
             int flags = 0;
             for (Tag tag : tags) {
@@ -754,9 +754,9 @@ public final class DbSearch {
         } else if (bool) { // Repeats "EXISTS (SELECT...)" as many times as tags.
             if (useJoin) {
                 assert tags.size() == 1;
-                
+
                 Tag tag = tags.iterator().next();
-                
+
                 //AND (mi.id = ti.item_id AND mi.mailbox_id = ti.mailbox_id AND ti.tag_id = -10)
                 sql.append(" AND (mi.id = ti.item_id AND mi.mailbox_id = ti.mailbox_id AND ti.tag_id = ?)");
                 params.add(tag.getId());

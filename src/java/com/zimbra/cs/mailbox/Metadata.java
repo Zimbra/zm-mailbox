@@ -204,7 +204,7 @@ public final class Metadata {
 
     public Metadata put(String key, long value) {
         if (key != null) {
-            map.put(key, new Long(value));
+            map.put(key, Long.valueOf(value));
         }
         return this;
     }
@@ -370,7 +370,7 @@ public final class Metadata {
             sb.append(' ');
         }
     }
-    
+
     public static void main(String[] args) throws MailServiceException {
         String encoded = "d1:ai1e4:aclmd1:gld1:ei0e1:g36:474b7021-cef6-469d-b5fb-54c96117efd11:ri1e1:ti1eee2:gei0e2:iei0ee5:mdveri4e4:mseqi628e2:szi7596456e4:unxti744e1:vi10e2:vti5ee";
         Metadata meta = new Metadata(encoded);
@@ -378,7 +378,7 @@ public final class Metadata {
         for (String key : map.keySet()) {
             System.out.println("key: " + key + " value: " + map.get(key));
         }
-        
+
     }
-    
+
 }

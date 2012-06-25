@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,7 +21,7 @@ import net.freeutils.tnef.TNEFUtils;
 
 /**
  * From MS-OXCICAL on the value of the UID property :
- * 
+ *
  *    UID = EncodedGlobalId / ThirdPartyGlobalId
  *    EncodedGlobalId         = Header GlobalIdData
  *    ThirdPartyGlobalId      = 1*UTF8-octets      ; Assuming UTF-8 is the encoding
@@ -40,7 +40,7 @@ import net.freeutils.tnef.TNEFUtils;
  * Effectively, an "EncodedGlobalId" is a direct encoding of the PidLidGlobalObjectId
  * property to hex.  The analog PidLidGlobalObjectId property of a "ThirdPartyGlobalId"
  * contains the full "ThirdPartyGlobalId" inside it.
- * 
+ *
  * Information from MS-OXCOCAL on PidLidGlobalObjectId structure :
  *    byte[16]             ByteArrayID = 0x04, 0x00, 0x00, 0x00,
  *                                       0x82, 0x00, 0xE0, 0x00,
@@ -57,7 +57,7 @@ import net.freeutils.tnef.TNEFUtils;
 
 public class GlobalObjectId {
 
-    private static final byte[] thirdPartyWaterMark = 
+    private static final byte[] thirdPartyWaterMark =
             // v     C     a     l     -     U     i     d
             {0x76, 0x43, 0x61, 0x6C, 0x2D, 0x55, 0x69, 0x64, 0x01, 0x00, 0x00, 0x00};
     private String icalUid;
@@ -96,7 +96,7 @@ public class GlobalObjectId {
             }
         }
         if (isWrappedIcalUid) {
-            Long uidLen = new Long (dataSize - thirdPartyWaterMark.length);
+            Long uidLen = Long.valueOf(dataSize - thirdPartyWaterMark.length);
             byte [] icalUidBytes = risCopy.readBytes(uidLen.intValue());
             icalUid = new String(icalUidBytes, "UTF8");
             icalUid = TNEFUtils.removeTerminatingNulls(icalUid);
@@ -115,9 +115,9 @@ public class GlobalObjectId {
             icalUid = s.toString();
         }
     }
- 
+
     /**
-     * 
+     *
      * @return the value to use for the ICALENDAR UID property
      */
     public String getIcalUid() {
@@ -147,7 +147,7 @@ public class GlobalObjectId {
 
     /**
      * @param ris - the stream currently being processed
-     * @throws IOException 
+     * @throws IOException
      */
     private void setOrigInstanceYear(RawInputStream ris) throws IOException {
         // Note: if non-zero is BIG-ENDIAN!
@@ -158,7 +158,7 @@ public class GlobalObjectId {
 
     /**
      * @param ris - the stream currently being processed
-     * @throws IOException 
+     * @throws IOException
      */
     private void setOrigInstanceMonth(RawInputStream ris) throws IOException {
         this.origInstanceMonth = ris.readU8();
@@ -166,7 +166,7 @@ public class GlobalObjectId {
 
     /**
      * @param ris - the stream currently being processed
-     * @throws IOException 
+     * @throws IOException
      */
     private void setOrigInstanceDay(RawInputStream ris) throws IOException {
         this.origInstanceDay = ris.readU8();

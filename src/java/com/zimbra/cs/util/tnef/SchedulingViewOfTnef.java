@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -66,7 +66,7 @@ public class SchedulingViewOfTnef extends Message {
     private TimeZoneDefinition startTimeTZinfo;
     private TimeZoneDefinition endTimeTZinfo;
     private TimeZoneDefinition recurrenceTZinfo;
-    
+
     private EnumSet <AppointmentStateFlags> appointmentStateFlagsMask;
     private TaskMode taskMode;
     private TaskStatus taskStatus;
@@ -495,7 +495,7 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
-     * 
+     *
      * @return value of PidLidReminderSet property which specifies whether
      * a reminder is set on the object.
      * @throws IOException
@@ -513,10 +513,10 @@ public class SchedulingViewOfTnef extends Message {
         // Specifies the start date and time of the event in UTC
         DateTime timeVal = null;
         if (this.getIcalType() == ICALENDAR_TYPE.VTODO) {
-            /* PidLidTaskStartDate Unset or has value 0x5AE980E0 
+            /* PidLidTaskStartDate Unset or has value 0x5AE980E0
              *        --> task does not have a start date
              */
-            Long taskStartDateNum = 
+            Long taskStartDateNum =
                 MapiPropertyId.PidLidTaskStartDate.get100nsPeriodsSince1601(this);
             if (taskStartDateNum == null) {
                 return null;
@@ -641,7 +641,7 @@ public class SchedulingViewOfTnef extends Message {
     /**
      * PidLidAppointmentProposedEndWhole - Specifies the proposed
      *         value for PidLidAppointmentEndWhole for a counter proposal.
-     * @return 
+     * @return
      * @throws IOException
      */
     public DateTime getProposedEndTime() throws IOException {
@@ -714,7 +714,7 @@ public class SchedulingViewOfTnef extends Message {
     /**
      * Useful for X-ALT-DESC?  Would need to convert to HTML, which, even for wrapped HTML
      * which isn't necessarily common place, isn't 100% straight forward.
-     * 
+     *
      * @return
      * @throws IOException
      */
@@ -742,7 +742,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Attr getAttr(int attrib) throws IOException {
-        List <?> attribs = (List <?>) super.getAttributes();
+        List <?> attribs = super.getAttributes();
         for (Object thisObj : attribs) {
             if (! (thisObj instanceof Attr)) {
                 continue;
@@ -757,7 +757,7 @@ public class SchedulingViewOfTnef extends Message {
     /**
      * PidLidGlobalObjectId is The unique identifier of the Calendar object.
      * After it is set for a Calendar object, the value of this property MUST NOT change.
-     * 
+     *
      * @return value of PidLidGlobalObjectId property
      */
     private GlobalObjectId getGlobalObjectId() {
@@ -776,7 +776,7 @@ public class SchedulingViewOfTnef extends Message {
      * All objects that refer to an instance of a recurring series (including
      * an orphan instance), as well as the recurring series itself, will have the
      * same value for this property.
-     * 
+     *
      * @return value of PidLidCleanGlobalObjectId property
      */
     private GlobalObjectId getCleanGlobalObjectId() {
@@ -832,9 +832,9 @@ public class SchedulingViewOfTnef extends Message {
      * is the best source of a UID.  This property is a GUID, so does NOT
      * have the ability to encode third party UIDs in the same way as
      * GlobalObjectIds do;
-     * 
-     * @return 
-     * @throws IOException 
+     *
+     * @return
+     * @throws IOException
      */
     private String getUidFromPidLidTaskGlobalId() throws IOException {
         byte[] theVal = MapiPropertyId.PidLidTaskGlobalId.getByteArrayValue(this);
@@ -853,7 +853,7 @@ public class SchedulingViewOfTnef extends Message {
 
     /**
      * @return the icalType
-     * @throws IOException 
+     * @throws IOException
      */
     public ICALENDAR_TYPE getIcalType() throws IOException {
         if (icalType == null) {
@@ -929,7 +929,7 @@ public class SchedulingViewOfTnef extends Message {
         }
         if (dateTaskCompleted != null) {
             taskStatus = TaskStatus.COMPLETE;
-            percentComplete = new Integer(100);
+            percentComplete = Integer.valueOf(100);
         } else {
             taskStatus = TaskStatus.NOT_STARTED;
             intVal = MapiPropertyId.PidLidTaskStatus.getIntegerValue(this);
@@ -944,7 +944,7 @@ public class SchedulingViewOfTnef extends Message {
             Double fractionComplete;
             fractionComplete = MapiPropertyId.PidLidPercentComplete.getDoubleValue(this);
             if ( (fractionComplete == null) || (fractionComplete < 0) || (fractionComplete > 1) ) {
-                percentComplete = new Integer(0);
+                percentComplete = Integer.valueOf(0);
             } else {
                 fractionComplete = fractionComplete * 100;
                 percentComplete = (int) Math.round(fractionComplete);
@@ -1059,7 +1059,7 @@ public class SchedulingViewOfTnef extends Message {
     /**
      * PidLidTimeZoneStruct Specifies time zone information for a recurring meeting.
      *
-     * @param tzName 
+     * @param tzName
      * @return
      * @throws IOException
      */

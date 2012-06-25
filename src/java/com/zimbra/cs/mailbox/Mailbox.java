@@ -2452,7 +2452,7 @@ public class Mailbox {
         }
 
         // try the cache first
-        MailItem item = getCachedItem(new Integer(id), type);
+        MailItem item = getCachedItem(Integer.valueOf(id), type);
         if (item != null)
             return item;
 
@@ -2465,7 +2465,7 @@ public class Mailbox {
             if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
                 throw MailItem.noSuchItem(id, type);
             }
-            Message msg = getCachedMessage(new Integer(-id));
+            Message msg = getCachedMessage(Integer.valueOf(-id));
             if (msg == null)
                 msg = getMessageById(-id);
             if (msg.getConversationId() != id)
@@ -5566,7 +5566,7 @@ public class Mailbox {
         String hash = subjectHash != null ? subjectHash : getHash(conv.getNormalizedSubject());
         conv.open(hash);
         markOtherItemDirty(hash);
-        mConvHashes.put(hash, new Integer(conv.getId()));
+        mConvHashes.put(hash, Integer.valueOf(conv.getId()));
     }
 
     // please keep this package-visible but not public

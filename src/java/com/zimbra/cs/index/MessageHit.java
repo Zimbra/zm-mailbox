@@ -170,7 +170,7 @@ public final class MessageHit extends ZimbraHit {
      */
     public ConversationHit getConversationResult() throws ServiceException {
         if (conversationHit == null) {
-            Integer cid = new Integer(getConversationId());
+            Integer cid = Integer.valueOf(getConversationId());
             conversationHit = getResults().getConversationHit(getMailbox(), cid, sortValue);
             conversationHit.addMessageHit(this);
         }

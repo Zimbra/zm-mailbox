@@ -263,7 +263,7 @@ public class Contact extends MailItem {
             return "";
         }
     }
-    
+
     @Override
     public String getSortSender() {
         String sender = getSender();
@@ -482,7 +482,7 @@ public class Contact extends MailItem {
         if (last.length() > 0 && first.length() > 0) sb.append(", ");
         sb.append(first);
         if (sb.toString().equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_LAST_C_FIRST).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_LAST_C_FIRST).toString());
             return;
         }
 
@@ -492,13 +492,13 @@ public class Contact extends MailItem {
         if (last.length() > 0 && first.length() > 0) sb.append(' ');
         sb.append(last);
         if (sb.toString().equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_FIRST_LAST).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_FIRST_LAST).toString());
             return;
         }
 
         //ContactConstants.A_COMPANY = 3
         if (company.equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_COMPANY).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_COMPANY).toString());
             return;
         }
 
@@ -509,7 +509,7 @@ public class Contact extends MailItem {
         sb.append(first);
         if (company.length() > 0) sb.append(" (").append(company).append(')');
         if (sb.toString().equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_LAST_C_FIRST_COMPANY).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_LAST_C_FIRST_COMPANY).toString());
             return;
         }
 
@@ -520,7 +520,7 @@ public class Contact extends MailItem {
         sb.append(last);
         if (company.length() > 0) sb.append(" (").append(company).append(')');
         if (sb.toString().equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_FIRST_LAST_COMPANY).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_FIRST_LAST_COMPANY).toString());
             return;
         }
 
@@ -533,7 +533,7 @@ public class Contact extends MailItem {
             sb.append(first).append(')');
         }
         if (sb.toString().equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_COMPANY_LAST_C_FIRST).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_COMPANY_LAST_C_FIRST).toString());
             return;
         }
 
@@ -546,12 +546,12 @@ public class Contact extends MailItem {
             sb.append(last).append(')');
         }
         if (sb.toString().equals(fileAs)) {
-            attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_COMPANY_FIRST_LAST).toString());
+            attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_COMPANY_FIRST_LAST).toString());
             return;
         }
 
         //ContactConstants.A_EXPLICIT = 8
-        attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
+        attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
     /**

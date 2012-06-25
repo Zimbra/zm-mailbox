@@ -76,7 +76,7 @@ public class PatchManifest
             totalBytesSoFar += currentTotal.longValue();
         }
 
-        references.put(ref, new Long(totalBytesSoFar));
+        references.put(ref, Long.valueOf(totalBytesSoFar));
     }
 
     /**

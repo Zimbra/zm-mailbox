@@ -375,7 +375,7 @@ public final class ACL {
         if ((rightsGranted & SUBFOLDER_RIGHTS) == SUBFOLDER_RIGHTS)
             rightsGranted |= RIGHT_SUBFOLDER;
 
-        return new Short(rightsGranted);
+        return Short.valueOf(rightsGranted);
     }
 
     /** Returns whether there are any grants encapsulated by this ACL. */

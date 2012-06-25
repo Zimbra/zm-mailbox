@@ -196,7 +196,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
                     storedBlobs.put(id, versionMap);
                 }
 
-                Integer versionInt = new Integer(version);
+                Integer versionInt = Integer.valueOf(version);
                 assert !versionMap.containsKey(versionInt) : "Version " + version + " already exists";
 
                 versionMap.put(versionInt, sb);
@@ -246,7 +246,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
                 return null;
             }
 
-            return versionMap.get(new Integer(version));
+            return versionMap.get(Integer.valueOf(version));
         }
     }
 
@@ -284,7 +284,7 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
                     return;
                 }
 
-                StoredBlob removedSb = versionMap.remove(new Integer(version));
+                StoredBlob removedSb = versionMap.remove(Integer.valueOf(version));
 
                 if (removedSb != null) {
 

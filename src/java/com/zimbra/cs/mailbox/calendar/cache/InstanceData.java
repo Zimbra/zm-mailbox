@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -98,13 +98,13 @@ public class InstanceData {
         String recurIdZ = meta.get(FN_RECURRENCE_ID_Z, null);
         Long dtStart = null, duration = null, alarmAt = null, tzOffset = null;
         if (meta.containsKey(FN_DTSTART))
-            dtStart = new Long(meta.getLong(FN_DTSTART));
+            dtStart = Long.valueOf(meta.getLong(FN_DTSTART));
         if (meta.containsKey(FN_DURATION))
-            duration = new Long(meta.getLong(FN_DURATION));
+            duration = Long.valueOf(meta.getLong(FN_DURATION));
         if (meta.containsKey(FN_ALARM_AT))
-            alarmAt = new Long(meta.getLong(FN_ALARM_AT));
+            alarmAt = Long.valueOf(meta.getLong(FN_ALARM_AT));
         if (meta.containsKey(FN_TZOFFSET))
-            tzOffset = new Long(meta.getLong(FN_TZOFFSET));
+            tzOffset = Long.valueOf(meta.getLong(FN_TZOFFSET));
         String ptst = meta.get(FN_PARTSTAT, null);
         String fba = meta.get(FN_FREEBUSY_ACTUAL, null);
         String pctComp = meta.get(FN_PERCENT_COMPLETE, null);

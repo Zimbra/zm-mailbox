@@ -131,10 +131,10 @@ public class CalSummaryCache {
             Long defDurationLong = null;
             ParsedDateTime defDtStart = defaultInvite.getStartTime();
             if (defDtStart != null) {
-                defDtStartLong = new Long(defDtStart.getUtcTime());
+                defDtStartLong = Long.valueOf(defDtStart.getUtcTime());
                 ParsedDateTime defDtEnd = defaultInvite.getEffectiveEndTime();
                 if (defDtEnd != null)
-                    defDurationLong = new Long(defDtEnd.getUtcTime() - defDtStartLong.longValue());
+                    defDurationLong = Long.valueOf(defDtEnd.getUtcTime() - defDtStartLong.longValue());
             }
             String defaultEffectivePartStat = calItem.getEffectivePartStat(defaultInvite, null);
             FullInstanceData defaultData =
@@ -156,8 +156,8 @@ public class CalSummaryCache {
                 try {
                     long instStart = inst.getStart();
                     long duration = inst.getEnd() - instStart;
-                    Long instStartLong = instStart > 0 ? new Long(instStart) : null;
-                    Long durationLong = duration > 0 ? new Long(duration) : null;
+                    Long instStartLong = instStart > 0 ? Long.valueOf(instStart) : null;
+                    Long durationLong = duration > 0 ? Long.valueOf(duration) : null;
 
                     // For an instance whose alarm time is within the time range, we must
                     // include it even if its start time is after the range.
@@ -178,7 +178,7 @@ public class CalSummaryCache {
 
                     InviteInfo invId = inst.getInviteInfo();
                     Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
-                    Long alarmAt = instStart == alarmInst ? new Long(alarmTime) : null;
+                    Long alarmAt = instStart == alarmInst ? Long.valueOf(alarmTime) : null;
 
                     String fba = inv.getFreeBusyActual();
                     if (calItem instanceof Appointment)
@@ -187,7 +187,7 @@ public class CalSummaryCache {
                     InstanceData instData;
                     if (!inst.isException()) {
                         String ridZ = inst.getRecurIdZ();
-                        Long tzOffset = instStartLong != null && inst.isAllDay() ? new Long(inst.getStartTzOffset()) : null;
+                        Long tzOffset = instStartLong != null && inst.isAllDay() ? Long.valueOf(inst.getStartTzOffset()) : null;
                         instData = new InstanceData(
                                 ridZ, instStartLong, durationLong, alarmAt, tzOffset,
                                 effectivePartStat, fba, inv.getPercentComplete(),

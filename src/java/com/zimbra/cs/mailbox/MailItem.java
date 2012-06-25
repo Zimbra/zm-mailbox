@@ -3200,7 +3200,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         }
 
-        Integer id = new Integer(mId);
+        Integer id = Integer.valueOf(mId);
         PendingDelete info = new PendingDelete();
         info.size   = getTotalSize();
         info.itemIds.add(getType(), id, mData.uuid);

@@ -66,7 +66,7 @@ public abstract class MailboxBlob implements Serializable {
 
     public long getSize() throws IOException {
         if (mSize == null)
-            mSize = new Long(getLocalBlob().getRawSize());
+            mSize = Long.valueOf(getLocalBlob().getRawSize());
         return mSize;
     }
 

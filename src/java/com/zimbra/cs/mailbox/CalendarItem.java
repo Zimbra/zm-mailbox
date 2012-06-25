@@ -254,7 +254,7 @@ public abstract class CalendarItem extends MailItem {
         } finally {
             mMailbox.lock.release();
         }
-        
+
         return docs;
     }
 
@@ -493,7 +493,7 @@ public abstract class CalendarItem extends MailItem {
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
-        
+
         if (!firstInvite.hasRecurId()) {
             ZimbraLog.calendar.info(
                     "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s",
@@ -509,7 +509,7 @@ public abstract class CalendarItem extends MailItem {
         }
 
         new DbMailItem(mbox).setSender(sender).create(data);
-        
+
         CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
         Invite defInvite = item.getDefaultInviteOrNull();
         if (defInvite != null) {
@@ -721,11 +721,11 @@ public abstract class CalendarItem extends MailItem {
             try {
                 Set<String> tzids = new HashSet<String>();
                 mTzMap = Util.decodeFromMetadata(meta.getMap(Metadata.FN_TZMAP), accountTZ);
-    
+
                 // appointment/task start and end
                 mStartTime = meta.getLong(Metadata.FN_CALITEM_START, 0);
                 mEndTime = meta.getLong(Metadata.FN_CALITEM_END, 0);
-    
+
                 // invite ID's
                 long numComp = meta.getLong(Metadata.FN_NUM_COMPONENTS);
                 for (int i = 0; i < numComp; i++) {
@@ -735,7 +735,7 @@ public abstract class CalendarItem extends MailItem {
                     tzids.addAll(inv.getReferencedTZIDs());
                     mTzMap.add(inv.getTimeZoneMap());
                 }
-    
+
                 Metadata metaRecur = meta.getMap(FN_CALITEM_RECURRENCE, true);
                 if (metaRecur != null) {
                     mRecurrence = Recurrence.decodeMetadata(metaRecur, mTzMap);
@@ -743,7 +743,7 @@ public abstract class CalendarItem extends MailItem {
                         tzids.addAll(Recurrence.getReferencedTZIDs(mRecurrence));
                     }
                 }
-    
+
                 if (meta.containsKey(Metadata.FN_REPLY_LIST)) {
                     mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
                     // Get all TZIDs referenced by replies.
@@ -760,17 +760,17 @@ public abstract class CalendarItem extends MailItem {
                 } else {
                     mReplyList = new ReplyList();
                 }
-    
+
                 Metadata metaAlarmData = meta.getMap(Metadata.FN_ALARM_DATA, true);
                 if (metaAlarmData != null)
                     mAlarmData = AlarmData.decodeMetadata(metaAlarmData);
-    
+
                 // Reduce tzmap to minimal set of TZIDs referenced by invites, recurrence, and replies.
                 mTzMap.reduceTo(tzids);
             } catch (ServiceException se) {
-                if (ServiceException.INVALID_REQUEST.equals(se.getCode()) && 
+                if (ServiceException.INVALID_REQUEST.equals(se.getCode()) &&
                         this.getChangeDate() < new GregorianCalendar(2006, 0, 1).getTimeInMillis()) {
-                    //could have been metadata version 3, 4 or 5. 
+                    //could have been metadata version 3, 4 or 5.
                     //All of those versions have FN_TZMAP, but different format for other fields
                     //these are edge cases that should only appear in dev/df/cf
                     mStartTime = 0;
@@ -783,7 +783,7 @@ public abstract class CalendarItem extends MailItem {
             //version 2 or earlier
             mStartTime = 0;
             mEndTime = 0;
-        } 
+        }
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
@@ -804,7 +804,7 @@ public abstract class CalendarItem extends MailItem {
                                    List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
         if (tzmap != null)
             meta.put(Metadata.FN_TZMAP, Util.encodeAsMetadata(tzmap));
-        
+
         meta.put(Metadata.FN_UID, uid);
         meta.put(Metadata.FN_CALITEM_START, startTime);
         meta.put(Metadata.FN_CALITEM_END, endTime);
@@ -1781,7 +1781,7 @@ public abstract class CalendarItem extends MailItem {
                     toRemove.add(cur);
                     // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
                     // that way the numbers all match up as the list contracts!
-                    idxsToRemove.add(0, new Integer(i));
+                    idxsToRemove.add(0, Integer.valueOf(i));
 
                     boolean invalidateReplies = false;
                     if (!discardExistingInvites) {
@@ -1854,7 +1854,7 @@ public abstract class CalendarItem extends MailItem {
                         toRemove.add(cur);
                         // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
                         // that way the numbers all match up as the list contracts!
-                        idxsToRemove.add(0, new Integer(i));
+                        idxsToRemove.add(0, Integer.valueOf(i));
 
                         // clean up any old REPLYs that have been made obsolete by this new invite
                         mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(),

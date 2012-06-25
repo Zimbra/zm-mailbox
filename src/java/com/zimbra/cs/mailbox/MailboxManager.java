@@ -453,7 +453,7 @@ public class MailboxManager {
             } finally {
                 conn.closeQuietly();
             }
-            
+
             mbox = instantiateMailbox(data);
             Account account = mbox.getAccount();
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
@@ -574,7 +574,7 @@ public class MailboxManager {
     }
 
     protected synchronized void cacheAccount(String accountId, int mailboxId) {
-        mailboxIds.put(accountId.toLowerCase(), new Integer(mailboxId));
+        mailboxIds.put(accountId.toLowerCase(), Integer.valueOf(mailboxId));
     }
 
     private Mailbox cacheMailbox(Mailbox mailbox) {
@@ -693,7 +693,7 @@ public class MailboxManager {
         } finally {
             DbPool.quietClose(conn);
         }
-        
+
     }
 
     /** Returns an array of the account IDs of all the mailboxes on this host.
@@ -791,7 +791,7 @@ public class MailboxManager {
         do {
             if (mailboxKey != null)
                 return getMailboxById(mailboxKey);
-            
+
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
             synchronized (this) {
                 // check to make sure the mailbox doesn't already exist

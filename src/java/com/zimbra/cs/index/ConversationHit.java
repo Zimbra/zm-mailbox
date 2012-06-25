@@ -52,7 +52,7 @@ public final class ConversationHit extends ZimbraHit {
     }
 
     public void addMessageHit(MessageHit hit) {
-        messageHits.put(new Long(hit.getItemId()), hit);
+        messageHits.put(Long.valueOf(hit.getItemId()), hit);
     }
 
     public Collection<MessageHit> getMessageHits() {

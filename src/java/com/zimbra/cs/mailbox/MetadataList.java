@@ -87,7 +87,7 @@ public class MetadataList {
     }
 
     public MetadataList add(long value) {
-        list.add(new Long(value));
+        list.add(Long.valueOf(value));
         return this;
     }
 

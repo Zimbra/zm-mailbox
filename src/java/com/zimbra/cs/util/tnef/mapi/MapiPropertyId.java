@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,15 +33,15 @@ import net.freeutils.tnef.RawInputStream;
 
 public class MapiPropertyId {
 
-    public final static MapiPropertyId PidTagImportance = 
+    public final static MapiPropertyId PidTagImportance =
         new MapiPropertyId(MAPIProp.PR_IMPORTANCE);
-    public final static MapiPropertyId PidTagSensitivity = 
+    public final static MapiPropertyId PidTagSensitivity =
         new MapiPropertyId(MAPIProp.PR_SENSITIVITY);
-    public final static MapiPropertyId PidTagResponseRequested = 
+    public final static MapiPropertyId PidTagResponseRequested =
         new MapiPropertyId(MAPIProp.PR_RESPONSE_REQUESTED);
-    public final static MapiPropertyId PidTagReplyRequested = 
+    public final static MapiPropertyId PidTagReplyRequested =
         new MapiPropertyId(MAPIProp.PR_REPLY_REQUESTED);
-    public final static MapiPropertyId PidTagOwnerAppointmentId = 
+    public final static MapiPropertyId PidTagOwnerAppointmentId =
         new MapiPropertyId(MAPIProp.PR_OWNER_APPT_ID);
     public final static MapiPropertyId PidTagEndDate =
         new MapiPropertyId(MAPIProp.PR_END_DATE);
@@ -61,7 +61,7 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8516);
     public final static MapiPropertyId PidLidCommonEnd =
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8517);
-    public final static MapiPropertyId PidLidTaskMode = 
+    public final static MapiPropertyId PidLidTaskMode =
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8518);
     public final static MapiPropertyId PidLidTaskGlobalId =
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8519);
@@ -71,7 +71,7 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8535);
     public final static MapiPropertyId PidLidCompanies =
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8539);
-    public final static MapiPropertyId PidNameKeywords = 
+    public final static MapiPropertyId PidNameKeywords =
         new MapiPropertyId(MSGUID.PS_PUBLIC_STRINGS, "Keywords");
     public final static MapiPropertyId PidNameCalendarUid =
         new MapiPropertyId(MSGUID.PS_PUBLIC_STRINGS,
@@ -100,22 +100,22 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8228);
     public final static MapiPropertyId PidLidTimeZoneDescription =
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8234);
-    public final static MapiPropertyId PidLidAppointmentProposedStartWhole = 
+    public final static MapiPropertyId PidLidAppointmentProposedStartWhole =
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8250);
-    public final static MapiPropertyId PidLidAppointmentProposedEndWhole = 
+    public final static MapiPropertyId PidLidAppointmentProposedEndWhole =
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8251);
-    public final static MapiPropertyId PidLidAppointmentCounterProposal = 
+    public final static MapiPropertyId PidLidAppointmentCounterProposal =
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8257);
     public final static MapiPropertyId PidLidAppointmentNotAllowPropose =
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x825A);
     // PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies
     // time zone information applicable to PidLidAppointmentStartWhole.
-    public final static MapiPropertyId 
+    public final static MapiPropertyId
         PidLidAppointmentTimeZoneDefinitionStartDisplay =
             new MapiPropertyId(MSGUID.PSETID_Appointment, 0x825E);
     // PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies
     // time zone information applicable to PidLidAppointmentEndWhole.
-    public final static MapiPropertyId 
+    public final static MapiPropertyId
         PidLidAppointmentTimeZoneDefinitionEndDisplay =
             new MapiPropertyId(MSGUID.PSETID_Appointment, 0x825F);
     // PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
@@ -124,12 +124,12 @@ public class MapiPropertyId {
     // MS-OXOCAL says "If this property is set, but it has data that is
     // inconsistent with the data that is represented by PidLidTimeZoneStruct,
     // then the client uses PidLidTimeZoneStruct instead of this property."
-    public final static MapiPropertyId 
+    public final static MapiPropertyId
         PidLidAppointmentTimeZoneDefinitionRecur =
             new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8260);
     public final static MapiPropertyId PidLidTimeZoneStruct =
         new MapiPropertyId(MSGUID.PSETID_Appointment, 0x8233);
-    public final static MapiPropertyId PidLidAttendeeCriticalChange = 
+    public final static MapiPropertyId PidLidAttendeeCriticalChange =
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x0001);
     public final static MapiPropertyId PidLidGlobalObjectId =
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x0003);
@@ -139,25 +139,25 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x0023);
     public final static MapiPropertyId PidLidMeetingType =
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x0026);
-    public final static MapiPropertyId PidLidStartRecurrenceTime = 
+    public final static MapiPropertyId PidLidStartRecurrenceTime =
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x000e);
 
     // PSETID_Task - MSGUID("{00062003-0000-0000-C000-000000000046}");
-    public final static MapiPropertyId PidLidTaskStatus = 
+    public final static MapiPropertyId PidLidTaskStatus =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8101);
-    /* PidLidPercentComplete - Double -value between 0 and 1! */ 
-    public final static MapiPropertyId PidLidPercentComplete = 
+    /* PidLidPercentComplete - Double -value between 0 and 1! */
+    public final static MapiPropertyId PidLidPercentComplete =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8102);
     // PidLidTaskStartDate - MS-OXOTASK this is start date in user's local timezone.
     // MS-OXOTASK also says PidLidCommonStart should be UTC equivalent of PidLidTaskStartDate
-    public final static MapiPropertyId PidLidTaskStartDate = 
+    public final static MapiPropertyId PidLidTaskStartDate =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8104);
     // PidLidTaskDueDate - MS-OXOTASK this is due date in user's local timezone.
     // MS-OXOTASK also says PidLidCommonEnd should be UTC equivalent of PidLidTaskDueDate
-    public final static MapiPropertyId PidLidTaskDueDate = 
+    public final static MapiPropertyId PidLidTaskDueDate =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8105);
     // PidLidTaskResetReminder 0x8107 - true if future instances need reminders
-    // PidLidTaskAccepted 0x8108 - boolean 
+    // PidLidTaskAccepted 0x8108 - boolean
     public final static MapiPropertyId PidLidTaskDateCompleted = /* UTC value */
         new MapiPropertyId(MSGUID.PSETID_Task, 0x810f);
     /* PidLidTaskActualEffort - Number of mins.  Works on assumption 8 hrs/day 5 days/week */
@@ -168,7 +168,7 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8111);
     public final static MapiPropertyId PidLidTaskVersion =  /* integer - suitable for iCal SEQUENCE */
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8112);
-    // PidLidTaskState 0x8113 - Current assignment state of Task Object 
+    // PidLidTaskState 0x8113 - Current assignment state of Task Object
     // PidLidTaskLastUpdate 0x8115 -  UTC value
     // DeletedInstanceCount and ModifiedInstanceCount MUST be 0 - hence no EXDATE/RDATE
     public final static MapiPropertyId PidLidTaskRecurrence =
@@ -208,6 +208,7 @@ public class MapiPropertyId {
         this.id = id;
     }
 
+    @Override
     public String toString() {
         if (mapiPropName == null) {
             return mapiPropName.toString();
@@ -277,7 +278,7 @@ public class MapiPropertyId {
     public Integer getIntegerValue(SchedulingViewOfTnef schedView, int defaultVal) throws IOException {
         Integer retVal = this.getIntegerValue(schedView);
         if (retVal == null) {
-            retVal = new Integer(defaultVal);
+            retVal = Integer.valueOf(defaultVal);
         }
         return retVal;
     }
@@ -430,7 +431,7 @@ public class MapiPropertyId {
 
     public MAPIProp getProp(SchedulingViewOfTnef schedView) throws IOException {
         MAPIProp mp;
-        List <?> attribs = (List <?>) schedView.getAttributes();
+        List <?> attribs = schedView.getAttributes();
         for (Object thisObj : attribs) {
             if (! (thisObj instanceof Attr)) {
                 continue;

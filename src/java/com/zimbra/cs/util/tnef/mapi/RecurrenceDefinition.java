@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -157,7 +157,7 @@ public class RecurrenceDefinition {
      * @param ris
      * @param tz
      * @throws IOException
-     * @throws TNEFtoIcalendarServiceException 
+     * @throws TNEFtoIcalendarServiceException
      */
     public RecurrenceDefinition(RawInputStream ris,
             TimeZoneDefinition tz, String oemCP) throws IOException, TNEFtoIcalendarServiceException {
@@ -176,7 +176,7 @@ public class RecurrenceDefinition {
             readPatternType(ris);
             readMsCalScale(ris);
             readFirstDateTime(ris);
-    
+
             // This field is the interval at which the meeting pattern specified in PatternTypeSpecific field
             // repeats. The Period value MUST be between 0 (zero) and the MaximumRecurrenceInterval, which is
             // 999 days for daily recurrences, 99 weeks for weekly recurrences, and 99 months for monthly
@@ -186,7 +186,7 @@ public class RecurrenceDefinition {
             dayMask = 0;
             dayOfMonth = 0;
             weekDayOccurrenceNumber = 0;
-    
+
             // Process PatternSpecificType data
             switch (patternType) {
                 case DAY:
@@ -212,7 +212,7 @@ public class RecurrenceDefinition {
                 default:
                     throw TNEFtoIcalendarServiceException.RECURDEF_BAD_PATTERN(patternType.toString());
             }
-    
+
             readEndType(ris);
             occurrenceCount = ris.readU32();
             readFirstDayOfWeek(ris);
@@ -226,7 +226,7 @@ public class RecurrenceDefinition {
             for (int cnt = 0;cnt < modifiedInstanceCount; cnt++) {
                 modMidnightMinsSince1601[cnt] = ris.readU32();
             }
-            
+
             startMinsSince1601 = ris.readU32();
             endMinsSince1601 = ris.readU32();
 
@@ -242,12 +242,12 @@ public class RecurrenceDefinition {
             }
             readerVersion2 = ris.readU32();
             writerVersion2 = ris.readU32();
-            
+
             startTimeOffset = ris.readU32();
             endTimeOffset = ris.readU32();
             exceptionCount = ris.readU16();  // Should be same as modifiedInstanceCount?
             //        For each modified instance, expect to find an ExceptionInfo structure.
-    
+
             changedInstances = new ArrayList <ChangedInstanceInfo>();
             for (int cnt = 1; cnt <= modifiedInstanceCount; cnt++) {
                 ChangedInstanceInfo cInst = new ChangedInstanceInfo(cnt, tzDef, oemCodePage);
@@ -459,15 +459,15 @@ public class RecurrenceDefinition {
         switch (patternType) {
             case DAY:
                 recurrenceRule.append(Recur.DAILY);
-                interval = new Long(period).intValue() / 1440;
+                interval = Long.valueOf(period).intValue() / 1440;
                 break;
             case WEEK:
                 recurrenceRule.append(Recur.WEEKLY);
-                interval = new Long(period).intValue();
+                interval = Long.valueOf(period).intValue();
                 hasBYDAY = true;
                 break;
             case MONTH:
-                interval = new Long(period).intValue();
+                interval = Long.valueOf(period).intValue();
                 if ((interval % 12) == 0) {
                     isYearly = true;
                     recurrenceRule.append(Recur.YEARLY);
@@ -501,7 +501,7 @@ public class RecurrenceDefinition {
                 }
                 break;
             case MONTH_NTH:
-                interval = new Long(period).intValue();
+                interval = Long.valueOf(period).intValue();
                 if ((interval % 12) == 0) {
                     isYearly = true;
                     recurrenceRule.append(Recur.YEARLY);
@@ -644,7 +644,7 @@ public class RecurrenceDefinition {
 
         if (calType == 0) {
             if (patternType.equals(PatternType.HJ_MONTH)) {
-                this.calScale = 
+                this.calScale =
                 MsCalScale.HIJRI;
                 return;
             }
@@ -706,6 +706,7 @@ public class RecurrenceDefinition {
         this.firstDateTime = ris.readU32();
     }
 
+    @Override
     public String toString() {
         StringBuffer buf = new StringBuffer("PidLidAppointmentRecur\n");
         if (readerVersion != 0x3004) {
@@ -808,24 +809,24 @@ public class RecurrenceDefinition {
         if (rsrvdBlock1Size != -1) {
             buf.append("    rsrvdBlock1Size=").append(rsrvdBlock1Size).append("\n");
             buf.append("    rsrvdBlock1=")
-                .append(TNEFUtils.toHexString((byte[])rsrvdBlock1, (int)rsrvdBlock1Size))
+                .append(TNEFUtils.toHexString(rsrvdBlock1, (int)rsrvdBlock1Size))
                 .append("\n");
         }
         if (rsrvdBlock2Size != -1) {
             buf.append("    rsrvdBlock2Size=").append(rsrvdBlock2Size).append("\n");
             buf.append("    rsrvdBlock2=")
-                .append(TNEFUtils.toHexString((byte[])rsrvdBlock2, (int)rsrvdBlock2Size))
+                .append(TNEFUtils.toHexString(rsrvdBlock2, (int)rsrvdBlock2Size))
                 .append("\n");
         }
         if (unprocessedByteCount != 0L) {
             buf.append("    unprocessedByteCount=").append(unprocessedByteCount).append("\n");
             buf.append("    unprocessedBytes=")
-                .append(TNEFUtils.toHexString((byte[])unprocessedBytes, (int)unprocessedByteCount))
+                .append(TNEFUtils.toHexString(unprocessedBytes, (int)unprocessedByteCount))
                 .append("\n");
         }
         return buf.toString();
     }
-    
+
     private StringBuffer infoOnLocalTimeSince1601Val(StringBuffer buf, String desc,
             long localTimeSince1601) {
         buf.append(desc);
@@ -838,7 +839,7 @@ public class RecurrenceDefinition {
         buf.append(")]\n");
         return buf;
     }
-    
+
     private StringBuffer infoOnLocalTimeSince1601ValWithOffset(StringBuffer buf, String desc,
             long localTimeSince1601, long startOffset, String suffix) {
         long since1601 = localTimeSince1601 + startOffset;
