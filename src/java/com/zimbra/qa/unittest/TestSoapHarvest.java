@@ -38,8 +38,7 @@ public class TestSoapHarvest extends TestCase {
     throws Exception {
     }
 
-    private String getRequest(String userId, String authToken) {
-        //no password or authtoken, so this will fail
+    private String getNoOpRequest(String userId, String authToken) {
         return "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\">" +
         "<soap:Header>"+
         "<context xmlns=\"urn:zimbra\">"+
@@ -57,10 +56,28 @@ public class TestSoapHarvest extends TestCase {
         "</soap:Envelope>";
     }
 
-    private String sendReq(String userId, String authToken, int expectedCode) throws HttpException, IOException {
+    private String getSearchRequest(String userId, String authToken) {
+        return "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\">" +
+        "<soap:Header>"+
+        "<context xmlns=\"urn:zimbra\">"+
+        "<userAgent name=\"Zimbra Junit\" version=\"0.0\"/>"+
+        (authToken != null ? "<authToken>" + authToken + "</authToken>" : "") +
+        "<nosession/>"+
+        "<account by=\"name\">"+
+        userId+
+        "</account>"+
+        "</context>"+
+        "</soap:Header>"+
+        "<soap:Body>"+
+        "<GetInfoRequest xmlns=\"urn:zimbraAccount\" sections=\"mbox\"/>"+
+        "</soap:Body>"+
+        "</soap:Envelope>";
+    }
+
+    private String sendReq(String userId, String authToken, int expectedCode, boolean useSearchReq) throws HttpException, IOException {
         HttpClient client = new HttpClient();
-        PostMethod method = new PostMethod(TestUtil.getSoapUrl() + "NoOpRequest");
-        method.setRequestEntity(new StringRequestEntity(getRequest(userId, authToken), "application/soap+xml", "UTF-8"));
+        PostMethod method = new PostMethod(TestUtil.getSoapUrl() + (useSearchReq ? "GetInfoRequest" : "NoOpRequest"));
+        method.setRequestEntity(new StringRequestEntity(useSearchReq ? getSearchRequest(userId, authToken) : getNoOpRequest(userId, authToken), "application/soap+xml", "UTF-8"));
         int respCode = HttpClientUtil.executeMethod(client, method);
         Assert.assertEquals(expectedCode, respCode);
         return method.getResponseBodyAsString();
@@ -73,7 +90,7 @@ public class TestSoapHarvest extends TestCase {
         //make sure user1 exists
         Assert.assertNotNull(mbox);
 
-        String response = sendReq(USER_NAME, null, 500);
+        String response = sendReq(USER_NAME, null, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.AUTH_REQUIRED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>no valid authtoken present</soap:Text>") > -1);
 
@@ -87,7 +104,7 @@ public class TestSoapHarvest extends TestCase {
             //expected
         }
 
-        response = sendReq(bogusUserId, null, 500);
+        response = sendReq(bogusUserId, null, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.AUTH_REQUIRED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>no valid authtoken present</soap:Text>") > -1);
 
@@ -100,7 +117,7 @@ public class TestSoapHarvest extends TestCase {
         Assert.assertNotNull(mbox);
 
         String authToken = mbox.getAuthToken().getValue();
-        String response = sendReq(USER_NAME, authToken, 200);
+        String response = sendReq(USER_NAME, authToken, 200, true);
         //make sure auth token works for normal request
 
         String userId = "user4";
@@ -109,9 +126,9 @@ public class TestSoapHarvest extends TestCase {
         Assert.assertNotNull(mbox);
 
         //note this fails if you've shared anything from user1 to user4. works fine in clean setup
-        response = sendReq(userId, authToken, 500);
+        response = sendReq(userId, authToken, 500, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
-        Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account " + userId + "</soap:Text>") > -1);
+        Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
 
 
         //make sure bogus does *not* exist
@@ -123,9 +140,9 @@ public class TestSoapHarvest extends TestCase {
             //expected
         }
 
-        response = sendReq(userId, authToken, 500);
+        response = sendReq(userId, authToken, 500, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
-        Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account " + userId + "</soap:Text>") > -1);
+        Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
     }
 
 }
