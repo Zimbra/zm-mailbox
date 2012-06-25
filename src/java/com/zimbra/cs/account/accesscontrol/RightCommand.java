@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
@@ -1179,6 +1180,30 @@ public class RightCommand {
             if (!granteeType.allowedForAdminRights()) {
                 throw ServiceException.INVALID_REQUEST("grantee type " +
                         granteeType.getCode() +  " is not allowed for admin right", null);
+            }
+        }
+
+        /*
+         * dynamic group with custom memberURL cannot be the grantee of any grants
+         */
+        if (granteeEntry instanceof DynamicGroup) {
+            if (!((DynamicGroup)granteeEntry).isIsACLGroup()) {
+                throw ServiceException.INVALID_REQUEST(
+                        "dynamic group with custom memberURL cannot be the grantee of any grant", null);
+            }
+        }
+
+        /*
+         * dynamic group with custom memberURL can only be the target group level rights,
+         * not account rights, because given an account, we can't answer the question
+         * "is the account a member of this group?".
+         */
+        if (targetEntry instanceof DynamicGroup) {
+            if (!((DynamicGroup)targetEntry).isIsACLGroup()) {
+                if (!right.isValidTargetForCustomDynamicGroup()) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "dynamic group with custom memberURL can only be the target of dynamic group rights", null);
+                }
             }
         }
 
