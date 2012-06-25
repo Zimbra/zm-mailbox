@@ -74,22 +74,31 @@ public class ExchangeAuthSpec {
     private final AuthScheme scheme;
 
     /**
+     * @zm-api-field-tag auth-type
+     * @zm-api-field-description Auth type
+     */
+    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
+    private final String type;
+    
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ExchangeAuthSpec() {
-        this((String) null, (String) null, (String) null, (AuthScheme) null);
+        this((String) null, (String) null, (String) null, (AuthScheme) null, null);
     }
 
     public ExchangeAuthSpec(String url, String authUserName,
-                    String authPassword, AuthScheme scheme) {
+                    String authPassword, AuthScheme scheme, String type) {
         this.url = url;
         this.authUserName = authUserName;
         this.authPassword = authPassword;
         this.scheme = scheme;
+        this.type = type;
     }
 
     public String getUrl() { return url; }
+    public String getType() { return type; }
     public String getAuthUserName() { return authUserName; }
     public String getAuthPassword() { return authPassword; }
     public AuthScheme getScheme() { return scheme; }
