@@ -118,7 +118,7 @@ public final class BEncoding {
                 return null;
 
             case 'i':
-                return new Long(readLong(buffer, offset, 'e'));
+                return Long.valueOf(readLong(buffer, offset, 'e'));
 
             default:
                 offset.offset--;

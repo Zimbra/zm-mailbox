@@ -28,13 +28,13 @@ public class TimeZoneMap implements Cloneable {
     static HashMap<ZWeekDay, Integer> sDayWeekDayMap;
     static {
         sDayWeekDayMap = new HashMap<ZWeekDay, Integer>();
-        sDayWeekDayMap.put(ZWeekDay.SU, new Integer(java.util.Calendar.SUNDAY));
-        sDayWeekDayMap.put(ZWeekDay.MO, new Integer(java.util.Calendar.MONDAY));
-        sDayWeekDayMap.put(ZWeekDay.TU, new Integer(java.util.Calendar.TUESDAY));
-        sDayWeekDayMap.put(ZWeekDay.WE, new Integer(java.util.Calendar.WEDNESDAY));
-        sDayWeekDayMap.put(ZWeekDay.TH, new Integer(java.util.Calendar.THURSDAY));
-        sDayWeekDayMap.put(ZWeekDay.FR, new Integer(java.util.Calendar.FRIDAY));
-        sDayWeekDayMap.put(ZWeekDay.SA, new Integer(java.util.Calendar.SATURDAY));
+        sDayWeekDayMap.put(ZWeekDay.SU, Integer.valueOf(java.util.Calendar.SUNDAY));
+        sDayWeekDayMap.put(ZWeekDay.MO, Integer.valueOf(java.util.Calendar.MONDAY));
+        sDayWeekDayMap.put(ZWeekDay.TU, Integer.valueOf(java.util.Calendar.TUESDAY));
+        sDayWeekDayMap.put(ZWeekDay.WE, Integer.valueOf(java.util.Calendar.WEDNESDAY));
+        sDayWeekDayMap.put(ZWeekDay.TH, Integer.valueOf(java.util.Calendar.THURSDAY));
+        sDayWeekDayMap.put(ZWeekDay.FR, Integer.valueOf(java.util.Calendar.FRIDAY));
+        sDayWeekDayMap.put(ZWeekDay.SA, Integer.valueOf(java.util.Calendar.SATURDAY));
     }
 
     private Map<String /* real TZID */, ICalTimeZone> mTzMap;
@@ -51,11 +51,11 @@ public class TimeZoneMap implements Cloneable {
         mAliasMap = new HashMap<String, String>();
         mLocalTZ = localTZ;
     }
-    
+
     public Map<String, ICalTimeZone> getMap() {
         return mTzMap;
     }
-    
+
     public Map<String, String> getAliasMap() {
         return mAliasMap;
     }
@@ -195,7 +195,8 @@ public class TimeZoneMap implements Cloneable {
                 iter.remove();
         }
     }
-    
+
+    @Override
     public TimeZoneMap clone() {
         TimeZoneMap retMap = new TimeZoneMap(mLocalTZ);
         retMap.mTzMap.putAll(mTzMap);

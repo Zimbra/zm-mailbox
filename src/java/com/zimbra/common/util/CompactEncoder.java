@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -68,7 +68,7 @@ public class CompactEncoder {
     public static byte[] encode(Object obj, ByteOrder bo) {
         ByteBuffer bb = ByteBuffer.allocate(1024);
         byte [] ret;
-        
+
         bb.order(bo);
         bb.put(bo == ByteOrder.BIG_ENDIAN ? (byte)'[' : (byte)']');
         bb = encode(bb, obj);
@@ -90,7 +90,7 @@ public class CompactEncoder {
 
     private static Object decode(ByteBuffer bb) throws Exception {
         byte type = bb.get();
-        
+
         switch (type) {
         case  ' ': case  '!': case  '"': case  '#': case  '$': case  '%':
         case  '&': case  '\'': case  '(': case  ')': case  '*': case  '+':
@@ -99,7 +99,7 @@ public class CompactEncoder {
         case  '8': case  '9': case  ':': case  ';': case  '<': case  '=':
         case  '>': case  '?': case  '@': {
             byte[] str = new byte[type - ' '];
-            
+
             bb.get(str);
             return new String(str, "UTF-8");
         } case 'A': {
@@ -109,49 +109,49 @@ public class CompactEncoder {
             switch (atype) {
             case 'B': {
                 byte [] ret = new byte[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = (byte)getStringLong(bb);
                 return ret;
             } case 'C': {
                 char [] ret = new char[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = (char)getStringLong(bb);
                 return ret;
             } case 'S': {
                 short [] ret = new short[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = (short)getStringLong(bb);
                 return ret;
             } case 'I': {
                 int [] ret = new int[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = (int)getStringLong(bb);
                 return ret;
             } case 'L': {
                 long [] ret = new long[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = getStringLong(bb);
                 return ret;
             } case 'F': {
                 float [] ret = new float[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = Float.parseFloat(getString(bb));
                 return ret;
             } case 'D': {
                 double [] ret = new double[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = Double.parseDouble(getString(bb));
                 return ret;
             } case 'O': {
                 Object [] ret = new Object[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = decode(bb);
                 return ret;
@@ -165,49 +165,49 @@ public class CompactEncoder {
             switch (atype) {
             case 'b': {
                 byte [] ret = new byte[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.get();
                 return ret;
             } case 'c': {
                 char [] ret = new char[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.getChar();
                 return ret;
             } case 's': {
                 short [] ret = new short[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.getShort();
                 return ret;
             } case 'i': {
                 int [] ret = new int[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.getInt();
                 return ret;
             } case 'l': {
                 long [] ret = new long[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.getLong();
                 return ret;
             } case 'f': {
                 float [] ret = new float[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.getFloat();
                 return ret;
             } case 'd': {
                 double [] ret = new double[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = bb.getDouble();
                 return ret;
             } case 'o': {
                 Object [] ret = new Object[len];
-                
+
                 for (int i = 0; i < len; i++)
                     ret[i] = decode(bb);
                 return ret;
@@ -215,25 +215,25 @@ public class CompactEncoder {
                 throw new CompactEncoderException("invalid data type");
             }
         } case 'B': {
-            return new Byte((byte)getStringLong(bb));
+            return Byte.valueOf((byte)getStringLong(bb));
         } case 'b': {
-            return new Byte(bb.get());
+            return Byte.valueOf(bb.get());
         } case 'C': {
-            return new Character((char)getStringLong(bb));
+            return Character.valueOf((char)getStringLong(bb));
         } case 'c': {
-            return new Character(bb.getChar());
+            return Character.valueOf(bb.getChar());
         } case 'S': {
-            return new Short((short)getStringLong(bb));
+            return Short.valueOf((short)getStringLong(bb));
         } case 's': {
-            return new Short(bb.getShort());
+            return Short.valueOf(bb.getShort());
         } case 'I': {
-            return new Integer((int)getStringLong(bb));
+            return Integer.valueOf((int)getStringLong(bb));
         } case 'i': {
-            return new Integer(bb.getInt());
+            return Integer.valueOf(bb.getInt());
         } case 'L': {
-            return new Long(getStringLong(bb));
+            return Long.valueOf(getStringLong(bb));
         } case 'l': {
-            return new Long(bb.getLong());
+            return Long.valueOf(bb.getLong());
         } case 'F': {
             return new Float(Float.parseFloat(getString(bb)));
         } case 'f': {
@@ -243,9 +243,9 @@ public class CompactEncoder {
         } case 'd': {
             return new Double(bb.getDouble());
         } case 'E': {
-            return new Integer((int)getStringLong(bb));
+            return Integer.valueOf((int)getStringLong(bb));
         } case 'e': {
-            return new Integer(bb.getShort());
+            return Integer.valueOf(bb.getShort());
         } case 'n': {
             return null;
         } case 'M': {
@@ -266,17 +266,17 @@ public class CompactEncoder {
             return map;
         } case 'p': {
             byte[] val = new byte[bb.getShort()];
-            
+
             bb.get(val);
             return new String(val, "UTF-8");
         } case 'T': {
             byte[] str = new byte[(int)getStringLong(bb)];
-            
+
             bb.get(str);
             return new String(str, "UTF-8");
         } case 't': {
             byte[] val = new byte[bb.getInt()];
-            
+
             bb.get(val);
             return new String(val, "UTF-8");
         } case 'V': {
@@ -364,7 +364,7 @@ public class CompactEncoder {
             return bb;
         } else if (obj instanceof List) {
             List<?> l = (List<?>)obj;
-            
+
             bb = putRaw(bb, 'v', Integer.SIZE).putInt(l.size());
             for (Object val : l)
                 bb = encode(bb, val);
@@ -455,7 +455,7 @@ public class CompactEncoder {
             return bb;
         } else if (obj instanceof List) {
             List<?> l = (List<?>)obj;
-            
+
             bb = putString(bb, 'V', l.size());
             for (Object val : l)
                 bb = encodeToString(bb, val);
@@ -484,20 +484,20 @@ public class CompactEncoder {
     private static String getString(ByteBuffer bb) throws Exception {
         byte len = (byte)(bb.get() - (byte)' ');
         byte[] val = new byte[len];
-        
+
         bb.get(val);
         return new String(val, "UTF-8");
     }
-    
+
     private static long getStringLong(ByteBuffer bb) throws
         CharConversionException {
         long l = 0;
         byte len = (byte)(bb.get() - ' ');
         boolean neg = false;
-        
+
         while (len-- > 0) {
             byte b = bb.get();
-            
+
             if (b == '-' && l == 0)
                 neg = true;
             else if (!isDigit(b))
@@ -507,21 +507,21 @@ public class CompactEncoder {
         }
         return neg ? -1 * l : l;
     }
-    
+
     private static ByteBuffer ensure(ByteBuffer bb, int cap) {
         if (bb.remaining() < cap)
             return ByteBuffer.allocate(bb.capacity() < cap ? bb.capacity() * 2 :
                 bb.capacity() + cap + 512).put(bb.array());
         return bb;
     }
-    
+
     private static ByteBuffer putRaw(ByteBuffer bb, char type, int cap) {
         return ensure(bb, cap + 1).put((byte)type);
     }
-    
+
     private static ByteBuffer putString(ByteBuffer bb, char type, Object obj) {
         byte [] str;
-        
+
         try {
             str = obj.toString().getBytes("UTF-8");
         } catch (Exception e) {
@@ -530,10 +530,10 @@ public class CompactEncoder {
         return ensure(bb, str.length + 2).put((byte)type).put((byte)(' ' +
             str.length)).put(str);
     }
-    
+
     private static ByteBuffer putStringElem(ByteBuffer bb, Object obj) {
         byte [] str;
-        
+
         try {
             str = obj.toString().getBytes("UTF-8");
         } catch (Exception e) {
@@ -541,7 +541,7 @@ public class CompactEncoder {
         }
         return ensure(bb, str.length + 1).put((byte)(' ' + str.length)).put(str);
     }
-    
+
     public static void main(String[] args) throws CompactEncoderException {
         char[] carray = new char[] { 'a', 'r', 'r', 'a', 'y'};
         ArrayList<?> dlist;
@@ -549,7 +549,7 @@ public class CompactEncoder {
         ArrayList<Object> list = new ArrayList<Object>();
         Map<Object, Object> map = new HashMap<Object, Object>();
         Object[] darray, oarray = new Object[] {
-            new String("arraystring"), new Integer(9)
+            new String("arraystring"), Integer.valueOf(9)
         };
         byte [] print, raw;
 
@@ -558,7 +558,7 @@ public class CompactEncoder {
         darray = (Object [])decode(print);
         darray = (Object [])decode(raw);
         list.add(carray);
-        list.add(new Integer(8));
+        list.add(Integer.valueOf(8));
         list.add("string");
         list.add(true);
         print = encodeToString(list);
@@ -571,7 +571,7 @@ public class CompactEncoder {
         map.put("float", new Float(1.1));
         map.put("hashmap", new HashMap<Object, Object>());
         map.put("list", list);
-        map.put("long", new Long(3));
+        map.put("long", Long.valueOf(3));
         map.put("mapstring", "test");
         map.put("null", null);
         map.put("text", "1234567890123456789012345678901234567890");

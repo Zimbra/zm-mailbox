@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,31 +21,31 @@ import java.util.Map;
 /**
  * A simple counter that maintains the count of unique values passed into the
  * {@link #increment} and {@link #decrement} methods.
- * 
+ *
  * @author bburtin
  */
 public class ValueCounter<E> {
 
     private Map<E, Integer> mValues = new HashMap<E, Integer>();
-    
+
     public void increment(E value) {
         increment(value, 1);
     }
-    
+
     public void decrement(E value) {
         increment(value, -1);
     }
-    
+
     public void increment(E value, int delta) {
         Integer count = mValues.get(value);
         if (count == null) {
-            count = new Integer(delta);
+            count = Integer.valueOf(delta);
         } else {
-            count = new Integer(count.intValue() + delta);
+            count = Integer.valueOf(count.intValue() + delta);
         }
         mValues.put(value, count);
     }
-    
+
     public int getCount(Object value) {
         Integer count = mValues.get(value);
         if (count == null) {
@@ -53,15 +53,15 @@ public class ValueCounter<E> {
         }
         return count.intValue();
     }
-    
+
     public Iterator<E> iterator() {
         return mValues.keySet().iterator();
     }
-    
+
     public int size() {
         return mValues.size();
     }
-    
+
     public int getTotal() {
         int total = 0;
         Iterator<E> i = iterator();
@@ -70,11 +70,12 @@ public class ValueCounter<E> {
         }
         return total;
     }
-    
+
     public void clear() {
         mValues.clear();
     }
-    
+
+    @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();
         Iterator<E> i = iterator();

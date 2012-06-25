@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -93,6 +93,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                 applyBYMONTHDAYFixup();
         }
 
+        @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append("week=").append(mWeek);
@@ -137,6 +138,7 @@ public class ICalTimeZone extends SimpleTimeZone {
             }
         }
 
+        @Override
         public int compareTo(SimpleOnset other) {
             int comp;
             comp = mMonth - other.mMonth;
@@ -164,7 +166,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     private String mDayToStdRule = null;
     private String mStandardTzname = null;
 
-    private int    mDaylightOffset = 0; 
+    private int    mDaylightOffset = 0;
     private String mStdToDayDtStart = DEFAULT_DTSTART;
     private String mStdToDayRule = null;
     private String mDaylightTzname = null;
@@ -180,6 +182,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         return cloneTZ;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("TZID=").append(getID());
@@ -260,14 +263,14 @@ public class ICalTimeZone extends SimpleTimeZone {
                     // java.util.SimpleTimeZone wants negative week number
                     // in dayOfMonth.
                     mDayOfMonth = week;
-    
+
                     mDayOfWeek = onset.getDayOfWeek();
                 } else {
                     // For positive week, onset date is day of week on or
                     // after day of month.  First week is day 1 through day 7,
                     // second week is day 8 through day 14, etc.
                     mDayOfMonth = (week - 1) * 7 + 1;
-    
+
                     // Another peculiarity of java.util.SimpleTimeZone class.
                     // For positive week, day-of-week must be specified as
                     // a negative value.
@@ -378,15 +381,15 @@ public class ICalTimeZone extends SimpleTimeZone {
     private static Map<String, Integer> sDayOfWeekMap =
         new HashMap<String, Integer>(7);
     static {
-        sDayOfWeekMap.put("SU", new Integer(Calendar.SUNDAY));     // 1
-        sDayOfWeekMap.put("MO", new Integer(Calendar.MONDAY));     // 2
-        sDayOfWeekMap.put("TU", new Integer(Calendar.TUESDAY));    // 3
-        sDayOfWeekMap.put("WE", new Integer(Calendar.WEDNESDAY));  // 4
-        sDayOfWeekMap.put("TH", new Integer(Calendar.THURSDAY));   // 5
-        sDayOfWeekMap.put("FR", new Integer(Calendar.FRIDAY));     // 6
-        sDayOfWeekMap.put("SA", new Integer(Calendar.SATURDAY));   // 7
+        sDayOfWeekMap.put("SU", Integer.valueOf(Calendar.SUNDAY));     // 1
+        sDayOfWeekMap.put("MO", Integer.valueOf(Calendar.MONDAY));     // 2
+        sDayOfWeekMap.put("TU", Integer.valueOf(Calendar.TUESDAY));    // 3
+        sDayOfWeekMap.put("WE", Integer.valueOf(Calendar.WEDNESDAY));  // 4
+        sDayOfWeekMap.put("TH", Integer.valueOf(Calendar.THURSDAY));   // 5
+        sDayOfWeekMap.put("FR", Integer.valueOf(Calendar.FRIDAY));     // 6
+        sDayOfWeekMap.put("SA", Integer.valueOf(Calendar.SATURDAY));   // 7
     }
-    
+
     /**
      * Return the standard offset in milliseconds.
      * local = UTC + offset
@@ -421,7 +424,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     }
 
     /**
-     * 
+     *
      * @param tzId       iCal TZID string
      * @param stdOffset  standard time offset from UTC in milliseconds
      * @param stdDtStart iCal datetime string specifying the beginning of the
@@ -594,8 +597,8 @@ public class ICalTimeZone extends SimpleTimeZone {
             long beforeOffset = yesterday.getTimeZone().getOffset(yesterday.getTimeInMillis());
             long afterOffset = tomorrow.getTimeZone().getOffset(tomorrow.getTimeInMillis());
 
-            int year = cal.get(Calendar.YEAR); 
-            int month = cal.get(Calendar.MONTH); 
+            int year = cal.get(Calendar.YEAR);
+            int month = cal.get(Calendar.MONTH);
             int day = cal.get(Calendar.DAY_OF_MONTH);
             int minute = cal.get(Calendar.MINUTE);
             int second = cal.get(Calendar.SECOND);
@@ -698,7 +701,7 @@ public class ICalTimeZone extends SimpleTimeZone {
             }
 
             ICalTimeZone icalClone = cloneFromICalData(onsetClone);
-            String icalCloneStr = icalClone.toString(); 
+            String icalCloneStr = icalClone.toString();
             if (!icalClone.hasSameRules(onsetClone)) {
                 System.out.println("ERROR: iCal-clone doesn't have the same rules as Onset-clone.");
                 System.out.println("iCal-clone:\n" + icalCloneStr);
@@ -868,19 +871,19 @@ public class ICalTimeZone extends SimpleTimeZone {
             return onsetTime;
         }
     }
-    
+
     private static final long MSEC_PER_HOUR = 1000 * 60 * 60;
     private static final long MSEC_PER_MIN = 1000 * 60;
-    private static final long MSEC_PER_SEC = 1000;    
-    
+    private static final long MSEC_PER_SEC = 1000;
+
     /**
      * Input: TZOFFSETTO: [+-]HHMM(SS)?
      * Output: msec offset from GMT
-     * 
+     *
      * The sign character is required and each time component must be specified wth 2 digits,
      * but this method relaxes the rules a bit to accept data from buggy systems.  Omitted
      * sign means positive offset, and hour can be specified as a single digit.
-     * 
+     *
      * @param utcOffset
      * @return
      */
@@ -959,7 +962,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                     "\"; must have format \"+/-hhmm[ss]\"", e);
         }
     }
-    
+
     /**
      * Input: msec GMT
      * Output: TZOFFSETTO: [+-]HHMM(SS)?
@@ -969,23 +972,23 @@ public class ICalTimeZone extends SimpleTimeZone {
     static String timeToTzOffsetString(int time)
     {
         StringBuilder toRet = new StringBuilder(time > 0 ? "+" : "-");
-       
+
        time = Math.abs(time / 1000); // msecs->secs
-       
+
        int secs = time % 60;
        time = time / 60;
-       
+
        int mins = time % 60;
        int hours = time / 60;
-       
-       if (secs > 0) { 
+
+       if (secs > 0) {
            toRet.append(new Formatter().format("%02d%02d%02d", hours, mins, secs));
        } else {
            toRet.append(new Formatter().format("%02d%02d", hours, mins));
        }
        return toRet.toString();
     }
-    
+
     public ZComponent newToVTimeZone()
     {
         ZComponent vtz = new ZComponent(ICalTok.VTIMEZONE);
@@ -1007,7 +1010,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         if (mStdToDayDtStart != null && (mStandardOffset != mDaylightOffset || mDayToStdDtStart == null)) {
             ZComponent daylight = new ZComponent(ICalTok.DAYLIGHT);
             vtz.addComponent(daylight);
-            
+
             daylight.addProperty(new ZProperty(ICalTok.DTSTART, mStdToDayDtStart));
             daylight.addProperty(new ZProperty(ICalTok.TZOFFSETTO, timeToTzOffsetString(mDaylightOffset)));
             daylight.addProperty(new ZProperty(ICalTok.TZOFFSETFROM, timeToTzOffsetString(mStandardOffset)));
@@ -1128,12 +1131,12 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
         if (standard == null)
         	throw new IllegalArgumentException("VTIMEZONE has neither STANDARD nor DAYLIGHT: TZID=" + tzid);
-        
+
         String stddtStart = null;
         int stdoffsetTime = 0;
         String stdrrule = null;
         String stdTzname = null;
-        
+
         if (standard != null) {
             stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
             String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
@@ -1157,16 +1160,16 @@ public class ICalTimeZone extends SimpleTimeZone {
                 stdrrule = standard.getPropVal(ICalTok.RRULE, null);
             }
         }
-        
+
         String daydtStart = null;
         int dayoffsetTime = stdoffsetTime;
         String dayrrule = null;
         String dayTzname = null;
-        
+
         if (daylight != null) {
             daydtStart = daylight.getPropVal(ICalTok.DTSTART, null);
             String daytzOffsetTo = daylight.getPropVal(ICalTok.TZOFFSETTO, null);
-            dayoffsetTime = tzOffsetTime(daytzOffsetTo);  
+            dayoffsetTime = tzOffsetTime(daytzOffsetTo);
             dayrrule = daylight.getPropVal(ICalTok.RRULE, null);
             dayTzname = daylight.getPropVal(ICalTok.TZNAME, null);
 
@@ -1194,8 +1197,8 @@ public class ICalTimeZone extends SimpleTimeZone {
                 }
             }
         }
-        
-        ICalTimeZone newTz = new ICalTimeZone(tzid, 
+
+        ICalTimeZone newTz = new ICalTimeZone(tzid,
                 stdoffsetTime, stddtStart, stdrrule, stdTzname,
                 dayoffsetTime, daydtStart, dayrrule, dayTzname);
 

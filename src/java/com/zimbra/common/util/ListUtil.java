@@ -272,43 +272,43 @@ public class ListUtil {
             int i = 0;
 
             in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(1));
-            in[i].add(new Integer(3));
-            in[i].add(new Integer(5));
-            in[i].add(new Integer(7));
-            in[i].add(new Integer(9));
+            in[i].add(Integer.valueOf(1));
+            in[i].add(Integer.valueOf(3));
+            in[i].add(Integer.valueOf(5));
+            in[i].add(Integer.valueOf(7));
+            in[i].add(Integer.valueOf(9));
 
             i = 1;
             in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(1));
-            in[i].add(new Integer(7));
-            in[i].add(new Integer(12));
-            in[i].add(new Integer(13));
-            in[i].add(new Integer(13));
+            in[i].add(Integer.valueOf(1));
+            in[i].add(Integer.valueOf(7));
+            in[i].add(Integer.valueOf(12));
+            in[i].add(Integer.valueOf(13));
+            in[i].add(Integer.valueOf(13));
 
             i = 2;
             in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(1));
-            in[i].add(new Integer(2));
-            in[i].add(new Integer(3));
-            in[i].add(new Integer(4));
-            in[i].add(new Integer(5));
+            in[i].add(Integer.valueOf(1));
+            in[i].add(Integer.valueOf(2));
+            in[i].add(Integer.valueOf(3));
+            in[i].add(Integer.valueOf(4));
+            in[i].add(Integer.valueOf(5));
 
             i = 3;
             in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(5));
-            in[i].add(new Integer(6));
-            in[i].add(new Integer(7));
-            in[i].add(new Integer(8));
-            in[i].add(new Integer(9));
+            in[i].add(Integer.valueOf(5));
+            in[i].add(Integer.valueOf(6));
+            in[i].add(Integer.valueOf(7));
+            in[i].add(Integer.valueOf(8));
+            in[i].add(Integer.valueOf(9));
 
             i = 4;
             in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(100));
-            in[i].add(new Integer(101));
-            in[i].add(new Integer(102));
-            in[i].add(new Integer(103));
-            in[i].add(new Integer(104));
+            in[i].add(Integer.valueOf(100));
+            in[i].add(Integer.valueOf(101));
+            in[i].add(Integer.valueOf(102));
+            in[i].add(Integer.valueOf(103));
+            in[i].add(Integer.valueOf(104));
 
             List<Integer> test;
 
