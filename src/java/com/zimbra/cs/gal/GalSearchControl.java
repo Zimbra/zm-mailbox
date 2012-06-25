@@ -21,6 +21,7 @@ import java.util.List;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.ZAttrProvisioning.GalMode;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AccountConstants;
@@ -178,7 +179,7 @@ public class GalSearchControl {
         
         // if the presented sync token is old LDAP timestamp format, we need to sync
         // against LDAP server to keep the client up to date.
-        boolean useGalSyncAccount = mParams.isIdOnly() && gst.doMailboxSync();
+        boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || !LC.syncgal_non_idonly_use_ldap.booleanValue());
         if (useGalSyncAccount) {
             try {
                 synchronized (SyncClients) {
@@ -464,25 +465,22 @@ public class GalSearchControl {
                         continue;
                     folderIds.add(fid);
                     syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
-                    if (mParams.isIdOnly() && token.doMailboxSync()) {
-                        int changeId = token.getChangeId(galAcct.getId());
-                        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
-                                MailItem.Type.CONTACT, folderIds);
+                    int changeId = token.getChangeId(galAcct.getId());
+                    Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
+                            MailItem.Type.CONTACT, folderIds);
 
-                        int count = 0;
-                        for (int itemId : changed.getFirst()) {
-                            MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
-                            if (item instanceof Contact) {
-                                Contact c = (Contact)item;
-                                String accountType = c.get("zimbraAccountCalendarUserType");
-                                if (accountType != null &&
-                                        accountType.equals("RESOURCE"))
-                                    callback.handleContact(c);
-                            }
-                            count++;
-                            if (count % 100 == 0)
-                                ZimbraLog.gal.debug("processing resources #"+count);
+                    int count = 0;
+                    for (int itemId : changed.getFirst()) {
+                        MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
+                        if (item instanceof Contact) {
+                            Contact c = (Contact)item;
+                            String accountType = c.get("zimbraAccountCalendarUserType");
+                            if (accountType != null && accountType.equals("RESOURCE"))
+                                callback.handleContact(c);
                         }
+                        count++;
+                        if (count % 100 == 0)
+                            ZimbraLog.gal.debug("processing resources #"+count);
                     }
                     break;
                 }
@@ -504,40 +502,37 @@ public class GalSearchControl {
                 folderIds.add(fid);
                 syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
             }
-            if (mParams.isIdOnly() && token.doMailboxSync()) {
-                int changeId = token.getChangeId(galAcct.getId());
-                List<Integer> deleted = null;
-                if (changeId > 0) {
-                    try {
-                        deleted = mbox.getTombstones(changeId).getAllIds();
-                    } catch (MailServiceException e) {
-                        if (MailServiceException.MUST_RESYNC == e.getCode()) {
-                            ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);
-                        } else {
-                            throw e;
-                        }
+            int changeId = token.getChangeId(galAcct.getId());
+            List<Integer> deleted = null;
+            if (changeId > 0) {
+                try {
+                    deleted = mbox.getTombstones(changeId).getAllIds();
+                } catch (MailServiceException e) {
+                    if (MailServiceException.MUST_RESYNC == e.getCode()) {
+                        ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);
+                    } else {
+                        throw e;
                     }
                 }
+            }
                 
-                Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
-                        MailItem.Type.CONTACT, folderIds);
+            Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
+                    MailItem.Type.CONTACT, folderIds);
 
-                int count = 0;
-                for (int itemId : changed.getFirst()) {
-                    MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
-                    if (item instanceof Contact)
-                        callback.handleContact((Contact)item);
-                    count++;
-                    if (count % 100 == 0)
-                        ZimbraLog.gal.debug("processing #"+count);
-                }
+            int count = 0;
+            for (int itemId : changed.getFirst()) {
+                MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
+                if (item instanceof Contact)
+                    callback.handleContact((Contact)item);
+                count++;
+                if (count % 100 == 0)
+                    ZimbraLog.gal.debug("processing #"+count);
+            }
 
-                if (deleted != null) {
-                    for (int itemId : deleted) {
-                        callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
-                    }
+            if (deleted != null) {
+                for (int itemId : deleted) {
+                    callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
                 }
-                
             }
             GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
             ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
