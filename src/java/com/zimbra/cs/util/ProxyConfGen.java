@@ -368,7 +368,6 @@ abstract class IPModeEnablerVar extends ProxyConfVar {
              String description) {
         super(keyword, null, defaultValue, ProxyConfValueType.ENABLER, 
                 ProxyConfOverride.CUSTOM, description);
-        // TODO Auto-generated constructor stub
     }
     private static IPMode currentIPMode = IPMode.UNKNOWN;
     
@@ -504,7 +503,7 @@ class MemcacheServersVar extends ProxyConfVar {
     
    
     @Override
-    public void update() throws ServiceException {
+    public void update() throws ServiceException, ProxyConfException {
         ArrayList<String> servers = new ArrayList<String>();
 
         /* $(zmprov gamcs) */
@@ -514,8 +513,14 @@ class MemcacheServersVar extends ProxyConfVar {
                     Provisioning.A_zimbraServiceHostname, "");
             int serverPort = mc.getIntAttr(
                     Provisioning.A_zimbraMemcachedBindPort, 11211);
+            InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(serverName);
+            
             Formatter f = new Formatter();
-            f.format("%s:%d", serverName, serverPort);
+            if (ip instanceof Inet4Address) {
+            	f.format("%s:%d", ip.getHostAddress(), serverPort);
+            } else {
+            	f.format("[%s]:%d", ip.getHostAddress(), serverPort);
+            }
 
             servers.add(f.toString());
         }
@@ -545,7 +550,7 @@ class LookupHandlersVar extends ProxyConfVar {
     }
     
     @Override
-    public void update() throws ServiceException {
+    public void update() throws ServiceException, ProxyConfException {
         
         ArrayList<String> servers = new ArrayList<String>();
 
@@ -556,15 +561,23 @@ class LookupHandlersVar extends ProxyConfVar {
             String sn = s.getAttr(Provisioning.A_zimbraServiceHostname,"");
             boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
             if (isTarget) {
+            	InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
+				
                 Formatter f = new Formatter();
-                f.format("%s:%d", sn, REVERSE_PROXY_PORT);
+                if (ip instanceof Inet4Address) {
+                	f.format("%s:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                } else {
+                	f.format("[%s]:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                }
                 servers.add(f.toString());
-                mLog.debug("Route Lookup: Added server " + sn);
+                mLog.debug("Route Lookup: Added server " + sn + "(" + ip.getHostAddress() + ")");
             }
         }
 
         mValue = servers;
     }
+    
+   
 }
 
 @Deprecated
@@ -862,7 +875,7 @@ class ZMLookupHandlerVar extends ProxyConfVar{
     }
     
     @Override
-    public void update() throws ServiceException {
+    public void update() throws ServiceException, ProxyConfException {
         ArrayList<String> servers = new ArrayList<String>();
         int REVERSE_PROXY_PORT = 7072;
         
@@ -873,10 +886,15 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
+                	InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
                     Formatter f = new Formatter();
-                    f.format("%s:%d", sn, REVERSE_PROXY_PORT);
+                    if (ip instanceof Inet4Address) {
+                    	f.format("%s:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                    } else {
+                    	f.format("[%s]:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                    }
                     servers.add(f.toString());
-                    mLog.debug("Route Lookup: Added server " + sn);
+                    mLog.debug("Route Lookup: Added server " + ip);
                 }
             }
         } else {
@@ -887,10 +905,15 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
-                    Formatter f = new Formatter();
-                    f.format("%s:%d", sn, REVERSE_PROXY_PORT);
+                	InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
+            		Formatter f = new Formatter();
+                	if (ip instanceof Inet4Address) {
+                        f.format("%s:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                	} else {
+                		f.format("[%s]:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                	}
                     servers.add(f.toString());
-                    mLog.debug("Route Lookup: Added server " + sn);
+                    mLog.debug("Route Lookup: Added server " + ip);
                 }
             }
         }
@@ -2053,20 +2076,31 @@ public class ProxyConfGen
 
         mGenConfPerVhn = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxyGenConfigPerVirtualHostname", false);
 
+        try {
         /* upgrade the variable map from the config in force */
-        mLog.debug("Loading Attrs in Domain Level");
-        mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
+            mLog.debug("Loading Attrs in Domain Level");
+            mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
 
+            mLog.debug("Updating Default Variable Map");
+            updateDefaultVars();
 
-        mLog.debug("Updating Default Variable Map");
-        updateDefaultVars();
+            mLog.debug("Processing Config Overrides");
+            overrideDefaultVars(cl);
 
-        mLog.debug("Processing Config Overrides");
-        overrideDefaultVars(cl);
-        
-        String clientCA = loadAllClientCertCA();
-        writeClientCAtoFile(clientCA);
-       
+            String clientCA = loadAllClientCertCA();
+            writeClientCAtoFile(clientCA);
+        } catch (ProxyConfException pe) {
+            handleException(pe);
+            exitCode = 1;
+        } catch (ServiceException se) {
+            handleException(se);
+            exitCode = 1;
+        }
+
+        if (exitCode > 0) {
+            mLog.info("Proxy configuration files generation is interrupted by errors");
+            return exitCode;
+        }
         if (cl.hasOption('D')) {
             displayVariables();
             exitCode = 0;
@@ -2128,15 +2162,13 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpSModeConf("redirect")));
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
-            mLog.error("Error while expanding templates: " + pe.getMessage());
-            appendConfGenResultToConf("__CONF_GEN_ERROR__:" + pe.getMessage());
+	        handleException(pe);
             exitCode = 1;
         } catch (SecurityException se) {
-            mLog.error("Error while expanding templates: " + se.getMessage());
-            appendConfGenResultToConf("__CONF_GEN_ERROR__:" + se.getMessage());
+        	handleException(se);
             exitCode = 1;
         }
-        if (exitCode != 1) {
+        if (exitCode == 0) {
             mLog.info("Proxy configuration files are generated successfully");
             appendConfGenResultToConf("__SUCCESS__");
         } else {
@@ -2144,6 +2176,11 @@ public class ProxyConfGen
         }
         
         return (exitCode);
+    }
+    
+    private static void handleException(Exception e) {
+    	 mLog.error("Error while expanding templates: " + e.getMessage());
+         appendConfGenResultToConf("__CONF_GEN_ERROR__:" + e.getMessage());
     }
 
     /**
@@ -2261,5 +2298,42 @@ class ProxyConfUtil{
     public static boolean isEmptyString( String target ){
         return (target == null) || (target.trim().equalsIgnoreCase(""));
     }
+    
+    public static InetAddress getLookupTargetIPbyIPMode(String hostname) throws ProxyConfException {
 
+        InetAddress[] ips;
+        try {
+            ips = InetAddress.getAllByName(hostname);
+        } catch (UnknownHostException e) {
+            throw new ProxyConfException("the lookup target " + hostname
+                    + " can't be resolved");
+        }
+        IPModeEnablerVar.IPMode mode = IPModeEnablerVar.getZimbraIPMode();
+
+        if (mode == IPModeEnablerVar.IPMode.IPV4_ONLY) {
+            for (InetAddress ip : ips) {
+                if (ip instanceof Inet4Address) {
+                    return ip;
+                }
+            }
+            throw new ProxyConfException(
+                    "Can't find valid lookup target IPv4 address when zimbra IP mode is IPv4 only");
+        } else if (mode == IPModeEnablerVar.IPMode.IPV6_ONLY) {
+            for (InetAddress ip : ips) {
+                if (ip instanceof Inet6Address) {
+                    return ip;
+                }
+            }
+            throw new ProxyConfException(
+                    "Can't find valid lookup target IPv6 address when zimbra IP mode is IPv6 only");
+        } else {
+            for (InetAddress ip : ips) {
+                if (ip instanceof Inet4Address) {
+                    return ip;
+                }
+            }
+            return ips[0]; // try to return an IPv4, but if there is none,
+                           // simply return the first IPv6
+        }
+    }
 }
