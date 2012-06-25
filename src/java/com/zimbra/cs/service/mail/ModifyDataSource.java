@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,15 +45,15 @@ public class ModifyDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
-        
+
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
-        
+
         //boolean wipeOutOldData = false;
-        
+
         Element eDataSource = CreateDataSource.getDataSourceElement(request);
         DataSourceType type = DataSourceType.fromString(eDataSource.getName());
-        
+
         String id = eDataSource.getAttribute(MailConstants.A_ID);
         DataSource ds = prov.get(account, Key.DataSourceBy.id, id);
         if (ds == null) {
@@ -74,24 +74,24 @@ public class ModifyDataSource extends MailDocumentHandler {
             CreateDataSource.validateFolderId(account, mbox, eDataSource);
         	dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
         }
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_HOST, null);
         if (value != null && !value.equals(ds.getHost())) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
         }
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_PORT, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePort, value);
         value = eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, value);
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_USERNAME, null);
         if (value != null && !value.equals(ds.getUsername())) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
         }
-    
+
         value = eDataSource.getAttribute(MailConstants.A_DS_PASSWORD, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
@@ -112,66 +112,62 @@ public class ModifyDataSource extends MailDocumentHandler {
                 DbDataSource.deleteAllMappings(ds);
             }
         }
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_POLLING_INTERVAL, null);
         if (value != null) {
             dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
         }
-        
+
         // import class
         String importClass = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSourceManager.getDefaultImportClass(type));
         if (importClass != null) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
         }
-        
+
         processCommonOptionalAttrs(dsAttrs, eDataSource);
-        
+
         prov.modifyDataSource(account, id, dsAttrs);
-        
+
         Element response = zsc.createElement(MailConstants.MODIFY_DATA_SOURCE_RESPONSE);
 
         return response;
     }
-    
+
     public static void processCommonOptionalAttrs(Map<String, Object> dsAttrs, Element eDataSource) throws ServiceException {
         String value;
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, value);
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceUseAddressForForwardReply,
                     LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, false)));
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, value);
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_FORWARD_REPLY_SIGNATURE, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, value);
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_FROM_DISPLAY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, value);
-  
-        value = eDataSource.getAttribute(MailConstants.A_DS_FROM_ADDRESS, null);
-        if (value != null)
-            dsAttrs.put(Provisioning.A_zimbraPrefFromAddress, value);
-  
+
         value = eDataSource.getAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, value);
-        
+
         value = eDataSource.getAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, value);
         value = eDataSource.getAttribute(MailConstants.A_DS_POLLING_INTERVAL, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
-        
+
         Iterator<Element> attrs = eDataSource.elementIterator(MailConstants.E_ATTRIBUTE);
         if (attrs != null && attrs.hasNext()) {
         	ArrayList<String> attrList = new ArrayList<String>();

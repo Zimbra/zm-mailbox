@@ -3269,7 +3269,6 @@ emailAddress="changed-phoebe@google.com"
     [defaultSignature="{default-signature-id}"]
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
-    [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
 
@@ -3282,7 +3281,6 @@ emailAddress="changed-phoebe@google.com"
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
-    [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
 </CreateDataSourceRequest>
@@ -3306,7 +3304,6 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [defaultSignature="{default-signature-id}"]
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
-    [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]
     [failingSince="{timestamp}">]
@@ -3319,7 +3316,6 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [defaultSignature="{default-signature-id}"]
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
-    [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]>
     [failingSince="{timestamp}">]
@@ -3349,7 +3345,6 @@ failingSince: if the most recent sync(s) failed, this attribute specifies
     [defaultSignature="{default-signature-id}"]
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
-    [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
@@ -3360,7 +3355,6 @@ failingSince: if the most recent sync(s) failed, this attribute specifies
     [defaultSignature="{default-signature-id}"]
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
-    [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
 </ModifyDataSourceRequest>

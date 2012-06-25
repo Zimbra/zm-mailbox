@@ -2708,7 +2708,6 @@ public final class ToXML {
         m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());
         m.addAttribute(MailConstants.A_DS_FORWARD_REPLY_SIGNATURE, ds.getForwardReplySignature());
         m.addAttribute(MailConstants.A_DS_FROM_DISPLAY, ds.getFromDisplay());
-        m.addAttribute(MailConstants.A_DS_FROM_ADDRESS, ds.getFromAddress());
         m.addAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, ds.getReplyToAddress());
         m.addAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, ds.getReplyToDisplay());
 

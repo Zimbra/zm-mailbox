@@ -307,10 +307,6 @@ public class DataSource extends AccountProperty {
         return getAttr(Provisioning.A_zimbraPrefFromDisplay);
     }
 
-    public String getFromAddress() {
-        return getAttr(Provisioning.A_zimbraPrefFromAddress);
-    }
-
     public String getReplyToAddress() {
         return getAttr(Provisioning.A_zimbraPrefReplyToAddress);
     }
