@@ -2293,13 +2293,13 @@ Note: For account/alias/dl, if a <domain> is specified, only entries on the
 # Get server's network interfaces. Returns IP  addresses and net masks
 # This call will use zmrcd to call /opt/zimbra/libexec/zmserverips
 
-<GetServerNIfsRequest>
+<GetServerNIfsRequest [type="{ipv4|ipv6|both}"]>
  <server by="id|name|serviceHostname">...</server>
 </GetServerNIfsRequest>
 
 <GetServerNIfsResponse>
   <ni>
-  <a n="addr">ip address</a>
+  <a n="addr" [type="{ipv4|ipv6}"]>ip address</a>
   <a n="mask">network mask</a>
   </ni>*
 </GetServerNIfsResponse>

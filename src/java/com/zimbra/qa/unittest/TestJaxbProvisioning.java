@@ -411,7 +411,7 @@ public class TestJaxbProvisioning extends TestCase {
         ZimbraLog.test.debug("Starting testGetServerNIfs");
         Server svr = Provisioning.getInstance().getLocalServer();
         GetServerNIfsRequest req = new GetServerNIfsRequest(
-                ServerSelector.fromId(svr.getId()));
+                null, ServerSelector.fromId(svr.getId()));
         GetServerNIfsResponse resp = prov.invokeJaxb(req);
         assertNotNull("GetServerNIfsResponse", resp);
         List <NetworkInformation> nisList = resp.getNetworkInterfaces();
