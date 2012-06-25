@@ -704,7 +704,7 @@ import and export of addressbook.
 
  </SearchGalRequest>
 
- <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
+ <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"] [paginationSupported="1|0"]>
    <cn [exp="1|0"] [isOwner="1|0"] [isMember="1|0"] ref="{gal-entry-ref}">
      <a n="...">...</a>+
    </cn>*
@@ -742,6 +742,12 @@ import and export of addressbook.
   {gal-entry-ref}: a unigue reference id for the GAL entry.  This is the ref id to be used for the value
                    of type="G" contact group members.  See CreateContactRequest and ModifyContactRequest.
 
+
+  paginationSupported:
+     1 - limit and offset in the request was honored
+     0 - the underlying search does not support pagination
+         limit and offset in the request was not honored
+         
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
 
