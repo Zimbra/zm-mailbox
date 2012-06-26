@@ -42,6 +42,7 @@ public class HostedAuth extends ZimbraCustomAuth {
 	//public static String HEADER_AUTH_SERVER = "Auth-Server";
 	//public static String HEADER_AUTH_PORT = "Auth-Port";
 	public static String HEADER_AUTH_USER_AGENT = "Auth-User-Agent";
+	public static String HEADER_X_ZIMBRA_REMOTE_ADDR = "X-ZIMBRA-REMOTE-ADDR";
 	
 	public static String AUTH_STATUS_OK = "OK";
 	
@@ -77,6 +78,9 @@ public class HostedAuth extends ZimbraCustomAuth {
 		
 		if(context.get(AuthContext.AC_ORIGINATING_CLIENT_IP)!=null)
 			method.addRequestHeader(HEADER_CLIENT_IP,context.get(AuthContext.AC_ORIGINATING_CLIENT_IP).toString());
+		
+	    if(context.get(AuthContext.AC_REMOTE_IP) != null)
+	        method.addRequestHeader(HEADER_X_ZIMBRA_REMOTE_ADDR,context.get(AuthContext.AC_REMOTE_IP).toString());
 		
 		method.addRequestHeader(HEADER_AUTH_USER,acct.getName());
 		method.addRequestHeader(HEADER_AUTH_PASSWORD,password);
