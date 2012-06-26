@@ -421,11 +421,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         // Create a Forward Notification message if the invitation is originally from ZCS user.
         MimeMessage notifyMimeMsg = null;
         if (org != null) {
-            String orgAddress;
-            if (org.hasSentBy())
-                orgAddress = org.getSentBy();
-            else
-                orgAddress = org.getAddress();
+            String orgAddress = org.getAddress();
             Account orgAccount = Provisioning.getInstance().getAccountByName(orgAddress);
             if (orgAccount != null && !orgAccount.getId().equals(senderAcct.getId())) {
                 notifyMimeMsg = CalendarMailSender.createForwardNotifyMessage(senderAcct, 
