@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -143,33 +143,28 @@ public final class GetContacts extends MailDocumentHandler  {
             }
 
             if (local.size() > 0) {
-                mbox.lock.lock();
-                try {
-                    boolean migrateDlist = CreateContact.needToMigrateDlist(zsc);
-                    for (int id : local) {
-                        Contact con = mbox.getContactById(octxt, id);
-                        if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
-                            ContactGroup contactGroup = null;
-                            String migratedDlist = null;
-                            if (migrateDlist) {
-                                ContactGroup cg = ContactGroup.init(con, false);
-                                if (cg != null) {
-                                    migratedDlist = cg.migrateToDlist(con.getMailbox(), octxt);
-                                }
-                            } else if (derefContactGroupMember) {
-                                contactGroup = ContactGroup.init(con, false);
-                                if (contactGroup != null) {
-                                    contactGroup.derefAllMembers(con.getMailbox(), octxt, 
-                                            zsc.getResponseProtocol());
-                                }
+                boolean migrateDlist = CreateContact.needToMigrateDlist(zsc);
+                for (int id : local) {
+                    Contact con = mbox.getContactById(octxt, id);
+                    if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
+                        ContactGroup contactGroup = null;
+                        String migratedDlist = null;
+                        if (migrateDlist) {
+                            ContactGroup cg = ContactGroup.init(con, false);
+                            if (cg != null) {
+                                migratedDlist = cg.migrateToDlist(con.getMailbox(), octxt);
                             }
-                            ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
-                                    memberAttrs, false, attrs, fields, migratedDlist,
-                                    returnHiddenAttrs, maxMembers);
+                        } else if (derefContactGroupMember) {
+                            contactGroup = ContactGroup.init(con, false);
+                            if (contactGroup != null) {
+                                contactGroup.derefAllMembers(con.getMailbox(), octxt, 
+                                        zsc.getResponseProtocol());
+                            }
                         }
+                        ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
+                                memberAttrs, false, attrs, fields, migratedDlist,
+                                returnHiddenAttrs, maxMembers);
                     }
-                } finally {
-                    mbox.lock.release();
                 }
             }
         } else {
