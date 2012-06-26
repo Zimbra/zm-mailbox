@@ -407,6 +407,7 @@ public class TestProvisioning extends TestCase {
 
         public void authenticate(Account acct, String password, Map<String, Object> context, List<String> args) throws Exception {
             String acOrigClientIp = (String)context.get(AuthContext.AC_ORIGINATING_CLIENT_IP);
+            String acRemoteIp = (String)context.get(AuthContext.AC_REMOTE_IP);
             String acNamePassedIn = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
             AuthContext.Protocol acProto = (AuthContext.Protocol)context.get(AuthContext.AC_PROTOCOL);
 

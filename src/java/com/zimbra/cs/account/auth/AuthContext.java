@@ -24,6 +24,14 @@ public class AuthContext {
     public static final String AC_ORIGINATING_CLIENT_IP = "ocip";
     
     /*
+     * Remote address as seen by ServletRequest.getRemoteAddr()
+     * Present in context for SOAP, IMAP, POP3, and http basic authentication.
+     * 
+     * type: String
+     */
+    public static final String AC_REMOTE_IP = "remoteip";
+    
+    /*
      * Account name passed in to the interface.
      * Present in context for SOAP and http basic authentication.
      * 

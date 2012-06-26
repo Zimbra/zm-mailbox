@@ -1384,7 +1384,7 @@ abstract class ImapHandler {
             // for some authenticators, actually do the authentication here
             // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check
             Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.imap,
-                    origRemoteIp, userAgent);
+                    origRemoteIp, getRemoteIp(), userAgent);
             if (acct == null) {
                 // auth failure was represented by Authenticator.authenticate() returning null
                 sendNO(tag, command + " failed");

@@ -129,6 +129,7 @@ public class Auth extends AccountDocumentHandler {
             
             Map<String, Object> authCtxt = new HashMap<String, Object>();
             authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
+            authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
             

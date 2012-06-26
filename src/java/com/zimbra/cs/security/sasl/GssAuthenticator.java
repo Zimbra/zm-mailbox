@@ -214,7 +214,7 @@ public class GssAuthenticator extends Authenticator {
 
     @Override
     public Account authenticate(String username, String principal, String unused,
-                                          AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
+                                          AuthContext.Protocol protocol, String origRemoteIp, String remoteIp, String userAgent)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account authAccount = prov.get(Key.AccountBy.krb5Principal, principal);

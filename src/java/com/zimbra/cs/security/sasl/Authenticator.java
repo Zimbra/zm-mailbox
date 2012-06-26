@@ -105,7 +105,7 @@ public abstract class Authenticator {
     public abstract void handle(byte[] data) throws IOException;
 
     public abstract Account authenticate(String username, String authenticateId, String password,
-            AuthContext.Protocol protocol, String origRemoteIp, String userAgent) throws ServiceException;
+            AuthContext.Protocol protocol, String origRemoteIp, String remoteIp, String userAgent) throws ServiceException;
 
     public abstract boolean isEncryptionEnabled();
 

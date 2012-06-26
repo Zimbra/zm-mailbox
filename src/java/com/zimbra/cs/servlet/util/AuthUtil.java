@@ -204,6 +204,7 @@ public class AuthUtil {
         try {
             Map<String, Object> authCtxt = new HashMap<String, Object>();
             authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getOrigIp(req));
+            authCtxt.put(AuthContext.AC_REMOTE_IP, ZimbraServlet.getClientIp(req));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, userPassedIn);
             authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
             prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);

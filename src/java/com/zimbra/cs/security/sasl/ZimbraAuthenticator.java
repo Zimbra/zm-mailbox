@@ -68,7 +68,7 @@ public class ZimbraAuthenticator extends Authenticator {
     }
 
     @Override public Account authenticate(String username, String authenticateId, String authtoken,
-                                          AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
+                                          AuthContext.Protocol protocol, String origRemoteIp, String remoteIp, String userAgent)
     throws ServiceException {
         if (authenticateId == null || authenticateId.equals(""))
             return null;

@@ -547,7 +547,7 @@ abstract class Pop3Handler {
             }
             // for some authenticators, actually do the authentication here
             // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check
-            Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), null);
+            Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), clientAddress, null);
             // auth failure was represented by Authenticator.authenticate() returning null
             if (acct == null) {
                 throw new Pop3CmdException("invalid username/password");

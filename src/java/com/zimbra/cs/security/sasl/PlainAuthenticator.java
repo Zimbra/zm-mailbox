@@ -80,7 +80,7 @@ public class PlainAuthenticator extends Authenticator {
     }
 
     @Override public Account authenticate(String username, String authenticateId, String password,
-                                          AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
+                                          AuthContext.Protocol protocol, String origRemoteIp, String remoteIp, String userAgent)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account authAccount = prov.get(Key.AccountBy.name, authenticateId);
@@ -92,6 +92,7 @@ public class PlainAuthenticator extends Authenticator {
         // authenticate the authentication principal
         Map<String, Object> authCtxt = new HashMap<String, Object>();
         authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
+        authCtxt.put(AuthContext.AC_REMOTE_IP, remoteIp);
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, authenticateId);
         authCtxt.put(AuthContext.AC_USER_AGENT, userAgent);
         prov.authAccount(authAccount, password, protocol, authCtxt);
