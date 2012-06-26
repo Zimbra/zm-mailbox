@@ -39,13 +39,13 @@ Step 4: Extensions can be configured both from admin UI and command line. Here i
 
         NOTE: Mitel doesn't support presence
 
-Step 6: Voice License - We need to install voice license to enable the voice feature.
+Step 5: Voice License - We need to install voice license to enable the voice feature.
         $ zmprov ma qauser1@bostonceltics.local zimbraFeatureVoiceEnabled TRUE
         $ cd ~/p4/main/ZimbraLicenseExtension
         $ ant deploy-dev
         $ Restart jetty
 
-Step 5: If there are any proxy issues, run the below commands.
+Step 6: If there are any proxy issues, run the below commands.
 
         1. set mailboxd_java_options in zmlocalconfig as
 
