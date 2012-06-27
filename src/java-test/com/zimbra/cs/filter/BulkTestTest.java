@@ -67,6 +67,17 @@ public final class BulkTestTest {
     }
 
     @Test
+    public void zimbraOOO() throws Exception {
+        //negative test; don't mark these as bulk
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
+                new ParsedMessage("From: sender@zimbra.com\nPrecedence: bulk\nAuto-Submitted: auto-replied (zimbra; vacation)\nSubject: bulk".getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mailbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertNull(ArrayUtil.getFirstElement(msg.getTags()));
+    }
+
+    @Test
     public void abuse() throws Exception {
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
                 new ParsedMessage("From: sender@zimbra.com\nX-Report-Abuse: test\nSubject: bulk".getBytes(), false),

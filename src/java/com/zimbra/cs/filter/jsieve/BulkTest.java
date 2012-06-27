@@ -43,6 +43,8 @@ public final class BulkTest extends AbstractTest {
     private static final String LIST_UNSUBSCRIBE = "LIST-UNSUBSCRIBE";
     private static final String PRECEDENCE = "PRECEDENCE";
     private static final String X_PROOFPOINT_SPAM_DETAILS = "X-PROOFPOINT-SPAM-DETAILS";
+    private static final String AUTO_SUBMITTED = "Auto-Submitted";
+    private static final String ZIMBRA_OOO_AUTO_REPLY = "auto-replied (zimbra; vacation)";
 
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
@@ -50,7 +52,6 @@ public final class BulkTest extends AbstractTest {
             return false;
         }
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
-
         for (String name : adapter.getHeaderNames()) {
             name = name.toUpperCase(); // compare in all upper-case
             if (HEADERS.contains(name)) { // test common bulk headers
@@ -74,7 +75,16 @@ public final class BulkTest extends AbstractTest {
             } else if (PRECEDENCE.equals(name)) { // test "Precedence: bulk"
                 for (String precedence : adapter.getHeader(PRECEDENCE)) {
                     if ("bulk".equalsIgnoreCase(precedence)) {
-                        return true;
+                        boolean zimbraOOONotif = false;
+                        for (String autoSubmitted : mail.getHeader(AUTO_SUBMITTED)) {
+                            if (ZIMBRA_OOO_AUTO_REPLY.equals(autoSubmitted)) {
+                                zimbraOOONotif = true;
+                                break;
+                            }
+                        }
+                        if (!zimbraOOONotif) {
+                            return true;
+                        }
                     }
                 }
             } else if (name.contains("CAMPAIGN")) { // test *CAMPAIGN*
