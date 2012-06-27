@@ -45,7 +45,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         for (Element el : e.listElements(VoiceConstants.E_CALLPARTY)) {
             String t = el.getAttribute(MailConstants.A_ADDRESS_TYPE, null);
             if (ZEmailAddress.EMAIL_TYPE_FROM.equals(t)) {
-                mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM), el.getAttribute(MailConstants.A_PERSONAL, null));
+                mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM, null), el.getAttribute(MailConstants.A_PERSONAL, null));
                 break;
             }
         }

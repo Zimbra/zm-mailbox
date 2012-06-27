@@ -97,6 +97,9 @@ public class ZPhone implements ToZJSONObject {
 
     public static String getDisplay(String number) {
         // Handles familiar usa-style numbers only for now...
+        if (number == null) {
+            return number;
+        }
 	String name = ZPhone.getName(number);
         int offset = 0;
         boolean doIt = false;
