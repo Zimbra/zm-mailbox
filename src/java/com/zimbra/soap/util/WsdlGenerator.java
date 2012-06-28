@@ -26,12 +26,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
-import org.dom4j.io.DOMWriter;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.QName;
+import org.dom4j.io.XMLWriter;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -42,9 +43,7 @@ import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.JaxbUtil;
 
 /**
@@ -278,14 +277,16 @@ public class WsdlGenerator {
 
     public static void writeWsdl(OutputStream xmlOut, String targetNamespace, String serviceName,
             List<WsdlInfoForNamespace> nsInfos)
-    throws DocumentException {
+    throws IOException {
         Document wsdlDoc = makeWsdlDoc(nsInfos, serviceName, targetNamespace);
-        org.w3c.dom.Document w3cDoc = new DOMWriter().write(wsdlDoc);
-        W3cDomUtil.asXML(xmlOut, w3cDoc, true /* indent */, false /* don't omit XML declaration */);
+        OutputFormat format = OutputFormat.createPrettyPrint();
+        XMLWriter writer = new XMLWriter( xmlOut, format );
+        writer.write(wsdlDoc);
+        writer.close();
     }
 
     public static void createWsdlFile(File wsdlFile, String serviceName, List<WsdlInfoForNamespace> nsInfos)
-    throws DocumentException, IOException {
+    throws IOException {
         String targetNamespace = targetNsBase + wsdlFile.getName();
         if (wsdlFile.exists())
             wsdlFile.delete();
@@ -294,7 +295,7 @@ public class WsdlGenerator {
     }
 
     public static void createWsdlFile(String wsdlFileName, String serviceName, List<WsdlInfoForNamespace> nsInfos)
-    throws DocumentException, IOException {
+    throws IOException {
         File wsdlFile = new File(outputDir, wsdlFileName);
         createWsdlFile(wsdlFile, serviceName, nsInfos);
     }
@@ -344,26 +345,21 @@ public class WsdlGenerator {
 
     public static boolean handleRequestForWsdl(String fileName, OutputStream out, String soapUrl, String adminSoapUrl)
     throws IOException {
-        try {
-            if (WsdlDefinition.ALL.getFileName().equals(fileName)) {
-                createZimbraServiceWsdl(out, soapUrl, adminSoapUrl);
-                return true;
-            } else if (WsdlDefinition.ADMIN.getFileName().equals(fileName)) {
-                createZimbraAdminServiceWsdl(out, adminSoapUrl);
-                return true;
-            } else if (WsdlDefinition.USER.getFileName().equals(fileName)) {
-                createZimbraUserServiceWsdl(out, soapUrl);
-                return true;
-            }
-        } catch (DocumentException ex) {
-            ZimbraLog.soap.debug("Problem servicing request for WSDL " + fileName, ex);
-            return false;
+        if (WsdlDefinition.ALL.getFileName().equals(fileName)) {
+            createZimbraServiceWsdl(out, soapUrl, adminSoapUrl);
+            return true;
+        } else if (WsdlDefinition.ADMIN.getFileName().equals(fileName)) {
+            createZimbraAdminServiceWsdl(out, adminSoapUrl);
+            return true;
+        } else if (WsdlDefinition.USER.getFileName().equals(fileName)) {
+            createZimbraUserServiceWsdl(out, soapUrl);
+            return true;
         }
         return false;
     }
 
     public static void createZimbraServiceWsdl(OutputStream out, String soapUrl, String adminSoapUrl)
-    throws DocumentException, IOException {
+    throws IOException {
         List<WsdlInfoForNamespace> nsInfoList = Lists.newArrayList();
         Map<String,List<String>> packageToRequestListMap = getPackageToRequestListMap();
         WsdlServiceInfo zcsService = WsdlServiceInfo.createForSoap(soapUrl);
@@ -374,7 +370,7 @@ public class WsdlGenerator {
     }
 
     public static void createZimbraAdminServiceWsdl(OutputStream out, String adminSoapUrl)
-    throws DocumentException, IOException {
+    throws IOException {
         List<WsdlInfoForNamespace> nsInfoList = Lists.newArrayList();
         Map<String,List<String>> packageToRequestListMap = getPackageToRequestListMap();
         WsdlServiceInfo zcsAdminService = WsdlServiceInfo.createForAdmin(adminSoapUrl);
@@ -383,7 +379,7 @@ public class WsdlGenerator {
     }
 
     public static void createZimbraUserServiceWsdl(OutputStream out, String soapUrl)
-    throws DocumentException, IOException {
+    throws IOException {
         List<WsdlInfoForNamespace> nsInfoList = Lists.newArrayList();
         Map<String,List<String>> packageToRequestListMap = getPackageToRequestListMap();
         WsdlServiceInfo zcsService = WsdlServiceInfo.createForSoap(soapUrl);
