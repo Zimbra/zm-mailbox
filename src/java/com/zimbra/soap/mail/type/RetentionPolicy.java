@@ -117,10 +117,15 @@ public class RetentionPolicy {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof RetentionPolicy)) {
+        if (!(o instanceof RetentionPolicy)) {
             return false;
         }
         RetentionPolicy other = (RetentionPolicy) o;
         return keep.equals(other.keep) && purge.equals(other.purge);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
     }
 }

@@ -58,12 +58,22 @@ public enum ZmBoolean {
     @XmlEnumValue("false") FALSE,
     @XmlEnumValue("true") TRUE;
 
+    /**
+     * Convert {@link Boolean} to {@link ZmBoolean} equivalent - May return null
+     */
     public static ZmBoolean fromBool(Boolean val) {
         if (val == null) {
             return null;
         } else {
             return val ? ONE : ZERO;
         }
+    }
+
+    /**
+     * Convert {@link Boolean} to ZmBoolean equivalent - If {@code val} is null returns equivalent of {@code defaultval}
+     */
+    public static ZmBoolean fromBool(Boolean val, boolean defaultVal) {
+        return (val == null) ? fromBool(defaultVal) : fromBool(val);
     }
 
     /**
@@ -74,7 +84,7 @@ public enum ZmBoolean {
     }
 
     /**
-     * Convert {@link ZmBoolean} to boolean equivalent - If {@link val} is null returns {@link defaultval}
+     * Convert {@link ZmBoolean} to boolean equivalent - If {@code val} is null returns {@code defaultval}
      */
     public static boolean toBool(ZmBoolean val, boolean defaultVal) {
         return (val == null) ? defaultVal : ((val.equals(ONE)) || (val.equals(TRUE)));

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,8 +23,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -75,18 +75,16 @@ import com.zimbra.common.util.ZimbraLog;
  *     XmlValue           : Ignored
  */
 
-public class JaxbInfo {
+public final class JaxbInfo {
 
     private static final Log LOG = ZimbraLog.soap;
     // Various annotation classes use this
-    public final static String DEFAULT_MARKER = "##default";
+    public static final String DEFAULT_MARKER = "##default";
 
     private Class<?> jaxbClass = null;
-    private Class<?> superClass = null;
     private String stamp = null;
     private String rootElementName = null;
     private String rootElementNamespace = null;
-    private XmlAccessType accessType = null;
     private XmlType xmlType = null;
     
     /**
@@ -94,7 +92,7 @@ public class JaxbInfo {
      */
     private final List<String> attributeNames = Lists.newArrayList();
 
-    public static final HashMap<String,JaxbInfo> cache = Maps.newHashMap();
+    public static final Map<String,JaxbInfo> CACHE = Maps.newHashMap();
 
     /* excludes attributes represented in super classes */
     private final List<JaxbAttributeInfo> attrInfo = Lists.newArrayList();
@@ -118,31 +116,33 @@ public class JaxbInfo {
         }
         stamp = "JaxbInfo class=" + this.jaxbClass.getName() + ":";
         gatherInfo();
-        synchronized(cache) {
-            cache.put(klass.getName(), this);
+        synchronized(CACHE) {
+            CACHE.put(klass.getName(), this);
         }
     }
 
     public static JaxbInfo getFromCache(Class<?> klass) {
-        if (klass == null || klass.isPrimitive())
+        if (klass == null || klass.isPrimitive()) {
             return null;
-        JaxbInfo jbi = null;
-        synchronized(cache) {
-            jbi = cache.get(klass.getName());
         }
-        if (jbi == null)
+        JaxbInfo jbi = null;
+        synchronized(CACHE) {
+            jbi = CACHE.get(klass.getName());
+        }
+        if (jbi == null) {
             jbi = new JaxbInfo(klass);
+        }
         return jbi;
     }
 
     public static void clearCache() {
-        synchronized(cache) {
-            cache.clear();
+        synchronized(CACHE) {
+            CACHE.clear();
         }
     }
 
     private JaxbInfo getSuperClassInfo() {
-        superClass = jaxbClass.getSuperclass();
+        Class<?> superClass = jaxbClass.getSuperclass();
         if (superClass == null) {
             return null;
         }
@@ -157,8 +157,9 @@ public class JaxbInfo {
         List<String> allNames = Lists.newArrayList();
         Iterables.addAll(allNames, this.attributeNames);
         JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
+        if (encClassInfo != null) {
             Iterables.addAll(allNames, encClassInfo.getAttributeNames());
+        }
         return allNames;
     }
 
@@ -166,8 +167,9 @@ public class JaxbInfo {
         List<JaxbAttributeInfo> attrs = Lists.newArrayList();
         Iterables.addAll(attrs, this.attrInfo);
         JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
+        if (encClassInfo != null) {
             Iterables.addAll(attrs, encClassInfo.getAttributes());
+        }
         return attrs;
     }
 
@@ -185,8 +187,9 @@ public class JaxbInfo {
             }
         }
         JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
+        if (encClassInfo != null) {
             Iterables.addAll(elemNames, encClassInfo.getElementNames());
+        }
         return elemNames;
     }
 
@@ -197,8 +200,9 @@ public class JaxbInfo {
         List<JaxbNodeInfo> elems = Lists.newArrayList();
         Iterables.addAll(elems, this.jaxbElemNodeInfo);
         JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
+        if (encClassInfo != null) {
             Iterables.addAll(elems, encClassInfo.getJaxbNodeInfos());
+        }
         return elems;
     }
 
@@ -208,15 +212,14 @@ public class JaxbInfo {
 
     public WrappedElementInfo getWrapperInfo(String name) {
         for (JaxbNodeInfo node : jaxbElemNodeInfo) {
-            if (node instanceof WrappedElementInfo) {
-                if (name.equals(node.getName())) {
-                    return (WrappedElementInfo) node;
-                }
+            if ((node instanceof WrappedElementInfo) && (name.equals(node.getName()))) {
+                return (WrappedElementInfo) node;
             }
         }
         JaxbInfo encClassInfo = getSuperClassInfo();
-        if (encClassInfo != null)
+        if (encClassInfo != null) {
             return encClassInfo.getWrapperInfo(name);
+        }
         return null;
     }
 
@@ -253,23 +256,26 @@ public class JaxbInfo {
         List<String> propOrder = Lists.newArrayList();
         if ( (null == xmlType) || (null == xmlType.propOrder()) )
             return propOrder;
-        for (String prop : xmlType.propOrder())
+        for (String prop : xmlType.propOrder()) {
             propOrder.add(prop);
+        }
         return propOrder;
     }
 
     public static String getRootElementName(Class<?> kls) {
         String name;
-        if (kls == null)
+        if (kls == null) {
             return null;
+        }
         XmlRootElement re = kls.getAnnotation(XmlRootElement.class);
         if (re != null) {
             name = re.name();
         } else {
             name = kls.getName();
             int lastDot =  name.lastIndexOf('.');
-            if (lastDot >= 0)
+            if (lastDot >= 0) {
                 name = name.substring(lastDot + 1);
+            }
         }
         return name;
     }
@@ -283,8 +289,9 @@ public class JaxbInfo {
 
     public static String getRootElementNamespace(Class<?> kls) {
         String namespace = null;
-        if (kls == null)
+        if (kls == null) {
             return null;
+        }
         XmlRootElement re = kls.getAnnotation(XmlRootElement.class);
         if (re != null) {
             namespace = re.namespace();
@@ -454,18 +461,19 @@ public class JaxbInfo {
 
     public static boolean isGetter(Method method) {
         String methodName = method.getName();
-        if (!methodName.startsWith("get")) {
-            if (!methodName.startsWith("is"))
-                return false;
+        if ((!methodName.startsWith("get")) && (!methodName.startsWith("is"))) {
+            return false;
         }
-        if (method.getParameterTypes().length != 0)
+        if (method.getParameterTypes().length != 0) {
             return false;  
+        }
         return (!void.class.equals(method.getReturnType()));
     }
 
     public static boolean isSetter(Method method) {
-        if (!method.getName().startsWith("set"))
+        if (!method.getName().startsWith("set")) {
             return false;
+        }
         return (method.getParameterTypes().length == 1);
     }
 
@@ -489,8 +497,9 @@ public class JaxbInfo {
      */
     public static Class<?> classFromType(Type genericType) {
         Class<?> defKlass;
-        if (genericType == null)
+        if (genericType == null) {
             return null;
+        }
         if (genericType instanceof Class<?>) {
             defKlass = (Class<?>) genericType;
         } else if (genericType instanceof ParameterizedType) {
@@ -520,8 +529,9 @@ public class JaxbInfo {
      */
     public static boolean representsMultipleElements(Type genericType) {
         Class<?> defKlass = null;
-        if (genericType == null)
+        if (genericType == null) {
             return false;
+        }
         if (genericType instanceof Class<?>) {
             defKlass = (Class<?>) genericType;
             return Collection.class.isAssignableFrom(defKlass);
@@ -546,65 +556,64 @@ public class JaxbInfo {
     private void gatherInfo() {
         XmlAccessorType accessorType;
         rootElementName = null;
-        accessType = null;
-        try {
-            XmlRootElement rootE = (XmlRootElement) jaxbClass.getAnnotation(XmlRootElement.class);
-            if (rootE != null)
-                rootElementName = rootE.name();
-            xmlType = (XmlType) jaxbClass.getAnnotation(XmlType.class);
+        XmlAccessType accessType = null;
 
-            accessorType = (XmlAccessorType) jaxbClass.getAnnotation(XmlAccessorType.class);
-            if (accessorType == null) {
-                Package pkg = jaxbClass.getPackage();
-                accessorType = (XmlAccessorType) pkg.getAnnotation(XmlAccessorType.class);
-            }
-            if (accessorType != null) {
-                accessType = accessorType.value();
-            }
-            if (accessType == null) {
-                // Default value for JAXB
-                accessType = XmlAccessType.PUBLIC_MEMBER;
-            }
+        XmlRootElement rootE = (XmlRootElement) jaxbClass.getAnnotation(XmlRootElement.class);
+        if (rootE != null) {
+            rootElementName = rootE.name();
+        }
+        xmlType = (XmlType) jaxbClass.getAnnotation(XmlType.class);
 
-            Field fields[] = jaxbClass.getDeclaredFields();
-            for (Field field: fields) {
-                XmlTransient xmlTransient = (XmlTransient) field.getAnnotation(XmlTransient.class);
-                if (xmlTransient != null) {
+        accessorType = (XmlAccessorType) jaxbClass.getAnnotation(XmlAccessorType.class);
+        if (accessorType == null) {
+            Package pkg = jaxbClass.getPackage();
+            accessorType = (XmlAccessorType) pkg.getAnnotation(XmlAccessorType.class);
+        }
+        if (accessorType != null) {
+            accessType = accessorType.value();
+        }
+        if (accessType == null) {
+            // Default value for JAXB
+            accessType = XmlAccessType.PUBLIC_MEMBER;
+        }
+
+        Field fields[] = jaxbClass.getDeclaredFields();
+        for (Field field: fields) {
+            XmlTransient xmlTransient = (XmlTransient) field.getAnnotation(XmlTransient.class);
+            if (xmlTransient != null) {
+                continue;
+            }
+            Annotation fAnnots[] = field.getAnnotations();
+            if ((fAnnots == null) || (fAnnots.length == 0)) {
+                boolean autoFields =
+                    (accessType.equals(XmlAccessType.PUBLIC_MEMBER) || accessType.equals(XmlAccessType.FIELD));
+                if (!autoFields) {
                     continue;
                 }
-                Annotation fAnnots[] = field.getAnnotations();
-                if ((fAnnots == null) || (fAnnots.length == 0)) {
-                    boolean autoFields =
-                        (accessType.equals(XmlAccessType.PUBLIC_MEMBER) || accessType.equals(XmlAccessType.FIELD));
-                    if (!autoFields) {
-                        continue;
-                    }
-                }
-                processFieldRelatedAnnotations(fAnnots, field.getName(), field.getGenericType());
             }
+            processFieldRelatedAnnotations(fAnnots, field.getName(), field.getGenericType());
+        }
 
-            Method methods[] = jaxbClass.getDeclaredMethods();
-            for (Method method : methods) {
-                XmlTransient xmlTransient = (XmlTransient) method.getAnnotation(XmlTransient.class);
-                if (xmlTransient != null) {
-                    continue;
-                }
-                if (!isGetterOrSetter(method))
-                    continue;
-                Annotation mAnnots[] = method.getAnnotations();
-                if ((mAnnots == null) || (mAnnots.length == 0)) {
-                    boolean autoGettersSetters =
-                        (accessType.equals(XmlAccessType.PUBLIC_MEMBER) || accessType.equals(XmlAccessType.PROPERTY));
-                    if (!autoGettersSetters) {
-                        continue;
-                    }
-                }
-                processFieldRelatedAnnotations(mAnnots,
-                        guessFieldNameFromGetterOrSetter(method.getName()),
-                        method.getGenericReturnType());
+        Method methods[] = jaxbClass.getDeclaredMethods();
+        for (Method method : methods) {
+            XmlTransient xmlTransient = (XmlTransient) method.getAnnotation(XmlTransient.class);
+            if (xmlTransient != null) {
+                continue;
             }
-        } catch (Throwable e) {
-            LOG.error(stamp + "Problem introspecting class", e);
+            if (!isGetterOrSetter(method)) {
+                continue;
+            }
+            Annotation mAnnots[] = method.getAnnotations();
+            if ((mAnnots == null) || (mAnnots.length == 0)) {
+                boolean autoGettersSetters =
+                    (accessType.equals(XmlAccessType.PUBLIC_MEMBER) || accessType.equals(XmlAccessType.PROPERTY));
+                if (!autoGettersSetters) {
+                    continue;
+                }
+            }
+            processFieldRelatedAnnotations(mAnnots,
+                    guessFieldNameFromGetterOrSetter(method.getName()),
+                    method.getGenericReturnType());
         }
     }
 

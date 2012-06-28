@@ -146,12 +146,13 @@ public class Policy {
         return Objects.toStringHelper(this)
             .add("type", type)
             .add("id", id)
+            .add("name", name)
             .add("lifetimeString", lifetime).toString();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof Policy)) {
+        if (!(o instanceof Policy)) {
             return false;
         }
         Policy other = (Policy) o;
@@ -159,5 +160,10 @@ public class Policy {
             Objects.equal(name, other.name) &&
             Objects.equal(lifetime, other.lifetime) &&
             Objects.equal(type, other.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
     }
 }

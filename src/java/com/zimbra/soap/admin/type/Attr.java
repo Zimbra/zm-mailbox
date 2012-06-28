@@ -52,7 +52,9 @@ public class Attr extends KeyValuePair {
     public static List <Attr> mapToList(Map<String, ? extends Object> attrs)
     throws ServiceException {
         List<Attr> newAttrs = Lists.newArrayList();
-        if (attrs == null) return newAttrs;
+        if (attrs == null) {
+            return newAttrs;
+        }
 
         for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
             String key = (String) entry.getKey();
@@ -90,7 +92,7 @@ public class Attr extends KeyValuePair {
 
     @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper = super.addToStringInfo(helper);
+        return super.addToStringInfo(helper);
     }
 
     @Override

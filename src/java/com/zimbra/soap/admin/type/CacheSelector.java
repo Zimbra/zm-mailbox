@@ -34,8 +34,8 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public final class CacheSelector {
 
-    private final static Splitter COMMA_SPLITTER = Splitter.on(",");
-    private final static Joiner COMMA_JOINER = Joiner.on(",");
+    private static final Splitter COMMA_SPLITTER = Splitter.on(",");
+    private static final Joiner COMMA_JOINER = Joiner.on(",");
 
     private final List<CacheEntryType> types = Lists.newArrayList();
 
@@ -59,7 +59,7 @@ public final class CacheSelector {
 
     public CacheSelector()
     throws ServiceException {
-        this((Boolean)null, (String) null);
+        this(false, (String) null);
     }
 
     public CacheSelector(Boolean allServers, String types)
@@ -99,7 +99,7 @@ public final class CacheSelector {
         this.entries.add(entry);
     }
 
-    public Boolean isAllServers() { return ZmBoolean.toBool(allServers); }
+    public boolean isAllServers() { return ZmBoolean.toBool(allServers, false); }
 
     // Note: Valid types from Provisioning.CacheEntryType PLUS there is an extension mechanism
     /**
