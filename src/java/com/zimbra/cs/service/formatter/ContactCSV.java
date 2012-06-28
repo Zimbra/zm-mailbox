@@ -51,6 +51,9 @@ public final class ContactCSV {
 
     private static Log LOG = ZimbraLog.misc;
     private static final char DEFAULT_FIELD_SEPARATOR = ',';
+    // Bug 32273 - Outlook prefers DOS line endings between records - although it doesn't mind either type of
+    // ending for lines contained within a field.
+    private static final String NEW_LINE = "\r\n";
     // CSV files intended for use in locales where ',' as the decimal separator
     // sometimes use ';' as a field separator instead of ','.
     private static final char[] SUPPORTED_SEPARATORS = { DEFAULT_FIELD_SEPARATOR, ';' };
@@ -1020,7 +1023,7 @@ public final class ContactCSV {
             addFieldValue(contact, f, f, sb);
             first = false;
         }
-        sb.append("\n");
+        sb.append(NEW_LINE);
     }
 
     private void toCSVContact(CsvFormat fmt, Contact c, StringBuilder sb) {
@@ -1045,7 +1048,7 @@ public final class ContactCSV {
             }
             first = false;
         }
-        sb.append("\n");
+        sb.append(NEW_LINE);
     }
 
     private void addFieldDef(List<String> fields, StringBuilder sb) {
@@ -1057,7 +1060,7 @@ public final class ContactCSV {
             sb.append('"').append(f).append('"');
             first = false;
         }
-        sb.append("\n");
+        sb.append(NEW_LINE);
     }
 
     private void addFieldDef(CsvFormat fmt, StringBuilder sb) {
@@ -1069,7 +1072,7 @@ public final class ContactCSV {
             sb.append('"').append(col.name).append('"');
             first = false;
         }
-        sb.append("\n");
+        sb.append(NEW_LINE);
     }
 
     private static void writeLine(OutputStream out, String line) throws IOException {
