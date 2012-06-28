@@ -459,7 +459,7 @@ public final class ParseMimeMessage {
                 if (up == null) {
                     throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
                 }
-                attachUpload(mmp, up, contentID, ctxt, null);
+                attachUpload(mmp, up, contentID, ctxt, null, null);
                 ctxt.out.addUpload(up);
             }
         }
@@ -618,7 +618,7 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void attachUpload(MimeMultipart mmp, Upload up, String contentID, ParseMessageContext ctxt, ContentType ctypeOverride)
+    private static void attachUpload(MimeMultipart mmp, Upload up, String contentID, ParseMessageContext ctxt, ContentType ctypeOverride, String contentDescription)
     throws ServiceException, MessagingException {
         // make sure we haven't exceeded the max size
         ctxt.incrementSize("upload " + up.getName(), (long) (up.getSize() * 1.33));
@@ -652,6 +652,9 @@ public final class ParseMimeMessage {
         }
         mbp.setHeader("Content-Type", ctype.setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", cdisp.setCharset(ctxt.defaultCharset).toString());
+        if (contentDescription != null) {
+            mbp.setHeader("Content-Description", contentDescription);
+        }
         if (ctype.getContentType().equals(MimeConstants.CT_APPLICATION_PDF)) {
             mbp.setHeader("Content-Transfer-Encoding", "base64");
         }
@@ -667,7 +670,7 @@ public final class ParseMimeMessage {
         try {
             Upload up = UserServlet.getRemoteResourceAsUpload(ctxt.zsc.getAuthToken(), iid, params);
             ctxt.out.addFetch(up);
-            attachUpload(mmp, up, contentID, ctxt, ctypeOverride);
+            attachUpload(mmp, up, contentID, ctxt, ctypeOverride, null);
             return;
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("can't serialize remote item", ioe);
@@ -820,7 +823,8 @@ public final class ParseMimeMessage {
         //      deleting original blob doesn't lead to stale BlobInputStream references
         Upload up = FileUploadServlet.saveUpload(mp.getInputStream(), filename, contentType, DocumentHandler.getRequestedAccount(ctxt.zsc).getId());
         ctxt.out.addFetch(up);
-        attachUpload(mmp, up, contentID, ctxt, null);
+        String[] contentDesc = mp.getHeader("Content-Description");
+        attachUpload(mmp, up, contentID, ctxt, null, (contentDesc == null || contentDesc.length == 0) ? null : contentDesc[0]);
     }
 
 
