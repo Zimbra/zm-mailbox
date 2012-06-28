@@ -3290,7 +3290,53 @@ public class DbMailItem {
             DbPool.closeResults(rs);
         }
     }
+    
+    public static interface Callback<T>
+    {
+        public void call(T value);
+    }
+    
+    public static void visitAllBlobDigests(Mailbox mbox, Callback<String> callback) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("SELECT blob_digest FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            visitAllBlobDigests(stmt, mbox, callback);
 
+            stmt = conn.prepareStatement("SELECT blob_digest FROM " + getMailItemTableName(mbox, true) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            visitAllBlobDigests(stmt, mbox, callback);
+
+            stmt = conn.prepareStatement("SELECT blob_digest FROM " + getRevisionTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            visitAllBlobDigests(stmt, mbox, callback);
+
+            stmt = conn.prepareStatement("SELECT blob_digest FROM " + getRevisionTableName(mbox, true) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            visitAllBlobDigests(stmt, mbox, callback);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("visiting blob digests list for mailbox " + mbox.getId(), e);
+        }
+    }
+
+    private static void visitAllBlobDigests(PreparedStatement stmt, Mailbox mbox, Callback<String> callback)
+    throws SQLException, ServiceException {
+        ResultSet rs = null;
+        try {
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                callback.call(rs.getString(1));
+            }
+        } finally {
+            DbPool.closeResults(rs);
+            stmt.close();
+        }
+    }
+    
     // these columns are specified by DB_FIELDS, below
     public static final int CI_ID          = 1;
     public static final int CI_TYPE        = 2;

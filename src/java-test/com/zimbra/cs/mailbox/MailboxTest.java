@@ -278,22 +278,35 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertEquals("start with no blobs in the store", 0, sm.size());
 
-        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
+        MailItem item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
+        // Index the mailbox so that mime message gets cached
+        mbox.index.indexDeferredItems();
+        // make sure digest is in message cache.
+        Assert.assertTrue(MessageCache.contains(item.getDigest()));
 
         mbox.deleteMailbox();
         Assert.assertEquals("end with no blobs in the store", 0, sm.size());
+        // make sure digest is removed from message cache.
+        Assert.assertFalse(MessageCache.contains(item.getDigest()));
 
 
         // then test mailbox delete without store delete
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Assert.assertEquals("start with no blobs in the store", 0, sm.size());
 
-        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
+        item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
-
+        
+        // Index the mailbox so that mime message gets cached
+        mbox.index.indexDeferredItems();
+        // make sure digest is in message cache.
+        Assert.assertTrue(MessageCache.contains(item.getDigest()));
+        
         mbox.deleteMailbox(Mailbox.DeleteBlobs.NEVER);
         Assert.assertEquals("end with 1 blob in the store", 1, sm.size());
+        // make sure digest is still present in message cache.
+        Assert.assertTrue(MessageCache.contains(item.getDigest()));
         sm.purge();
 
 

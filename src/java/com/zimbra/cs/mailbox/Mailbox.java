@@ -1978,6 +1978,13 @@ public class Mailbox {
     }
 
     public enum DeleteBlobs { ALWAYS, NEVER, UNLESS_CENTRALIZED };
+    
+    private static class MessageCachePurgeCallback implements DbMailItem.Callback<String> {
+        @Override
+        public void call(String value) {
+            MessageCache.purge(value);
+        }
+    }
 
     public void deleteMailbox(DeleteBlobs deleteBlobs) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
@@ -2014,6 +2021,10 @@ public class Mailbox {
                 }
 
                 try {
+                    // Remove the mime messages from MessageCache
+                    if (deleteStore) {
+                        DbMailItem.visitAllBlobDigests(this, new MessageCachePurgeCallback());
+                    }
                     // remove all the relevant entries from the database
                     DbConnection conn = getOperationConnection();
                     DbMailbox.clearMailboxContent(this);
