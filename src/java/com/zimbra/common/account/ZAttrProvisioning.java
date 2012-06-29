@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120627-1119 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3188,6 +3188,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
 
     /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1418)
+    public static final String A_zimbraDataSourceImportOnLogin = "zimbraDataSourceImportOnLogin";
+
+    /**
      * indicates that this datasource is used for one way (incoming) import
      * vs. two-way sync
      *
@@ -3419,7 +3428,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDeviceLockWhenInactive = "zimbraDeviceLockWhenInactive";
 
     /**
-     * Whether offline reading of docuemnts on device is allowed
+     * Whether offline reading of documents on device is allowed
      *
      * @since ZCS 8.0.0
      */
@@ -6599,7 +6608,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
 
     /**
-     * whether message channel servie is enabled on this server
+     * whether message channel service is enabled on this server
      *
      * @since ZCS 8.0.0
      */
@@ -8486,7 +8495,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefForwardReplySignatureId = "zimbraPrefForwardReplySignatureId";
 
     /**
-     * email address to put in from header
+     * email address to put in from header. Deprecated on data source as of
+     * bug 67068.
      */
     @ZAttr(id=403)
     public static final String A_zimbraPrefFromAddress = "zimbraPrefFromAddress";
