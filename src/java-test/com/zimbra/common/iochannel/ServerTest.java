@@ -72,6 +72,7 @@ public class ServerTest {
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s2 = Server.start(new TestConfig(TestConfig.C.alternate));
         c = Client.start(new TestConfig(TestConfig.C.main));
+        c.setWaitInterval(1000);
     }
 
     @AfterClass public static void shutdown() throws Exception {
@@ -105,7 +106,7 @@ public class ServerTest {
         CountDownLatch latch = new CountDownLatch(1);
         s1.registerCallback(new CountDownCallback(latch));
         c.getPeer("self").sendMessage(messages[0]);
-        latch.await(20, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -118,7 +119,7 @@ public class ServerTest {
         c.getPeer("copy2").sendMessage(messages[1]);
         c.getPeer("self").sendMessage(messages[2]);
         c.getPeer("copy2").sendMessage(messages[2]);
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -131,8 +132,8 @@ public class ServerTest {
         c.getPeer("peer2").sendMessage(messages[1]);
         c.getPeer("peer1").sendMessage(messages[2]);
         c.getPeer("peer2").sendMessage(messages[3]);
-        latch1.await(10, TimeUnit.SECONDS);
-        latch2.await(10, TimeUnit.SECONDS);
+        latch1.await(2, TimeUnit.SECONDS);
+        latch2.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch1.getCount());
         Assert.assertEquals(0, latch2.getCount());
     }
@@ -141,11 +142,11 @@ public class ServerTest {
         s1.shutdown();
         Thread.sleep(1000);
         c.getPeer("self").sendMessage(messages[0]);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         CountDownLatch latch = new CountDownLatch(1);
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s1.registerCallback(new CountDownCallback(latch));
-        latch.await(20, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -153,16 +154,16 @@ public class ServerTest {
         CountDownLatch latch = new CountDownLatch(1);
         s1.registerCallback(new CountDownCallback(latch));
         c.getPeer("self").sendMessage(messages[0]);
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
         s1.shutdown();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         c.getPeer("self").sendMessage(messages[1]);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         latch = new CountDownLatch(1);
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s1.registerCallback(new CountDownCallback(latch));
-        latch.await(20, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch.getCount());
     }
 
@@ -173,17 +174,31 @@ public class ServerTest {
         s2.registerCallback(new CountDownCallback(latch2));
         c.getPeer("peer1").sendMessage(messages[0]);
         c.getPeer("peer2").sendMessage(messages[1]);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         s1.shutdown();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         c.getPeer("peer1").sendMessage(messages[2]);
         c.getPeer("peer2").sendMessage(messages[3]);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         s1 = Server.start(new TestConfig(TestConfig.C.main));
         s1.registerCallback(new CountDownCallback(latch1));
-        latch1.await(20, TimeUnit.SECONDS);
-        latch2.await(20, TimeUnit.SECONDS);
+        latch1.await(2, TimeUnit.SECONDS);
+        latch2.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, latch1.getCount());
         Assert.assertEquals(0, latch2.getCount());
+    }
+
+    @Test public void testLargeMessage() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        s1.registerCallback(new CountDownCallback(latch));
+        String msg = messages[1];
+        while (msg.length() < Packet.maxMessageSize) {
+            msg += msg;
+        }
+        c.getPeer("self").sendMessage(msg);
+        Thread.sleep(2000);
+        c.getPeer("self").sendMessage(messages[0]);
+        latch.await(2, TimeUnit.SECONDS);
+        Assert.assertEquals(0, latch.getCount());
     }
 }

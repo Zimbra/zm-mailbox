@@ -91,7 +91,7 @@ public class Server implements Runnable {
     /**
      * Cleans up and shuts down the server thread.
      */
-    public void shutdown() {
+    public synchronized void shutdown() {
         shutdown = true;
         for (SelectionKey key : selector.keys()) {
             try {
@@ -141,10 +141,11 @@ public class Server implements Runnable {
     @Override
     public void run() {
         while (!shutdown) {
+            SelectionKey key = null;
             try {
                 selector.select();
                 for (Iterator<SelectionKey> iter = selector.selectedKeys().iterator(); iter.hasNext();) {
-                    SelectionKey key = iter.next();
+                    key = iter.next();
                     iter.remove();
                     if (key.isValid()) {
                         if (key.isAcceptable()) {
@@ -166,35 +167,46 @@ public class Server implements Runnable {
                             log.debug("server:reading %d bytes from %d", bytesRead, channel.socket().getPort());
                             if (bytesRead == -1) {
                                 log.debug("server:EOF 0");
-                                key.cancel();
-                                channel.close();
+                                throw IOChannelException.ChannelClosed(channel.toString());
                             }
                             checkBuffer(buffer);
                         }
                     }
                 }
+            } catch (IOChannelException e) {
+                switch (e.getCode()) {
+                case ChannelClosed:
+                    try {
+                        key.channel().close();
+                    } catch (IOException ignore) {
+                    }
+                    key.cancel();
+                    break;
+                }
+                ByteBuffer buffer = (ByteBuffer)key.attachment();
+                if (buffer != null) {
+                    buffer.clear();
+                }
+            } catch (ClosedSelectorException ignore) {
+                // ignore since we are shutting down
             } catch (Throwable e) {
+                log.warn(e);
                 if (e instanceof OutOfMemoryError) {
                     break;
                 }
-                if (!(e instanceof ClosedSelectorException)) {
-                    // log the error and continue
-                    log.warn(e);
-                }
-                continue;
             }
         }
         log.info("server:shutting down");
     }
 
-    private void checkBuffer(ByteBuffer buffer) {
+    private void checkBuffer(ByteBuffer buffer) throws IOChannelException {
         Packet p = Packet.fromBuffer(buffer);
         while (p != null) {
             try {
                 callback.dataReceived(p.getHeader(), p.getContent());
             } catch (IOException e) {
                 log.warn(e);
-                buffer.reset();
+                buffer.clear();
                 return;
             }
             p = Packet.fromBuffer(buffer);

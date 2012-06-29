@@ -85,7 +85,7 @@ public class Packet {
         payload[1] = ByteBuffer.wrap(content);
     }
 
-    public static Packet fromBuffer(ByteBuffer buffer) {
+    public static Packet fromBuffer(ByteBuffer buffer) throws IOChannelException {
         if (buffer.position() < minimumHeaderSize) {
             return null;
         }
@@ -97,15 +97,17 @@ public class Packet {
             // it's corrupted data or beginning part has been lost.
             // discard what's been read and hope that the next segment
             // starts from the beginning of a new message.
-            buffer.reset();
+            buffer.clear();
             return null;
         }
 
         long headerLen = copy.getLong();
         long contentLen = copy.getLong();
         if (copy.remaining() < headerLen + contentLen) {
-            // not enough data in the buffer
-            return null;
+            // not enough space in the buffer to read the Packet fully.
+            byte[] headerBuf = new byte[(int)headerLen];
+            copy.get(headerBuf);
+            throw IOChannelException.PacketTooBig(new String(headerBuf));
         }
         // fully read the current message
         byte[] headerBuf = new byte[(int)headerLen];

@@ -264,7 +264,11 @@ public class Client implements Runnable {
     private final HashMap<String,PeerServer> peers;
     private final HashSet<PeerServer> activeSet;
 
-    private static final int waitInterval = 10000;  // 10s
+    private static int waitInterval = 10000;  // 10s
+
+    void setWaitInterval(int interval) {
+        waitInterval = interval;
+    }
 
     private boolean hasBusyPeer() {
         return !activeSet.isEmpty();
