@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120627-1119 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3326,6 +3326,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @return zimbraDataSourceImportOnLogin, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1418)
+    public boolean isDataSourceImportOnLogin() {
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceImportOnLogin, false);
+    }
+
+    /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @param zimbraDataSourceImportOnLogin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1418)
+    public void setDataSourceImportOnLogin(boolean zimbraDataSourceImportOnLogin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceImportOnLogin, zimbraDataSourceImportOnLogin ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @param zimbraDataSourceImportOnLogin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1418)
+    public Map<String,Object> setDataSourceImportOnLogin(boolean zimbraDataSourceImportOnLogin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceImportOnLogin, zimbraDataSourceImportOnLogin ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1418)
+    public void unsetDataSourceImportOnLogin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceImportOnLogin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1418)
+    public Map<String,Object> unsetDataSourceImportOnLogin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceImportOnLogin, "");
+        return attrs;
+    }
+
+    /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling. . Must be in valid duration format:
@@ -4444,7 +4521,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Whether offline reading of docuemnts on device is allowed
+     * Whether offline reading of documents on device is allowed
      *
      * @return zimbraDeviceOfflineCacheEnabled, or false if unset
      *
@@ -4456,7 +4533,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Whether offline reading of docuemnts on device is allowed
+     * Whether offline reading of documents on device is allowed
      *
      * @param zimbraDeviceOfflineCacheEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4471,7 +4548,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Whether offline reading of docuemnts on device is allowed
+     * Whether offline reading of documents on device is allowed
      *
      * @param zimbraDeviceOfflineCacheEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4487,7 +4564,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Whether offline reading of docuemnts on device is allowed
+     * Whether offline reading of documents on device is allowed
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4501,7 +4578,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Whether offline reading of docuemnts on device is allowed
+     * Whether offline reading of documents on device is allowed
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

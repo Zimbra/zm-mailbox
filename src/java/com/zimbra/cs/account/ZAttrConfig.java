@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120627-1119 */
 
     /**
      * RFC2256: descriptive information
@@ -20208,7 +20208,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * whether message channel servie is enabled on this server
+     * whether message channel service is enabled on this server
      *
      * @return zimbraMessageChannelEnabled, or false if unset
      *
@@ -20220,7 +20220,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * whether message channel servie is enabled on this server
+     * whether message channel service is enabled on this server
      *
      * @param zimbraMessageChannelEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20235,7 +20235,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * whether message channel servie is enabled on this server
+     * whether message channel service is enabled on this server
      *
      * @param zimbraMessageChannelEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20251,7 +20251,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * whether message channel servie is enabled on this server
+     * whether message channel service is enabled on this server
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20265,7 +20265,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * whether message channel servie is enabled on this server
+     * whether message channel service is enabled on this server
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
