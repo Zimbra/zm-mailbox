@@ -3335,10 +3335,13 @@ public class ZMailbox implements ToZJSONObject {
      * @param ical iCalendar data
      * @throws ServiceException on error
      */
-    public void iCalReply(String ical) throws ServiceException {
+    public void iCalReply(String ical, String sender) throws ServiceException {
         Element req = newRequestElement(MailConstants.ICAL_REPLY_REQUEST);
         Element icalElem = req.addUniqueElement(MailConstants.E_CAL_ICAL);
         icalElem.setText(ical);
+        if (sender != null) {
+            icalElem.addAttribute(MailConstants.E_CAL_ATTENDEE, sender);
+        }
         invoke(req);
     }
 
