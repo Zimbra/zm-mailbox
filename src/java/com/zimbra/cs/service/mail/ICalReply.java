@@ -40,6 +40,7 @@ public class ICalReply extends MailDocumentHandler {
 
         Element icalElem = request.getElement(MailConstants.E_CAL_ICAL);
         String icalStr = icalElem.getText();
+        String sender = icalElem.getAttribute(MailConstants.E_CAL_ATTENDEE, null);
         ZVCalendar cal = ZCalendarBuilder.build(icalStr);
 
         List<Invite> invites =
@@ -52,7 +53,7 @@ public class ICalReply extends MailDocumentHandler {
             }
         }
         for (Invite inv : invites) {
-            mbox.processICalReply(octxt, inv);
+            mbox.processICalReply(octxt, inv, sender);
         }
 
         Element response = getResponseElement(zsc);

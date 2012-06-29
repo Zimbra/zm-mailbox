@@ -4966,8 +4966,8 @@ public class Mailbox {
      *
      * @param inv REPLY iCalendar object
      */
-    public void processICalReply(OperationContext octxt, Invite inv) throws ServiceException {
-        ICalReply redoRecorder = new ICalReply(getId(), inv);
+    public void processICalReply(OperationContext octxt, Invite inv, String sender) throws ServiceException {
+        ICalReply redoRecorder = new ICalReply(getId(), inv, sender);
         boolean success = false;
         try {
             beginTransaction("iCalReply", octxt, redoRecorder);
@@ -4978,7 +4978,7 @@ public class Mailbox {
                 return;
             }
             calItem.snapshotRevision();
-            calItem.processNewInviteReply(inv);
+            calItem.processNewInviteReply(inv, sender);
             success = true;
         } finally {
             endTransaction(success);
@@ -4996,7 +4996,7 @@ public class Mailbox {
         return authToken;
     }
 
-    private void processICalReplies(OperationContext octxt, ZVCalendar cal)
+    private void processICalReplies(OperationContext octxt, ZVCalendar cal, String sender)
     throws ServiceException {
         // Reply from Outlook will usually have PRODID set to the following:
         //
@@ -5045,7 +5045,7 @@ public class Mailbox {
                         }
                     }
                 }
-                processICalReply(octxt, inv);
+                processICalReply(octxt, inv, sender);
             } else {
                 Account orgAccount = inv.getOrganizerAccount();
                 // Unknown organizer
@@ -5057,7 +5057,7 @@ public class Mailbox {
                     // Run in the context of organizer's mailbox.
                     Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(orgAccount);
                     OperationContext orgOctxt = new OperationContext(mbox);
-                    mbox.processICalReply(orgOctxt, inv);
+                    mbox.processICalReply(orgOctxt, inv, sender);
                 } else {
                     // Organizer's mailbox is on a remote server.
                     String uri = AccountUtil.getSoapUri(orgAccount);
@@ -5072,6 +5072,7 @@ public class Mailbox {
                         StringWriter sr = null;
                         try {
                             sr = new StringWriter();
+                            inv.setMethod(ICalTok.REPLY.toString());
                             inv.newToICalendar(true).toICalendar(sr);
                             ical = sr.toString();
                         } finally {
@@ -5085,7 +5086,7 @@ public class Mailbox {
                         options.setUri(uri);
                         options.setNoSession(true);
                         ZMailbox zmbox = ZMailbox.getMailbox(options);
-                        zmbox.iCalReply(ical);
+                        zmbox.iCalReply(ical, sender);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
                     }
@@ -5168,7 +5169,9 @@ public class Mailbox {
                 CalendarPartInfo cpi = pm.getCalendarPartInfo();
                 if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                     if (ICalTok.REPLY.equals(cpi.method)) {
-                        processICalReplies(octxt, cpi.cal);
+                        processICalReplies(octxt, cpi.cal, null);
+                    } else if (ICalTok.COUNTER.equals(cpi.method)) {
+                        processICalReplies(octxt, cpi.cal, pm.getSender());
                     }
                 }
             } catch (Exception e) {

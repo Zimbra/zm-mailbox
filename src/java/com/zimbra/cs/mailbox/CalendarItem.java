@@ -34,6 +34,7 @@ import java.util.Set;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -52,6 +53,7 @@ import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -1390,10 +1392,12 @@ public abstract class CalendarItem extends MailItem {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
                                                    preserveAlarms, replaceExistingInvites);
         } else if (method.equals(ICalTok.REPLY.toString())) {
-            return processNewInviteReply(invite);
+            return processNewInviteReply(invite, null);
+        } else if (method.equals(ICalTok.COUNTER.toString())) {
+            return processNewInviteReply(invite, pm.getSender());
         }
 
-        if (!method.equals(ICalTok.COUNTER.toString()) && !method.equals(ICalTok.DECLINECOUNTER.toString()))
+        if (!method.equals(ICalTok.DECLINECOUNTER.toString()))
             ZimbraLog.calendar.warn("Unsupported METHOD " + method);
         return false;
     }
@@ -3050,10 +3054,36 @@ public abstract class CalendarItem extends MailItem {
         saveMetadata();
     }
 
-    boolean processNewInviteReply(Invite reply)
+    boolean processNewInviteReply(Invite reply, String sender)
     throws ServiceException {
         List<ZAttendee> attendees = reply.getAttendees();
-
+        
+        String senderAddress = null;
+        if (sender != null && !sender.isEmpty()) {
+            try {
+                JavaMailInternetAddress address = new JavaMailInternetAddress(sender);
+                senderAddress = address.getAddress();
+            } catch (AddressException e) {
+                // ignore invalid sender address.
+            }
+        }
+        
+        if (senderAddress != null && !attendees.isEmpty()) { 
+            AccountAddressMatcher acctMatcher = null;
+            Account acct = Provisioning.getInstance().get(AccountBy.name, senderAddress);
+            if (acct != null) {
+                acctMatcher = new AccountAddressMatcher(acct);
+            }
+            Iterator<ZAttendee> iter = attendees.iterator();
+            while (iter.hasNext()) {
+                ZAttendee att = iter.next();
+                // Remove the attendee if not same as the sender.
+                if (!(att.addressMatches(senderAddress) || (acctMatcher != null && acctMatcher.matches(att.getAddress())))) {
+                    iter.remove();
+                }
+            }
+        }
+        
         // trace logging
         ZAttendee att1 = !attendees.isEmpty() ? attendees.get(0) : null;
         if (att1 != null) {

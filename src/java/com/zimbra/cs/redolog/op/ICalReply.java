@@ -30,15 +30,17 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class ICalReply extends RedoableOp {
 
     private Invite mInvite;
+    private String mSender;
     
     public ICalReply()  {
         super(MailboxOperation.ICalReply);
     }
 
-    public ICalReply(int mailboxId, Invite inv) {
+    public ICalReply(int mailboxId, Invite inv, String sender) {
         this();
         setMailboxId(mailboxId);
         mInvite = inv;
+        mSender = sender;
     }
 
     @Override protected String getPrintableData() {
@@ -46,6 +48,7 @@ public class ICalReply extends RedoableOp {
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         sb.append("localTZ=").append(Util.encodeAsMetadata(localTz).toString());
         sb.append(", inv=").append(Invite.encodeMetadata(mInvite).toString());
+        sb.append(", sender=").append(mSender);
         return sb.toString();
     }
 
@@ -53,12 +56,14 @@ public class ICalReply extends RedoableOp {
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         out.writeUTF(Util.encodeAsMetadata(localTz).toString());
         out.writeUTF(Invite.encodeMetadata(mInvite).toString());
+        out.writeUTF(mSender);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         try {
             ICalTimeZone localTz = Util.decodeTimeZoneFromMetadata(new Metadata(in.readUTF()));
             mInvite = Invite.decodeMetadata(getMailboxId(), new Metadata(in.readUTF()), null, localTz);
+            mSender = in.readUTF();
         } catch (ServiceException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for ICalReply " + ex.toString());
@@ -67,6 +72,6 @@ public class ICalReply extends RedoableOp {
     
     @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.processICalReply(getOperationContext(), mInvite);
+        mbox.processICalReply(getOperationContext(), mInvite, mSender);
     }
 }
