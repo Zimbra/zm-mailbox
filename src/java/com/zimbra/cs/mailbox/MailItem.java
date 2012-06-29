@@ -453,15 +453,17 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public static final short INCLUDE_TRASH  = 0x01;
         public static final short INCLUDE_SPAM   = 0x02;
         public static final short INCLUDE_SENT   = 0x04;
-        public static final short INCLUDE_OTHERS = 0x08;
+        public static final short INCLUDE_DRAFTS = 0x08;
+        public static final short INCLUDE_OTHERS = 0x20;
         public static final short INCLUDE_QUERY  = 0x10;
-        private static final short ALL_LOCATIONS = INCLUDE_TRASH | INCLUDE_SPAM | INCLUDE_SENT | INCLUDE_OTHERS;
+        private static final short ALL_LOCATIONS = INCLUDE_TRASH | INCLUDE_SPAM | INCLUDE_SENT | INCLUDE_DRAFTS | INCLUDE_OTHERS;
 
         private static final char ENC_TRASH = 't';
         private static final char ENC_SPAM  = 'j';
         private static final char ENC_SENT  = 's';
         private static final char ENC_OTHER = 'o';
         private static final char ENC_QUERY = 'q';
+        private static final char ENC_DRAFTS = 'd';
 
         private short inclusions;
         private String query;
@@ -500,6 +502,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                     case ENC_TRASH:  inclusions |= INCLUDE_TRASH;       break;
                     case ENC_SPAM:   inclusions |= INCLUDE_SPAM;        break;
                     case ENC_SENT:   inclusions |= INCLUDE_SENT;        break;
+                    case ENC_DRAFTS:  inclusions |= INCLUDE_DRAFTS;     break;
                     case ENC_OTHER:  inclusions |= INCLUDE_OTHERS;      break;
                     case ENC_QUERY:  inclusions |= INCLUDE_QUERY;
                                      query = encoded.substring(i + 1);  break loop;
@@ -530,6 +533,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if ((inclusions & INCLUDE_SENT) != 0) {
                 sb.append(ENC_SENT);
             }
+            if ((inclusions & INCLUDE_DRAFTS) != 0) {
+                sb.append(ENC_DRAFTS);
+            }
             if ((inclusions & INCLUDE_OTHERS) != 0) {
                 sb.append(ENC_OTHER);
             }
@@ -553,7 +559,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 return true;
             if ((inclusions & INCLUDE_SENT) != 0 && inSent(item))
                 return true;
-            if ((inclusions & INCLUDE_OTHERS) != 0 && !item.inTrash() && !item.inSpam() && !inSent(item))
+            if ((inclusions & INCLUDE_DRAFTS) != 0 && item.inDrafts())
+                return true;
+            if ((inclusions & INCLUDE_OTHERS) != 0 && !item.inTrash() && !item.inSpam() && !inSent(item) && !item.inDrafts())
                 return true;
             return false;
         }
@@ -1099,6 +1107,12 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  may not have subfolders.) */
     public boolean inSpam() {
         return mData.folderId == Mailbox.ID_FOLDER_SPAM;
+    }
+
+    /** Returns whether the item is in the Drafts folder.  (The Drafts folder
+     *  may not have subfolders.) */
+    public boolean inDrafts() {
+        return mData.folderId == Mailbox.ID_FOLDER_DRAFTS;
     }
 
     public boolean inDumpster() {
