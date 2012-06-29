@@ -21,7 +21,7 @@ public class MessageChannelException extends IOChannelException {
     private static final long serialVersionUID = -3595831838657110474L;
 
     public MessageChannelException(String msg) {
-        super(msg);
+        super(Code.Error, msg);
     }
 
     public static MessageChannelException NoSuchMessage(String message) {
