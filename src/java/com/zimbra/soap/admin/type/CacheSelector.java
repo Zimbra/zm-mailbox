@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,22 +22,23 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public final class CacheSelector {
 
-    private static final Splitter COMMA_SPLITTER = Splitter.on(",");
-    private static final Joiner COMMA_JOINER = Joiner.on(",");
-
-    private final List<CacheEntryType> types = Lists.newArrayList();
+    // Note: Valid types from Provisioning.CacheEntryType PLUS there is an extension mechanism
+    /**
+     * @zm-api-field-tag comma-sep-cache-types
+     * @zm-api-field-description Comma separated list of cache types.
+     * e.g. from <b>skin|locale|account|cos|domain|server|zimlet</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
+    private String types;
 
     /**
      * @zm-api-field-tag all-servers
@@ -57,35 +58,21 @@ public final class CacheSelector {
     @XmlElement(name=AdminConstants.E_ENTRY /* entry */, required=false)
     private final List <CacheEntrySelector> entries = Lists.newArrayList();
 
-    public CacheSelector()
-    throws ServiceException {
-        this(false, (String) null);
+    public CacheSelector() {
+        this(false, "");
     }
 
-    public CacheSelector(Boolean allServers, String types)
-    throws ServiceException {
+    public CacheSelector(Boolean allServers, String types) {
         this.allServers = ZmBoolean.fromBool(allServers);
-        setTypes(types);
+        this.setTypes(types);
+    }
+
+    public void setTypes(String types) {
+        this.types = (types == null) ? "" : types;
     }
 
     public void setAllServers(Boolean allServers) {
         this.allServers = ZmBoolean.fromBool(allServers);
-    }
-
-    public void setTypes(String types)
-    throws ServiceException {
-        for (String typeString : COMMA_SPLITTER.split(types)) {
-            addType(typeString);
-        }
-    }
-
-    public void addType(CacheEntryType type) {
-        types.add(type);
-    }
-
-    public void addType(String typeString)
-    throws ServiceException {
-        addType(CacheEntryType.fromString(typeString));
     }
 
     public void setEntries(Iterable<CacheEntrySelector> entryList) {
@@ -101,14 +88,7 @@ public final class CacheSelector {
 
     public boolean isAllServers() { return ZmBoolean.toBool(allServers, false); }
 
-    // Note: Valid types from Provisioning.CacheEntryType PLUS there is an extension mechanism
-    /**
-     * @zm-api-field-tag comma-sep-cache-types
-     * @zm-api-field-description Comma separated list of cache types.
-     * e.g. from <b>skin|locale|account|cos|domain|server|zimlet</b>
-     */
-    @XmlAttribute(name=AdminConstants.A_TYPE)
-    public String getTypes() { return COMMA_JOINER.join(types); }
+    public String getTypes() { return types; }
     public List<CacheEntrySelector> getEntries() {
         return Collections.unmodifiableList(entries);
     }
