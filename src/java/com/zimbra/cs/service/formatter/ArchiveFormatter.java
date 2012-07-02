@@ -45,6 +45,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.Sets;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
 import org.eclipse.jetty.server.AbstractHttpConnection;
@@ -112,6 +113,14 @@ public abstract class ArchiveFormatter extends Formatter {
     private static String UTF8 = "UTF-8";
     public static enum Resolve { Modify, Replace, Reset, Skip }
     public static final String PARAM_RESOLVE = "resolve";
+
+    /* Black Listed Extensions */
+    private static final Set<String> BLE = Collections.unmodifiableSet(Sets.newHashSet("TAR", "ZIP", "TGZ", "A6P","AC","AS","ACR","ACTION","AIR","APP","APP","AWK","BAT","CGI","CMD","COM","CSH",
+                                               "DEK","DLD","DS","EBM","ESH","EXE","EZS","FKY","FRS","FXP","GADGET","HMS","HTA","ICD",
+                                               "INX","IPF","ISU","JAR","JS","JSE","JSX","KIX","LUA","MCR","MEM","MPX","MS","MSI","MST",
+                                               "OBS","PAF","PEX","PIF","PRC","PRG","PVD","PWC","PY","PYC","PYO","QPX","RBX","REG","RGS",
+                                               "ROX","RPJ","SCAR","SCR","SCRIPT","SCT","SHB","SHS","SPR","TLB","TMS","U3P","UDF","VB",
+                                               "VBE","VBS","VBSCRIPT","WCM","WPK","WS","WSF","XQT"));
 
     private static final class SortPath implements Comparator<MailItem> {
         SortPath() {
@@ -209,8 +218,13 @@ public abstract class ArchiveFormatter extends Formatter {
                 } else {
                     filename = context.targetMailbox.getAccountId() + '.' + df.format(date).replace('/', '-') + sdf.format(date);
                 }
-            } else if ((dot = filename.lastIndexOf('.')) != -1) {
-                ext = filename.substring(dot);
+            }
+            else if ((dot = filename.lastIndexOf('.')) != -1) {
+
+                String userProvidedExtension = filename.substring(dot + 1);
+                if(BLE.contains(userProvidedExtension.toUpperCase())){
+                    filename = filename.substring(0, dot);
+                }
             }
             if (!filename.endsWith(ext)) {
                 filename += ext;
