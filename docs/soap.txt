@@ -2011,6 +2011,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
         t - include items in the Trash
         j - include items in Spam/Junk
         s - include items in the user's Sent folder (not necessarily "Sent")
+        d - include items in Drafts folder
         o - include items in any other folder
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
@@ -2082,6 +2083,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
         t - include items in the Trash
         j - include items in Spam/Junk
         s - include items in the user's Sent folder (not necessarily "Sent")
+        d - include items in Drafts folder
         o - include items in any other folder
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
