@@ -20,6 +20,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -80,7 +81,8 @@ public class DiscoverUserRights {
             for (ZimbraACE ace : acl.getAllACEs()) {
                 Right right = ace.getRight();
 
-                if (rights.contains(right) && !isSameEntry(targetEntry, acct)) {
+                if (rights.contains(right) && !isSameEntry(targetEntry, acct)
+                        && StringUtil.equal(this.acct.getId(), ace.getGrantee())) {
                     // include the entry only if it is the designated target type for the right
                     TargetType targetTypeForRight = right.getTargetType();
                     TargetType taregtTypeOfEntry = TargetType.getTargetType(targetEntry);
