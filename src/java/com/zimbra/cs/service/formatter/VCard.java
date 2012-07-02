@@ -23,12 +23,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.mail.internet.ContentType;
+import javax.mail.internet.ParseException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.net.QuotedPrintableCodec;
 import org.json.JSONException;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
@@ -282,8 +287,8 @@ public class VCard {
                     if (!xprops.isEmpty()) {
                         HashMap<String, String> newMap = new HashMap<String, String>();
                         // handle multiple occurrences of xprops with the same key
-                        for (String k : xprops.keySet()) {
-                            Object v = xprops.get(k);
+                        for (Entry<String, Object> xprop : xprops.entrySet()) {
+                            Object v = xprop.getValue();
                             String val = null;
                             if (v instanceof ArrayList) {
                                 @SuppressWarnings("unchecked")
@@ -294,9 +299,9 @@ public class VCard {
                                 }
                                 if (val == null)
                                     val = v.toString();
-                                newMap.put(k, val);
+                                newMap.put(xprop.getKey(), val);
                             } else {
-                                newMap.put(k, (String)v);
+                                newMap.put(xprop.getKey(), (String)v);
                             }
                         }
                         fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(newMap));
@@ -483,7 +488,7 @@ public class VCard {
     public static VCard formatContact(Contact con) {
         return formatContact(con, null, false);
     }
-    
+
     public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps) {
         Map<String, String> fields = con.getFields();
         List<Attachment> attachments = con.getAttachments();
@@ -565,8 +570,9 @@ public class VCard {
         }
         
         if (vcattrs == null || vcattrs.contains("EMAIL"))
-            for (String email : emails)
+            for (String email : emails) {
                 encodeField(sb, "EMAIL;TYPE=internet", email);
+            }
 
         if (vcattrs == null || vcattrs.contains("URL")) {
             encodeField(sb, "URL;TYPE=home", fields.get(ContactConstants.A_homeURL));
@@ -579,8 +585,9 @@ public class VCard {
             if (org != null && !org.trim().equals("")) {
                 org = vcfEncode(org);
                 String dept = fields.get(ContactConstants.A_department);
-                if (dept != null && !dept.trim().equals(""))
+                if (dept != null && !dept.trim().equals("")) {
                     org += ';' + vcfEncode(dept);
+                }
                 sb.append("ORG:").append(org).append("\r\n");
             }
         }
@@ -595,8 +602,19 @@ public class VCard {
                 try {
                     if (attach.getName().equalsIgnoreCase(ContactConstants.A_image)) {
                         String field = "PHOTO;ENCODING=B";
-                        if (attach.getContentType().startsWith("image/"))
-                            field += ";TYPE=" + attach.getContentType().substring(6).toUpperCase();
+                        if (attach.getContentType().startsWith("image/")) {
+                            // We want just the subtype, ignoring any name etc
+                            try {
+                                ContentType ct = new ContentType(attach.getContentType());
+                                if (ct != null) {
+                                    String subType = ct.getSubType();
+                                    if (!Strings.isNullOrEmpty(subType)) {
+                                        field += ";TYPE=" + ct.getSubType().toUpperCase();
+                                    }
+                                }
+                            } catch (ParseException e) {
+                            }
+                        }
                         String encoded = new String(Base64.encodeBase64Chunked(attach.getContent())).trim().replace("\r\n", "\r\n ");
                         sb.append(field).append(":\r\n ").append(encoded).append("\r\n");
                     }
@@ -651,14 +669,15 @@ public class VCard {
                 sb.append("X-ZIMBRA-MAIDENNAME:").append(maidenName).append("\r\n");
         }
         if (includeXProps) {
-            Map<String,String> xprops = con.getXProps();
-            for (String key : xprops.keySet()) {
+            for (Entry<String, String> xprop : con.getXProps().entrySet()) {
+
+                String key = xprop.getKey();
                 try {
-                    for (String value : Contact.parseMultiValueAttr(xprops.get(key))) {
+                    for (String value : Contact.parseMultiValueAttr(xprop.getValue())) {
                         sb.append(key).append(":").append(value).append("\r\n");
                     }
                 } catch (JSONException e) {
-                    sb.append(key).append(":").append(xprops.get(key)).append("\r\n");
+                    sb.append(key).append(":").append(xprop.getValue()).append("\r\n");
                 }
             }
         }
