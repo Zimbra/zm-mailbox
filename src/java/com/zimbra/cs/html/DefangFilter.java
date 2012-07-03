@@ -409,11 +409,15 @@ public class DefangFilter extends DefaultFilter {
         }
     }
 
+    private static final Pattern COMMENT = Pattern.compile("/\\*.*\\*/");
+    // matches functions (like url(), expression(), etc), except rgb()
+    private static final Pattern STYLE_UNWANTED_FUNC = Pattern.compile(":\\s*(?!\\s*rgb).*\\(.*\\)", Pattern.CASE_INSENSITIVE);
+
     private static String sanitizeStyleValue(String value) {
         // remove comments
-        String result = value.replaceAll("/\\*.*\\*/", "");
-        // strip off any functions (like url(), expression()), except rgb()
-        return result.replaceAll(":[^(\\s*[rR][gG][bB]\\s*)]*\\(.*\\)",":");
+        value = COMMENT.matcher(value).replaceAll("");
+        // strip off unwanted functions
+        return STYLE_UNWANTED_FUNC.matcher(value).replaceAll(":");
     }
 
     /** Ignorable whitespace. */
