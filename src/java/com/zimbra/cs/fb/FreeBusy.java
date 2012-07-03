@@ -349,7 +349,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
         public boolean overlapsOrAbuts(Interval other) {
 //            return (other.mEnd > mStart && other.mStart < mEnd);  
-            return (other.mEnd >= mStart && other.mStart < mEnd);  
+            return (other.mEnd >= mStart && other.mStart <= mEnd);  
         }
         public boolean hasPrev() { return mPrev!= null; }
         public Interval getPrev() { return mPrev; }
