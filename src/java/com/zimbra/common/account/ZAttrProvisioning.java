@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120627-1119 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -898,6 +898,22 @@ public class ZAttrProvisioning {
         public boolean isText() { return this == text;}
         public boolean isHtml() { return this == html;}
         public boolean isSame() { return this == same;}
+    }
+
+    public static enum PrefFromAddressType {
+        sendOnBehalfOf("sendOnBehalfOf"),
+        sendAs("sendAs");
+        private String mValue;
+        private PrefFromAddressType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefFromAddressType fromString(String s) throws ServiceException {
+            for (PrefFromAddressType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSendOnBehalfOf() { return this == sendOnBehalfOf;}
+        public boolean isSendAs() { return this == sendAs;}
     }
 
     public static enum PrefGetMailAction {
@@ -8500,6 +8516,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=403)
     public static final String A_zimbraPrefFromAddress = "zimbraPrefFromAddress";
+
+    /**
+     * Type of the email address from header.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public static final String A_zimbraPrefFromAddressType = "zimbraPrefFromAddressType";
 
     /**
      * personal part of email address put in from header
