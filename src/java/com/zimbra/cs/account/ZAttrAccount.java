@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120627-1119 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -36492,6 +36492,137 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefFromAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefFromAddress, "");
+        return attrs;
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @return zimbraPrefFromAddressType, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public ZAttrProvisioning.PrefFromAddressType getPrefFromAddressType() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefFromAddressType); return v == null ? null : ZAttrProvisioning.PrefFromAddressType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @return zimbraPrefFromAddressType, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public String getPrefFromAddressTypeAsString() {
+        return getAttr(Provisioning.A_zimbraPrefFromAddressType, null);
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @param zimbraPrefFromAddressType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public void setPrefFromAddressType(ZAttrProvisioning.PrefFromAddressType zimbraPrefFromAddressType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFromAddressType, zimbraPrefFromAddressType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @param zimbraPrefFromAddressType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public Map<String,Object> setPrefFromAddressType(ZAttrProvisioning.PrefFromAddressType zimbraPrefFromAddressType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFromAddressType, zimbraPrefFromAddressType.toString());
+        return attrs;
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @param zimbraPrefFromAddressType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public void setPrefFromAddressTypeAsString(String zimbraPrefFromAddressType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFromAddressType, zimbraPrefFromAddressType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @param zimbraPrefFromAddressType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public Map<String,Object> setPrefFromAddressTypeAsString(String zimbraPrefFromAddressType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFromAddressType, zimbraPrefFromAddressType);
+        return attrs;
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public void unsetPrefFromAddressType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFromAddressType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Type of the email address from header.
+     *
+     * <p>Valid values: [sendAs, sendOnBehalfOf]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1419)
+    public Map<String,Object> unsetPrefFromAddressType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFromAddressType, "");
         return attrs;
     }
 

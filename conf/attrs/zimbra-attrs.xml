@@ -7069,4 +7069,8 @@ TODO: delete them permanently from here
   <desc>whether to invoke data imports for all data sources owned by an account after successful user login from the login page</desc>
 </attr>
 
+<attr id="1419" name="zimbraPrefFromAddressType" type="enum" cardinality="single" value="sendAs,sendOnBehalfOf" optionalIn="account,identity" since="8.0.0">
+  <desc>Type of the email address from header. (sendAs or sendOnBehalfOf)</desc>
+</attr>
+
 </attrs>
