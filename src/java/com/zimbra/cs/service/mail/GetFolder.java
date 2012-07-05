@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -206,7 +205,7 @@ public class GetFolder extends MailDocumentHandler {
             if (proxied != null) {
                 ToXML.transferMountpointContents(empt.elt, proxied); //args: to,from
             }
-        } catch (SoapFaultException sfe) {
+        } catch (ServiceException se) {
             empt.elt.addAttribute(MailConstants.A_BROKEN, true);
         }
     }
