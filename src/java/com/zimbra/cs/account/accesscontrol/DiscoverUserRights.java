@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 
@@ -81,9 +82,15 @@ public class DiscoverUserRights {
             for (ZimbraACE ace : acl.getAllACEs()) {
                 Right right = ace.getRight();
 
-                if (rights.contains(right) && !isSameEntry(targetEntry, acct)
-                        && StringUtil.equal(this.acct.getId(), ace.getGrantee())) {
+                if (rights.contains(right) && !isSameEntry(targetEntry, acct)) {
                     // include the entry only if it is the designated target type for the right
+                    if ((targetEntry instanceof Account || targetEntry instanceof Group)
+                            && (ace.getGranteeType() == GranteeType.GT_USER)) {
+                        if (!StringUtil.equal(this.acct.getId(), ace.getGrantee())) {
+                         // bug 75512, if grantee is user, include entry only if grantee is target
+                            continue;
+                        }
+                    }
                     TargetType targetTypeForRight = right.getTargetType();
                     TargetType taregtTypeOfEntry = TargetType.getTargetType(targetEntry);
 
