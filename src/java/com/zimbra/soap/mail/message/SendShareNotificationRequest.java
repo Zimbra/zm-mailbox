@@ -117,7 +117,7 @@ public class SendShareNotificationRequest {
 
     @XmlEnum
     public static enum Action {
-        revoke, expire;
+        edit, revoke, expire;
 
         public static Action fromString(String value) throws ServiceException {
             if (value == null) {
