@@ -2954,6 +2954,7 @@ public class LdapProvisioning extends LdapProv {
         String oldEmail = acct.getName();
 
         boolean domainChanged = false;
+        Account oldAccount = acct;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_ACCOUNT);
 
@@ -3092,7 +3093,7 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             LdapClient.closeContext(zlc);
             // prune cache
-            accountCache.remove(acct);
+            accountCache.remove(oldAccount);
         }
 
         // reload it to cache using the master, bug 45736
