@@ -99,7 +99,7 @@ public class SendShareNotification extends MailDocumentHandler {
         // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
         Action action = Action.fromString(request.getAttribute(MailConstants.A_ACTION, null));
-        String notes = (eNotes==null)?null:eNotes.getText();
+        String notes = eNotes==null ? null : eNotes.getText();
 
         // send the messages
         try {
@@ -557,8 +557,24 @@ public class SendShareNotification extends MailDocumentHandler {
 
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
 
-        MsgKey subjectKey = action == null ? MsgKey.shareNotifSubject :
-                action == Action.revoke ? MsgKey.shareRevokeSubject : MsgKey.shareExpireSubject;
+        MsgKey subjectKey;
+        if (action == null) {
+            subjectKey = MsgKey.shareNotifSubject;
+        } else {
+            switch (action) {
+                case edit:
+                    subjectKey = MsgKey.shareModifySubject;
+                    break;
+                case revoke:
+                    subjectKey = MsgKey.shareRevokeSubject;
+                    break;
+                case expire:
+                    subjectKey = MsgKey.shareExpireSubject;
+                    break;
+                default:
+                    subjectKey = MsgKey.shareNotifSubject;
+            }
+        }
         String subject = L10nUtil.getMessage(subjectKey, locale);
         String ownerAcctDisplayName = ownerAccount.getDisplayName();
         if (ownerAcctDisplayName == null) {

@@ -563,7 +563,7 @@ public class ShareInfo {
             // Body
             MimeMultipart mmp = new ZMimeMultipart("alternative");
 
-            String shareAcceptUrl = null;
+            String extUserShareAcceptUrl = null;
             String extUserLoginUrl = null;
             String externalGranteeName = null;
             if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
@@ -575,18 +575,19 @@ public class ShareInfo {
             boolean goesToExternalAddr = (externalGranteeName != null);
             if (action == null && goesToExternalAddr) {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
-                shareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), externalGranteeName);
+                extUserShareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), externalGranteeName);
                 extUserLoginUrl = getExtUserLoginURL(owner);
             }
 
             // TEXT part (add me first!)
             String mimePartText;
             if (action == Action.revoke) {
-                mimePartText = genRevokeText(sid, locale, false);
+                mimePartText = genRevokePart(sid, locale, false);
             } else if (action == Action.expire) {
-                mimePartText = genExpireText(sid, locale, false);
+                mimePartText = genExpirePart(sid, locale, false);
             } else {
-                mimePartText = genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, false);
+                mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
+                        locale, null, false);
             }
             MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(mimePartText, MimeConstants.P_CHARSET_UTF8);
@@ -594,11 +595,12 @@ public class ShareInfo {
 
             // HTML part
             if (action == Action.revoke) {
-                mimePartText = genRevokeText(sid, locale, true);
+                mimePartText = genRevokePart(sid, locale, true);
             } else if (action == Action.expire) {
-                mimePartText = genExpireText(sid, locale, true);
+                mimePartText = genExpirePart(sid, locale, true);
             } else {
-                mimePartText = genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, true);
+                mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
+                        locale, null, true);
             }
             MimeBodyPart htmlPart = new ZMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(mimePartText)));
@@ -645,25 +647,30 @@ public class ShareInfo {
         }
 
 
-        private static String genPart(ShareInfoData sid, String senderNotes,
-                String shareAcceptUrl, String extUserLoginUrl,
-                Locale locale, StringBuilder sb, boolean html) {
+        private static String genPart(ShareInfoData sid, boolean shareModified, String senderNotes,
+                String extUserShareAcceptUrl, String extUserLoginUrl, Locale locale, StringBuilder sb, boolean html) {
             if (sb == null) {
                 sb = new StringBuilder();
             }
             String externalShareInfo = null;
-            if (shareAcceptUrl != null) {
+            if (extUserShareAcceptUrl != null) {
                 assert(extUserLoginUrl != null);
                 externalShareInfo = L10nUtil.getMessage(
                         html ? MsgKey.shareNotifBodyExternalShareHtml : MsgKey.shareNotifBodyExternalShareText,
-                        locale, shareAcceptUrl, extUserLoginUrl);
+                        locale, extUserShareAcceptUrl, extUserLoginUrl);
             }
             if (!Strings.isNullOrEmpty(senderNotes)) {
                 senderNotes = L10nUtil.getMessage(
                         html ? MsgKey.shareNotifBodyNotesHtml : MsgKey.shareNotifBodyNotesText, locale, senderNotes);
             }
+            MsgKey msgKey;
+            if (shareModified) {
+                msgKey = html ? MsgKey.shareModifyBodyHtml : MsgKey.shareModifyBodyText;
+            } else {
+                msgKey = html ? MsgKey.shareNotifBodyHtml : MsgKey.shareNotifBodyText;
+            }
             return sb.append(L10nUtil.getMessage(
-                    html ? MsgKey.shareNotifBodyHtml : MsgKey.shareNotifBodyText, locale,
+                    msgKey, locale,
                     sid.getName(),
                     formatFolderDesc(locale, sid),
                     sid.getOwnerNotifName(),
@@ -675,22 +682,18 @@ public class ShareInfo {
                     toString();
         }
 
-        private static String genRevokeText(ShareInfoData sid, Locale locale, boolean html) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(L10nUtil.getMessage((html ? MsgKey.shareRevokeBodyHtml : MsgKey.shareRevokeBodyText),
+        private static String genRevokePart(ShareInfoData sid, Locale locale, boolean html) {
+            return L10nUtil.getMessage(html ? MsgKey.shareRevokeBodyHtml : MsgKey.shareRevokeBodyText,
                     sid.getName(),
                     formatFolderDesc(locale, sid),
-                    sid.getOwnerNotifName()));
-            return sb.toString();
+                    sid.getOwnerNotifName());
         }
 
-        private static String genExpireText(ShareInfoData sid, Locale locale, boolean html) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(L10nUtil.getMessage((html ? MsgKey.shareExpireBodyHtml : MsgKey.shareExpireBodyText),
+        private static String genExpirePart(ShareInfoData sid, Locale locale, boolean html) {
+            return L10nUtil.getMessage((html ? MsgKey.shareExpireBodyHtml : MsgKey.shareExpireBodyText),
                     sid.getName(),
                     formatFolderDesc(locale, sid),
-                    sid.getOwnerNotifName()));
-            return sb.toString();
+                    sid.getOwnerNotifName());
         }
 
         private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, Action action)
@@ -698,12 +701,18 @@ public class ShareInfo {
             if (sb == null) {
                 sb = new StringBuilder();
             }
-            QName actionName = action == null ? ShareConstants.SHARE : ShareConstants.REVOKE;
-            Element share = Element.create(SoapProtocol.Soap12, actionName).
-                    addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).
-                    addAttribute(ShareConstants.A_ACTION, ShareConstants.ACTION_NEW);
-            if (action == Action.expire) {
-                share.addAttribute(ShareConstants.A_EXPIRE, true);
+            Element share;
+            if (action == null || action == Action.edit) {
+                share = Element.create(SoapProtocol.Soap12, ShareConstants.SHARE).
+                        addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).
+                        addAttribute(ShareConstants.A_ACTION, action == null ?
+                                ShareConstants.ACTION_NEW : ShareConstants.ACTION_EDIT);
+            } else {
+                share = Element.create(SoapProtocol.Soap12, ShareConstants.REVOKE).
+                        addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION);
+                if (action == Action.expire) {
+                    share.addAttribute(ShareConstants.A_EXPIRE, true);
+                }
             }
             share.addElement(ShareConstants.E_GRANTEE).
                     addAttribute(ShareConstants.A_ID, sid.getGranteeId()).
@@ -811,10 +820,10 @@ public class ShareInfo {
 
                 if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genPart(sid, null, null, null, locale, sb, false);
+                        genPart(sid, false, null, null, null, locale, sb, false);
                     }
                 } else
-                    genPart(mShares.get(idx), null, null, null, locale, sb, false);
+                    genPart(mShares.get(idx), false, null, null, null, locale, sb, false);
 
                 sb.append("\n\n");
                 return sb.toString();
@@ -832,10 +841,10 @@ public class ShareInfo {
 
                 if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genPart(sid, null, null, null, locale, sb, true);
+                        genPart(sid, false, null, null, null, locale, sb, true);
                     }
                 } else
-                    genPart(mShares.get(idx), null, null, null, locale, sb, true);
+                    genPart(mShares.get(idx), false, null, null, null, locale, sb, true);
 
                 return sb.toString();
             }

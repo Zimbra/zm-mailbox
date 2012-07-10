@@ -3920,7 +3920,7 @@ mid="{mountpoint-id}" : returned if the share is already mounted.
 
 ----------------------------
 
-<SendShareNotificationRequest [action="revoke|expire"]>
+<SendShareNotificationRequest [action="edit|revoke|expire"]>
     <item id="{item-id}"/>
     [<e a="{email-addr}"/>]+
     [<notes>{notes}</notes>]
@@ -3928,6 +3928,9 @@ mid="{mountpoint-id}" : returned if the share is already mounted.
 
 The client can list the recipient email addresses for the share, along
 with the itemId of the item being shared.
+
+Request with "action=edit" indicates that permissions were modified for an
+existing share.
 
 A request with "action=expire" is sent by the system itself, when a share
 expires and is automatically revoked.
