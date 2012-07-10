@@ -9323,6 +9323,7 @@ public class LdapProvisioning extends LdapProv {
 
         List<Account> accts = new ArrayList<Account>();
         List<String> externalAddrs = new ArrayList<String>();
+        HashSet<String> failed = new HashSet<String>();
 
         // check for errors, and put valid accts to the queue
         for (String member : members) {
@@ -9347,10 +9348,24 @@ public class LdapProvisioning extends LdapProv {
                     Set<String> memberOf = acct.getMultiAttrSet(Provisioning.A_zimbraMemberOf);
                     if (memberOf.contains(groupId)) {
                         accts.add(acct);
+                    } else {
+                        // else the addr is not in the group, throw exception
+                        failed.add(memberName);
                     }
-                    // else the addr is not in the group, just skip it, do not throw
                 }
             }
+        }
+
+        if (!failed.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            Iterator<String> iter = failed.iterator();
+            while (true) {
+                sb.append(iter.next());
+                if (!iter.hasNext())
+                    break;
+                sb.append(",");
+            }
+            throw AccountServiceException.NO_SUCH_MEMBER(group.getName(), sb.toString());
         }
 
         ZLdapContext zlc = null;
