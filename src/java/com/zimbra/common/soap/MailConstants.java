@@ -40,6 +40,7 @@ public final class MailConstants {
         public static final String A_EXPIRE = "expire";
 
         public static final String ACTION_NEW = "new";
+        public static final String ACTION_EDIT = "edit";
 
         public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
         public static final QName SHARE = QName.get(E_SHARE, NAMESPACE);
