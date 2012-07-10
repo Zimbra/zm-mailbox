@@ -377,7 +377,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>deprecated in favor for zimbraHsmPolicy</deprecateDesc>
 </attr>
 
-<attr id="9" name="zimbraNotes" type="string" max="1024" cardinality="single" optionalIn="account,distributionList,cos,domain,server" flags="domainAdminModifiable">
+<attr id="9" name="zimbraNotes" type="string" max="1024" cardinality="single" optionalIn="account,distributionList,group,cos,domain,server" flags="domainAdminModifiable">
   <desc>administrative notes</desc>
 </attr>
 
