@@ -548,5 +548,6 @@
   <publicURL>http://tarka.local:7070</publicURL>
   <license status="OK">
     <attr name="SMIME">FALSE</attr>
+    <attr name="VOICE">FALSE</attr>
   </license>
 </GetInfoResponse>

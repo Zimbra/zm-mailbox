@@ -908,8 +908,13 @@
   "publicURL": "http://tarka.local:7070",
   "license": {
     "status": "OK",
-    "attr": [{
+    "attr": [
+      {
         "name": "SMIME",
+        "_content": "FALSE"
+      },
+      {
+        "name": "VOICE",
         "_content": "FALSE"
       }]
   },

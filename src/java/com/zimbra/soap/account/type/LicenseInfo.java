@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,17 +16,20 @@
 package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.LicenseStatus;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class LicenseInfo {
 
     /**
@@ -36,29 +39,44 @@ public class LicenseInfo {
     private LicenseStatus status;
 
     /**
-     * @zm-api-field-description License attribute
+     * @zm-api-field-description License attributes
      */
-    @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
-    private LicenseAttr attr;
+    @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=false)
+    private List<LicenseAttr> attrs;
 
     public LicenseInfo() {
     }
 
     public void setStatus(LicenseStatus status) { this.status = status; }
-    public void setAttr(LicenseAttr attr) { this.attr = attr; }
-    public LicenseStatus getStatus() { return status; }
-    public LicenseAttr getAttr() { return attr; }
+    public void setAttrs(Iterable <LicenseAttr> attrs) {
+        if (attrs == null) {
+            this.attrs = null;
+        } else {
+            this.attrs = Lists.newArrayList();
+            Iterables.addAll(this.attrs, attrs);
+        }
+    }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public void addAttr(LicenseAttr attr) {
+        if (this.attrs == null) {
+            this.attrs = Lists.newArrayList();
+        }
+        this.attrs.add(attr);
+    }
+
+    public LicenseStatus getStatus() { return status; }
+    public List<LicenseAttr> getAttrs() {
+        return attrs;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("status", status)
-            .add("attr", attr);
+            .add("attrs", attrs);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

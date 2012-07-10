@@ -69,6 +69,7 @@ public class GetInfoResponseTest {
         String sig = sigHtml.iterator().next();
         // Assert.assertEquals("\u003Cstrong\u003Ef—— utf8\u003C/strong\u003E signature test" , sig);
         Assert.assertTrue("Signature", sig.endsWith("signature test"));
+        Assert.assertTrue("Number of license attributes", 2 <= result.getLicense().getAttrs().size());
     }
     
     @Test

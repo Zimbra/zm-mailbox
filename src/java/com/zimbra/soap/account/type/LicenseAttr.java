@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -31,13 +31,13 @@ public class LicenseAttr {
 
     /**
      * @zm-api-field-tag license-attr-name
-     * @zm-api-field-description Name - always "SMIME" at present
+     * @zm-api-field-description Current valid values are "SMIME" and "VOICE"
      */
     @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private String name;
 
     /**
-     * @zm-api-field-tag license-attr-value
+     * @zm-api-field-tag license-attr-value-TRUE|FALSE
      * @zm-api-field-description Value - value is "TRUE" or "FALSE"
      */
     @XmlValue
@@ -51,8 +51,7 @@ public class LicenseAttr {
     public String getName() { return name; }
     public String getContent() { return content; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("content", content);
@@ -60,7 +59,6 @@ public class LicenseAttr {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
