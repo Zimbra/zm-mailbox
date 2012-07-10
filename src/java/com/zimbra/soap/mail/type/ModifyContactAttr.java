@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public final class NewContactAttr {
+public class ModifyContactAttr {
 
     /**
      * @zm-api-field-tag attr-name
@@ -54,6 +54,14 @@ public final class NewContactAttr {
     @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
 
+    // See ParsedContact.FieldDelta.Op - values "+" or "-"
+    /**
+     * @zm-api-field-tag
+     * @zm-api-field-description
+     */
+    @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=false)
+    private String operation;
+
     /**
      * @zm-api-field-tag attr-data
      * @zm-api-field-description Attribute data
@@ -61,27 +69,20 @@ public final class NewContactAttr {
     @XmlValue
     private String value;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private NewContactAttr() {
-         this((String) null);
-    }
-
-    public NewContactAttr(String name) {
-         this.name = name;
+    public ModifyContactAttr() {
     }
 
     public void setName(String name) { this.name = name; }
     public void setAttachId(String attachId) { this.attachId = attachId; }
     public void setId(Integer id) { this.id = id; }
     public void setPart(String part) { this.part = part; }
+    public void setOperation(String operation) { this.operation = operation; }
     public void setValue(String value) { this.value = value; }
     public String getName() { return name; }
     public String getAttachId() { return attachId; }
     public Integer getId() { return id; }
     public String getPart() { return part; }
+    public String getOperation() { return operation; }
     public String getValue() { return value; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
@@ -90,6 +91,7 @@ public final class NewContactAttr {
             .add("attachId", attachId)
             .add("id", id)
             .add("part", part)
+            .add("operation", operation)
             .add("value", value);
     }
 

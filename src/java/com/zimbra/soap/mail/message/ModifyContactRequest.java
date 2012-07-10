@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ContactSpec;
+import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
@@ -59,17 +59,17 @@ public class ModifyContactRequest {
      */
     @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=true)
-    private final ContactSpec contact;
+    private final ModifyContactSpec contact;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ModifyContactRequest() {
-        this((ContactSpec) null);
+        this((ModifyContactSpec) null);
     }
 
-    public ModifyContactRequest(ContactSpec contact) {
+    public ModifyContactRequest(ModifyContactSpec contact) {
         this.contact = contact;
     }
 
@@ -77,7 +77,7 @@ public class ModifyContactRequest {
     public void setVerbose(Boolean verbose) { this.verbose = ZmBoolean.fromBool(verbose); }
     public Boolean getReplace() { return ZmBoolean.toBool(replace); }
     public Boolean getVerbose() { return ZmBoolean.toBool(verbose); }
-    public ContactSpec getContact() { return contact; }
+    public ModifyContactSpec getContact() { return contact; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper

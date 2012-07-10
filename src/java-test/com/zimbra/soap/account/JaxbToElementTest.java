@@ -70,6 +70,7 @@ import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactActionSelector;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
+import com.zimbra.soap.mail.type.ModifyGroupMemberOperation;
 import com.zimbra.soap.mail.type.NoteActionSelector;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RetentionPolicy;
@@ -78,6 +79,7 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.util.JaxbElementInfo;
 import com.zimbra.soap.util.JaxbInfo;
 import com.zimbra.soap.util.JaxbNodeInfo;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -774,7 +776,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
             kvPair.addAttribute(AccountConstants.A_PERM_DENIED, true);
         }
     }
-    
+
     // GetInfo encoding of identities calls similar code
     @Test
     public void encodeAttrsWithDenied() throws Exception {
@@ -796,5 +798,20 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Assert.assertEquals("XML from JAXB Attr top name", AccountConstants.E_A, elem2.getName());
         Assert.assertEquals("XML from JAXB Attr pd", "1", elem2.getAttribute("pd"));
         Assert.assertEquals("XML from JAXB Attr name", "keyDenied", elem2.getAttribute("name"));
+    }
+
+    // Verify that fromString will throw an exception for a duff value rather than return null
+    @Test
+    public void modGroupMemberOpWithBadValue() {
+        try {
+            ModifyGroupMemberOperation.fromString("duff");
+            Assert.fail("ServiceException NOT thrown");
+        } catch (ServiceException e) {
+        }
+        try {
+            ModifyGroupMemberOperation.fromString(null);
+            Assert.fail("ServiceException NOT thrown for null");
+        } catch (ServiceException e) {
+        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlElement;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class ContactSpec {
+public class ModifyContactSpec {
 
     // Used when modifying a contact
     /**
@@ -40,20 +40,6 @@ public class ContactSpec {
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private Integer id;
 
-    /**
-     * @zm-api-field-tag folder-id
-     * @zm-api-field-description ID of folder to create contact in. Un-specified means use the default Contacts folder.
-     */
-    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
-    private String folder;
-
-    /**
-     * @zm-api-field-tag tags
-     * @zm-api-field-description Tags - Comma separated list of integers.  DEPRECATED - use "tn" instead
-     */
-    @Deprecated
-    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
-    private String tags;
 
     /**
      * @zm-api-field-tag tag-names
@@ -63,75 +49,58 @@ public class ContactSpec {
     private String tagNames;
 
     /**
-     * @zm-api-field-description Either a vcard or attributes can be specified but not both.
-     */
-    @XmlElement(name=MailConstants.E_VCARD /* vcard */, required=false)
-    private VCardInfo vcard;
-
-    /**
      * @zm-api-field-description Contact attributes.  Cannot specify <b>&lt;vcard></b> as well as these
      */
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
-    private List<NewContactAttr> attrs = Lists.newArrayList();
+    private List<ModifyContactAttr> attrs = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Contact group members.  Valid only if the contact being created is a contact group
      * (has attribute type="group")
      */
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
-    private List<NewContactGroupMember> contactGroupMembers = Lists.newArrayList();
+    private List<ModifyContactGroupMember> contactGroupMembers = Lists.newArrayList();
 
-    public ContactSpec() {
+    public ModifyContactSpec() {
     }
 
     public void setId(Integer id) { this.id = id; }
-    public void setFolder(String folder) { this.folder = folder; }
-    @Deprecated
-    public void setTags(String tags) { this.tags = tags; }
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
-    public void setVcard(VCardInfo vcard) { this.vcard = vcard; }
-    public void setAttrs(Iterable <NewContactAttr> attrs) {
+    public void setAttrs(Iterable <ModifyContactAttr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
             Iterables.addAll(this.attrs, attrs);
         }
     }
 
-    public void addAttr(NewContactAttr attr) {
+    public void addAttr(ModifyContactAttr attr) {
         this.attrs.add(attr);
     }
 
-    public void setContactGroupMembers(Iterable <NewContactGroupMember> contactGroupMembers) {
+    public void setContactGroupMembers(Iterable <ModifyContactGroupMember> contactGroupMembers) {
         this.contactGroupMembers.clear();
         if (contactGroupMembers != null) {
             Iterables.addAll(this.contactGroupMembers, contactGroupMembers);
         }
     }
 
-    public void addContactGroupMember(NewContactGroupMember contactGroupMember) {
+    public void addContactGroupMember(ModifyContactGroupMember contactGroupMember) {
         this.contactGroupMembers.add(contactGroupMember);
     }
 
     public Integer getId() { return id; }
-    public String getFolder() { return folder; }
-    @Deprecated
-    public String getTags() { return tags; }
     public String getTagNames() { return tagNames; }
-    public VCardInfo getVcard() { return vcard; }
-    public List<NewContactAttr> getAttrs() {
+    public List<ModifyContactAttr> getAttrs() {
         return attrs;
     }
-    public List<NewContactGroupMember> getContactGroupMembers() {
+    public List<ModifyContactGroupMember> getContactGroupMembers() {
         return contactGroupMembers;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
-            .add("folder", folder)
-            .add("tags", tags)
             .add("tagNames", tagNames)
-            .add("vcard", vcard)
             .add("attrs", attrs)
             .add("contactGroupMembers", contactGroupMembers);
     }
