@@ -70,9 +70,7 @@ public class ModifyContact extends MailDocumentHandler  {
             Pair<Map<String,Object>, List<Attachment>> cdata = CreateContact.parseContact(cn, zsc, octxt, contact);
             pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
         } else {
-            Pair<ParsedContact.FieldDeltaList, List<Attachment>> cdata = 
-                CreateContact.parseContactMergeMode(cn, zsc, octxt, contact);
-            pc = new ParsedContact(contact).modify(cdata.getFirst(), cdata.getSecond());
+            pc = CreateContact.parseContactMergeMode(cn, zsc, octxt, contact);
         }
 
         if (CreateContact.needToMigrateDlist(zsc)) {

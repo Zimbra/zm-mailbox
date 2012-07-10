@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +92,11 @@ public class ContactGroup {
     private boolean isDerefed() {
         return derefedMembers != null;
     }
-    
+
+    public boolean hasMembers() {
+        return (members.size() > 0);
+    }
+
     public void removeAllMembers() {
         members.clear();
         derefedMembers = null;
@@ -187,10 +189,7 @@ public class ContactGroup {
     private void addMember(Member member) {
         members.add(member);
     }
-    
-    private void removeMember(Member member) {
-        members.remove(member);
-    }
+
     
     /*
      * Note: deref each time when called, result is not cached

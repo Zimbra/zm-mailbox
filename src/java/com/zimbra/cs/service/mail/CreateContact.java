@@ -64,6 +64,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.ModifyGroupMemberOperation;
 
 /**
  * @author schemers
@@ -206,7 +207,7 @@ public class CreateContact extends MailDocumentHandler  {
         }
     }
 
-    static Pair<ParsedContact.FieldDeltaList, List<Attachment>> parseContactMergeMode(
+    static ParsedContact parseContactMergeMode(
             Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing)
     throws ServiceException {
         ParsedContact.FieldDeltaList deltaList = new ParsedContact.FieldDeltaList();
@@ -233,7 +234,8 @@ public class CreateContact extends MailDocumentHandler  {
                 attachments.add(attach);
             }
         }
-        
+
+        boolean discardExistingMembers = false;
         for (Element elt : cn.listElements(MailConstants.E_CONTACT_GROUP_MEMBER)) {
             if (!isContactGroup && !existing.isGroup()) {
                 throw ServiceException.INVALID_REQUEST(MailConstants.E_CONTACT_GROUP_MEMBER +
@@ -241,23 +243,27 @@ public class CreateContact extends MailDocumentHandler  {
             }
             
             String opStr = elt.getAttribute(MailConstants.A_OPERATION);
-            ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
+            ModifyGroupMemberOperation groupMemberOp = ModifyGroupMemberOperation.fromString(opStr);
             
-            ContactGroup.Member.Type memberType = 
-                ContactGroup.Member.Type.fromSoap(elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, null));
-            String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, null);
-            
-            if (memberType == null) {
-                throw ServiceException.INVALID_REQUEST("missing member type", null);
+            if (ModifyGroupMemberOperation.RESET.equals(groupMemberOp)) {
+                discardExistingMembers = true;
+            } else {
+                ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
+                ContactGroup.Member.Type memberType = 
+                    ContactGroup.Member.Type.fromSoap(elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, null));
+                String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, null);
+                
+                if (memberType == null) {
+                    throw ServiceException.INVALID_REQUEST("missing member type", null);
+                }
+                if (StringUtil.isNullOrEmpty(memberValue)) {
+                    throw ServiceException.INVALID_REQUEST("missing member value", null);
+                }
+                deltaList.addGroupMemberDelta(memberType, memberValue, op);
             }
-            if (StringUtil.isNullOrEmpty(memberValue)) {
-                throw ServiceException.INVALID_REQUEST("missing member value", null);
-            }
-            
-            deltaList.addGroupMemberDelta(memberType, memberValue, op);
         }
 
-        return new Pair<ParsedContact.FieldDeltaList, List<Attachment>>(deltaList, attachments);
+        return new ParsedContact(existing).modify(deltaList, attachments, discardExistingMembers);
     }
 
     private static Attachment parseAttachment(Element elt, String name, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) throws ServiceException {

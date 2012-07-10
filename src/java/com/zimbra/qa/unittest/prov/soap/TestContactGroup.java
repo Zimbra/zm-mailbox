@@ -40,6 +40,7 @@ import com.zimbra.soap.mail.message.GetContactsResponse;
 import com.zimbra.soap.mail.type.ContactGroupMember;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
+import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.type.Id;
 
 public class TestContactGroup extends SoapTest {
@@ -96,10 +97,8 @@ public class TestContactGroup extends SoapTest {
         /*
          * create a contact group
          */
-        ContactGroupMember contactGroupMemer = 
-            ContactGroupMember.createForTypeValueAndContact(
-            ContactGroup.Member.Type.GAL_REF.getSoapEncoded(), galMemberRef, null);
-        
+        NewContactGroupMember contactGroupMemer = NewContactGroupMember.createForTypeAndValue(
+                ContactGroup.Member.Type.GAL_REF.getSoapEncoded(), galMemberRef);
         NewContactAttr contactAttr = new NewContactAttr(ContactConstants.A_type);
         contactAttr.setValue(ContactConstants.TYPE_GROUP);
         

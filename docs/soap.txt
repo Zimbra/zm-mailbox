@@ -2575,26 +2575,24 @@ END:VCARD]
 <ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
   <cn id="..." [tn="{tag-names}"]>
     <a n="{name}" [op="{op}"]>{attr-value}</a>+
-    <m op="{op}" type="{member-type}" value="{member-value}"/>*
+    <m op="{member-op}" type="{member-type}" value="{member-value}"/>*
   </cn>
 </ModifyContactRequest>
 
  {tag-names} = list of tags to apply to the created contact
  {attr-value} = new attribute value. If empty (<a/>), then the attribute will be removed.
 
- {replace-mode} = 0|1 (0 is default)
+ {replace-mode} = 0 (false)|1 (true) [0 is default]
 
-  if replace-mode is 1, all attrs and group members in the specified contact are replaced with specified attrs
+  if {replace-mode} is 1, all attrs and group members in the specified contact are replaced with specified attrs
   and group members, otherwise the attrs and group members are merged with the existing contact.
 
   {op} = + | -
          + : add the value
          - : remove the value
 
-        {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
-
-        When replace=0:
-        For <a> elements:
+        When {replace-mode} is 1, {op} must NOT be specified.  If it is, INVALID_REQUEST will be thrown
+        When {replace-mode} is 0:
             (1) if op is not present:
                    if {attr-value} is empty, remove the field
                    otherwise, replace the field with this value
@@ -2603,7 +2601,13 @@ END:VCARD]
                    if {attr-value} is empty, throw INVALID_REQUEST
                    - otherwise, add/remove the specified value.
 
-        For <m> elements, op is required; also, {member-type} and {member-value} are required
+  {member-op} = + | - | reset
+         +     : add the value - {member-type} and {member-value} are required
+         -     : remove the value - {member-type} and {member-value} are required
+         reset : Delete all pre-existing members - new members can be specified with later <m> elements using "+"
+                 {member-type} and {member-value} are ignored
+        When {replace-mode} is 1, {member-op} must NOT be specified.  If it is, INVALID_REQUEST will be thrown
+        When {replace-mode} is 0, {member-op} is required.
 
   When modifying tags, all specified tags are set and all others are unset.  If tn="{tag-names}" is NOT specified
   then any existing tags will remain set.

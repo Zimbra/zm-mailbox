@@ -425,6 +425,11 @@ public final class ParsedContact {
 
     public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta)
     throws ServiceException {
+        return modify(fieldDeltaList, attachDelta, false);
+    }
+    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta,
+            boolean discardExistingMembers)
+    throws ServiceException {
         if (attachDelta != null && !attachDelta.isEmpty()) {
             try {
                 validateImageAttachments(attachDelta);
@@ -450,6 +455,10 @@ public final class ParsedContact {
                 ContactGroup.init() : ContactGroup.init(encodedContactGroup);
 
         boolean contactGroupMemberChanged = false;
+        if (discardExistingMembers && contactGroup.hasMembers()) {
+            contactGroup.removeAllMembers();
+            contactGroupMemberChanged = true;
+        }
         for (FieldDelta delta : fieldDeltaList.getDeltaList()) {
             if (delta instanceof AttrDelta) {
                 processAttrDelta((AttrDelta) delta);
