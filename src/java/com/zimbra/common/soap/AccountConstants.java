@@ -368,6 +368,7 @@ public class AccountConstants {
     // account ACLs
     public static final String A_ACCESSKEY = "key";
     public static final String A_ALLOW = "allow";
+    public static final String A_CHECK_GRANTEE_TYPE = "chkgt";
     public static final String A_DENY = "deny";
     public static final String A_DISPLAY = "d";
     public static final String A_GRANT_TYPE = "gt";
