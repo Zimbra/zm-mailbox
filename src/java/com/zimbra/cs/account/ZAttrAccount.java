@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
+    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120710-1325 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -10643,11 +10643,11 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether to allow use of briefcase feature
      *
-     * @return zimbraFeatureBriefcasesEnabled, or true if unset
+     * @return zimbraFeatureBriefcasesEnabled, or false if unset
      */
     @ZAttr(id=498)
     public boolean isFeatureBriefcasesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, false);
     }
 
     /**
@@ -36496,7 +36496,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36510,7 +36510,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36524,7 +36524,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36541,7 +36541,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36559,7 +36559,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36576,7 +36576,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36594,7 +36594,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *
@@ -36610,7 +36610,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * <p>Valid values: [sendAs, sendOnBehalfOf]
      *

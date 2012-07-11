@@ -36,7 +36,7 @@ public abstract class ZAttrDynamicGroup extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
+    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120710-1325 */
 
     /**
      * RFC2256: descriptive information
@@ -1630,6 +1630,68 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetMailStatus(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailStatus, "");
+        return attrs;
+    }
+
+    /**
+     * administrative notes
+     *
+     * @return zimbraNotes, or null if unset
+     */
+    @ZAttr(id=9)
+    public String getNotes() {
+        return getAttr(Provisioning.A_zimbraNotes, null);
+    }
+
+    /**
+     * administrative notes
+     *
+     * @param zimbraNotes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=9)
+    public void setNotes(String zimbraNotes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, zimbraNotes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * administrative notes
+     *
+     * @param zimbraNotes new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=9)
+    public Map<String,Object> setNotes(String zimbraNotes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, zimbraNotes);
+        return attrs;
+    }
+
+    /**
+     * administrative notes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=9)
+    public void unsetNotes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * administrative notes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=9)
+    public Map<String,Object> unsetNotes(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNotes, "");
         return attrs;
     }
 
