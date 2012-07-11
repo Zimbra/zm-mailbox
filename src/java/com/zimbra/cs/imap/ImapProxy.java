@@ -59,11 +59,15 @@ final class ImapProxy {
         this.path = path;
 
         Account acct = handler.getCredentials().getAccount();
-        Server server = Provisioning.getInstance().getServer(path.getOwnerAccount());
-        String host = server.getServiceHostname();
         if (acct == null) {
             throw ServiceException.PROXY_ERROR(new Exception("no such authenticated user"), path.asImapPath());
         }
+        Account pathOwner = path.getOwnerAccount();
+        if (pathOwner == null) {
+            throw ServiceException.PROXY_ERROR(new Exception("no such account"), path.asImapPath());
+        }
+        Server server = Provisioning.getInstance().getServer(pathOwner);
+        String host = server.getServiceHostname();
         ImapConfig config = new ImapConfig();
         config.setAuthenticationId(acct.getName());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
