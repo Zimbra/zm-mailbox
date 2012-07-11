@@ -24,23 +24,23 @@ Step 4: Extensions can be configured both from admin UI and command line. Here i
         $ zmprov mcf zimbraUCProviderEnabled cisco
         $ zmprov cucs cisco-1 zimbraUCProvider cisco  zimbraUCVoicemailURL https://ciscocuc.eng.vmware.com  zimbraUCCallControlURL https://ciscocucm.eng.vmware.com/webdialer/services/WebdialerSoapService70
           zimbraUCPresenceURL http://ciscocups.eng.vmware.com:8082/presence-service/users
-        $ zmprov ca user1@localhost.com {account_password}
-        $ zmprov ma user1@localhost.local zimbraUCUsername voiceAccount_Username zimbraUCServiceId service-ID (skip the above step if the account is already set-up)
-        $ zmsoap -v -z -m user1@localhost.local -t voice ChangeUCPasswordRequest/password=voiceAccount_password
+        $ zmprov ca user1@`zmhostname` {account_password}
+        $ zmprov ma user1@`zmhostname` zimbraUCUsername voiceAccount_Username zimbraUCServiceId service-ID (skip the above step if the account is already set-up)
+        $ zmsoap -v -z -m user1@`zmhostname` -t voice ChangeUCPasswordRequest/password=voiceAccount_password
         $ zmprov updatePresenceSessionId {UC service name or service-id} {app-username} {app-password}
 
         For Mitel
         ============
         $ zmprov mcf zimbraUCProviderEnabled mitel
         $ zmprov cucs mitel-1 zimbraUCProvider mitel zimbraUCUserURL https://vuca.cloudmitel.com/ucs/ws/service/ucs zimbraUCVoicemailURL https://vuca.cloudmitel.com/ucs/ws/service/NpViewService zimbraUCCallControlURL https://vuca.cloudmitel.com/ucs/ws/services/csta
-        $ zmprov ca user1@localhost.local {account_password}
-        $ zmprov ma qauser1@bostonceltics.local zimbraUCUsername voiceAccount_Username zimbraUCServiceId service-ID (skip the above step if the account is already set-up)
-        $ zmsoap -v -z -m qauser1@bostonceltics.local -t voice ChangeUCPasswordRequest/password=voiceAccount_password
+        $ zmprov ca user1@`zmhostname` {account_password}    (skip this step if the account is already set-up)
+        $ zmprov ma user1@`zmhostname` zimbraUCUsername voiceAccount_Username zimbraUCServiceId service-ID   (service-ID is the ID generated from the previous step)
+        $ zmsoap -v -z -m user1@`zmhostname` -t voice ChangeUCPasswordRequest/password=voiceAccount_password
 
         NOTE: Mitel doesn't support presence
 
 Step 5: Voice License - We need to install voice license to enable the voice feature.
-        $ zmprov ma qauser1@bostonceltics.local zimbraFeatureVoiceEnabled TRUE
+        $ zmprov ma user1@`zmhostname` zimbraFeatureVoiceEnabled TRUE
         $ cd ~/p4/main/ZimbraLicenseExtension
         $ ant deploy-dev
         $ Restart jetty
