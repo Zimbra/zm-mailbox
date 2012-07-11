@@ -67,6 +67,8 @@ public class AccountACEInfo {
      * <li> if key is given, server will use that as the access key for this grant
      * <li> if key is not given, server will generate an access key
      * </ul>
+     * If <b>chkgt<b> is "1 (true)", INVALID_REQUEST will be thrown if wrong grantee type is specified.
+     * 
      */
     @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
     private final GranteeType granteeType;
@@ -108,6 +110,12 @@ public class AccountACEInfo {
     private ZmBoolean deny;
 
     /**
+     * @zm-api-field-description "1 (true)" if check grantee type or "0 (false)" (default)
+     */
+    @XmlAttribute(name=AccountConstants.A_CHECK_GRANTEE_TYPE /* chkgt */, required=false)
+    private ZmBoolean checkGranteeType;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -127,6 +135,7 @@ public class AccountACEInfo {
     public void setAccessKey(String accessKey) { this.accessKey = accessKey; }
     public void setPassword(String password) { this.password = password; }
     public void setDeny(Boolean deny) { this.deny = ZmBoolean.fromBool(deny); }
+    public void setCheckGranteeType(Boolean chkgt) { this.checkGranteeType = ZmBoolean.fromBool(chkgt); }
     public String getZimbraId() { return zimbraId; }
     public GranteeType getGranteeType() { return granteeType; }
     public String getRight() { return right; }
@@ -134,6 +143,7 @@ public class AccountACEInfo {
     public String getAccessKey() { return accessKey; }
     public String getPassword() { return password; }
     public Boolean getDeny() { return ZmBoolean.toBool(deny); }
+    public Boolean getCheckGranteeType() { return ZmBoolean.toBool(checkGranteeType); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -144,7 +154,8 @@ public class AccountACEInfo {
             .add("displayName", displayName)
             .add("accessKey", accessKey)
             .add("password", password)
-            .add("deny", deny);
+            .add("deny", deny)
+            .add("checkGranteeType", checkGranteeType);
     }
 
     @Override
