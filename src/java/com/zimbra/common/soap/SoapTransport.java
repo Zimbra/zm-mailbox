@@ -17,8 +17,6 @@ package com.zimbra.common.soap;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.JSONElement;
@@ -301,7 +299,7 @@ public abstract class SoapTransport {
                 env = Element.parseXML(envelopeStr);
             else
                 env = Element.parseJSON(envelopeStr);
-        } catch (DocumentException de) {
+        } catch (XmlParseException e) {
             throw new SoapParseException("unable to parse response", envelopeStr);
         }
 

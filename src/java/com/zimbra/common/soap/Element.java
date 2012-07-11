@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,7 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.dom4j.DocumentFactory;
@@ -55,30 +54,6 @@ public abstract class Element implements Cloneable {
     protected Element mParent;
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
-
-    /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
-     *  them for every XML parse. */
-    private static final ThreadLocal<javax.xml.parsers.DocumentBuilder> w3DomBuilderTL =
-        new ThreadLocal<javax.xml.parsers.DocumentBuilder>() {
-            @Override
-            protected javax.xml.parsers.DocumentBuilder initialValue() {
-                try {
-                    return javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
-                } catch (javax.xml.parsers.ParserConfigurationException pce) {
-                    ZimbraLog.misc.error("Problem creating w3c DOM document", pce);
-                    return null;
-                }
-            }
-    };
-
-    /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
-     *  them for every XML parse. */
-    private static ThreadLocal<org.dom4j.DocumentFactory> mDocumentFactory = new ThreadLocal<org.dom4j.DocumentFactory>() {
-        @Override
-        protected synchronized org.dom4j.DocumentFactory initialValue() {
-            return new org.dom4j.DocumentFactory();
-        }
-    };
 
     /** These values are used to control how the <tt>Element</tt> serializes
      *  an attribute.  In our model, {@link Element#getAttribute(String)} will
@@ -513,7 +488,7 @@ public abstract class Element implements Cloneable {
      * @return
      */
     public org.w3c.dom.Document toW3cDom() {
-        javax.xml.parsers.DocumentBuilder w3DomBuilder = w3DomBuilderTL.get();
+        javax.xml.parsers.DocumentBuilder w3DomBuilder = W3cDomUtil.getBuilder();
         w3DomBuilder.reset();
         org.w3c.dom.Document doc = w3DomBuilder.newDocument();
         doc.appendChild(toW3cDom(doc, null));
@@ -579,7 +554,7 @@ public abstract class Element implements Cloneable {
         return cur.listElements(xpath[xpath.length-1]);
     }
 
-    /** Set the attribute at the specified path, thowing an exception if the
+    /** Set the attribute at the specified path, throwing an exception if the
      *  parent Element does not exist.
      * @param xpath an array of names to traverse in the element tree */
     public void setPathAttribute(String[] xpath, String value) throws ServiceException {
@@ -634,22 +609,16 @@ public abstract class Element implements Cloneable {
         }
     }
 
-    private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
+    public static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
 
-    public static Element parseXML(InputStream is) throws org.dom4j.DocumentException {
-        return parseXML(is, XMLElement.mFactory);
+    public static Element parseXML(InputStream is)
+    throws XmlParseException {
+        return W3cDomUtil.parseXML(is, XMLElement.mFactory);
     }
 
-    public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(getSAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);
-    }
-
-    public static Element parseXML(String xml) throws org.dom4j.DocumentException {
-        return parseXML(xml, XMLElement.mFactory);
-    }
-
-    public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(getSAXReader(mDocumentFactory.get()).read(new StringReader(xml)).getRootElement(), factory);
+    public static Element parseXML(String xml)
+    throws XmlParseException {
+        return W3cDomUtil.parseXML(xml, XMLElement.mFactory);
     }
 
     public static org.dom4j.io.SAXReader getSAXReader() {
@@ -1524,7 +1493,7 @@ public abstract class Element implements Cloneable {
 
         public static final String E_ATTRIBUTE = "a";
         public static final String A_ATTR_NAME = "n";
-        private static final String A_NAMESPACE = "xmlns";
+        public static final String A_NAMESPACE = "xmlns";
 
         public XMLElement(String name) throws ContainerException { mName = validateName(name); }
         public XMLElement(QName qname) throws ContainerException {

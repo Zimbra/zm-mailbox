@@ -33,7 +33,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
@@ -388,7 +387,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     }
     
     private void run()
-    throws ServiceException, IOException, DocumentException {
+    throws ServiceException, IOException {
         // Assemble SOAP request.
         Element element = null;
         InputStream in = null;

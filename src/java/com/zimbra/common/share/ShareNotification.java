@@ -20,19 +20,18 @@ import java.io.InputStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants.ShareConstants;
 
 public class ShareNotification {
 
-    public static ShareNotification fromMimePart(MimePart part) throws ServiceException, DocumentException, IOException, MessagingException {
+    public static ShareNotification fromMimePart(MimePart part)
+    throws ServiceException, IOException, MessagingException {
         return new ShareNotification(part.getInputStream());
     }
 
-    private ShareNotification(InputStream in) throws ServiceException, DocumentException {
+    private ShareNotification(InputStream in) throws ServiceException {
         this(Element.parseXML(in));
     }
 
