@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,9 +28,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -127,16 +124,7 @@ public class SaveDraft extends MailDocumentHandler {
             ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
 
             if (autoSendTime != 0) {
-                Account acct = mbox.getAccount();
-                long acctQuota = AccountUtil.getEffectiveQuota(acct);
-                if (acct.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
-                    throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
-                }
-                Domain domain = Provisioning.getInstance().getDomain(acct);
-                if (domain != null && !AccountUtil.isSendAllowedOverAggregateQuota(domain) &&
-                        AccountUtil.isOverAggregateQuota(domain)) {
-                    throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
-                }
+                AccountUtil.checkQuotaWhenSendMail(mbox);
             }
 
             String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ? mbox.getAccountId() : account);

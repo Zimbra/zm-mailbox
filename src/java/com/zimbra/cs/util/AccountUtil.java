@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,26 +25,28 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
@@ -84,6 +86,24 @@ public class AccountUtil {
 
     public static boolean isReceiveAllowedOverAggregateQuota(Domain domain) {
         return !domain.getDomainAggregateQuotaPolicy().isBLOCKSENDRECEIVE();
+    }
+
+    /**
+     * Check mailbox/domain quota
+     * @param mbox mailbox to check
+     * @throws ServiceException when exceeds quota
+     */
+    public static void checkQuotaWhenSendMail(Mailbox mbox) throws ServiceException {
+        Account account = mbox.getAccount();
+        long acctQuota = AccountUtil.getEffectiveQuota(account);
+        if (account.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
+            throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
+        }
+        Domain domain = Provisioning.getInstance().getDomain(account);
+        if (domain != null &&
+                AccountUtil.isOverAggregateQuota(domain) && !AccountUtil.isSendAllowedOverAggregateQuota(domain)) {
+            throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
+        }
     }
 
     public static InternetAddress getFriendlyEmailAddress(Account acct) {
