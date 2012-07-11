@@ -83,6 +83,7 @@ public class GrantRights extends AccountDocumentHandler {
         GranteeType gtype = GranteeType.fromCode(eACE.getAttribute(AccountConstants.A_GRANT_TYPE));
         String zid = eACE.getAttribute(AccountConstants.A_ZIMBRA_ID, null);
         boolean deny = eACE.getAttributeBool(AccountConstants.A_DENY, false);
+        boolean checkGranteeType = eACE.getAttributeBool(AccountConstants.A_CHECK_GRANTEE_TYPE, false);
         String secret = null;
         NamedEntry nentry = null;
         
@@ -121,10 +122,16 @@ public class GrantRights extends AccountDocumentHandler {
             nentry = lookupGranteeByName(eACE.getAttribute(AccountConstants.A_DISPLAY), gtype, zsc);
             zid = nentry.getId();
             // make sure they didn't accidentally specify "usr" instead of "grp"
-            if (gtype == GranteeType.GT_USER && nentry instanceof DistributionList)
-                gtype = GranteeType.GT_GROUP;
+            if (gtype == GranteeType.GT_USER && nentry instanceof DistributionList) {
+                if (checkGranteeType) {
+                    throw AccountServiceException.INVALID_REQUEST(eACE.getAttribute(AccountConstants.A_DISPLAY) +
+                            " is not a valid grantee for grantee type '" + gtype.getCode() + "'.", null);
+                } else {
+                    gtype = GranteeType.GT_GROUP;
+                }
+            }
         }
-        
+
         RightModifier rightModifier = null;
         if (deny)
             rightModifier = RightModifier.RM_DENY;

@@ -3611,7 +3611,7 @@ If <ace> elements are provided, only those ACEs with specified rights are return
 Grant account level rights.
 
 <GrantRightsRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>+
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"] [chkgt="{checkGranteeType}"]/>+
 </GrantRightsRequest>
 
   If gt is:
@@ -3631,6 +3631,7 @@ Grant account level rights.
      - if key is given, server will use that as the access key for this grant
      - if key is not given, server will generate an access key
 
+  If chkgt is set, INVALID_REQUEST will be thrown if wrong grantee type is specified.
 
 GrantRightsResponse returns rights that are successfully granted.
 
