@@ -442,10 +442,8 @@ public class CreateContact extends MailDocumentHandler  {
         } else {
             Version zcoZcbVersion = DocumentHandler.zimbraConnectorClientVersion(zsc);
             if (zcoZcbVersion != null) {
-                // ZCO/ZCB version in that the new contact group API is supported
-                // TODO: change 9.0.0 to the real ZCO/ZCB version when bug 61593 is 
-                // implemented/fixed.
-                Version newContactGroupAPISupported = new Version("9.0.0"); 
+                // ZCO/ZCB support new contact group API since 8.0.0
+                Version newContactGroupAPISupported = new Version("8.0.0"); 
                 if (zcoZcbVersion.compareTo(newContactGroupAPISupported) < 0) {
                     return true;
                 }
