@@ -40,7 +40,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 		}
 		public void run() {
 			try {
-				ZimletUtil.uninstallZimlet(name, auth);
+				ZimletUtil.uninstallFromOtherServers(name, auth);
 			} catch (Exception e) {
 				ZimbraLog.zimlet.info("undeploy", e);
 			}
@@ -62,6 +62,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 		if (action == null)
 			auth = zsc.getRawAuthToken();
 	    Element response = zsc.createElement(AdminConstants.UNDEPLOY_ZIMLET_RESPONSE);
+	    ZimletUtil.uninstallZimlet(name);
 	    new Thread(new UndeployThread(name, auth)).start();
 		return response;
 	}

@@ -728,7 +728,7 @@ public class ZimletUtil {
 	 * @param zimlet
 	 * @throws ZimletException
 	 */
-	public static void uninstallZimlet(String zimlet, ZAuthToken auth) throws ServiceException {
+	public static void uninstallZimlet(String zimlet) throws ServiceException {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
 
@@ -752,13 +752,14 @@ public class ZimletUtil {
 			deleteFile(zf.getFile());
 			sZimlets.remove(zimlet);
 		}
-
-		if (auth == null)
-			return;
-
-		// deploy on the rest of the servers
-		ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
-		soapUtil.undeployZimlet(zimlet);
+	}
+	
+	public static void uninstallFromOtherServers(String zimlet, ZAuthToken auth) throws ServiceException {
+	       if (auth == null)
+	            return;
+	        // undeploy on the rest of the servers
+	        ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
+	        soapUtil.undeployZimlet(zimlet);
 	}
 
 	/**
