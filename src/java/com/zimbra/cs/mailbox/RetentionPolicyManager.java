@@ -20,14 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.dom4j.DocumentException;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -89,7 +88,7 @@ public class RetentionPolicyManager {
                             assert(p.getId() != null);
                             sp.purge.put(p.getId(), p);
                         }
-                    } catch (DocumentException e) {
+                    } catch (XmlParseException e) {
                         throw ServiceException.FAILURE("Unable to parse system retention policy.", e);
                     }
                 }

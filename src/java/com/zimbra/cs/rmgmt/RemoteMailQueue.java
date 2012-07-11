@@ -40,14 +40,11 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
-import org.dom4j.DocumentException;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.index.LuceneDirectory;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.common.service.ServiceException;
@@ -608,7 +605,7 @@ public class RemoteMailQueue {
         System.exit(1);
     }
 
-    public static void main(String[] args) throws ServiceException, DocumentException {
+    public static void main(String[] args) throws ServiceException {
         CliUtil.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
 

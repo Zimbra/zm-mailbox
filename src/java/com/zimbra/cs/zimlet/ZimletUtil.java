@@ -58,7 +58,6 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -436,13 +435,14 @@ public class ZimletUtil {
         zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRESENCE, presence.toString());
 
         try {
-			zf.getZimletDescription().addToElement(entry);
-			String config = zimlet.getHandlerConfig();
-			if (config != null)
-			    entry.addElement(Element.parseXML(config, elem.getFactory()));
-		} catch (Exception e) {
-		    ZimbraLog.zimlet.warn("error loading zimlet "+zimlet, e);
-		}
+            zf.getZimletDescription().addToElement(entry);
+            String config = zimlet.getHandlerConfig();
+            if (config != null) {
+                entry.addElement(W3cDomUtil.parseXML(config, elem.getFactory()));
+            }
+        } catch (Exception e) {
+            ZimbraLog.zimlet.warn("error loading zimlet "+zimlet, e);
+        }
 	}
 
 	/**

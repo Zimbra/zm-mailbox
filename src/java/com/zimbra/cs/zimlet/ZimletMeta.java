@@ -19,11 +19,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.soap.ZimletConstants;
 
 /**
@@ -59,7 +60,7 @@ public abstract class ZimletMeta {
 		try {
 			mTopElement = Element.parseXML(meta);
 			mRawXML = meta;
-		} catch (DocumentException de) {
+		} catch (XmlParseException de) {
 			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Cannot parse Zimlet description: "+de.getMessage());
 		}
 
@@ -145,8 +146,8 @@ public abstract class ZimletMeta {
 			if (mGeneratedXML == null) {
 				mGeneratedXML = mTopElement.toString();
 			}
-			return Element.parseXML(mGeneratedXML, f).toString();
-		} catch (Exception e) {
+			return W3cDomUtil.parseXML(mGeneratedXML, f).toString();
+		} catch (XmlParseException e) {
 			ZimbraLog.zimlet.warn("error parsing the Zimlet file "+mName);
 		}
 		return "";
@@ -158,9 +159,9 @@ public abstract class ZimletMeta {
 	public void addToElement(Element elem) throws ZimletException {
 		try {
 			// TODO: cache parsed structure or result or both.
-			Element newElem = Element.parseXML(toXMLString(), elem.getFactory());
+			Element newElem = W3cDomUtil.parseXML(toXMLString(), elem.getFactory());
 			elem.addElement(newElem);
-		} catch (DocumentException de) {
+		} catch (XmlParseException de) {
 			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot parse the dom tree");
 		}
 	}

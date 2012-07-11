@@ -277,8 +277,6 @@ public class FeedManager {
                 default:
                     throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
             }
-        } catch (org.dom4j.DocumentException e) {
-            throw ServiceException.PARSE_ERROR("could not parse feed", e);
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException: " + e, e);
         } catch (IOException e) {

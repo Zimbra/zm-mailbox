@@ -36,7 +36,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.soap.ZimbraSoapContext;
-import org.dom4j.DocumentException;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
@@ -108,8 +107,6 @@ public class GetShareNotifications extends MailDocumentHandler {
                     } catch (IOException e) {
                         ZimbraLog.misc.warn("can't parse share notification", e);
                     } catch (MessagingException e) {
-                        ZimbraLog.misc.warn("can't parse share notification", e);
-                    } catch (DocumentException e) {
                         ZimbraLog.misc.warn("can't parse share notification", e);
                     }
                 }

@@ -39,19 +39,17 @@ import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
@@ -442,12 +440,13 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
                 int contentLength = 10240;
                 if (cl != null)
                     contentLength = Integer.valueOf(cl.getValue());
-                String buf = new String(com.zimbra.common.util.ByteUtil.readInput(method.getResponseBodyAsStream(), contentLength, contentLength), "UTF-8");
+                String buf = new String(com.zimbra.common.util.ByteUtil.readInput(
+                        method.getResponseBodyAsStream(), contentLength, contentLength), "UTF-8");
                 ZimbraLog.fb.debug(buf);
                 response = Element.parseXML(buf);
             } else
                 response = Element.parseXML(method.getResponseBodyAsStream());
-        } catch (DocumentException e) {
+        } catch (XmlParseException e) {
             ZimbraLog.fb.warn("error parsing fb response from exchange", e);
             return getEmptyList(req);
         } catch (IOException e) {
