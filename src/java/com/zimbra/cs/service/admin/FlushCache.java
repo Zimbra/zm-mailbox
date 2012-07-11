@@ -107,6 +107,9 @@ public class FlushCache extends AdminDocumentHandler {
 			case acl:
 				PermissionCache.invalidateCache();
 				break;
+			case all:
+				flushLdapCache(cacheType, eCache);
+				Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
 			case galgroup:
 				GalGroup.flushCache(getCacheEntries(eCache));
 				break;
