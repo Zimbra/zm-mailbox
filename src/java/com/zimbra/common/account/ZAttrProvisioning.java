@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20120614-1149 */
+    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120710-1325 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8518,7 +8518,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefFromAddress = "zimbraPrefFromAddress";
 
     /**
-     * Type of the email address from header.
+     * Type of the email address from header. (sendAs or sendOnBehalfOf)
      *
      * @since ZCS 8.0.0
      */
@@ -9492,7 +9492,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraProxyAllowedDomains = "zimbraProxyAllowedDomains";
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      */
     @ZAttr(id=303)
     public static final String A_zimbraProxyCacheableContentTypes = "zimbraProxyCacheableContentTypes";
