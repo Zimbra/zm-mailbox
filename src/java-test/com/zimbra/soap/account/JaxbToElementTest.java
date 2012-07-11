@@ -87,6 +87,7 @@ import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.StringUtil;
 
 /**
@@ -224,7 +225,7 @@ public class JaxbToElementTest {
         Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
         org.w3c.dom.Document doc = el.toW3cDom();
         if (LOG.isDebugEnabled())
-            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + JaxbUtil.domToString(doc));
+            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + W3cDomUtil.asXML(doc));
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
             Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
@@ -287,7 +288,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element el = env.listElements().get(0);
         org.w3c.dom.Document doc = el.toW3cDom();
         if (LOG.isDebugEnabled())
-            LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + JaxbUtil.domToString(doc));
+            LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + W3cDomUtil.asXML(doc));
         GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(el);
         Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
     }

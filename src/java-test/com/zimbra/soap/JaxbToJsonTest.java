@@ -1816,22 +1816,6 @@ header="X-Spam-Score"/>
         Assert.assertEquals("JSONElement num xml-elem-json-attr elements", 0, jsonElem.listElements("xml-elem-json-attr").size());
     }
 
-    // Used for experiments
-    // @Test
-    public void JacksonPlay() throws Exception {
-        ObjectMapper mapper = JacksonUtil.getWrapRootObjectMapper();
-        // ---------------------------------
-        // rather than getting a StringWriter or a string, use JsonNode which is a bit of an analog to Element?
-        // JsonNode foobar = mapper.valueToTree(resp);
-        // Stolen from main in "Element"
-        logInfo("Getting attribute 'a' \n" + Element.parseJSON("{ '_attrs' : {'a':'b'}}").getAttribute("a", null));
-        logInfo("Round tripped _attrs using Element\n" +
-            Element.parseJSON("{ '_attrs' : {'a':'b','c':'d'},'_jsns':'urn:zimbraAdmin'}").prettyPrint());
-        GetInfoResponse giResp = (GetInfoResponse) JaxbUtil.elementToJaxb(
-                        Element.parseXML(JaxbToElementTest.getTestInfoResponseXml()));
-        jacksonSerializeCheck(mapper, "GetInfoResponse TEST", giResp);
-    }
-
     public String getZimbraJsonJaxbString(Object obj) {
             try {
                 return JacksonUtil.jaxbToJsonString(JacksonUtil.getObjectMapper(), obj);

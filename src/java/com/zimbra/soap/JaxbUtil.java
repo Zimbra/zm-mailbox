@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010-2012 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@
 package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +26,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.dom4j.Document;
 import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
@@ -100,11 +91,11 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.DistributionListActionResponse.class,
             com.zimbra.soap.account.message.EndSessionRequest.class,
             com.zimbra.soap.account.message.EndSessionResponse.class,
+            com.zimbra.soap.account.message.GetAccountDistributionListsRequest.class,
+            com.zimbra.soap.account.message.GetAccountDistributionListsResponse.class,
             com.zimbra.soap.account.message.GetAccountInfoRequest.class,
             com.zimbra.soap.account.message.GetAccountInfoResponse.class,
             com.zimbra.soap.account.message.GetAllLocalesRequest.class,
-            com.zimbra.soap.account.message.GetAccountDistributionListsRequest.class,
-            com.zimbra.soap.account.message.GetAccountDistributionListsResponse.class,
             com.zimbra.soap.account.message.GetAllLocalesResponse.class,
             com.zimbra.soap.account.message.GetAvailableCsvFormatsRequest.class,
             com.zimbra.soap.account.message.GetAvailableCsvFormatsResponse.class,
@@ -112,10 +103,10 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetAvailableLocalesResponse.class,
             com.zimbra.soap.account.message.GetAvailableSkinsRequest.class,
             com.zimbra.soap.account.message.GetAvailableSkinsResponse.class,
-            com.zimbra.soap.account.message.GetDistributionListRequest.class,
-            com.zimbra.soap.account.message.GetDistributionListResponse.class,
             com.zimbra.soap.account.message.GetDistributionListMembersRequest.class,
             com.zimbra.soap.account.message.GetDistributionListMembersResponse.class,
+            com.zimbra.soap.account.message.GetDistributionListRequest.class,
+            com.zimbra.soap.account.message.GetDistributionListResponse.class,
             com.zimbra.soap.account.message.GetIdentitiesRequest.class,
             com.zimbra.soap.account.message.GetIdentitiesResponse.class,
             com.zimbra.soap.account.message.GetInfoRequest.class,
@@ -154,10 +145,10 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SearchCalendarResourcesResponse.class,
             com.zimbra.soap.account.message.SearchGalRequest.class,
             com.zimbra.soap.account.message.SearchGalResponse.class,
-            com.zimbra.soap.account.message.SyncGalRequest.class,
-            com.zimbra.soap.account.message.SyncGalResponse.class,
             com.zimbra.soap.account.message.SubscribeDistributionListRequest.class,
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
+            com.zimbra.soap.account.message.SyncGalRequest.class,
+            com.zimbra.soap.account.message.SyncGalResponse.class,
             com.zimbra.soap.account.message.UpdateProfileRequest.class,
             com.zimbra.soap.account.message.UpdateProfileResponse.class,
 
@@ -632,6 +623,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllServersResponse.class,
             com.zimbra.soap.admin.message.GetAllSkinsRequest.class,
             com.zimbra.soap.admin.message.GetAllSkinsResponse.class,
+            com.zimbra.soap.admin.message.GetAllUCProvidersRequest.class,
+            com.zimbra.soap.admin.message.GetAllUCProvidersResponse.class,
             com.zimbra.soap.admin.message.GetAllUCServicesRequest.class,
             com.zimbra.soap.admin.message.GetAllUCServicesResponse.class,
             com.zimbra.soap.admin.message.GetAllVolumesRequest.class,
@@ -664,6 +657,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetDataSourcesResponse.class,
             com.zimbra.soap.admin.message.GetDelegatedAdminConstraintsRequest.class,
             com.zimbra.soap.admin.message.GetDelegatedAdminConstraintsResponse.class,
+            com.zimbra.soap.admin.message.GetDeviceStatusRequest.class,
+            com.zimbra.soap.admin.message.GetDeviceStatusResponse.class,
             com.zimbra.soap.admin.message.GetDevicesCountRequest.class,
             com.zimbra.soap.admin.message.GetDevicesCountResponse.class,
             com.zimbra.soap.admin.message.GetDevicesCountSinceLastUsedRequest.class,
@@ -672,8 +667,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetDevicesCountUsedTodayResponse.class,
             com.zimbra.soap.admin.message.GetDevicesRequest.class,
             com.zimbra.soap.admin.message.GetDevicesResponse.class,
-            com.zimbra.soap.admin.message.GetDeviceStatusRequest.class,
-            com.zimbra.soap.admin.message.GetDeviceStatusResponse.class,
             com.zimbra.soap.admin.message.GetDistributionListMembershipRequest.class,
             com.zimbra.soap.admin.message.GetDistributionListMembershipResponse.class,
             com.zimbra.soap.admin.message.GetDistributionListRequest.class,
@@ -836,6 +829,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.RemoveAccountAliasResponse.class,
             com.zimbra.soap.admin.message.RemoveAccountLoggerRequest.class,
             com.zimbra.soap.admin.message.RemoveAccountLoggerResponse.class,
+            com.zimbra.soap.admin.message.RemoveDeviceRequest.class,
+            com.zimbra.soap.admin.message.RemoveDeviceResponse.class,
             com.zimbra.soap.admin.message.RemoveDistributionListAliasRequest.class,
             com.zimbra.soap.admin.message.RemoveDistributionListAliasResponse.class,
             com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest.class,
@@ -856,6 +851,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ResetAllLoggersResponse.class,
             com.zimbra.soap.admin.message.RestoreRequest.class,
             com.zimbra.soap.admin.message.RestoreResponse.class,
+            com.zimbra.soap.admin.message.ResumeDeviceRequest.class,
+            com.zimbra.soap.admin.message.ResumeDeviceResponse.class,
             com.zimbra.soap.admin.message.RevokeRightRequest.class,
             com.zimbra.soap.admin.message.RevokeRightResponse.class,
             com.zimbra.soap.admin.message.RolloverRedoLogRequest.class,
@@ -880,6 +877,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
             com.zimbra.soap.admin.message.SetPasswordRequest.class,
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
+            com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
+            com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
             com.zimbra.soap.admin.message.SyncGalAccountResponse.class,
             com.zimbra.soap.admin.message.UndeployZimletRequest.class,
@@ -955,7 +954,27 @@ public final class JaxbUtil {
             com.zimbra.soap.appblast.message.EditDocumentRequest.class,
             com.zimbra.soap.appblast.message.EditDocumentResponse.class,
             com.zimbra.soap.appblast.message.FinishEditDocumentRequest.class,
-            com.zimbra.soap.appblast.message.FinishEditDocumentResponse.class
+            com.zimbra.soap.appblast.message.FinishEditDocumentResponse.class,
+
+            // zimbraVoice
+            com.zimbra.soap.voice.message.ChangeUCPasswordRequest.class,
+            com.zimbra.soap.voice.message.ChangeUCPasswordResponse.class,
+            com.zimbra.soap.voice.message.GetUCInfoRequest.class,
+            com.zimbra.soap.voice.message.GetUCInfoResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceFolderRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceFolderResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceInfoRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceInfoResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceMailPrefsRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceMailPrefsResponse.class,
+            com.zimbra.soap.voice.message.ModifyFromNumRequest.class,
+            com.zimbra.soap.voice.message.ModifyFromNumResponse.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPinRequest.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPinResponse.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPrefsRequest.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPrefsResponse.class,
+            com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
         };
 
         try {
@@ -1330,7 +1349,7 @@ public final class JaxbUtil {
             return null;
         }
         try {
-            // LOG.warn("Dom to Xml:\n" + domToString(doc));
+            // LOG.warn("Dom to Xml:\n" + W3cDomUtil.asXML(document);
             Unmarshaller unmarshaller;
             if (jaxbClassInContext) {
                 unmarshaller = getContext().createUnmarshaller();
@@ -1375,23 +1394,6 @@ public final class JaxbUtil {
             return null;
         }
         return (T) w3cDomDocToJaxb(e.toW3cDom(), klass, true);
-    }
-
-    public static String domToString(org.w3c.dom.Document document) {
-        try {
-            Source xmlSource = new DOMSource(document);
-            StreamResult result = new StreamResult(new ByteArrayOutputStream());
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty("indent", "yes"); //Java XML Indent
-            transformer.transform(xmlSource, result);
-            return result.getOutputStream().toString();
-        } catch (TransformerFactoryConfigurationError factoryError) {
-            LOG.error("Error creating TransformerFactory", factoryError);
-        } catch (TransformerException transformerError) {
-            LOG.error( "Error transforming document", transformerError);
-        }
-        return null;
     }
 
     /**
