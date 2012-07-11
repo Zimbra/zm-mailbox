@@ -17,9 +17,9 @@ package com.zimbra.client;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.client.ZFolder.View;
-import org.dom4j.DocumentException;
 import org.json.JSONException;
 
 public class ZShare implements ToZJSONObject {
@@ -60,7 +60,7 @@ public class ZShare implements ToZJSONObject {
     public static ZShare parseXml(String xml) throws ServiceException {
         try {
             return new ZShare(Element.parseXML(xml));
-        } catch (DocumentException e) {
+        } catch (XmlParseException e) {
             throw ZClientException.ZIMBRA_SHARE_PARSE_ERROR("can't parse share", e);
         }
     }
@@ -92,6 +92,7 @@ public class ZShare implements ToZJSONObject {
         return e;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put(A_VERSION, mVersion);
@@ -102,6 +103,7 @@ public class ZShare implements ToZJSONObject {
         return zjo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZShare %s]", mGrantor);
     }
@@ -161,6 +163,7 @@ public class ZShare implements ToZJSONObject {
             }
         }
 
+        @Override
         public String toString() {
             return name().toLowerCase();
         }
@@ -214,6 +217,7 @@ public class ZShare implements ToZJSONObject {
             mName = name;
         }
 
+        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put(A_ID, mId);
@@ -222,6 +226,7 @@ public class ZShare implements ToZJSONObject {
             return zjo;
         }
 
+        @Override
         public String toString() {
             return String.format("[ZGrantInfo id=%s email=%s name=%s]", mId, mEmail, mName);
         }
@@ -319,6 +324,7 @@ public class ZShare implements ToZJSONObject {
             mName = name;
         }
 
+        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put(A_ID, mId);
@@ -328,6 +334,7 @@ public class ZShare implements ToZJSONObject {
             return zjo;
         }
 
+        @Override
         public String toString() {
             return String.format("[ZLink id=%s name=%s]", mId, mName);
         }
