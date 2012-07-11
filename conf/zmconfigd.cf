@@ -11,6 +11,7 @@ SECTION amavis
 		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	LOCAL amavis_dspam_enabled
+	LOCAL amavis_originating_bypass_sa
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
