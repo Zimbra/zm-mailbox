@@ -690,8 +690,11 @@ public class ZimletUtil {
 		if(disableZimletUndeploy != null && disableZimletUndeploy.equalsIgnoreCase("true"))
 			attrs.put(Provisioning.A_zimbraAdminExtDisableUIUndeploy, ProvisioningConstants.TRUE);
 
-		if (zd.isExtension())
+		if (zd.isExtension()) {
 			attrs.put(Provisioning.A_zimbraZimletIsExtension, ProvisioningConstants.TRUE);
+		} else {
+			attrs.put(Provisioning.A_zimbraZimletIsExtension, ProvisioningConstants.FALSE);
+		}
 
 		ZimbraLog.zimlet.info("Deploying Zimlet " + zimletName + " in LDAP.");
 
