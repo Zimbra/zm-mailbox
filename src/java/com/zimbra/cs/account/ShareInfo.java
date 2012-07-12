@@ -748,7 +748,7 @@ public class ShareInfo {
                 case ROLE_MANAGER:
                     return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleManager, locale);
                 default:
-                    return "";
+                    return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleNone, locale);
             }
         }
 
@@ -760,7 +760,11 @@ public class ShareInfo {
             if ((rights & ACL.RIGHT_INSERT) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionInsert, locale));
             if ((rights & ACL.RIGHT_DELETE) != 0)    appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionDelete, locale));
             if ((rights & ACL.RIGHT_ADMIN) != 0)     appendCommaSeparated(r, L10nUtil.getMessage(MsgKey.shareNotifBodyActionAdmin, locale));
-            return r.toString();
+            if (r.toString().isEmpty()) {
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyActionNone, locale);
+            } else {
+                return r.toString();
+            }
         }
 
         private static String formatFolderDesc(Locale locale, ShareInfoData sid) {
