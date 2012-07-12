@@ -49,8 +49,19 @@ name for your new response.
     nsInfoList.add(WsdlInfoForNamespace.create(AppBlastConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
                 packageToRequestListMap.get("com.zimbra.soap.appblast.message")));
     </pre>
+<li>  Update <b>ZimbraSoap/soapdocs/src/java/com/zimbra/doc/soap/WsdlDocGenerator.java</b>
+    the static block which initialises <b>serviceDescriptions</b> needs updating
+<li>  Will need an updated <b>ZimbraSoap/soapdocs/jars/ZmApiDoclet.jar</b>
+    <pre>
+    cd ZimbraSoap
+    p4 edit soapdocs/jars/ZmApiDoclet.jar
+    ant generate-soap-api-jar
+    ant generate-soap-api-doc
+    </pre>
 <li>  Update binding file <b>ZimbraSoap/src/wsdl-test/xsdBindings-zcs.xml</b> for use with wsdl-test API.
         This will need a &lt;jaxb:bindings> for the new targetNamespace.
+<li>  Update the <b>generate-schema</b> target in ant file <b>ZimbraSoap/build.xml</b> to choose a .xsd filename for
+    the new namespace.
 </ol>
 
 <h3> Manual steps </h3>

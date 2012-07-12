@@ -82,6 +82,7 @@ public class ActionSelector {
      * <tr> <td> <b>t</b> </td> <td> include items in the Trash </td> </tr>
      * <tr> <td> <b>j</b> </td> <td> include items in Spam/Junk </td> </tr>
      * <tr> <td> <b>s</b> </td> <td> include items in the user's Sent folder (not necessarily "Sent") </td> </tr>
+     * <tr> <td> <b>d</b> </td> <td> include items in Drafts folder </td> </tr>
      * <tr> <td> <b>o</b> </td> <td> include items in any other folder </td> </tr>
      * </table>
      * A leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)

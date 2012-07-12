@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -28,6 +27,7 @@ import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.common.soap.SyncConstants;
+import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.util.JaxbInfo;
 import javax.xml.bind.annotation.XmlSchema;
@@ -47,6 +47,7 @@ public class WsdlDocGenerator {
         serviceDescriptions.put(MailConstants.NAMESPACE_STR, "The Mail Service includes commands for managing mail and calendar information.");
         serviceDescriptions.put(ReplicationConstants.NAMESPACE_STR, "The zimbraRepl Service includes commands for managing Zimbra Server replication.");
         serviceDescriptions.put(SyncConstants.NAMESPACE_STR, "The zimbraSync Service includes commands for managing devices using Synchronization.");
+        serviceDescriptions.put(VoiceConstants.NAMESPACE_STR, "The zimbraVoice Service includes commands related to Unified Communications.");
     }
 
     private static String getNamespace(Class<?> jaxbClass, Map<Package,String> pkgToNamespace) {

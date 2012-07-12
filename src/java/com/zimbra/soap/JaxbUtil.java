@@ -623,6 +623,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllServersResponse.class,
             com.zimbra.soap.admin.message.GetAllSkinsRequest.class,
             com.zimbra.soap.admin.message.GetAllSkinsResponse.class,
+            com.zimbra.soap.admin.message.GetAllUCProvidersRequest.class,
+            com.zimbra.soap.admin.message.GetAllUCProvidersResponse.class,
             com.zimbra.soap.admin.message.GetAllUCServicesRequest.class,
             com.zimbra.soap.admin.message.GetAllUCServicesResponse.class,
             com.zimbra.soap.admin.message.GetAllVolumesRequest.class,
@@ -952,7 +954,29 @@ public final class JaxbUtil {
             com.zimbra.soap.appblast.message.EditDocumentRequest.class,
             com.zimbra.soap.appblast.message.EditDocumentResponse.class,
             com.zimbra.soap.appblast.message.FinishEditDocumentRequest.class,
-            com.zimbra.soap.appblast.message.FinishEditDocumentResponse.class
+            com.zimbra.soap.appblast.message.FinishEditDocumentResponse.class,
+
+            // zimbraVoice
+            com.zimbra.soap.voice.message.ChangeUCPasswordRequest.class,
+            com.zimbra.soap.voice.message.ChangeUCPasswordResponse.class,
+            com.zimbra.soap.voice.message.GetUCInfoRequest.class,
+            com.zimbra.soap.voice.message.GetUCInfoResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceFeaturesRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceFeaturesResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceFolderRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceFolderResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceInfoRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceInfoResponse.class,
+            com.zimbra.soap.voice.message.GetVoiceMailPrefsRequest.class,
+            com.zimbra.soap.voice.message.GetVoiceMailPrefsResponse.class,
+            com.zimbra.soap.voice.message.ModifyFromNumRequest.class,
+            com.zimbra.soap.voice.message.ModifyFromNumResponse.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPinRequest.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPinResponse.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPrefsRequest.class,
+            com.zimbra.soap.voice.message.ModifyVoiceMailPrefsResponse.class,
+            com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
         };
 
         try {
