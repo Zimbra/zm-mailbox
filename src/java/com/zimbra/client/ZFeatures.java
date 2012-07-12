@@ -115,6 +115,8 @@ public class ZFeatures {
     
     public boolean getGroupcalendarEnabled() { return getBool(ZAttrProvisioning.A_zimbraFeatureGroupCalendarEnabled); }
 
+    public boolean getDataSourceImportOnLogin() { return getBool(ZAttrProvisioning.A_zimbraDataSourceImportOnLogin); }
+
     public boolean getFlagging() { return getBool(ZAttrProvisioning.A_zimbraFeatureFlaggingEnabled); }
 
     public boolean getMailPriority() { return getBool(ZAttrProvisioning.A_zimbraFeatureMailPriorityEnabled); }
