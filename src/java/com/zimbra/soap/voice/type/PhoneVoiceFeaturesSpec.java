@@ -109,7 +109,7 @@ public class PhoneVoiceFeaturesSpec {
         @XmlElement(name=VoiceConstants.E_CALL_WAITING /* callwaiting */, type=CallWaitingReq.class),
         @XmlElement(name=VoiceConstants.E_SELECTIVE_CALL_FORWARD /* selectivecallforward */, type=SelectiveCallForwardReq.class),
         @XmlElement(name=VoiceConstants.E_SELECTIVE_CALL_ACCEPTANCE /* selectivecallacceptance */, type=SelectiveCallAcceptanceReq.class),
-        @XmlElement(name=VoiceConstants.E_SELECTIVE_CALL_REJECTION /* selectivecallrejection */, type=SelectiveCallRejectionReq.class),
+        @XmlElement(name=VoiceConstants.E_SELECTIVE_CALL_REJECTION /* selectivecallrejection */, type=SelectiveCallRejectionReq.class)
     })
     private List<CallFeatureReq> callFeatures = Lists.newArrayList();
 
