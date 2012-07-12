@@ -141,6 +141,7 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleViewer,
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
+        shareNotifBodyGranteeRoleNone,
 
         shareNotifBodyFolderDesc,
         shareNotifBodyExternalShareText,
@@ -157,6 +158,7 @@ public class L10nUtil {
         shareNotifBodyActionPrivate,
         shareNotifBodyActionFreebusy,
         shareNotifBodyActionSubfolder,
+        shareNotifBodyActionNone,
         //////////////////////
 
         // group subscription request
