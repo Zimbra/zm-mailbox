@@ -1470,7 +1470,7 @@ abstract class ImapHandler {
             // set imap_proxy_to_localhost = true to test IMAP proxy
             Object mboxobj = (DebugConfig.imapProxyToLocalhost && path.useReferent()) ?
                             path.getOwnerZMailbox() : path.getOwnerMailbox();
-            if (!(mboxobj instanceof Mailbox)) {
+            if (mboxobj instanceof ZMailbox) {
                 // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
                 //         before attempting the new selection.  Consequently, if a mailbox is selected
                 //         and a SELECT command that fails is attempted, no mailbox is selected."
