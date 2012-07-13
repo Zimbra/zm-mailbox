@@ -971,10 +971,16 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.GetVoiceMailPrefsResponse.class,
             com.zimbra.soap.voice.message.ModifyFromNumRequest.class,
             com.zimbra.soap.voice.message.ModifyFromNumResponse.class,
+            com.zimbra.soap.voice.message.ModifyVoiceFeaturesRequest.class,
+            com.zimbra.soap.voice.message.ModifyVoiceFeaturesResponse.class,
             com.zimbra.soap.voice.message.ModifyVoiceMailPinRequest.class,
             com.zimbra.soap.voice.message.ModifyVoiceMailPinResponse.class,
             com.zimbra.soap.voice.message.ModifyVoiceMailPrefsRequest.class,
             com.zimbra.soap.voice.message.ModifyVoiceMailPrefsResponse.class,
+            com.zimbra.soap.voice.message.ResetVoiceFeaturesRequest.class,
+            com.zimbra.soap.voice.message.ResetVoiceFeaturesResponse.class,
+            com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
+            com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
             com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
         };
