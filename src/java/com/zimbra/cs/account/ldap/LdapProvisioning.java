@@ -2355,10 +2355,12 @@ public class LdapProvisioning extends Provisioning {
             zlc = new ZimbraLdapContext(true);
 
             String oldDn = entry.getDN();
-            String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
+            String[] parts = EmailUtil.getLocalPartAndDomain(oldEmail);
+            String oldLocal = parts[0];
+            String oldDomain = parts[1];
 
             newName = newName.toLowerCase().trim();
-            String[] parts = EmailUtil.getLocalPartAndDomain(newName);
+            parts = EmailUtil.getLocalPartAndDomain(newName);
             if (parts == null)
                 throw ServiceException.INVALID_REQUEST("bad value for newName", null);
             String newLocal = parts[0];
@@ -2419,8 +2421,22 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
 
-            Attributes attributes = new BasicAttributes(true);
-            LdapUtil.mapToAttrs(newAttrs, attributes);
+            ReplaceAddressResult replacedAllowAddrForDelegatedSender =
+                    replaceMailAddresses(acct, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
+                    oldEmail, newName);
+            if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
+                newAttrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
+                        replacedAllowAddrForDelegatedSender.newAddrs());
+            }
+
+            if (newAttrs.get(Provisioning.A_displayName) == null && oldLocal.equals(newAttrs.get(Provisioning.A_cn)))
+                newAttrs.put(Provisioning.A_cn, newLocal);
+
+            /*
+            ZMutableEntry mutableEntry = LdapClient.createMutableEntry();
+            mutableEntry.mapToAttrs(newAttrs);
+            mutableEntry.setDN(newDn);
+            */
 
             if (dnChanged) {
                 zlc.createEntry(newDn, attributes, "createAccount");
