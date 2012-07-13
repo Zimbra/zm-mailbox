@@ -75,6 +75,10 @@ if allof (mime_header :contains ["to"] "james.apache.org",
     fileInto "jSieve";
     stop;
 }
+# backslash
+if allof (header :contains ["to"] "\\") {
+    keep;
+}
 # Mutlple header names
 if allof (header :contains ["to","cc"] "james.apache.org")
 {
