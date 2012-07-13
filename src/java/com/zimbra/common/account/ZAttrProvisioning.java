@@ -7284,7 +7284,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      */
     @ZAttr(id=198)
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
