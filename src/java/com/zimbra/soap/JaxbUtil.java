@@ -979,6 +979,8 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.ModifyVoiceMailPrefsResponse.class,
             com.zimbra.soap.voice.message.ResetVoiceFeaturesRequest.class,
             com.zimbra.soap.voice.message.ResetVoiceFeaturesResponse.class,
+            com.zimbra.soap.voice.message.SearchVoiceRequest.class,
+            com.zimbra.soap.voice.message.SearchVoiceResponse.class,
             com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
             com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
