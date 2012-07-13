@@ -19,20 +19,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -122,7 +123,7 @@ public class GrantRights extends AccountDocumentHandler {
             nentry = lookupGranteeByName(eACE.getAttribute(AccountConstants.A_DISPLAY), gtype, zsc);
             zid = nentry.getId();
             // make sure they didn't accidentally specify "usr" instead of "grp"
-            if (gtype == GranteeType.GT_USER && nentry instanceof DistributionList) {
+            if (gtype == GranteeType.GT_USER && nentry instanceof Group) {
                 if (checkGranteeType) {
                     throw AccountServiceException.INVALID_REQUEST(eACE.getAttribute(AccountConstants.A_DISPLAY) +
                             " is not a valid grantee for grantee type '" + gtype.getCode() + "'.", null);
@@ -138,16 +139,18 @@ public class GrantRights extends AccountDocumentHandler {
         return new ZimbraACE(zid, gtype, right, rightModifier, secret);
 
     }
-    
+
     private static NamedEntry lookupEmailAddress(String name) throws ServiceException {
         NamedEntry nentry = null;
         Provisioning prov = Provisioning.getInstance();
         nentry = prov.get(AccountBy.name, name);
-        if (nentry == null)
-            nentry = prov.get(Key.DistributionListBy.name, name);
+        //look for both distribution list and dynamic group
+        if (nentry == null) {
+            nentry = prov.getGroup(Key.DistributionListBy.name, name);
+        }
         return nentry;
     }
-    
+
     private static NamedEntry lookupGranteeByName(String name, GranteeType type, 
             ZimbraSoapContext zsc) 
     throws ServiceException {
