@@ -84,7 +84,7 @@ A request at the http level looks something like this:
 
 
 POST /service/upload HTTP/1.1 
-Cookie: LS_AUTH_TOKEN=0_6029... 
+Cookie: ZM_AUTH_TOKEN=0_6029... 
 Content-Type: multipart/form-data; boundary=SKhAvar1nat0rt3mp 
 Host: localhost:7070 
 Content-Length: 338 
