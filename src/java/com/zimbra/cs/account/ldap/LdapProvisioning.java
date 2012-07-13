@@ -2959,10 +2959,12 @@ public class LdapProvisioning extends LdapProv {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_ACCOUNT);
 
             String oldDn = entry.getDN();
-            String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
+            String[] parts = EmailUtil.getLocalPartAndDomain(oldEmail);
+            String oldLocal = parts[0];
+            String oldDomain = parts[1];
 
             newName = newName.toLowerCase().trim();
-            String[] parts = EmailUtil.getLocalPartAndDomain(newName);
+            parts = EmailUtil.getLocalPartAndDomain(newName);
             if (parts == null) {
                 throw ServiceException.INVALID_REQUEST("bad value for newName", null);
             }
@@ -3045,6 +3047,9 @@ public class LdapProvisioning extends LdapProv {
                 newAttrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
                         replacedAllowAddrForDelegatedSender.newAddrs());
             }
+
+            if (newAttrs.get(Provisioning.A_displayName) == null && oldLocal.equals(newAttrs.get(Provisioning.A_cn)))
+                newAttrs.put(Provisioning.A_cn, newLocal);
 
             /*
             ZMutableEntry mutableEntry = LdapClient.createMutableEntry();
