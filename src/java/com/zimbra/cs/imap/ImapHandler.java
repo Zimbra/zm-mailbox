@@ -1511,6 +1511,8 @@ abstract class ImapHandler {
                 ZimbraLog.imap.info("%s failed: no such folder: %s", command, path);
             } else if (e.getCode().equals(ServiceException.PERM_DENIED)) {
                 ZimbraLog.imap.info("%s failed: permission denied: %s", command,  path);
+            } else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT)) {
+                ZimbraLog.imap.info("%s failed: no such account: %s", command,  path);
             } else {
                 ZimbraLog.imap.warn("%s failed", command, e);
             }
