@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -17,20 +17,22 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalImport;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 public final class SyncGalAccount extends AdminDocumentHandler {
 
@@ -80,6 +82,9 @@ public final class SyncGalAccount extends AdminDocumentHandler {
                 if (dataImport instanceof GalImport) {
                     ((GalImport) dataImport).importGal(fid, (reset ? reset : fullSync), reset);
                 }
+                //flush domain gal group cache
+                Domain domain = prov.getDomain(account);
+                GalGroup.flushCache(domain);
             }
         }
 

@@ -126,8 +126,8 @@ public abstract class GalGroup {
             
         return null;
     }
-    
-    private static synchronized void flushCache(Domain domain) {
+
+    public static synchronized void flushCache(Domain domain) {
         if (domain == null) {
             for (Map.Entry<String, DomainGalGroupCache> entry : groups.entrySet())
                 GalGroup.flushCache(entry.getKey(), entry.getValue());
@@ -137,7 +137,7 @@ public abstract class GalGroup {
             GalGroup.flushCache(domain.getName(), galGroup);
         }
     }
-    
+
     private static void flushCache(String domainName, DomainGalGroupCache galGroup) {
         
         if (galGroup == null) {
