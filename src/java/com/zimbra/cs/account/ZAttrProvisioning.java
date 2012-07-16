@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pburgu 20120605-1057 */
+    /* build: 7.0.0_BETA1_1111 rgadipuuri 20120716-1629 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5616,7 +5616,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      */
     @ZAttr(id=198)
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";

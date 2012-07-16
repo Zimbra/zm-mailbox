@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pburgu 20120605-1057 */
+    /* build: 7.0.0_BETA1_1111 rgadipuuri 20120716-1629 */
 
     /**
      * RFC2256: descriptive information
@@ -19151,7 +19151,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      *
      * @return zimbraMtaMaxMessageSize, or 10240000 if unset
      */
@@ -19161,7 +19162,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      *
      * @param zimbraMtaMaxMessageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19174,7 +19176,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      *
      * @param zimbraMtaMaxMessageSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19188,7 +19191,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -19200,7 +19204,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf message_size_limit
+     * Maximum total size of a mail message. Enforced in mailbox server and
+     * also used as value for postconf message_size_limit
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
