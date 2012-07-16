@@ -2355,10 +2355,12 @@ public class LdapProvisioning extends Provisioning {
             zlc = new ZimbraLdapContext(true);
 
             String oldDn = entry.getDN();
-            String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
+            String[] parts = EmailUtil.getLocalPartAndDomain(oldEmail);
+            String oldLocal = parts[0];
+            String oldDomain = parts[1];
 
             newName = newName.toLowerCase().trim();
-            String[] parts = EmailUtil.getLocalPartAndDomain(newName);
+            parts = EmailUtil.getLocalPartAndDomain(newName);
             if (parts == null)
                 throw ServiceException.INVALID_REQUEST("bad value for newName", null);
             String newLocal = parts[0];
@@ -2418,6 +2420,9 @@ public class LdapProvisioning extends Provisioning {
                         throw AccountServiceException.ACCOUNT_EXISTS(newName);
                 }
             }
+
+            if (newAttrs.get(Provisioning.A_displayName) == null && oldLocal.equals(newAttrs.get(Provisioning.A_cn)))
+                newAttrs.put(Provisioning.A_cn, newLocal);
 
             Attributes attributes = new BasicAttributes(true);
             LdapUtil.mapToAttrs(newAttrs, attributes);
