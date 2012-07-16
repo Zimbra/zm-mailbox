@@ -22,6 +22,7 @@ import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
@@ -63,6 +64,9 @@ public class ZimbraGalGroupHandler extends GroupHandler {
                 String zimbraId = ldapAttrs.getAttrString(Provisioning.A_zimbraId);
                 Provisioning prov = Provisioning.getInstance();
                 Group group = prov.getGroupBasic(DistributionListBy.id, zimbraId);
+                if (group == null) {
+                    throw AccountServiceException.NO_SUCH_GROUP(zimbraId);
+                }
                 members = prov.getGroupMembers(group);
             }
 

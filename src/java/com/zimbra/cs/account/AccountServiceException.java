@@ -55,6 +55,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";
     public static final String NO_SUCH_XMPP_COMPONENT = "account.NO_SUCH_XMPP_COMPONENT";
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
+    public static final String NO_SUCH_GROUP      = "account.NO_SUCH_GROUP";
     public static final String NO_SUCH_CALENDAR_RESOURCE = "account.NO_SUCH_CALENDAR_RESOURCE";
     public static final String NO_SUCH_EXTERNAL_ENTRY    = "account.NO_SUCH_EXTERNAL_ENTRY";
     public static final String MEMBER_EXISTS      = "account.MEMBER_EXISTS";
@@ -257,6 +258,11 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException NO_SUCH_DISTRIBUTION_LIST(String name) {
         return new AccountServiceException("no such distribution list: " + name, NO_SUCH_DISTRIBUTION_LIST,
+                SENDERS_FAULT, null);
+    }
+    
+    public static AccountServiceException NO_SUCH_GROUP(String name) {
+        return new AccountServiceException("no such group: " + name, NO_SUCH_GROUP,
                 SENDERS_FAULT, null);
     }
 
