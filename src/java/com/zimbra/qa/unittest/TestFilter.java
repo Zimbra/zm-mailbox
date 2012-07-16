@@ -414,20 +414,6 @@ extends TestCase {
     }
 
     /**
-     * Tests {@link FilterUtil#escape}.
-     */
-    public void testEscape() {
-        doTestEscape("Hello, \"Dave\"", "Hello, \\\"Dave\\\"");
-        doTestEscape("\\/\\/", "\\\\/\\\\/");
-        doTestEscape("\"\\\"", "\\\"\\\\\\\"");
-    }
-    
-    private void doTestEscape(String original, String escaped) {
-        assertEquals(escaped, FilterUtil.escape(original));
-        assertEquals(original, FilterUtil.unescape(escaped));
-    }
-
-    /**
      * Tests {@link SoapToSieve} and {@link SieveToSoap}.
      */
     public void testConversion()

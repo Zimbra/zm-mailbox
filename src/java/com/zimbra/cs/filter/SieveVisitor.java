@@ -444,9 +444,6 @@ public abstract class SieveVisitor {
         if (value == null) {
             return null;
         }
-        if (value instanceof String) {
-            value = FilterUtil.unescape(stripQuotes((String) value));
-        }
         return value.toString();
     }
     
@@ -456,9 +453,6 @@ public abstract class SieveVisitor {
         List<String> values = new ArrayList<String>();
         for (int i = 0; i < child.jjtGetNumChildren(); i++) {
             Object value = ((SieveNode) child.jjtGetChild(i)).getValue();
-            if (value instanceof String) {
-                value = FilterUtil.unescape(stripQuotes((String) value));
-            }
             values.add(value == null ? null : value.toString());
         }
         return values;
@@ -472,15 +466,6 @@ public abstract class SieveVisitor {
         return s.substring(1, s.length());
     }
     
-    private String stripQuotes(String s) {
-        if (s == null || s.length() == 0) {
-            return s;
-        }
-        int idxStart = (s.charAt(0) == '"' ? 1 : 0);
-        int idxEnd = (s.charAt(s.length() - 1) == '"' ? s.length() - 1 : s.length());
-        return s.substring(idxStart, idxEnd);
-    }
-
     /**
      * Returns <tt>true</tt> if the given node is the root of a rule node
      * hierarchy.

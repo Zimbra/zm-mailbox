@@ -79,6 +79,10 @@ if allof (mime_header :contains ["to"] "james.apache.org",
 if allof (header :contains ["to"] "\\") {
     keep;
 }
+# double quote
+if anyof (header :contains ["from"] "\"") {
+    keep;
+}
 # Mutlple header names
 if allof (header :contains ["to","cc"] "james.apache.org")
 {
