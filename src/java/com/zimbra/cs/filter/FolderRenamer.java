@@ -45,7 +45,7 @@ class FolderRenamer extends SieveVisitor {
         if (folderPath.startsWith(mOldPath)) {
             String newPath = folderPath.replace(mOldPath, mNewPath);
             SieveNode folderNameNode = (SieveNode) getNode(node, 0, 0, 0, 0);
-            String escapedName = "\"" + FilterUtil.escape(newPath) + "\"";
+            String escapedName = FilterUtil.escape(newPath);
             folderNameNode.setValue(escapedName);
             mRenamed = true;
         }
