@@ -1,4 +1,41 @@
-Auto provision attributes:
+===========
+1. Use Case
+===========
+When using an external LDAP directory (example: Microsoft Active Directory) as
+the authoritative source for account provisioning, streamline the process of
+creating the mailbox account and populating GAL attributes.
+
+Assumption
+  - An external authentication mechanism (i.e. preauth or SSO) has been 
+    configured on the zimbra domain.
+  - User A exists in the external source directory for auto provisioning
+
+
+==========================
+2. Auto Provisioning modes
+==========================
+(1) LAZY mode
+Zimbra provisions the mailbox for User A on first login.
+
+(2) EAGER mode
+Zimbra provisions the mailbox for User A automatically in a background thread.
+
+(3) MANUAL mode
+Helpdesk Person searches the external source directory for accounts to be auto provisioned,
+then select the account(s) to auto provision.
+
+In all three modes, account information (account name, first name, last name, etc) is 
+populated based on attribute mapping configuration from the external source directory to 
+Zimbra directory.
+
+Multiple modes can co-exist.
+
+
+
+============================
+3. Auto provision attributes
+============================
+All auto provisioning are on domain level.
 
 ------------------------------
 zimbraAutoProvMode
@@ -358,3 +395,6 @@ zimbraAutoProvPollingInterval
 examples:
 - set polling interval for EAGER auto provision to 15 minutes
 $ zmprov ms server.com zimbraAutoProvPollingInterval 15m
+
+
+
