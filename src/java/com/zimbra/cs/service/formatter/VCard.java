@@ -625,6 +625,18 @@ public class VCard {
                 }
             }
         }
+        
+        if (vcattrs == null || vcattrs.contains("KEY")) {
+            String smimeCert = fields.get(ContactConstants.A_userSMIMECertificate);
+            if (smimeCert == null) {
+                smimeCert = fields.get(ContactConstants.A_userCertificate);
+            }
+            if (smimeCert != null) {
+                smimeCert = smimeCert.trim().replace("\r\n", "\r\n ");
+                String field = "KEY;ENCODING=B";
+                sb.append(field).append(":\r\n ").append(smimeCert).append("\r\n");
+            }
+        }
 
         if (vcattrs == null || vcattrs.contains("CATEGORIES")) {
             String[] tags = con.getTags();
