@@ -29,6 +29,9 @@ import com.zimbra.soap.type.AccountSelector;
    <password>...</password>
    [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
+ * @zm-api-command-auth-required false - This command can be sent before authenticating. The command handler will
+ * internally make sure the old password provided matches the current password of the account.
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Change Password
 */
 @XmlRootElement(name=AccountConstants.E_CHANGE_PASSWORD_REQUEST)

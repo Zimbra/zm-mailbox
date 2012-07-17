@@ -23,6 +23,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.SetCalendarItemInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Add a task invite
  */
 @XmlAccessorType(XmlAccessType.NONE)

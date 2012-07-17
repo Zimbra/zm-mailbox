@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description This is the API to create a new Task
  */
 @XmlAccessorType(XmlAccessType.NONE)

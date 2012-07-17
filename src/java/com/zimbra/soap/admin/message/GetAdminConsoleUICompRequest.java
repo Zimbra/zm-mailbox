@@ -25,6 +25,8 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns the union of the <b>zimbraAdminConsoleUIComponents</b> values on the
  * specified account/dl entry and that on all admin groups the entry belongs to.
  * <br />

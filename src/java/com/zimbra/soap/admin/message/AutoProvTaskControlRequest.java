@@ -22,6 +22,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Under normal situations, the EAGER auto provisioning 
  * task(thread) should be started/stopped automatically by the server when appropriate.  
  * The task should be running when zimbraAutoProvPollingInterval is not 0 and 

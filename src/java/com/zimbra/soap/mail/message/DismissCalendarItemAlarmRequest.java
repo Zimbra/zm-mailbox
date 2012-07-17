@@ -34,6 +34,8 @@ import com.zimbra.soap.mail.type.DismissAppointmentAlarm;
 import com.zimbra.soap.mail.type.DismissTaskAlarm;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Dismiss calendar item alarm
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -28,6 +28,8 @@ import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Attempts to delete a search task.
  * <br />
  * Returns empty <b>&lt;DeleteXMbxSearchResponse/></b> element on success or Fault document on error.

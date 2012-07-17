@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Directly set status of an entire task.
  * <br />
  * See SetAppointment for more information.

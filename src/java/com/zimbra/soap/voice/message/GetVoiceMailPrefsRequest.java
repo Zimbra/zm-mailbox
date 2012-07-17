@@ -27,6 +27,8 @@ import com.zimbra.soap.voice.type.PhoneSpec;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get voice mail preferences.
  * <br />
  * If no <b>&lt;pref></b> elements are provided, all known prefs for the requested phone are returned in the response.

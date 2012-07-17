@@ -24,6 +24,8 @@ import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.UCServiceSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Count number of objects.
  * <br />
  * Returns number of objects of requested type.

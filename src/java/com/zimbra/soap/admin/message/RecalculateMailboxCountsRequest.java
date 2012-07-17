@@ -21,6 +21,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Recalculate Mailbox counts.
  * <br />
  * Forces immediate recalculation of total mailbox quota usage and all folder unread and size counts

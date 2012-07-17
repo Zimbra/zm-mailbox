@@ -25,6 +25,8 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.CosSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get Class Of Service (COS)
  */
 @XmlAccessorType(XmlAccessType.NONE)

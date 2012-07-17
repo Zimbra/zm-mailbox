@@ -28,6 +28,8 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required false - can't require auth on auth request
+ * @zm-api-command-admin-auth-required false - can't require auth on auth request
  * @zm-api-command-description Authenticate for administration
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.Name;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns the info on blob and index volumes of a mailbox.  Only the volumes that have
  * data for the mailbox are returned.  The rootpath attribute is the root of the mailbox data, rather than the root
  * of the volume.  Also returns the current sync token of the mailbox.

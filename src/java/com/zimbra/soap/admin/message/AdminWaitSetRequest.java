@@ -36,6 +36,8 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description <b>AdminWaitSetRequest</b> optionally modifies the wait set and checks for any notifications.
  * If block=1 and there are no notifications, then this API will BLOCK until there is data.
  * <p>

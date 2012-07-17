@@ -27,6 +27,8 @@ import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Search voice messages and call logs
  */
 @XmlAccessorType(XmlAccessType.NONE)

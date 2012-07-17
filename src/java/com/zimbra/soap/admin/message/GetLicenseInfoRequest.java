@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required false
+ * @zm-api-command-admin-auth-required false - Always provide license information
  * @zm-api-command-description Get License information
  */
 @XmlRootElement(name=AdminConstants.E_GET_LICENSE_INFO_REQUEST)

@@ -35,6 +35,8 @@ import com.zimbra.soap.admin.type.CommCert;
 import com.zimbra.soap.admin.type.CSRSubject;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Ask server to install the certificates
  * @zm-api-command-network-edition
  */

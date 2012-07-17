@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Appointment. Returns the metadata info for each Invite that makes up this appointment.
  * <br />
  * The content (original email) for each invite is stored within the Appointment itself in a big multipart/digest

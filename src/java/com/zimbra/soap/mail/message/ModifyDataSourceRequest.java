@@ -34,6 +34,8 @@ import com.zimbra.soap.mail.type.MailYabDataSource;
 import com.zimbra.soap.type.DataSource;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Changes attributes of the given data source.  Only the attributes specified in the
  * request are modified.  If the username, host or leaveOnServer settings are modified, the server wipes out saved
  * state for this data source.  As a result, any previously downloaded messages that are still stored on the remote

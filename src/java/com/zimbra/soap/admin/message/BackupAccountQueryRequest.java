@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.BackupAccountQuerySpec;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Backup Account query
  * <br />
  * For each account &lt;backup> is listed from the most recent to earlier ones.

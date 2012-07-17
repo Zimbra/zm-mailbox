@@ -25,6 +25,8 @@ import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.ItemSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get the download URL of shared document
  */
 @XmlAccessorType(XmlAccessType.NONE)

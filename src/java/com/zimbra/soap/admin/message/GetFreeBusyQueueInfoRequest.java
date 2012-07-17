@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get Free/Busy provider information
  * <br />
  * If the optional element <b>&lt;provider/></b> is present in the request, the response contains the requested

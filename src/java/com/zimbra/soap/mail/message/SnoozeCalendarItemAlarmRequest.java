@@ -34,6 +34,8 @@ import com.zimbra.soap.mail.type.SnoozeAppointmentAlarm;
 import com.zimbra.soap.mail.type.SnoozeTaskAlarm;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Snooze alarm(s) for appointments or tasks
  */
 @XmlAccessorType(XmlAccessType.NONE)

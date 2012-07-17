@@ -28,6 +28,8 @@ import com.zimbra.soap.mail.type.CalTZInfo;
 import com.zimbra.soap.mail.type.DtTimeInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Used by an attendee to forward an instance or entire appointment to another user who
  * is not already an attendee.
  */

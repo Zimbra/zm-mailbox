@@ -21,6 +21,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get information about an account
  * <br />
  * Currently only 2 attrs are returned:

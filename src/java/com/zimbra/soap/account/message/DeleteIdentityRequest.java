@@ -26,6 +26,8 @@ import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Delete an Identity
  * <p>
  * must specify either <b>{name}</b> or <b>{id}</b> attribute to <b>&lt;identity></b>

@@ -26,6 +26,8 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Return all mailboxes
  * <br />
  * Returns all data from the mailbox table (in db.sql), except for the "comment" column.

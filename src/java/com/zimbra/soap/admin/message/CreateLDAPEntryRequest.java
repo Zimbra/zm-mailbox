@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
 // See ZimbraLDAPUtilsExtension/doc/soapadmin.txt
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Create an LDAP entry
  */
 @XmlAccessorType(XmlAccessType.NONE)

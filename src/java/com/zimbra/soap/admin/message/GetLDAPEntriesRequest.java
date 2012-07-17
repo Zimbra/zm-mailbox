@@ -27,6 +27,8 @@ import com.zimbra.common.soap.LDAPUtilsConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get LDAP entries
  * <br />
  * GetLDAPEntriesRequest fetches ldap entry (or entries) by a search-base (<b>{ldap-search-base}</b>) and a search

@@ -27,6 +27,8 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.type.Id;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Changes attributes of the given data source.
  * Only the attributes specified in the request are modified. To change the name, specify 
  * <b>"zimbraDataSourceName"</b> as an attribute.

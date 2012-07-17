@@ -26,6 +26,8 @@ import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.type.Id;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Check device status
  */
 @XmlAccessorType(XmlAccessType.NONE)

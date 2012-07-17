@@ -20,6 +20,8 @@ import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Resume sync with a device or all devices attached to an account if currently suspended.
  * This will cause a policy reset, but will not reset sync data.
  */

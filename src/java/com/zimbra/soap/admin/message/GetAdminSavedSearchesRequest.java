@@ -30,6 +30,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns admin saved searches.
  * <br />
  * If no <b>&lt;search></b> is present server will return all saved searches.

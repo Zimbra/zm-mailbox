@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AddedComment;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Add a comment to the specified item.  Currently comments can only be added to documents
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011,2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,6 +29,16 @@ public class ZmApiTags {
      * Use to flag that a command is part of Network Edition.  Value doesn't matter, suggest "true" or empty
      */
     public static final String TAG_COMMAND_NETWORK_ONLY = "@zm-api-command-network-edition";
+    /**
+     * Information on whether standard Zimbra Authorization is required - true|false|maybe
+     * If the first token is "maybe", the rest explains why
+     */
+    public static final String TAG_COMMAND_AUTH_REQUIRED = "@zm-api-command-auth-required";
+    /**
+     * Information on whether Zimbra Administration Authorization is required - true|false|maybe
+     * If the first token is "maybe", the rest explains why
+     */
+    public static final String TAG_COMMAND_ADMIN_AUTH_REQUIRED = "@zm-api-command-admin-auth-required";
     /**
      * Use to flag a command that is or will be deprecated.  Set to text explaining the nature of the
      * deprecation

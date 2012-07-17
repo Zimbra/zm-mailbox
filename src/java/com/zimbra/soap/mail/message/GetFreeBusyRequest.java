@@ -32,6 +32,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.FreeBusyUserSpec;
 
 /**
+ * @zm-api-command-auth-required false - Freebusy information considered public if available
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Free/Busy information.
  * <br />
  * For accounts listed using uid,id or name attributes, f/b search will be done for all calendar folders.

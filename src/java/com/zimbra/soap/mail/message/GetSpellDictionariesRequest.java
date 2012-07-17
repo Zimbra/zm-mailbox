@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns the list of dictionaries that can be used for spell checking.
  */
 @XmlRootElement(name=MailConstants.E_GET_SPELL_DICTIONARIES_REQUEST)

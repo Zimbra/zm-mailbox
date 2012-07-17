@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Purge the calendar cache for an account
  * <br />
  * <b>Access</b>: domain admin sufficient

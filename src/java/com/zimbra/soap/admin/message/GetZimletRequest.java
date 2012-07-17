@@ -25,6 +25,8 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.NamedElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get Zimlet
  */
 @XmlAccessorType(XmlAccessType.NONE)

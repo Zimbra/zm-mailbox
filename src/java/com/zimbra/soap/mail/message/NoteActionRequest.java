@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.NoteActionSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Perform an action on an note
  */
 @XmlAccessorType(XmlAccessType.NONE)

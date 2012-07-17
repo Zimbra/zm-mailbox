@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get a certificate signing request (CSR)
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get a count of all the mail queues by counting the number of files in the queue
  * directories.  Note that the admin server waits for queue counting to complete before responding - client should
  * invoke requests for different servers in parallel.

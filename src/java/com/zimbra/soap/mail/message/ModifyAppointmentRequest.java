@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalItemRequestBase;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify an appointment, or if the appointment is a recurrence then modify the "default"
  * invites. That is, all instances that do not have exceptions.
  * <br />

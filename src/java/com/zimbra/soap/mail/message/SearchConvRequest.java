@@ -26,6 +26,8 @@ import com.zimbra.soap.mail.type.MailSearchParams;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Search a conversation
  */
 @XmlAccessorType(XmlAccessType.NONE)

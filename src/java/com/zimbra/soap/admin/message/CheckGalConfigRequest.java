@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.LimitedQuery;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Check Global Addressbook Configuration
  * <br />
  * <pre>

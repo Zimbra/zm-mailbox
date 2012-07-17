@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.XMPPComponentSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Create an XMPP component
  */
 @XmlAccessorType(XmlAccessType.NONE)

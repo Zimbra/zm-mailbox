@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Ajax client can use this request to ask the server for help in generating a proper,
  * globally unique UUID.
  */

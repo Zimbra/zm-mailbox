@@ -27,6 +27,8 @@ import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.CheckedRight;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Check if a principal has the specified right on target.
  * <br />
  * A successful return means the principal specified by the <b>&lt;grantee></b> is allowed for the specified right on

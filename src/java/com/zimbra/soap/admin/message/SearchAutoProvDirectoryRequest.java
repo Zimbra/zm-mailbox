@@ -28,6 +28,8 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Search Auto Prov Directory
  * <br />
  * Only one of <b>&lt;name></b> or <b>&lt;query></b> can be provided.  If neither is provided, the configured search

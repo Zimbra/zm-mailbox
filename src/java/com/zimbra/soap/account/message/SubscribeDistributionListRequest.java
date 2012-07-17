@@ -25,6 +25,8 @@ import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.type.DistributionListSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Subscribe to or unsubscribe from a distribution list
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ExchangeAuthSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Check Exchange Authorisation
  */
 @XmlAccessorType(XmlAccessType.NONE)

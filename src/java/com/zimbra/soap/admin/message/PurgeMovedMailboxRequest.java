@@ -27,6 +27,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Purge moved mailbox.  Following a successful mailbox move to a new server, the
  * mailbox on the old server remains.  This allows manually checking the new mailbox to confirm the move worked.
  * Afterwards, <b>PurgeMovedMailboxRequest</b> should be used to remove the old mailbox and reclaim the space.

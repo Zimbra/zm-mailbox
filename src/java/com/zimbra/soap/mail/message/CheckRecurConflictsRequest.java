@@ -40,6 +40,8 @@ import com.zimbra.soap.mail.type.FreeBusyUserSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Check conflicts in recurrence against list of users.
  * <br />
  * Set <b>all</b> attribute to get all instances, even those without conflicts.  By default only instances that have

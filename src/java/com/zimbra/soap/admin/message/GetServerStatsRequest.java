@@ -28,6 +28,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.Stat;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns server monitoring stats.  These are the same stats that are logged to
  * mailboxd.csv.  If no <b>&lt;stat></b> element is specified, all server stats are returned.
  * If the stat name is invalid, returns a SOAP fault.

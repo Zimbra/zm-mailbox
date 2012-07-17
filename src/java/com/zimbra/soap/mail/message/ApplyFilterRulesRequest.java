@@ -33,6 +33,8 @@ import com.zimbra.soap.mail.type.IdsAttr;
 import com.zimbra.soap.type.NamedElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Applies one or more filter rules to messages specified by a comma-separated ID list,
  * or returned by a search query.  One or the other can be specified, but not both.  Returns the list of ids of
  * existing messages that were affected.

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description A request that does nothing and always returns nothing. Used to keep a session alive,
  * and return any pending notifications.
  * <br />

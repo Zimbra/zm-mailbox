@@ -30,6 +30,8 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Folder
  * <br />
  * A {base-folder-id}, a {base-folder-uuid} or a {fully-qualified-path} can optionally be specified in the folder

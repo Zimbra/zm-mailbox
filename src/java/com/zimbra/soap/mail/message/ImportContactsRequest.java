@@ -27,6 +27,8 @@ import com.zimbra.soap.mail.type.Content;
 
 // TODO: should have an option on import that matches email addresses to existing contacts, and updates/ignores them.
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Import contacts
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -20,6 +20,8 @@ import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Remove a device or remove all devices attached to an account. This will not cause a
  * reset of sync data, but will cause a reset of policies on the next sync.
  */

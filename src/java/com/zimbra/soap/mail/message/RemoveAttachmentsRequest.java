@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MsgPartIds;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Remove attachments from a message body
  * <br />
  * <b>NOTE</b> that this operation is effectively a create and a delete, and thus the message's item ID will change

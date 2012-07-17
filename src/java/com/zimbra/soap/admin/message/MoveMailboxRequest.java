@@ -27,6 +27,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Move a mailbox
  * <br />
  * Note: This request should be sent to the move destination server, rather than the source server.

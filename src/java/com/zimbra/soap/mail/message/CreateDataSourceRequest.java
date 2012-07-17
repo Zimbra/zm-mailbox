@@ -34,6 +34,8 @@ import com.zimbra.soap.mail.type.MailYabDataSource;
 import com.zimbra.soap.type.DataSource;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Creates a data source that imports mail items into the specified folder, for example
  * via the POP3 or IMAP protocols.  Only one data source is allowed per request.
  */

@@ -32,6 +32,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.OpValue;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify the anti-spam WhiteList and BlackList addresses
  * <br />
  * Note: If no <b>&lt;addr></b> is present in a list, it means to remove all addresses in the list.

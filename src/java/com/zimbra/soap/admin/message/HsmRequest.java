@@ -21,6 +21,8 @@ import com.zimbra.common.soap.HsmConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Starts the HSM process, which moves blobs for older messages to the current secondary
  * message volume.  This request is asynchronous.  The progress of the last HSM process can be monitored with
  * <b>GetHsmStatusRequest</b>.  The HSM policy is read from the zimbraHsmPolicy LDAP attribute.

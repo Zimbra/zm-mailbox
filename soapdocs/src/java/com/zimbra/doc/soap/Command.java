@@ -39,6 +39,8 @@ public class Command implements java.io.Serializable {
     private String description = null;
     private Boolean networkEdition = false;
     private String deprecation = null;
+    private String authRequiredDescription;
+    private String adminAuthRequiredDescription;
 
     Command(Service service, String name, String namespace) {
         this.service = service;
@@ -175,6 +177,22 @@ public class Command implements java.io.Serializable {
 
     public void setNetworkEdition(boolean networkEdition) { this.networkEdition = networkEdition; }
     public Boolean isNetworkEdition() { return networkEdition; }
+
+    public String getAuthRequiredDescription() {
+        return authRequiredDescription == null ? "UNKNOWN" : authRequiredDescription;
+    }
+
+    public void setAuthRequiredDescription(String authRequiredDescription) {
+        this.authRequiredDescription = authRequiredDescription;
+    }
+
+    public String getAdminAuthRequiredDescription() {
+        return adminAuthRequiredDescription == null ? "UNKNOWN" : adminAuthRequiredDescription;
+    }
+
+    public void setAdminAuthRequiredDescription( String adminAuthRequiredDescription) {
+        this.adminAuthRequiredDescription = adminAuthRequiredDescription;
+    }
 
     /**
      * Dumps the contents to <code>System.out.println</code>

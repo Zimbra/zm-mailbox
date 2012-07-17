@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.UCServiceSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Generate a new Cisco Presence server session ID and persist 
  * the newly generated session id in zimbraUCCiscoPresenceSessionId attribute for the 
  * specified UC service.

@@ -22,6 +22,8 @@ import com.zimbra.soap.admin.type.UCServiceSelector;
 import com.zimbra.soap.type.AttributeSelectorImpl;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get UC Service
  */
 @XmlRootElement(name=AdminConstants.E_GET_UC_SERVICE_REQUEST)

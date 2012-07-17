@@ -26,6 +26,8 @@ import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.mail.type.DocumentActionSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Document Action
  */
 @XmlAccessorType(XmlAccessType.NONE)

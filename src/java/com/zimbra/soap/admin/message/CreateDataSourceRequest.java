@@ -26,6 +26,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DataSourceSpecifier;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Creates a data source that imports mail items into the specified folder.
  * <br />
  * Notes:

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxIdAndItems;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Exports the database data for the given items with SELECT INTO OUTFILE and deletes the
  * items from the mailbox.  Exported filenames follow the pattern {prefix}{table_name}.txt.  The files are written
  * to <b>sqlExportDir</b>.  When sqlExportDir is not specified, data is not exported.  Export is only supported for

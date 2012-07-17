@@ -27,6 +27,8 @@ import com.zimbra.soap.type.DistributionListSelector;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get a distribution list, optionally with ownership information an granted rights.
  * <br />
  * Notes:

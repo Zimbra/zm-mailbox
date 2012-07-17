@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Remove Distribution List Member
  * <br />
  * Unlike add, remove of a non-existent member causes an exception and no modification to the list.

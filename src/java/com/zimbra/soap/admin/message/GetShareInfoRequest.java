@@ -25,6 +25,8 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GranteeChooser;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Iterate through all folders of the owner's mailbox and return shares that match
  * grantees specified by the <b>&lt;grantee></b> specifier.
  * <br />

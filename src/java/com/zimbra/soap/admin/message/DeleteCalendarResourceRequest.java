@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Deletes the calendar resource with the given id.
  * <br />
  * Note: this request is by default proxied to the account's home server

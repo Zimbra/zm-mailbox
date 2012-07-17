@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.BackupSpec;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Do a backup
  * <br />
  * &lt;account> elements are required when method=full and server is running in standard backup mode.

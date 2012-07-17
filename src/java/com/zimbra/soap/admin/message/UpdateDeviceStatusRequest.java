@@ -28,6 +28,8 @@ import com.zimbra.soap.mail.type.IdStatus;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Update device status
  */
 @XmlAccessorType(XmlAccessType.NONE)

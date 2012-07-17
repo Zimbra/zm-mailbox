@@ -29,6 +29,8 @@ import com.zimbra.soap.type.ZmBoolean;
 
 // TODO: indicate whether to save in SentMail (or some other folder)
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Send message
  * <ul>
  * <li> Supports (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification "type" on

@@ -36,6 +36,8 @@ import com.zimbra.soap.mail.type.TargetSpec;
  */
 /**
  * @zm-api-command-deprecation-info Note: to be deprecated in Zimbra 9.  Use zimbraAccount CheckRights instead.
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Check if the authed user has the specified right(s) on a target.
  * <br />
  * If the specified target cannot be found:

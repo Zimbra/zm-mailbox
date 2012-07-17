@@ -25,6 +25,8 @@ import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get notifications
  */
 @XmlAccessorType(XmlAccessType.NONE)

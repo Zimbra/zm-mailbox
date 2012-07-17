@@ -21,6 +21,8 @@ import com.zimbra.common.soap.AdminConstants;
 
 // Note: soap-admin.txt implies there is an attrs attribute but the handler doesn't appear to get it.
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get status for Zimlets
  * <br />
  * priority is listed in the global list &lt;zimlets> ... &lt;/zimlets> only.  This is because the priority value is

@@ -27,6 +27,8 @@ import com.zimbra.soap.voice.type.StorePrincipalSpec;
 import com.zimbra.soap.voice.type.VoiceMsgActionSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Perform an action on a voice message
  * <ul>
  * <li> Modify state of voice messages </li>

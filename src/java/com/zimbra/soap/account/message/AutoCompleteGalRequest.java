@@ -27,6 +27,8 @@ import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Perform an autocomplete for a name against the Global Address List
  * <p>
  * The number of entries in the response is limited by Account/COS attribute zimbraContactAutoCompleteMaxResults with

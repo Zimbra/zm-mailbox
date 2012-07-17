@@ -26,6 +26,8 @@ import com.zimbra.soap.account.type.DistributionListAction;
 import com.zimbra.soap.type.DistributionListSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Perform an action on a Distribution List
  * <br />
  * Notes:

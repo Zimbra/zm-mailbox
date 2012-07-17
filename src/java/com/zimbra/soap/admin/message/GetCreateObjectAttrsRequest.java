@@ -27,6 +27,8 @@ import com.zimbra.soap.admin.type.TargetWithType;
 
 // see soap-right.txt
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns attributes, with defaults and constraints if any,  that can be set by the
  * authed admin when an object is created.
  * <br />

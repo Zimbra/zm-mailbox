@@ -26,6 +26,8 @@ implements Comparable<SoapApiCommand> {
     private String namespace;
     private String description;
     private String deprecationInformation;
+    private String authRequiredDescription;
+    private String adminAuthRequiredDescription;
     private boolean networkEditionOnly;
     private SoapApiElement request;
     private SoapApiElement response;
@@ -48,6 +50,8 @@ implements Comparable<SoapApiCommand> {
             deprecationInformation = null;
         }
         networkEditionOnly = cmd.isNetworkEdition();
+        authRequiredDescription = cmd.getAuthRequiredDescription();
+        adminAuthRequiredDescription = cmd.getAdminAuthRequiredDescription();
     }
 
     public String getName() { return name; }
@@ -55,6 +59,8 @@ implements Comparable<SoapApiCommand> {
     public String getDescription() { return description; }
     public String getDeprecationInformation() { return deprecationInformation; }
     public boolean isNetworkEditionOnly() { return networkEditionOnly; }
+    public String getAuthRequiredDescription() { return authRequiredDescription; }
+    public String getAdminAuthRequiredDescription() { return adminAuthRequiredDescription; }
 
     @JsonIgnore
     public String getId() {

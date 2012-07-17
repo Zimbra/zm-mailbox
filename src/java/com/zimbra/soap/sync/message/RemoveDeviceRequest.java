@@ -26,6 +26,8 @@ import com.zimbra.soap.sync.type.DeviceId;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Remove a device. This will not cause a reset of sync data, but will cause a reset of
  * policies on the next sync.
  */

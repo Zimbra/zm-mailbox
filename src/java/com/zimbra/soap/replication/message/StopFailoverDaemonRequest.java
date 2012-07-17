@@ -21,6 +21,8 @@ import com.zimbra.common.soap.ReplicationConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Stop Failover daemon on replication master
  */
 @XmlRootElement(name=ReplicationConstants.E_STOP_HA_DAEMON_REQUEST)

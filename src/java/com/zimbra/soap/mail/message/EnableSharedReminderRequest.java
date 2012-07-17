@@ -26,6 +26,8 @@ import com.zimbra.soap.mail.type.SharedReminderMount;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Enable/disable reminders for shared appointments/tasks on a mountpoint
  */
 @XmlAccessorType(XmlAccessType.NONE)

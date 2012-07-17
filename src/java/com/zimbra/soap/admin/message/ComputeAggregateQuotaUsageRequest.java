@@ -20,6 +20,8 @@ import com.zimbra.common.soap.AdminConstants;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Computes the aggregate quota usage for all domains in the system.
  * <br />
  * The request handler issues <b>GetAggregateQuotaUsageOnServerRequest</b> to all mailbox servers and computes the

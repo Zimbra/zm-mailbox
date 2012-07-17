@@ -29,6 +29,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Runs the server-side unit test suite.
  * <br />
  * If <b>&lt;test></b>'s are specified, then run the requested tests (instead of the standard test suite).

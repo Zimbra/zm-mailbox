@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Set current volume.
  * <br />
  * Notes: Each SetCurrentVolumeRequest can set only one current volume type.

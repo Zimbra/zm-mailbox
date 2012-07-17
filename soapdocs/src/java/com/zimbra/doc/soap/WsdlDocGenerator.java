@@ -143,6 +143,8 @@ public class WsdlDocGenerator {
                 cmd.setDescription(doc.getCommandDescription());
                 cmd.setNetworkEdition(doc.isNetworkEdition());
                 cmd.setDeprecation(doc.getDeprecationDescription());
+                cmd.setAuthRequiredDescription(doc.getAuthRequiredDescription());
+                cmd.setAdminAuthRequiredDescription(doc.getAdminAuthRequiredDescription());
             } else {
                 Class<?> respKlass = cmd.getResponse().getJaxbClass();
                 if (respKlass  == null) {

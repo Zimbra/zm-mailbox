@@ -28,6 +28,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Pref;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get preferences for the authenticated account
  * <br />
  * If no <b>&lt;pref></b> elements are provided, all known prefs are returned in the response.

@@ -25,6 +25,8 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Search directory
  * <br />
  * <b>Access</b>: domain admin sufficient (though a domain admin can't specify "domains" as a type)

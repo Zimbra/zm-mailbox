@@ -32,6 +32,8 @@ import com.zimbra.soap.admin.type.IntIdAttr;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Checks for items that have no blob, blobs that have no item, and items that have an
  * incorrect blob size stored in their metadata.  If no volumes are specified, all volumes are checked.  If no
  * mailboxes are specified, all mailboxes are checked.  Blob sizes are checked by default.  Set checkSize to 0 (false)

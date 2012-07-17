@@ -21,6 +21,8 @@ import com.zimbra.common.soap.BackupConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Rollover Redo Log
  */
 @XmlRootElement(name=BackupConstants.E_ROLLOVER_REDOLOG_REQUEST)

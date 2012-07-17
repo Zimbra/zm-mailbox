@@ -39,6 +39,8 @@ import com.zimbra.soap.mail.type.UnknownDataSourceNameOrId;
 import com.zimbra.soap.mail.type.YabDataSourceNameOrId;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Deletes the given data sources.  The name or id of each data source must be specified.
  */
 @XmlAccessorType(XmlAccessType.NONE)

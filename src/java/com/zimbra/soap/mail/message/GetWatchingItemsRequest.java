@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.OctopusXmlConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns a list of items the user is currently watching.
  */
 @XmlRootElement(name=OctopusXmlConstants.E_GET_WATCHING_ITEMS_REQUEST)

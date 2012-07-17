@@ -24,6 +24,8 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get attributes related to an account
  * <br />
  * <b>{request-attrs}</b> - comma-seperated list of attrs to return

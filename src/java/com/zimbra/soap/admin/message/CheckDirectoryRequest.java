@@ -31,6 +31,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CheckDirSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Check existence of one or more directories and optionally create them.
  */
 @XmlAccessorType(XmlAccessType.NONE)

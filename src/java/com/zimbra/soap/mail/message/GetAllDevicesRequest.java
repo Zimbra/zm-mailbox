@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.OctopusXmlConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get all devices
  */
 @XmlRootElement(name=OctopusXmlConstants.E_GET_ALL_DEVICES_REQUEST)

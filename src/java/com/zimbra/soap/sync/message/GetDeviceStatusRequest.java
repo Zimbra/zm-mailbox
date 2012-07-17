@@ -21,6 +21,8 @@ import com.zimbra.common.soap.SyncConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get status for devices
  */
 @XmlRootElement(name=SyncConstants.E_GET_DEVICE_STATUS_REQUEST)

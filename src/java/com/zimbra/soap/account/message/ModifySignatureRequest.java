@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Signature;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Change attributes of the given signature.
  * Only the attributes specified in the request are modified.
  * <br />

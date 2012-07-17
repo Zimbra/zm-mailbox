@@ -31,6 +31,8 @@ import com.zimbra.soap.account.type.Prop;
           ...
           <prop zimlet="{zimlet-name}" name="{name}">{value}</prop>
       </ModifyPropertiesRequest>
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify properties related to zimlets
  */
 @XmlRootElement(name=AccountConstants.E_MODIFY_PROPERTIES_REQUEST)

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.LDAPUtilsConstants;
 
 // See ZimbraLDAPUtilsExtension/doc/soapadmin.txt
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Delete an LDAP entry
  */
 @XmlAccessorType(XmlAccessType.NONE)

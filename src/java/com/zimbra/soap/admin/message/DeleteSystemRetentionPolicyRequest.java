@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.mail.type.Policy;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Delete a system retention policy.
  */
 @XmlAccessorType(XmlAccessType.NONE)

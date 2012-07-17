@@ -24,9 +24,12 @@ import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required false
+ * @zm-api-command-admin-auth-required false -
+ * Only returns attributes that are pertinent to domain settings for cases when the user is not authenticated
  * @zm-api-command-description Get Domain information
  * <br />
- * This call does <b>not</b> require an auth token.  It returuns attributes that are pertinent to domain settings
+ * This call does <b>not</b> require an auth token.  It returns attributes that are pertinent to domain settings
  * for cases when the user is not authenticated.  For example, URL to direct the user to upon logging out or
  * when auth token is expired.
  * <br />

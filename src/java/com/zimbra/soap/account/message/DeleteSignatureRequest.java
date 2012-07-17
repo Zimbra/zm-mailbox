@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.NameId;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Delete a signature
  * <p>
  * must specify either <b>{name}</b> or <b>{id}</b> attribute to <b>&lt;signature></b>

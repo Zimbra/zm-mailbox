@@ -27,6 +27,8 @@ import com.zimbra.soap.admin.type.CalendarResourceSelector;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get a calendar resource
  * <b>Access</b>: domain admin sufficient
  */

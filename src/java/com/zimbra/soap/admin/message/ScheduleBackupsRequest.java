@@ -27,6 +27,8 @@ import com.zimbra.soap.admin.type.Name;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Schedule backups
  */
 @XmlAccessorType(XmlAccessType.NONE)

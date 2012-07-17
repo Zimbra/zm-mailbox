@@ -27,6 +27,8 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.GalMode;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Create Global Address List (GAL) Synchronisation account
  * <br />
  * Notes:

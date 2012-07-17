@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required false - Working hours information considered public if available
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description User's working hours within the given time range are expressed in a similar format
  * to the format used for GetFreeBusy.
  * <br />

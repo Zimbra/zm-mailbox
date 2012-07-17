@@ -27,6 +27,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Used to request a new auth token that is valid for the specified account.
  * The id of the auth token will be the id of the target account, and the requesting admin's id will be stored in
  * the auth token for auditing purposes.

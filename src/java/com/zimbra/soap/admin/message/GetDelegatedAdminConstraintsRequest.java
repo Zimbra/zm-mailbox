@@ -32,6 +32,8 @@ import com.zimbra.soap.type.TargetType;
 import com.zimbra.soap.type.NamedElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get constraints (zimbraConstraint) for delegated admin on global config or a COS
  * <br />
  * none or several attributes can be specified for which constraints are to be returned.

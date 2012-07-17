@@ -27,6 +27,8 @@ import com.zimbra.soap.mail.type.SaveDraftMsg;
 // Can we have more than one From: address?
 // TODO: indicate folder to save in (defaults to Drafts)
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Save draft
  * <ul> 
  * <li> Only allowed one top-level <b>&lt;mp></b> but can nest <b>&lt;mp></b>s within if multipart/* on reply/forward.

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ReindexMailboxInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description ReIndex
  * <br />
  * <b>Access</b>: domain admin sufficient

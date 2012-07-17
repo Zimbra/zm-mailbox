@@ -34,6 +34,8 @@ import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns <b>effective ADMIN</b> rights the authenticated admin has on the specified
  * target entry.
  * <br />

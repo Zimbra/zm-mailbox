@@ -29,6 +29,8 @@ import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns groups the user is either a member or an owner of.
  * <br />
  * Notes: 

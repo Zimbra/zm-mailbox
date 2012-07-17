@@ -26,6 +26,8 @@ import com.zimbra.soap.voice.type.ResetPhoneVoiceFeaturesSpec;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Reset call features of a phone.
  * <br />
  * If no <b>&lt;{call-feature}></b> are provided, all subscribed call features for the phone are reset to the default

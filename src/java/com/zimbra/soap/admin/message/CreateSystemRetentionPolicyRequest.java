@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.mail.type.Policy;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Create a system retention policy.
  * <br />
  * The system retention policy SOAP APIs allow the administrator to edit named system retention policies that users

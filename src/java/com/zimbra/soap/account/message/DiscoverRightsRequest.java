@@ -24,6 +24,8 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Return all targets of the specified rights applicable to the requested account.
  * <p>
  * Notes:

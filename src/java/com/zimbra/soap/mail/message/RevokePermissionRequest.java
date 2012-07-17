@@ -36,6 +36,8 @@ import com.zimbra.soap.mail.type.AccountACEinfo;
 
 /**
  * @zm-api-command-deprecation-info Note: to be deprecated in Zimbra 9.  Use zimbraAccount RevokeRights instead.
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Revoke account level permissions
  * <br />
  * RevokePermissionResponse returns permissions that are successfully revoked.

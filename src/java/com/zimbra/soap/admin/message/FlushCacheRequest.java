@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CacheSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Flush memory cache for specified LDAP or directory scan type/entries
  * <br />
  * Directory scan caches(source of data is on local disk of the server): <b>skin|locale</b>

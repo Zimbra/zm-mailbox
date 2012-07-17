@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required false
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Ping
  */
 @XmlAccessorType(XmlAccessType.NONE)

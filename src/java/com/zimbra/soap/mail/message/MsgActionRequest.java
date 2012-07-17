@@ -26,6 +26,8 @@ import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Perform an action on a message
  * <br />
  * For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}", tn="{tag-names}",

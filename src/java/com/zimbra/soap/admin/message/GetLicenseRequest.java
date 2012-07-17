@@ -21,6 +21,8 @@ import com.zimbra.common.soap.AdminConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get License
  */
 @XmlRootElement(name=AdminConstants.E_GET_LICENSE_REQUEST)

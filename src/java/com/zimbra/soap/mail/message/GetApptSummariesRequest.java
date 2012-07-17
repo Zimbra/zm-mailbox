@@ -26,6 +26,8 @@ import com.zimbra.common.soap.MailConstants;
 /**
  * @zm-api-command-deprecation-info Note: This API is deprecated Use <b>&lt;SearchRequest></b> with the
  * <b>calExpandInstStart</b> and <b>calExpandInstEnd</b> parameters
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get appointment summaries
  */
 @XmlAccessorType(XmlAccessType.NONE)

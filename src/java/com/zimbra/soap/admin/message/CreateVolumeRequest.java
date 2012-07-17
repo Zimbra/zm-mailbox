@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Create a volume
  */
 @XmlAccessorType(XmlAccessType.NONE)

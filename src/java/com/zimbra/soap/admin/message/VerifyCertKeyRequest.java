@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.CertMgrConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Verify Certificate Key
  */
 @XmlAccessorType(XmlAccessType.NONE)

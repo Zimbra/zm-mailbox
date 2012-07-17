@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.CheckRightsTargetSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Check if the authed user has the specified right(s) on a target.
  */
 @XmlRootElement(name=AccountConstants.E_CHECK_RIGHTS_REQUEST)

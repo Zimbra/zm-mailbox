@@ -26,6 +26,8 @@ import com.zimbra.soap.mail.type.ConversationSpec;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Conversation
  * <br />
  * GetConvRequest gets information about the 1 conversation named by id's value.

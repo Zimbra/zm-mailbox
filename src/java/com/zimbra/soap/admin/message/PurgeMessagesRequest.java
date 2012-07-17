@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Purges aged messages out of trash, spam, and entire mailbox
  * <br />
  * (if <b>&lt;mbox></b> element is omitted, purges all mailboxes on server)

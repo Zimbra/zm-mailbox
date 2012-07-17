@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Delete a mailbox
  * <br />
  * The request includes the account ID (uuid) of the target mailbox on success, the response includes the mailbox

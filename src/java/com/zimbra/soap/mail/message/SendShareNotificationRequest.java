@@ -36,6 +36,8 @@ import com.zimbra.soap.mail.type.EmailAddrInfo;
 import com.zimbra.soap.type.Id;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Send share notification
  * <br />
  * The client can list the recipient email addresses for the share, along with the itemId of the item being shared.

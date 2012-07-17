@@ -21,6 +21,8 @@ import com.zimbra.common.soap.ReplicationConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Tell slave host to failover and become master
  */
 @XmlRootElement(name=ReplicationConstants.E_BECOME_MASTER_REQUEST)

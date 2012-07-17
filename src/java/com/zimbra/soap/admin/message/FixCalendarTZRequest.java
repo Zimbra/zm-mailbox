@@ -35,6 +35,8 @@ import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Fix timezone definitions in appointments and tasks to reflect changes in daylight
  * savings time rules in various timezones.
  */

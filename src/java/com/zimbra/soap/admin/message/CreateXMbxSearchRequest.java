@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.AdminKeyValuePairs;
 //       This is not used - the attributes are direct children of <CreateXMbxSearchRequest>
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Creates a search task
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -38,19 +38,19 @@ function windowTitle()
 <font SIZE="-1">Namespace: "${command.namespace}"</font>
 <br>
 ${command.name} SOAP Command</h2>
-<#if command.hasDeprecationDescription()>
-<p>
-<b>${command.deprecation}</b>
-</p>
-</#if>
-<#if command.isNetworkEdition()>
-<p>
-This is a <b>Network edition only</b> API
-</p>
-</#if>
 <p>
 ${command.description}
 </p>
+<table cellspacing="0" cellpadding="5" border="1">
+<#if command.isNetworkEdition()>
+    <tr> <td> Network edition only API </td> <td> <b>TRUE</b> </td> </tr>
+</#if>
+    <tr> <td> Authorization token required </td> <td> <b>${command.authRequiredDescription}</b> </td> </tr>
+    <tr> <td> Admin Authorization token required </td> <td> <b>${command.adminAuthRequiredDescription}</b> </td> </tr>
+<#if command.hasDeprecationDescription()>
+    <tr> <td> Deprecation information </td> <td> <b>${command.deprecation}</b> </td> </tr>
+</#if>
+</table>
 <h2><a name="request">${command.requestName}</a></h2>
 <#if command.request.description != "">
 <p>

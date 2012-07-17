@@ -37,6 +37,8 @@ import com.zimbra.soap.admin.type.Attr;
   * Seems to be incorrect - the API has room for a password and can login using ZWC using that password.
   */
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Create a calendar resource
  * <br />
  * Notes:

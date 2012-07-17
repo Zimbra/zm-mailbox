@@ -28,6 +28,8 @@ import com.zimbra.soap.account.type.InfoSection;
 
 /**
  * <GetInfoRequest [sections="mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children"]/>
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get information about an account.
  * @zm-api-request-description By default, GetInfo returns all data; to limit the returned data, specify only the
  *     sections you want in the "sections" attr.

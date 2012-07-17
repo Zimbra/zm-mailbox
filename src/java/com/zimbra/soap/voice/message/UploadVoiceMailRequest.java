@@ -26,6 +26,8 @@ import com.zimbra.soap.voice.type.StorePrincipalSpec;
 import com.zimbra.soap.voice.type.VoiceMsgUploadSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Retrieve the voice mail body from the gateway and upload(save) it as an attachment on
  * the server.
  */

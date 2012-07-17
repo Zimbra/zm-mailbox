@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Signature;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Create a signature.
  * <p>
  * If an id is provided it will be honored as the id for the signature.

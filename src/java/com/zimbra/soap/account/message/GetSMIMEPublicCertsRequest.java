@@ -32,6 +32,8 @@ import com.zimbra.soap.account.type.SMIMEPublicCertsStoreSpec;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get SMIME Public Certificates
  * Stores specified in <b>&lt;store></b> will be attempted in the order they appear in the comma separated list.
  * <br />

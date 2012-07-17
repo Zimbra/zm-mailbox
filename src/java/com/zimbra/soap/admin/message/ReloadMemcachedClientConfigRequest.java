@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Reloads the memcached client configuration on this server.  Memcached client layer
  * is reinitialized accordingly.  Call this command after updating the memcached server list, for example.
  */

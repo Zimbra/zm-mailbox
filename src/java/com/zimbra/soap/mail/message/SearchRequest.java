@@ -25,6 +25,8 @@ import com.zimbra.soap.mail.type.MailSearchParams;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Search
  * <br />
  * For a response, the order of the returned results represents the sorted order.  There is not a separate index

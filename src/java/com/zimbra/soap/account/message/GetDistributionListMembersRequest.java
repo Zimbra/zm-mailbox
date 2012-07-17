@@ -26,6 +26,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get the list of members of a distribution list.
  */
 @XmlAccessorType(XmlAccessType.NONE)

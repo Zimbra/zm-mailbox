@@ -26,6 +26,8 @@ import com.zimbra.soap.voice.type.ModifyVoiceMailPinSpec;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify the voice mail PIN.
  */
 @XmlAccessorType(XmlAccessType.NONE)

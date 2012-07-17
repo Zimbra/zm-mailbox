@@ -21,6 +21,8 @@ import com.zimbra.common.soap.HsmConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get Appliance HSM Filesystem information
  */
 @XmlRootElement(name=HsmConstants.E_GET_APPLIANCE_HSM_FS_REQUEST)

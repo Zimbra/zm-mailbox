@@ -19,6 +19,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description A request that does nothing and always returns nothing. Used to keep an admin
  * session alive.
  */

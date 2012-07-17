@@ -23,6 +23,11 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CookieSpec;
 
+/**
+ * @zm-api-command-auth-required false
+ * @zm-api-command-admin-auth-required false - always allow clearing
+ * @zm-api-command-description Clear cookie
+ */
 @XmlRootElement(name=AdminConstants.E_CLEAR_COOKIE_REQUEST)
 public class ClearCookieRequest {
 
@@ -31,19 +36,19 @@ public class ClearCookieRequest {
      */
     @XmlElement(name=AdminConstants.E_COOKIE)
     private List<CookieSpec> cookies = Lists.newArrayList();
-    
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ClearCookieRequest() {
-        
+
     }
-    
+
     public ClearCookieRequest(List<CookieSpec> cookies) {
         this.cookies = cookies;
     }
-    
+
     public void addCookie(CookieSpec cookie) {
         cookies.add(cookie);
     }

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Use this to close out the waitset.  Note that the server will automatically time out
  * a wait set if there is no reference to it for (default of) 20 minutes.
  * <p>

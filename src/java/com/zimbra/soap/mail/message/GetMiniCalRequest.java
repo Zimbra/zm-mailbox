@@ -34,6 +34,8 @@ import com.zimbra.soap.mail.type.CalTZInfo;
 import com.zimbra.soap.type.Id;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get information needed for Mini Calendar.
  * <br />
  * Date is returned if there is at least one appointment on that date.  The date computation uses the requesting

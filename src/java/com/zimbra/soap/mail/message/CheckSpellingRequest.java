@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Check spelling.
  * <br />
  * Suggested words are listed in decreasing order of their match score.  The "available" attribute specifies whether

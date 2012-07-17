@@ -26,6 +26,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.GalSearchType;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Search Global Address Book (GAL)
  * <br />
  * Notes: admin verison of mail equiv. Used for testing via zmprov.

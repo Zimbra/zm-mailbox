@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns all data sources defined for the given mailbox.  For each data source, every
  * attribute value is returned except password.
  * <br />

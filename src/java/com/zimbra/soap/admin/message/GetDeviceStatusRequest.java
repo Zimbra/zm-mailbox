@@ -27,6 +27,8 @@ import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get the requested device's status
  */
 @XmlRootElement(name = SyncAdminConstants.E_GET_DEVICE_STATUS_REQUEST)

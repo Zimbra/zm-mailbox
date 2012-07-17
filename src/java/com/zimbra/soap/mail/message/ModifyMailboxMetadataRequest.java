@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCustomMetadata;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify Mailbox Metadata
  * <ul>
  * <li> Modify request must contain one or more key/value pairs

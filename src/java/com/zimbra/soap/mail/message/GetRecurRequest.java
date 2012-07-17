@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Retrieve the recurrence definition of an appointment
  */
 @XmlAccessorType(XmlAccessType.NONE)

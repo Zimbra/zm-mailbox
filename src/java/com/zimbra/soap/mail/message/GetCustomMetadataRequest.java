@@ -26,6 +26,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SectionAttr;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Custom metadata
  */
 @XmlAccessorType(XmlAccessType.NONE)

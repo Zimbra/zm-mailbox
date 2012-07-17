@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Verify index
  */
 @XmlAccessorType(XmlAccessType.NONE)

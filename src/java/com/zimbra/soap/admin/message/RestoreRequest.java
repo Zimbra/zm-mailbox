@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.RestoreSpec;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Perform an action related to a Restore from backup
  * <ul>
  * <li> When includeIncrementals is 1 (true), any incremental backups from the last full backup are also restored.

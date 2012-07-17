@@ -26,6 +26,8 @@ import com.zimbra.soap.voice.type.PhoneInfo;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify voice mail preferences.
  */
 @XmlAccessorType(XmlAccessType.NONE)

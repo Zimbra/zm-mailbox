@@ -28,6 +28,8 @@ import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Create a Distribution List
  * <p>
  * Note:<br />

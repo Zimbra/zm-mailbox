@@ -26,6 +26,8 @@ import com.zimbra.soap.voice.type.ModifyVoiceFeaturesSpec;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify call features of a phone.
  * <br />
  * Refer to <b>GetVoiceFeaturesResponse</b> for attributes and child elements of each call feature

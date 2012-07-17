@@ -28,6 +28,8 @@ import com.zimbra.soap.mail.type.CalTZInfo;
 import com.zimbra.soap.mail.type.InstanceRecurIdInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Cancel appointment
  * <br />
  * NOTE: If canceling an exception, the original instance (ie the one the exception was "excepting") WILL NOT be

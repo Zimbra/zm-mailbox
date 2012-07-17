@@ -26,6 +26,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Msg;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Propose a new time/location.  Sent by meeting attendee to organizer.
  * <br />
  * The syntax is very similar to CreateAppointmentRequest.

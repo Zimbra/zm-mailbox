@@ -23,6 +23,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalItemRequestBase;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description This is the API to create a new Appointment, optionally  sending out meeting
  * Invitations to other people.
  */

@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.PrincipalSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Auto-provision an account
  */
 @XmlAccessorType(XmlAccessType.NONE)

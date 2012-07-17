@@ -20,6 +20,8 @@ import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Suspend a device or all devices attached to an account from further sync actions
  */
 @XmlAccessorType(XmlAccessType.NONE)

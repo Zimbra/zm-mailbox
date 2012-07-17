@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Count number of accounts by cos in a domain,
  * <br />
  * Note, it doesn't include any account with zimbraIsSystemResource=TRUE, nor does it include any calendar resources.

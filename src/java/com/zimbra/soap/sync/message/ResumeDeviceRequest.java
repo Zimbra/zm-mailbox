@@ -26,6 +26,8 @@ import com.zimbra.soap.sync.type.DeviceId;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Resume sync with a device if currently suspended.
  * This will cause a policy reset, but will not reset sync data.
  */

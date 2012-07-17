@@ -31,6 +31,8 @@ import com.zimbra.soap.admin.type.Names;
 import com.zimbra.soap.type.Id;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Push Free/Busy.
  * <br />
  * The request must include either <b>&lt;domain/></b> or <b>&lt;account/></b>. When <b>&lt;domain/></b> is specified

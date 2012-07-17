@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get attribute information
  * @zm-api-request-description Only one of <b>attrs</b> or <b>entryTypes</b> can be specified.
  * <br />

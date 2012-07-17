@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.RightModifierInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Revoke a right from a target that was previously granted to an individual or group
  * grantee.
  */

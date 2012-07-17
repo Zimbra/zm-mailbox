@@ -32,6 +32,8 @@ import com.zimbra.soap.admin.type.ConstraintAttr;
 import com.zimbra.soap.type.TargetType;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Modify constraint (zimbraConstraint) for delegated admin on global config or a COS
  * <br />
  * If constraints for an attribute already exists, it will be replaced by the new constraints.

@@ -46,6 +46,8 @@ import com.zimbra.soap.type.ZmBoolean;
    [<attrs>[<attr name="..."/>...]</attrs>]
    [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
+ * @zm-api-command-auth-required false - can't require auth on auth request
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Authenticate for an account
  * @zm-api-request-description when specifying an account, one of <b>&lt;password></b> or <b>&lt;preauth></b> must be
  * specified.  See preauth.txt for a discussion of preauth.<br />

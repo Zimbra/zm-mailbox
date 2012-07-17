@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.StatsSpec;
 import com.zimbra.soap.admin.type.TimeAttr;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Query to retrieve Logger statistics in ZCS
  * <br />
  * Use cases:

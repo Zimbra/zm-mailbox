@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.ProfileInfo;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Update profile
  */
 @XmlAccessorType(XmlAccessType.NONE)

@@ -26,6 +26,8 @@ import com.zimbra.soap.voice.type.PhoneVoiceFeaturesSpec;
 import com.zimbra.soap.voice.type.StorePrincipalSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Call features of a phone
  * <br />
  * Only features requested in <b>&lt;{call-feature}/></b> are returned in the response.

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Request a list of DLs that a particular DL is a member of
  */
 @XmlAccessorType(XmlAccessType.NONE)

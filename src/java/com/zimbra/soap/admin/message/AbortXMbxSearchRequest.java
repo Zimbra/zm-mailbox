@@ -28,6 +28,8 @@ import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Attempts to abort a running cross mailbox search task
  */
 @XmlAccessorType(XmlAccessType.NONE)

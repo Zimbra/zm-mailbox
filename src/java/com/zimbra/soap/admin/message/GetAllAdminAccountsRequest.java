@@ -21,6 +21,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get all Admin accounts
  */
 @XmlRootElement(name=AdminConstants.E_GET_ALL_ADMIN_ACCOUNTS_REQUEST)

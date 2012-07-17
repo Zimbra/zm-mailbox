@@ -38,6 +38,8 @@ import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description <b>SearchMultiMailboxRequest</b> is a version of the standard <b>&lt;SearchRequest></b>
  * API that allows the caller to specify one or more <b>&lt;mbx></b> targets to be searched in.  Most parameters are
  * identical to a normal search.

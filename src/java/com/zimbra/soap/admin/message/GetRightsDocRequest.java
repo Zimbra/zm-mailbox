@@ -30,6 +30,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.PackageSelector;
 
 /**
+ * @zm-api-command-auth-required false
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get Rights Document
  */
 @XmlAccessorType(XmlAccessType.NONE)

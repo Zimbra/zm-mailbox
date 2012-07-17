@@ -21,6 +21,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get all servers defined in the system or all servers that have a particular service
  * enabled (eg, mta, antispam, spell).
  * @zm-api-request-description

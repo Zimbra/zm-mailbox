@@ -40,6 +40,8 @@ import com.zimbra.soap.mail.type.UnknownDataSourceNameOrId;
 import com.zimbra.soap.mail.type.YabDataSourceNameOrId;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Triggers the specified data sources to kick off their import processes.
  * Data import runs asynchronously, so the response immediately returns.  Status of an import can be queried via
  * the <b>&lt;GetImportStatusRequest></b> message.  If the server receives an <b>&lt;ImportDataRequest></b> while

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ListDocumentRevisionsSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns <b>{num}</b> number of revisions starting from <b>{version}</b> of the
  * requested document.  <b>{num}</b> defaults to 1.  <b>{version}</b> defaults to the current version.
  * <br />

@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ServerWithQueueAction;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Command to act on invidual queue files.  This proxies through to postsuper.
  * <br />
  * list-of-ids can be ALL.

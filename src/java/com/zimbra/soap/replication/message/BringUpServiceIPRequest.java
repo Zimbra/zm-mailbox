@@ -21,6 +21,8 @@ import com.zimbra.common.soap.ReplicationConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Bring up the configured service IP address
  */
 @XmlRootElement(name=ReplicationConstants.E_BRING_UP_SERVICE_IP_REQUEST)

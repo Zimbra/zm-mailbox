@@ -24,6 +24,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ServerMailQueueQuery;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Summarize and/or search a particular mail queue on a particular server.
  * <br />
  * The admin SOAP server initiates a MTA queue scan (via ssh) and then caches the result of the queue scan.

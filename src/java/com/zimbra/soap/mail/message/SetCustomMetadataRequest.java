@@ -26,6 +26,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCustomMetadata;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Set Custom Metadata
  * <br />
  * Setting a custom metadata section but providing no key/value pairs will remove the sction from the item

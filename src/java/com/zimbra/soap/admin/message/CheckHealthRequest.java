@@ -23,6 +23,9 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required false - leave the auth decision entirely up to Admin auth
+ * @zm-api-command-admin-auth-required maybe - No auth required if client is localhost.  Otherwise, admin auth is
+ * required.
  * @zm-api-command-description Check Health
  */
 @XmlAccessorType(XmlAccessType.NONE)

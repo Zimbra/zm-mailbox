@@ -28,6 +28,8 @@ import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify Contact
  * <br />
  * When modifying tags, all specified tags are set and all others are unset.  If tn="{tag-names}" is NOT specified

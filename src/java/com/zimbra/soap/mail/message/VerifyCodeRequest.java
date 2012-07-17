@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Validate the verification code sent to a device. After successful validation the
  * server sets the device email address as the value of zimbraCalendarReminderDeviceEmail account attribute.
  */

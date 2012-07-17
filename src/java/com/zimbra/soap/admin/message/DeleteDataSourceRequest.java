@@ -27,6 +27,8 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.type.Id;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Deletes the given data source.
  * <br />
  * Note: this request is by default proxied to the account's home server

@@ -26,6 +26,8 @@ public class ApiClassDocumentation {
     private boolean networkEdition;
     private String classDescription;
     private String deprecationDescription;
+    private String authRequiredDescription;
+    private String adminAuthRequiredDescription;
     private Map <String, String> fieldDescriptions = Maps.newHashMap();
     private Map <String, String> fieldTags = Maps.newHashMap();
 
@@ -93,6 +95,23 @@ public class ApiClassDocumentation {
         this.deprecationDescription = deprecationDescription;
     }
 
+    public String getAuthRequiredDescription() {
+        return authRequiredDescription;
+    }
+
+    public void setAuthRequiredDescription(String authRequiredDescription) {
+        this.authRequiredDescription = authRequiredDescription;
+    }
+
+    public String getAdminAuthRequiredDescription() {
+        return adminAuthRequiredDescription;
+    }
+
+    public void setAdminAuthRequiredDescription(
+            String adminAuthRequiredDescription) {
+        this.adminAuthRequiredDescription = adminAuthRequiredDescription;
+    }
+
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -107,6 +126,12 @@ public class ApiClassDocumentation {
         }
         if (deprecationDescription != null) {
             buf.append("[DEPRECATION:").append(deprecationDescription).append("]");
+        }
+        if (authRequiredDescription != null) {
+            buf.append("[AUTH_REQUIRED:").append(authRequiredDescription).append("]");
+        }
+        if (adminAuthRequiredDescription != null) {
+            buf.append("[ADMIN_AUTH_REQUIRED:").append(adminAuthRequiredDescription).append("]");
         }
         for (Entry<String, String> entry : fieldDescriptions.entrySet()) {
             buf.append("[FIELD:").append(entry.getKey()).append("=").append(entry.getValue()).append("]");

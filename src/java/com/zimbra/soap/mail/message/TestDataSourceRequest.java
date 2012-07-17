@@ -34,6 +34,8 @@ import com.zimbra.soap.mail.type.MailYabDataSource;
 import com.zimbra.soap.type.DataSource;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Tests the connection to the specified data source.  Does not modify the data source or
  * import data.  If the id is specified, uses an existing data source.  Any values specified in the request are used
  * in the test instead of the saved values.

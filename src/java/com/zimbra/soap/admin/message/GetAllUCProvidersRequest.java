@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.VoiceAdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns all installed UC providers and applicable UC service attributes for each
  * provider.
  */

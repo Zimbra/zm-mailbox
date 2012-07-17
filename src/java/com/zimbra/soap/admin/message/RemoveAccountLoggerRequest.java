@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Removes one or more custom loggers.  If both the account and logger are
  * specified, removes the given account logger if it exists.  If only the account
  * is specified or the category is "all", removes all custom loggers from that

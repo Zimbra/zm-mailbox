@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Get the intersection of installed skins on the server and the list specified in the
  * <b>zimbraAvailableSkin</b> on an account (or its CoS).  If none is set in <b>zimbraAvailableSkin</b>, get the entire
  * list of installed skins.  The installed skin list is obtained by a directory scan of the designated location of

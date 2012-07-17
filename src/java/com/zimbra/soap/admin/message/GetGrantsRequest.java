@@ -25,6 +25,8 @@ import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns all grants on the specified target entry, or all grants granted to the
  * specified grantee entry.
  * <br />

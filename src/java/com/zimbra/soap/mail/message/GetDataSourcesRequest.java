@@ -19,6 +19,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns all data sources defined for the given mailbox.  For each data source,
  * every attribute value is returned except password.
  */

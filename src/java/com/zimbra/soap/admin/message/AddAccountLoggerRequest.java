@@ -26,6 +26,8 @@ import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Changes logging settings on a per-account basis<br />
  * Adds a custom logger for the given account and log category.  The logger stays in effect only during the
  * lifetime of the current server instance.  If the request is sent to a server other than the one that the account

@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.VoiceConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Update Zimbra's stored value of the password for unified communications
  */
 @XmlAccessorType(XmlAccessType.NONE)

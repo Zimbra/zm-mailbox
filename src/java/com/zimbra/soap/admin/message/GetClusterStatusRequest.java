@@ -21,6 +21,8 @@ import com.zimbra.common.soap.ClusterConstants;
 
 /**
  * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get Cluster Status
  */
 @XmlRootElement(name=ClusterConstants.E_GET_CLUSTER_STATUS_REQUEST)

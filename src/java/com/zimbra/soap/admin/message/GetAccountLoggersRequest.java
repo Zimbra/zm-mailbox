@@ -25,6 +25,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Returns custom loggers created for the given account since the
  *  last server start.  If the request is sent to a server other than the
  *  one that the account resides on, it is proxied to the correct server.

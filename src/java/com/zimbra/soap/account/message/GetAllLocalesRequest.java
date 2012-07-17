@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns all locales defined in the system.  This is the same list returned by
  * java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
  */

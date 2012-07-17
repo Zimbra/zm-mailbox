@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Msg;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Decline a change proposal from an attendee.  Sent by organizer to an attendee who has
  * previously sent a COUNTER message.  The syntax of the request is very similar to CreateAppointmentRequest.
  */

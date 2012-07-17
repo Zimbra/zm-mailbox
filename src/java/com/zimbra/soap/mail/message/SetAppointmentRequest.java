@@ -37,6 +37,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 //   TODO: need way to link message to appointment after the fact
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Directly set status of an entire appointment.  This API is intended for mailbox
  * Migration (ie migrating a mailbox onto this server) and is not used by normal mail clients.
  * <br />

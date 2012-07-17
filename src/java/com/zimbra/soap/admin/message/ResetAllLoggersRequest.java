@@ -19,6 +19,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Removes all account loggers and reloads /opt/zimbra/conf/log4j.properties.
  */
 @XmlRootElement(name=AdminConstants.E_RESET_ALL_LOGGERS_REQUEST)

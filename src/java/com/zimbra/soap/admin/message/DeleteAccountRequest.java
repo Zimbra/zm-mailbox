@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Deletes the account with the given id.
  * <br />
  * Notes:

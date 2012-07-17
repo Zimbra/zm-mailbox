@@ -28,6 +28,8 @@ import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Search for Calendar Resources
  * <b>Access</b>: domain admin sufficient
  */

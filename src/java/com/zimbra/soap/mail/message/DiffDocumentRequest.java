@@ -25,6 +25,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.DiffDocumentVersionSpec;
 
 /**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Performs line by line diff of two revisions of a Document then returns a list of
  * <b>&lt;chunk/></b> containing the result.  Sections of text that are identical to both versions are indicated with
  * disp="common".  For each conflict the chunk will show disp="first", disp="second" or both.
