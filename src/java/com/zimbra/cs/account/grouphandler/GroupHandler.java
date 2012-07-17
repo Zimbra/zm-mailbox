@@ -39,7 +39,7 @@ public abstract class GroupHandler {
     public abstract boolean isGroup(IAttributes ldapAttrs);
 
     public abstract String[] getMembers(ILdapContext ldapContext, String searchBase,
-            String entryDN, IAttributes ldapAttrs);
+            String entryDN, IAttributes ldapAttrs) throws ServiceException;
 
     public abstract boolean inDelegatedAdminGroup(ExternalGroup group,
             Account acct, boolean asAdmin) throws ServiceException;

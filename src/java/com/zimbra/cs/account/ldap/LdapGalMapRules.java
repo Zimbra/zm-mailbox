@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
@@ -114,14 +115,17 @@ public class LdapGalMapRules {
         }
         
         if (mGroupHandler.isGroup(ldapAttrs)) {
-            contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
-            
-            if (mFetchGroupMembers)
-                contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(ldapContext, searchBase, entryDN, ldapAttrs));
-            else {
-                // for internal LDAP, all members are on the DL entry and have been fetched/mapped
-                // delete it.
-                contactAttrs.remove(ContactConstants.A_member);
+            try {
+                if (mFetchGroupMembers) {
+                    contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(ldapContext, searchBase, entryDN, ldapAttrs));
+                } else {
+                    // for internal LDAP, all members are on the DL entry and have been fetched/mapped
+                    // delete it.
+                    contactAttrs.remove(ContactConstants.A_member);
+                }
+                contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
+            } catch (ServiceException e) {
+                ZimbraLog.gal.warn("unable to retrieve group members ", e);
             }
         }
         

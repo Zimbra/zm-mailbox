@@ -61,7 +61,7 @@ public class ADGroupHandler extends GroupHandler {
 
     @Override
     public String[] getMembers(ILdapContext ldapContext, String searchBase, 
-            String entryDN, IAttributes ldapAttrs) {
+            String entryDN, IAttributes ldapAttrs) throws ServiceException {
         if (ZimbraLog.gal.isDebugEnabled()) {
             try {
                 ZimbraLog.gal.debug("Fetching members for group " + 

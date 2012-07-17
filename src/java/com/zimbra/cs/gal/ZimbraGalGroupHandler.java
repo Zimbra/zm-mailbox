@@ -34,8 +34,6 @@ import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 
 public class ZimbraGalGroupHandler extends GroupHandler {
 
-    private static String[] sEmptyMembers = new String[0];
-
     @Override
     public boolean isGroup(IAttributes ldapAttrs) {
         try {
@@ -51,31 +49,26 @@ public class ZimbraGalGroupHandler extends GroupHandler {
 
     @Override
     public String[] getMembers(ILdapContext ldapContext, String searchBase,
-            String entryDN, IAttributes ldapAttrs) {
-        try {
-            ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(Provisioning.A_mail));
-            List<String> objectclass =
-                ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
+            String entryDN, IAttributes ldapAttrs) throws ServiceException {
+        ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(Provisioning.A_mail));
+        List<String> objectclass =
+            ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
 
-            String[] members = null;
-            if (objectclass.contains(AttributeClass.OC_zimbraDistributionList)) {
-                members = ldapAttrs.getMultiAttrString(Provisioning.A_zimbraMailForwardingAddress);
-            } else if (objectclass.contains(AttributeClass.OC_zimbraGroup)) {
-                String zimbraId = ldapAttrs.getAttrString(Provisioning.A_zimbraId);
-                Provisioning prov = Provisioning.getInstance();
-                Group group = prov.getGroupBasic(DistributionListBy.id, zimbraId);
-                if (group == null) {
-                    throw AccountServiceException.NO_SUCH_GROUP(zimbraId);
-                }
-                members = prov.getGroupMembers(group);
+        String[] members = null;
+        if (objectclass.contains(AttributeClass.OC_zimbraDistributionList)) {
+            members = ldapAttrs.getMultiAttrString(Provisioning.A_zimbraMailForwardingAddress);
+        } else if (objectclass.contains(AttributeClass.OC_zimbraGroup)) {
+            String zimbraId = ldapAttrs.getAttrString(Provisioning.A_zimbraId);
+            Provisioning prov = Provisioning.getInstance();
+            Group group = prov.getGroupBasic(DistributionListBy.id, zimbraId);
+            if (group == null) {
+                throw AccountServiceException.NO_SUCH_GROUP(zimbraId);
             }
-
-            Arrays.sort(members);
-            return members;
-        } catch (ServiceException e) {
-            ZimbraLog.gal.warn("unable to retrieve group members ", e);
-            return sEmptyMembers;
+            members = prov.getGroupMembers(group);
         }
+
+        Arrays.sort(members);
+        return members;
     }
 
     @Override
