@@ -509,6 +509,15 @@ public abstract class ArchiveFormatter extends Formatter {
             }
             if (aos == null)
                 aos = getOutputStream(context, charsetEncoder.charset().name());
+
+            if ((mi instanceof CalendarItem) &&
+                    (context.getStartTime() != TIME_UNSPECIFIED || context.getEndTime() != TIME_UNSPECIFIED)) {
+                Collection<Instance> instances = ((CalendarItem)mi).expandInstances(
+                        context.getStartTime(), context.getEndTime(), false);
+                if (instances.isEmpty())
+                    return aos;
+            }
+
             aoe = aos.newOutputEntry(path + ".meta",
                 MailItem.getNameForType(mi), mi.getType(), mi.getDate());
             if (mi instanceof Message && (mi.getFlagBitmask() &
@@ -531,23 +540,17 @@ public abstract class ArchiveFormatter extends Formatter {
                 aos.closeEntry();
             } else if (mi instanceof CalendarItem) {
                 Browser browser = HttpUtil.guessBrowser(context.req);
-                CalendarItem ci = (CalendarItem)mi;
                 List<CalendarItem> calItems = new ArrayList<CalendarItem>();
-                Collection<Instance> instances = ci.expandInstances(
-                    context.getStartTime(), context.getEndTime(), false);
                 boolean needAppleICalHacks = Browser.APPLE_ICAL.equals(browser);
                 boolean useOutlookCompatMode = Browser.IE.equals(browser);
                 OperationContext octxt = new OperationContext(
                         context.getAuthAccount(), context.isUsingAdminPrivileges());
                 StringWriter writer = new StringWriter();
-
-                if (!instances.isEmpty()) {
-                    calItems.add(ci);
-                    context.targetMailbox.writeICalendarForCalendarItems(
+                calItems.add((CalendarItem)mi);
+                context.targetMailbox.writeICalendarForCalendarItems(
                         writer, octxt, calItems, useOutlookCompatMode, true,
                         needAppleICalHacks, true);
-                    data = writer.toString().getBytes(charsetEncoder.charset());
-                }
+                data = writer.toString().getBytes(charsetEncoder.charset());
             } else if (mi instanceof Contact) {
                 VCard vcf = VCard.formatContact((Contact)mi);
 
