@@ -487,7 +487,8 @@
           <include name="testng*.jar"/>
           <include name="jython*.jar"/>
           <include name="log4j-*.jar"/>
-          <include name="apache-log4j-extras-*.jar"/> 	
+          <include name="apache-log4j-extras-*.jar"/>
+          <include name="icu4j-*.jar"/>
         </fileset>
       </delete>
     </target>
@@ -505,7 +506,6 @@
           <include name="*jsieve*.jar"/>
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
-          <include name="icu4j-*.jar"/>
           <include name="mina-*.jar"/>
           <include name="ews.jar"/>
           <include name="cassandra-*.jar"/>
@@ -1013,6 +1013,7 @@
         <include name="commons-io*.jar"/>
         <include name="commons-lang-*.jar"/>
         <include name="commons-logging.jar"/>
+        <include name="icu4j-*.jar"/>
 	<include name="commons-pool*.jar"/>
 	<include name="concurrentlinkedhashmap-lru*.jar"/>
         <include name="yuicompressor*jar"/>
