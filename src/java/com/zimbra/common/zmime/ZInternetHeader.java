@@ -18,10 +18,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -77,6 +81,47 @@ public class ZInternetHeader {
         this.hinfo = HeaderInfo.of(name);
         this.content = line;
         this.valueStart = vstart;
+        if (LC.mime_handle_nonprintable_subject.booleanValue() && "subject".equalsIgnoreCase(name)) {
+            //if any non-printable characters it is probably natively encoded in ISO-2022-JP or similar
+            for (int i = vstart; i < line.length ; i++) {
+                int code = content[i];
+                if (code < 0x20 || code > 0x7E) {
+                    byte[] rawValue = Arrays.copyOfRange(content, vstart, content.length);
+                    Charset charset = detectCharset(rawValue, DEFAULT_CHARSET);
+                    if (charset != null && !charset.equals(DEFAULT_CHARSET)) {
+                        String newValue = new String(rawValue, charset);
+                        String encoded = EncodedWord.encode(newValue.trim(), charset);
+                        updateContent(encoded.getBytes());
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    private Charset detectCharset(byte[] content, Charset defaultCharset) {
+        if (defaultCharset == null) {
+            defaultCharset = Charset.defaultCharset();
+        }
+        CharsetDetector detector = new CharsetDetector();
+        detector.setText(content);
+
+        Charset match = findMatch(detector);
+        return (match != null ? match : defaultCharset);
+    }
+
+    private Charset findMatch(CharsetDetector detector) {
+        for (CharsetMatch match : detector.detectAll()) { // matches are sorted by confidence
+            if (match.getConfidence() > 50) { // only trust good match
+                try {
+                    return Charset.forName(match.getName());
+                } catch (Exception ignore) {
+                }
+            } else {
+                break;
+            }
+        }
+        return null;
     }
 
     /** Creates a new {@code ZInternetHeader} with {@code value} as the field value.

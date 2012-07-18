@@ -206,7 +206,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_reader_cache_size = KnownKey.newKey(20);
-    
+
     @Supported
     public static final KnownKey zimbra_galsync_index_reader_cache_size = KnownKey.newKey(5);
 
@@ -713,7 +713,7 @@ public final class LC {
     public static final KnownKey calendar_cache_range_months = KnownKey.newKey(3);
     public static final KnownKey calendar_cache_max_stale_items = KnownKey.newKey(10);
     public static final KnownKey calendar_exchange_form_auth_url = KnownKey.newKey("/exchweb/bin/auth/owaauth.dll");
-    
+
     public static final KnownKey syncgal_non_idonly_use_ldap = KnownKey.newKey(true);
 
     public static final KnownKey spnego_java_options =  KnownKey.newKey(
@@ -895,6 +895,7 @@ public final class LC {
     public static final KnownKey javamail_smtp_enable_starttls = KnownKey.newKey(true);
 
     public static final KnownKey mime_promote_empty_multipart = KnownKey.newKey(true);
+    public static final KnownKey mime_handle_nonprintable_subject = KnownKey.newKey(true);
 
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
