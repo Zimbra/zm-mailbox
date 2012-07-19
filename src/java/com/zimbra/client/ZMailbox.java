@@ -1442,7 +1442,7 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments) throws ServiceException {
-        return modifyContact(id, replace, attrs, null, null);
+        return modifyContact(id, replace, attrs, attachments, null);
     }
 
     /**
