@@ -224,10 +224,10 @@ extends TestCase {
         int timeout = (int) Constants.MILLIS_PER_MINUTE;
         String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
 
-        String attachment1Id = zmbx.uploadAttachment("file.png", attachment1Text.getBytes(), "image/png", timeout);
+        String attachment1Id = zmbx.uploadAttachment("file1.txt", attachment1Text.getBytes(), "text/plain", timeout);
         Map<String, ZAttachmentInfo> attachments = new HashMap<String, ZAttachmentInfo>();
         ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
-        attachments.put("image", info);
+        attachments.put("file1", info);
         ZContact contact = zmbx.createContact(folderId, null, attrs, attachments);
         
         Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER2_NAME));
@@ -244,8 +244,8 @@ extends TestCase {
         List<Attachment> list = ct.getAttachments();
         Assert.assertFalse(list.isEmpty());
         Attachment att = list.get(0);
-        Assert.assertEquals("file.png", att.getFilename());
-        Assert.assertEquals("image/png", att.getContentType());
+        Assert.assertEquals("file1.txt", att.getFilename());
+        Assert.assertEquals("text/plain", att.getContentType());
         Assert.assertEquals("attachment 1", new String(att.getContent()));
         // move the contact back to user1
         remoteZmbx.moveContact(String.valueOf(ct.getId()), acct.getId() + ":" + Mailbox.ID_FOLDER_CONTACTS);
@@ -260,8 +260,8 @@ extends TestCase {
         list = ct.getAttachments();
         Assert.assertFalse(list.isEmpty());
         att = list.get(0);
-        Assert.assertEquals("file.png", att.getFilename());
-        Assert.assertEquals("image/png", att.getContentType());
+        Assert.assertEquals("file1.txt", att.getFilename());
+        Assert.assertEquals("text/plain", att.getContentType());
         Assert.assertEquals("attachment 1", new String(att.getContent()));
     }    
 
