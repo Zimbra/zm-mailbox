@@ -299,60 +299,6 @@ public class TestSendAndReceive extends TestCase {
         verifyTextAttachmentLineEnding(mbox, content, "application/x-shellscript");
     }
 
-    private class SenderThread
-    extends Thread {
-        private String subject;
-        private String attachId;
-        private Throwable error;
-
-        SenderThread(String subject, String attachId) {
-            this.subject = subject;
-            this.attachId = attachId;
-        }
-
-        @Override
-        public void run() {
-            try {
-                ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-                TestUtil.sendMessage(mbox, USER_NAME, subject, "", attachId);
-            } catch (Throwable e) {
-                this.error = e;
-            }
-        }
-    }
-
-    /**
-     * Confirms that the server gracefully handles the case where multiple threads
-     * simultaneously send a message, using the same attachment upload id (bug 57222).
-     */
-    public void testReuseUploadId()
-    throws Exception {
-        // Upload attachment.
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        String attachContent = "The leaves that are green turn to brown.";
-        String attachId = mbox.uploadAttachment("lyrics.txt", attachContent.getBytes(), "text/plain", 0);
-
-        // Run 5 threads that all send with the same upload id.
-        SenderThread[] threads = new SenderThread[5];
-        String subject = NAME_PREFIX + " testReuseUploadId";
-        for (int i = 0; i < threads.length; i++) {
-            threads[i] = new SenderThread(subject + " " + i, attachId);
-            threads[i].start();
-        }
-        for (SenderThread thread : threads) {
-            thread.join();
-        }
-
-        // Make sure only 1 succeeded.
-        int numFailures = 0;
-        for (SenderThread sender : threads) {
-            if (sender.error != null) {
-                numFailures++;
-            }
-        }
-        assertEquals(threads.length - 1, numFailures);
-    }
-
     private void verifyTextAttachmentLineEnding(ZMailbox mbox, String content, String contentType)
     throws Exception {
         // Test simple send.
