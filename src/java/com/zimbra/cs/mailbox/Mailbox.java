@@ -1978,7 +1978,7 @@ public class Mailbox {
     }
 
     public enum DeleteBlobs { ALWAYS, NEVER, UNLESS_CENTRALIZED };
-    
+
     private static class MessageCachePurgeCallback implements DbMailItem.Callback<String> {
         @Override
         public void call(String value) {
@@ -6090,14 +6090,11 @@ public class Mailbox {
                     }
                     int parentId = item.getParentId();
                     MailItem parent = null;
-                    if (fromDumpster) {
-                        // Parent of dumpstered item may no longer exist.
-                        if (parentId > 0) {
-                            try {
-                                parent = getItemById(parentId, MailItem.Type.UNKNOWN);
-                            } catch (MailServiceException.NoSuchItemException e) {
-                                // ignore
-                            }
+                    if (parentId > 0) {
+                        try {
+                            parent = getItemById(parentId, MailItem.Type.UNKNOWN);
+                        } catch (MailServiceException.NoSuchItemException e) {
+                            // ignore
                         }
                     }
                     copy = item.copy(folder, newId, uuid, parent);
