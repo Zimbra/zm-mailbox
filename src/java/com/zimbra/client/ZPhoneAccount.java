@@ -21,32 +21,44 @@ import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.service.ServiceException;
 
 public class ZPhoneAccount {
-    private ZFolder mFolder;
-    private ZPhone mPhone;
-    private ZCallFeatures mCallFeatures;
-	private boolean mHasVoiceMail;
+    private ZFolder folder;
+    private ZPhone phone;
+    private ZCallFeatures callFeatures;
+	private boolean hasVoiceMail;
+    private String phoneType;
 
 	public ZPhoneAccount(Element e, ZMailbox mbox) throws ServiceException {
-        mPhone = new ZPhone(e.getAttribute(MailConstants.A_NAME));
-        mFolder = new ZVoiceFolder(e.getElement(MailConstants.E_FOLDER), null, mbox);
-        mCallFeatures = new ZCallFeatures(mbox, mPhone, e.getElement(VoiceConstants.E_CALL_FEATURES));
-		mHasVoiceMail = e.getAttributeBool(VoiceConstants.E_VOICEMSG);
+        phone = new ZPhone(e.getAttribute(MailConstants.A_NAME));
+        folder = new ZVoiceFolder(e.getElement(MailConstants.E_FOLDER), null, mbox);
+        callFeatures = new ZCallFeatures(mbox, phone, e.getElement(VoiceConstants.E_CALL_FEATURES));
+		hasVoiceMail = e.getAttributeBool(VoiceConstants.E_VOICEMSG);
+        try{
+            phoneType = e.getAttribute(VoiceConstants.A_TYPE);
+        }
+        catch(ServiceException ex){
+            phoneType = null;
+        }
+
 	}
 
     public ZFolder getRootFolder() {
-        return mFolder;
+        return folder;
     }
 
     public ZPhone getPhone() {
-        return mPhone;
+        return phone;
     }
 
     public ZCallFeatures getCallFeatures() throws ServiceException {
-        mCallFeatures.loadCallFeatures();
-        return mCallFeatures;
+        callFeatures.loadCallFeatures();
+        return callFeatures;
     }
 
 	public boolean getHasVoiceMail() {
-		return mHasVoiceMail;
+		return hasVoiceMail;
 	}
+
+    public String getPhoneType() {
+        return phoneType;
+    }
 }
