@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -56,31 +56,31 @@ import com.zimbra.cs.util.Zimbra;
 
 /**
  * zmplayredo: Program for playing back redologs.
- * 
+ *
  * This program is intended to be run with mailboxd process stopped.
  * Some diagnostic information is logged to stdout/stderr.  Most of
  * the logging goes to /opt/zimbra/log/mailbox.log, with log level
  * controlled by /opt/zimbra/conf/log4j.properties file.
- * 
+ *
  * When it is run without options it replays all redologs found under
  * /opt/zimbra/redolog/archive directory, in sequence order, followed
  * by /opt/zimbra/redolog/redo.log.  For each redolog all committed
  * operations are replayed.
- * 
+ *
  * Specify --mailboxId <mailbox id> option to replay committed operations
  * for that mailbox only.
- * 
+ *
  * Specify --logfiles <list of redolog files> option to replay only
  * those redologs, in the order specified.
- * 
+ *
  * Specify --fromSeq <sequence> to replay logs from that sequence only.
  * Specify --toSeq <sequence> to replay logs up to that sequence only.
  * Specify --fromTime <timestamp> to replay operations from that time only.
  * Specify --toTime <timestamp> to replay operations up to that time only.
- * 
+ *
  * Specify --stopOnError option to make replay stop when it encounters any
  * error.  By default errors are logged and ignored.
- * 
+ *
  * Specify --threads <number of threads> to set the degree of parallelism.
  * By default 50 threads are used.  Operations for a given mailbox is always
  * executed by the same thread to guarantee execution order within a mailbox.
@@ -89,7 +89,7 @@ import com.zimbra.cs.util.Zimbra;
  * handled by the same thread.  This means replay is not fully parallelized.
  * This is a consequence of the need to guarantee order of execution for each
  * mailbox.
- * 
+ *
  * When only 1 thread is used or --mailboxId option is used all replay is done
  * by the main thread.  Even when multiple replay threads are used operations
  * that span multiple mailboxes (StoreIncomingBlob of a multi-recipient email
@@ -97,7 +97,7 @@ import com.zimbra.cs.util.Zimbra;
  * This is necessary to guarantee that latermailbox-specific operations that
  * depend on the non-mailbox-specific operation (e.g. CreateMessage that links
  * to blob stored by StoreIncomingBlob) are not started out of order.
- * 
+ *
  * Specify --queueCapacity <number of ops> to set the capacity of the operation
  * queue used by each replay thread.  Default capacity is 100.  This parameter
  * is related to the degree of parallelism.  When a replay thread's queue is full
@@ -300,7 +300,7 @@ public class PlaybackUtil {
         for (Iterator<File> iter = logList.iterator(); iter.hasNext(); ) {
             File f = iter.next();
             FileHeader hdr = (new FileLogReader(f)).getHeader();
-            if (hdr.getFirstOpTstamp() > params.toTime || hdr.getLastOpTstamp() < params.fromTime) {
+            if (hdr.getFirstOpTstamp() > params.toTime || (hdr.getLastOpTstamp() < params.fromTime && !hdr.getOpen())) {
                 // log is outside the time range
                 iter.remove();
                 System.out.printf("Redolog %s has no operation in the requested time range\n", f.getName());
@@ -365,7 +365,7 @@ public class PlaybackUtil {
                 usage(null);
                 System.exit(0);
             }
-    
+
             PlaybackUtil player = new PlaybackUtil(params);
             player.playback();
         } finally {
@@ -378,7 +378,7 @@ public class PlaybackUtil {
         ZimbraLog.toolSetupLog4j("INFO", LC.zimbra_log4j_properties.value());
         // remove the console appender if any
         Logger rootLogger = Logger.getRootLogger();
-        Appender consoleAppender = null; 
+        Appender consoleAppender = null;
         Enumeration appenders = rootLogger.getAllAppenders();
         while (appenders.hasMoreElements()) {
             Appender appender = (Appender) appenders.nextElement();
@@ -392,7 +392,7 @@ public class PlaybackUtil {
         DbPool.startup();
         Zimbra.startupCLI();
     }
-    
+
     private static void teardown() throws ServiceException {
         Zimbra.shutdown();
     }
