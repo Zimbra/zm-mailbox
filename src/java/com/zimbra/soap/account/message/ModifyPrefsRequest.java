@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Pref;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 
 /**
  * @zm-api-command-auth-required true
@@ -65,6 +66,7 @@ public class ModifyPrefsRequest {
     /**
      * @zm-api-field-description Specify the preferences to be modified
      */
+    @ZimbraKeyValuePairs
     @XmlElement(name=AccountConstants.E_PREF, required=false)
     private List<Pref> prefs = Lists.newArrayList();
 
