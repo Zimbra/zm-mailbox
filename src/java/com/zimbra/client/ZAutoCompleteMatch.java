@@ -30,6 +30,8 @@ public class ZAutoCompleteMatch implements ToZJSONObject {
 	private String mFolderId;
 	private String mId;
 	private String mDisplay;
+	private boolean isGroup;
+    private boolean exp;
 
 	private ZMailbox mMailbox;
 	
@@ -37,10 +39,12 @@ public class ZAutoCompleteMatch implements ToZJSONObject {
         mMailbox = mailbox;
         mRanking = e.getAttribute(MailConstants.A_RANKING);
         mType = e.getAttribute(MailConstants.A_MATCH_TYPE);
-        mEmail = e.getAttribute(MailConstants.A_EMAIL);
+        mEmail = e.getAttribute(MailConstants.A_EMAIL, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mId = e.getAttribute(MailConstants.A_ID, null);
         mDisplay = e.getAttribute(MailConstants.A_DISPLAYNAME, null);
+        isGroup = e.getAttributeBool(MailConstants.A_IS_GROUP, false);
+        exp = e.getAttributeBool(MailConstants.A_EXP, false);
     }
     
     public ZMailbox getMailbox() {
@@ -89,10 +93,12 @@ public class ZAutoCompleteMatch implements ToZJSONObject {
         ZJSONObject jo = new ZJSONObject();
         jo.put("ranking", mRanking);
         jo.put("type", mType);
-        jo.put("email", mEmail);
+        if (mEmail != null) jo.put("email", mEmail);
         if (mFolderId != null) jo.put("l", mFolderId);
         if (mId != null)       jo.put("id", mId);
         if (mDisplay != null)  jo.put("display", mDisplay);
+        if (isGroup)           jo.put("isGroup", isGroup);
+        if (exp)               jo.put("exp", exp);
         return jo;
 	}
 	
