@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.cs.account.Account;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
@@ -85,7 +86,9 @@ public final class MeTest extends AbstractTest {
             }
         }
         try {
-            Set<String> me = AccountUtil.getEmailAddresses(mbox.getAccount());
+            Account account = mbox.getAccount();
+            Set<String> me = AccountUtil.getEmailAddresses(account);
+            me.addAll(AccountUtil.getImapPop3EmailAddresses(account));
             for (InternetAddress addr : addrs) {
                 String email = addr.getAddress();
                 if (email != null && me.contains(email.toLowerCase())) {

@@ -282,6 +282,24 @@ public class AccountUtil {
         return addrs;
     }
 
+    /**
+     * Gets all email addresses for the imap and pop3 external accounts for the given account.
+     * @param acct
+     * @return
+     * @throws ServiceException
+     */
+    public static Set<String> getImapPop3EmailAddresses(Account acct) throws ServiceException {
+        List<DataSource> dataSources = acct.getAllDataSources();
+        Set<String> addrs = new HashSet<String> ();
+        for (DataSource dataSource : dataSources) {
+            DataSourceType dataSourceType = dataSource.getType();
+            if (dataSourceType == DataSourceType.imap || dataSourceType == DataSourceType.pop3) {
+                addrs.add(dataSource.getEmailAddress().toLowerCase());
+            }
+        }
+        return addrs;
+    }
+
     public static long getMaxInternalShareLifetime(Account account, MailItem.Type folderType) {
         switch (folderType) {
             case DOCUMENT:
