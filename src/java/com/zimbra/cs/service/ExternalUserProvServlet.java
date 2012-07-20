@@ -124,7 +124,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 MailItem.Type sharedFolderView = null;
                 for (String sharedItem : sharedItems) {
                     ShareInfoData sid = AclPushSerializer.deserialize(sharedItem);
-                    if (sid.getItemId() == sharedFolderId) {
+                    if (sid.getItemId() == sharedFolderId && extUserEmail.equalsIgnoreCase(sid.getGranteeId())) {
                         sharedFolderPath = sid.getPath();
                         sharedFolderView = sid.getFolderDefaultViewCode();
                         break;
