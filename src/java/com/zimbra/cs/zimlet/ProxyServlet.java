@@ -232,7 +232,7 @@ public class ProxyServlet extends ZimbraServlet {
 
         HttpMethod method = null;
         try {
-            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+            HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
             HttpProxyUtil.configureProxy(client);
             String reqMethod = req.getMethod();
             if (reqMethod.equalsIgnoreCase("GET")) {
