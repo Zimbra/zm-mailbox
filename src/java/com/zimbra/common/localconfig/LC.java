@@ -926,7 +926,7 @@ public final class LC {
     public static final KnownKey httpclient_external_connmgr_connection_timeout = KnownKey.newKey(25 * Constants.MILLIS_PER_SECOND);
 
     public static final KnownKey httpclient_internal_connmgr_so_timeout = KnownKey.newKey(60 * Constants.MILLIS_PER_SECOND);
-    public static final KnownKey httpclient_external_connmgr_so_timeout = KnownKey.newKey(60 * Constants.MILLIS_PER_SECOND);
+    public static final KnownKey httpclient_external_connmgr_so_timeout = KnownKey.newKey(45 * Constants.MILLIS_PER_SECOND);
 
     public static final KnownKey httpclient_internal_client_connection_timeout = KnownKey.newKey(30 * Constants.MILLIS_PER_SECOND);
     public static final KnownKey httpclient_external_client_connection_timeout = KnownKey.newKey(30 * Constants.MILLIS_PER_SECOND);
