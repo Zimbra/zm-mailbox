@@ -27448,7 +27448,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @return zimbraProxyCacheableContentTypes, or empty array if unset
      */
@@ -27458,7 +27459,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27471,7 +27473,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27485,7 +27488,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27498,7 +27502,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -27512,7 +27517,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27525,7 +27531,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -27539,7 +27546,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -27551,7 +27559,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

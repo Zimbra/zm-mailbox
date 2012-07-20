@@ -7534,7 +7534,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraProxyAllowedDomains = "zimbraProxyAllowedDomains";
 
     /**
-     * Content types that can be cached by proxy servlet
+     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * types that can be cached by proxy servlet
      */
     @ZAttr(id=303)
     public static final String A_zimbraProxyCacheableContentTypes = "zimbraProxyCacheableContentTypes";
