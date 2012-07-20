@@ -360,6 +360,6 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs)
+    public abstract boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs)
     throws IOException, ServiceException;
 }

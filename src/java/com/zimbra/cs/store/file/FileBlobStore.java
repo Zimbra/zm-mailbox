@@ -346,7 +346,7 @@ public class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException {
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException {
         assert blobs == null : "should not be passed a blob list since we support bulk blob delete";
         for (Volume vol : Volume.getAll()) {
             FileUtil.deleteDir(new File(vol.getMessageRootDir(mbox.getId())));

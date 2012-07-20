@@ -3156,8 +3156,8 @@ public class DbMailItem {
         }
     }
 
-    public static SpoolingCache<MailboxBlob> getAllBlobs(Mailbox mbox) throws ServiceException {
-        SpoolingCache<MailboxBlob> blobs = new SpoolingCache<MailboxBlob>(5000);
+    public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(Mailbox mbox) throws ServiceException {
+        SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = new SpoolingCache<MailboxBlob.MailboxBlobInfo>(5000);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -3196,9 +3196,8 @@ public class DbMailItem {
         }
     }
 
-    private static void getAllBlobs(PreparedStatement stmt, Mailbox mbox, SpoolingCache<MailboxBlob> blobs)
+    private static void getAllBlobs(PreparedStatement stmt, Mailbox mbox, SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs)
     throws SQLException, IOException, ServiceException {
-        StoreManager sm = StoreManager.getInstance();
         ResultSet rs = null;
         try {
             int pos = 1;
@@ -3206,7 +3205,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                blobs.add(sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(2), rs.getString(3)));
+                blobs.add(new MailboxBlob.MailboxBlobInfo(mbox.getAccountId(), rs.getInt(1), rs.getInt(2), rs.getString(3)));
             }
         } finally {
             DbPool.closeResults(rs);

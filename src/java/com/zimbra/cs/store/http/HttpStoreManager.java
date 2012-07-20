@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -278,7 +278,7 @@ public abstract class HttpStoreManager extends StoreManager {
     @Override
     public boolean delete(StagedBlob staged) throws IOException {
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
-        // we only delete a staged blob if it hasn't already been added to the mailbox 
+        // we only delete a staged blob if it hasn't already been added to the mailbox
         if (hsb == null || hsb.isInserted()) {
             return true;
         }
@@ -311,12 +311,12 @@ public abstract class HttpStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException {
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException {
         // the default implementation iterates through the mailbox's blobs and deletes them one by one
         ZimbraLog.store.info("deleting store for mailbox %d by iterating blobs", mbox.getId());
 
-        for (MailboxBlob mblob : blobs) {
-            delete(mblob);
+        for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
+            delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
         }
         return true;
     }

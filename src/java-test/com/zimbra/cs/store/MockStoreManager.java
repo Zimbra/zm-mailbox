@@ -40,7 +40,6 @@ public class MockStoreManager extends StoreManager {
         }
     }
 
-    @SuppressWarnings("serial")
     private static class MockMailboxBlob extends MailboxBlob {
         private final String content;
 
@@ -152,7 +151,7 @@ public class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> ignored)
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> ignored)
     throws IOException, ServiceException {
         blobs.clear();
         return true;

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,25 +26,30 @@ public class HttpMailboxBlob extends MailboxBlob {
         super(mbox, itemId, revision, locator);
     }
 
-    @Override public Blob getLocalBlob() throws IOException {
+    @Override
+    public Blob getLocalBlob() throws IOException {
         HttpStoreManager hsm = (HttpStoreManager) StoreManager.getInstance();
-        Blob blob = hsm.getLocalBlob(getMailbox(), getLocator(), mSize == null ? -1 : mSize.intValue());
+        Blob blob = hsm.getLocalBlob(getMailbox(), getLocator(), size == null ? -1 : size.intValue());
 
         setSize(blob.getRawSize());
-        if (mDigest != null)
+        if (digest != null) {
             setDigest(blob.getDigest());
+        }
         return blob;
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         return getLocator().hashCode();
     }
 
-    @Override public boolean equals(Object other) {
-        if (this == other)
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
             return true;
-        if (!(other instanceof HttpMailboxBlob))
+        } else if (!(other instanceof HttpMailboxBlob)) {
             return false;
+        }
         return getLocator().equals(((HttpMailboxBlob) other).getLocator());
     }
 }
