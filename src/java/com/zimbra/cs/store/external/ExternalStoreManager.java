@@ -128,10 +128,10 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException, ServiceException {
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
         // the default implementation iterates through the mailbox's blobs and deletes them one by one
-        for (MailboxBlob mblob : blobs) {
-            delete(mblob);
+        for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
+            delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
         }
         return true;
     }
@@ -186,14 +186,14 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
     @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
-            ServiceException {
+    ServiceException {
         // link is a noop
         return renameTo(src, destMbox, destMsgId, destRevision);
     }
 
     @Override
     public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
-            ServiceException {
+    ServiceException {
         // rename is a noop
         ExternalStagedBlob staged = (ExternalStagedBlob) src;
         staged.markInserted();
@@ -267,7 +267,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
     @Override
     public Blob storeIncoming(InputStream data, boolean storeAsIs) throws IOException,
-            ServiceException {
+    ServiceException {
         BlobBuilder builder = getBlobBuilder();
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
@@ -277,11 +277,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     @Override
     public boolean supports(StoreFeature feature) {
         switch (feature) {
-            case BULK_DELETE:  return false;
-            case CENTRALIZED:  return true;
-            case SINGLE_INSTANCE_SERVER_CREATE : return this instanceof SisStore;
-            case RESUMABLE_UPLOAD: return this instanceof ExternalResumableUpload;
-            default:           return false;
+            case BULK_DELETE:                   return false;
+            case CENTRALIZED:                   return true;
+            case SINGLE_INSTANCE_SERVER_CREATE: return false;
+            case RESUMABLE_UPLOAD:              return this instanceof ExternalResumableUpload;
+            default:                            return false;
         }
     }
 

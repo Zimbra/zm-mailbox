@@ -32,4 +32,12 @@ public abstract class SisStore extends ContentAddressableStoreManager {
      * @throws IOException
      */
     public abstract Blob getSisBlob(byte[] hash) throws IOException;
+
+    @Override
+    public boolean supports(StoreFeature feature) {
+        switch (feature) {
+            case SINGLE_INSTANCE_SERVER_CREATE: return true;
+            default:                            return super.supports(feature);
+        }
+    }
 }

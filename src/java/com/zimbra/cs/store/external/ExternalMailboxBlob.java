@@ -25,7 +25,6 @@ import com.zimbra.cs.store.StoreManager;
 /**
  * MailboxBlob implementation which accesses ExternalStoreManager to retrieve blobs for local use
  */
-@SuppressWarnings("serial")
 public class ExternalMailboxBlob extends MailboxBlob {
 
     protected ExternalMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
@@ -38,8 +37,9 @@ public class ExternalMailboxBlob extends MailboxBlob {
         Blob blob = sm.getLocalBlob(getMailbox(), getLocator());
 
         setSize(blob.getRawSize());
-        if (mDigest != null)
+        if (digest != null) {
             setDigest(blob.getDigest());
+        }
         return blob;
     }
 
@@ -48,11 +48,13 @@ public class ExternalMailboxBlob extends MailboxBlob {
         return getLocator().hashCode();
     }
 
-    @Override public boolean equals(Object other) {
-        if (this == other)
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
             return true;
-        if (!(other instanceof ExternalMailboxBlob))
+        } else if (!(other instanceof ExternalMailboxBlob)) {
             return false;
+        }
         return getLocator().equals(((ExternalMailboxBlob) other).getLocator());
     }
 

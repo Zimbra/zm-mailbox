@@ -3234,8 +3234,8 @@ public class DbMailItem {
         }
     }
 
-    public static SpoolingCache<MailboxBlob> getAllBlobs(Mailbox mbox) throws ServiceException {
-        SpoolingCache<MailboxBlob> blobs = new SpoolingCache<MailboxBlob>(5000);
+    public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(Mailbox mbox) throws ServiceException {
+        SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = new SpoolingCache<MailboxBlob.MailboxBlobInfo>(5000);
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -3274,9 +3274,8 @@ public class DbMailItem {
         }
     }
 
-    private static void getAllBlobs(PreparedStatement stmt, Mailbox mbox, SpoolingCache<MailboxBlob> blobs)
+    private static void getAllBlobs(PreparedStatement stmt, Mailbox mbox, SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs)
     throws SQLException, IOException, ServiceException {
-        StoreManager sm = StoreManager.getInstance();
         ResultSet rs = null;
         try {
             int pos = 1;
@@ -3284,18 +3283,17 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                blobs.add(sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(2), rs.getString(3)));
+                blobs.add(new MailboxBlob.MailboxBlobInfo(mbox.getAccountId(), rs.getInt(1), rs.getInt(2), rs.getString(3)));
             }
         } finally {
             DbPool.closeResults(rs);
         }
     }
-    
-    public static interface Callback<T>
-    {
+
+    public static interface Callback<T> {
         public void call(T value);
     }
-    
+
     public static void visitAllBlobDigests(Mailbox mbox, Callback<String> callback) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -3336,7 +3334,7 @@ public class DbMailItem {
             stmt.close();
         }
     }
-    
+
     // these columns are specified by DB_FIELDS, below
     public static final int CI_ID          = 1;
     public static final int CI_TYPE        = 2;

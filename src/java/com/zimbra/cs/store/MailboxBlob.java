@@ -23,30 +23,44 @@ import java.io.Serializable;
 
 import com.zimbra.cs.mailbox.Mailbox;
 
-@SuppressWarnings("serial")
-public abstract class MailboxBlob implements Serializable {
+public abstract class MailboxBlob {
+    public static class MailboxBlobInfo implements Serializable {
+        private static final long serialVersionUID = 6378518636677970767L;
 
-    private final Mailbox mMailbox;
+        public String accountId;
+        public int itemId;
+        public int revision;
+        public String locator;
 
-    private final int mItemId;
-    private final int mRevision;
+        public MailboxBlobInfo(String accountId, int itemId, int revision, String locator) {
+            this.accountId = accountId;
+            this.itemId = itemId;
+            this.revision = revision;
+            this.locator = locator;
+        }
+    }
+
+    private final Mailbox mailbox;
+
+    private final int itemId;
+    private final int revision;
     private final String locator;
-    protected Long mSize;
-    protected String mDigest;
+    protected Long size;
+    protected String digest;
 
     protected MailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
-        mMailbox = mbox;
-        mItemId = itemId;
-        mRevision = revision;
+        this.mailbox = mbox;
+        this.itemId = itemId;
+        this.revision = revision;
         this.locator = locator;
     }
 
     public int getItemId() {
-        return mItemId;
+        return itemId;
     }
 
     public int getRevision() {
-        return mRevision;
+        return revision;
     }
 
     public String getLocator() {
@@ -54,34 +68,37 @@ public abstract class MailboxBlob implements Serializable {
     }
 
     public String getDigest() throws IOException {
-        if (mDigest == null)
-            mDigest = getLocalBlob().getDigest();
-        return mDigest;
+        if (digest == null) {
+            digest = getLocalBlob().getDigest();
+        }
+        return digest;
     }
 
     public MailboxBlob setDigest(String digest) {
-        mDigest = digest;
+        this.digest = digest;
         return this;
     }
 
     public long getSize() throws IOException {
-        if (mSize == null)
-            mSize = Long.valueOf(getLocalBlob().getRawSize());
-        return mSize;
+        if (size == null) {
+            this.size = Long.valueOf(getLocalBlob().getRawSize());
+        }
+        return size;
     }
 
     public MailboxBlob setSize(long size) {
-        mSize = size;
+        this.size = size;
         return this;
     }
 
     public Mailbox getMailbox() {
-        return mMailbox;
+        return mailbox;
     }
 
     abstract public Blob getLocalBlob() throws IOException;
 
-    @Override public String toString() {
-        return mMailbox.getId() + ":" + mItemId + ":" + mRevision + "[" + getLocator() + "]";
+    @Override
+    public String toString() {
+        return mailbox.getId() + ":" + itemId + ":" + revision + "[" + getLocator() + "]";
     }
 }
