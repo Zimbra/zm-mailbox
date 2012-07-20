@@ -53,6 +53,7 @@
 <right name="viewDomainAdminConsoleAccountsInfoTab" type="getAttrs" targetType="account">
   <desc> Admin Console Domain Admin view attr rights for Accounts Info Tab</desc>
   <attrs>
+    <a n="zimbraId"/>
     <a n="givenName"/>
     <a n="initials"/>
     <a n="uid"/>
