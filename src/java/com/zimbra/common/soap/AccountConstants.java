@@ -124,10 +124,6 @@ public class AccountConstants {
     public static final String E_GET_SMIME_PUBLIC_CERTS_REQUEST = "GetSMIMEPublicCertsRequest";
     public static final String E_GET_SMIME_PUBLIC_CERTS_RESPONSE = "GetSMIMEPublicCertsResponse";
 
-    // profile
-    public static final String E_UPDATE_PROFILE_REQUEST = "UpdateProfileRequest";
-    public static final String E_UPDATE_PROFILE_RESPONSE = "UpdateProfileResponse";
-
     // ZimbraLicenseExtension - LicenseService
     public static final String E_CHECK_LICENSE_REQUEST = "CheckLicenseRequest";
     public static final String E_CHECK_LICENSE_RESPONSE = "CheckLicenseResponse";
@@ -231,10 +227,6 @@ public class AccountConstants {
     // SMIME
     public static final QName GET_SMIME_PUBLIC_CERTS_REQUEST = QName.get(E_GET_SMIME_PUBLIC_CERTS_REQUEST, NAMESPACE);
     public static final QName GET_SMIME_PUBLIC_CERTS_RESPONSE = QName.get(E_GET_SMIME_PUBLIC_CERTS_RESPONSE, NAMESPACE);
-
-    // profile
-    public static final QName UPDATE_PROFILE_REQUEST = QName.get(E_UPDATE_PROFILE_REQUEST, NAMESPACE);
-    public static final QName UPDATE_PROFILE_RESPONSE = QName.get(E_UPDATE_PROFILE_RESPONSE, NAMESPACE);
 
     // ZimbraLicenseExtension - LicenseService
     public static final QName CHECK_LICENSE_REQUEST = QName.get(E_CHECK_LICENSE_REQUEST, NAMESPACE);
@@ -435,7 +427,4 @@ public class AccountConstants {
     // upload limits
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
-
-    public static final String E_PROFILE = "profile";
-    public static final String A_IMAGE = "image";
 }
