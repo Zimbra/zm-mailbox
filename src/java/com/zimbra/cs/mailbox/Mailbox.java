@@ -258,6 +258,9 @@ public class Mailbox {
     public static final int ID_FOLDER_TASKS     = 15;
     public static final int ID_FOLDER_BRIEFCASE = 16;
     public static final int ID_FOLDER_COMMENTS  = 17;
+    // ID_FOLDER_PROFILE Was used for folder related to ProfileServlet which was used in pre-release Iron Maiden only.
+    // Old mailboxes may still contain a system folder with id 18
+    @Deprecated
     public static final int ID_FOLDER_PROFILE   = 18;
 
     public static final int HIGHEST_SYSTEM_ID = 18;
@@ -1747,7 +1750,6 @@ public class Mailbox {
      *       +--Tags
      *       +--Conversations
      *       +--Comments
-     *       +--Profile
      *       +--&lt;other hidden system folders>
      *       +--USER_ROOT
      *            +--INBOX
@@ -1787,8 +1789,6 @@ public class Mailbox {
             Folder.create(ID_FOLDER_CONVERSATIONS, UUIDUtil.generateUUID(), this, root, "Conversations", hidden, MailItem.Type.CONVERSATION,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_COMMENTS, UUIDUtil.generateUUID(), this, root, "Comments", hidden, MailItem.Type.COMMENT,
-                    0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
-            Folder.create(ID_FOLDER_PROFILE, UUIDUtil.generateUUID(), this, root, "Profile", hidden, MailItem.Type.DOCUMENT,
                     0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
 
             byte system = Folder.FOLDER_IS_IMMUTABLE;

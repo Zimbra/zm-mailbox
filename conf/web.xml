@@ -387,16 +387,6 @@
   </servlet>
 
   <servlet>
-    <servlet-name>ProfileServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.ProfileServlet</servlet-class>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>443, 7070, 7071</param-value>
-    </init-param>
-    <load-on-startup>10</load-on-startup>
-  </servlet>
-
-  <servlet>
     <servlet-name>ZimletResources</servlet-name>
     <servlet-class>com.zimbra.cs.zimlet.ZimletResources</servlet-class>
     <init-param>
@@ -566,11 +556,6 @@
     <url-pattern>/robots.txt</url-pattern>
   </servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>ProfileServlet</servlet-name>
-    <url-pattern>/profile/*</url-pattern>
-  </servlet-mapping>
-  
   <servlet-mapping>
     <servlet-name>AutoDiscoverServlet</servlet-name>
     <url-pattern>/autodiscover/*</url-pattern>

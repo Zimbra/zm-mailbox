@@ -295,14 +295,6 @@
         <Call name="addRule">
 	    <Arg>        
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
-		    <Set name="pattern">/profile/*</Set>
-		    <Set name="replacement">/service/profile</Set>
-		</New>
-	    </Arg>
-        </Call>
-        <Call name="addRule">
-	    <Arg>        
-		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/autodiscover/*</Set>
 		    <Set name="replacement">/service/autodiscover</Set>
 		</New>
