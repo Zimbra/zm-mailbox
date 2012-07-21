@@ -317,7 +317,11 @@ public class W3cDomUtil {
     private static org.dom4j.QName dom4jQNameForNode(Node node) {
         org.dom4j.Namespace ns = node.getNamespaceURI() == null ? null :
             new org.dom4j.Namespace(node.getPrefix(), node.getNamespaceURI());
-        return new org.dom4j.QName(node.getLocalName(), ns);
+        String localName = node.getNodeName();
+        if (localName.contains(":")) {
+            localName = localName.substring(localName.indexOf(':') + 1);
+        }
+        return new org.dom4j.QName(localName, ns);
     }
 
     // Error handler to report errors and warnings
