@@ -541,6 +541,26 @@
     <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
 
 
+    <Call name="addBean">
+      <Arg>
+        <New class="org.eclipse.jetty.monitor.ThreadMonitor">
+          <Set name="scanInterval">2000</Set>
+          <Set name="busyThreshold">90</Set>
+          <Set name="stackDepth">5</Set> <!-- how much of the stack trace is compared for spinning check -->
+          <Set name="trailLength">4</Set><!-- how many stack traces to log -->
+          <!-- To enable logging CPU utilization for threads above specified threshold, -->
+          <!-- uncomment the following lines, changing log interval (in milliseconds)  -->
+          <!-- and log threshold (in percent) as desired.                              -->
+          <Set name="logInterval">10000</Set>
+          <Set name="logThreshold">65</Set>
+        
+          <!-- To enable detail dump of the server whenever a thread is detected as spinning, -->
+          <!-- uncomment the following lines. -->
+          <Set name="dumpable"><Ref id="Server"/></Set>
+        </New>
+      </Arg>
+    </Call>
+
     <!-- =========================================================== -->
     <!-- Configure Request Log                                       -->
     <!-- Request logs  may be configured for the entire server here, -->
