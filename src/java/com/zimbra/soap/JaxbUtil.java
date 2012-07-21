@@ -149,8 +149,6 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
-            com.zimbra.soap.account.message.UpdateProfileRequest.class,
-            com.zimbra.soap.account.message.UpdateProfileResponse.class,
 
             // zimbraMail
             com.zimbra.soap.mail.message.AddAppointmentInviteRequest.class,
@@ -745,8 +743,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GrantRightResponse.class,
             com.zimbra.soap.admin.message.HsmRequest.class,
             com.zimbra.soap.admin.message.HsmResponse.class,
-            com.zimbra.soap.admin.message.InjectStaticFilesRequest.class,
-            com.zimbra.soap.admin.message.InjectStaticFilesResponse.class,
             com.zimbra.soap.admin.message.InstallCertRequest.class,
             com.zimbra.soap.admin.message.InstallCertResponse.class,
             com.zimbra.soap.admin.message.InstallLicenseRequest.class,
