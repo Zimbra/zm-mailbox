@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AdminExtConstants;
-import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.common.soap.SyncConstants;
@@ -43,7 +42,6 @@ public class WsdlDocGenerator {
         serviceDescriptions.put(AccountConstants.NAMESPACE_STR, "The Account Service includes commands for retrieving, storing and managing user account information.");
         serviceDescriptions.put(AdminConstants.NAMESPACE_STR, "The Admin Service includes commands for administering Zimbra.");
         serviceDescriptions.put(AdminExtConstants.NAMESPACE_STR, "The Admin Extension Service includes additional commands for administering Zimbra.");
-        serviceDescriptions.put(AppBlastConstants.NAMESPACE_STR, "The AppBlast Service includes commands related to application delivery.");
         serviceDescriptions.put(MailConstants.NAMESPACE_STR, "The Mail Service includes commands for managing mail and calendar information.");
         serviceDescriptions.put(ReplicationConstants.NAMESPACE_STR, "The zimbraRepl Service includes commands for managing Zimbra Server replication.");
         serviceDescriptions.put(SyncConstants.NAMESPACE_STR, "The zimbraSync Service includes commands for managing devices using Synchronization.");

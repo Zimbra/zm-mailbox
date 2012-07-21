@@ -160,7 +160,6 @@
       <schema namespace="urn:zimbraMail" file="zimbraMail.xsd" />
       <schema namespace="urn:zimbraSync" file="zimbraSync.xsd" />
       <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd" />
-      <schema namespace="urn:zimbraAppblast" file="zimbraAppblast.xsd" />
       <schema namespace="urn:zimbraVoice" file="zimbraVoice.xsd" />
       <schema namespace="" file="extras.xsd" />
     </schemagen>

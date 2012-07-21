@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -39,7 +39,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AdminExtConstants;
-import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.common.soap.SyncConstants;
@@ -406,8 +405,6 @@ public class WsdlGenerator {
                 packageToRequestListMap.get("com.zimbra.soap.replication.message")));
         nsInfoList.add(WsdlInfoForNamespace.create(SyncConstants.NAMESPACE_STR, zcsService,
                 packageToRequestListMap.get("com.zimbra.soap.sync.message")));
-        nsInfoList.add(WsdlInfoForNamespace.create(AppBlastConstants.NAMESPACE_STR, zcsService,
-                packageToRequestListMap.get("com.zimbra.soap.appblast.message")));
         nsInfoList.add(WsdlInfoForNamespace.create(VoiceConstants.NAMESPACE_STR, zcsService,
                 packageToRequestListMap.get("com.zimbra.soap.voice.message")));
     }
