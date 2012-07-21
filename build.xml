@@ -1849,7 +1849,7 @@
             <sysproperty key="STOP.PORT" value="7867"/>
             <sysproperty key="STOP.KEY" value="stop"/>
             <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml"/>
-            <arg line="--ini OPTIONS=Server,jsp,jmx,resources,websocket,ext,jta,plus,rewrite etc/jetty.xml"/>
+            <arg line="--ini OPTIONS=Server,jsp,jmx,resources,websocket,ext,jta,plus,rewrite,monitor etc/jetty.xml"/>
         </java>
     </target>
 
