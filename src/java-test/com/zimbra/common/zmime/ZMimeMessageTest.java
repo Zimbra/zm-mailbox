@@ -58,6 +58,27 @@ public class ZMimeMessageTest {
         }
         mm.setContent("", mm.getContentType());
         mm.writeTo(System.out);
+
+        String subject = "re: Your Brains";
+
+        Assert.assertEquals(subject, mm.getSubject());
+
+        @SuppressWarnings("unchecked")
+        Enumeration<String> headerLines = mm.getAllHeaderLines();
+        boolean foundSubject = false;
+        if (headerLines != null) {
+            while (headerLines.hasMoreElements()) {
+                String line = headerLines.nextElement();
+                if (line.startsWith("Subject: ")) {
+                    System.out.println(line);
+                    Assert.assertEquals("Subject: "+subject, line);
+                    foundSubject = true;
+                    break;
+                }
+            }
+        }
+
+        Assert.assertTrue(foundSubject);
     }
 
     @Test

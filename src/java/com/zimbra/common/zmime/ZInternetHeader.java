@@ -83,9 +83,9 @@ public class ZInternetHeader {
         this.valueStart = vstart;
         if (LC.mime_handle_nonprintable_subject.booleanValue() && "subject".equalsIgnoreCase(name)) {
             //if any non-printable characters it is probably natively encoded in ISO-2022-JP or similar
-            for (int i = vstart; i < line.length ; i++) {
+            for (int i = vstart; i < line.length; i++) {
                 int code = content[i];
-                if (code < 0x20 || code > 0x7E) {
+                if ((code < 0x20 || code > 0x7E) && code != 10 && code != 13 && code != 9) {
                     byte[] rawValue = Arrays.copyOfRange(content, vstart, content.length);
                     Charset charset = detectCharset(rawValue, DEFAULT_CHARSET);
                     if (charset != null && !charset.equals(DEFAULT_CHARSET)) {
