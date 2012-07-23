@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -50,15 +50,16 @@ public class TestDataSource extends TestCase {
     private static final String DS_NAME = "TestDataSource";
     private static final String TEST_USER_NAME = "testdatasource";
     private static final String NAME_PREFIX = TestDataSource.class.getSimpleName();
-    
+
     private String mOriginalAccountPollingInterval;
     private String mOriginalAccountPop3PollingInterval;
     private String mOriginalAccountImapPollingInterval;
-    
+
     private String mOriginalCosPollingInterval;
     private String mOriginalCosPop3PollingInterval;
     private String mOriginalCosImapPollingInterval;
-    
+
+    @Override
     public void setUp()
     throws Exception {
         cleanUp();
@@ -78,12 +79,12 @@ public class TestDataSource extends TestCase {
         if (mOriginalAccountImapPollingInterval == null) {
             mOriginalAccountImapPollingInterval = "";
         }
-        
+
         mOriginalCosPollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, "");
         mOriginalCosPop3PollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourcePop3PollingInterval, "");
         mOriginalCosImapPollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval, "");
     }
-    
+
     public void testPollingInterval()
     throws Exception {
         // Create data source
@@ -98,14 +99,14 @@ public class TestDataSource extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         DataSource ds = prov.createDataSource(account, DataSourceType.pop3, NAME_PREFIX + " testPollingInterval", attrs);
-        
+
         // Valid polling interval
         assertNotNull("Min not defined", account.getAttr(Provisioning.A_zimbraDataSourceMinPollingInterval));
         long min = account.getTimeInterval(Provisioning.A_zimbraDataSourceMinPollingInterval, 0) / 1000;
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, Long.toString(min));
         prov.modifyDataSource(account, ds.getId(), attrs);
-        
+
         // Invalid polling interval
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, Long.toString(min - 1));
@@ -117,7 +118,7 @@ public class TestDataSource extends TestCase {
                 e.getMessage().contains("shorter than the allowed minimum"));
         }
     }
-    
+
     /**
      * Tests the <tt>lastError</tt> element and <tt>failingSince</tt> attribute
      * for <tt>GetInfoRequest</tt> and <tt>GetDataSourcesRequest</tt>.
@@ -125,7 +126,7 @@ public class TestDataSource extends TestCase {
     public void testErrorStatus()
     throws Exception {
         Account account = TestUtil.createAccount(TEST_USER_NAME);
-        
+
         // Create data source.
         Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -142,12 +143,12 @@ public class TestDataSource extends TestCase {
         // Make sure error status is not set.
         ZMailbox mbox = TestUtil.getZMailbox(TEST_USER_NAME);
         confirmErrorStatus(mbox, null);
-        
+
         // Invoke data source sync and make sure error status is not set.
         ZDataSource zds = TestUtil.getDataSource(mbox, DS_NAME);
         TestUtil.importDataSource(zds, mbox, null, true);
         confirmErrorStatus(mbox, null);
-        
+
         // Change to an invalid password, make sure error status is set.
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "bogus");
@@ -156,19 +157,19 @@ public class TestDataSource extends TestCase {
         long startTimestamp = System.currentTimeMillis() - 1000; // timestamp is returned in seconds, not millis
         TestUtil.importDataSource(zds, mbox, null, false);
         confirmErrorStatus(mbox, startTimestamp);
-        
+
         // Fix password, make sure that error status is reset (bug 39050).
         attrs.put(Provisioning.A_zimbraDataSourcePassword, TestUtil.DEFAULT_PASSWORD);
         prov.modifyDataSource(account, ds.getId(), attrs);
         confirmErrorStatus(mbox, null);
-        
+
         // Do another sync, make sure error password is not set.
         zds = TestUtil.getDataSource(mbox, DS_NAME);
         startTimestamp = System.currentTimeMillis();
         TestUtil.importDataSource(zds, mbox, null, true);
         confirmErrorStatus(mbox, null);
     }
-    
+
     private void confirmErrorStatus(ZMailbox mbox, Long laterThanTimestamp)
     throws Exception {
         // Check GetInfoRequest.
@@ -183,7 +184,7 @@ public class TestDataSource extends TestCase {
         }
         assertNotNull("Could not find data source in response: " + response.prettyPrint(), ePop3);
         confirmErrorStatus(ePop3, laterThanTimestamp);
-        
+
         // Check GetDataSources.
         ePop3 = null;
         request = new XMLElement(MailConstants.GET_DATA_SOURCES_REQUEST);
@@ -196,14 +197,14 @@ public class TestDataSource extends TestCase {
         assertNotNull("Could not find data source in response: " + response.prettyPrint(), ePop3);
         confirmErrorStatus(ePop3, laterThanTimestamp);
     }
-    
+
     private void confirmErrorStatus(Element ePop3, Long timestampBeforeSync)
     throws Exception {
         if (timestampBeforeSync != null) {
             assertTrue(ePop3.getElement(MailConstants.E_DS_LAST_ERROR).getText().length() > 0);
             long failingSince = ePop3.getAttributeLong(MailConstants.A_DS_FAILING_SINCE) * 1000;
             long now = System.currentTimeMillis();
-            
+
             assertTrue(failingSince + " is earlier than " + timestampBeforeSync, failingSince >= timestampBeforeSync);
             assertTrue(failingSince + " is later than " + now, failingSince < now);
         } else {
@@ -211,7 +212,7 @@ public class TestDataSource extends TestCase {
             assertNull("Error timestamp was not reset", ePop3.getAttribute(MailConstants.A_DS_FAILING_SINCE, null));
         }
     }
-    
+
     /**
      * Tests {@link DataSource#isScheduled()}.
      */
@@ -230,11 +231,11 @@ public class TestDataSource extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         String name = NAME_PREFIX + " testNegativePollingInterval";
         DataSource ds = prov.createDataSource(account, DataSourceType.pop3, name, attrs);
-        
+
         // Test polling interval not set.
         ds = account.getDataSourceByName(name);
         assertFalse(ds.isScheduled());
-        
+
         // Test polling interval = 0.
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "0");
@@ -249,16 +250,16 @@ public class TestDataSource extends TestCase {
         ds = account.getDataSourceByName(name);
         assertTrue(ds.isScheduled());
     }
-    
+
     public void testMigratePollingInterval()
     throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         Cos cos = account.getCOS();
-        
+
         // Create data source
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = TestUtil.createFolder(mbox, NAME_PREFIX + " testMigratePollingInterval");
-        
+
         Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_FALSE);
@@ -279,24 +280,24 @@ public class TestDataSource extends TestCase {
         cos.unsetDataSourceImapPollingInterval();
         account.setDataSourcePollingInterval("1h");
         cos.setDataSourcePollingInterval("2h");
-        
+
         // Trigger the migration.
         ds.getPollingInterval();
-        
+
         // Refresh and verify migrated values.
         account = TestUtil.getAccount(USER_NAME);
         cos = account.getCOS();
         ds = account.getDataSourceByName(dsName);
-        
+
         assertEquals("1h", account.getAttr(Provisioning.A_zimbraDataSourcePop3PollingInterval));
         assertEquals("1h", account.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval));
         assertEquals("2h", cos.getAttr(Provisioning.A_zimbraDataSourcePop3PollingInterval));
         assertEquals("2h", cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval));
     }
-    
+
     /**
      * Creates a folder that syncs to another folder via RSS, and verifies that an
-     * RSS data source was implicitly created. 
+     * RSS data source was implicitly created.
      */
     public void testRss()
     throws Exception {
@@ -307,7 +308,7 @@ public class TestDataSource extends TestCase {
         mbox.modifyFolderGrant(sourceFolder.getId(), GranteeType.pub, null, "r", null);
         String subject = NAME_PREFIX + " testRss";
         TestUtil.addMessage(mbox, subject, sourceFolder.getId());
-        
+
         // Create destination folder that syncs to the source folder via RSS.
         String urlString = String.format("%s/home/%s%s.rss", TestUtil.getBaseUrl(), USER_NAME, sourceFolder.getPath());
         urlString = HttpUtil.encodePath(urlString);
@@ -317,7 +318,7 @@ public class TestDataSource extends TestCase {
         ZRssDataSource ds = (ZRssDataSource) getDataSource(mbox, rssFolder.getId());
         assertNotNull(ds);
         assertNull(mbox.testDataSource(ds));
-        
+
         // Import data and validate the synced message.
         List<ZDataSource> list = new ArrayList<ZDataSource>();
         list.add(ds);
@@ -325,16 +326,17 @@ public class TestDataSource extends TestCase {
         waitForData(mbox, rssFolder);
         ZMessage syncedMsg = TestUtil.getMessage(mbox, "in:\"" + rssFolder.getPath() + "\"");
         assertEquals(subject, syncedMsg.getSubject());
-        
+
         // Delete folder, import data, and make sure that the data source was deleted.
         // Data source import runs asynchronously, so poll until the data source is gone.
         mbox.deleteFolder(rssFolder.getId());
-        mbox.importData(list);
+        //JBF - do not do the import; it will fail if DS is already deleted
+        //mbox.importData(list);
 
         // XXX bburtin: disabled check to avoid false positives (bug 54816).  Some sort
         // of race condition is causing this check to fail intermittently.  I was unable
         // to consistently repro.
-        
+
         /*
         for (int i = 1; i <= 10; i++) {
             ds = (ZRssDataSource) getDataSource(mbox, rssFolder.getId());
@@ -366,7 +368,7 @@ public class TestDataSource extends TestCase {
         // Get the data source that was implicitly created.
         ZCalDataSource ds = (ZCalDataSource) getDataSource(mbox, folder.getId());
         assertNotNull(ds);
-        
+
         // Test data source.  If the test fails, skip validation so we don't
         // get false positives when the feed is down or the test
         // is running on a box that's not connected to the internet.
@@ -375,20 +377,20 @@ public class TestDataSource extends TestCase {
             ZimbraLog.test.warn("Unable to test iCal data source for %s: %s.", urlString, error);
             return;
         }
-        
+
         // Import data and confirm that the folder is not empty.
         List<ZDataSource> list = new ArrayList<ZDataSource>();
         list.add(ds);
         mbox.importData(list);
         waitForData(mbox, folder);
-        
+
         // Delete folder, import data, and make sure that the data source was deleted.
         mbox.deleteFolder(folder.getId());
         mbox.importData(list);
         ds = (ZCalDataSource) getDataSource(mbox, folder.getId());
         assertNull(ds);
     }
-    
+
     private void waitForData(ZMailbox mbox, ZFolder folder)
     throws Exception {
         for (int i = 1; i <= 10; i++) {
@@ -411,30 +413,31 @@ public class TestDataSource extends TestCase {
         return null;
     }
 
-    
+
+    @Override
     public void tearDown()
     throws Exception {
         // Reset original polling intervals.
         Account account = TestUtil.getAccount(USER_NAME);
         Cos cos = account.getCOS();
-        
+
         account.setDataSourcePollingInterval(mOriginalAccountPollingInterval);
         account.setDataSourcePop3PollingInterval(mOriginalAccountPop3PollingInterval);
         account.setDataSourceImapPollingInterval(mOriginalAccountImapPollingInterval);
-        
+
         cos.setDataSourcePollingInterval(mOriginalCosPollingInterval);
         cos.setDataSourcePop3PollingInterval(mOriginalCosPop3PollingInterval);
         cos.setDataSourceImapPollingInterval(mOriginalCosImapPollingInterval);
-        
+
         cleanUp();
     }
-    
+
     public void cleanUp()
     throws Exception {
         TestUtil.deleteAccount(TEST_USER_NAME);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
-    
+
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
