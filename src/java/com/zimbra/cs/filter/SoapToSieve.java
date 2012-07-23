@@ -313,22 +313,41 @@ public final class SoapToSieve {
             return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
-            return String.format("tag \"%s\"", FilterUtil.escape(tag.getTag()));
+            String tagName = tag.getTag();
+            if (StringUtil.isNullOrEmpty(tagName)) {
+                throw ServiceException.INVALID_REQUEST("Missing tag", null);
+            }
+            return String.format("tag \"%s\"", FilterUtil.escape(tagName));
         } else if (action instanceof FilterAction.FlagAction) {
             FilterAction.FlagAction flag = (FilterAction.FlagAction) action;
-            return String.format("flag \"%s\"", Sieve.Flag.valueOf(flag.getFlag()));
+            String flagName = flag.getFlag();
+            if (StringUtil.isNullOrEmpty(flagName)) {
+                throw ServiceException.INVALID_REQUEST("Missing flag", null);
+            }
+            return String.format("flag \"%s\"", Sieve.Flag.valueOf(flagName));
         } else if (action instanceof FilterAction.RedirectAction) {
             FilterAction.RedirectAction redirect = (FilterAction.RedirectAction) action;
-            return String.format("redirect \"%s\"", FilterUtil.escape(redirect.getAddress()));
+            String address = redirect.getAddress();
+            if (StringUtil.isNullOrEmpty(address)) {
+                throw ServiceException.INVALID_REQUEST("Missing address", null);
+            }
+            return String.format("redirect \"%s\"", FilterUtil.escape(address));
         } else if (action instanceof FilterAction.ReplyAction) {
             FilterAction.ReplyAction reply = (FilterAction.ReplyAction) action;
+            String content = reply.getContent();
+            if (StringUtil.isNullOrEmpty(content)) {
+                throw ServiceException.INVALID_REQUEST("Missing reply content", null);
+            }
             return new StringBuilder("reply text:\r\n")
-                .append(getDotStuffed(reply.getContent()))
+                .append(getDotStuffed(content))
                 .append("\r\n.\r\n")
                 .toString();
         } else if (action instanceof FilterAction.NotifyAction) {
             FilterAction.NotifyAction notify = (FilterAction.NotifyAction) action;
             String emailAddr = notify.getAddress();
+            if (StringUtil.isNullOrEmpty(emailAddr)) {
+                throw ServiceException.INVALID_REQUEST("Missing address", null);
+            }
             String subjectTemplate = Strings.nullToEmpty(notify.getSubject());
             String bodyTemplate = Strings.nullToEmpty(notify.getContent());
             int maxBodyBytes = Objects.firstNonNull(notify.getMaxBodySize(), -1);
