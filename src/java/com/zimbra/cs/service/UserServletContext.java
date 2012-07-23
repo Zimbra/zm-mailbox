@@ -87,6 +87,7 @@ public class UserServletContext {
     private long mStartTime = -2;
     private long mEndTime = -2;
     private Throwable error;
+    private FileUploadServlet.Upload upload;
 
     public static class Item {
         public int id;
@@ -488,7 +489,7 @@ public class UserServletContext {
     }
 
     public FileUploadServlet.Upload getUpload() throws ServiceException, IOException {
-        return FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId());
+        return FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId(), true);
     }
 
     private static final class UploadInputStream extends InputStream {
@@ -600,10 +601,11 @@ public class UserServletContext {
             filename = ctype.getParameter("name");
             if (filename == null || filename.trim().equals(""))
                 filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
+            upload = getUpload();
             is = new UploadInputStream(contentEncoding != null &&
                 contentEncoding.indexOf("gzip") != -1 ?
-                new GZIPInputStream(req.getInputStream()) :
-                    req.getInputStream(), limit);
+                new GZIPInputStream(upload.getInputStream()) :
+                    upload.getInputStream(), limit);
         }
         if (filename == null || filename.trim().equals(""))
             filename = "unknown";
@@ -613,6 +615,12 @@ public class UserServletContext {
         ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
             filename, req.getContentLength());
         return is;
+    }
+    
+    public void cleanup() {
+        if (upload != null)
+            FileUploadServlet.deleteUpload(upload);
+        upload = null;
     }
 
     public void logError(Throwable e) {

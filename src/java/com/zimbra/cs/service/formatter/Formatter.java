@@ -342,7 +342,7 @@ public abstract class Formatter {
                 ZimbraLog.misc.warn("format output has already been written.");
                 return;
             }
-            if (exception == null && w == null) {
+            if (exception == null && (w == null || w.isEmpty())) {
                 out.println("<body></body>\n</html>");
             } else {
                 ZimbraLog.misc.warn(getType() + " formatter exception",
