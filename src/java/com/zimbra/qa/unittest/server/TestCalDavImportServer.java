@@ -34,8 +34,8 @@ import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class TestCalDavImportServer extends TestCase {
-    private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestCalDavImportServer.class.getSimpleName();
+    private static final String USER_NAME = NAME_PREFIX + "user1";
     private static final String DATA_SOURCE_NAME = NAME_PREFIX;
     private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
     private Folder rootFolder = null;
@@ -45,8 +45,12 @@ public class TestCalDavImportServer extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
-        // Create temp account and mailbox
         Provisioning prov = Provisioning.getInstance();
+        // create user1 account
+        Account user1Account = prov.createAccount(TestUtil.getAddress(USER_NAME), "test123", null);
+        // load the mailbox
+        Mailbox user1Mbox = MailboxManager.getInstance().getMailboxByAccount(user1Account);
+        // Create temp account and mailbox
         account = prov.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
         mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         rootFolder = mbox.createFolder(null, USER_NAME, Mailbox.ID_FOLDER_ROOT, new Folder.FolderOptions().setDefaultView(MailItem.Type.APPOINTMENT));
@@ -98,6 +102,11 @@ public class TestCalDavImportServer extends TestCase {
             }
             TestUtil.deleteTestData(TEMP_USER_NAME, NAME_PREFIX);
             TestUtil.deleteAccount(TEMP_USER_NAME);
+        }
+        account = TestUtil.getAccount(USER_NAME);
+        if (account != null) {
+            TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+            TestUtil.deleteAccount(USER_NAME);
         }
     }
 }
