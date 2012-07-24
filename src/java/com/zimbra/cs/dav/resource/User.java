@@ -219,12 +219,16 @@ public class User extends Principal {
                     if (zmbx == null) {
                         continue;
                     }
-                    ZFolder folder = zmbx.getFolderById(mp.getTarget().toString(mAccount));
-                    // skip dangling mountpoints
-                    if (folder == null) {
-                        continue;
+                    try {
+                        ZFolder folder = zmbx.getFolderById(mp.getTarget().toString(mAccount));
+                        // skip dangling mountpoints
+                        if (folder == null) {
+                            continue;
+                        }
+                        mps.add(new Pair<Mountpoint,ZFolder>(mp, folder));
+                    } catch (ServiceException se) {
+                        ZimbraLog.dav.warn("can't get remote folder", se);
                     }
-                    mps.add(new Pair<Mountpoint,ZFolder>(mp, folder));
                 }
             } catch (ServiceException se) {
                 ZimbraLog.dav.warn("can't get mailbox", se);
