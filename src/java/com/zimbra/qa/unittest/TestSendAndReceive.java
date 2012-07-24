@@ -91,8 +91,18 @@ public class TestSendAndReceive extends TestCase {
         TestUtil.waitForMessage(mbox, "in:Sent " + subject);
 
         // make sure message is no longer in the Drafts folder
-        assertTrue("message is still in the Drafts folder",
-                   TestUtil.search(mbox, "in:Drafts " + subject).isEmpty());
+        //there is a race here since auto send and delete from drafts are two transactions
+        //handle the race by sleeping and trying again a few times
+        boolean deletedFromSent = false;
+        int tries = 0;
+        while (!deletedFromSent && tries < 10) {
+            deletedFromSent = TestUtil.search(mbox, "in:Drafts " + subject).isEmpty();
+            if (!deletedFromSent) {
+                Thread.sleep(500);
+            }
+            tries++;
+        }
+        assertTrue("message is still in the Drafts folder", deletedFromSent);
     }
 
     /**
