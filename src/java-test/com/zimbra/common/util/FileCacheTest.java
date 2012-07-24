@@ -288,14 +288,14 @@ public class FileCacheTest {
         byte[] data = getRandomBytes(100);
 
         // Store 2 entries for the same content.
-        Map<String, String> props = ImmutableMap.of("Bill", "Evans", "Winton", "Kelly");
+        Map<String, String> props = ImmutableMap.of("Bill", "Evans", "Wynton", "Kelly");
         cache.put(1, new ByteArrayInputStream(data), props);
         cache.put(2, new ByteArrayInputStream(data), props);
 
         FileCache.Item item = cache.get(1);
         assertEquals(2, item.properties.size());
         assertEquals("Evans", item.properties.get("Bill"));
-        assertEquals("Kelly", item.properties.get("Winton"));
+        assertEquals("Kelly", item.properties.get("Wynton"));
 
         assertEquals(item, cache.get(2));
     }
@@ -315,7 +315,7 @@ public class FileCacheTest {
         FileCache.Item item = cache.get(1);
         assertEquals(2, item.properties.size());
         assertEquals("Evans", item.properties.get("Bill"));
-        assertEquals("Kelly", item.properties.get("Winton"));
+        assertEquals("Kelly", item.properties.get("Wynton"));
 
         assertEquals(item, cache.get(2));
     }
@@ -350,6 +350,41 @@ public class FileCacheTest {
         FileCache.Item item = cache.get(key1);
         assertEquals(item, cache.get(key2));
         assertArrayEquals(data, ByteUtil.getContent(item.file));
+    }
+
+    /**
+     * Confirms that the cache properly replaces a value for an existing key (HS-7363).
+     */
+    @Test
+    public void replaceValueForKey() throws IOException {
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, false).build();
+
+        // Put data into the cache 10 times and make sure that the number of files doesn't grow.
+        byte[] data = null;
+        for (int i = 1; i <= 10; i++) {
+            data = getRandomBytes(100);
+            cache.put(1, new ByteArrayInputStream(data));
+            assertEquals(1, FileUtil.listFilesRecursively(tmpDir).size());
+        }
+
+        // Verify that we have the latest version of the data;
+        FileCache.Item item = cache.get(1);
+        assertArrayEquals(data, ByteUtil.getContent(item.file));
+    }
+
+    /**
+     * Confirms that both the data file and the property file are deleted when an item
+     * is removed.
+     */
+    @Test
+    public void removeProperties() throws IOException {
+        FileCache<Integer> cache = FileCache.Builder.createWithIntegerKey(tmpDir, true).build();
+        byte[] data = getRandomBytes(100);
+        assertEquals(0, FileUtil.listFilesRecursively(tmpDir).size());
+        cache.put(1, new ByteArrayInputStream(data));
+        assertEquals(2, FileUtil.listFilesRecursively(tmpDir).size());
+        cache.remove(1);
+        assertEquals(0, FileUtil.listFilesRecursively(tmpDir).size());
     }
 
     private static byte[] getRandomBytes(int size) {

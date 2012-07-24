@@ -405,6 +405,19 @@ public class FileCache<K> {
         }
 
         synchronized (this) {
+            // If this data is already stored for the given key, return the item.
+            String existingDigest = keyToDigest.get(key);
+            if (existingDigest != null) {
+                if (existingDigest.equals(digest)) {
+                    // The same data is already mapped to this key.
+                    deleteWithWarning(temp);
+                    return digestToItem.get(digest);
+                } else {
+                    // New data for the same key.  Remove the old entry.
+                    remove(key);
+                }
+            }
+
             if (persistent) {
                 // Store properties.
                 Properties props = makeProperties(key, userProps, digest);
@@ -418,14 +431,12 @@ public class FileCache<K> {
                 }
             }
 
-            // Update in-memory data.
             item = digestToItem.get(digest);
-
             if (item != null) {
-                // File is already in the cache.  Delete the temp file.
+                // Data is already in the cache for another key.  Delete the temp file.
                 deleteWithWarning(temp);
             } else {
-                // File is not in the cache.  Move to the cached location.
+                // Data is not in the cache.  Move to the cached location.
                 File dataFile = new File(dataDir, digest);
                 FileUtil.rename(temp, dataFile);
                 item = new Item(dataFile, digest, userProps);
@@ -483,12 +494,8 @@ public class FileCache<K> {
             if (keys.isEmpty()) {
                 Item entry = digestToItem.remove(digest);
                 numBytes -= entry.length;
-                log.debug("Deleting unreferenced file %s.", entry.file);
-                if (deleteWithWarning(entry.file)) {
-                    return true;
-                } else {
-                    log.warn("Unable to delete %s.", entry.file.getAbsolutePath());
-                }
+                deleteFromDisk(entry);
+                return true;
             } else {
                 log.debug("Not deleting file for %s.  It is referenced by %s.", digest, keys);
             }
@@ -499,8 +506,16 @@ public class FileCache<K> {
 
     @VisibleForTesting
     public synchronized void removeAll() {
-        for (K key :keyToDigest.keySet()) {
+        for (K key : keyToDigest.keySet()) {
             remove(key);
+        }
+    }
+
+    private void deleteFromDisk(Item item) {
+        deleteWithWarning(item.file);
+        if (persistent) {
+            File propFile = new File(propDir, item.digest + ".properties");
+            deleteWithWarning(propFile);
         }
     }
 
@@ -523,11 +538,7 @@ public class FileCache<K> {
             }
 
             // Delete from filesystem.
-            deleteWithWarning(item.file);
-            if (persistent) {
-                File propFile = new File(propDir, item.digest + ".properties");
-                deleteWithWarning(propFile);
-            }
+            deleteFromDisk(item);
 
             // Update in-memory caches.
             i.remove();
