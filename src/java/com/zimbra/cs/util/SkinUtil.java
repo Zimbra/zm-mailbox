@@ -121,8 +121,9 @@ public class SkinUtil {
 			return prefSkin;
 		}
 
-		// Nothing in ldap has a valid skin. Since beach seens to be our most stable skin, try it.
-		String usuallyAvailableSkin = "beach";
+		// Nothing in ldap has a valid skin. 
+		// use carbon since that is the default for 7.x
+		String usuallyAvailableSkin = "carbon";
 		if (prefSkin != usuallyAvailableSkin) {
 			if (checkSkin(usuallyAvailableSkin, installedSkins, allowedSkins)) {
 				ZimbraLog.webclient.debug("Loading default skin "+usuallyAvailableSkin );
