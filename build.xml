@@ -74,10 +74,8 @@
   <path id="soapdocs.class.path">
     <path refid="class.path"/>
     <pathelement location="${soapdocs.classes.dir}" />
-    <fileset dir="${server.dir}/soapdocs/jars">
-        <include name="**/freemarker*.jar"/>
-    </fileset>
     <fileset dir="${common.jars.dir}">
+        <include name="**/freemarker*.jar"/>
         <include name="**/commons-lang-*.jar"/>
         <include name="**/commons-cli-*.jar"/>
     </fileset>
@@ -97,8 +95,6 @@
         <include name="jackson*.jar"/>
         <include name="guava*.jar"/>
         <include name="**/commons-lang-*.jar"/>
-    </fileset>
-    <fileset dir="${server.dir}/soapdocs/jars">
         <include name="**/freemarker*.jar"/>
     </fileset>
   </path>
