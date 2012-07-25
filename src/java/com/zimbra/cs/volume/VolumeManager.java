@@ -171,7 +171,7 @@ public final class VolumeManager {
                     id2volume.put(update.getId(), update);
                     updateSweptDirectories();
                     if (isCurrent(vol)) {
-                        updateCurrentVolumeRefs(update);
+                        updateCurrentVolumeRefs(update, update.getType());
                     }
                 }
             }
@@ -339,7 +339,7 @@ public final class VolumeManager {
         DbConnection conn = DbPool.getConnection();
         try {
             DbVolume.updateCurrentVolume(conn, type, id);
-            updateCurrentVolumeRefs(vol);
+            updateCurrentVolumeRefs(vol, type);
             success = true;
             if (!noRedo) {
                 redoRecorder.log();
@@ -349,8 +349,7 @@ public final class VolumeManager {
         }
     }
 
-    private void updateCurrentVolumeRefs(Volume vol) {
-        short type = vol.getType();
+    private void updateCurrentVolumeRefs(Volume vol, short type) {
         synchronized (this) {
             switch (type) {
                 case Volume.TYPE_MESSAGE:
