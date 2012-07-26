@@ -323,7 +323,7 @@ public final class LC {
     public static final KnownKey soap_response_chunked_transfer_encoding_enabled = KnownKey.newKey(true);
     public static final KnownKey zimbra_servlet_output_stream_buffer_size = KnownKey.newKey(5120);
 
-    public static final KnownKey rest_response_cache_control_value = KnownKey.newKey("");
+    public static final KnownKey rest_response_cache_control_value = KnownKey.newKey("no-store, no-cache");
 
     @Reloadable
     @Supported
