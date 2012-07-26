@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120710-1325 */
+    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120724-1526 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -35640,7 +35640,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @return zimbraProxyCacheableContentTypes, or empty array if unset
@@ -35651,7 +35651,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new value
@@ -35665,7 +35665,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new value
@@ -35680,7 +35680,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new to add to existing values
@@ -35694,7 +35694,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes new to add to existing values
@@ -35709,7 +35709,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes existing value to remove
@@ -35723,7 +35723,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param zimbraProxyCacheableContentTypes existing value to remove
@@ -35738,7 +35738,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35751,7 +35751,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      *
      * @param attrs existing map to populate, or null to create a new map

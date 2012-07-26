@@ -1636,7 +1636,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Object match priority</desc>
 </attr>
 
-<attr id="303" name="zimbraProxyCacheableContentTypes" type="string" max="256" cardinality="multi" optionalIn="cos" deprecatedSince="8.0.0">
+<attr id="303" name="zimbraProxyCacheableContentTypes" type="string" max="256" cardinality="multi" optionalIn="cos" deprecatedSince="7.2.1">
   <defaultCOSValue>text/javascript</defaultCOSValue>
   <defaultCOSValue>application/x-javascript</defaultCOSValue>
   <desc>Content types that can be cached by proxy servlet</desc>
