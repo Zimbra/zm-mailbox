@@ -81,6 +81,8 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_directory = KnownKey.newKey("${zimbra_home}/index");
+    
+    public static final KnownKey zimbra_index_disable_perf_counters = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey zimbra_store_directory = KnownKey.newKey("${zimbra_home}/store");
