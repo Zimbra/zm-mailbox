@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120710-1325 */
+    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120724-1526 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -9493,7 +9493,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraProxyAllowedDomains = "zimbraProxyAllowedDomains";
 
     /**
-     * Deprecated since: 8.0.0. Deprecated per bug 74769. Orig desc: Content
+     * Deprecated since: 7.2.1. Deprecated per bug 74769. Orig desc: Content
      * types that can be cached by proxy servlet
      */
     @ZAttr(id=303)
