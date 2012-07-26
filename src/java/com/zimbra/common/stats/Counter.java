@@ -14,20 +14,22 @@
  */
 package com.zimbra.common.stats;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Tracks a total and count (number of calls to {@link #increment}).
  */
 public class Counter {
 
-    private volatile long mCount = 0;
-    private volatile long mTotal = 0;
+    private AtomicLong mCount = new AtomicLong();
+    private AtomicLong mTotal = new AtomicLong();
     
     public long getCount() {
-        return mCount;
+        return mCount.longValue();
     }
     
     public long getTotal() { 
-        return mTotal;
+        return mTotal.longValue();
     }
 
     /**
@@ -35,30 +37,30 @@ public class Counter {
      * call to {@link #reset}.
      */
     public synchronized double getAverage() {
-        if (mCount == 0) {
+        if (mCount.longValue() == 0) {
             return 0.0;
         } else {
-            return (double) mTotal / (double) mCount;
+            return (double) mTotal.longValue() / (double) mCount.longValue();
         }
     }
 
     /**
      * Increments the total by the specified value.  Increments the count by 1.
      */
-    public synchronized void increment(long value) {
-        mCount++;
-        mTotal += value;
+    public void increment(long value) {
+        mCount.getAndIncrement();
+        mTotal.getAndAdd(value);
     }
 
     /**
      * Increments the count and total by 1.  
      */
-    public synchronized void increment() {
+    public void increment() {
         increment(1);
     }
     
     public synchronized void reset() {
-        mCount = 0;
-        mTotal = 0;
+        mCount.set(0);
+        mTotal.set(0);
     }
 }
