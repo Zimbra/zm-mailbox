@@ -25,6 +25,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -41,6 +42,8 @@ public final class LuceneDirectoryTest {
         if (!tmpDir.isDirectory()) {
             tmpDir.mkdirs();
         }
+        // make sure index perf counters are enabled.
+        LC.zimbra_index_disable_perf_counters.setDefault(false);
     }
 
     @Test

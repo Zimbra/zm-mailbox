@@ -188,6 +188,7 @@ public final class LuceneDirectory extends Directory {
 
     private static final class LuceneIndexInput extends IndexInput {
         private final IndexInput input;
+        private boolean disableCounters = LC.zimbra_index_disable_perf_counters.booleanValue();
 
         LuceneIndexInput(IndexInput in) {
             input = in;
@@ -195,20 +196,26 @@ public final class LuceneDirectory extends Directory {
 
         @Override
         public byte readByte() throws IOException {
-            ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(1);
+            if (!disableCounters) {
+                ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(1);
+            }
             return input.readByte();
         }
 
         @Override
         public void readBytes(byte[] b, int offset, int len) throws IOException {
-            ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(len);
+            if (!disableCounters) {
+                ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(len);
+            }
             input.readBytes(b, offset, len);
         }
 
         @Override
         public void readBytes(byte[] b, int offset, int len, boolean useBuffer)
             throws IOException {
-            ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(len);
+            if (!disableCounters) {
+                ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(len);
+            }
             input.readBytes(b, offset, len, useBuffer);
         }
 
@@ -245,6 +252,7 @@ public final class LuceneDirectory extends Directory {
 
     private static final class LuceneIndexOutput extends IndexOutput {
         private final IndexOutput output;
+        private boolean disableCounters = LC.zimbra_index_disable_perf_counters.booleanValue();
 
         LuceneIndexOutput(IndexOutput out) {
             output = out;
@@ -252,19 +260,25 @@ public final class LuceneDirectory extends Directory {
 
         @Override
         public void writeByte(byte b) throws IOException {
-            ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(1);
+            if (!disableCounters) {
+                ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(1);
+            }
             output.writeByte(b);
         }
 
         @Override
         public void writeBytes(byte[] b, int len) throws IOException {
-            ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(len);
+            if (!disableCounters) {
+                ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(len);
+            }
             output.writeBytes(b, len);
         }
 
         @Override
         public void writeBytes(byte[] b, int offset, int len) throws IOException {
-            ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(len);
+            if (!disableCounters) {
+                ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(len);
+            }
             output.writeBytes(b, offset, len);
         }
 
