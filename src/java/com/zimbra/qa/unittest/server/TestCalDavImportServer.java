@@ -76,7 +76,7 @@ public class TestCalDavImportServer extends TestCase {
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraMailSSLPort));
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, ProvisioningConstants.TRUE);
-        attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
+        attrs.put(Provisioning.A_zimbraDataSourceHost, TestUtil.getServerAttr(Provisioning.A_zimbraServiceHostname));
         attrs.put(Provisioning.A_zimbraDataSourcePort, Integer.toString(port));
         attrs.put(Provisioning.A_zimbraDataSourceUsername, USER_NAME);
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "test123");
