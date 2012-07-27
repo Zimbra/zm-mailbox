@@ -73,7 +73,7 @@ public class TestCalDavImportServer extends TestCase {
 
     private void createDataSource() throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraMailPort));
+        int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraMailSSLPort));
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
@@ -81,7 +81,7 @@ public class TestCalDavImportServer extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceUsername, USER_NAME);
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "test123");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(rootFolder.getId()));
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "cleartext");
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
         attrs.put(Provisioning.A_zimbraDataSourceAttribute, "p:/principals/users/_USERNAME_");
         prov.createDataSource(account, DataSourceType.caldav, DATA_SOURCE_NAME, attrs);
     }

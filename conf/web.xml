@@ -371,7 +371,7 @@
     <servlet-class>com.zimbra.cs.dav.service.DavServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>443, 7070, 7071</param-value>
+      <param-value>443, 7070, 7071, 7443</param-value>
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
@@ -381,7 +381,7 @@
     <servlet-class>com.zimbra.cs.dav.service.DavWellKnownServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>443, 7070, 7071</param-value>
+      <param-value>443, 7070, 7071, 7443</param-value>
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
