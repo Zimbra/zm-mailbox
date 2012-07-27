@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -79,7 +81,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> callbacks = new CopyOnWriteArrayList<LmtpCallback>();
     private static Map<String, Set<Integer>> receivedMessageIDs;
-    private static final Map<Integer, Object> mailboxDeliveryLocks = createMailboxDeliveryLocks();
+    private static final Map<Integer, ReentrantLock> mailboxDeliveryLocks = createMailboxDeliveryLocks();
 
     private final LmtpConfig config;
 
@@ -105,14 +107,14 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         addCallback(QuotaWarning.getInstance());
     }
 
-    private static Map<Integer, Object> createMailboxDeliveryLocks() {
-        Function<Integer, Object> objCreator = new Function<Integer,  Object>() {
+    private static Map<Integer, ReentrantLock> createMailboxDeliveryLocks() {
+        Function<Integer, ReentrantLock> lockCreator = new Function<Integer,  ReentrantLock>() {
             @Override
-            public Object apply(Integer from) {
-                return new Object();
+            public ReentrantLock apply(Integer from) {
+                return new ReentrantLock();
             }
         };
-        return new MapMaker().makeComputingMap(objCreator);
+        return new MapMaker().makeComputingMap(lockCreator);
     }
 
     @Override public LmtpReply getAddressStatus(LmtpAddress address) {
@@ -549,7 +551,21 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                             Mailbox mbox = rd.mbox;
                             ParsedMessage pm = rd.pm;
                             List<ItemId> addedMessageIds = null;
-                            synchronized (mailboxDeliveryLocks.get(mbox.getId())) {
+                            ReentrantLock lock = mailboxDeliveryLocks.get(mbox.getId());
+                            boolean acquiredLock;
+                            try {
+                                // Wait for the lock, up to the timeout
+                                acquiredLock = lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+                            } catch (InterruptedException e) {
+                                acquiredLock = false;
+                            }
+                            if (!acquiredLock) {
+                                ZimbraLog.lmtp.info("try again for message from=%s,to=%s: another mail delivery in progress.",
+                                        envSender, rcptEmail);
+                                reply = LmtpReply.TEMPORARY_FAILURE;
+                                break;
+                            }
+                            try {
                                 if (dedupe(pm, mbox)) {
                                     // message was already delivered to this mailbox
                                     ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
@@ -596,6 +612,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 if (addedMessageIds != null && addedMessageIds.size() > 0) {
                                     addToDedupeCache(pm, mbox);
                                 }
+                            } finally {
+                                lock.unlock();
                             }
 
                             if (addedMessageIds != null && addedMessageIds.size() > 0) {
