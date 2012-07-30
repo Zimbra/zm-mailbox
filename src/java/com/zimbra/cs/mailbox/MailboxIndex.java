@@ -623,8 +623,8 @@ public final class MailboxIndex {
             // index.
             ZimbraLog.index.debug("Tokenizing id=%d", id);
             MailItem item = null;
-            mailbox.beginTransaction("IndexItemList-Fetch", null);
             try {
+                mailbox.beginTransaction("IndexItemList-Fetch", null);
                 item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
             } catch (MailServiceException.NoSuchItemException e) { // fallback to dumpster
                 try {
