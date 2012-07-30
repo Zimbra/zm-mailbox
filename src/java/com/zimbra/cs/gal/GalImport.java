@@ -75,7 +75,7 @@ public class GalImport extends MailItemImport {
                 Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp :
                 Provisioning.A_zimbraGalLastFailedSyncTimestamp;
         attrs.put(attr, DateUtil.toGeneralizedTime(now));
-        Provisioning.getInstance().modifyAttrs(ds, attrs);
+        Provisioning.getInstance().modifyDataSource(ds.getAccount(), ds.getId(), attrs);
     }
 
     public void importGal(int fid, boolean fullSync, boolean force) throws ServiceException {
