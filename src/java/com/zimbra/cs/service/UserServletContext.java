@@ -489,7 +489,10 @@ public class UserServletContext {
     }
 
     public FileUploadServlet.Upload getUpload() throws ServiceException, IOException {
-        return FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId(), true);
+        if (upload == null) {
+            upload = FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId(), true);
+        }
+        return upload;
     }
 
     private static final class UploadInputStream extends InputStream {
@@ -601,11 +604,10 @@ public class UserServletContext {
             filename = ctype.getParameter("name");
             if (filename == null || filename.trim().equals(""))
                 filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
-            upload = getUpload();
             is = new UploadInputStream(contentEncoding != null &&
                 contentEncoding.indexOf("gzip") != -1 ?
-                new GZIPInputStream(upload.getInputStream()) :
-                    upload.getInputStream(), limit);
+                new GZIPInputStream(getUpload().getInputStream()) :
+                    getUpload().getInputStream(), limit);
         }
         if (filename == null || filename.trim().equals(""))
             filename = "unknown";

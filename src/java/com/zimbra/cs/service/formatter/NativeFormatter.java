@@ -401,25 +401,22 @@ public final class NativeFormatter extends Formatter {
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
             throws IOException, ServiceException, UserServletException
     {
-        InputStream is = context.getRequestInputStream();
-
-        try {
+        if (filename == null) {
             Mailbox mbox = folder.getMailbox();
-
-            if (filename == null) {
-                try {
-                    ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
-                    DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true);
-                    mbox.addMessage(context.opContext, pm, dopt, null);
-                    return;
-                } catch (ServiceException e) {
-                    throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
-                }
+            try {
+                ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
+                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true);
+                mbox.addMessage(context.opContext, pm, dopt, null);
+                return;
+            } catch (ServiceException e) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
             }
+        }
 
+        InputStream is = context.getRequestInputStream();
+        try {
             Blob blob = StoreManager.getInstance().storeIncoming(is);
             saveDocument(blob, context, contentType, folder, filename, is);
-
         } finally {
             is.close();
         }
