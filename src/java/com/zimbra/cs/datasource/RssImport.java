@@ -67,18 +67,16 @@ public class RssImport implements DataImport {
         if (StringUtil.isNullOrEmpty(urlString)) {
             throw ServiceException.FAILURE("URL not specified for folder " + folder.getPath(), null);
         }
-        
-        InputStream in = null;
+        GetMethod get = new GetMethod(urlString);
         try {
             HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
             HttpProxyUtil.configureProxy(client);
-            GetMethod get = new GetMethod(urlString);
             HttpClientUtil.executeMethod(client, get);
             get.getResponseContentLength();
         } catch (Exception e) {
             throw ServiceException.FAILURE("Data source test failed.", e);
         } finally {
-            ByteUtil.closeStream(in);
+            get.releaseConnection();
         }
     }
 
