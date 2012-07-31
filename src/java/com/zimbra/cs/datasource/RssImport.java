@@ -15,16 +15,20 @@
 package com.zimbra.cs.datasource;
 
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -66,10 +70,11 @@ public class RssImport implements DataImport {
         
         InputStream in = null;
         try {
-            URL url = new URL(urlString);
-            URLConnection conn = url.openConnection();
-            in = conn.getInputStream();
-            in.read();
+            HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+            HttpProxyUtil.configureProxy(client);
+            GetMethod get = new GetMethod(urlString);
+            HttpClientUtil.executeMethod(client, get);
+            get.getResponseContentLength();
         } catch (Exception e) {
             throw ServiceException.FAILURE("Data source test failed.", e);
         } finally {

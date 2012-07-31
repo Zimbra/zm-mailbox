@@ -310,7 +310,8 @@ public class TestDataSource extends TestCase {
         TestUtil.addMessage(mbox, subject, sourceFolder.getId());
 
         // Create destination folder that syncs to the source folder via RSS.
-        String urlString = String.format("%s/home/%s%s.rss", TestUtil.getBaseUrl(), USER_NAME, sourceFolder.getPath());
+        String urlString = String.format("https://%s:%s/home/%s%s.rss", TestUtil.getServerAttr(Provisioning.A_zimbraServiceHostname),
+                                            TestUtil.getServerAttr(Provisioning.A_zimbraMailSSLPort), USER_NAME, sourceFolder.getPath());
         urlString = HttpUtil.encodePath(urlString);
         ZFolder rssFolder = mbox.createFolder(parentId, NAME_PREFIX + " testRss destination", null, null, null, urlString);
 
