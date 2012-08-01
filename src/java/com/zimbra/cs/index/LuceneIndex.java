@@ -22,7 +22,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lucene.index.CheckIndex;
@@ -36,7 +39,6 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
@@ -74,7 +76,7 @@ public final class LuceneIndex implements IndexStore {
     /**
      * We don't want to enable StopFilter preserving position increments, which is enabled on or after 2.9, because we
      * want phrases to match across removed stop words.
-     * TODO: LUCENE_2* are oboslete as of Lucene 3.1.
+     * TODO: LUCENE_2* are obsolete as of Lucene 3.1.
      */
     @SuppressWarnings("deprecation")
     public static final Version VERSION = Version.LUCENE_24;
@@ -115,7 +117,51 @@ public final class LuceneIndex implements IndexStore {
 
     private final Mailbox mailbox;
     private final LuceneDirectory luceneDirectory;
-    private IndexWriterRef writerRef;
+    private final AtomicBoolean pendingDelete = new AtomicBoolean(false);
+    private final WriterInfo writerInfo = new WriterInfo();
+
+    /**
+     * Holds information related to writers to the index.
+     * Deletion of the index is only allowed when there are no writers, hence it is important to know
+     * when there are no more writers.
+     */
+    private final class WriterInfo {
+        private IndexWriterRef writerRef;
+        private final Lock lock = new ReentrantLock();
+        private final Condition hasNoWriters  = lock.newCondition(); 
+
+        private WriterInfo() {
+            writerRef = null;
+        }
+
+        public IndexWriterRef getWriterRef() {
+            return writerRef;
+        }
+
+        public void setWriterRef(IndexWriterRef newRef)
+        throws IOException {
+            if (isPendingDelete()) {
+                throw new IndexPendingDeleteException();
+            }
+            lock.lock();
+            try {
+                writerRef= newRef;
+                if (writerRef == null) {
+                    hasNoWriters.signal();
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public Condition getHasNoWritersCondition() {
+            return hasNoWriters;
+        }
+
+        public Lock getHasNoWritersLock() {
+            return lock;
+        }
+    }
 
     private LuceneIndex(Mailbox mbox) throws ServiceException {
         mailbox = mbox;
@@ -167,12 +213,8 @@ public final class LuceneIndex implements IndexStore {
         return Objects.toStringHelper(this).add("mbox", mailbox.getId()).add("dir", luceneDirectory).toString();
     }
 
-    /**
-     * Deletes this index completely.
-     */
-    @Override
-    public synchronized void deleteIndex() throws IOException {
-        assert(writerRef == null);
+    private synchronized void doDeleteIndex() throws IOException {
+        assert(writerInfo.getWriterRef() == null);
         ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
         if (mailbox.isGalSyncMailbox()) {
             Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId()));
@@ -193,6 +235,24 @@ public final class LuceneIndex implements IndexStore {
         for (String file : files) {
             luceneDirectory.deleteFile(file);
         }
+    }
+
+    /**
+     * Deletes this index completely.
+     */
+    @Override
+    public void deleteIndex() throws IOException {
+        pendingDelete.set(true);
+        writerInfo.getHasNoWritersLock().lock();
+        try {
+            if (writerInfo.getWriterRef() != null) {
+                writerInfo.getHasNoWritersCondition().awaitUninterruptibly();
+            }
+            doDeleteIndex();
+        } finally {
+            writerInfo.getHasNoWritersLock().unlock();
+        }
+        pendingDelete.set(false);
     }
 
     /**
@@ -398,19 +458,19 @@ public final class LuceneIndex implements IndexStore {
 
     @Override
     public synchronized Indexer openIndexer() throws IOException {
-        if (writerRef != null) {
-            writerRef.inc();
+        if (writerInfo.getWriterRef() != null) {
+            writerInfo.getWriterRef().inc();
         } else {
             WRITER_THROTTLE.acquireUninterruptibly();
             try {
-                writerRef = openWriter();
+                writerInfo.setWriterRef(openWriter());
             } finally {
-                if (writerRef == null) {
+                if (writerInfo.getWriterRef() == null) {
                     WRITER_THROTTLE.release();
                 }
             }
         }
-        return new IndexerImpl(writerRef);
+        return new IndexerImpl(writerInfo.getWriterRef());
     }
 
     private IndexWriterRef openWriter() throws IOException {
@@ -435,29 +495,29 @@ public final class LuceneIndex implements IndexStore {
     }
 
     private synchronized void commitWriter() throws IOException {
-        assert(writerRef != null);
+        assert(writerInfo.getWriterRef() != null);
 
         ZimbraLog.index.debug("Commit IndexWriter");
 
-        MergeTask task = new MergeTask(writerRef);
+        MergeTask task = new MergeTask(writerInfo.getWriterRef());
         if (mailbox.lock.isLocked()) {
             boolean success = false;
             try {
                 try {
-                    writerRef.get().commit();
+                    writerInfo.getWriterRef().get().commit();
                 } catch (CorruptIndexException e) {
                     try {
-                        writerRef.get().close(false);
+                        writerInfo.getWriterRef().get().close(false);
                     } catch (Throwable ignore) {
                     }
                     repair(e);
                     throw e; // fail to commit regardless of the repair
                 } catch (AssertionError e) {
                     try {
-                        writerRef.get().close(false);
+                        writerInfo.getWriterRef().get().close(false);
                     } catch (Throwable ignore) {
                     }
-                    writerRef.get().close(false);
+                    writerInfo.getWriterRef().get().close(false);
                     repair(e);
                     throw e; // fail to commit regardless of the repair
                 }
@@ -467,7 +527,7 @@ public final class LuceneIndex implements IndexStore {
                 ZimbraLog.index.warn("Skipping merge because all index threads are busy");
             } finally {
                 if (!success) {
-                    writerRef.dec();
+                    writerInfo.getWriterRef().dec();
                 }
             }
         } else { // Unless holding the mailbox lock, merge synchronously.
@@ -479,14 +539,14 @@ public final class LuceneIndex implements IndexStore {
      * Called by {@link IndexWriterRef#dec()}. Can be called by the thread that opened the writer or the merge thread.
      */
     private synchronized void closeWriter() {
-        if (writerRef == null) {
+        if (writerInfo.getWriterRef() == null) {
             return;
         }
 
         ZimbraLog.index.debug("Close IndexWriter");
 
         try {
-            writerRef.get().close(false); // ignore phantom pending merges
+            writerInfo.getWriterRef().get().close(false); // ignore phantom pending merges
         } catch (CorruptIndexException e) {
             try {
                 repair(e);
@@ -499,7 +559,10 @@ public final class LuceneIndex implements IndexStore {
         } finally {
             unlockIndexWriter();
             WRITER_THROTTLE.release();
-            writerRef = null;
+            try {
+                writerInfo.setWriterRef(null);
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -704,6 +767,16 @@ public final class LuceneIndex implements IndexStore {
             results = new ReSortingQueryResults(results, originalSort, params);
         }
         return results;
+    }
+
+    @Override
+    public boolean isPendingDelete() {
+        return pendingDelete.get();
+    }
+
+    @Override
+    public void setPendingDelete(boolean pendingDelete) {
+        this.pendingDelete.set(pendingDelete);
     }
 
     public static final class Factory implements IndexStore.Factory {

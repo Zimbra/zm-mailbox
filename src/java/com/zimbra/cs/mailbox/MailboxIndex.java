@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DbSearchConstraints;
+import com.zimbra.cs.index.IndexPendingDeleteException;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneIndex;
@@ -322,6 +323,10 @@ public final class MailboxIndex {
      * Attempts to index deferred items.
      */
     void maybeIndexDeferredItems() {
+        if ((indexStore != null) && indexStore.isPendingDelete()) {
+            ZimbraLog.index.debug("index delete is in progress by other thread, skipping");
+            return;  // No point in indexing if we are going to delete the index
+        }
         // If there was a failure, we trigger indexing even if the deferred count is still low.
         if ((lastFailedTime >= 0 && System.currentTimeMillis() - lastFailedTime > FAILURE_DELAY) ||
                 getDeferredCount(EnumSet.noneOf(MailItem.Type.class)) >= getBatchThreshold()) {
@@ -343,6 +348,10 @@ public final class MailboxIndex {
     private void indexDeferredItems(Set<MailItem.Type> types, BatchStatus status, boolean wait)
             throws ServiceException {
         assert(!mailbox.lock.isLocked());
+        if ((indexStore != null) && indexStore.isPendingDelete()) {
+            ZimbraLog.index.debug("index delete is in progress by other thread, skipping");
+            return;  // No point in indexing if we are going to delete the index
+        }
 
         if (wait) {
             indexLock.acquireUninterruptibly();
@@ -394,6 +403,9 @@ public final class MailboxIndex {
     }
 
     private synchronized void startReIndex(ReIndexTask task) throws ServiceException {
+        if ((indexStore != null) && indexStore.isPendingDelete()) {
+            throw ServiceException.FAILURE("Unable to submit reindex request. Index is pending delete", null);
+        }
         try {
             if (reIndex != null) {
                 throw ServiceException.ALREADY_IN_PROGRESS(
@@ -759,6 +771,10 @@ public final class MailboxIndex {
         Indexer indexer;
         try {
             indexer = indexStore.openIndexer();
+        } catch (IndexPendingDeleteException e) {
+            ZimbraLog.index.debug("delete of ids from index aborted as it is pending delete");
+            lastFailedTime = System.currentTimeMillis();
+            return;
         } catch (IOException e) {
             ZimbraLog.index.warn("Failed to open Indexer", e);
             lastFailedTime = System.currentTimeMillis();
@@ -792,6 +808,10 @@ public final class MailboxIndex {
         Indexer indexer;
         try {
             indexer = indexStore.openIndexer();
+        } catch (IndexPendingDeleteException e) {
+            ZimbraLog.index.debug("add of entries to index aborted as index is pending delete");
+            lastFailedTime = System.currentTimeMillis();
+            return;
         } catch (IOException e) {
             ZimbraLog.index.warn("Failed to open Indexer", e);
             lastFailedTime = System.currentTimeMillis();
@@ -801,6 +821,11 @@ public final class MailboxIndex {
         List<MailItem> indexed = new ArrayList<MailItem>(entries.size());
         try {
             for (IndexItemEntry entry : entries) {
+                if ((indexStore != null) && indexStore.isPendingDelete()) {
+                    ZimbraLog.index.debug("add of list of entries to index aborted as index is pending delete");
+                    lastFailedTime = System.currentTimeMillis();
+                    return;  // No point in indexing if we are going to delete the index
+                }
                 if (entry.documents == null) {
                     ZimbraLog.index.warn("NULL index data item=%s", entry);
                     continue;
@@ -849,6 +874,8 @@ public final class MailboxIndex {
             } finally {
                 indexer.close();
             }
+        } catch (IndexPendingDeleteException e) {
+            ZimbraLog.index.debug("Optimize of index aborted as it is pending delete");
         } catch (IOException e) {
             ZimbraLog.index.error("Failed to optimize index", e);
         }

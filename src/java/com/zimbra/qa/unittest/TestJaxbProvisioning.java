@@ -167,29 +167,33 @@ public class TestJaxbProvisioning extends TestCase {
             if (res != null)
                 prov.deleteDistributionList(res.getId());
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting Distribution List " +
-                    name, ex);
+            ZimbraLog.test.error("Problem deleting Distribution List " + name, ex);
         }
     }
 
     public void deleteCosIfExists(String name) {
         try {
-            ZimbraLog.test.debug(
-                    "Deleting COS " + name);
+            ZimbraLog.test.debug("Deleting COS " + name);
             Cos res = prov.get(Key.CosBy.name, name);
             if (res != null)
                 prov.deleteCos(res.getId());
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting Cos " +
-                    name, ex);
+            ZimbraLog.test.error("Problem deleting Cos " + name, ex);
         }
     }
 
     public Domain ensureDomainExists(String name)
     throws Exception {
         Domain dom = prov.get(Key.DomainBy.name, name);
-        if (dom == null)
+        if (dom == null) {
+            ZimbraLog.test.debug("ensureDomainExists didn't exist - creating new domain=" + name);
             dom = prov.createDomain(name, null);
+        }
+        if (dom == null) {
+            ZimbraLog.test.debug("ensureDomainExists returning null!!!");
+        } else {
+            ZimbraLog.test.debug("ensureDomainExists Returning=" + dom.getName() + " Id=" + dom.getId());
+        }
         return dom;
     }
 
@@ -200,14 +204,27 @@ public class TestJaxbProvisioning extends TestCase {
         Account acct = prov.get(AccountBy.name, name);
         if (acct == null)
             acct = TestUtil.createAccount(name);
+        if (acct == null) {
+            ZimbraLog.test.debug("ensureAccountExists returning null!!!");
+        } else {
+            ZimbraLog.test.debug("ensureAccountExists Returning Account=" + acct.getName() + " Id=" + acct.getId());
+        }
         return acct;
     }
 
     public Account ensureMailboxExists(String name)
     throws Exception {
         Account acct = ensureAccountExists(name);
-        prov.authAccount(acct, TestUtil.DEFAULT_PASSWORD,
-                AuthContext.Protocol.test);
+        if (acct == null) {
+            ZimbraLog.test.debug("ensureMailboxExists returning null!!!");
+        } else {
+            // The act of getting a mailbox is sufficient to create it if the associated account exists.
+            // Note that prov.getAccount() USED TO implicitly created a mailbox even though it was not really
+            // supposed to and this routine used to rely on that.
+            MailboxInfo mboxInfo = prov.getMailbox(acct);
+            ZimbraLog.test.debug("ensureMailboxExists Returning Mailbox=" + mboxInfo.getMailboxId() +
+                    " Account=" + acct.getName() + " Id=" + acct.getId());
+        }
         return acct;
     }
 

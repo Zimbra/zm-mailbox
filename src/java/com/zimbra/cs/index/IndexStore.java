@@ -53,6 +53,8 @@ public interface IndexStore {
      * Deletes the whole index data for the mailbox.
      */
     void deleteIndex() throws IOException;
+    public boolean isPendingDelete();
+    public void setPendingDelete(boolean pendingDelete);
 
     /**
      * Runs a sanity check for the index data.
