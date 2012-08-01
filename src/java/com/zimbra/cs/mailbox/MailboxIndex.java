@@ -306,6 +306,9 @@ public final class MailboxIndex {
     }
 
     public void deleteIndex() throws IOException {
+        if (isReIndexInProgress()) {
+            cancelReIndex();
+        }
         indexStore.deleteIndex();
     }
 
