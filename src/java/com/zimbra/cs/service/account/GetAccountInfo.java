@@ -20,6 +20,8 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import com.google.common.base.Strings;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -27,7 +29,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -44,6 +45,10 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         String key = a.getAttribute(AccountConstants.A_BY);
         String value = a.getText();
 
+        if (Strings.isNullOrEmpty(value)) {
+            throw ServiceException.INVALID_REQUEST(
+                "no text specified for the " + AccountConstants.E_ACCOUNT + " element", null);
+        }
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
 
