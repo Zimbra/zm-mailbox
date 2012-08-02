@@ -424,7 +424,7 @@ public final class JaxbInfo {
                 if (wrappedInfo == null) {
                     setXmlElementInfo(xmlElem, fieldName, defaultGenericType);
                 } else {
-                    wrappedInfo.add(xmlElem, fieldName, classFromType(defaultGenericType));
+                    wrappedInfo.add(xmlElem, fieldName, defaultGenericType);
                 }
             } else if (annot instanceof XmlElementRef) {
                 XmlElementRef xmlElemR = (XmlElementRef) annot;
