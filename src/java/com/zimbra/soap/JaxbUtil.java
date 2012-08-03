@@ -684,6 +684,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetGrantsResponse.class,
             com.zimbra.soap.admin.message.GetHsmStatusRequest.class,
             com.zimbra.soap.admin.message.GetHsmStatusResponse.class,
+            com.zimbra.soap.admin.message.GetIndexStatsRequest.class,
+            com.zimbra.soap.admin.message.GetIndexStatsResponse.class,
             com.zimbra.soap.admin.message.GetLDAPEntriesRequest.class,
             com.zimbra.soap.admin.message.GetLDAPEntriesResponse.class,
             com.zimbra.soap.admin.message.GetLicenseInfoRequest.class,
