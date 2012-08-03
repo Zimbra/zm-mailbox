@@ -218,6 +218,8 @@ public final class AdminConstants {
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
     public static final String E_COMPACT_INDEX_REQUEST = "CompactIndexRequest";
     public static final String E_COMPACT_INDEX_RESPONSE = "CompactIndexResponse";
+    public static final String E_GET_INDEX_STATS_REQUEST = "GetIndexStatsRequest";
+    public static final String E_GET_INDEX_STATS_RESPONSE = "GetIndexStatsResponse";
     public static final String E_VERIFY_INDEX_REQUEST = "VerifyIndexRequest";
     public static final String E_VERIFY_INDEX_RESPONSE = "VerifyIndexResponse";
     public static final String E_RECALCULATE_MAILBOX_COUNTS_REQUEST = "RecalculateMailboxCountsRequest";
@@ -685,6 +687,8 @@ public final class AdminConstants {
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
     public static final QName COMPACT_INDEX_REQUEST = QName.get(E_COMPACT_INDEX_REQUEST, NAMESPACE);
     public static final QName COMPACT_INDEX_RESPONSE = QName.get(E_COMPACT_INDEX_RESPONSE, NAMESPACE);
+    public static final QName GET_INDEX_STATS_REQUEST = QName.get(E_GET_INDEX_STATS_REQUEST, NAMESPACE);
+    public static final QName GET_INDEX_STATS_RESPONSE = QName.get(E_GET_INDEX_STATS_RESPONSE, NAMESPACE);
     public static final QName VERIFY_INDEX_REQUEST = QName.get(E_VERIFY_INDEX_REQUEST, NAMESPACE);
     public static final QName VERIFY_INDEX_RESPONSE = QName.get(E_VERIFY_INDEX_RESPONSE, NAMESPACE);
     public static final QName RECALCULATE_MAILBOX_COUNTS_REQUEST = QName.get(E_RECALCULATE_MAILBOX_COUNTS_REQUEST, NAMESPACE);
@@ -1210,6 +1214,10 @@ public final class AdminConstants {
     // mailbox stats
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
+
+    // index stats
+    public static final String A_MAX_DOCS = "maxDocs";
+    public static final String A_DELETED_DOCS = "deletedDocs";
 
     // mailbox table
     public static final String A_MT_ID               = "id";
