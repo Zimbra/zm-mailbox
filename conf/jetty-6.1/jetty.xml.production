@@ -49,7 +49,8 @@
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -74,7 +75,8 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -103,7 +105,8 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -129,7 +132,8 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
