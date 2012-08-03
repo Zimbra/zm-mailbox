@@ -45,4 +45,9 @@ public interface Indexer extends Closeable {
      * Requests an "optimize" operation on the index, priming the index for the fastest available search.
      */
     void optimize();
+
+    /**
+     * Compacts the index by expunging all the deletes.
+     */
+    void compact();
 }

@@ -25,9 +25,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
@@ -50,16 +50,16 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -75,10 +75,8 @@ import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
-import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ShareLocator;
@@ -86,6 +84,8 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -1115,6 +1115,15 @@ public class SoapProvisioning extends Provisioning {
         return new ReIndexInfo(resp.getStatus(), progress);
     }
 
+    public String compactIndex(Account acct, String action)
+    throws ServiceException {
+        Server server = getServer(acct);
+        CompactIndexRequest req = new CompactIndexRequest(action, new MailboxByAccountIdSelector(acct.getId()));
+        CompactIndexResponse resp = this.invokeJaxb(req,
+                server.getAttr(A_zimbraServiceHostname));
+        return resp.getStatus();
+    }
+
     public static final class VerifyIndexResult {
         public final boolean status;
         public final String message;
@@ -1485,7 +1494,7 @@ public class SoapProvisioning extends Provisioning {
 
     private static final String DATA_DL_SET = "DL_SET";
     private static final String DATA_DIRECT_DL_SET = "DIRECT_DL_SET";
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
@@ -1511,8 +1520,8 @@ public class SoapProvisioning extends Provisioning {
         acct.setCachedData(DATA_DIRECT_DL_SET, dls);
         return dls;
     }
-    
-    private Set<String> getDistributionLists(Account acct, boolean directOnly) 
+
+    private Set<String> getDistributionLists(Account acct, boolean directOnly)
     throws ServiceException {
         Set<String> dls = new HashSet<String>();
 
@@ -2424,9 +2433,9 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
-    
+
     @Override
-    public long countObjects(CountObjectsType type, Domain domain, UCService ucService) 
+    public long countObjects(CountObjectsType type, Domain domain, UCService ucService)
     throws ServiceException {
         CountObjectsResponse resp = invokeJaxb(new CountObjectsRequest(
                 type, getSelector(domain), getSelector(ucService)));
@@ -2572,7 +2581,7 @@ public class SoapProvisioning extends Provisioning {
 
         invoke(req);
     }
-    
+
     @Override
     public ShareLocator get(ShareLocatorBy keyType, String key) throws ServiceException {
         throw new UnsupportedOperationException();
@@ -2625,14 +2634,14 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
-    
+
     @Override
-    public String updatePresenceSessionId(String zimbraId, String username, String password) 
+    public String updatePresenceSessionId(String zimbraId, String username, String password)
     throws ServiceException {
-        
+
         UCServiceSelector sel =
             new UCServiceSelector(SoapProvisioning.toJaxb(Key.UCServiceBy.id), zimbraId);
-        
+
         UpdatePresenceSessionIdRequest req = new UpdatePresenceSessionIdRequest(
                 sel, username, password);
         UpdatePresenceSessionIdResponse resp = invokeJaxb(req);
@@ -2666,13 +2675,13 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /* Convert to equivalent JAXB object */
-    private static ServerSelector.ServerBy toJaxb(Key.ServerBy provServerBy) 
+    private static ServerSelector.ServerBy toJaxb(Key.ServerBy provServerBy)
     throws ServiceException {
         return ServerSelector.ServerBy.fromString(provServerBy.toString());
     }
-    
+
     /* Convert to equivalent JAXB object */
-    private static UCServiceSelector.UCServiceBy toJaxb(Key.UCServiceBy provUCServiceBy) 
+    private static UCServiceSelector.UCServiceBy toJaxb(Key.UCServiceBy provUCServiceBy)
     throws ServiceException {
         return UCServiceSelector.UCServiceBy.fromString(provUCServiceBy.toString());
     }

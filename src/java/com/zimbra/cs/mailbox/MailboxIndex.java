@@ -36,6 +36,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.IndexSearcher;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -51,20 +52,20 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DbSearchConstraints;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexPendingDeleteException;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneIndex;
-import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -105,6 +106,8 @@ public final class MailboxIndex {
     private IndexStore indexStore;
     // current re-indexing operation for this mailbox, or NULL if a re-index is not in progress.
     private volatile ReIndexTask reIndex;
+    // current compact-indexing operation for this mailbox, or NULL if a compact-index is not in progress.
+    private volatile CompactIndexTask compactIndex;
     private SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
 
     MailboxIndex(Mailbox mbox) {
@@ -414,6 +417,11 @@ public final class MailboxIndex {
                 throw ServiceException.ALREADY_IN_PROGRESS(
                         Integer.toString(mailbox.getId()), reIndex.status.toString());
             }
+            // reIndex and compactIndex cannot interleave
+            if (isCompactIndexInProgress()) {
+                throw ServiceException.ALREADY_IN_PROGRESS(
+                        Integer.toString(mailbox.getId()), "Compact Index");
+            }
             REINDEX_EXECUTOR.submit(reIndex = task);
         } catch (RejectedExecutionException e) {
             throw ServiceException.FAILURE("Unable to submit reindex request. Try again later", e);
@@ -426,6 +434,30 @@ public final class MailboxIndex {
         }
         reIndex.status.cancel();
         return reIndex.status;
+    }
+
+    public void startCompactIndex() throws ServiceException {
+        startCompactIndex(new CompactIndexTask(mailbox));
+    }
+
+    private synchronized void startCompactIndex(CompactIndexTask task) throws ServiceException {
+        if ((indexStore != null) && indexStore.isPendingDelete()) {
+            throw ServiceException.FAILURE("Unable to submit compact index request. Index is pending delete", null);
+        }
+        try {
+            if (compactIndex != null) {
+                throw ServiceException.ALREADY_IN_PROGRESS(
+                        Integer.toString(mailbox.getId()), "Compact Index");
+            }
+            // reIndex and compactIndex cannot interleave
+            if (isReIndexInProgress()) {
+                throw ServiceException.ALREADY_IN_PROGRESS(
+                        Integer.toString(mailbox.getId()), reIndex.status.toString());
+            }
+            REINDEX_EXECUTOR.submit(compactIndex = task);
+        } catch (RejectedExecutionException e) {
+            throw ServiceException.FAILURE("Unable to submit compact index request. Try again later", e);
+        }
     }
 
     public boolean verify(PrintStream out) throws ServiceException {
@@ -514,14 +546,48 @@ public final class MailboxIndex {
                 }
                 ZimbraLog.index.info("Re-indexing all items");
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
-                ZimbraLog.index.info("Optimizing index");
-                optimize();
+                // skipping the optimize!!
+                // Note: Lucene 3.5.0 highly discourage optimizing the index as
+                // it is horribly inefficient and very rarely justified. Please check the API doc for more details.
             } else { // partial re-index
                 indexLock.acquireUninterruptibly();
                 try {
                     indexItemList(ids, status);
                 } finally {
                     indexLock.release();
+                }
+            }
+        }
+    }
+
+    private class CompactIndexTask extends IndexTask {
+
+        public CompactIndexTask(Mailbox mbox) {
+            super(mbox);
+        }
+
+        @Override
+        protected void exec() throws Exception {
+            try {
+                ZimbraLog.index.info("Compact-index start");
+
+                long start = System.currentTimeMillis();
+                compact();
+                long elapsed = System.currentTimeMillis() - start;
+                ZimbraLog.index.info("Compact-index completed elapsed=%d", elapsed);
+            } catch (ServiceException e) {
+                if (e.getCode() == ServiceException.INTERRUPTED) {
+                    ZimbraLog.index.info("Compact-index cancelled");
+                } else {
+                    ZimbraLog.index.error("Compact-index failed. This mailbox must be re-indexed.", e);
+                }
+            } catch (OutOfMemoryError e) {
+                Zimbra.halt("out of memory", e);
+            } catch (Throwable t) {
+                ZimbraLog.index.error("Compact-index failed. This mailbox must be manually re-indexed.", t);
+            } finally {
+                synchronized (MailboxIndex.this) {
+                    compactIndex = null;
                 }
             }
         }
@@ -884,12 +950,35 @@ public final class MailboxIndex {
         }
     }
 
+    /**
+     * Compacts the index data by expunging deletes
+     * @throws ServiceException
+     */
+    public void compact() throws ServiceException {
+        try {
+            Indexer indexer = indexStore.openIndexer();
+            try {
+                indexer.compact();
+            } finally {
+                indexer.close();
+            }
+        } catch (IndexPendingDeleteException e) {
+            ZimbraLog.index.debug("Compaction of index aborted as it is pending delete");
+        } catch (IOException e) {
+            ZimbraLog.index.error("Failed to compact index", e);
+        }
+    }
+
     public synchronized ReIndexStatus getReIndexStatus() {
         return reIndex != null ? reIndex.status : null;
     }
 
     public boolean isReIndexInProgress() {
         return reIndex != null;
+    }
+
+    public boolean isCompactIndexInProgress() {
+        return compactIndex != null;
     }
 
     /**

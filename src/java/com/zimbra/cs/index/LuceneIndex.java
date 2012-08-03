@@ -83,16 +83,16 @@ public final class LuceneIndex implements IndexStore {
 
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
     private static final Semaphore WRITER_THROTTLE = new Semaphore(LC.zimbra_index_max_writers.intValue());
-    
-    private static final Cache<Integer, IndexSearcherImpl> SEARCHER_CACHE = 
-        CacheBuilder.newBuilder()                                                                                          
-        .maximumSize(LC.zimbra_index_reader_cache_size.intValue())                                                        
+
+    private static final Cache<Integer, IndexSearcherImpl> SEARCHER_CACHE =
+        CacheBuilder.newBuilder()
+        .maximumSize(LC.zimbra_index_reader_cache_size.intValue())
         .expireAfterAccess(LC.zimbra_index_reader_cache_ttl.intValue(), TimeUnit.SECONDS)
-        .removalListener(new RemovalListener<Integer, IndexSearcherImpl>() {                                               
+        .removalListener(new RemovalListener<Integer, IndexSearcherImpl>() {
             @Override
             public void onRemoval(RemovalNotification<Integer, IndexSearcherImpl> notification) {
-                Closeables.closeQuietly(notification.getValue());  
-            }  
+                Closeables.closeQuietly(notification.getValue());
+            }
         })
         .build(new CacheLoader<Integer, IndexSearcherImpl>() {
             @Override
@@ -101,14 +101,14 @@ public final class LuceneIndex implements IndexStore {
                              // should ideally be avoided by using google "Optional" collection.
             }
         });
-    
+
     // Bug: 60631
     // cache lucene index of GAL sync account separately with no automatic eviction
-    private static final ConcurrentMap<Integer, IndexSearcherImpl> GAL_SEARCHER_CACHE = 
+    private static final ConcurrentMap<Integer, IndexSearcherImpl> GAL_SEARCHER_CACHE =
         new ConcurrentLinkedHashMap.Builder<Integer, IndexSearcherImpl>()
         .maximumWeightedCapacity(LC.zimbra_galsync_index_reader_cache_size.intValue())
         .listener(new EvictionListener<Integer, IndexSearcherImpl>() {
-            @Override 
+            @Override
             public void onEviction(Integer mboxId, IndexSearcherImpl searcher) {
                 Closeables.closeQuietly(searcher);
             }
@@ -128,7 +128,7 @@ public final class LuceneIndex implements IndexStore {
     private final class WriterInfo {
         private IndexWriterRef writerRef;
         private final Lock lock = new ReentrantLock();
-        private final Condition hasNoWriters  = lock.newCondition(); 
+        private final Condition hasNoWriters  = lock.newCondition();
 
         private WriterInfo() {
             writerRef = null;
@@ -285,7 +285,7 @@ public final class LuceneIndex implements IndexStore {
     @Override
     public void evict() {
         if (mailbox.isGalSyncMailbox()) {
-            Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId())); 
+            Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId()));
         } else {
             SEARCHER_CACHE.asMap().remove(mailbox.getId());
         }
@@ -367,9 +367,9 @@ public final class LuceneIndex implements IndexStore {
     }
 
     /**
-     * Caller is responsible for calling {@link Searcher#close()} to release system resources associated with it.
+     * Caller is responsible for calling {@link IndexReader#close()} to release system resources associated with it.
      *
-     * @return A {@link Searcher} for this index.
+     * @return A {@link IndexReader} for this index.
      * @throws IOException if opening an {@link IndexReader} failed
      */
     @Override
@@ -500,38 +500,35 @@ public final class LuceneIndex implements IndexStore {
         ZimbraLog.index.debug("Commit IndexWriter");
 
         MergeTask task = new MergeTask(writerInfo.getWriterRef());
-        if (mailbox.lock.isLocked()) {
-            boolean success = false;
+
+        boolean success = false;
+        try {
             try {
+                writerInfo.getWriterRef().get().commit();
+            } catch (CorruptIndexException e) {
                 try {
-                    writerInfo.getWriterRef().get().commit();
-                } catch (CorruptIndexException e) {
-                    try {
-                        writerInfo.getWriterRef().get().close(false);
-                    } catch (Throwable ignore) {
-                    }
-                    repair(e);
-                    throw e; // fail to commit regardless of the repair
-                } catch (AssertionError e) {
-                    try {
-                        writerInfo.getWriterRef().get().close(false);
-                    } catch (Throwable ignore) {
-                    }
                     writerInfo.getWriterRef().get().close(false);
-                    repair(e);
-                    throw e; // fail to commit regardless of the repair
+                } catch (Throwable ignore) {
                 }
-                mailbox.index.submit(task); // merge must run in background
-                success = true;
-            } catch (RejectedExecutionException e) {
-                ZimbraLog.index.warn("Skipping merge because all index threads are busy");
-            } finally {
-                if (!success) {
-                    writerInfo.getWriterRef().dec();
+                repair(e);
+                throw e; // fail to commit regardless of the repair
+            } catch (AssertionError e) {
+                try {
+                    writerInfo.getWriterRef().get().close(false);
+                } catch (Throwable ignore) {
                 }
+                writerInfo.getWriterRef().get().close(false);
+                repair(e);
+                throw e; // fail to commit regardless of the repair
             }
-        } else { // Unless holding the mailbox lock, merge synchronously.
-            task.exec();
+            mailbox.index.submit(task); // merge must run in background
+            success = true;
+        } catch (RejectedExecutionException e) {
+            ZimbraLog.index.warn("Skipping merge because all index threads are busy");
+        } finally {
+            if (!success) {
+                writerInfo.getWriterRef().dec();
+            }
         }
     }
 
@@ -657,11 +654,6 @@ public final class LuceneIndex implements IndexStore {
             MergeScheduler scheduler = (MergeScheduler) writer.getConfig().getMergeScheduler();
             try {
                 if (scheduler.tryLock()) {
-                    int dels = writer.maxDoc() - writer.numDocs();
-                    if (dels >= LC.zimbra_index_max_pending_deletes.intValue()) {
-                        ZimbraLog.index.info("Expunge deletes %d", dels);
-                        writer.expungeDeletes();
-                    }
                     writer.maybeMerge();
                 } else {
                     ZimbraLog.index.debug("Merge is in progress by other thread");
@@ -783,7 +775,7 @@ public final class LuceneIndex implements IndexStore {
         public Factory() {
             BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
         }
-        
+
         @Override
         public LuceneIndex getInstance(Mailbox mbox) throws ServiceException {
             return new LuceneIndex(mbox);
@@ -792,7 +784,7 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public void destroy() {
             SEARCHER_CACHE.asMap().clear();
-            
+
             for (IndexSearcherImpl searcher : GAL_SEARCHER_CACHE.values()) {
                 Closeables.closeQuietly(searcher);
             }
@@ -822,8 +814,8 @@ public final class LuceneIndex implements IndexStore {
                     ZimbraLog.search.warn(e);
             }
             if (searcher != null) {
-                IndexReader newReader = searcher.getIndexReader().reopen(true);
-                if (newReader != searcher.getIndexReader()) {
+                IndexReader newReader = IndexReader.openIfChanged(searcher.getIndexReader(), true);
+                if (newReader != null) {
                     if (writer.getIndex().mailbox.isGalSyncMailbox()) {
                         //make sure that we close the previous value associated with the key
                         Closeables.closeQuietly(GAL_SEARCHER_CACHE.put(writer.getIndex().mailbox.getId(),
@@ -845,7 +837,21 @@ public final class LuceneIndex implements IndexStore {
             MergeScheduler scheduler = (MergeScheduler) writer.get().getConfig().getMergeScheduler();
             scheduler.lock();
             try {
-                writer.get().optimize(true);
+                writer.get().forceMerge(writer.get().maxDoc() / LC.zimbra_index_lucene_avg_doc_per_segment.intValue() + 1, true);
+            } catch (IOException e) {
+                ZimbraLog.index.error("Failed to optimize index", e);
+            } finally {
+                scheduler.release();
+            }
+        }
+
+        @Override
+        public void compact() {
+            MergeScheduler scheduler = (MergeScheduler) writer.get().getConfig().getMergeScheduler();
+            scheduler.lock();
+            try {
+                ZimbraLog.index.info("Force merge deletes %d", writer.get().maxDoc() - writer.get().numDocs());
+                writer.get().forceMergeDeletes(true);
             } catch (IOException e) {
                 ZimbraLog.index.error("Failed to optimize index", e);
             } finally {
@@ -865,7 +871,7 @@ public final class LuceneIndex implements IndexStore {
             if (docs == null || docs.isEmpty()) {
                 return;
             }
-            
+
             // handle the partial re-index case here by simply deleting all the documents matching the index_id
             // so that we can simply add the documents to the index later!!
             switch (item.getIndexStatus()) {
@@ -879,7 +885,7 @@ public final class LuceneIndex implements IndexStore {
                 default:
                     assert false : item.getIndexId();
             }
-            
+
             for (IndexDocument doc : docs) {
                 // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
                 synchronized (doc) {
@@ -899,7 +905,7 @@ public final class LuceneIndex implements IndexStore {
 
                     doc.removeSortSize();
                     doc.addSortSize(item.getSize());
-                    
+
                     writer.get().addDocument(doc.toDocument());
                 }
             }

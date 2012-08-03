@@ -981,6 +981,26 @@ Access: domain admin sufficient
 
 ---------------------------
 
+<CompactIndexRequest action="start|status">
+  <mbox id="{account-id}"/>
+</CompactIndexRequest>
+
+<CompactIndexResponse status="started|running|idle">
+</CompactIndexResponse>
+
+  action start - start index compaction
+    status started - success
+    status running - index compaction is already running
+  action status - show index compaction progress
+    status running - index compaction is running
+    status idle - index compaction is not running
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
 <DeleteMailboxRequest>
   <mbox id="{account-id}"/>
 </DeleteMailboxRequest>
