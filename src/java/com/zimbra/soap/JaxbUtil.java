@@ -26,6 +26,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
+
 import org.dom4j.Document;
 import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
@@ -44,9 +45,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.json.JacksonUtil;
@@ -475,6 +476,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CheckRightResponse.class,
             com.zimbra.soap.admin.message.ClearCookieRequest.class,
             com.zimbra.soap.admin.message.ClearCookieResponse.class,
+            com.zimbra.soap.admin.message.CompactIndexRequest.class,
+            com.zimbra.soap.admin.message.CompactIndexResponse.class,
             com.zimbra.soap.admin.message.ComputeAggregateQuotaUsageRequest.class,
             com.zimbra.soap.admin.message.ComputeAggregateQuotaUsageResponse.class,
             com.zimbra.soap.admin.message.ConfigureZimletRequest.class,
