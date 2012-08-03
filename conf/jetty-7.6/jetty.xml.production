@@ -42,7 +42,8 @@
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="Host">%%zimbraMailBindAddress%%</Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -59,7 +60,8 @@
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="Host">localhost</Set>
-	  	  <Set name="Forwarded">true</Set>
+      	  <Set name="Forwarded">true</Set>
+    	  <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -85,7 +87,8 @@
             </Array>
           </Set>
           <Set name="Host">%%zimbraMailSSLBindAddress%%</Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -114,7 +117,8 @@
             </Array>
          </Set>
          <Set name="Host">%%zimbraMailSSLClientCertBindAddress%%</Set>
-	  <Set name="Forwarded">true</Set>
+         <Set name="Forwarded">true</Set>
+         <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -141,7 +145,8 @@
             </Array>
           </Set>
           <Set name="Host">%%zimbraAdminBindAddress%%</Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -165,6 +170,7 @@
           </Set>
           <Set name="Host">localhost</Set>
           <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
@@ -181,7 +187,8 @@
           <Set name="lowResourcesMaxIdleTime">10000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="Host">%%zimbraExtensionBindAddress%%</Set>
-	  <Set name="Forwarded">true</Set>
+          <Set name="Forwarded">true</Set>
+          <Set name="ForwardedForHeader">bogus</Set>
         </New>
       </Arg>
     </Call>
