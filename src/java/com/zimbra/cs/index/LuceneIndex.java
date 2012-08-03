@@ -859,6 +859,11 @@ public final class LuceneIndex implements IndexStore {
             }
         }
 
+        @Override
+        public synchronized int maxDocs() {
+            return writer.get().maxDoc();
+        }
+
         /**
          * Adds the list of documents to the index.
          * <p>

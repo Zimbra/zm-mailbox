@@ -1001,6 +1001,20 @@ Access: domain admin sufficient
 
 ---------------------------
 
+<GetIndexStatsRequest>
+  <mbox id="{account-id}"/>
+</GetIndexStatsRequest>
+
+<GetIndexStatsResponse>
+  <stats maxDocs="..." deletedDocs="..."/>
+</GetIndexStatsResponse>
+
+Notes:
+  maxDocs: Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer), not counting deletions.
+  deletedDocs: number of deleted docs for the index
+
+-----------------------------
+
 <DeleteMailboxRequest>
   <mbox id="{account-id}"/>
 </DeleteMailboxRequest>

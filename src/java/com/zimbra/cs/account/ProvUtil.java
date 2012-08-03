@@ -106,6 +106,7 @@ import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.IndexStatsInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
@@ -589,6 +590,7 @@ public class ProvUtil implements HttpDebugListener {
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [,type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE, null, new ReindexCommandHelp()),
         COMPACT_INBOX_MAILBOX("compactIndexMailbox", "cim", "{name@domain|id} {start|status}", Category.MAILBOX, 2, Integer.MAX_VALUE),
         VERIFY_INDEX("verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1),
+        GET_INDEX_STATS("getIndexStats", "gis", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {[-]right}", Category.RIGHT, 3, 5, null, new RightCommandHelp()),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH, 1, Integer.MAX_VALUE, Via.ldap),
@@ -1222,6 +1224,9 @@ public class ProvUtil implements HttpDebugListener {
             case VERIFY_INDEX:
                 doVerifyIndex(args);
                 break;
+            case GET_INDEX_STATS:
+                doGetIndexStats(args);
+                break;
             case RECALCULATE_MAILBOX_COUNTS:
                 doRecalculateMailboxCounts(args);
                 break;
@@ -1415,6 +1420,16 @@ public class ProvUtil implements HttpDebugListener {
         if (!result.status) {
             throw ServiceException.FAILURE("The index may be corrupted. Run reIndexMailbox(rim) to repair.", null);
         }
+    }
+
+    private void doGetIndexStats(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        Account acct = lookupAccount(args[1]);
+        IndexStatsInfo stats = sp.getIndexStats(acct);
+        console.printf("stats: maxDocs:%d numDeletedDocs:%d\n", stats.getMaxDocs(), stats.getNumDeletedDocs());
     }
 
     private void doRecalculateMailboxCounts(String[] args) throws ServiceException {

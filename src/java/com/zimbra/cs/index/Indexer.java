@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.MailItem;
  *
  * @see IndexStore#openIndexer()
  * @author ysasaki
+ * @author smukhopadhyay
  */
 public interface Indexer extends Closeable {
 
@@ -50,4 +51,10 @@ public interface Indexer extends Closeable {
      * Compacts the index by expunging all the deletes.
      */
     void compact();
+
+    /**
+     * Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer), not counting deletions.
+     * @return total number of docs
+     */
+    int maxDocs();
 }

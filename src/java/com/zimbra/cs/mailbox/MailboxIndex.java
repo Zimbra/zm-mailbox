@@ -969,6 +969,61 @@ public final class MailboxIndex {
         }
     }
 
+    public static final class IndexStats {
+        private int maxDocs;
+        private int numDeletedDocs;
+
+        public IndexStats(int maxDocs, int numDeletedDocs) {
+            super();
+            this.maxDocs = maxDocs;
+            this.numDeletedDocs = numDeletedDocs;
+        }
+
+        public int getMaxDocs() {
+            return maxDocs;
+        }
+
+        public int getNumDeletedDocs() {
+            return numDeletedDocs;
+        }
+    }
+
+    public IndexStats getIndexStats() throws ServiceException {
+        int maxDocs = 0;
+        int numDeletedDocs = 0;
+        try {
+            Indexer indexer = indexStore.openIndexer();
+            try {
+                maxDocs = indexer.maxDocs();
+            } finally {
+                indexer.close();
+            }
+            numDeletedDocs = numDeletedDocs();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed to open Indexer", e);
+        }
+
+        return new IndexStats(maxDocs, numDeletedDocs);
+    }
+
+    /**
+     * Returns the number of deleted documents.
+     * @return number of deleted docs for this index
+     * @throws ServiceException
+     */
+    public int numDeletedDocs() throws ServiceException {
+        try {
+            IndexSearcher searcher = indexStore.openSearcher();
+            try {
+                return searcher.getIndexReader().numDeletedDocs();
+            } finally {
+                Closeables.closeQuietly(searcher);
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed to open Searcher", e);
+        }
+    }
+
     public synchronized ReIndexStatus getReIndexStatus() {
         return reIndex != null ? reIndex.status : null;
     }

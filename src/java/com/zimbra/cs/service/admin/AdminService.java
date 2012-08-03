@@ -14,14 +14,15 @@
  */
 package com.zimbra.cs.service.admin;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.soap.DocumentDispatcher;
-import com.zimbra.soap.DocumentService;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.DocumentDispatcher;
+import com.zimbra.soap.DocumentService;
 
 /**
  * @zm-service-description		The Admin Service includes commands for server, account
@@ -137,6 +138,7 @@ public class AdminService implements DocumentService {
 
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
         dispatcher.registerHandler(AdminConstants.COMPACT_INDEX_REQUEST, new CompactIndex());
+        dispatcher.registerHandler(AdminConstants.GET_INDEX_STATS_REQUEST, new GetIndexStats());
         dispatcher.registerHandler(AdminConstants.VERIFY_INDEX_REQUEST, new VerifyIndex());
         dispatcher.registerHandler(AdminConstants.RECALCULATE_MAILBOX_COUNTS_REQUEST, new RecalculateMailboxCounts());
 

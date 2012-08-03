@@ -1124,6 +1124,33 @@ public class SoapProvisioning extends Provisioning {
         return resp.getStatus();
     }
 
+    public static final class IndexStatsInfo {
+        private int maxDocs;
+        private int numDeletedDocs;
+
+        public IndexStatsInfo(int maxDocs, int numDeletedDocs) {
+            this.maxDocs = maxDocs;
+            this.numDeletedDocs = numDeletedDocs;
+        }
+
+        public int getMaxDocs() {
+            return maxDocs;
+        }
+
+        public int getNumDeletedDocs() {
+            return numDeletedDocs;
+        }
+    }
+
+    public IndexStatsInfo getIndexStats(Account acct)
+    throws ServiceException {
+        Server server = getServer(acct);
+        GetIndexStatsRequest req = new GetIndexStatsRequest(new MailboxByAccountIdSelector(acct.getId()));
+        GetIndexStatsResponse resp = this.invokeJaxb(req,
+                server.getAttr(A_zimbraServiceHostname));
+        return new IndexStatsInfo(resp.getStats().getMaxDocs(), resp.getStats().getNumDeletedDocs());
+    }
+
     public static final class VerifyIndexResult {
         public final boolean status;
         public final String message;
@@ -1132,7 +1159,7 @@ public class SoapProvisioning extends Provisioning {
             this.status = status;
             this.message = message;
         }
-        }
+    }
 
     public VerifyIndexResult verifyIndex(Account account) throws ServiceException {
         VerifyIndexRequest req = new VerifyIndexRequest(
