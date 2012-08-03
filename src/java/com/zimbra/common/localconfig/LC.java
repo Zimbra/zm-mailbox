@@ -81,7 +81,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_directory = KnownKey.newKey("${zimbra_home}/index");
-    
+
     public static final KnownKey zimbra_index_disable_perf_counters = KnownKey.newKey(false);
 
     @Supported
@@ -227,10 +227,6 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_index_max_transaction_items = KnownKey.newKey(100);
 
-    @Supported
-    @Reloadable
-    public static final KnownKey zimbra_index_max_pending_deletes = KnownKey.newKey(10000);
-
     public static final KnownKey zimbra_index_lucene_io_impl = KnownKey.newKey("nio");
 
     @Supported
@@ -241,6 +237,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lucene_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
+
+    @Supported
+    public static final KnownKey zimbra_index_lucene_avg_doc_per_segment = KnownKey.newKey(10000);
 
     @Supported
     public static final KnownKey zimbra_index_lucene_merge_factor = KnownKey.newKey(10);

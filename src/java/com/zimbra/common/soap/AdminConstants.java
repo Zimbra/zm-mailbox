@@ -115,7 +115,7 @@ public final class AdminConstants {
     public static final String E_DELETE_SERVER_RESPONSE = "DeleteServerResponse";
     public static final String E_GET_ALL_SERVERS_REQUEST = "GetAllServersRequest";
     public static final String E_GET_ALL_SERVERS_RESPONSE = "GetAllServersResponse";
-    
+
     public static final String E_CREATE_UC_SERVICE_REQUEST = "CreateUCServiceRequest";
     public static final String E_CREATE_UC_SERVICE_RESPONSE = "CreateUCServiceResponse";
     public static final String E_DELETE_UC_SERVICE_REQUEST = "DeleteUCServiceRequest";
@@ -210,12 +210,14 @@ public final class AdminConstants {
 
     public static final String E_GET_LICENSE_INFO_REQUEST = "GetLicenseInfoRequest";
     public static final String E_GET_LICENSE_INFO_RESPONSE = "GetLicenseInfoResponse";
-    
+
     public static final String E_GET_ATTRIBUTE_INFO_REQUEST = "GetAttributeInfoRequest";
-    public static final String E_GET_ATTRIBUTE_INFO_RESPONSE = "GetAttributeInfoResponse";    
+    public static final String E_GET_ATTRIBUTE_INFO_RESPONSE = "GetAttributeInfoResponse";
 
     public static final String E_REINDEX_REQUEST = "ReIndexRequest";
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
+    public static final String E_COMPACT_INDEX_REQUEST = "CompactIndexRequest";
+    public static final String E_COMPACT_INDEX_RESPONSE = "CompactIndexResponse";
     public static final String E_VERIFY_INDEX_REQUEST = "VerifyIndexRequest";
     public static final String E_VERIFY_INDEX_RESPONSE = "VerifyIndexResponse";
     public static final String E_RECALCULATE_MAILBOX_COUNTS_REQUEST = "RecalculateMailboxCountsRequest";
@@ -330,7 +332,7 @@ public final class AdminConstants {
 
     public static final String E_COUNT_ACCOUNT_REQUEST = "CountAccountRequest";
     public static final String E_COUNT_ACCOUNT_RESPONSE = "CountAccountResponse";
-    
+
     public static final String E_COUNT_OBJECTS_REQUEST = "CountObjectsRequest";
     public static final String E_COUNT_OBJECTS_RESPONSE = "CountObjectsResponse";
 
@@ -438,7 +440,7 @@ public final class AdminConstants {
     // noop
     public static final String E_NO_OP_REQUEST = "NoOpRequest";
     public static final String E_NO_OP_RESPONSE = "NoOpResponse";
-    
+
     // cookie
     public static final String E_CLEAR_COOKIE_REQUEST = "ClearCookieRequest";
     public static final String E_CLEAR_COOKIE_RESPONSE = "ClearCookieResponse";
@@ -460,7 +462,7 @@ public final class AdminConstants {
     public static final String E_ACTIVATE_LICENSE_RESPONSE = "ActivateLicenseResponse";
     public static final String E_GET_LICENSE_REQUEST = "GetLicenseRequest";
     public static final String E_GET_LICENSE_RESPONSE = "GetLicenseResponse";
-    
+
     // Auto Provision
     public static final String E_AUTO_PROV_ACCOUNT_REQUEST = "AutoProvAccountRequest";
     public static final String E_AUTO_PROV_ACCOUNT_RESPONSE = "AutoProvAccountResponse";
@@ -478,16 +480,16 @@ public final class AdminConstants {
     public static final String E_MODIFY_SYSTEM_RETENTION_POLICY_RESPONSE = "ModifySystemRetentionPolicyResponse";
     public static final String E_DELETE_SYSTEM_RETENTION_POLICY_REQUEST = "DeleteSystemRetentionPolicyRequest";
     public static final String E_DELETE_SYSTEM_RETENTION_POLICY_RESPONSE = "DeleteSystemRetentionPolicyResponse";
-    
+
     // StoreManager verification utility
     public static final String E_VERIFY_STORE_MANAGER_REQUEST = "VerifyStoreManagerRequest";
     public static final String E_VERIFY_STORE_MANAGER_RESPONSE = "VerifyStoreManagerResponse";
-    
+
     // Skins
     // Skins
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
-    
+
 
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
@@ -580,7 +582,7 @@ public final class AdminConstants {
     public static final QName DELETE_SERVER_RESPONSE = QName.get(E_DELETE_SERVER_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_SERVERS_REQUEST = QName.get(E_GET_ALL_SERVERS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_SERVERS_RESPONSE = QName.get(E_GET_ALL_SERVERS_RESPONSE, NAMESPACE);
-    
+
     public static final QName CREATE_UC_SERVICE_REQUEST = QName.get(E_CREATE_UC_SERVICE_REQUEST, NAMESPACE);
     public static final QName CREATE_UC_SERVICE_RESPONSE = QName.get(E_CREATE_UC_SERVICE_RESPONSE, NAMESPACE);
     public static final QName DELETE_UC_SERVICE_REQUEST = QName.get(E_DELETE_UC_SERVICE_REQUEST, NAMESPACE);
@@ -675,12 +677,14 @@ public final class AdminConstants {
 
     public static final QName GET_LICENSE_INFO_REQUEST = QName.get(E_GET_LICENSE_INFO_REQUEST, NAMESPACE);
     public static final QName GET_LICENSE_INFO_RESPONSE = QName.get(E_GET_LICENSE_INFO_RESPONSE, NAMESPACE);
-    
+
     public static final QName GET_ATTRIBUTE_INFO_REQUEST = QName.get(E_GET_ATTRIBUTE_INFO_REQUEST, NAMESPACE);
     public static final QName GET_ATTRIBUTE_INFO_RESPONSE = QName.get(E_GET_ATTRIBUTE_INFO_RESPONSE, NAMESPACE);
 
     public static final QName REINDEX_REQUEST = QName.get(E_REINDEX_REQUEST, NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
+    public static final QName COMPACT_INDEX_REQUEST = QName.get(E_COMPACT_INDEX_REQUEST, NAMESPACE);
+    public static final QName COMPACT_INDEX_RESPONSE = QName.get(E_COMPACT_INDEX_RESPONSE, NAMESPACE);
     public static final QName VERIFY_INDEX_REQUEST = QName.get(E_VERIFY_INDEX_REQUEST, NAMESPACE);
     public static final QName VERIFY_INDEX_RESPONSE = QName.get(E_VERIFY_INDEX_RESPONSE, NAMESPACE);
     public static final QName RECALCULATE_MAILBOX_COUNTS_REQUEST = QName.get(E_RECALCULATE_MAILBOX_COUNTS_REQUEST, NAMESPACE);
@@ -800,7 +804,7 @@ public final class AdminConstants {
 
     public static final QName COUNT_OBJECTS_REQUEST = QName.get(E_COUNT_OBJECTS_REQUEST, NAMESPACE);
     public static final QName COUNT_OBJECTS_RESPONSE = QName.get(E_COUNT_OBJECTS_RESPONSE, NAMESPACE);
-    
+
     public static final QName GET_SHARE_INFO_REQUEST = QName.get(E_GET_SHARE_INFO_REQUEST, NAMESPACE);
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get(E_GET_SHARE_INFO_RESPONSE, NAMESPACE);
 
@@ -905,7 +909,7 @@ public final class AdminConstants {
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
-    
+
     // cookie
     public static final QName CLEAR_COOKIE_REQUEST = QName.get(E_CLEAR_COOKIE_REQUEST, NAMESPACE);
     public static final QName CLEAR_COOKIE_RESPONSE = QName.get(E_CLEAR_COOKIE_RESPONSE, NAMESPACE);
@@ -926,7 +930,7 @@ public final class AdminConstants {
     public static final QName ACTIVATE_LICENSE_RESPONSE = QName.get(E_ACTIVATE_LICENSE_RESPONSE, NAMESPACE);
     public static final QName GET_LICENSE_REQUEST = QName.get(E_GET_LICENSE_REQUEST, NAMESPACE);
     public static final QName GET_LICENSE_RESPONSE = QName.get(E_GET_LICENSE_RESPONSE, NAMESPACE);
-    
+
     // Auto provision
     public static final QName AUTO_PROV_ACCOUNT_REQUEST = QName.get(E_AUTO_PROV_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName AUTO_PROV_ACCOUNT_RESPONSE = QName.get(E_AUTO_PROV_ACCOUNT_RESPONSE, NAMESPACE);
@@ -940,11 +944,11 @@ public final class AdminConstants {
     public static final QName CREATE_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_CREATE_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
     public static final QName MODIFY_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_MODIFY_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
     public static final QName DELETE_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_DELETE_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
-    
+
     // Store Manager Verifier
     public static final QName VERIFY_STORE_MANAGER_REQUEST = QName.get(E_VERIFY_STORE_MANAGER_REQUEST, NAMESPACE);
     public static final QName VERIFY_STORE_MANAGER_RESPONSE = QName.get(E_VERIFY_STORE_MANAGER_RESPONSE, NAMESPACE);
-    
+
     // Skins
     public static final QName GET_ALL_SKINS_REQUEST = QName.get(E_GET_ALL_SKINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_SKINS_RESPONSE = QName.get(E_GET_ALL_SKINS_RESPONSE, NAMESPACE);
@@ -1036,7 +1040,7 @@ public final class AdminConstants {
     public static final String E_KEY = "key";
     public static final String E_PRINCIPAL = "principal";
     public static final String E_SKIN = "skin";
-    
+
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
     public static final String A_COS = "cos";
