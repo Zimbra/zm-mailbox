@@ -42,6 +42,7 @@ public class RenameItemPath extends RedoableOp {
         setMailboxId(mailboxId);
         mId = id;
         mPath = path != null ? path : "";
+        mType = type;
     }
 
     public int[] getParentIds() {
