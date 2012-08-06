@@ -19,7 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.zimbra.cs.account.Account;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
@@ -32,6 +31,7 @@ import org.apache.jsieve.tests.AbstractTest;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.AccountUtil;
@@ -82,7 +82,10 @@ public final class MeTest extends AbstractTest {
         List<InternetAddress> addrs = new ArrayList<InternetAddress>();
         for (String header : headers) {
             for (String value : mail.getHeader(header)) {
-                addrs.add(new InternetAddress(value));
+                List<InternetAddress> inetAddrs = InternetAddress.parseHeader(value);
+                if (inetAddrs != null) {
+                    addrs.addAll(inetAddrs);
+                }
             }
         }
         try {
