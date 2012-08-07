@@ -78,7 +78,7 @@ public class WaitSetRequest extends MailDocumentHandler {
         NODATA_SLEEP_TIME_MILLIS = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);
     }
 
-    private static long getTimeoutMillis(Element request, boolean isAdminRequest) throws ServiceException {
+    public static long getTimeoutMillis(Element request, boolean isAdminRequest) throws ServiceException {
         long to;
         if (!isAdminRequest) {
             to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
@@ -94,6 +94,14 @@ public class WaitSetRequest extends MailDocumentHandler {
                 to = MAX_ADMIN_TIMEOUT;
         }
         return to * 1000;
+    }
+    
+    @Override
+    public void preProxy(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        boolean adminAllowed = zsc.getAuthToken().isAdmin();
+        setProxyTimeout(getTimeoutMillis(request, adminAllowed) + 10 * Constants.MILLIS_PER_SECOND);
+        super.preProxy(request, context);
     }
 
     /*

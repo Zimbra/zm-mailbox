@@ -20,6 +20,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -30,6 +31,12 @@ public class AdminWaitSetRequest extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element response = zsc.createElement(AdminConstants.ADMIN_WAIT_SET_RESPONSE);
         return WaitSetRequest.staticHandle(request, context, response, true);
+    }
+    
+    @Override
+    public void preProxy(Element request, Map<String, Object> context) throws ServiceException {
+        setProxyTimeout(WaitSetRequest.getTimeoutMillis(request, true) + 10 * Constants.MILLIS_PER_SECOND);
+        super.preProxy(request, context);
     }
     
     @Override

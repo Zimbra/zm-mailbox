@@ -55,6 +55,7 @@ import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 public abstract class DocumentHandler {
 
     private QName responseQName;
+    private long proxyTimeout = -1;
 
     @VisibleForTesting
     public void setResponseQName(QName response) {
@@ -63,6 +64,15 @@ public abstract class DocumentHandler {
 
     protected Element getResponseElement(ZimbraSoapContext zc) {
         return zc.createElement(responseQName);
+    }
+    
+    /**
+     * Set the timeout in milli seconds for SoapHttpTransport when this request gets proxied. 
+     * @param timeoutMsecs
+     */
+
+    protected void setProxyTimeout(long timeoutMsecs) {
+        proxyTimeout = timeoutMsecs;
     }
 
     private static String LOCAL_HOST = "";
@@ -528,6 +538,9 @@ public abstract class DocumentHandler {
             // executing remotely; find our target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
+            if (proxyTimeout >= 0) {
+                proxy.setTimeouts(proxyTimeout);
+            }
             response = proxyWithNotification(request, proxy, zsc, (Session) context.get(SoapEngine.ZIMBRA_SESSION));
             // do any necessary operations after doing a cross-server proxy
             postProxy(request, response, context);

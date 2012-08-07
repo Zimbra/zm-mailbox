@@ -30,6 +30,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -61,6 +62,12 @@ public class NoOp extends MailDocumentHandler  {
         if (timeout > MAX_TIMEOUT)
             timeout = MAX_TIMEOUT;
         return timeout;
+    }
+    
+    @Override
+    public void preProxy(Element request, Map<String, Object> context) throws ServiceException {
+        setProxyTimeout(parseTimeout(request) + 10 * Constants.MILLIS_PER_SECOND);
+        super.preProxy(request, context);
     }
     
     ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext> sBlockedNops = 
