@@ -73,6 +73,7 @@ public class MailServiceException extends ServiceException {
 
     public static final String SCAN_ERROR      = "mail.SCAN_ERROR";
     public static final String UPLOAD_REJECTED = "mail.UPLOAD_REJECTED";
+    public static final String UPLOAD_TOO_LARGE = "mail.UPLOAD_TOO_LARGE";
     public static final String TOO_MANY_UPLOADS  = "mail.TOO_MANY_UPLOADS";
     public static final String TOO_MANY_CONTACTS = "mail.TOO_MANY_CONTACTS";
     public static final String TOO_MUCH_METADATA = "mail.TOO_MUCH_METADATA";
@@ -309,6 +310,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException UPLOAD_REJECTED(String file, String reason) {
         return new MailServiceException("upload rejected: file '" + file + "': " + reason, UPLOAD_REJECTED, SENDERS_FAULT, new Argument(NAME, file, Argument.Type.STR), new Argument("reason", reason, Argument.Type.STR));
+    }
+    
+    public static MailServiceException UPLOAD_TOO_LARGE(String file, String reason) {
+        return new MailServiceException("upload too large: file '" + file + "': " + reason, UPLOAD_TOO_LARGE, SENDERS_FAULT, new Argument(NAME, file, Argument.Type.STR), new Argument("reason", reason, Argument.Type.STR));
     }
 
     // note that this logs "service.TOO_MANY_HOPS" rather than "mail.*"

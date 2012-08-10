@@ -778,8 +778,10 @@ public abstract class ArchiveFormatter extends Formatter {
             try {
                 ais = getInputStream(context, charset.name());
             } catch (Exception e) {
+                if (e instanceof UserServletException && ((UserServletException) e).getHttpStatusCode() == HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE) {
+                    throw FormatterServiceException.UNKNOWN_ERROR(e);
+                }
                 String filename = context.params.get(UserServlet.UPLOAD_NAME);
-
                 throw FormatterServiceException.INVALID_FORMAT(filename == null ? "unknown" : filename);
             }
             if (!Strings.isNullOrEmpty(subfolder)) {

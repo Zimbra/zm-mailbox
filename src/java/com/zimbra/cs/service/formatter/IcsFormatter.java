@@ -159,7 +159,7 @@ public class IcsFormatter extends Formatter {
     throws UserServletException, ServiceException, IOException, ServletException {
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();
-        InputStream is = context.getRequestInputStream(Long.MAX_VALUE);
+        InputStream is = context.getRequestInputStream(-1);
         String charset = MimeConstants.P_CHARSET_UTF8;
         String ctStr = context.req.getContentType();
         if (ctStr != null) {
