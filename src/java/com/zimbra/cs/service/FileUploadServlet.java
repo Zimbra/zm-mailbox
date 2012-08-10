@@ -317,15 +317,21 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId, boolean limitByFileUploadMaxSize) throws ServiceException, IOException {
+        return saveUpload(is, filename, contentType, accountId, getFileUploadMaxSize(limitByFileUploadMaxSize));
+    }
+    
+    public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId, long limit) throws ServiceException, IOException {
         FileItem fi = null;
         boolean success = false;
         try {
             // store the fetched file as a normal upload
-            ServletFileUpload upload = getUploader(limitByFileUploadMaxSize);
+            ServletFileUpload upload = getUploader(limit);
             fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
-            long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
-            if (size > upload.getSizeMax())
-                throw MailServiceException.UPLOAD_REJECTED(filename, "upload too large");
+            long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() + 1);
+            if (upload.getSizeMax() >= 0 && size > upload.getSizeMax()) {
+                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes");
+                throw MailServiceException.UPLOAD_TOO_LARGE(filename, "upload too large");
+            }
 
             Upload up = new Upload(accountId, fi);
             mLog.info("saveUpload(): received %s", up);
@@ -696,12 +702,9 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    private static ServletFileUpload getUploader(boolean limitByFileUploadMaxSize) {
+    private static long getFileUploadMaxSize(boolean limitByFileUploadMaxSize) {
         // look up the maximum file size for uploads
         long maxSize = DEFAULT_MAX_SIZE;
-        DiskFileItemFactory dfif = new DiskFileItemFactory();
-        ServletFileUpload upload;
-
         try {
             if (limitByFileUploadMaxSize) {
                 maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
@@ -713,9 +716,18 @@ public class FileUploadServlet extends ZimbraServlet {
                       ((limitByFileUploadMaxSize) ? Provisioning.A_zimbraFileUploadMaxSize : Provisioning.A_zimbraMtaMaxMessageSize) +
                       " attribute", e);
         }
+        return maxSize;
+    }
+
+    protected ServletFileUpload getUploader(boolean limitByFileUploadMaxSize) {
+    	return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
+    }
+    
+    private static ServletFileUpload getUploader(long maxSize) {
+        DiskFileItemFactory dfif = new DiskFileItemFactory();
         dfif.setSizeThreshold(32 * 1024);
         dfif.setRepository(new File(getUploadDir()));
-        upload = new ServletFileUpload(dfif);
+        ServletFileUpload upload = new ServletFileUpload(dfif);
         upload.setSizeMax(maxSize);
         return upload;
     }
