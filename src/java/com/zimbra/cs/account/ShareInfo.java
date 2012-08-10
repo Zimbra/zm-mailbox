@@ -726,7 +726,7 @@ public class ShareInfo {
             link.addAttribute(ShareConstants.A_ID, sid.getItemId()).
                     addAttribute(ShareConstants.A_NAME, sid.getName()).
                     addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView());
-            if (action == null) {
+            if (action == null || action == Action.edit) {
                 link.addAttribute(ShareConstants.A_PERM, ACL.rightsToString(sid.getRightsCode()));
             }
             sb.append(share.prettyPrint());
