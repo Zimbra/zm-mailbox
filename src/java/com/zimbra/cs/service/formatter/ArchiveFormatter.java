@@ -722,6 +722,10 @@ public abstract class ArchiveFormatter extends Formatter {
     @Override
     public void saveCallback(UserServletContext context, String contentType, Folder fldr,
             String file) throws IOException, ServiceException {
+
+        // Disable the jetty timeout
+        disableJettyTimeout();
+
         Exception ex = null;
         ItemData id = null;
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
