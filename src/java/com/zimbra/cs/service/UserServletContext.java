@@ -460,7 +460,7 @@ public final class UserServletContext {
 
     public FileUploadServlet.Upload getUpload(long limit) throws ServiceException, IOException {
         if (upload == null) {
-            upload = FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId(), true);
+            upload = FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId(), limit);
         }
         return upload;
     }
