@@ -1090,6 +1090,14 @@ public class Mailbox {
         return authuser;
     }
 
+    Account getLockAccount() throws ServiceException {
+        Account authenticatedAccount = getAuthenticatedAccount();
+        if (authenticatedAccount == null) {
+            authenticatedAccount = getAccount();
+        }
+        return authenticatedAccount;
+    }
+
     /** Returns whether the authenticated user for the transaction is using
      *  any admin privileges they might have.  Admin users not using privileges
      *  are exactly like any other user and cannot access any folder they have

@@ -342,7 +342,7 @@ public class Document extends MailItem {
         checkLock();
         return super.move(target);
     }
-    
+
     @Override
     void rename(String name, Folder target) throws ServiceException {
         String oldName = getName();
@@ -377,11 +377,7 @@ public class Document extends MailItem {
     }
 
     protected void checkLock() throws ServiceException {
-        Account authenticatedAccount = mMailbox.getAuthenticatedAccount();
-        if (authenticatedAccount == null) {
-            authenticatedAccount = mMailbox.getAccount();
-        }
-        if (lockOwner != null && !authenticatedAccount.getId().equalsIgnoreCase(lockOwner)) {
+        if (lockOwner != null && !mMailbox.getLockAccount().getId().equalsIgnoreCase(lockOwner)) {
             throw MailServiceException.LOCKED(mId, lockOwner);
         }
     }
