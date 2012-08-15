@@ -470,7 +470,8 @@ public final class MailboxUpgrade {
         }
 
         List<String> matches = Lists.newArrayList();
-        for (int i = 0; i < 31; i++) {
+        // There can only be 63 tags in 7.x and the ids can range from 64 to 126.
+        for (int i = 0; i < 63; i++) {
             if ((tags & (1L << i)) != 0) {
                 matches.add(tagNames.get(64 + i));
             }
