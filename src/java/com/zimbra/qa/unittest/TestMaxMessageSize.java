@@ -14,6 +14,8 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Config;
@@ -78,9 +81,27 @@ extends TestCase {
             validateMessageTooBigFault(e);
         }
     }
-    
+
+    public void testLimitByFileUploadMaxSize()
+    throws Exception {
+        setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        try {
+            InputStream in = new ByteArrayInputStream(new byte[3000]);
+            mbox.uploadContentAsStream("testLimitByFileUploadMaxSize1", in, "application/octet-stream", 3000, 5000);
+            fail("upload should not have succeeded");
+        } catch (ServiceException e) {;
+        }
+        try {
+            InputStream in = new ByteArrayInputStream(new byte[3000]);
+            mbox.uploadContentAsStream("testLimitByFileUploadMaxSize2", in, "application/octet-stream", 3000, 5000, true);
+        } catch (SoapFaultException e) {
+            fail("upload should not have failed");
+        }
+    }
+
     /**
-     * Confirms that 
+     * Confirms that
      * @throws Exception
      */
     public void testMaxMessageSizeSaveDraft()

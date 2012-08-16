@@ -635,7 +635,7 @@ public class ItemActionHelper {
                 SoapHttpTransport transport = new SoapHttpTransport(zoptions.getUri());
                 try {
                     in = StoreManager.getInstance().getContent(doc.getBlob());
-                    String uploadId = zmbx.uploadContentAsStream(name, in, doc.getContentType(), doc.getSize(), 4000);
+                    String uploadId = zmbx.uploadContentAsStream(name, in, doc.getContentType(), doc.getSize(), 4000, true);
                     // instead of using convenience method from ZMailbox
                     // we need to hand marshall the request and set the
                     // response protocol explicitly to what was requested
