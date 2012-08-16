@@ -1893,12 +1893,17 @@ public class ZMailbox implements ToZJSONObject {
 
     public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout)
     throws ServiceException {
+        return uploadContentAsStream(name, in, contentType, contentLength, msTimeout, false);
+    }
+
+    public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout, boolean limitByFileUploadMaxSize)
+    throws ServiceException {
         String aid = null;
         if (name != null) {
             contentType += "; name=" + name;
         }
 
-        URI uri = getUploadURI();
+        URI uri = getUploadURI(limitByFileUploadMaxSize);
         HttpClient client = getHttpClient(uri);
 
         // make the post
@@ -1926,9 +1931,13 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public URI getUploadURI()  throws ServiceException {
+        return getUploadURI(false);
+    }
+
+    private URI getUploadURI(boolean limitByFileUploadMaxSize)  throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
-            return  uri.resolve("/service/upload?fmt=raw");
+            return  uri.resolve("/service/upload?fmt=raw" + (limitByFileUploadMaxSize ? "&lbfums" : ""));
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
