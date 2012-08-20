@@ -1,0 +1,212 @@
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by dogfood.zimbra.com (Postfix) with ESMTP id D756073523
+	for <dkarp@zimbra.com>; Wed,  8 Nov 2006 16:51:30 -0800 (PST)
+X-DSPAM-Result: Innocent
+X-DSPAM-Confidence: 0.9997
+X-DSPAM-Probability: 0.0000
+X-DSPAM-Signature: 45527b92190111346712775
+X-DSPAM-Factors: 27,
+X-Virus-Scanned: amavisd-new at dogfood.zimbra.com
+X-Spam-Score: -4.221
+X-Spam-Level: 
+X-Spam-Status: No, score=-4.221 tagged_above=-10 required=3
+	tests=[ALL_TRUSTED=-1.8, AWL=-0.527, BAYES_00=-2.599, DSPAM_HAM=-0.5,
+	HTML_40_50=0.496, HTML_MESSAGE=0.001, MPART_ALT_DIFF_COUNT=0.708]
+Received: from dogfood.zimbra.com ([127.0.0.1])
+	by localhost (dogfood.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id rlH66ClJBdpt for <dkarp@zimbra.com>;
+	Wed,  8 Nov 2006 16:51:29 -0800 (PST)
+Received: from mta02.zimbra.com (mta02.zimbra.com [4.78.240.39])
+	by dogfood.zimbra.com (Postfix) with ESMTP id C4D0573522
+	for <dkarp@zimbra.com>; Wed,  8 Nov 2006 16:51:29 -0800 (PST)
+Received: by mta02.zimbra.com (Postfix)
+	id 07DB1810C39; Wed,  8 Nov 2006 16:46:31 -0800 (PST)
+Date: Wed,  8 Nov 2006 16:46:31 -0800 (PST)
+From: MAILER-DAEMON@mta02.zimbra.com (Mail Delivery System)
+Subject: Undelivered Mail Returned to Sender
+To: dkarp@zimbra.com
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="6E4E3810C27.1163033191/mta02.zimbra.com"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20061109004631.07DB1810C39@mta02.zimbra.com>
+
+This is a MIME-encapsulated message.
+
+--6E4E3810C27.1163033191/mta02.zimbra.com
+Content-Description: Notification
+Content-Type: text/plain
+
+This is the Postfix program at host mta02.zimbra.com.
+
+I'm sorry to have to inform you that your message could not be
+be delivered to one or more recipients. It's attached below.
+
+For further assistance, please send mail to <postmaster>
+
+If you do so, please include this problem report. You can
+delete your own text from the attached returned message.
+
+			The Postfix program
+
+<ptangptangwhoop@cs.stanford.edu>: host cs.stanford.edu[171.64.64.64] said: 550
+    ptangptangwhoop@cs.stanford.edu: unknown recipient. (in reply to RCPT TO
+    command)
+
+<squigglehopting@yahoo.com>: host mx3.mail.yahoo.com[67.28.113.71] said: 554
+    delivery error: dd This user doesn't have a yahoo.com account
+    (squigglehopting@yahoo.com) [0] - mta164.mail.re4.yahoo.com (in reply to
+    end of DATA command)
+
+<murdleymurdleywhoptee@gmail.com>: host
+    gmail-smtp-in.l.google.com[72.14.215.114] said: 550 5.1.1 No such user
+    c18si105209hub (in reply to RCPT TO command)
+
+--6E4E3810C27.1163033191/mta02.zimbra.com
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mta02.zimbra.com
+X-Postfix-Queue-ID: 6E4E3810C27
+X-Postfix-Sender: rfc822; dkarp@zimbra.com
+Arrival-Date: Wed,  8 Nov 2006 16:46:26 -0800 (PST)
+
+Final-Recipient: rfc822; ptangptangwhoop@cs.stanford.edu
+Action: failed
+Status: 5.0.0
+Diagnostic-Code: X-Postfix; host cs.stanford.edu[171.64.64.64] said: 550
+    ptangptangwhoop@cs.stanford.edu: unknown recipient. (in reply to RCPT TO
+    command)
+
+Final-Recipient: rfc822; squigglehopting@yahoo.com
+Action: failed
+Status: 5.0.0
+Diagnostic-Code: X-Postfix; host mx3.mail.yahoo.com[67.28.113.71] said: 554
+    delivery error: dd This user doesn't have a yahoo.com account
+    (squigglehopting@yahoo.com) [0] - mta164.mail.re4.yahoo.com (in reply to
+    end of DATA command)
+
+Final-Recipient: rfc822; murdleymurdleywhoptee@gmail.com
+Action: failed
+Status: 5.0.0
+Diagnostic-Code: X-Postfix; host gmail-smtp-in.l.google.com[72.14.215.114]
+    said: 550 5.1.1 No such user c18si105209hub (in reply to RCPT TO command)
+
+--6E4E3810C27.1163033191/mta02.zimbra.com
+Content-Description: Undelivered Message
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+
+Received: from dogfood.zimbra.com (dogfood.liquidsys.com [66.92.25.198])
+	by mta02.zimbra.com (Postfix) with ESMTP id 6E4E3810C27;
+	Wed,  8 Nov 2006 16:46:26 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by dogfood.zimbra.com (Postfix) with ESMTP id D1BA073523;
+	Wed,  8 Nov 2006 16:51:24 -0800 (PST)
+X-Virus-Scanned: amavisd-new at dogfood.zimbra.com
+Received: from dogfood.zimbra.com ([127.0.0.1])
+	by localhost (dogfood.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ACl2P-CHVuPN; Wed,  8 Nov 2006 16:51:23 -0800 (PST)
+Received: from dogfood.zimbra.com (localhost.localdomain [127.0.0.1])
+	by dogfood.zimbra.com (Postfix) with ESMTP id E40F373522;
+	Wed,  8 Nov 2006 16:51:23 -0800 (PST)
+Message-ID: <401784674.13511163033483783.JavaMail.root@dogfood.zimbra.com>
+Date: Wed, 8 Nov 2006 16:51:23 -0800 (PST)
+From: Dan Karp <dkarp@zimbra.com>
+To: squigglehopting@yahoo.com, murdleymurdleywhoptee@gmail.com,
+	ptangptangwhoop@cs.stanford.edu
+Subject: testing appointment bounce
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_235_901532167.1163033483782"
+
+------=_Part_235_901532167.1163033483782
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+The following is a new meeting request:
+
+Subject: testing appointment bounce 
+Organizer: "Dan Karp" <dkarp@zimbra.com> 
+
+Time: Wednesday, November 8, 2006, 5:00:00 PM - 6:00:00 PM
+ 
+Invitees: squigglehopting@yahoo.com; murdleymurdleywhoptee@gmail.com; ptangptangwhoop@cs.stanford.edu 
+
+*~*~*~*~*~*~*~*~*~*
+
+Testing bounce messages.
+------=_Part_235_901532167.1163033483782
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<html><body><h3>The following is a new meeting request:</h3>
+
+<p>
+<table border='0'>
+<tr><th align=left>Subject:</th><td>testing appointment bounce </td></tr>
+<tr><th align=left>Organizer:</th><td>"Dan Karp" &lt;dkarp@zimbra.com&gt; </td></tr>
+</table>
+<p>
+<table border='0'>
+<tr><th align=left>Time:</th><td>Wednesday, November 8, 2006, 5:00:00 PM - 6:00:00 PM
+ </td></tr></table>
+<p>
+<table border='0'>
+<tr><th align=left>Invitees:</th><td>squigglehopting@yahoo.com; murdleymurdleywhoptee@gmail.com; ptangptangwhoop@cs.stanford.edu </td></tr></table>
+<div>*~*~*~*~*~*~*~*~*~*</div><br>Testing bounce messages.</body></html>
+------=_Part_235_901532167.1163033483782
+Content-Type: text/calendar; name=meeting.ics; method=REQUEST; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:Zimbra-Calendar-Provider
+VERSION:2.0
+METHOD:REQUEST
+BEGIN:VTIMEZONE
+TZID:(GMT-08.00) Pacific Time (US & Canada) / Tijuana
+BEGIN:STANDARD
+DTSTART:16010101T020000
+TZOFFSETTO:-0800
+TZOFFSETFROM:-0700
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T020000
+TZOFFSETTO:-0700
+TZOFFSETFROM:-0800
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=1SU
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:4dd50a2d-1bb9-403f-9c17-be8356cdf6f6
+ORGANIZER:MAILTO:dkarp@zimbra.com
+SUMMARY:testing appointment bounce
+DTSTART;TZID="(GMT-08.00) Pacific Time (US & Canada) / Tijuana":20061108T170
+ 000
+DTEND;TZID="(GMT-08.00) Pacific Time (US & Canada) / Tijuana":20061108T18000
+ 0
+LOCATION:
+STATUS:CONFIRMED
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+TRANSP:OPAQUE
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:MAILTO:squiggl
+ ehopting@yahoo.com
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:MAILTO:murdley
+ murdleywhoptee@gmail.com
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:MAILTO:ptangpt
+ angwhoop@cs.stanford.edu
+DTSTAMP:20061109T005123Z
+SEQUENCE:0
+DESCRIPTION:The following is a new meeting request:\n\nSubject: testing appo
+ intment bounce \nOrganizer: \"Dan Karp\" <dkarp@zimbra.com> \n\nTime: Wednes
+ day\, November 8\, 2006\, 5:00:00 PM - 6:00:00 PM\n \nInvitees: squigglehopt
+ ing@yahoo.com\; murdleymurdleywhoptee@gmail.com\; ptangptangwhoop@cs.stanfor
+ d.edu \n\n*~*~*~*~*~*~*~*~*~*\n\nTesting bounce messages.
+END:VEVENT
+END:VCALENDAR
+------=_Part_235_901532167.1163033483782--
+
+
+--6E4E3810C27.1163033191/mta02.zimbra.com--

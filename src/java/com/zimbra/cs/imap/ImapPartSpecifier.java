@@ -14,8 +14,8 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,87 +28,103 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mime.Mime;
 
 class ImapPartSpecifier {
-    static class BinaryDecodingException extends Exception { private static final long serialVersionUID = 8158363540973909369L; }
+    static class BinaryDecodingException extends Exception {
+        private static final long serialVersionUID = 8158363540973909369L;
+    }
 
-    /** Maximum size of byte[] buffer held in memory while processing a
-     *  <tt>FETCH BINARY</tt> or <tt>FETCH BINARY.SIZE</tt>. */
+    /**
+     * Maximum size of byte[] buffer held in memory while processing a
+     * <tt>FETCH BINARY</tt> or <tt>FETCH BINARY.SIZE</tt>.
+     */
     static final int MAX_PINNED_BINARY_CONTENT = 100000;
 
-    private String mCommand;
-    private String mPart;
-    private String mModifier;
-    private int    mOctetStart = -1, mOctetEnd = -1;
-    private List<String> mHeaders;
+    private final String command;
+    private final String part;
+    private final String modifier;
+    private int octetStart = -1, octetEnd = -1;
+    private List<String> requestedHeaders;
 
     ImapPartSpecifier(String cmd, String part, String modifier) {
-        mCommand = cmd;  mPart = part;  mModifier = modifier;
+        this.command = cmd;
+        this.part = part;
+        this.modifier = modifier;
     }
 
     ImapPartSpecifier(String cmd, String part, String modifier, int start, int count) {
-        mCommand = cmd;  mPart = part;  mModifier = modifier;  setPartial(start, count);
+        this(cmd, part, modifier);
+        setPartial(start, count);
     }
 
     void setPartial(int start, int count) {
         if (start >= 0 && count >= 0) {
-            mOctetStart = start;  mOctetEnd = start + count;
+            this.octetStart = start;
+            this.octetEnd = start + count;
         }
     }
 
     boolean isEntireMessage() {
-        return mPart.equals("") && mModifier.equals("");
+        return part.equals("") && modifier.equals("");
     }
 
     ImapPartSpecifier setHeaders(List<String> headers) {
-        mHeaders = headers;  return this;
+        this.requestedHeaders = headers;
+        return this;
     }
 
     private String[] getHeaders() {
-        if (mHeaders == null || mHeaders.isEmpty())
+        if (requestedHeaders == null || requestedHeaders.isEmpty()) {
             return NO_HEADERS;
-        String[] headers = new String[mHeaders.size()];
-        for (int i = 0; i < mHeaders.size(); i++)
-            headers[i] = mHeaders.get(i);
+        }
+
+        String[] headers = new String[requestedHeaders.size()];
+        for (int i = 0; i < requestedHeaders.size(); i++) {
+            headers[i] = requestedHeaders.get(i);
+        }
         return headers;
     }
 
     private static final String[] NO_HEADERS = new String[0];
 
-    @Override public String toString() {
-        StringBuilder response = new StringBuilder(mCommand);
-        if (mCommand.equals("BODY") || mCommand.equals("BINARY") || mCommand.equals("BINARY.SIZE")) {
+    @Override
+    public String toString() {
+        StringBuilder response = new StringBuilder(command);
+        if (command.equals("BODY") || command.equals("BINARY") || command.equals("BINARY.SIZE")) {
             response.append('[').append(getSectionSpec()).append(']');
             // 6.4.5: "BODY[]<0.2048> of a 1500-octet message will return
-            //         BODY[]<0> with a literal of size 1500, not BODY[]."
-            if (mOctetStart != -1)
-                response.append('<').append(mOctetStart).append('>');
+            // BODY[]<0> with a literal of size 1500, not BODY[]."
+            if (octetStart != -1) {
+                response.append('<').append(octetStart).append('>');
+            }
         }
         return response.toString();
     }
 
     String getCommand() {
-        return mCommand;
+        return command;
     }
 
     String getSectionPart() {
-        return mPart;
+        return part;
     }
 
     String getSectionSpec() {
         StringBuilder sb = new StringBuilder();
-        sb.append(mPart).append(mPart.equals("") || mModifier.equals("") ? "" : ".").append(mModifier);
-        if (mHeaders != null) {
-            boolean first = true;  sb.append(" (");
-            for (String header : mHeaders) {
-                sb.append(first ? "" : " ").append(header.toUpperCase());  first = false;
+        sb.append(part).append(part.equals("") || modifier.equals("") ? "" : ".").append(modifier);
+        if (requestedHeaders != null) {
+            boolean first = true;
+            sb.append(" (");
+            for (String header : requestedHeaders) {
+                sb.append(first ? "" : " ").append(header.toUpperCase());
+                first = false;
             }
             sb.append(')');
         }
@@ -122,18 +138,20 @@ class ImapPartSpecifier {
             is = contents == null ? null : contents.getSecond();
             long length = contents == null ? -1 : contents.getFirst();
 
-            ps.print(this);  ps.write(' ');
+            ps.print(this);
+            ps.write(' ');
 
             if (is == null) {
                 ps.print("NIL");
-            } else if (mCommand.equals("BINARY.SIZE")) {
+            } else if (command.equals("BINARY.SIZE")) {
                 ps.print(length >= 0 ? length : NULCheck.getLength(is));
             } else {
                 boolean binary = false;
-                if (mCommand.startsWith("BINARY")) {
+                if (command.startsWith("BINARY")) {
                     NULCheck nul = NULCheck.hasNULs(is, length);
-                    if (length < 0)
+                    if (length < 0) {
                         length = nul.length;
+                    }
                     if (nul.content == null) {
                         // reload the original InputStream
                         is = getContent(obj).getSecond();
@@ -144,11 +162,13 @@ class ImapPartSpecifier {
                     binary = nul.hasNULs;
                 }
 
-                ps.print(binary ? "~{" : "{");  ps.print(length);  ps.write('}');
+                ps.print(binary ? "~{" : "{");
+                ps.print(length);
+                ps.write('}');
                 if (os != null) {
                     os.write(ImapHandler.LINE_SEPARATOR_BYTES);
                     long written = ByteUtil.copy(is, false, os, false);
-                    assert(written == length);
+                    assert written == length;
                 }
             }
         } finally {
@@ -161,21 +181,25 @@ class ImapPartSpecifier {
         if (obj instanceof MimeMessage) {
             contents = getContent((MimeMessage) obj);
         } else if (obj instanceof MailItem) {
-            if (!isEntireMessage())
+            if (!isEntireMessage()) {
                 throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
+            }
             contents = ImapMessage.getContent((MailItem) obj);
         } else {
-            throw ServiceException.FAILURE("called write() with unexpected argument: " + (obj == null ? "null" : obj.getClass().getSimpleName()), null);
+            throw ServiceException.FAILURE("called write() with unexpected argument: "
+                    + (obj == null ? "null" : obj.getClass().getSimpleName()), null);
         }
 
-        if (mOctetStart >= 0 && contents != null) {
-            // if there is a "partial" octet start/length constraint on this part specifier, apply it here
+        if (octetStart >= 0 && contents != null) {
+            // if there is a "partial" octet start/length constraint on this
+            // part specifier, apply it here
             InputStream is = contents.getSecond();
             long statedLength = contents.getFirst();
-            long realLength = Math.max(0, Math.min(statedLength < 0 ? Integer.MAX_VALUE : statedLength, mOctetEnd) - mOctetStart);
+            long realLength = Math.max(0, Math.min(statedLength < 0 ? Integer.MAX_VALUE : statedLength, octetEnd) - octetStart);
             try {
-                int start = mOctetStart;
-                // the JavaMail implementations of the content-transfer decoders don't do skip() correctly
+                int start = octetStart;
+                // the JavaMail implementations of the content-transfer decoders
+                // don't do skip() correctly
                 if (is instanceof com.sun.mail.util.BASE64DecoderStream || is instanceof com.sun.mail.util.QPDecoderStream) {
                     ByteUtil.skip(is, start);
                     start = 0;
@@ -204,13 +228,16 @@ class ImapPartSpecifier {
         }
 
         private static NULCheck scan(InputStream is, long length, boolean checkNULs) throws BinaryDecodingException {
-            // we want to (a) avoid rereading the message from disk, but (b) avoid reading a 30GB blob to memory
-            //   so we're going to read messages up to a certain length into memory and do the rest by going back to disk
+            // we want to (a) avoid rereading the message from disk, but (b)
+            // avoid reading a 30GB blob to memory
+            // so we're going to read messages up to a certain length into
+            // memory and do the rest by going back to disk
             NULCheck nul = new NULCheck();
             long totalSize = 0;
             ByteArrayOutputStream baos = null;
-            if (checkNULs && length <= MAX_PINNED_BINARY_CONTENT)
+            if (checkNULs && length <= MAX_PINNED_BINARY_CONTENT) {
                 baos = new ByteArrayOutputStream(length < 0 ? MAX_PINNED_BINARY_CONTENT / 2 : (int) length);
+            }
 
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -220,20 +247,23 @@ class ImapPartSpecifier {
                     if (checkNULs && !nul.hasNULs) {
                         for (int i = 0; i < bytesRead; i++) {
                             if (buffer[i] == '\0') {
-                                nul.hasNULs = true;  break;
+                                nul.hasNULs = true;
+                                break;
                             }
                         }
                     }
                     // and copy to memory buffer if we're doing that...
                     if (length < 0) {
                         totalSize += bytesRead;
-                        if (totalSize > MAX_PINNED_BINARY_CONTENT && baos != null)
+                        if (totalSize > MAX_PINNED_BINARY_CONTENT && baos != null) {
                             baos = null;
+                        }
                     }
-                    if (baos != null)
+                    if (baos != null) {
                         baos.write(buffer, 0, bytesRead);
-                    else if (nul.hasNULs && length > 0)
+                    } else if (nul.hasNULs && length > 0) {
                         break;
+                    }
                 }
             } catch (IOException ioe) {
                 throw new BinaryDecodingException();
@@ -241,12 +271,24 @@ class ImapPartSpecifier {
                 ByteUtil.closeStream(is);
             }
 
-            if (baos != null)
+            if (baos != null) {
                 nul.content = baos.toByteArray();
-            if (length < 0)
+            }
+            if (length < 0) {
                 nul.length = totalSize;
+            }
             return nul;
         }
+    }
+
+    private boolean isMessageBody(MimeMessage base, MimePart resolved)
+    throws IOException, MessagingException {
+        if (!part.equals("1") && !part.endsWith(".1")) {
+            return false;
+        }
+
+        String parentPart = part.substring(0, Math.max(0, part.length() - 2));
+        return Mime.getMimePart(base, parentPart) == resolved;
     }
 
     private Pair<Long, InputStream> getContent(MimeMessage msg) throws BinaryDecodingException {
@@ -254,65 +296,88 @@ class ImapPartSpecifier {
         InputStream is = null;
 
         try {
-            MimePart mp = Mime.getMimePart(msg, mPart);
-            if (mp == null)
+            MimePart mp = Mime.getMimePart(msg, part);
+            if (mp == null) {
                 return null;
+            }
+
             // TEXT and HEADER* modifiers operate on rfc822 messages
-            if ((mModifier.equals("TEXT") || mModifier.startsWith("HEADER")) && !(mp instanceof MimeMessage)) {
+            if ((modifier.equals("TEXT") || modifier.startsWith("HEADER")) && !(mp instanceof MimeMessage)) {
                 // FIXME: hackaround for JavaMail's failure to handle multipart/digest properly
                 Object content = Mime.getMessageContent(mp);
-                if (!(content instanceof MimeMessage))
+                if (!(content instanceof MimeMessage)) {
                     return null;
+                }
                 mp = (MimeMessage) content;
             }
+
             // get the content of the requested part
-            if (mModifier.equals("")) {
+            if (modifier.equals("")) {
                 if (mp instanceof MimeBodyPart) {
-                    if (mCommand.startsWith("BINARY")) {
+                    if (command.startsWith("BINARY")) {
                         try {
                             is = ((MimeBodyPart) mp).getInputStream();
                         } catch (IOException ioe) {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        is = ((MimeBodyPart) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
+                        is = ((MimeBodyPart) mp).getRawInputStream();
+                        length = Math.max(0, mp.getSize());
                     }
                 } else if (mp instanceof MimeMessage) {
-                    if (mCommand.startsWith("BINARY")) {
+                    if (!isMessageBody(msg, mp)) {
+                        String parentPart = part.substring(0, Math.max(0, part.length() - 2));
+                        return new ImapPartSpecifier(command, parentPart, "TEXT").getContent(msg);
+                    } else if (command.startsWith("BINARY")) {
                         try {
                             is = ((MimeMessage) mp).getInputStream();
                         } catch (IOException ioe) {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        is = ((MimeMessage) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
+                        is = ((MimeMessage) mp).getRawInputStream();
+                        length = Math.max(0, mp.getSize());
                     }
                 } else {
                     ZimbraLog.imap.debug("getting content of part; not MimeBodyPart: " + this);
                     return ImapMessage.EMPTY_CONTENT;
                 }
-            } else if (mModifier.startsWith("HEADER")) {
+            } else if (modifier.startsWith("HEADER")) {
                 MimeMessage mm = (MimeMessage) mp;
                 Enumeration<?> headers;
-                if (mModifier.equals("HEADER"))              headers = mm.getAllHeaderLines();
-                else if (mModifier.equals("HEADER.FIELDS"))  headers = mm.getMatchingHeaderLines(getHeaders());
-                else                                         headers = mm.getNonMatchingHeaderLines(getHeaders());
+                if (modifier.equals("HEADER")) {
+                    headers = mm.getAllHeaderLines();
+                } else if (modifier.equals("HEADER.FIELDS")) {
+                    headers = mm.getMatchingHeaderLines(getHeaders());
+                } else {
+                    headers = mm.getNonMatchingHeaderLines(getHeaders());
+                }
                 StringBuilder result = new StringBuilder();
-                while (headers.hasMoreElements())
+                while (headers.hasMoreElements()) {
                     result.append(headers.nextElement()).append(ImapHandler.LINE_SEPARATOR);
+                }
 
                 byte[] content = result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
-                is = new ByteArrayInputStream(content);  length = content.length;
-            } else if (mModifier.equals("MIME")) {
+                is = new ByteArrayInputStream(content);
+                length = content.length;
+            } else if (modifier.equals("MIME")) {
+                if (mp instanceof MimeMessage) {
+                    String parentPart = part.substring(0, Math.max(0, part.length() - 2));
+                    return new ImapPartSpecifier(command, parentPart, "HEADERS").getContent(msg);
+                }
+
                 Enumeration<?> mime = mp.getAllHeaderLines();
                 StringBuilder result = new StringBuilder();
-                while (mime.hasMoreElements())
+                while (mime.hasMoreElements()) {
                     result.append(mime.nextElement()).append(ImapHandler.LINE_SEPARATOR);
+                }
 
                 byte[] content = result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
-                is = new ByteArrayInputStream(content);  length = content.length;
-            } else if (mModifier.equals("TEXT")) {
-                is = ((MimeMessage) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
+                is = new ByteArrayInputStream(content);
+                length = content.length;
+            } else if (modifier.equals("TEXT")) {
+                is = ((MimeMessage) mp).getRawInputStream();
+                length = Math.max(0, mp.getSize());
             } else {
                 return null;
             }
@@ -328,19 +393,20 @@ class ImapPartSpecifier {
     }
 
     public boolean isIgnoredExchangeHeader() {
-        return (mHeaders != null && mHeaders.size() == 1 && StringUtil.equalIgnoreCase(mHeaders.get(0), "CONTENT-CLASS") && StringUtil.equalIgnoreCase("BODY", mCommand) && StringUtil.equalIgnoreCase("HEADER.FIELDS", mModifier));
+        return requestedHeaders != null && requestedHeaders.size() == 1 && StringUtil.equalIgnoreCase(requestedHeaders.get(0), "CONTENT-CLASS")
+                && StringUtil.equalIgnoreCase("BODY", command) && StringUtil.equalIgnoreCase("HEADER.FIELDS", modifier);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((mCommand == null) ? 0 : mCommand.hashCode());
-        result = prime * result + ((mHeaders == null) ? 0 : mHeaders.hashCode());
-        result = prime * result + ((mModifier == null) ? 0 : mModifier.hashCode());
-        result = prime * result + mOctetEnd;
-        result = prime * result + mOctetStart;
-        result = prime * result + ((mPart == null) ? 0 : mPart.hashCode());
+        result = prime * result + (command == null ? 0 : command.hashCode());
+        result = prime * result + (requestedHeaders == null ? 0 : requestedHeaders.hashCode());
+        result = prime * result + (modifier == null ? 0 : modifier.hashCode());
+        result = prime * result + octetEnd;
+        result = prime * result + octetStart;
+        result = prime * result + (part == null ? 0 : part.hashCode());
         return result;
     }
 
@@ -356,43 +422,44 @@ class ImapPartSpecifier {
             return false;
         }
         ImapPartSpecifier other = (ImapPartSpecifier) obj;
-        if (mCommand == null) {
-            if (other.mCommand != null) {
+        if (command == null) {
+            if (other.command != null) {
                 return false;
             }
-        } else if (!mCommand.equals(other.mCommand)) {
+        } else if (!command.equals(other.command)) {
             return false;
         }
-        if (mHeaders == null) {
-            if (other.mHeaders != null) {
+        if (requestedHeaders == null) {
+            if (other.requestedHeaders != null) {
                 return false;
             }
-        } else if (!mHeaders.equals(other.mHeaders)) {
-            if (other.mHeaders == null || mHeaders.size() != other.mHeaders.size()) {
+        } else if (!requestedHeaders.equals(other.requestedHeaders)) {
+            if (other.requestedHeaders == null || requestedHeaders.size() != other.requestedHeaders.size()) {
                 return false;
             } else {
-                //special case, effectively equal if same headers but different order
-                return mHeaders.containsAll(other.mHeaders);
+                // special case, effectively equal if same headers but different
+                // order
+                return requestedHeaders.containsAll(other.requestedHeaders);
             }
         }
-        if (mModifier == null) {
-            if (other.mModifier != null) {
+        if (modifier == null) {
+            if (other.modifier != null) {
                 return false;
             }
-        } else if (!mModifier.equals(other.mModifier)) {
+        } else if (!modifier.equals(other.modifier)) {
             return false;
         }
-        if (mOctetEnd != other.mOctetEnd) {
+        if (octetEnd != other.octetEnd) {
             return false;
         }
-        if (mOctetStart != other.mOctetStart) {
+        if (octetStart != other.octetStart) {
             return false;
         }
-        if (mPart == null) {
-            if (other.mPart != null) {
+        if (part == null) {
+            if (other.part != null) {
                 return false;
             }
-        } else if (!mPart.equals(other.mPart)) {
+        } else if (!part.equals(other.part)) {
             return false;
         }
         return true;

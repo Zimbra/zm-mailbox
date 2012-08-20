@@ -645,22 +645,26 @@ public class Mime {
     }
 
     public static MimePart getMimePart(MimePart mp, String part) throws IOException, MessagingException {
-        if (mp == null)
+        if (mp == null) {
             return null;
-        if (part == null || part.trim().isEmpty())
+        }
+        if (part == null || part.trim().isEmpty()) {
             return mp;
+        }
         part = part.trim();
 
         boolean digestParent = false;
         String[] subpart = part.split("\\.");
         for (int i = 0; i < subpart.length; i++) {
             int index = Integer.parseInt(subpart[i]);
-            if (index <= 0)
+            if (index <= 0) {
                 return null;
+            }
             // the content-type determines the expected substructure
             String ct = getContentType(mp, digestParent ? MimeConstants.CT_MESSAGE_RFC822 : MimeConstants.CT_DEFAULT);
-            if (ct == null)
+            if (ct == null) {
                 return null;
+            }
             digestParent = ct.equals(MimeConstants.CT_MULTIPART_DIGEST);
 
             if (ct.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
@@ -672,22 +676,23 @@ public class Mime {
                         continue;
                     }
                 }
-            } else if (mp instanceof MimeMessage && index == 1 && i == subpart.length - 1) {
-                // the top-level part of a non-multipart message is numbered "1"
-                break;
             } else if (ct.equals(MimeConstants.CT_MESSAGE_RFC822)) {
                 MimeMessage content = getMessageContent(mp);
                 if (content != null) {
                     if (mp instanceof MimeMessage) {
                         // the top-level part of a non-multipart message is numbered "1"
-                        if (index != 1)
+                        if (index != 1) {
                             return null;
+                        }
                     } else {
                         i--;
                     }
                     mp = content;
                     continue;
                 }
+            } else if (mp instanceof MimeMessage && index == 1 && i == subpart.length - 1) {
+                // the top-level part of a non-multipart message is numbered "1"
+                break;
             }
             return null;
         }

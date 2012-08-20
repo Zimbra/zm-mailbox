@@ -1,0 +1,116 @@
+X-Gmail-Received: ea9cadad8b81db887fe7ca769a31384c1468b618
+Delivered-To:
+ dan.karp@gmail.com
+Received:  by 10.54.24.26 with SMTP id 26cs4549wrx;
+        Wed, 23 Feb 2005 17:28:54 -0800 (PST)
+Received: by 10.54.52.18 with SMTP id z18mr176996wrz;
+        Wed, 23 Feb 2005 17:28:54 -0800 (PST)
+Return-Path: <anandp@liquidsys.com>
+Received: from liquidsys.com ([66.92.182.100])
+        by mx.gmail.com with ESMTP id g5si100073wra.2005.02.23.17.28.49;
+        Wed, 23 Feb 2005 17:28:54 -0800 (PST)
+Received-SPF: pass (gmail.com: best guess record for domain of anandp@liquidsys.com designates 66.92.182.100 as permitted sender)
+Received: from phillip.liquidsys.com ([10.10.130.27]) by liquidsys.com with Microsoft SMTPSVC(6.0.3790.211);
+	 Wed, 23 Feb 2005 17:28:49 -0800
+Received: by phillip.liquidsys.com (Postfix, from userid 500)
+	id 606FE292F4C; Wed, 23 Feb 2005 17:28:31 -0800 (PST)
+To: Dan Karp <dkarp@liquidsys.com>
+Subject: main content type is message-rfc822
+From: Anand Palaniswamy <anandp@liquidsys.com>
+Date: 23 Feb 2005 17:28:31 -0800
+X-Liquid-Received: 23 Feb 2005 17:28:31 -0800
+Message-ID: <m37jky21c0.fsf@phillip.liquidsys.com>
+Lines:	85
+User-Agent: Gnus/5.09 (Gnus v5.9.0) Emacs/21.3
+MIME-Version: 1.0
+Content-Type: message/rfc822
+Content-Disposition: attachment; filename=foo.txt
+Content-Description: dsfsdf
+Return-Path: anandp@liquidsys.com
+X-OriginalArrivalTime: 24 Feb 2005 01:28:49.0382 (UTC) FILETIME=[31002860:01C51A10]
+
+Return-Path: <pubcookie-dev-bounces@mailman.u.washington.edu>
+Received: from popserver1.Stanford.EDU ([unix socket]) by
+	popserver1.Stanford.EDU (Cyrus v2.1.16) with LMTP; Fri, 27 Feb 2004
+	15:25:16 -0800
+X-Sieve: CMU Sieve 2.2
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id i1RNPFrW011464;
+	Fri, 27 Feb 2004 15:25:15 -0800 (PST)
+Received: from mailman.u.washington.edu (mailman.u.washington.edu
+	[140.142.17.227]) by leland2.Stanford.EDU (8.12.10/8.12.10) with ESMTP id
+	i1RNPEuY021357; Fri, 27 Feb 2004 15:25:14 -0800
+Received: from mailman.u.washington.edu (localhost.localdomain [127.0.0.1])
+	by mailman.u.washington.edu (8.12.11+UW04.02/8.12.11+UW04.02) with ESMTP id
+	i1RNOlgb013415; Fri, 27 Feb 2004 15:24:47 -0800
+Received: from mxu8.u.washington.edu (mxu8.u.washington.edu
+	[140.142.32.142]) ESMTP id i1RNOjNv013410	for
+	<pubcookie-dev@mailman.u.washington.edu>; Fri, 27 Feb 2004 15:24:45 -0800
+Received: from mxout5.cac.washington.edu (mxout5.cac.washington.edu
+	[140.142.32.135])id i1RNOii5004375 for <pubcookie-dev@u.washington.edu>;
+	Fri, 27 Feb 2004 15:24:44 -0800
+Received: from red0.cac.washington.edu (red0.cac.washington.edu
+	[140.142.10.68])ESMTP id i1RNOhR6025700; Fri, 27 Feb 2004 15:24:43 -0800
+Received: from localhost (dors@localhost)ESMTP id i1RNOhSX009487; Fri, 27
+	Feb 2004 15:24:43 -0800
+Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
+From: Nathan Dors <dors@cac.washington.edu>
+To: Jim Fox <fox@cac.washington.edu>
+Subject: Re: [pubcookie-dev] summary of current activities (anchors)
+In-Reply-To: <Pine.LNX.4.58.0402270848570.15454@los.cac.washington.edu>
+Message-ID: <Pine.LNX.4.58.0402271502300.7302@red0.cac.washington.edu>
+References: <Pine.LNX.4.58.0402241658020.7646@red1.cac.washington.edu>
+	 <Pine.LNX.4.58.0402270848570.15454@los.cac.washington.edu>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Uwash-Spam: Gauge=IIIIIIII, Probability=8%, Report='__TO_MALFORMED_2 0,
+	__IN_REP_TO 0, __HAS_MSGID 0, __SANE_MSGID 0, __REFERENCES 0,
+	__MIME_VERSION 0, __CT_TEXT_PLAIN 0, __CT 0, EMAIL_ATTRIBUTION 0,
+	QUOTED_EMAIL_TEXT 0, __MIME_TEXT_ONLY 0, REFERENCES 0.000, IN_REP_TO 0'
+cc: pubcookie-dev@u.washington.edu
+X-BeenThere: pubcookie-dev@u.washington.edu
+X-Mailman-Version: 2.1
+Precedence: list
+List-Id: Pubcookie Developers List <pubcookie-dev.u.washington.edu>
+List-Unsubscribe:
+	<http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev>,
+	<mailto:pubcookie-dev-request@mailman.u.washington.edu?subject=unsubscribe>
+List-Archive: <http://mailman.u.washington.edu/pipermail/pubcookie-dev>
+List-Post: <mailto:pubcookie-dev@u.washington.edu>
+List-Help:
+	<mailto:pubcookie-dev-request@mailman.u.washington.edu?subject=help>
+List-Subscribe:
+	<http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev>,
+	<mailto:pubcookie-dev-request@mailman.u.washington.edu?subject=subscribe>
+Sender: pubcookie-dev-bounces@mailman.u.washington.edu
+Errors-To: pubcookie-dev-bounces@mailman.u.washington.edu
+X-Evolution-Source: imap://schemers@schemers.pobox.stanford.edu/
+X-Evolution: 00000001-0110
+
+
+On Fri, 27 Feb 2004, Jim Fox wrote:
+
+> I think we cannot preserve these with our present methodology.
+> The browser remembers the anchor, but does not send it with the
+> request.  Pubcookie never sees it.
+
+Wow ... for some reason I thought the browser would
+have sent the anchor in the request, e.g. "GET
+/foo.html#bar". But they're smarter than that; they
+remember it, i.e. "GET /foo.html", just like you said.
+
+I think we can leave it where it stands: a known
+issue, and one that doesn't come up often and has a
+workaround. In that respect it's something like the
+"multipart/form-data" issue, where the browser has
+to obtain a session cookie before attempting the
+request.
+
+Sorry for creating such a hullabaloo about it. I'll
+mark it as "completed" online.
+
+-Nathan
+_______________________________________________
+pubcookie-dev mailing list
+pubcookie-dev@u.washington.edu
+http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev
