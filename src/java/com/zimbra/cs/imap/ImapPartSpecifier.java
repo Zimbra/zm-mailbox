@@ -363,7 +363,7 @@ class ImapPartSpecifier {
             } else if (modifier.equals("MIME")) {
                 if (mp instanceof MimeMessage) {
                     String parentPart = part.substring(0, Math.max(0, part.length() - 2));
-                    return new ImapPartSpecifier(command, parentPart, "HEADERS").getContent(msg);
+                    return new ImapPartSpecifier(command, parentPart, "HEADER").getContent(msg);
                 }
 
                 Enumeration<?> mime = mp.getAllHeaderLines();
