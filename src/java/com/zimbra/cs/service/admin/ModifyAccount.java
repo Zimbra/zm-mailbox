@@ -157,11 +157,12 @@ public class ModifyAccount extends AdminDocumentHandler {
                 throw AccountServiceException.INVALID_ATTR_VALUE("can not modify mail quota (invalid format): "+quotaAttr, e);
             }
         }
-        
+
         if (!canModifyMailQuota(zsc,  account, quota))
-            throw ServiceException.PERM_DENIED("can not modify mail quota");
+            throw ServiceException.PERM_DENIED("can not modify mail quota, domain admin can only modify quota if " +
+            		"zimbraDomainAdminMaxMailQuota is set to 0 or set to a certain value and quota is less than that value.");
     }
-    
+
     private void checkCos(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
         String newCosId = getStringAttrNewValue(Provisioning.A_zimbraCOSId, attrs);
         if (newCosId == null) {
