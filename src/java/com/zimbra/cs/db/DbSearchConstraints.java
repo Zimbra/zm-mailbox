@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -196,7 +196,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<NumericRange> convCounts = new ArrayList<NumericRange>(); /* optional */
     public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
-    
+
+    private int constraintCount = 0;
+
     private Set<Byte> calcTypes() {
         if (excludeTypes.size() == 0)
             return types;
@@ -1014,5 +1016,13 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                     iter.remove();
             }
         }
+    }
+
+    public int getConstraintCount() {
+        return constraintCount;
+    }
+
+    void setConstraintCount(int constraintCount) {
+        this.constraintCount = constraintCount;
     }
 }

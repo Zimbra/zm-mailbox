@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -518,10 +518,12 @@ public class DbSearch {
         }
 
         statement.append(')');
-        
+
+        node.getSearchConstraints().setConstraintCount(num);
+
         return num;
     }
-    
+
     /**
      * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null 
      */
@@ -617,7 +619,7 @@ public class DbSearch {
                 return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
             } catch (ServiceException se) {
                 boolean splitNodes = false;
-                if (Db.supports(Db.Capability.SQL_PARAM_LIMIT) && (NodeType.LEAF != node.getNodeType())) {
+                if (Db.supports(Db.Capability.SQL_PARAM_LIMIT)) {
                     Throwable cause = se;
                     while (cause != null) {
                         if (cause instanceof SQLException) {
@@ -634,29 +636,76 @@ public class DbSearch {
                     throw se;
                 }
             }
-        } 
-        // if (where a or b) not supported or if we encountered too many sql params try splitting 
-        // run each toplevel OR/AND part as a separate SQL query, then merge
-        // the results in memory
-        List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
-            
-        for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
-            List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
-            search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra, inDumpster);
-            resultLists.add(subNodeResults);
         }
+        List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
 
-        Comparator<SearchResult> comp = SearchResult.getComparator(sort);
-        if (NodeType.OR == node.getNodeType()) {
-            result = mergeSortedLists(result, resultLists, comp);
-        } else if (NodeType.AND == node.getNodeType()) {
-            result = intersectSortedLists(result, resultLists);
+        if (NodeType.LEAF != node.getNodeType()) {
+            // case 1 (non-leaf node), if (where a or b) not supported or if we encountered too many sql params try splitting 
+            // run each toplevel OR/AND part as a separate SQL query, then merge
+            // the results in memory
+            for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
+                List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
+                search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra, inDumpster);
+                resultLists.add(subNodeResults);
+            }
+
+            Comparator<SearchResult> comp = SearchResult.getComparator(sort);
+            if (NodeType.OR == node.getNodeType()) {
+                result = mergeSortedLists(result, resultLists, comp);
+            } else if (NodeType.AND == node.getNodeType()) {
+                result = intersectSortedLists(result, resultLists);
+            } else {
+                throw ServiceException.FAILURE("Reached merge/intersect block with something other than OR/AND clause", null);
+            }
         } else {
-            throw ServiceException.FAILURE("Reached merge/intersect block with something other than OR/AND clause", null);
+            //case 2 (leaf node), we could encounter a sql clause with too many folders involved, try splitting these folders
+            //only deals with folders for now to avoid considering complicated situations (other constraints combined)
+            DbSearchConstraints leafNode = node.getSearchConstraints();
+            final int dbLimit = Db.getInstance().getParamLimit();
+            //avoid edge cases
+            int otherConstraintsCount = leafNode.getConstraintCount() - leafNode.folders.size();
+            final int softLimit = dbLimit - otherConstraintsCount - 10;
+            if (leafNode.folders.size() > softLimit) {
+                List<Folder> folderList = new ArrayList<Folder>(leafNode.folders);
+                int end = leafNode.folders.size();
+                int start = end - softLimit;
+                leafNode.folders.clear();
+                while (start > 0) {
+                    DbSearchConstraints subsetNode;
+                    try {
+                        subsetNode = (DbSearchConstraints) leafNode.clone();
+                    } catch (CloneNotSupportedException e) {
+                        throw ServiceException.PARSE_ERROR("unable to split DbSearchConstraint", e);
+                    }
+                    List<Folder> subList = folderList.subList(start, end);
+                    subsetNode.folders.addAll(subList);
+                    List<SearchResult> subsetResults = new ArrayList<SearchResult>();
+                    search(subsetResults, conn, subsetNode, mbox, sort, offset, limit, extra, inDumpster);
+                    resultLists.add(subsetResults);
+                    end -= softLimit;
+                    start -= softLimit;
+                }
+                //0 to end
+                DbSearchConstraints subsetNode;
+                try {
+                    subsetNode = (DbSearchConstraints) leafNode.clone();
+                } catch (CloneNotSupportedException e) {
+                    throw ServiceException.FAILURE("unable to split DbSearchConstraint", e);
+                }
+                List<Folder> subList = folderList.subList(0, end);
+                subsetNode.folders.addAll(subList);
+                List<SearchResult> subsetResults = new ArrayList<SearchResult>();
+                search(subsetResults, conn, subsetNode, mbox, sort, offset, limit, extra, inDumpster);
+                resultLists.add(subsetResults);
+                Comparator<SearchResult> comp = SearchResult.getComparator(sort);
+                result = mergeSortedLists(result, resultLists, comp);
+            } else {
+                throw ServiceException.FAILURE("splitting failed, too many constraints not caused by folders", null);
+            }
         }
         return result;
     }
-        
+
     public static List<SearchResult> searchInternal(List<SearchResult> result, Connection conn,
                                                     DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                                     int offset, int limit, SearchResult.ExtraData extra,

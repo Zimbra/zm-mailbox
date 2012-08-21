@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,9 +15,6 @@
 
 /*
  * Created on Apr 10, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
  */
 package com.zimbra.cs.db;
 
@@ -292,5 +289,12 @@ public abstract class Db {
      * @param numParams
      */
     public void checkParamLimit(int numParams) throws ServiceException {
+    }
+
+    /**
+     * @return limit for param checking
+     */
+    public int getParamLimit() {
+        return Integer.MAX_VALUE;
     }
 }
