@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -504,15 +504,19 @@ public final class SQLite extends Db {
     protected int getInClauseBatchSize() {
         return 200;
     }
-    
+
     @Override
     public void checkParamLimit(int numParams) throws ServiceException {
-        if (numParams > 999) {
+        if (numParams > getParamLimit()) {
             throw ServiceException.FAILURE("SQLite parameter limit will be exceeded",
                 new SQLException(mErrorCodes.get(Db.Error.TOO_MANY_SQL_PARAMS)));
         }
     }
 
+    @Override
+    public int getParamLimit() {
+        return 999; //SQLite's SQLITE_MAX_VARIABLE_NUMBER default value
+    }
 
     public static void main(String args[]) {
         // command line argument parsing

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -470,24 +470,57 @@ public final class DbSearch {
                 }
             }
         }
-        // if (where a or b) not supported or if we encountered too many sql params try splitting
-        // run each toplevel ORed part as a separate SQL query, then merge the results in memory
         List<Result> result = new ArrayList<Result>();
-        if (node instanceof DbSearchConstraints.Union) {
-            for (DbSearchConstraints child : node.getChildren()) {
-                result.addAll(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
-            }
-            Collections.sort(result, new ResultComparator(sort));
-        } else if (node instanceof DbSearchConstraints.Intersection) {
-            List<List<Result>> resultLists = new ArrayList<List<Result>>();
+        if (!(node instanceof DbSearchConstraints.Leaf)) {
+            // case 1 (non-leaf node), if (where a or b) not supported or if we encountered too many sql params try splitting
+            // run each toplevel ORed part as a separate SQL query, then merge the results in memory
+            if (node instanceof DbSearchConstraints.Union) {
+                for (DbSearchConstraints child : node.getChildren()) {
+                    result.addAll(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+                }
+                Collections.sort(result, new ResultComparator(sort));
+            } else if (node instanceof DbSearchConstraints.Intersection) {
+                List<List<Result>> resultLists = new ArrayList<List<Result>>();
 
-            for (DbSearchConstraints child : node.getChildren()) {
-                resultLists.add(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+                for (DbSearchConstraints child : node.getChildren()) {
+                    resultLists.add(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+                }
+                result = intersectSortedLists(result, resultLists);
+            } else {
+                throw ServiceException.FAILURE("Reached merge/intersect block with something other than OR/AND clause", null);
             }
-            result = intersectSortedLists(result, resultLists);
         } else {
-            throw ServiceException.FAILURE("Reached merge/intersect block with something other than OR/AND clause", null);
+            //case 2 (leaf node), we could encounter a sql clause with too many folders involved, try splitting these folders
+            //only deals with folders for now to avoid considering complicated situations (other constraints combined)
+            DbSearchConstraints.Leaf leafNode = node.toLeaf();
+            final int dbLimit = Db.getInstance().getParamLimit();
+            //avoid edge cases
+            int otherConstraintsCount = params.size() - leafNode.folders.size();
+            final int softLimit = dbLimit - otherConstraintsCount - 10;
+            if (leafNode.folders.size() > softLimit) {
+                List<Folder> folderList = new ArrayList<Folder>(leafNode.folders);
+                int end = leafNode.folders.size();
+                int start = end - softLimit;
+                leafNode.folders.clear();
+                while (start > 0) {
+                    DbSearchConstraints.Leaf subsetNode = leafNode.clone();
+                    List<Folder> subList = folderList.subList(start, end);
+                    subsetNode.folders.addAll(subList);
+                    result.addAll(new DbSearch(mailbox, dumpster).search(conn, subsetNode, sort, offset, limit, fetch));
+                    end -= softLimit;
+                    start -= softLimit;
+                }
+                //0 to end
+                DbSearchConstraints.Leaf subsetNode = leafNode.clone();
+                List<Folder> subList = folderList.subList(0, end);
+                subsetNode.folders.addAll(subList);
+                result.addAll(new DbSearch(mailbox, dumpster).search(conn, subsetNode, sort, offset, limit, fetch));
+                Collections.sort(result, new ResultComparator(sort));
+            } else {
+                throw ServiceException.FAILURE("splitting failed, too many constraints but not caused entirely by folders", null);
+            }
         }
+
         return result;
     }
 

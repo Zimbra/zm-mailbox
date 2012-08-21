@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -294,7 +294,14 @@ public abstract class Db {
      */
     public void checkParamLimit(int numParams) throws ServiceException {
     }
-    
+
+    /**
+     * @return limit for param checking
+     */
+    public int getParamLimit() {
+        return Integer.MAX_VALUE;
+    }
+
     /**
      * Concatenates two or more fields.
      */
