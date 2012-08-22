@@ -603,7 +603,7 @@
         <Set name="handler"><Ref id="oldhandler"/></Set>
         <Set name="outputStream">
           <New class="org.eclipse.jetty.util.RolloverFileOutputStream">
-            <Arg type="String"><SystemProperty name="jetty.home" default="."/>/../log/yyyy_mm_dd.trace.log</Arg>
+            <Arg type="String"><SystemProperty name="jetty.home" default="."/>/../log/trace_log.yyyy_mm_dd</Arg>
             <Arg type="boolean">true</Arg>
             <Arg type="int">10</Arg>
           </New>
