@@ -1680,7 +1680,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                             obsoletedRecurIdZs.remove(rid.getDtZ());  // "Un-obsolete" the surviving recurrence ids.
                         }
                     }
-                } else {
+                } else if (recur != null) {
                     // This shouldn't happen.
                     ZimbraLog.calendar.warn("Expected RecurrenceRule object, but got " + recur.getClass().getName());
                 }
