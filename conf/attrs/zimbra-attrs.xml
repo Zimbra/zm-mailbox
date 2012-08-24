@@ -5639,7 +5639,7 @@ TODO: delete them permanently from here
   <desc>whether to show declined meetings in calendar</desc>
 </attr>
 
-<attr id="1197" name="zimbraPrefFileSharingApplication" type="enum" value="briefcase,octopus" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+<attr id="1197" name="zimbraPrefFileSharingApplication" type="enum" value="briefcase" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
   <defaultCOSValue>briefcase</defaultCOSValue>
   <desc>indicates which application to use for file sharing</desc>
 </attr>
@@ -6494,27 +6494,27 @@ TODO: delete them permanently from here
   <desc>device information entered by the user for receiving reminders for appointments and tasks</desc>
 </attr>
 
-<attr id="1308" name="zimbraFileExpirationWarningThreshold" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1308" name="zimbraFileExpirationWarningThreshold" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>Period of inactivity after which file owner receives a deletion warning email</desc>
 </attr>
 
-<attr id="1309" name="zimbraFileLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1309" name="zimbraFileLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>Period of inactivity after which a file gets deleted</desc>
 </attr>
 
-<attr id="1310" name="zimbraFileExpirationWarningSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1310" name="zimbraFileExpirationWarningSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>template for constructing the subject of a file expiration warning message</desc>
 </attr>
 
-<attr id="1311" name="zimbraFileExpirationWarningBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1311" name="zimbraFileExpirationWarningBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>template for constructing the body of a file expiration warning message</desc>
 </attr>
 
-<attr id="1312" name="zimbraFileDeletionNotificationSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1312" name="zimbraFileDeletionNotificationSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>template for constructing the subject of a file deletion warning message</desc>
 </attr>
 
-<attr id="1313" name="zimbraFileDeletionNotificationBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1313" name="zimbraFileDeletionNotificationBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>template for constructing the body of a file deletion warning message</desc>
 </attr>
 
@@ -6564,11 +6564,11 @@ TODO: delete them permanently from here
   <desc>preferred task filtering option in UI</desc>
 </attr>
 
-<attr id="1324" name="zimbraFileVersioningEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1324" name="zimbraFileVersioningEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>whether file versioning is enabled</desc>
 </attr>
 
-<attr id="1325" name="zimbraFileVersionLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+<attr id="1325" name="zimbraFileVersionLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
   <desc>how long a file version is kept around</desc>
 </attr>
 
@@ -6656,28 +6656,28 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1341" name="zimbraShareNotificationMtaHostname" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1341" name="zimbraShareNotificationMtaHostname" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <desc>SMTP hostname for share notification MTA used for sending email notifications.</desc>
 </attr>
 
-<attr id="1342" name="zimbraShareNotificationMtaPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1342" name="zimbraShareNotificationMtaPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <desc>SMTP port for share notification MTA used for sending email notifications.</desc>
 </attr>
 
-<attr id="1343" name="zimbraShareNotificationMtaAuthAccount" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1343" name="zimbraShareNotificationMtaAuthAccount" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <desc>Account name for authenticating to share notification MTA.</desc>
 </attr>
 
-<attr id="1344" name="zimbraShareNotificationMtaAuthPassword" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1344" name="zimbraShareNotificationMtaAuthPassword" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <desc>Password for authenticating to share notification MTA.</desc>
 </attr>
 
-<attr id="1345" name="zimbraShareNotificationMtaConnectionType" type="enum" value="CLEARTEXT,SSL,STARTTLS" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1345" name="zimbraShareNotificationMtaConnectionType" type="enum" value="CLEARTEXT,SSL,STARTTLS" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <globalConfigValue>CLEARTEXT</globalConfigValue>
   <desc>Connection mode when connecting to share notification MTA.</desc>
 </attr>
 
-<attr id="1346" name="zimbraShareNotificationMtaAuthRequired" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1346" name="zimbraShareNotificationMtaAuthRequired" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to use credential to authenticate to share notification MTA.</desc>
 </attr>
@@ -6768,12 +6768,12 @@ TODO: delete them permanently from here
   <desc>If set as TRUE, proxy will use SSL to connect to the upstream mail servers for web and mail proxy. Note admin console proxy always use https no matter how this attr is set.</desc>
 </attr>
 
-<attr id="1361" name="zimbraShareNotificationMtaEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1361" name="zimbraShareNotificationMtaEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether share notification MTA is enabled.</desc>
 </attr>
 
-<attr id="1362" name="zimbraFileShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
+<attr id="1362" name="zimbraFileShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.0">
   <desc>
     Maximum allowed lifetime of file shares to internal users or groups.
     A value of 0 indicates that there's no limit on an internal file share's lifetime.
@@ -6781,7 +6781,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>0</defaultCOSValue>
 </attr>
 
-<attr id="1363" name="zimbraFileExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
+<attr id="1363" name="zimbraFileExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.0">
   <desc>
     Maximum allowed lifetime of file shares to external users.
     A value of 0 indicates that there's no limit on an external file share's lifetime.
@@ -6789,7 +6789,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>90d</defaultCOSValue>
 </attr>
 
-<attr id="1364" name="zimbraFilePublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
+<attr id="1364" name="zimbraFilePublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.0">
   <desc>
     Maximum allowed lifetime of public file shares.
     A value of 0 indicates that there's no limit on a public file share's lifetime.
@@ -6842,7 +6842,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1373" name="zimbraFeatureExternalFeedbackEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus"  since="8.0.0">
+<attr id="1373" name="zimbraFeatureExternalFeedbackEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether external feedback feature is enabled</desc>
 </attr>
@@ -6880,7 +6880,7 @@ TODO: delete them permanently from here
   <desc>Specifies whether the http server should bound to localhost or not. This is an immutable property and is generated based on zimbraMailMode and zimbraMailBindAddress.</desc>
 </attr>
 
-<attr id="1381" name="zimbraFeatureCrocodocEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus"  since="8.0.0">
+<attr id="1381" name="zimbraFeatureCrocodocEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether Crocodoc feature is enabled in the web client</desc>
 </attr>
@@ -6901,7 +6901,7 @@ TODO: delete them permanently from here
 
 <attr id="1385" name="zimbraFileAndroidCrashReportingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether crash reporting is enabled in the Octopus Android client</desc>
+  <desc>whether crash reporting is enabled in the Android client</desc>
 </attr>
 
 <attr id="1386" name="zimbraInternalSharingCrossDomainEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
@@ -6924,7 +6924,7 @@ TODO: delete them permanently from here
 
 <attr id="1390" name="zimbraFileIOSCrashReportingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether crash reporting is enabled in the Octopus IOS client</desc>
+  <desc>whether crash reporting is enabled in the IOS client</desc>
 </attr>
 
 <attr id="1391" name="zimbraZimletLoadSynchronously" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.2.0">
@@ -6936,9 +6936,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1392" name="zimbraProduct" type="enum" cardinality="single" value="ZCS,OCTOPUS" optionalIn="globalConfig" immutable="1" since="8.0.0">
+<attr id="1392" name="zimbraProduct" type="enum" cardinality="single" value="ZCS" optionalIn="globalConfig" immutable="1" since="8.0.0">
   <globalConfigValue>ZCS</globalConfigValue>
-  <desc>whether this instance of Zimbra is running ZCS or OCTOPUS</desc>
+  <desc>whether this instance of Zimbra is running ZCS or some other derivative product</desc>
 </attr>
 
 <attr id="1393" name="zimbraHsmMovePreviousRevisions" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
@@ -6960,12 +6960,12 @@ TODO: delete them permanently from here
 </attr>
 
 
-<attr id="1396" name="zimbraDevicePasscodeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1396" name="zimbraDevicePasscodeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether device is password protected in native apps</desc>
 </attr>
 
-<attr id="1397" name="zimbraDeviceAllowedPasscodeLockoutDuration" type="duration" cardinality="multi" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1397" name="zimbraDeviceAllowedPasscodeLockoutDuration" type="duration" cardinality="multi" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.0.0">
   <defaultCOSValue>1m</defaultCOSValue>
   <defaultCOSValue>2m</defaultCOSValue>
   <defaultCOSValue>5m</defaultCOSValue>
@@ -6974,16 +6974,16 @@ TODO: delete them permanently from here
   <desc>allowed passcode lockout duration</desc>
 </attr>
 
-<attr id="1398" name="zimbraDevicePasscodeLockoutDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1398" name="zimbraDevicePasscodeLockoutDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.0.0">
   <desc>passcode lockout duration</desc>
 </attr>
 
-<attr id="1399" name="zimbraDeviceLockWhenInactive" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1399" name="zimbraDeviceLockWhenInactive" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>For native apps - whether to lock device when inactive.</desc>
 </attr>
 
-<attr id="1400" name="zimbraDeviceFileOpenWithEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1400" name="zimbraDeviceFileOpenWithEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether OpenWith feature is enabled on devices.</desc>
 </attr>
@@ -7032,7 +7032,7 @@ TODO: delete them permanently from here
   <desc>This is the internal attr for "zimbraMobilePolicyApprovedApplication" which can only store app hash (to keep consistent with ActiveSync specification. This attr's format is "app_name":"app_hash", and is used for showing both the app name and hash in admin console UI</desc>
 </attr>
 
-<attr id="1412" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo,octopus" since="8.0.0">
+<attr id="1412" name="zimbraDeviceOfflineCacheEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether offline reading of documents on device is allowed</desc>
 </attr>
@@ -7041,7 +7041,7 @@ TODO: delete them permanently from here
   <desc>the time at which GAL definition is last modified.</desc>
 </attr>
 
-<attr id="1414" name="zimbraVirtualAccountInitialPasswordSet" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo,octopus" since="8.0.0">
+<attr id="1414" name="zimbraVirtualAccountInitialPasswordSet" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
   <desc>
     Whether virtual user set/changed his password after an external virtual account for him is provisioned.
     This attribute is applicable for accounts having zimbraIsExternalVirtualAccount set to TRUE.</desc>
@@ -7052,7 +7052,7 @@ TODO: delete them permanently from here
   <desc>port number on which message channel should listen</desc>
 </attr>
 
-<attr id="1416" name="zimbraClientTypeRegex" type="cstring" max="256" cardinality="multi" optionalIn="globalConfig" flags="octopus" since="8.0.0">
+<attr id="1416" name="zimbraClientTypeRegex" type="cstring" max="256" cardinality="multi" optionalIn="globalConfig" since="8.0.0">
   <globalConfigValue>Web UI:(.*)ZimbraWebClient(.*)</globalConfigValue>
   <globalConfigValue>ipad:(.*)iPad(.*)</globalConfigValue>
   <globalConfigValue>iphone:(.*)iPhone(.*)</globalConfigValue>
