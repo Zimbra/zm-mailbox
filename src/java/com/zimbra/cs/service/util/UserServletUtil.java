@@ -40,6 +40,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
+import com.zimbra.cs.service.formatter.FormatterFactory;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
@@ -173,8 +174,16 @@ public class UserServletUtil {
                      *      path   -> /foo/bar/baz  */
                     String unsuffixedPath = context.itemPath.substring(0, dot);
                     try {
-                        context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
                         context.format = FormatType.fromString(context.itemPath.substring(dot + 1));
+                        if (context.format != null) {
+                            context.formatter = FormatterFactory.mFormatters.get(context.format);
+                        }
+                        if (context.formatter != null && !context.formatter.requiresAuth()) {
+                            // Do the get as mailbox owner to circumvent ACL system.
+                            context.target = mbox.getItemByPath(null, unsuffixedPath);
+                        } else {
+                            context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);        
+                        }
                         context.itemPath = unsuffixedPath;
                     } catch (ServiceException e) { }
                 }
