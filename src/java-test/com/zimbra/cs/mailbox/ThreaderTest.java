@@ -66,6 +66,10 @@ public final class ThreaderTest {
     }
 
     public static ParsedMessage getRootMessage() throws Exception {
+        return new ParsedMessage(getRootMimeMessage(), false);
+    }
+
+    static MimeMessage getRootMimeMessage() throws Exception {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
         mm.setHeader("From", "Bob Evans <bob@example.com>");
         mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
@@ -74,8 +78,7 @@ public final class ThreaderTest {
         mm.setHeader("Thread-Topic", ROOT_THREAD_TOPIC);
         mm.setHeader("Thread-Index", ROOT_THREAD_INDEX);
         mm.setText("nothing to see here");
-
-        return new ParsedMessage(mm, false);
+        return mm;
     }
 
     static MimeMessage getSecondMessage() throws Exception {
@@ -337,4 +340,55 @@ public final class ThreaderTest {
 
         checkConversations(mbox, msgid3A, msgid3, true);
     }
+
+    @Test
+    public void bogusThreadIndexHeader() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        MimeMessage mm = getRootMimeMessage();
+        mm.setHeader("Thread-Index", Threader.IGNORE_THREAD_INDEX);
+
+        Message msg = mbox.addMessage(null, new ParsedMessage(mm, false), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
+        List<Integer> match = Arrays.asList(msg.getConversationId());
+
+        // unrelated, not a reply
+        mm = getSecondMessage();
+        mm.setHeader("Subject", OTHER_SUBJECT);
+        mm.setHeader("Thread-Index", Threader.IGNORE_THREAD_INDEX);
+        ParsedMessage pm = new ParsedMessage(mm, false);
+
+        threadMessage("unrelated bogus thread index", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated bogus thread index", MailThreadingAlgorithm.subject, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated bogus thread index", MailThreadingAlgorithm.references, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated bogus thread index", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("unrelated bogus thread index", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
+
+        //same subject, but don't match on references
+        mm = getSecondMessage();
+        mm.setHeader("Subject", ROOT_SUBJECT);
+        mm.setHeader("Thread-Index", Threader.IGNORE_THREAD_INDEX);
+        pm = new ParsedMessage(mm, false);
+
+        //only subject algorithm should match; others should not
+        threadMessage("same subject bogus thread index", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("same subject bogus thread index", MailThreadingAlgorithm.subject, pm, mbox, match);
+        threadMessage("same subject bogus thread index", MailThreadingAlgorithm.references, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("same subject bogus thread index", MailThreadingAlgorithm.subjrefs, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("same subject bogus thread index", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
+
+        //reply
+        mm = getSecondMessage();
+        mm.setHeader("Subject", "RE: " + ROOT_SUBJECT);
+        mm.setHeader("Thread-Index", Threader.IGNORE_THREAD_INDEX);
+        pm = new ParsedMessage(mm, false);
+
+        //all should match except strict
+        threadMessage("reply bogus thread index", MailThreadingAlgorithm.none, pm, mbox, Collections.<Integer>emptyList());
+        threadMessage("reply bogus thread index", MailThreadingAlgorithm.subject, pm, mbox, match);
+        threadMessage("reply bogus thread index", MailThreadingAlgorithm.references, pm, mbox, match);
+        threadMessage("reply bogus thread index", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
+        threadMessage("reply bogus thread index", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
+
+    }
+
 }

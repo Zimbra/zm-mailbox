@@ -139,6 +139,8 @@ public final class Threader {
         return hashes;
     }
 
+    static final String IGNORE_THREAD_INDEX = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
     /** Returns the SHA-1 hashes for the {@code Threader}'s message's {@code
      *  Thread-Index} header and those derived from it for all its parents.
      *  We prepend two control characters to these values before generating
@@ -151,7 +153,12 @@ public final class Threader {
     private List<String> getThreadIndexHashes(boolean includeParents) {
         byte[] tindex = null;
         try {
-            tindex = ThreadIndex.parseHeader(pm.getMimeMessage().getHeader("Thread-Index", null));
+            String header = pm.getMimeMessage().getHeader("Thread-Index", null);
+            if (header != null && header.startsWith(IGNORE_THREAD_INDEX)) {
+                //bogus thread index, let subject threading take over
+                return Collections.emptyList();
+            }
+            tindex = ThreadIndex.parseHeader(header);
         } catch (Exception e) { }
         if (tindex == null)
             return Collections.emptyList();
