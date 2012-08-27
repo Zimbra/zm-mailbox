@@ -21,6 +21,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -129,6 +130,9 @@ public final class ProxyTarget {
                 transport.setTimeout((int) Math.min(mTimeout, Integer.MAX_VALUE));
 
             transport.setResponseProtocol(zsc.getResponseProtocol());
+            if (zsc.getAuthToken() != null && !StringUtil.isNullOrEmpty(zsc.getAuthToken().getProxyAuthToken())) {
+                transport.setAuthToken(zsc.getAuthToken().getProxyAuthToken());
+            }
             Element response = transport.invokeRaw(envelope);
             Element body = transport.extractBodyElement(response);
             return new Pair<Element, Element>(transport.getZimbraContext(), body);
