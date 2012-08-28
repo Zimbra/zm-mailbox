@@ -1212,6 +1212,16 @@ public final class JaxbUtil {
      * </pre>
      * In JAXB, we typically use {@link XmlElement} for the associated field.  Round tripping from XML will result in
      * an element but round tripping from JSON will result in an attribute.
+     * <li>Zimbra uses key/value pairs which serialize to JSON as:
+     * <pre>
+     *     "_attrs":{"anID":"val","anID2":"val2"}
+     * </pre>
+     * If this is read into a JSONElement structure and written out as XML, you get:
+     * <pre>
+     *     &lt;a n="anID">val&lt;/a>&lt;a n="anID2">val2&lt;/a>
+     * </pre>
+     * The element name "a" and the attribute name "n" are defaults - the actual expected values can be different - so
+     * we query the JAXB classes to see what they should be.
      * </ol>
      * @param klass is the JAXB class for {@code elem} which must be under the "com.zimbra" package hierarchy.
      */
@@ -1281,6 +1291,24 @@ public final class JaxbUtil {
                         orphans = Lists.newArrayList();
                     }
                     orphans.add(child);
+                } else if (Element.XMLElement.E_ATTRIBUTE.equals(childName)) {
+                    // This might be a keyvaluepair, the Element code doesn't have access to JAXB info, so defaults
+                    // the element name to "a" and its attribute will be "n".  If this is what has happened, replace
+                    // it with a corrected equivalent using the JAXB object for reference.
+                    JaxbInfo.KeyValuePairXmlRepresentationInfo kvpXmlRep = jaxbInfo.getKeyValuePairElementInfo();
+                    if (kvpXmlRep != null) {
+                        elem.getNamespaceURI();
+                        org.w3c.dom.Element newElem = elem.getOwnerDocument().createElementNS(elem.getNamespaceURI(),
+                                kvpXmlRep.getXmlElementName());
+                        newElem.setTextContent(child.getTextContent());
+                        newElem.setAttribute(kvpXmlRep.getXmlAttributeName(),
+                                child.getAttribute(Element.XMLElement.A_ATTR_NAME));
+                        elem.appendChild(newElem);
+                        if (orphans == null) {
+                            orphans = Lists.newArrayList();
+                        }
+                        orphans.add(child);
+                    }
                 } else {
                     LOG.debug("JAXB class " + klass.getName() + " does NOT recognise element named:" + childName);
                 }
