@@ -6000,6 +6000,21 @@ TODO: delete them permanently from here
     The singleton listener instance is invoked after each account is auto created in Zimbra.  
     Listener can be plugged in as a server extension to handle tasks like updating the account auto 
     provision status in the external LDAP directory.
+    
+    At each eager provision interval, ZCS does an LDAP search based on the value configured 
+    in zimbraAutoProvLdapSearchFilter.  Returned entries from this search are candidates to 
+    be auto provisioned in this batch.   The zimbraAutoProvLdapSearchFilter should include 
+    an assertion that will only hit entries in the external directory that have not yet 
+    been provisioned in ZCS, otherwise it's likely the same entries will be repeated pulled 
+    in to ZCS.  After an account is auto provisioned in 
+    ZCS, com.zimbra.cs.account.Account.AutoProvisionListener.postCreate(Domain domain, Account acct, String externalDN) 
+    will be called by the auto provisioning framework.   Customer can implement the 
+    AutoProvisionListener interface in a ZCS server extension and get their 
+    AutoProvisionListener.postCreate() get called.   The implementation of customer's 
+    postCreate method can be, for example, setting an attribute in the external directory 
+    on the account just provisioned in ZCS.  The attribute can be included as a condition 
+    in the zimbraAutoProvLdapSearchFilter, so the entry won't be returned again by the 
+    LDAP search in the next interval.
   </desc>
 </attr>
 
