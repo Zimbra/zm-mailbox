@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -27,6 +26,9 @@ import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.soap.admin.message.GetAllConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
 
@@ -42,7 +44,6 @@ public class GetAllConfigTest {
     private static final Logger LOG = Logger.getLogger(GetAllConfigTest.class);
     
     private static Unmarshaller unmarshaller;
-    private static Marshaller marshaller;
 
     static {
         BasicConfigurator.configure();
@@ -54,19 +55,21 @@ public class GetAllConfigTest {
     public static void init() throws Exception {
         JAXBContext jaxb = JAXBContext.newInstance(GetAllConfigResponse.class);
         unmarshaller = jaxb.createUnmarshaller();
-        marshaller = jaxb.createMarshaller();
     }
 
     @Test
     public void unmarshallGetAllConfigResponseTest()
     throws Exception {
-        InputStream is = 
-                getClass().getResourceAsStream(
-                        "GetAllConfigResponse.xml");
-        GetAllConfigResponse resp =
-            (GetAllConfigResponse) unmarshaller.unmarshal(is);
+        InputStream is = getClass().getResourceAsStream("GetAllConfigResponse.xml");
+        Element elem = Element.parseXML(is);
+        List<KeyValuePair> kvps = elem.listKeyValuePairs();
+        is.close();
+        is = getClass().getResourceAsStream("GetAllConfigResponse.xml");
+        GetAllConfigResponse resp = (GetAllConfigResponse) unmarshaller.unmarshal(is);
         Assert.assertNotNull("Response", resp);
         List<Attr> attrs = resp.getAttrs();
-        Assert.assertEquals("Number of attrs", 407, attrs.size());
+        LOG.info("unmarshallGetAllConfigResponseTest:KVPS from elem=" + kvps.size() + " from jaxb=" + attrs.size());
+        Assert.assertTrue("Have some attrs", attrs.size() > 20);
+        Assert.assertEquals("Number of attrs from elem and from jaxb agree", kvps.size(), attrs.size());
     }
 }

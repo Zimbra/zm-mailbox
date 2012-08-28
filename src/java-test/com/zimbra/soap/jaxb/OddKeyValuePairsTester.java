@@ -31,8 +31,6 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="key-value-pairs-tester")
 public class OddKeyValuePairsTester {
-    // TODO: Remove the following note AND the similar one in OddKeyValuePairsTester once this is fixed.
-    // Note: Can use a different name to "a" BUT won't be able to round trip back to JAXB from JSON if you do
     @XmlElement(name="oddElemName")
     @ZimbraKeyValuePairs
     private List<Attr> attrList;

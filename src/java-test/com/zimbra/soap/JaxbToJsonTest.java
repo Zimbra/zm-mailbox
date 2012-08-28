@@ -370,11 +370,6 @@ public class JaxbToJsonTest {
         jsonElem.addKeyValuePair("key1", "value1");
         jsonElem.addKeyValuePair("key2", "value2-a");
         jsonElem.addKeyValuePair("key2", "value2-b");
-        // TODO: Update if this changes
-        // Currently KVPairs has this field definition:
-        //    @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
-        //    @ZimbraKeyValuePairs
-        //    private List<KeyValuePair> keyValuePairs;
         KVPairs kvPairs = new KVPairs();
         kvPairs.addKeyValuePair(new KeyValuePair("key1", "value1"));
         kvPairs.addKeyValuePair(new KeyValuePair("key2", "value2-a"));
