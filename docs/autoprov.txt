@@ -229,7 +229,7 @@ zimbraAutoProvAccountNameMap
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: optional 
+     EAGER mode: required 
       LAZY mode: optional 
     MANUAL mode: optional 
     
@@ -283,6 +283,40 @@ zimbraAutoProvNotificationFromAddress
 
 examples:
 $ zmprov md test.com zimbraAutoProvNotificationFromAddress prov-admin@test.com
+
+
+------------------------------
+zimbraAutoProvNotificationSubject
+  type="string" cardinality="single" optionalIn="globalConfig,domain"
+  Exposed in admin console: YES
+  Description:
+     EAGER mode: optional 
+      LAZY mode: optional 
+    MANUAL mode: optional  
+    
+    Template used to construct the subject of the notification message sent to the user 
+    when the user's account is auto provisioned.
+    Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+
+examples:
+$ zmprov md test.com zimbraAutoProvNotificationSubject "New account auto provisioned for ${ACCOUNT_DISPLAY_NAME}"
+
+
+------------------------------
+zimbraAutoProvNotificationBody
+  type="string" cardinality="single" optionalIn="globalConfig,domain"
+  Exposed in admin console: YES
+  Description:
+     EAGER mode: optional 
+      LAZY mode: optional 
+    MANUAL mode: optional  
+    
+    Template used to construct the subject of the notification message sent to the user 
+    when the user's account is auto provisioned.
+    Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+
+examples:
+$ zmprov md test.com zimbraAutoProvNotificationBody "Your account has been auto provisioned.  Your email address is ${ACCOUNT_ADDRESS}."
 
 
 ------------------------------
