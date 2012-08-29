@@ -135,9 +135,9 @@ public abstract class Range {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
                 CalendarItem item = mbox.getCalendarItemById(new OperationContext(mbox), itemId);
                 for (CalendarItem.Instance instance : item.expandInstances(mStart, mEnd, false)) {
-                    if ((instance.getStart() >= mStart && instance.getStart() <= mEnd) ||
-                            (instance.getEnd() >= mStart && instance.getEnd() <= mEnd))
+                    if (instance.getStart() < mEnd && instance.getEnd() > mStart) {
                         return true;
+                    }
                 }
             } catch (ServiceException se) {
                 ZimbraLog.dav.warn("error getting calendar item "+itemId+" from mailbox "+mboxId, se);
