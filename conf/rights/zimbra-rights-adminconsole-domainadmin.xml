@@ -53,7 +53,6 @@
 <right name="viewDomainAdminConsoleAccountsInfoTab" type="getAttrs" targetType="account">
   <desc> Admin Console Domain Admin view attr rights for Accounts Info Tab</desc>
   <attrs>
-    <a n="zimbraId"/>
     <a n="givenName"/>
     <a n="initials"/>
     <a n="uid"/>
@@ -562,6 +561,8 @@
   <rights>
     <r n="setDomainAdminConsoleDLSharesTab"/>
     <r n="viewDomainAdminConsoleDLSharesTab"/>
+    <r n="getDistributionListShareInfo"/>
+    <r n="publishDistributionListShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console DL ACL Tab -->
@@ -652,6 +653,7 @@
     <r n="renameCalendarResource"/>
     <r n="deleteCalendarResource"/>
     <r n="setCalendarResourcePassword"/>
+    <r n="getCalendarResourceShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console Resources Location/Contact Tab -->
@@ -733,7 +735,6 @@
     <r n="listAccount"/>
     <r n="viewAccountAdminUI"/>
     <r n="get.account.zimbraIsSystemResource"/>
-    <r n="get.account.zimbraIsSystemAccount"/>
   </rights>
 </right>
 
