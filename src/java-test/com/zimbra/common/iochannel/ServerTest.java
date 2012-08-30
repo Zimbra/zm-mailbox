@@ -10,12 +10,14 @@ import junit.framework.Assert;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.iochannel.Server.NotifyCallback;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.LogFactory;
 
+@Ignore("re-enable when bug 74392 is resolved")
 public class ServerTest {
 
     private static class CountDownCallback implements NotifyCallback {
