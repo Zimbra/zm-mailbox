@@ -324,7 +324,7 @@ public class FolderAction extends ItemAction {
                 secret = grant.getAttribute(MailConstants.A_ARGS, null);
                 // bug 30891 for 5.0.x
                 if (secret == null) {
-                    secret = grant.getAttribute(MailConstants.A_PASSWORD);
+                    secret = grant.getAttribute(MailConstants.A_PASSWORD, null);
                 }
             }
             acl.grantAccess(zid, gtype, rights, secret, expiry);
