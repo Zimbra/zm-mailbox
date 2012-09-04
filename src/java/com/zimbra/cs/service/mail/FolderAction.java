@@ -313,9 +313,9 @@ public class FolderAction extends ItemAction {
             byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             long expiry = gtype == ACL.GRANTEE_PUBLIC ?
-                    validateGrantExpiry(eAcl.getAttribute(MailConstants.A_EXPIRY, null),
+                    validateGrantExpiry(grant.getAttribute(MailConstants.A_EXPIRY, null),
                             AccountUtil.getMaxPublicShareLifetime(account, folderType)) :
-                    eAcl.getAttributeLong(MailConstants.A_EXPIRY, 0);
+                    grant.getAttributeLong(MailConstants.A_EXPIRY, 0);
 
             String secret = null;
             if (gtype == ACL.GRANTEE_KEY) {
