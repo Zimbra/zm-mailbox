@@ -207,7 +207,11 @@ public final class ACL {
 
         private boolean matchesGuestAccount(Account acct) {
             if (acct instanceof GuestAccount) {
-                return ((GuestAccount) acct).matches(mGrantee, mSecret);
+                // Now that we can have virtual accounts, the secret is null/empty in virtual account
+                // sharing, and so we need to block access to GuestAccount(s)
+                if (!StringUtil.isNullOrEmpty(mSecret)) {
+                    return ((GuestAccount) acct).matches(mGrantee, mSecret);
+                }
             } else if (acct.isIsExternalVirtualAccount()) {
                 return mGrantee.equalsIgnoreCase(acct.getExternalUserMailAddress());
             }
