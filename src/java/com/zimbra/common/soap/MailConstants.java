@@ -554,6 +554,7 @@ public final class MailConstants {
     public static final String A_TYPED_DELETES = "typed";
     public static final String A_CALENDAR_CUTOFF = "calCutoff";
     public static final String A_MSG_CUTOFF = "msgCutoff";
+    public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
 
     // filter rules
     public static final String A_LHS = "k0";
