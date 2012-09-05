@@ -225,6 +225,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
         mResponse.addAttribute(MailConstants.A_GALSYNC_THROTTLED, throttled);
     }
     
+    public void setFullSyncRecommended(boolean value) {
+        mResponse.addAttribute(MailConstants.A_GALSYNC_FULLSYNC_RECOMMENDED, value);
+    }
+    
     public void setGalDefinitionLastModified(String timestamp) {
         mResponse.addAttribute(MailConstants.A_GAL_DEFINITION_LAST_MODIFIED, timestamp);
     }
