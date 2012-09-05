@@ -175,6 +175,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     public void setHasMoreResult(boolean more) {
         mResponse.addAttribute(MailConstants.A_QUERY_MORE, more);
     }
+
+    public void setFullSyncRecommended(boolean value) {
+        mResponse.addAttribute(MailConstants.A_GALSYNC_FULLSYNC_RECOMMENDED, value);
+    }
     
     public static abstract class PassThruGalSearchResultCallback extends GalSearchResultCallback {
         protected Element mProxiedResponse;

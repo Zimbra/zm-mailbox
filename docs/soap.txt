@@ -769,7 +769,7 @@ import and export of addressbook.
 
  <SyncGalRequest [token="{previous-token}] [idOnly={true|false}]"/>
 
- <SyncGalResponse token="{new-token}">
+ <SyncGalResponse token="{new-token}" [fullSyncRecommended="{fullSyncRecommended-flag}"] >
    <cn>...</cn>*
    <deleted id="{itemId}">*
  </SyncGalResponse>
@@ -781,6 +781,7 @@ import and export of addressbook.
   Note: idOnly only works when GAL sync account is configured/enabled.
   If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
+  {fullSyncRecommended-flag} - true if GalSync Account is available and the client is using LDAP based sync.
 
 ----------------------------
 
