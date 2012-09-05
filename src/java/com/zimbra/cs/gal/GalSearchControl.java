@@ -212,6 +212,14 @@ public class GalSearchControl {
                 }
             }
         }
+        if (mParams.isIdOnly() || !LC.syncgal_non_idonly_use_ldap.booleanValue()) {
+            // add recommendation to perform fullsync if there is a valid GSA.
+            try {
+                if (getGalSyncAccount() != null) {
+                    mParams.getResultCallback().setFullSyncRecommended(true);
+                }
+            } catch (GalAccountNotConfiguredException e) {}
+        }
         ldapSearch();
     }
 

@@ -824,7 +824,8 @@ import and export of addressbook.
 
  <SyncGalRequest [token="{previous-token}] [idOnly={true|false}]"/>
 
- <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"] >
+ <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
+                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] >
    <cn>...</cn>*
    <deleted id="{itemId}">*
  </SyncGalResponse>
@@ -839,6 +840,7 @@ import and export of addressbook.
   galDefinitionLastModified is the time at which the GAL definition is last modified.
   This is returned if the sync does not happen using GAL sync account.
   {throttled-flag} - true if the SyncGal request is throttled.
+  {fullSyncRecommended-flag} - true if GalSync Account is available and the client is using LDAP based sync.
 
 ----------------------------
 
