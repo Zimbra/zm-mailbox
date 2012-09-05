@@ -71,6 +71,13 @@ public class SyncGalResponse {
     private ZmBoolean throttled;
     
     /**
+     * @zm-api-field-tag fullSyncRecommended-flag
+     * @zm-api-field-description True if the fullSync is recommended
+     */
+    @XmlAttribute(name=MailConstants.A_GALSYNC_FULLSYNC_RECOMMENDED /* fullSyncRecommended */, required=false)
+    private ZmBoolean fullSyncRecommended;
+    
+    /**
      * @zm-api-field-description Details of contact.  For element names <b>&lt;deleted</b> - gives details of deleted
      * entries.
      */
@@ -87,6 +94,7 @@ public class SyncGalResponse {
     public void setToken(String token) { this.token = token; }
     public void setGalDefinitionLastModified(String timestamp) { this.galDefinitionLastModified = timestamp; }
     public void setThrottled(Boolean throttled) { this.throttled = ZmBoolean.fromBool(throttled); }
+    public void setFullSyncRecommended(Boolean value) { this.fullSyncRecommended = ZmBoolean.fromBool(value); }
     public void setHits(Iterable <Object> hits) {
         this.hits.clear();
         if (hits != null) {
@@ -100,6 +108,7 @@ public class SyncGalResponse {
 
     public Boolean getMore() { return ZmBoolean.toBool(more); }
     public Boolean getThrottled() { return ZmBoolean.toBool(throttled); }
+    public Boolean getFullSyncRecommended() { return ZmBoolean.toBool(fullSyncRecommended); }
     public String getToken() { return token; }
     public String getGalDefinitionLastModified() { return galDefinitionLastModified; }
     public List<Object> getHits() {
@@ -113,6 +122,7 @@ public class SyncGalResponse {
             .add("token", token)
             .add("galDefinitionLastModified", galDefinitionLastModified)
             .add("throttled", throttled)
+            .add("fullSyncRecommended", fullSyncRecommended)
             .add("hits", hits);
     }
 
