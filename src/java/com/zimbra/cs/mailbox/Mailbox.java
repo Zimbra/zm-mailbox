@@ -91,6 +91,7 @@ import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
+import com.zimbra.cs.db.DbMailItem.SearchOpts;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -4063,12 +4064,12 @@ public class Mailbox {
         }
     }
 
-    public List<Integer> getItemListByDates(OperationContext octxt, MailItem.Type type,
-            long start, long end, int folderId, boolean descending) throws ServiceException {
+    public List<Integer> getItemIdList(OperationContext octxt, MailItem.Type type, int folderId,
+            SearchOpts searchOpts) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getItemListByDates", octxt);
-            List<Integer> msgIds = DbMailItem.getItemListByDates(this, type, start, end, folderId, descending);
+            beginTransaction("getItemIdList", octxt);
+            List<Integer> msgIds = DbMailItem.getItemIdList(this, type, folderId, searchOpts);
             success = true;
             return msgIds;
         } finally {
