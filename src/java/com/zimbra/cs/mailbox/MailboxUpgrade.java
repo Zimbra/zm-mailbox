@@ -17,10 +17,11 @@ package com.zimbra.cs.mailbox;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +41,6 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
-import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
@@ -138,7 +138,7 @@ public final class MailboxUpgrade {
 
     private static void pushExistingFolderAclsToLdap(Mailbox mbox) throws ServiceException {
         List<Folder> folders = mbox.getFolderList(null, SortBy.NONE);
-        List<String> sharedItems = new ArrayList<String>();
+        Set<String> sharedItems = new HashSet<String>();
         for (Folder folder : folders) {
             ACL acl = folder.getACL();
             if (acl == null) {
