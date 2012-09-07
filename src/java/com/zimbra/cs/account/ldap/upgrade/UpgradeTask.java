@@ -66,7 +66,6 @@ public enum UpgradeTask {
     BUG_68831(BUG_68831.class),
     BUG_68891(BUG_68891.class),
     BUG_72007(BUG_72007.class),
-    BUG_72056(BUG_72056.class),  // Octopus only
     BUG_75450(BUG_75450.class),
     BUG_76427(BUG_76427.class);
 

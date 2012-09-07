@@ -21,6 +21,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
@@ -42,6 +43,16 @@ public class BUG_75450 extends UpgradeOp {
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+
+    @Override
+    Description getDescription() {
+        return new Description(this,
+                new String[] {ATTR_NAME},
+                new EntryType[] {EntryType.DOMAIN, EntryType.COS},
+                FROM_VALUE,
+                TO_VALUE,
+                "Update skin to 8.0 default for all COS/Domains where it is set to the previous default");
     }
 
     private void doDomains(ZLdapContext zlc) throws ServiceException {
