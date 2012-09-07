@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,15 +27,16 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 
 public class BUG_76427 extends UpgradeOp {
-    
+
     public static Set<String> standardZimlets = new HashSet<String>();
-    
+
     static {
         standardZimlets.add("com_zimbra_adminversioncheck");
         standardZimlets.add("com_zimbra_archive");
@@ -135,7 +136,7 @@ public class BUG_76427 extends UpgradeOp {
         Config config = prov.getConfig();
         doEntry(zlc, config, "global config", Provisioning.A_zimbraZimletDomainAvailableZimlets);
     }
-    
+
     private void doAllDomain(ZLdapContext zlc) throws ServiceException {
         List<Domain> domains = prov.getAllDomains();
         for (Domain domain : domains) {
@@ -151,4 +152,15 @@ public class BUG_76427 extends UpgradeOp {
             doEntry(zlc, cos, name, Provisioning.A_zimbraZimletAvailableZimlets);
         }
     }
+
+    @Override
+    Description getDescription() {
+        return new Description(this,
+                new String[] {Provisioning.A_zimbraZimletAvailableZimlets, Provisioning.A_zimbraZimletDomainAvailableZimlets},
+                new EntryType[] {EntryType.DOMAIN, EntryType.COS},
+                "[Current Zimlets]",
+                standardZimlets.toString(),
+                "Disable all non-standard Zimlets." );
+    }
+
 }
