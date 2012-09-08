@@ -3475,7 +3475,7 @@ public class DbMailItem {
         return stmt;
     }
 
-    public static List<Integer> getItemListByDates(Mailbox mbox, byte type, long start, long end, int folderId, boolean descending) throws ServiceException {
+    public static List<Integer> getItemIdList(Mailbox mbox, byte type, int folderId, SearchOpts searchOpts) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         boolean allTypes = type == MailItem.TYPE_UNKNOWN;
@@ -3486,17 +3486,23 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String typeConstraint = allTypes ? "" : "type = ? AND ";
-            stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + typeConstraint + "folder_id = ?" +
-                        " AND date > ? AND date < ?" +
-                        " ORDER BY date" + (descending ? " DESC" : ""));
+            StringBuilder statement = new StringBuilder();
+            statement.append("SELECT id FROM ").append(getMailItemTableName(mbox))
+                     .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append(typeConstraint).append("folder_id = ?");
+            if (searchOpts.isByDate) {
+                statement.append(" AND date > ? AND date < ?");
+            }
+            statement.append(" ORDER BY date").append(searchOpts.isDescending ? " DESC" : "");
+            stmt = conn.prepareStatement(statement.toString());
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             if (!allTypes)
                 stmt.setByte(pos++, type);
             stmt.setInt(pos++, folderId);
-            stmt.setInt(pos++, (int)(start / 1000));
-            stmt.setInt(pos++, (int)(end / 1000));
+            if (searchOpts.isByDate) {
+                stmt.setInt(pos++, (int)(searchOpts.start / 1000));
+                stmt.setInt(pos++, (int)(searchOpts.end / 1000));
+            }
 
             rs = stmt.executeQuery();
 
@@ -3508,6 +3514,24 @@ public class DbMailItem {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static class SearchOpts {
+        private boolean isByDate = false;
+        private long start = 0L;
+        private long end = 0L;
+        private boolean isDescending = true;
+
+        public SearchOpts(long start, long end, boolean isDescending) {
+            this.isByDate = true;
+            this.start = start;
+            this.end = end;
+            this.isDescending = isDescending;
+        }
+
+        public SearchOpts(boolean isDescending) {
+            this.isDescending = isDescending;
         }
     }
 

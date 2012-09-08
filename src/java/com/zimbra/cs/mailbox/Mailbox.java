@@ -70,6 +70,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
+import com.zimbra.cs.db.DbMailItem.SearchOpts;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -3507,12 +3508,13 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Integer> getItemListByDates(OperationContext octxt, byte type, long start, long end, int folderId, boolean descending) throws ServiceException {
+    public synchronized List<Integer> getItemIdList(OperationContext octxt, byte type, int folderId,
+            SearchOpts searchOpts) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getItemListByDates", octxt);
+            beginTransaction("getItemIdList", octxt);
 
-            List<Integer> msgIds = DbMailItem.getItemListByDates(this, type, start, end, folderId, descending);
+            List<Integer> msgIds = DbMailItem.getItemIdList(this, type, folderId, searchOpts);
             success = true;
             return msgIds;
         } finally {
