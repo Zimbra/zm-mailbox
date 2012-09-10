@@ -55,7 +55,11 @@ public class PropPatch extends DavMethod {
 		resp.addResource(ctxt, resource, ctxt.getResponseProp(), false);
 		sendResponse(ctxt);
 	}
+	
 	public static void handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource) throws DavException, IOException {
+	    handlePropertyUpdate(ctxt, top, resource, false);
+	}
+	public static void handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource, boolean isCreate) throws DavException, IOException {
 		HashSet<Element> set = new HashSet<Element>();
 		HashSet<QName> remove = new HashSet<QName>();
 		RequestProp rp = new RequestProp(true);
@@ -80,6 +84,8 @@ public class PropPatch extends DavMethod {
 						else
 							remove.add(propName);
 						rp.addProp(propElem);
+					} else if (isCreate && prop.isAllowSetOnCreate() && isSet){
+					    set.add(propElem);
 					} else {
 						rp.addPropError(propName, new DavException.CannotModifyProtectedProperty(propName));
 					}

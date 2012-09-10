@@ -40,6 +40,8 @@ public class ResourceProperty {
 	private Locale mLocale;
 	private String mValue;
 	protected ArrayList<Element> mChildren;
+	private boolean allowSetOnCreate; // Property whose value can be set at creation time but cannot be altered after that.
+	                                  // Initial use - Set the view type based on supported-calendar-component-set for a mkcalendar request.
 
 	public ResourceProperty(String name) {
 		this(QName.get(name, DavElements.WEBDAV_NS));
@@ -66,6 +68,10 @@ public class ResourceProperty {
 	/* Returns true if the property is protected. */
 	public boolean isProtected() {
 		return mProtected;
+	}
+	
+	public boolean isAllowSetOnCreate() {
+	    return allowSetOnCreate;
 	}
 	
 	/* Returns true if the property is to be returned in allprop request. */
@@ -125,6 +131,10 @@ public class ResourceProperty {
 	public void setProtected(boolean pr) {
 		mProtected = pr;
 		mVisible = !pr;  // by default protected == not visible
+	}
+	
+	public void setAllowSetOnCreate(boolean set) {
+	    allowSetOnCreate = set;
 	}
 
 	public void setVisible(boolean v) {

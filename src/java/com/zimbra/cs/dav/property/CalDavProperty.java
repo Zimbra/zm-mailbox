@@ -120,6 +120,7 @@ public class CalDavProperty extends ResourceProperty {
     private static class SupportedCalendarComponentSet extends CalDavProperty {
         public SupportedCalendarComponentSet(MailItem.Type view) {
             super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET);
+            super.setAllowSetOnCreate(true);
             ArrayList<CalComponent> comps = new ArrayList<CalComponent>();
             Collections.addAll(comps, sSUPPORTED_COMPONENTS);
             if (view == MailItem.Type.APPOINTMENT) {

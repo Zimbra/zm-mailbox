@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Attribute;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -50,11 +51,13 @@ import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
+import com.zimbra.cs.dav.property.CalDavProperty.CalComponent;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -431,6 +434,32 @@ public abstract class MailItemResource extends DavResource {
                             DavProtocol.STATUS_FAILED_DEPENDENCY));
                 }
                 mDeadProps.remove(name);
+                continue;
+            } else if (name.equals(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET)) {
+                // change default view
+                @SuppressWarnings("unchecked")
+                List<Element> elements = e.elements(DavElements.E_COMP);
+                boolean isTodo = false;
+                boolean isEvent = false;
+                for (Element element : elements) {
+                    Attribute attr = element.attribute(DavElements.P_NAME);
+                    if (attr != null && CalComponent.VTODO.name().equals(attr.getValue())) {
+                        isTodo = true;
+                    } else if (attr != null && CalComponent.VEVENT.name().equals(attr.getValue())) {
+                        isEvent = true;
+                    }
+                }
+                if (isEvent ^ isTodo) { // we support a calendar collection of type event or todo, not both or none.
+                    Type type = (isEvent) ? Type.APPOINTMENT : Type.TASK;
+                    try {
+                        Mailbox mbox = getMailbox(ctxt);
+                        mbox.setFolderDefaultView(ctxt.getOperationContext(), mId, type);
+                    } catch (ServiceException se) {
+                        ctxt.getResponseProp().addPropError(name, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
+                    }
+                } else {
+                    ctxt.getResponseProp().addPropError(name, new DavException.CannotModifyProtectedProperty(name));
+                }
                 continue;
             }
             mDeadProps.put(name, e);

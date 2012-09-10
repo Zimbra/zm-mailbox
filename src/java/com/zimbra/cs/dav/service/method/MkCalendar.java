@@ -65,7 +65,7 @@ public class MkCalendar extends DavMethod {
         Collection newone = col.mkCol(ctxt, name, MailItem.Type.APPOINTMENT);
         boolean success = false;
         try {
-            PropPatch.handlePropertyUpdate(ctxt, top, newone);
+            PropPatch.handlePropertyUpdate(ctxt, top, newone, true);
             success = true;
         } finally {
             if (!success)
