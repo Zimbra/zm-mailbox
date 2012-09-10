@@ -89,7 +89,6 @@ public class UserServletContext {
     private long mStartTime = -2;
     private long mEndTime = -2;
     private Throwable error;
-    private FileUploadServlet.Upload upload;
 
     public static class Item {
         public int id;
@@ -490,13 +489,6 @@ public class UserServletContext {
         }
     }
 
-    public FileUploadServlet.Upload getUpload(long limit) throws ServiceException, IOException {
-        if (upload == null) {
-            upload = FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId(), limit);
-        }
-        return upload;
-    }
-
     private static final class UploadInputStream extends InputStream {
         private FileItem fi = null;
         private InputStream is;
@@ -570,9 +562,6 @@ public class UserServletContext {
                 limit = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
             else
                 limit = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
-        } else if (limit < 0) { // actually no-limit, but limit by an upper bound. default 1GB
-            limit = LC.rest_request_max_upload_size.longValue();
-            
         }
         if (ServletFileUpload.isMultipartContent(req)) {
             ServletFileUpload sfu = new ServletFileUpload();
@@ -590,19 +579,11 @@ public class UserServletContext {
                         is.close();
                         is = null;
                     } else {
-                        contentType = fis.getContentType();
-                        filename = fis.getName();
-                        if (upload == null) {
-                            upload = FileUploadServlet.saveUpload(fis.openStream(), filename, contentType, authAccount.getId(), limit);
-                        }
-                        is = new UploadInputStream(upload.getInputStream(), limit);
+                        is = new UploadInputStream(fis.openStream(), limit);
                         break;
                     }
                 }
             } catch (Exception e) {
-                if (e instanceof ServiceException && ((ServiceException) e).getCode() == MailServiceException.UPLOAD_TOO_LARGE) {
-                    throw new UserServletException(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, e.getMessage());
-                }
                 throw new UserServletException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
             }
             if (is == null)
@@ -615,20 +596,10 @@ public class UserServletContext {
             filename = ctype.getParameter("name");
             if (filename == null || filename.trim().equals(""))
                 filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
-            FileUploadServlet.Upload up;
-            try {
-                up = getUpload(limit);
-            } catch (ServiceException se) {
-                if (se instanceof ServiceException && ((ServiceException) se).getCode() == MailServiceException.UPLOAD_TOO_LARGE) {
-                    throw new UserServletException(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, se.getMessage());
-                } else {
-                    throw se;
-                }
-            }
             is = new UploadInputStream(contentEncoding != null &&
                 contentEncoding.indexOf("gzip") != -1 ?
-                new GZIPInputStream(up.getInputStream()) :
-                    up.getInputStream(), limit);
+                new GZIPInputStream(req.getInputStream()) :
+                    req.getInputStream(), limit);
         }
         if (filename == null || filename.trim().equals(""))
             filename = "unknown";
@@ -638,12 +609,6 @@ public class UserServletContext {
         ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
             filename, req.getContentLength());
         return is;
-    }
-    
-    public void cleanup() {
-        if (upload != null)
-            FileUploadServlet.deleteUpload(upload);
-        upload = null;
     }
 
     public void logError(Throwable e) {

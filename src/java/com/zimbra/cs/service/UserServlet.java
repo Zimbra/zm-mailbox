@@ -624,9 +624,6 @@ public class UserServlet extends ZimbraServlet {
             resp.sendError(e.getHttpStatusCode(), e.getMessage());
         } finally {
             ZimbraLog.clearContext();
-            if (context != null) {
-                context.cleanup();
-            }
         }
     }
 

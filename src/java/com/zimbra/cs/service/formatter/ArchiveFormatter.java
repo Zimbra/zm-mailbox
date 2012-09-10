@@ -782,9 +782,6 @@ public abstract class ArchiveFormatter extends Formatter {
             try {
                 ais = getInputStream(context, charset.name());
             } catch (Exception e) {
-                if (e instanceof UserServletException && ((UserServletException) e).getHttpStatusCode() == HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE) {
-                    throw FormatterServiceException.UNKNOWN_ERROR(e);
-                }
                 String filename = context.params.get(UserServlet.UPLOAD_NAME);
                 throw FormatterServiceException.INVALID_FORMAT(filename == null ? "unknown" : filename);
             }
@@ -800,10 +797,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     try {
                         List<Integer> delIds;
 
+                        /* TODO Uncomment when bug 76892 is fixed.
                         if (System.currentTimeMillis() - last > interval) {
                             updateClient(context, true);
                             last = System.currentTimeMillis();
                         }
+                        */
                         if (searchTypes == null) {
                             delIds = context.targetMailbox.listItemIds(context.opContext, MailItem.Type.UNKNOWN, f.getId());
                         } else {
@@ -846,10 +845,12 @@ public abstract class ArchiveFormatter extends Formatter {
                 Boolean meta = false;
 
                 while ((aie = ais.getNextEntry()) != null) {
+                    /* TODO Uncomment when bug 76892 is fixed.
                     if (System.currentTimeMillis() - last > interval) {
                         updateClient(context, true);
                         last = System.currentTimeMillis();
                     }
+                    */
                     if (aie.getName().startsWith("__MACOSX/")) {
                         continue;
                     } else if (aie.getName().endsWith(".meta")) {
