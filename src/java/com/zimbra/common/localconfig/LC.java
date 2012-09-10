@@ -342,7 +342,6 @@ public final class LC {
     public static final KnownKey soap_response_chunked_transfer_encoding_enabled = KnownKey.newKey(true);
     public static final KnownKey zimbra_servlet_output_stream_buffer_size = KnownKey.newKey(5120);
 
-    public static final KnownKey rest_request_max_upload_size = KnownKey.newKey(1 * 1024 * 1024 * 1024); // 1GB
 
     @Reloadable
     @Supported
