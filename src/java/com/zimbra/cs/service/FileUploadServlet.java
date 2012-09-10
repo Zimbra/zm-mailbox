@@ -108,6 +108,7 @@ public class FileUploadServlet extends ZimbraServlet {
         final FileItem file;
         long time;
         boolean deleted = false;
+        BlobInputStream blobInputStream;
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
@@ -166,6 +167,7 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getId()           { return uuid; }
         public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
+        public BlobInputStream getBlobInputStream()        { return blobInputStream; }
 
         public InputStream getInputStream() throws IOException {
             if (wasDeleted()) {
@@ -178,7 +180,8 @@ public class FileUploadServlet extends ZimbraServlet {
                 // If it's backed by a File, return a BlobInputStream so that any use by JavaMail
                 // will avoid loading the whole thing in memory.
                 File f = ((DiskFileItem) file).getStoreLocation();
-                return new BlobInputStream(f, f.length());
+                blobInputStream = new BlobInputStream(f, f.length());
+                return blobInputStream;
             } else {
                 return file.getInputStream();
             }
@@ -190,6 +193,9 @@ public class FileUploadServlet extends ZimbraServlet {
             if (file != null) {
                 mLog.debug("Deleting from disk: id=%s, %s", uuid, file);
                 file.delete();
+            }
+            if (blobInputStream != null) {
+                blobInputStream.closeFile();
             }
         }
 
