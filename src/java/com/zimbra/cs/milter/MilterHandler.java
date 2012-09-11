@@ -299,10 +299,14 @@ public final class MilterHandler implements NioHandler {
         if (prov.isDistributionList(rcpt)) {
             Group group = prov.getGroupBasic(Key.DistributionListBy.name, rcpt);
             if (group != null && !accessMgr.canDo(sender, group, User.R_sendToDistList, false)) {
+                ZimbraLog.milter.debug("Sender is not allowed to email this distribution list: " + rcpt);
                 SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
                 return;
             }
             lists.add(group);
+            ZimbraLog.milter.debug("group " + group + " has been added into the list.");
+        } else {
+            ZimbraLog.milter.debug(rcpt + " is not a distribution list.");
         }
         connection.send(new MilterPacket(SMFIR_CONTINUE));
     }
