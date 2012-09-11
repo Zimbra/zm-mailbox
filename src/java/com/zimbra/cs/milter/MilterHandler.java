@@ -224,8 +224,10 @@ public abstract class MilterHandler extends ProtocolHandler {
         
         if (prov.isDistributionList(rcpt)) {
             DistributionList dl = prov.getAclGroup(Provisioning.DistributionListBy.name, rcpt);
-            if (dl != null && !accessMgr.canDo(sender, dl, User.R_sendToDistList, false))
-                return SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);;
+            if (dl != null && !accessMgr.canDo(sender, dl, User.R_sendToDistList, false)) {
+                ZimbraLog.milter.debug("Sender is not allowed to email this distribution list: " + rcpt);
+                return SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
+            }
         }
         return RESPONSE_CONTINUE;            
     }
