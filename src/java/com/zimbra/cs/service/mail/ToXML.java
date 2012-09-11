@@ -1040,7 +1040,12 @@ public final class ToXML {
              * bug: 75104
              * we need to encode fragment of the first message in the conv instead of the first hit
              */
-            List<Message> msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, 1);
+            List<Message> msgsByConv = null;
+            if (msgHit.inTrash() || msgHit.inSpam()) {
+                msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, 1);
+            } else {
+                msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
+            }
             c.addAttribute(MailConstants.E_FRAG, msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment() : msgHit.getFragment(), Element.Disposition.CONTENT);
         }
         if (addRecips && msgHit != null) {
