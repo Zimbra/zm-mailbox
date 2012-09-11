@@ -892,8 +892,9 @@ public class LdapProvisioning extends LdapProv {
         if (account == null) {
             if (checkAliasDomain) {
                 String addrByDomainAlias = getEmailAddrByDomainAlias(emailAddress);
-                if (addrByDomainAlias != null)
+                if (addrByDomainAlias != null) {
                     account = getAccountByNameInternal(addrByDomainAlias, loadFromMaster);
+                }
             }
         }
 
@@ -4069,7 +4070,14 @@ public class LdapProvisioning extends LdapProv {
             case id:
                 return getDistributionListByIdInternal(key);
             case name:
-                return getDistributionListByNameInternal(key);
+                DistributionList dl = getDistributionListByNameInternal(key);
+                if (dl == null) {
+                    String localDomainAddr = getEmailAddrByDomainAlias(key);
+                    if (localDomainAddr != null) {
+                        dl = getDistributionListByNameInternal(localDomainAddr);
+                    }
+                }
+                return dl;
             default:
                 return null;
         }
@@ -4153,7 +4161,16 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean isDistributionList(String addr) {
-        return allDLs.isGroup(addr);
+        boolean isDL = allDLs.isGroup(addr);
+        if (!isDL) {
+            try {
+                addr = getEmailAddrByDomainAlias(addr);
+                isDL = allDLs.isGroup(addr);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to get local domain address of " + addr, e);
+            }
+        }
+        return isDL;
     }
 
     private Group getGroupFromCache(Key.DistributionListBy keyType, String key) {
@@ -8627,7 +8644,14 @@ public class LdapProvisioning extends LdapProv {
             case id:
                 return getGroupById(key, null, basicAttrsOnly, loadFromMaster);
             case name:
-                return getGroupByName(key, null, basicAttrsOnly, loadFromMaster);
+                Group group = getGroupByName(key, null, basicAttrsOnly, loadFromMaster);
+                if (group == null) {
+                    String localDomainAddr = getEmailAddrByDomainAlias(key);
+                    if (localDomainAddr != null) {
+                        group = getGroupByName(localDomainAddr, null, basicAttrsOnly, loadFromMaster);
+                    }
+                }
+                return group;
             default:
                 return null;
         }
