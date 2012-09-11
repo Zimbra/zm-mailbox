@@ -3171,7 +3171,37 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public boolean isDistributionList(String addr) {
-        return mAllDLs.isGroup(addr);
+        boolean isDL = mAllDLs.isGroup(addr);
+        if (!isDL) {
+            try {
+                addr = getEmailAddrByDomainAlias(addr);
+                isDL = mAllDLs.isGroup(addr);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to get local domain address of " + addr, e);
+            }
+        }
+        return isDL;
+    }
+
+    public String getEmailAddrByDomainAlias(String emailAddress) throws ServiceException {
+        String addr = null;
+
+        String parts[] = emailAddress.split("@");
+        if (parts.length == 2) {
+            Domain domain = getDomain(DomainBy.name, parts[1], true);
+            if (domain != null) {
+                if (!domain.isLocal()) {
+                    String targetDomainId = domain.getAttr(A_zimbraDomainAliasTargetId);
+                    if (targetDomainId != null) {
+                        domain = getDomainById(targetDomainId);
+                        if (domain != null) {
+                            addr = parts[0] + "@" + domain.getName();
+                        }
+                    }
+                }
+            }
+        }
+        return addr;
     }
 
     //
@@ -3194,7 +3224,14 @@ public class LdapProvisioning extends Provisioning {
             case id:
                 return getAclGroupById(key);
             case name:
-                return getAclGroupByName(key);
+                DistributionList dl = getAclGroupByName(key);
+                if (dl == null) {
+                    String localDomainAddr = getEmailAddrByDomainAlias(key);
+                    if (localDomainAddr != null) {
+                        dl = getAclGroupByName(localDomainAddr);
+                    }
+                }
+                return dl;
             default:
                 return null;
         }
