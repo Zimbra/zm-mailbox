@@ -71,7 +71,7 @@ public class AddMsgSpec {
      * @zm-api-field-description (optional) Time the message was originally received, in MILLISECONDS since the epoch
      */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
-    private String dateReceived;
+    private Long dateReceived;
 
     /**
      * @zm-api-field-tag uploaded-MIME-body-ID
@@ -98,20 +98,17 @@ public class AddMsgSpec {
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setFolder(String folder) { this.folder = folder; }
     public void setNoICal(Boolean noICal) { this.noICal = ZmBoolean.fromBool(noICal); }
-    public void setDateReceived(String dateReceived) {
-        this.dateReceived = dateReceived;
-    }
-    public void setAttachmentId(String attachmentId) {
-        this.attachmentId = attachmentId;
-    }
+    public void setDateReceived(Long dateReceived) { this.dateReceived = dateReceived; }
+    public void setAttachmentId(String attachmentId) { this.attachmentId = attachmentId; }
     public void setContent(String content) { this.content = content; }
+
     public String getFlags() { return flags; }
     @Deprecated
     public String getTags() { return tags; }
     public String getTagNames() { return tagNames; }
     public String getFolder() { return folder; }
     public Boolean getNoICal() { return ZmBoolean.toBool(noICal); }
-    public String getDateReceived() { return dateReceived; }
+    public Long getDateReceived() { return dateReceived; }
     public String getAttachmentId() { return attachmentId; }
     public String getContent() { return content; }
 

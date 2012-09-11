@@ -15,12 +15,12 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -73,11 +73,12 @@ public final class NewContactAttr {
          this.name = name;
     }
 
-    public void setName(String name) { this.name = name; }
-    public void setAttachId(String attachId) { this.attachId = attachId; }
-    public void setId(Integer id) { this.id = id; }
-    public void setPart(String part) { this.part = part; }
-    public void setValue(String value) { this.value = value; }
+    public NewContactAttr setName(String name) { this.name = name; return this; }
+    public NewContactAttr setAttachId(String attachId) { this.attachId = attachId; return this; }
+    public NewContactAttr setId(Integer id) { this.id = id; return this; }
+    public NewContactAttr setPart(String part) { this.part = part; return this; }
+    public NewContactAttr setValue(String value) { this.value = value; return this; }
+
     public String getName() { return name; }
     public String getAttachId() { return attachId; }
     public Integer getId() { return id; }
