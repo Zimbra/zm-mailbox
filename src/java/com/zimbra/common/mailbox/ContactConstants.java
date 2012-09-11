@@ -56,6 +56,7 @@ public final class ContactConstants {
     public static final String A_canExpand = Attr.canExpand.name();
     public static final String A_carPhone = Attr.callbackPhone.name();
     public static final String A_company = Attr.company.name();
+    public static final String A_dn = Attr.dn.name();
     public static final String A_phoneticCompany = Attr.phoneticCompany.name();
     public static final String A_companyPhone = Attr.companyPhone.name();
     public static final String A_department = Attr.department.name();
@@ -158,6 +159,7 @@ public final class ContactConstants {
         canExpand,
         carPhone,
         company,
+        dn,
         phoneticCompany,
         companyPhone,
         description,
