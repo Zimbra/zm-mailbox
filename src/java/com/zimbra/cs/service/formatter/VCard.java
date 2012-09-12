@@ -42,6 +42,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 
@@ -69,6 +70,7 @@ public class VCard {
                     "N",
                     "NICKNAME",
                     "PHOTO",
+                    "KEY",
                     "BDAY",
                     "ADR",
                     "TEL",
@@ -333,6 +335,11 @@ public class VCard {
                     attachments.add(new Attachment(vcprop.getDecoded(), ctype, "image", "image" + suffix));
                     continue;
                 }
+                if (name.equals("KEY")) {
+                    String encoded = new String(Base64.encodeBase64Chunked(vcprop.getDecoded()));
+                    fields.put(ContactConstants.A_userCertificate, encoded);
+                    continue;
+                }
             }
 
             value = vcprop.getValue();
@@ -350,25 +357,85 @@ public class VCard {
             else if (name.equals("TITLE"))     addField(ContactConstants.A_jobTitle, vcfDecode(value), "altJobTitle", 2, fields);
             else if (name.equals("NOTE"))      addField(ContactConstants.A_notes, vcfDecode(value), null, 2, fields);
             else if (name.equals("EMAIL"))     addField(ContactConstants.A_email, vcfDecode(value), null, 2, fields);
-            else if (name.equals("X-ZIMBRA-IMADDRESS1"))    fields.put(ContactConstants.A_imAddress1, value);
-            else if (name.equals("X-ZIMBRA-IMADDRESS2"))    fields.put(ContactConstants.A_imAddress2, value);
-            else if (name.equals("X-ZIMBRA-IMADDRESS3"))    fields.put(ContactConstants.A_imAddress3, value);
-            else if (name.equals("X-ZIMBRA-ANNIVERSARY"))   fields.put(ContactConstants.A_anniversary, value);
-            else if (name.equals("X-ZIMBRA-MAIDENNAME"))    fields.put(ContactConstants.A_maidenName, value);
+            else if (name.equals("X-ZIMBRA-MAIDENNAME"))   fields.put(ContactConstants.A_maidenName, vcfDecode(value));
+            else if (name.startsWith("X-ZIMBRA-IMADDRESS"))    addField("imAddress", true, vcfDecode(value), null, 1, fields);
+            else if (name.equals("X-ZIMBRA-ANNIVERSARY"))  addField(ContactConstants.A_anniversary, vcfDecode(value), null, 2, fields);
             else if (name.equals("UID")) uid = value;
         }
 
         return cards;
     }
-
+    
+    /*
+     * restore the following upon modify
+     */
+    
+    private static final String[] MERGE_FIELDS = new String[] {
+        ContactConstants.A_callbackPhone,
+        ContactConstants.A_canExpand,
+        ContactConstants.A_phoneticCompany,
+        ContactConstants.A_companyPhone,
+        ContactConstants.A_description,
+        ContactConstants.A_fileAs,
+        ContactConstants.A_phoneticFirstName,
+        ContactConstants.A_initials,
+        ContactConstants.A_phoneticLastName,
+        ContactConstants.A_office,
+        ContactConstants.A_tollFree,
+        ContactConstants.A_homeAddress,
+        ContactConstants.A_workAddress,
+        ContactConstants.A_workMobile,
+        "workIm",
+        ContactConstants.A_workAltPhone,
+        ContactConstants.A_otherDepartment,
+        ContactConstants.A_otherOffice,
+        ContactConstants.A_otherProfession,
+        ContactConstants.A_otherAddress,
+        ContactConstants.A_otherMgrName,
+        ContactConstants.A_otherAsstName,
+        ContactConstants.A_otherAnniversary,
+        "otherCustom",
+        ContactConstants.A_userCertificate,
+        ContactConstants.A_userSMIMECertificate,
+        ContactConstants.A_maidenName,
+        ContactConstants.A_anniversary,
+        "imAddress"
+    };
+    
+    public void merge(Contact existingContact) {
+        for (String key : MERGE_FIELDS) {
+            if (fields.get(key) == null && existingContact.get(key) != null) {
+                fields.put(key, existingContact.get(key));
+            }
+            String trialKey = key + "1";
+            if (fields.get(trialKey) == null && existingContact.get(trialKey) != null) {
+                fields.put(trialKey, existingContact.get(trialKey));
+            }
+            for (int suffix = 2; suffix < 20; suffix++) {
+                trialKey = new StringBuilder(key).append(String.valueOf(suffix)).toString();
+                if (existingContact.get(trialKey) == null) {
+                    break;
+                }
+                if (fields.get(trialKey) == null) {
+                    fields.put(trialKey, existingContact.get(trialKey));
+                }
+            }
+        }
+    }
+    
     private static void addField(String firstKey, String value, String customPrefix,
             int firstSuffix, Map<String, String> fields) {
-        if (!fields.containsKey(firstKey)) {
+        addField(firstKey, false, value, customPrefix, firstSuffix, fields);
+    }
+
+    private static void addField(String firstKey, boolean skipFirstKey, String value, String customPrefix,
+            int firstSuffix, Map<String, String> fields) {
+        if (!skipFirstKey && !fields.containsKey(firstKey)) {
             fields.put(firstKey, value);
         } else {
             if (customPrefix == null) customPrefix = firstKey;
             for (int suffix = firstSuffix;suffix < 20 ;suffix++) {
-                String trialKey = new StringBuffer(customPrefix).append(String.valueOf(suffix)).toString();
+                String trialKey = new StringBuilder(customPrefix).append(String.valueOf(suffix)).toString();
                 if (!fields.containsKey(trialKey)) {
                     fields.put(trialKey, value);
                     break;
@@ -442,7 +509,7 @@ public class VCard {
         do {
             keyAvailable = true;
             for (String key : keys) {
-                String trialKey = new StringBuffer(key).append(suffix).toString();
+                String trialKey = new StringBuilder(key).append(suffix).toString();
                 if (fields.containsKey(trialKey)) {
                     keyAvailable = false;
                     break;
@@ -459,7 +526,7 @@ public class VCard {
             for (boolean escaped = false; i < len && ((c = value.charAt(i)) != ';' || escaped); i++)
                 escaped = !escaped && c == '\\';
             if (i > start && keys[f] != null) {
-                String keyToUse = new StringBuffer(keys[f]).append(suffix).toString();
+                String keyToUse = new StringBuilder(keys[f]).append(suffix).toString();
                 fields.put(keyToUse, vcfDecode(value.substring(start, i)));
             }
         }
@@ -543,41 +610,39 @@ public class VCard {
         }
 
         if (vcattrs == null || vcattrs.contains("ADR")) {
-            encodeAddress(sb, "home,postal,parcel", fields.get(ContactConstants.A_homeStreet),
-                    fields.get(ContactConstants.A_homeCity), fields.get(ContactConstants.A_homeState),
-                    fields.get(ContactConstants.A_homePostalCode), fields.get(ContactConstants.A_homeCountry));
-            encodeAddress(sb, "work,postal,parcel", fields.get(ContactConstants.A_workStreet),
-                    fields.get(ContactConstants.A_workCity), fields.get(ContactConstants.A_workState),
-                    fields.get(ContactConstants.A_workPostalCode), fields.get(ContactConstants.A_workCountry));
-            encodeAddress(sb, "postal,parcel", fields.get(ContactConstants.A_otherStreet),
-                    fields.get(ContactConstants.A_otherCity), fields.get(ContactConstants.A_otherState),
-                    fields.get(ContactConstants.A_otherPostalCode), fields.get(ContactConstants.A_otherCountry));
+            encodeAddress(sb, "home,postal,parcel", ContactConstants.A_homeStreet,
+                    ContactConstants.A_homeCity, ContactConstants.A_homeState,
+                    ContactConstants.A_homePostalCode, ContactConstants.A_homeCountry, 2, fields);
+            encodeAddress(sb, "work,postal,parcel", ContactConstants.A_workStreet,
+                    ContactConstants.A_workCity, ContactConstants.A_workState,
+                    ContactConstants.A_workPostalCode, ContactConstants.A_workCountry, 2, fields);
+            encodeAddress(sb, "postal,parcel", ContactConstants.A_otherStreet,
+                    ContactConstants.A_otherCity, ContactConstants.A_otherState,
+                    ContactConstants.A_otherPostalCode, ContactConstants.A_otherCountry, 2, fields);
         }
 
         if (vcattrs == null || vcattrs.contains("TEL")) {
             // omitting callback phone for now
-            encodePhone(sb, "car,voice", fields.get(ContactConstants.A_carPhone));
-            encodePhone(sb, "home,fax", fields.get(ContactConstants.A_homeFax));
-            encodePhone(sb, "home,voice", fields.get(ContactConstants.A_homePhone));
-            encodePhone(sb, "home,voice", fields.get(ContactConstants.A_homePhone2));
-            encodePhone(sb, "cell,voice", fields.get(ContactConstants.A_mobilePhone));
-            encodePhone(sb, "fax", fields.get(ContactConstants.A_otherFax));
-            encodePhone(sb, "voice", fields.get(ContactConstants.A_otherPhone));
-            encodePhone(sb, "pager", fields.get(ContactConstants.A_pager));
-            encodePhone(sb, "work,fax", fields.get(ContactConstants.A_workFax));
-            encodePhone(sb, "work,voice", fields.get(ContactConstants.A_workPhone));
-            encodePhone(sb, "work,voice", fields.get(ContactConstants.A_workPhone2));
+            encodePhone(sb, "car,voice", ContactConstants.A_carPhone, 2, fields);
+            encodePhone(sb, "home,fax", ContactConstants.A_homeFax, 2, fields);
+            encodePhone(sb, "home,voice", ContactConstants.A_homePhone, 2, fields);
+            encodePhone(sb, "cell,voice", ContactConstants.A_mobilePhone, 2, fields);
+            encodePhone(sb, "fax", ContactConstants.A_otherFax, 2, fields);
+            encodePhone(sb, "voice", ContactConstants.A_otherPhone, 2, fields);
+            encodePhone(sb, "pager", ContactConstants.A_pager, 2, fields);
+            encodePhone(sb, "work,fax", ContactConstants.A_workFax, 2, fields);
+            encodePhone(sb, "work,voice", ContactConstants.A_workPhone, 2, fields);
         }
         
-        if (vcattrs == null || vcattrs.contains("EMAIL"))
-            for (String email : emails) {
-                encodeField(sb, "EMAIL;TYPE=internet", email);
-            }
+        if (vcattrs == null || vcattrs.contains("EMAIL")) {
+            encodeField(sb, "EMAIL;TYPE=internet", ContactConstants.A_email, false, 2, fields);
+            encodeField(sb, "EMAIL;TYPE=internet", ContactConstants.A_workEmail1, true, 1, fields);
+        }
 
         if (vcattrs == null || vcattrs.contains("URL")) {
-            encodeField(sb, "URL;TYPE=home", fields.get(ContactConstants.A_homeURL));
-            encodeField(sb, "URL", fields.get(ContactConstants.A_otherURL));
-            encodeField(sb, "URL;TYPE=work", fields.get(ContactConstants.A_workURL));
+            encodeField(sb, "URL;TYPE=home", ContactConstants.A_homeURL, false, 2, fields);
+            encodeField(sb, "URL", ContactConstants.A_otherURL, false, 2, fields);
+            encodeField(sb, "URL;TYPE=work", ContactConstants.A_workURL, false, 2, fields);
         }
 
         if (vcattrs == null || vcattrs.contains("ORG")) {
@@ -655,25 +720,11 @@ public class VCard {
         if (vcattrs == null || vcattrs.contains("UID"))
             sb.append("UID:").append(uid).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
-        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS1"))) {
-            String imAddr1 = con.get(ContactConstants.A_imAddress1);
-            if (imAddr1 != null)
-                sb.append("X-ZIMBRA-IMADDRESS1:").append(imAddr1).append("\r\n");
-        }
-        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS2"))) {
-            String imAddr2 = con.get(ContactConstants.A_imAddress2);
-            if (imAddr2 != null)
-                sb.append("X-ZIMBRA-IMADDRESS2:").append(imAddr2).append("\r\n");
-        }
-        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS3"))) {
-            String imAddr3 = con.get(ContactConstants.A_imAddress3);
-            if (imAddr3 != null)
-                sb.append("X-ZIMBRA-IMADDRESS3:").append(imAddr3).append("\r\n");
+        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS"))) {
+            encodeField(sb, "X-ZIMBRA-IMADDRESS", "imAddress", true, 1, fields);
         }
         if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-ANNIVERSARY"))) {
-            String anniversary = con.get(ContactConstants.A_anniversary);
-            if (anniversary != null)
-                sb.append("X-ZIMBRA-ANNIVERSARY:").append(anniversary).append("\r\n");
+            encodeField(sb, "X-ZIMBRA-ANNIVERSARY", ContactConstants.A_anniversary, false, 2, fields);
         }
         if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-MAIDENNAME"))) {
             String maidenName = con.get(ContactConstants.A_maidenName);
@@ -717,25 +768,84 @@ public class VCard {
         sb.append(name).append(':').append(vcfEncode(value)).append("\r\n");
     }
 
-    private static void encodeAddress(StringBuilder sb, String type, String street, String city, String state, String zip, String country) {
+    private static void encodeField(StringBuilder sb, String name, String firstKey, boolean skipFirstKey, int firstSuffix, Map<String, String> fields) {
+        
+        if (sb == null || name == null)
+            return;
+        
+        String value;
+        if (!skipFirstKey) {
+            value= fields.get(firstKey);
+            if  (value == null) {
+                return;
+            }
+            sb.append(name).append(':').append(vcfEncode(value)).append("\r\n");
+        }
+        for (int suffix = firstSuffix; suffix < 20 ;suffix++) {
+            String key = new StringBuilder(firstKey).append(String.valueOf(suffix)).toString();
+            value = fields.get(key);
+            if (value == null)
+                return;
+            sb.append(name).append(':').append(vcfEncode(value)).append("\r\n");
+        }
+    }
+
+    private static void encodeAddress(StringBuilder sb, String type, String streetKey, String cityKey, String stateKey, String zipKey, String countryKey,
+                                                    int firstSuffix, Map<String, String> fields) {
         if (sb == null || type == null)
             return;
+        String street = fields.get(streetKey);
+        String city = fields.get(cityKey);
+        String state = fields.get(stateKey);
+        String zip = fields.get(zipKey);
+        String country = fields.get(countryKey);
+
         if (street == null && city == null && state == null && zip == null && country == null)
             return;
-        String addr = ";;" + vcfEncode(street, true) +
-                      ';'  + vcfEncode(city) +
-                      ';'  + vcfEncode(state) +
-                      ';'  + vcfEncode(zip) +
-                      ';'  + vcfEncode(country);
-        if (!addr.equals(";;;;;;"))
+        String addr = ";;" + vcfEncode(street, true) + ';'  + vcfEncode(city) + ';'  + vcfEncode(state) +';'  + vcfEncode(zip) + ';'  + vcfEncode(country);
+        if (!addr.equals(";;;;;;")) {
             sb.append("ADR;TYPE=").append(type).append(':').append(addr).append("\r\n");
+        }
+        for (int suffix = firstSuffix; suffix < 20 ;suffix++) {
+            String key = new StringBuilder(streetKey).append(String.valueOf(suffix)).toString();
+            street = fields.get(key);
+            key = new StringBuilder(cityKey).append(String.valueOf(suffix)).toString();
+            city = fields.get(key);
+            key = new StringBuilder(stateKey).append(String.valueOf(suffix)).toString();
+            state = fields.get(key);
+            key = new StringBuilder(zipKey).append(String.valueOf(suffix)).toString();
+            zip = fields.get(key);
+            key = new StringBuilder(countryKey).append(String.valueOf(suffix)).toString();
+            country = fields.get(key);
+            if (street == null && city == null && state == null && zip == null && country == null)
+                return;
+            addr = ";;" + vcfEncode(street, true) + ';'  + vcfEncode(city) + ';'  + vcfEncode(state) +';'  + vcfEncode(zip) + ';'  + vcfEncode(country);
+            if (!addr.equals(";;;;;;")) {
+                sb.append("ADR;TYPE=").append(type).append(':').append(addr).append("\r\n");
+            }
+        }
     }
     
-    private static void encodePhone(StringBuilder sb, String type, String phone) {
-        if (sb == null || type == null || phone == null || phone.equals(""))
+    private static void encodePhone(StringBuilder sb, String type, String firstKey, int firstSuffix, Map<String, String> fields) {
+        if (sb == null || type == null)
             return;
-        // FIXME: really are supposed to reformat the phone to some standard
-        sb.append("TEL;TYPE=").append(type).append(':').append(phone).append("\r\n");
+        
+        String phone = fields.get(firstKey);
+        if (phone == null)
+            return;
+        if (!phone.isEmpty()) {
+            // FIXME: really are supposed to reformat the phone to some standard
+            sb.append("TEL;TYPE=").append(type).append(':').append(phone).append("\r\n");
+        }
+        for (int suffix = firstSuffix; suffix < 20 ;suffix++) {
+            String key = new StringBuilder(firstKey).append(String.valueOf(suffix)).toString();
+            phone = fields.get(key);
+            if (phone == null)
+                return;
+            if (!phone.isEmpty()) {
+                sb.append("TEL;TYPE=").append(type).append(':').append(phone).append("\r\n");
+            }
+        }
     }
 
     private static String vcfEncode(String value) {

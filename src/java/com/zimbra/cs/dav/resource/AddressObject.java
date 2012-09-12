@@ -241,6 +241,7 @@ public class AddressObject extends MailItemResource {
                         throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
                     MailItemResource mir = (MailItemResource) res;
                     constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, (Contact) mir.getMailItem(ctxt), where.getId());
+                    vcard.merge((Contact) mir.getMailItem(ctxt));
                     mbox.modifyContact(ctxt.getOperationContext(), mir.getId(), vcard.asParsedContact());
                     res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
                 }
