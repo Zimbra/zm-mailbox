@@ -250,7 +250,7 @@ public final class FilterUtil {
             if (!isMailLoop(sourceMbox, msg)) {
                 outgoingMsg = new Mime.FixedMimeMessage(msg);
                 Mime.recursiveRepairTransferEncoding(outgoingMsg);
-                outgoingMsg.setHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
+                outgoingMsg.addHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
                 outgoingMsg.saveChanges();
             } else {
                 String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(msg));
@@ -331,7 +331,11 @@ public final class FilterUtil {
 
         Account account = mailbox.getAccount();
         MimeMessage replyMsg = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
-        replyMsg.setHeader(HEADER_FORWARDED, account.getName());
+        // add the forwarded header account names to detect the mail loop between accounts
+        for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
+            replyMsg.addHeader(HEADER_FORWARDED, headerFwdAccountName);
+        }
+        replyMsg.addHeader(HEADER_FORWARDED, account.getName());
 
         String to = mimeMessage.getHeader("Reply-To", null);
         if (StringUtil.isNullOrEmpty(to))
@@ -377,7 +381,12 @@ public final class FilterUtil {
 
         Account account = mailbox.getAccount();
         MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
-        notification.setHeader(HEADER_FORWARDED, account.getName());
+        // add the forwarded header account names to detect the mail loop between accounts
+        for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
+            notification.addHeader(HEADER_FORWARDED, headerFwdAccountName);
+        }
+
+        notification.addHeader(HEADER_FORWARDED, account.getName());
         MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
 
         Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
@@ -395,6 +404,9 @@ public final class FilterUtil {
                 Enumeration enumeration = mimeMessage.getAllHeaders();
                 while (enumeration.hasMoreElements()) {
                     Header header = (Header) enumeration.nextElement();
+                    if (StringUtil.equal(header.getName(), HEADER_FORWARDED)) {
+                        continue;
+                    }
                     notification.addHeader(header.getName(), header.getValue());
                 }
             } else {
@@ -404,6 +416,9 @@ public final class FilterUtil {
                 for (String header : headersToCopy) {
                     if ("Subject".equalsIgnoreCase(header)) {
                         copySubject = true;
+                    }
+                    if (StringUtil.equal(header, HEADER_FORWARDED)) {
+                        continue;
                     }
                     String[] hdrVals = mimeMessage.getHeader(header);
                     if (hdrVals == null) {
