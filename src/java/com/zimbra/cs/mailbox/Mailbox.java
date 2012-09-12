@@ -3793,19 +3793,28 @@ public class Mailbox {
 
     public List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort, int limit)
             throws ServiceException {
+        return getMessagesByConversation(octxt, convId, sort, limit, false);
+    }
+
+    public List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort, int limit, boolean excludeSpamAndTrash)
+            throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getMessagesByConversation", octxt);
             List<Message> msgs = getConversationById(convId).getMessages(sort, limit);
-            if (!hasFullAccess()) {
-                List<Message> visible = new ArrayList<Message>(msgs.size());
-                for (Message msg : msgs) {
-                    if (msg.canAccess(ACL.RIGHT_READ)) {
-                        visible.add(msg);
-                    }
+
+            boolean hasMailboxAccess = hasFullAccess();
+            List<Message> filteredMsgs = new ArrayList<Message>(msgs.size());
+            for (Message msg : msgs) {
+                if (!hasMailboxAccess && !msg.canAccess(ACL.RIGHT_READ)) {
+                    continue;
                 }
-                msgs = visible;
+                if (excludeSpamAndTrash && (msg.inTrash() || msg.inSpam())) {
+                    continue;
+                }
+                filteredMsgs.add(msg);
             }
+            msgs = filteredMsgs;
             success = true;
             return msgs;
         } finally {
