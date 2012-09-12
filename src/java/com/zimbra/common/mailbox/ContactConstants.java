@@ -54,8 +54,9 @@ public final class ContactConstants {
     public static final String A_anniversary = Attr.anniversary.name();
     public static final String A_callbackPhone = Attr.callbackPhone.name();
     public static final String A_canExpand = Attr.canExpand.name();
-    public static final String A_carPhone = Attr.callbackPhone.name();
+    public static final String A_carPhone = Attr.carPhone.name();
     public static final String A_company = Attr.company.name();
+    public static final String A_description = Attr.description.name();
     public static final String A_dn = Attr.dn.name();
     public static final String A_phoneticCompany = Attr.phoneticCompany.name();
     public static final String A_companyPhone = Attr.companyPhone.name();
@@ -102,6 +103,7 @@ public final class ContactConstants {
     public static final String A_otherStreet = Attr.otherStreet.name();
     public static final String A_otherURL = Attr.otherURL.name();
     public static final String A_pager = Attr.pager.name();
+    public static final String A_tollFree = Attr.tollFree.name();
     public static final String A_userCertificate = Attr.userCertificate.name();
     public static final String A_userSMIMECertificate = Attr.userSMIMECertificate.name();
     public static final String A_workCity = Attr.workCity.name();
