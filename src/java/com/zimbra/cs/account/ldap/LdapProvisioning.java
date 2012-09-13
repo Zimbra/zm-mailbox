@@ -2401,12 +2401,48 @@ public class LdapProvisioning extends LdapProv {
                 domainAttrs.remove(A_zimbraDomainStatus); // add back later
             }
 
+            String smimeLdapURL = (String) domainAttrs.get(A_zimbraSMIMELdapURL);
+            if (!StringUtil.isNullOrEmpty(smimeLdapURL)) {
+                domainAttrs.remove(A_zimbraSMIMELdapURL); // add back later
+            }
+            String smimeLdapStartTlsEnabled = (String) domainAttrs.get(A_zimbraSMIMELdapStartTlsEnabled);
+            if (!StringUtil.isNullOrEmpty(smimeLdapStartTlsEnabled)) {
+                domainAttrs.remove(A_zimbraSMIMELdapStartTlsEnabled); // add back later
+            }
+            String smimeLdapBindDn = (String) domainAttrs.get(A_zimbraSMIMELdapBindDn);
+            if (!StringUtil.isNullOrEmpty(smimeLdapBindDn)) {
+                domainAttrs.remove(A_zimbraSMIMELdapBindDn); // add back later
+            }
+            String smimeLdapBindPassword = (String) domainAttrs.get(A_zimbraSMIMELdapBindPassword);
+            if (!StringUtil.isNullOrEmpty(smimeLdapBindPassword)) {
+                domainAttrs.remove(A_zimbraSMIMELdapBindPassword); // add back later
+            }
+            String smimeLdapSearchBase = (String) domainAttrs.get(A_zimbraSMIMELdapSearchBase);
+            if (!StringUtil.isNullOrEmpty(smimeLdapSearchBase)) {
+                domainAttrs.remove(A_zimbraSMIMELdapSearchBase); // add back later
+            }
+            String smimeLdapFilter = (String) domainAttrs.get(A_zimbraSMIMELdapFilter);
+            if (!StringUtil.isNullOrEmpty(smimeLdapFilter)) {
+                domainAttrs.remove(A_zimbraSMIMELdapFilter); // add back later
+            }
+            String smimeLdapAttribute = (String) domainAttrs.get(A_zimbraSMIMELdapAttribute);
+            if (!StringUtil.isNullOrEmpty(smimeLdapAttribute)) {
+                domainAttrs.remove(A_zimbraSMIMELdapAttribute); // add back later
+            }
+
             CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
             AttributeManager.getInstance().preModify(domainAttrs, null, callbackContext, true);
 
             // Add back attrs we circumvented from attribute checking
             domainAttrs.put(A_zimbraDomainType, domainType);
             domainAttrs.put(A_zimbraDomainStatus, domainStatus);
+            domainAttrs.put(A_zimbraSMIMELdapURL, smimeLdapURL);
+            domainAttrs.put(A_zimbraSMIMELdapStartTlsEnabled, smimeLdapStartTlsEnabled);
+            domainAttrs.put(A_zimbraSMIMELdapBindDn, smimeLdapBindDn);
+            domainAttrs.put(A_zimbraSMIMELdapBindPassword, smimeLdapBindPassword);
+            domainAttrs.put(A_zimbraSMIMELdapSearchBase, smimeLdapSearchBase);
+            domainAttrs.put(A_zimbraSMIMELdapFilter, smimeLdapFilter);
+            domainAttrs.put(A_zimbraSMIMELdapAttribute, smimeLdapAttribute);
 
             String parts[] = name.split("\\.");
             String dns[] = mDIT.domainToDNs(parts);
