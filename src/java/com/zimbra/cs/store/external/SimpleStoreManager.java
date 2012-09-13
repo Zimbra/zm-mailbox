@@ -16,10 +16,16 @@
 package com.zimbra.cs.store.external;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.filefilter.FileFileFilter;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -46,7 +52,8 @@ public class SimpleStoreManager extends ExternalStoreManager {
         super.shutdown();
     }
 
-    private String dirName(Mailbox mbox) {
+    @VisibleForTesting
+    public String dirName(Mailbox mbox) {
         return directory + "/" + mbox.getAccountId();
     }
 
@@ -87,6 +94,21 @@ public class SimpleStoreManager extends ExternalStoreManager {
     public boolean deleteFromStore(String locator, Mailbox mbox) throws IOException {
         File deleteFile = new File(locator);
         return deleteFile.delete();
+    }
+
+    @Override
+    public List<String> getAllBlobPaths(Mailbox mbox) throws IOException {
+        File dir = new File(dirName(mbox));
+        if (dir.exists()) {
+            File[] files = dir.listFiles((FileFilter) FileFileFilter.FILE);
+            List<String> locators = new ArrayList<String>();
+            for (File file : files) {
+                locators.add(file.getCanonicalPath());
+            }
+            return locators;
+        } else {
+            return new ArrayList<String>();
+        }
     }
 
     @Override
