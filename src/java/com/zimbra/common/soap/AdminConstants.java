@@ -1149,12 +1149,15 @@ public final class AdminConstants {
     public static final String E_BLOB = "blob";
     public static final String E_INCORRECT_SIZE = "incorrectSize";
     public static final String E_INCORRECT_REVISION = "incorrectRevision";
+    public static final String E_USED_BLOBS = "usedBlobs";
     public static final String A_FILE_DATA_SIZE = "fileDataSize";
     public static final String A_FILE_SIZE = "fileSize";
     public static final String A_CHECK_SIZE = "checkSize";
+    public static final String A_REPORT_USED_BLOBS = "reportUsedBlobs";
     public static final String A_VOLUME_ID = "volumeId";
     public static final String A_EXPORT_DIR = "exportDir";
     public static final String A_EXPORT_FILENAME_PREFIX = "exportFilenamePrefix";
+    public static final String A_EXTERNAL = "external";
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
