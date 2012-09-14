@@ -3211,7 +3211,9 @@ public class LdapProvisioning extends Provisioning {
         if (!isDL) {
             try {
                 addr = getEmailAddrByDomainAlias(addr);
-                isDL = mAllDLs.isGroup(addr);
+                if (addr != null) {
+                    isDL = mAllDLs.isGroup(addr);    
+                }
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to get local domain address of " + addr, e);
             }
