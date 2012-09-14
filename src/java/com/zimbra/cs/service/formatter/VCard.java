@@ -365,64 +365,90 @@ public class VCard {
 
         return cards;
     }
-    
-    /*
-     * restore the following upon modify
-     */
-    
-    private static final String[] MERGE_FIELDS = new String[] {
-        ContactConstants.A_callbackPhone,
-        ContactConstants.A_canExpand,
-        ContactConstants.A_phoneticCompany,
-        ContactConstants.A_companyPhone,
-        ContactConstants.A_description,
-        ContactConstants.A_fileAs,
-        ContactConstants.A_phoneticFirstName,
-        ContactConstants.A_initials,
-        ContactConstants.A_phoneticLastName,
-        ContactConstants.A_office,
-        ContactConstants.A_tollFree,
-        ContactConstants.A_homeAddress,
-        ContactConstants.A_workAddress,
-        ContactConstants.A_workMobile,
-        "workIm",
-        ContactConstants.A_workAltPhone,
-        ContactConstants.A_otherDepartment,
-        ContactConstants.A_otherOffice,
-        ContactConstants.A_otherProfession,
-        ContactConstants.A_otherAddress,
-        ContactConstants.A_otherMgrName,
-        ContactConstants.A_otherAsstName,
-        ContactConstants.A_otherAnniversary,
-        "otherCustom",
-        ContactConstants.A_userCertificate,
-        ContactConstants.A_userSMIMECertificate,
-        ContactConstants.A_maidenName,
-        ContactConstants.A_anniversary,
-        "imAddress"
-    };
-    
-    public void merge(Contact existingContact) {
-        for (String key : MERGE_FIELDS) {
-            if (fields.get(key) == null && existingContact.get(key) != null) {
-                fields.put(key, existingContact.get(key));
-            }
-            String trialKey = key + "1";
-            if (fields.get(trialKey) == null && existingContact.get(trialKey) != null) {
-                fields.put(trialKey, existingContact.get(trialKey));
-            }
-            for (int suffix = 2; suffix < 20; suffix++) {
-                trialKey = new StringBuilder(key).append(String.valueOf(suffix)).toString();
-                if (existingContact.get(trialKey) == null) {
-                    break;
-                }
-                if (fields.get(trialKey) == null) {
-                    fields.put(trialKey, existingContact.get(trialKey));
-                }
+
+    private static void removeField(String firstKey, boolean skipFirstKey, int firstSuffix, Map<String, String> fields) {
+        if (!skipFirstKey) {
+            fields.remove(firstKey);
+        }
+        for (int suffix = firstSuffix; suffix < 20; suffix++) {
+            String trialKey = new StringBuilder(firstKey).append(String.valueOf(suffix)).toString();
+            if (fields.remove(trialKey) == null) {
+                break;
             }
         }
     }
-    
+
+    /*
+     * Removes all the fields exposed through VCard.
+     */
+
+    private static void removeVCardFields(Map<String, String> fields) {
+        fields.remove(ContactConstants.A_fullName);
+        fields.remove(ContactConstants.A_company);
+        fields.remove(ContactConstants.A_lastName);
+        fields.remove(ContactConstants.A_firstName);
+        fields.remove(ContactConstants.A_middleName);
+        fields.remove(ContactConstants.A_namePrefix);
+        fields.remove(ContactConstants.A_nameSuffix);
+        fields.remove(ContactConstants.A_nickname);
+        fields.remove(ContactConstants.A_image);
+        fields.remove(ContactConstants.A_birthday);
+        fields.remove(ContactConstants.A_company);
+        fields.remove(ContactConstants.A_department);
+        fields.remove(ContactConstants.A_jobTitle);
+        fields.remove(ContactConstants.A_notes);
+        fields.remove(ContactConstants.A_type);
+        fields.remove(ContactConstants.A_groupMember);
+        fields.remove(ContactConstants.A_vCardXProps);
+
+        removeField(ContactConstants.A_homeStreet, false, 2, fields);
+        removeField(ContactConstants.A_homeCity, false, 2, fields);
+        removeField(ContactConstants.A_homeState, false, 2, fields);
+        removeField(ContactConstants.A_homePostalCode, false, 2, fields);
+        removeField(ContactConstants.A_homeCountry, false, 2, fields);
+        removeField(ContactConstants.A_workStreet, false, 2, fields);
+        removeField(ContactConstants.A_workCity, false, 2, fields);
+        removeField(ContactConstants.A_workState, false, 2, fields);
+        removeField(ContactConstants.A_workPostalCode, false, 2, fields);
+        removeField(ContactConstants.A_workCountry, false, 2, fields);
+        removeField(ContactConstants.A_otherStreet, false, 2, fields);
+        removeField(ContactConstants.A_otherCity, false, 2, fields);
+        removeField(ContactConstants.A_otherState, false, 2, fields);
+        removeField(ContactConstants.A_otherPostalCode, false, 2, fields);
+        removeField(ContactConstants.A_otherCountry, false, 2, fields);
+
+        removeField(ContactConstants.A_carPhone, false, 2, fields);
+        removeField(ContactConstants.A_homeFax, false, 2, fields);
+        removeField(ContactConstants.A_homePhone, false, 2, fields);
+        removeField(ContactConstants.A_mobilePhone, false, 2, fields);
+        removeField(ContactConstants.A_otherFax, false, 2, fields);
+        removeField(ContactConstants.A_otherPhone, false, 2, fields);
+        removeField(ContactConstants.A_pager, false, 2, fields);
+        removeField(ContactConstants.A_workFax, false, 2, fields);
+        removeField(ContactConstants.A_workPhone, false, 2, fields);
+        removeField(ContactConstants.A_email, false, 2, fields);
+
+        removeField(ContactConstants.A_homeURL, false, 2, fields);
+        removeField(ContactConstants.A_otherURL, false, 2, fields);
+        removeField(ContactConstants.A_workURL, false, 2, fields);
+
+        removeField("workEmail", true, 1, fields);
+    }
+
+    /*
+     * Merge back the fields that are not exposed in VCard.
+     */
+
+    public void merge(Contact existingContact) {
+        Map<String, String> existingFields = existingContact.getAllFields();
+        removeVCardFields(existingFields);
+        for (Entry<String, String> entry : existingFields.entrySet()) {
+            if (!fields.containsKey(entry.getKey())) {
+                fields.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
     private static void addField(String firstKey, String value, String customPrefix,
             int firstSuffix, Map<String, String> fields) {
         addField(firstKey, false, value, customPrefix, firstSuffix, fields);
@@ -636,7 +662,7 @@ public class VCard {
         
         if (vcattrs == null || vcattrs.contains("EMAIL")) {
             encodeField(sb, "EMAIL;TYPE=internet", ContactConstants.A_email, false, 2, fields);
-            encodeField(sb, "EMAIL;TYPE=internet", ContactConstants.A_workEmail1, true, 1, fields);
+            encodeField(sb, "EMAIL;TYPE=internet", "workEmail", true, 1, fields);
         }
 
         if (vcattrs == null || vcattrs.contains("URL")) {
