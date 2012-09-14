@@ -451,6 +451,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return cos;
     }
 
+    /**
+     * returns addr@<local domain> for addr@<alias domain>, null if given address is a local domain address
+     * @param emailAddress original addr
+     * @return addr@<local domain> or null
+     * @throws ServiceException
+     */
     public String getEmailAddrByDomainAlias(String emailAddress) throws ServiceException {
         String addr = null;
 
