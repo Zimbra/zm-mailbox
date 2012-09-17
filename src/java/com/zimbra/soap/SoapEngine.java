@@ -266,11 +266,13 @@ public final class SoapEngine {
                 for (Element req : doc.listElements()) {
                     // if (mLog.isDebugEnabled())
                     //     mLog.debug("dispatch: multi " + req.getQualifiedName());
-
+                    long start = System.currentTimeMillis();
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
-                    if (!isResumed)
-                        ZimbraLog.soap.info("(batch) " + req.getName());
                     Element br = dispatchRequest(req, context, zsc);
+                    if (!isResumed) {
+                        ZimbraLog.soap.info("(batch) %s elapsed=%d", req.getName(), System.currentTimeMillis() - start);
+                    }
+
                     if (id != null)
                         br.addAttribute(A_REQUEST_CORRELATOR, id);
                     responseBody.addElement(br);
@@ -282,9 +284,11 @@ public final class SoapEngine {
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
-                if (!isResumed)
-                    ZimbraLog.soap.info(doc.getName());
+                long start = System.currentTimeMillis();
                 responseBody = dispatchRequest(doc, context, zsc);
+                if (!isResumed) {
+                    ZimbraLog.soap.info("%s elapsed=%d", doc.getName(), System.currentTimeMillis() - start);
+                }
                 if (id != null)
                     responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
             }
@@ -300,8 +304,10 @@ public final class SoapEngine {
                 // if we don't detach it first.
                 doc.detach();
                 ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, zsc.getRequestedAccountId()).disableNotifications();
-                ZimbraLog.soap.info(doc.getName() + " (Proxying to " + zsc.getProxyTarget().toString() +")");
+                long start = System.currentTimeMillis();
                 responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
+                ZimbraLog.soap.info("%s proxy=%s,elapsed=%d", doc.getName(), zsc.getProxyTarget(),
+                        System.currentTimeMillis() - start);
                 responseBody.detach();
             } catch (SoapFaultException e) {
                 responseBody = e.getFault() != null ? e.getFault().detach() : responseProto.soapFault(e);
