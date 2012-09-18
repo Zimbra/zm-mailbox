@@ -33,6 +33,7 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -210,8 +211,10 @@ public class AddressObject extends MailItemResource {
         DavResource res = null;
         try {
             String url = ctxt.getItem();
-            if (url.endsWith(".vcf"))
+            if (url.endsWith(AddressObject.VCARD_EXTENSION)) {
                 url = url.substring(0, url.length()-4);
+                url = HttpUtil.urlUnescape(url);
+            }
             mbox = where.getMailbox(ctxt);
             for (VCard vcard : VCard.parseVCard(buf)) {
                 if (vcard.fields.isEmpty())
@@ -268,14 +271,10 @@ public class AddressObject extends MailItemResource {
     private static Contact getContactByUID(DavContext ctxt, String uid, Account account, int folderId) throws ServiceException {
         Contact item = null;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        if (uid.endsWith(AddressObject.VCARD_EXTENSION))
+        if (uid.endsWith(AddressObject.VCARD_EXTENSION)) {
             uid = uid.substring(0, uid.length() - AddressObject.VCARD_EXTENSION.length());
-        if (uid.indexOf('%') > 0) {
-            try {
-                uid = URLDecoder.decode(uid, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                ZimbraLog.dav.warn("Can't decode UID %s", uid);
-            }
+            // Unescape the name (It was encoded in DavContext intentionally)
+            uid = HttpUtil.urlUnescape(uid);
         }
         int id = 0;
         int index = uid.indexOf(':');

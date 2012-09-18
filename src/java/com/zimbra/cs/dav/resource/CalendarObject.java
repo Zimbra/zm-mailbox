@@ -30,6 +30,7 @@ import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
@@ -121,7 +122,7 @@ public interface CalendarObject {
             path.append(itemPath);
             if (path.charAt(path.length()-1) != '/')
                 path.append("/");
-            path.append(uid);
+            path.append(uid.replace("/", "//"));
             if (extra >= 0)
                 path.append(",").append(extra);
             path.append(CAL_EXTENSION);

@@ -42,7 +42,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 
@@ -784,8 +783,8 @@ public class VCard {
     public static String getUrl(Contact con) {
         String url = con.get(ContactConstants.A_vCardURL);
         if (url != null)
-            return url;
-        return getUid(con);
+            return url.replaceAll("/", "//");
+        return getUid(con).replaceAll("/", "//");
     }
     
     private static void encodeField(StringBuilder sb, String name, String value) {

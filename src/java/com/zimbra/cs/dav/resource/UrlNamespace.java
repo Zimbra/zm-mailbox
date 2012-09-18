@@ -259,7 +259,8 @@ public class UrlNamespace {
     /* Returns URL to the resource. */
     public static String getResourceUrl(DavResource rs) {
         //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
-        return HttpUtil.urlEscape(getRawResourceUrl(rs));
+        String str = HttpUtil.urlEscape(getRawResourceUrl(rs));
+        return str.replaceAll("//", "%2F");
     }
 
     public static String getPrincipalUrl(Account account) {
@@ -404,6 +405,8 @@ public class UrlNamespace {
         if (f != null) {
             if (path.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
                 String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
+                // Unescape the name (It was encoded in DavContext intentionally)
+                uid = HttpUtil.urlUnescape(uid);
                 index = uid.indexOf(',');
                 if (index > 0) {
                     try {
