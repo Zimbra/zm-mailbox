@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.internet.MimeUtility;
@@ -516,6 +517,11 @@ public final class HttpUtil {
             return buf.toString();
         return str;
     }
+    
+    public static String urlEscapeIncludingSlash(String str) {
+        String escaped = urlEscape(str);
+        return escaped.replaceAll("/", "%2F");
+    }
 
     /**
      * The main difference between java.net.URLDecoder.decode()
@@ -566,6 +572,49 @@ public final class HttpUtil {
         return escaped;
     }
 
+    /**
+     * Returns the decoded fragments of an url.
+     * @param uri
+     * @return
+     */
+
+    public static String[] getPathFragments(URI uri) {
+        List<String> fragments = new ArrayList<String>();
+        String[] encodedFragments = uri.getRawPath().split("/");
+        for (String encodedFragment : encodedFragments) {
+            if (!encodedFragment.isEmpty()) {
+                fragments.add(urlUnescape(encodedFragment));
+            }
+        }
+        return fragments.toArray(new String[0]);  
+    }
+    
+    /**
+     * Make the uri from decoded fragments
+     * @param fragments
+     * @param leadingSlash
+     * @param tralingSlash
+     * @return
+     */
+    
+    public static URI getUriFromFragments(String[] fragments, String queryString, boolean leadingSlash, boolean tralingSlash) {
+        StringBuilder sb = new StringBuilder();
+        if (leadingSlash) {
+            sb.append('/');
+        }
+        for (int i = 0; i < fragments.length-1; i++) {
+            sb.append(urlEscapeIncludingSlash(fragments[i])).append("/");
+        }
+        sb.append(urlEscapeIncludingSlash(fragments[fragments.length-1]));
+        if (tralingSlash) {
+            sb.append('/');
+        }
+        if (queryString != null) {
+            sb.append('?').append(queryString);
+        }
+        return URI.create(sb.toString());
+    }
+    
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
         System.out.println(getURIParams("foo=bar"));
