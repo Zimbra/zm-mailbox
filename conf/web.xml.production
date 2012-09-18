@@ -20,7 +20,12 @@
      <param-name>maxRequestsPerSec</param-name>
      <param-value>30</param-value>
     </init-param>
-    
+
+    <init-param>
+     <param-name>delayMs</param-name>
+     <param-value>-1</param-value>
+    </init-param>
+
     <init-param>
      <param-name>remotePort</param-name>
      <param-value>true</param-value>
