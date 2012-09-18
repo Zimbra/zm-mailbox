@@ -35,6 +35,11 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
                 AuthToken at = AuthProvider.getAuthToken(req, isAdminRequest);
                 if (at != null)
                     return at.getAccountId();
+                // Check if this is Http Basic Authentication, if so return authorization string.
+                String auth = req.getHeader("Authorization");
+                if (auth != null) {
+                    return auth;
+                }
             } 
         } catch (Exception e) {
             // ignore
