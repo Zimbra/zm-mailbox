@@ -49,11 +49,22 @@ import java.util.Set;
 public class ImportAppointments extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
+    @Override
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
+    /**
+     * Return false - need to mine "content" for pointers to data in the owner mailbox and resolve these
+     * before proxying.
+     */
+    @Override
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
     String DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_CALENDAR + "";
 
+    private enum SourceSpecMethod {
+        ATTACH_ID, MSG_PART, INLINE_TEXT
+    }
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -69,21 +80,49 @@ public class ImportAppointments extends MailDocumentHandler  {
         Element content = request.getElement(MailConstants.E_CONTENT);
         List<Upload> uploads = null;
         InputStream is = null;
+        String partStr = null;
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         String messageId = content.getAttribute(MailConstants.A_MESSAGE_ID, null);
-        if (attachment != null && messageId != null)
+        if (attachment != null && messageId != null) {
             throw ServiceException.INVALID_REQUEST("use either aid or mid but not both", null);
+        }
+        SourceSpecMethod sourceSpecMethod;
+        if (messageId != null) {
+            sourceSpecMethod = SourceSpecMethod.MSG_PART;
+        } else if (attachment != null) {
+            sourceSpecMethod = SourceSpecMethod.ATTACH_ID;
+        } else {
+            sourceSpecMethod = SourceSpecMethod.INLINE_TEXT;
+        }
+
         try {
-            if (attachment != null) {
-                is = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
-            } else if (messageId != null) {
-                // part of existing message
+            if (SourceSpecMethod.MSG_PART.equals(sourceSpecMethod)) {
+                // Get content from part of existing message.
                 ItemId iid = new ItemId(messageId, zsc);
                 String part = content.getAttribute(MailConstants.A_PART);
-                String partStr = CreateContact.fetchItemPart(
-                        zsc, octxt, mbox, iid, part, null, MimeConstants.P_CHARSET_UTF8);
+                partStr = CreateContact.fetchItemPart(zsc, octxt, mbox, iid, part, null, MimeConstants.P_CHARSET_UTF8);
                 is = new ByteArrayInputStream(partStr.getBytes(MimeConstants.P_CHARSET_UTF8));
-            } else {
+            }
+
+            // if the "target item" is remote, we will need to proxy the request
+            ItemId iidTarget = getProxyTarget(zsc, octxt, iidFolder, true);
+            if (iidTarget != null) {
+                ZimbraLog.misc.info("Proxying ImportAppointments - folder=" + folder + ", acct="
+                                + iidTarget.getAccountId());
+                if (SourceSpecMethod.MSG_PART.equals(sourceSpecMethod)) {
+                    /* Bug 77131 change specification method to something that will work in the proxied context */
+                    content.addAttribute(MailConstants.A_MESSAGE_ID, (String) null);
+                    content.addAttribute(MailConstants.A_PART, (String) null);
+                    Upload up = FileUploadServlet.saveUpload(is, "upload.ics", MimeConstants.CT_TEXT_CALENDAR,
+                                zsc.getAuthtokenAccountId());
+                    content.addAttribute(MailConstants.A_ATTACHMENT_ID, up.getId());
+                }
+                return proxyRequest(request, context, iidFolder, iidTarget);
+            }
+
+            if (SourceSpecMethod.ATTACH_ID.equals(sourceSpecMethod)) {
+                is = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
+            } else if (SourceSpecMethod.INLINE_TEXT.equals(sourceSpecMethod)) {
                 // Convert LF to CRLF because the XML parser normalizes element text to LF.
                 String text = StringUtil.lfToCrlf(content.getText());
                 is = new ByteArrayInputStream(text.getBytes(MimeConstants.P_CHARSET_UTF8));
