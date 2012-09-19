@@ -831,7 +831,7 @@ public class MailSender {
      *         sender} header addresses, in that order. */
     public Pair<InternetAddress, InternetAddress> getSenderHeaders(InternetAddress from, InternetAddress sender,
             Account acct, Account authuser, boolean asAdmin) throws ServiceException {
-        if (authuser.isAllowAnyFromAddress()) {
+        if (from != null && authuser.isAllowAnyFromAddress()) {
             return new Pair<InternetAddress, InternetAddress>(from, sender);
         }
         if (from == null && sender == null) {
