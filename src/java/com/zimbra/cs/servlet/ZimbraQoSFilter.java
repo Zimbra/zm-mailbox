@@ -33,10 +33,8 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.util.AuthUtil;
 
