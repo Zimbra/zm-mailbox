@@ -49,6 +49,16 @@
   </filter-mapping>
   
   <filter>
+    <filter-name>ZimbraQoSFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.ZimbraQoSFilter</filter-class>
+  </filter>
+  
+  <filter-mapping>
+    <filter-name>ZimbraQoSFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  
+  <filter>
     <filter-name>ThrottlingFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ThrottlingFilter</filter-class>
   </filter>
