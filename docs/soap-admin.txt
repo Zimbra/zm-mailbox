@@ -1262,7 +1262,7 @@ Notes:
 
 -----------------------------
 
-<CheckBlobConsistencyRequest [checkSize="0|1"]/>
+<CheckBlobConsistencyRequest [checkSize="0|1"] [reportUsedBlobs="0|1"]/>
   <volume id="..." />*
   <mbox id="..." />*
 </CheckBlobConsistencyRequest>
@@ -1270,30 +1270,45 @@ Notes:
 <CheckBlobConsistencyResponse>
   <mbox id="...">
     <missingBlobs>
-      <item id="{id}" rev="{n}" volumeId="{id}" blobPath="{path}" s="{data-size}" />*
+      <item id="{id}" rev="{n}" volumeId="{id}" blobPath="{path}" s="{data-size}" external="{external-flag}"/>*
     </missingBlobs>
     <unexpectedBlobs>
-      <blob volumeId="{id}" path="{path}" fileSize="{size} />*
+      <blob volumeId="{id}" path="{path}" fileSize="{size} external="{external-flag}"/>*
     </unexpectedBlobs>
     <incorrectSize>
       <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
-        <blob fileSize="{size}" s="{data-size}" path="{path}" />
+        <blob fileSize="{size}" s="{data-size}" path="{path}" external="{external-flag}"/>
       </item>
     </incorrectSize>
     <incorrectRevision>
       <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
-        <blob fileSize="{size}" path="{path}" rev="{n}" />
+        <blob fileSize="{size}" path="{path}" rev="{n}" external="{external-flag}"/>
       </item>
     </incorrectRevision>
+    <usedBlobs>
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
+        <blob fileSize="{size}" path="{path}" rev="{n}" external="{external-flag}"/>
+      </item>
+    </usedBlobs>
   </mbox>*
 </CheckBlobConsistencyResponse>
 
+Notes: 
+
 Checks for items that have no blob, blobs that have no item, and items that
 have an incorrect blob size stored in their metadata.  If no volumes are
-specified, all volumes are checked.  If no mailboxes are specified, all
-mailboxes are checked.  Blob sizes are checked by default.  Set checkSize
-to 0 to avoid the CPU overhead of uncompressing compressed blobs in order to
-calculate size.
+specified, all volumes are checked. If no mailboxes are specified, all mailboxes are checked.
+Blob sizes are checked by default. Set checkSize to 0 to avoid the CPU overhead of uncompressing
+compressed blobs in order to calculate size. 
+
+external-flag - boolean indicating if the blob is stored locally in FileBlobStore or in an ExternalStoreManager
+
+Blob consistency checking for external blob stores is supported with limitations.
+
+The volume element is ignored for external stores.
+For external blobs the volumeId is always -1 and the path is the locator used by the external store. 
+Unexpected blob detection is only possible if the external store implementation partitions blobs by mailbox. 
+If reportUsedBlobs is set to 1 a complete list of all blobs used by the mailbox(es) is returned. 
 
 -----------------------------
 
