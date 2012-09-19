@@ -327,6 +327,10 @@ public final class LC {
     @Reloadable
     @Supported
     public static final KnownKey servlet_max_concurrent_requests_per_session = KnownKey.newKey(0);
+    
+    @Reloadable
+    @Supported
+    public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
 
     public static final KnownKey index_store = KnownKey.newKey("lucene");
 
