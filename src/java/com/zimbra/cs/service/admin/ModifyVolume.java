@@ -46,6 +46,9 @@ public final class ModifyVolume extends AdminDocumentHandler {
         VolumeManager mgr = VolumeManager.getInstance();
         Volume.Builder builder = Volume.builder(mgr.getVolume(req.getId()));
         VolumeInfo vol = req.getVolume();
+        if (vol == null) {
+            throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
+        }
         if (vol.getType() > 0) {
             builder.setType(vol.getType());
         }
