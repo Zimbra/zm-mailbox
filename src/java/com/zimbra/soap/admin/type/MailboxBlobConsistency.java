@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,7 @@
 
 package com.zimbra.soap.admin.type;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -26,13 +27,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class MailboxBlobConsistency {
 
     /**
@@ -40,14 +39,14 @@ public class MailboxBlobConsistency {
      * @zm-api-field-description Mailbox ID
      */
     @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
-    private final Integer id;
+    private final int id;
 
     /**
      * @zm-api-field-description Information about missing blobs
      */
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_MISSING_BLOBS /* missingBlobs */, required=true)
-    @XmlElement(name=AdminConstants.E_ITEM, required=false)
+    @XmlElement(name=AdminConstants.E_ITEM /* item */, required=false)
     private List<MissingBlobInfo> missingBlobs = Lists.newArrayList();
 
     /**
@@ -55,7 +54,7 @@ public class MailboxBlobConsistency {
      */
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_INCORRECT_SIZE /* incorrectSize */, required=true)
-    @XmlElement(name=AdminConstants.E_ITEM, required=false)
+    @XmlElement(name=AdminConstants.E_ITEM /* item */, required=false)
     private List<IncorrectBlobSizeInfo> incorrectSizes = Lists.newArrayList();
 
     /**
@@ -63,7 +62,7 @@ public class MailboxBlobConsistency {
      */
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_UNEXPECTED_BLOBS /* unexpectedBlobs */, required=true)
-    @XmlElement(name=AdminConstants.E_BLOB, required=false)
+    @XmlElement(name=AdminConstants.E_BLOB /* blob */, required=false)
     private List<UnexpectedBlobInfo> unexpectedBlobs = Lists.newArrayList();
 
     /**
@@ -71,70 +70,85 @@ public class MailboxBlobConsistency {
      */
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_INCORRECT_REVISION /* incorrectRevision */, required=true)
-    @XmlElement(name=AdminConstants.E_ITEM, required=false)
+    @XmlElement(name=AdminConstants.E_ITEM /* item */, required=false)
     private List<IncorrectBlobRevisionInfo> incorrectRevisions = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-description Information about used Blobs
+      */
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=AdminConstants.E_USED_BLOBS /* usedBlobs */, required=true)
+    @XmlElement(name=AdminConstants.E_ITEM /* item */, required=false)
+    private List<UsedBlobInfo> usedBlobs = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private MailboxBlobConsistency() {
-        this((Integer) null);
+        this(-1);
     }
 
-    public MailboxBlobConsistency(Integer id) {
+    public MailboxBlobConsistency(int id) {
         this.id = id;
     }
 
     public void setMissingBlobs(Iterable <MissingBlobInfo> missingBlobs) {
         this.missingBlobs.clear();
         if (missingBlobs != null) {
-            Iterables.addAll(this.missingBlobs,missingBlobs);
+            Iterables.addAll(this.missingBlobs, missingBlobs);
         }
     }
 
-    public MailboxBlobConsistency addMissingBlob(MissingBlobInfo missingBlob) {
+    public void addMissingBlob(MissingBlobInfo missingBlob) {
         this.missingBlobs.add(missingBlob);
-        return this;
     }
 
     public void setIncorrectSizes(Iterable <IncorrectBlobSizeInfo> incorrectSizes) {
         this.incorrectSizes.clear();
         if (incorrectSizes != null) {
-            Iterables.addAll(this.incorrectSizes,incorrectSizes);
+            Iterables.addAll(this.incorrectSizes, incorrectSizes);
         }
     }
 
-    public MailboxBlobConsistency addIncorrectSize(IncorrectBlobSizeInfo incorrectSize) {
+    public void addIncorrectSize(IncorrectBlobSizeInfo incorrectSize) {
         this.incorrectSizes.add(incorrectSize);
-        return this;
     }
 
     public void setUnexpectedBlobs(Iterable <UnexpectedBlobInfo> unexpectedBlobs) {
         this.unexpectedBlobs.clear();
         if (unexpectedBlobs != null) {
-            Iterables.addAll(this.unexpectedBlobs,unexpectedBlobs);
+            Iterables.addAll(this.unexpectedBlobs, unexpectedBlobs);
         }
     }
 
-    public MailboxBlobConsistency addUnexpectedBlob(UnexpectedBlobInfo unexpectedBlob) {
+    public void addUnexpectedBlob(UnexpectedBlobInfo unexpectedBlob) {
         this.unexpectedBlobs.add(unexpectedBlob);
-        return this;
     }
 
     public void setIncorrectRevisions(Iterable <IncorrectBlobRevisionInfo> incorrectRevisions) {
         this.incorrectRevisions.clear();
         if (incorrectRevisions != null) {
-            Iterables.addAll(this.incorrectRevisions,incorrectRevisions);
+            Iterables.addAll(this.incorrectRevisions, incorrectRevisions);
         }
     }
 
-    public MailboxBlobConsistency addIncorrectRevision(IncorrectBlobRevisionInfo incorrectRevision) {
+    public void addIncorrectRevision(IncorrectBlobRevisionInfo incorrectRevision) {
         this.incorrectRevisions.add(incorrectRevision);
-        return this;
     }
 
-    public Integer getId() { return id; }
+    public void setUsedBlobs(Iterable <UsedBlobInfo> usedBlobs) {
+        this.usedBlobs.clear();
+        if (usedBlobs != null) {
+            Iterables.addAll(this.usedBlobs, usedBlobs);
+        }
+    }
+
+    public void addUsedBlob(UsedBlobInfo usedBlob) {
+        this.usedBlobs.add(usedBlob);
+    }
+
+    public int getId() { return id; }
     public List<MissingBlobInfo> getMissingBlobs() {
         return Collections.unmodifiableList(missingBlobs);
     }
@@ -146,5 +160,23 @@ public class MailboxBlobConsistency {
     }
     public List<IncorrectBlobRevisionInfo> getIncorrectRevisions() {
         return Collections.unmodifiableList(incorrectRevisions);
+    }
+    public List<UsedBlobInfo> getUsedBlobs() {
+        return usedBlobs;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("id", id)
+            .add("missingBlobs", missingBlobs)
+            .add("incorrectSizes", incorrectSizes)
+            .add("unexpectedBlobs", unexpectedBlobs)
+            .add("incorrectRevisions", incorrectRevisions)
+            .add("usedBlobs", usedBlobs);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

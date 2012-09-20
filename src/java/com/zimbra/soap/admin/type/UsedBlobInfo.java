@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -24,17 +24,17 @@ import javax.xml.bind.annotation.XmlElement;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class IncorrectBlobSizeInfo {
+public class UsedBlobInfo {
 
     /**
-     * @zm-api-field-tag item-id
-     * @zm-api-field-description Item ID
+     * @zm-api-field-tag id
+     * @zm-api-field-description Blob ID
      */
     @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final int id;
 
     /**
-     * @zm-api-field-tag rev-num
+     * @zm-api-field-tag rev
      * @zm-api-field-description Revision
      */
     @XmlAttribute(name=AdminConstants.A_REVISION /* rev */, required=true)
@@ -64,11 +64,11 @@ public class IncorrectBlobSizeInfo {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private IncorrectBlobSizeInfo() {
+    private UsedBlobInfo() {
         this(-1, -1, -1L, (short)-1);
     }
 
-    public IncorrectBlobSizeInfo(int id, int revision, long size, short volumeId) {
+    public UsedBlobInfo(int id, int revision, long size, short volumeId) {
         this.id = id;
         this.revision = revision;
         this.size = size;
