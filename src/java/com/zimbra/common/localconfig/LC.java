@@ -1082,9 +1082,6 @@ public final class LC {
     //make sure it's less than nginx's zimbraReverseProxyUpstreamPollingTimeout, which is now 3600 seconds
     public static final KnownKey zimbra_activesync_heartbeat_interval_max = KnownKey.newKey(3540); //3540 Seconds = 59 mins
     public static final KnownKey zimbra_activesync_search_max_results = KnownKey.newKey(500);
-    public static final KnownKey zimbra_activesync_ping_cache_size = KnownKey.newKey(5000); //about the active user number
-    //should be larger than zimbra_activesync_heartbeat_interval_max
-    public static final KnownKey zimbra_activesync_ping_cache_expire_in_hour = KnownKey.newKey(12);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
