@@ -4451,10 +4451,13 @@ public class Mailbox {
             // Make a single list containing default and exceptions.
             int scidLen = (defaultInv != null ? 1 : 0) + (exceptions != null ? exceptions.length : 0);
             List<SetCalendarItemData> scidList = new ArrayList<SetCalendarItemData>(scidLen);
-            if (defaultInv != null)
+            if (defaultInv != null) {
+                defaultInv.invite.setLastFullSeqNo(defaultInv.invite.getSeqNo());
                 scidList.add(defaultInv);
+            }
             if (exceptions != null) {
                 for (SetCalendarItemData scid : exceptions) {
+                    scid.invite.setLastFullSeqNo(scid.invite.getSeqNo());
                     scidList.add(scid);
                 }
             }
