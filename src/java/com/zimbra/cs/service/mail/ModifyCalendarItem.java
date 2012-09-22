@@ -235,10 +235,15 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
 
             List<ZAttendee> atsAdded = parser.getAttendeesAdded();
-            boolean notifyAllAttendees = true;
+            // Figure out if we're notifying all attendees.  Must do this before clearing recipients from dat.mMm.
+            boolean notifyAllAttendees = isNotifyingAll(dat.mMm, atsAdded);
+            // If notifying all the attendees update the last sequence number otherwise retain the existing value.
+            if (notifyAllAttendees) {
+                dat.mInvite.setLastFullSeqNo(dat.mInvite.getSeqNo());
+            } else {
+                dat.mInvite.setLastFullSeqNo(inv.getLastFullSeqNo());
+            }
             if (inv.isRecurrence()) {
-                // Figure out if we're notifying all attendees.  Must do this before clearing recipients from dat.mMm.
-                notifyAllAttendees = isNotifyingAll(dat.mMm, atsAdded);
                 // Clear to/cc/bcc from the MimeMessage, so that the sendCalendarMessage call only updates the organizer's
                 // own appointment without notifying any attendees.  Notifications will be sent later,
                 removeAllRecipients(dat.mMm);

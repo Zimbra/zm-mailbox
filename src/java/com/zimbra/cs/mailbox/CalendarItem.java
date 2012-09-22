@@ -3143,7 +3143,10 @@ public abstract class CalendarItem extends MailItem {
                 //     response, so that any earlier responses from an "Attendee" that are
                 //     received out of order (e.g., due to a delay in the transport) can be
                 //     correctly discarded.
-                if (cur.getSeqNo() > reply.getSeqNo()) {
+                // bug 74117 : Allow the replies from attendees whose event sequence number is not
+                //             up to date with the organizer's event, provided there were no major changes.
+                if ((cur.isOrganizer() && (cur.getLastFullSeqNo() > reply.getSeqNo())) ||
+                        (!cur.isOrganizer() && (cur.getSeqNo() > reply.getSeqNo()))) {
                     sLog.info("Invite-Reply "+reply.toString()+" is outdated (Calendar entry has higher SEQUENCE), ignoring!");
                     return false;
                 }
