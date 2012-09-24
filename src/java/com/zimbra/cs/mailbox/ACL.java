@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -80,19 +80,19 @@ public class ACL {
     public static final byte GRANTEE_GUEST    = 7;
     /** The grantee of these rights is a named non Zimbra user identified by the access key */
     public static final byte GRANTEE_KEY      = 8;
-	
+
 
     private static final int ACCESSKEY_SIZE_BYTES = 16;
-    
+
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
         private String mGrantee;
         /** The display name of the grantee, which is often the email address of grantee. */
-        private String mName;         
+        private String mName;
         /** The type of object the grantee's ID refers to.
          *  For instance, {@link ACL#GRANTEE_USER}. */
         private byte mType;
-        /** A bitmask of the rights being granted.  For instance, 
+        /** A bitmask of the rights being granted.  For instance,
          *  <tt>{@link ACL#RIGHT_INSERT} | {@link ACL#RIGHT_READ}</tt>. */
         private short mRights;
         /** The password for guest accounts, or hex ascii string version of the accesskey for "key" grantees. */
@@ -101,7 +101,7 @@ public class ACL {
         /** Creates a new Grant object granting access to a user or class
          *  of users.  <tt>zimbraId</tt> may be <tt>null</tt>
          *  if the <tt>type</tt> is {@link ACL#GRANTEE_PUBLIC}.
-         * 
+         *
          * @param zimbraId  The zimbraId of the entry being granted rights.
          * @param type      The type of object the grantee's ID refers to.
          * @param rights    A bitmask of the rights being granted.
@@ -118,7 +118,7 @@ public class ACL {
         }
 
         /** Creates a new Grant object from a decoded {@link Metadata} hash.
-         * 
+         *
          * @param meta  The Metadata object containing ACL data.
          * @throws ServiceException if any required fields are missing. */
         public Grant(Metadata meta) throws ServiceException {
@@ -141,7 +141,7 @@ public class ACL {
         public byte getGranteeType() { return mType; }
         /** Returns the bitmask of the rights granted. */
         public short getGrantedRights() { return mRights; }
-        
+
         /** Returns the rights granted to the given {@link Account} by this
          *  <tt>Grant</tt>.  If the grant does not apply to the Account,
          *  returns <tt>0</tt>. */
@@ -153,7 +153,7 @@ public class ACL {
         public String getGranteeName() { return mName; }
         /** Sets the display name of grantee. */
         public void setGranteeName(String name) { mName = name; }
-        
+
         /** Returns whether this grant applies to the given {@link Account}.
          *  If <tt>acct</tt> is <tt>null</tt>, only return
          *  <tt>true</tt> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
@@ -165,7 +165,7 @@ public class ACL {
                 case ACL.GRANTEE_PUBLIC:   return true;
                 case ACL.GRANTEE_AUTHUSER: return !acct.getId().equals(GuestAccount.GUID_PUBLIC);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
-                case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
+                case ACL.GRANTEE_DOMAIN:   return !(acct instanceof GuestAccount) && mGrantee.equals(getId(prov.getDomain(acct)));
                 case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 case ACL.GRANTEE_GUEST:    return matchesGuestAccount(acct);
@@ -179,13 +179,13 @@ public class ACL {
         		return false;
         	return ((GuestAccount) acct).matches(mGrantee, mSecret);
         }
-        
+
         private boolean matchesAccessKey(Account acct) {
             if (!(acct instanceof GuestAccount))
                 return false;
             return ((GuestAccount) acct).matchesAccessKey(mGrantee, mSecret);
         }
-        
+
         /** Utility function: Returns the zimbraId for a null-checked LDAP
          *  entry. */
         private static final String getId(NamedEntry entry) {
@@ -197,7 +197,7 @@ public class ACL {
          *  is also OK) if the actual grantee is {@link ACL#GRANTEE_PUBLIC}.
          *  <tt>zimbraId</tt> must be {@link GuestAccount#GUID_AUTHUSER} if the actual
          *  grantee is {@link ACL#GRANTEE_AUTHUSER}.
-         * 
+         *
          * @param zimbraId  The zimbraId of the principal. */
         public boolean isGrantee(String zimbraId) {
         	if (zimbraId == null || zimbraId.equals(GuestAccount.GUID_PUBLIC))
@@ -209,7 +209,7 @@ public class ACL {
 
         /** Updates the granted rights in the <tt>Grant</tt>.  The old
          *  set of rights is discarded.
-         * 
+         *
          * @param rights   A bitmask of the rights being granted.
          * @param inherit  Whether subfolders inherit these same rights.
          * @see ACL */
@@ -223,7 +223,7 @@ public class ACL {
         	if ((mType == GRANTEE_GUEST || mType == GRANTEE_KEY) && password != null)
                 mSecret = password;
         }
-        
+
         /**
          * Only for grants to external users
          */
@@ -248,12 +248,12 @@ public class ACL {
             meta.put(FN_TYPE,     mType);
             // FIXME: use "rwidxsca" instead of numeric value
             meta.put(FN_RIGHTS,   mRights);
-            
+
             if (mType == GRANTEE_KEY)
                 meta.put(FN_ACCESSKEY, mSecret);
             else
                 meta.put(FN_PASSWORD, mSecret);
-            
+
             return meta;
         }
     }
@@ -277,7 +277,7 @@ public class ACL {
      *  <tt>null</tt> if there are no rights granted to anyone.  (Note that
      *  if rights are granted to <i>other</i> accounts but not to the
      *  specified user, returns <tt>0</tt>.)
-     * 
+     *
      * @param authuser   The user to gather rights for.
      * @return A <tt>Short</tt> containing the OR'ed-together rights
      *         granted to the user, or <tt>null</tt>. */
@@ -302,10 +302,10 @@ public class ACL {
     /** Grants the specified set of rights to the target.  If another set
      *  of rights has already been granted to the exact given (id, type)
      *  pair, the previous set is revoked and the new set is granted.
-     * 
+     *
      * @param zimbraId  The zimbraId of the entry being granted rights.
      * @param type      The type of object the grantee's ID refers to.
-     * @param rights    A bitmask of the rights being granted. 
+     * @param rights    A bitmask of the rights being granted.
      * @param secret    password or accesskey
      * @return          the grant object
      */
@@ -321,7 +321,7 @@ public class ACL {
         // always generate a new key (if not provided) for updating or new key grants
         if (type == GRANTEE_KEY && secret == null)
             secret = generateAccessKey();
-            
+
         if (!mGrants.isEmpty()) {
             for (Grant grant : mGrants)
                 if (grant.isGrantee(zimbraId)) {
@@ -331,16 +331,16 @@ public class ACL {
                     return grant;
                 }
         }
-        
+
         Grant grant = new Grant(zimbraId, type, rights, secret);
         mGrants.add(grant);
         return grant;
     }
 
     /** Removes the set of rights granted to the specified id.  If no rights
-     *  were previously granted to the target, no error is thrown and 
+     *  were previously granted to the target, no error is thrown and
      *  <tt>false</tt> is returned.
-     * 
+     *
      * @param zimbraId  The zimbraId of the entry being revoked rights.
      * @return whether an {@link Grant} was actually removed from the set. */
     public boolean revokeAccess(String zimbraId) {
@@ -423,7 +423,7 @@ public class ACL {
         if ((rights & RIGHT_SUBFOLDER) != 0)  sb.append(ABBR_CREATE_FOLDER);
         return sb.toString();
     }
-    
+
     public static byte stringToType(String typeStr) throws ServiceException {
         if (typeStr.equalsIgnoreCase("usr"))  return ACL.GRANTEE_USER;
         if (typeStr.equalsIgnoreCase("grp"))  return ACL.GRANTEE_GROUP;
@@ -447,13 +447,13 @@ public class ACL {
         if (type == ACL.GRANTEE_KEY)       return "key";
         return null;
     }
-    
+
     public static String generateAccessKey() {
         SecureRandom random = new SecureRandom();
         byte[] key = new byte[ACCESSKEY_SIZE_BYTES];
         random.nextBytes(key);
-        
+
         // in the form of e.g. 8d159aed5fb9431d8ac52db5e20baafb
-        return new String(Hex.encodeHex(key));  
+        return new String(Hex.encodeHex(key));
     }
 }
