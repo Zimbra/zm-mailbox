@@ -14,6 +14,14 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +35,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key.AccountBy;
@@ -44,6 +53,7 @@ extends TestCase {
     private String mOriginalSoapRequestMaxSize;
     private String mOriginalSoapExposeVersion;
     
+    @Override
     public void setUp()
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
@@ -182,7 +192,87 @@ extends TestCase {
         ZFolder inbox = mbox.getFolderByPath("/Inbox");
         assertEquals("Inbox", inbox.getName());
     }
-    
+
+    /*
+     * Useful for sending invalid XML.
+     * @return Text of response - which could be either for a successful request or could be error text
+     */
+    private String doLowLevelRequest(URL url, String request)
+    throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestProperty("content-type", "text/xml");
+        conn.setRequestMethod("POST");
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.getOutputStream().write(request.getBytes("UTF-8"));
+
+        conn.connect(); /* Send the request to the server */
+        InputStream is;
+        if (conn.getResponseCode() <= 400) {
+            is = conn.getInputStream();
+        } else { /* error from server */
+            is = conn.getErrorStream();
+        }
+        BufferedReader in = new BufferedReader(new InputStreamReader(is));
+        StringBuilder resp = new StringBuilder();
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+            resp.append(inputLine);
+        }
+        in.close();
+        return resp.toString();
+    }
+
+    public void testBadXmlReqWantJSResp()
+    throws IOException {
+        StringBuilder req = new StringBuilder();
+        req.append("<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\">\n")
+            .append("<soap:Header>\n")
+            .append("<context xmlns=\"urn:zimbra\">\n")
+            .append("<format xmlns=\"\" type=\"js\"/>\n")
+            .append("</context>\n")
+            .append("</soap:Header>\n")
+            .append("<soap:Body>\n")
+            .append("<NoOpRequest session=<> xmlns=\"urn:zimbraMail\"/>\n") // invalid XML in this line
+            .append("</soap:Body>\n")
+            .append("</soap:Envelope>\n");
+        String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
+        assertTrue("Response should be a JSON fault", responseString.startsWith("{\"Body\":{\"Fault\":{\"Code\":") );
+    }
+
+    public void testBadXmlReqWantXmlResp()
+    throws IOException {
+        StringBuilder req = new StringBuilder();
+        req.append("<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\">\n")
+            .append("<soap:Header>\n")
+            .append("<context xmlns=\"urn:zimbra\">\n")
+            .append("<format xmlns=\"\" type=\"xml\"/>\n")   // Only diff from previous
+            .append("</context>\n")
+            .append("</soap:Header>\n")
+            .append("<soap:Body>\n")
+            .append("<NoOpRequest session=<> xmlns=\"urn:zimbraMail\"/>\n") // invalid XML in this line
+            .append("</soap:Body>\n")
+            .append("</soap:Envelope>\n");
+        String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
+        assertTrue("Response should be a SOAP 1.2 fault", responseString.startsWith(
+                "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"><soap:Body><soap:Fault>") );
+    }
+
+    public void testBadSoap11XmlReq()
+    throws IOException {
+        StringBuilder req = new StringBuilder();
+        req.append("<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n")
+            .append("  SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n")
+            .append("<SOAO-ENV:Body>\n")
+            .append("<comment>Missing end tag for body</comment>")
+            .append("</SOAO-ENV:Envelope>\n");
+        String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
+        assertTrue("Response should be a SOAP 1.1 fault", responseString.startsWith(
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" + 
+                "<soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>parse error:"));
+    }
+
+    @Override
     public void tearDown()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraSoapRequestMaxSize, mOriginalSoapRequestMaxSize);

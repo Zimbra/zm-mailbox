@@ -52,10 +52,14 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 /**
  * The soap engine.
@@ -131,6 +135,82 @@ public class SoapEngine {
         }
     }
 
+    /**
+     * Bug 77304 - If the XML for a Soap Request was bad, look at it to see if enough of it is valid to be able
+     * to determine the desired response protocol.
+     * Use StAX parsing so that we can stop looking at the XML once we have got past the Envelope Header context.
+     */
+    private SoapProtocol chooseFaultProtocolFromBadXml(InputStream in) {
+        SoapProtocol soapProto = SoapProtocol.Soap12; /* Default */
+        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+        XMLStreamReader xmlReader = null;
+        int depth = 0;
+        boolean inEnvelope = false;
+        boolean inHeader = false;
+        boolean inContext = false;
+        String localName;
+        try {
+            xmlReader = xmlInputFactory.createXMLStreamReader(in);
+            boolean scanningForFormat = true;
+            while (scanningForFormat && xmlReader.hasNext()) {
+                int eventType = xmlReader.next();
+                switch (eventType) {
+                    case XMLStreamReader.START_ELEMENT:
+                        localName = xmlReader.getLocalName();
+                        depth++;
+                        if ((depth == 1) && ("Envelope".equals(localName))) {
+                            inEnvelope = true;
+                            String ns = xmlReader.getNamespaceURI();
+                            if (SoapProtocol.Soap11.getNamespace().getStringValue().equals(ns)) {
+                                soapProto = SoapProtocol.Soap11; // new default
+                            }
+                        } else if (inEnvelope && (depth == 2) && ("Header".equals(localName))) {
+                            inHeader = true;
+                        } else if (inHeader && (depth == 3) && ("context".equals(localName))) {
+                            inContext = true;
+                        } else if (inContext && (depth == 4) && ("format".equals(localName))) {
+                            String respType = xmlReader.getAttributeValue(null, "type");
+                            if (respType != null) {
+                                if (HeaderConstants.TYPE_JAVASCRIPT.equals(respType)) {
+                                    soapProto = SoapProtocol.SoapJS;
+                                }
+                                scanningForFormat = false;
+                            }
+                        }
+                        break;
+                    case XMLStreamReader.END_ELEMENT:
+                        localName = xmlReader.getLocalName();
+                        if ((depth == 1) && ("Envelope".equals(localName))) {
+                            inEnvelope = false;
+                            scanningForFormat = false;  /* it wasn't specified, so default it */
+                        } else if (inEnvelope && (depth == 2) && ("Header".equals(localName))) {
+                            inHeader = false;
+                            scanningForFormat = false;  /* it wasn't specified, so default it */
+                        } else if (inHeader && (depth == 3) && ("context".equals(localName))) {
+                            inContext = false;
+                            scanningForFormat = false;  /* it wasn't specified, so default it */
+                        }
+                        depth--;
+                        break;
+                }
+            }
+        } catch (XMLStreamException e) {
+            ZimbraLog.soap.debug("Problem trying to determine response protocol from request XML", e);
+        } finally {
+            if (xmlReader != null) {
+                try {
+                    xmlReader.close();
+                } catch (XMLStreamException e) {
+                }
+            }
+        }
+        try {
+            in.close();
+        } catch (IOException e) {
+        }
+        return soapProto;
+    }
+
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
@@ -150,8 +230,7 @@ public class SoapEngine {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
         } catch (XmlParseException e) {
-            // FIXME: have to pick 1.1 or 1.2 since we can't parse any
-            SoapProtocol soapProto = SoapProtocol.Soap12;
+            SoapProtocol soapProto = chooseFaultProtocolFromBadXml(new ByteArrayInputStream(soapMessage));
             return soapFaultEnv(soapProto, "SOAP exception", e);
         }
         Element resp = dispatch(path, document, context);
