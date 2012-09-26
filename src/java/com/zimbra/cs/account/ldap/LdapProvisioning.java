@@ -2946,10 +2946,19 @@ public class LdapProvisioning extends LdapProv {
 
         // delete all aliases of the account
         String aliases[] = acc.getMailAlias();
-        if (aliases != null)
-            for (int i=0; i < aliases.length; i++)
-                removeAlias(acc, aliases[i]); // this also removes each alias from any DLs
-
+        if (aliases != null) {
+            for (int i=0; i < aliases.length; i++) {
+                try {
+                    removeAlias(acc, aliases[i]); // this also removes each alias from any DLs
+                } catch (ServiceException se) {
+                    if (AccountServiceException.NO_SUCH_ALIAS.equals(se.getCode())) {
+                        ZimbraLog.account.warn("got no such alias from removeAlias call when deleting account; likely alias was previously in a bad state");
+                    } else {
+                        throw se;
+                    }
+                }
+            }
+        }
         // delete all grants granted to the account
         try {
             RightCommand.revokeAllRights(this, GranteeType.GT_USER, zimbraId);
