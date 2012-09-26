@@ -194,7 +194,7 @@ public class AddressObject extends MailItemResource {
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
         populateContactGroupAppleXProps(ctxt, contact);
-        return VCard.formatContact(contact, null, true).formatted;
+        return VCard.formatContact(contact, null, true, false).formatted;
     }
     public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
         if (attrs == null || attrs.isEmpty())

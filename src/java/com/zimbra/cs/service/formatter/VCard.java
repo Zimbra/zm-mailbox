@@ -580,8 +580,12 @@ public class VCard {
     public static VCard formatContact(Contact con) {
         return formatContact(con, null, false);
     }
-
+    
     public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps) {
+        return formatContact(con, vcattrs, includeXProps, true);
+    }
+
+    public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps, boolean includeZimbraXProps) {
         Map<String, String> fields = con.getFields();
         List<Attachment> attachments = con.getAttachments();
         List<String> emails = con.getEmailAddresses(DerefGroupMembersOption.NONE);
@@ -745,13 +749,13 @@ public class VCard {
         if (vcattrs == null || vcattrs.contains("UID"))
             sb.append("UID:").append(uid).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
-        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-IMADDRESS"))) {
+        if ((vcattrs == null && includeZimbraXProps) || (vcattrs != null && vcattrs.contains("X-ZIMBRA-IMADDRESS"))) {
             encodeField(sb, "X-ZIMBRA-IMADDRESS", "imAddress", true, 1, fields);
         }
-        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-ANNIVERSARY"))) {
+        if ((vcattrs == null && includeZimbraXProps) || (vcattrs != null && vcattrs.contains("X-ZIMBRA-ANNIVERSARY"))) {
             encodeField(sb, "X-ZIMBRA-ANNIVERSARY", ContactConstants.A_anniversary, false, 2, fields);
         }
-        if ((vcattrs == null || vcattrs.contains("X-ZIMBRA-MAIDENNAME"))) {
+        if ((vcattrs == null && includeZimbraXProps) || (vcattrs != null && vcattrs.contains("X-ZIMBRA-MAIDENNAME"))) {
             String maidenName = con.get(ContactConstants.A_maidenName);
             if (maidenName != null)
                 sb.append("X-ZIMBRA-MAIDENNAME:").append(maidenName).append("\r\n");
