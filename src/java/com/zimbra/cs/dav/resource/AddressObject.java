@@ -94,7 +94,7 @@ public class AddressObject extends MailItemResource {
     
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
-        return VCard.formatContact(contact, null, true).formatted;
+        return VCard.formatContact(contact, null, true, false).formatted;
     }
     public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
         if (attrs == null || attrs.isEmpty())
@@ -163,7 +163,9 @@ public class AddressObject extends MailItemResource {
                     String itemEtag = res.getEtag();
                     if (etag != null && !etag.equals(itemEtag))
                         throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
-                    mbox.modifyContact(ctxt.getOperationContext(), ((MailItemResource)res).getId(), vcard.asParsedContact());
+                    MailItemResource mir = (MailItemResource) res;
+                    vcard.merge((Contact) mir.getMailItem(ctxt));
+                    mbox.modifyContact(ctxt.getOperationContext(), mir.getId(), vcard.asParsedContact());
                     res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
                 }
             }
