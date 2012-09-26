@@ -72,16 +72,16 @@
   <desc>reindex mailbox</desc>
 </right> 
 
-<right name="getAccountShareInfo" type="preset" targetType="account">
-  <desc>get share info on account</desc>
-</right>  
-
 <right name="moveAccountMailbox" type="preset" targetType="account">
   <desc>move account mailbox</desc>
 </right>        
  
 <right name="setAccountPassword" type="preset" targetType="account">
-  <desc>set account password</desc>
+  <desc>set account password, not restricted by password strength policies</desc>
+</right>
+
+<right name="changeAccountPassword" type="preset" targetType="account">
+  <desc>change account password, restricted by password strength policies</desc>
 </right>
 
 <right name="checkPasswordStrength" type="preset" targetType="account">
@@ -188,7 +188,11 @@
 </right>
        
 <right name="setCalendarResourcePassword" type="preset" targetType="calresource">
-  <desc>set calendar resource password</desc>
+  <desc>set calendar resource password, not restricted by password strength policies</desc>
+</right>
+
+<right name="changeCalendarResourcePassword" type="preset" targetType="calresource">
+  <desc>set calendar resource password, restricted by password strength policies</desc>
 </right> 
 
 <right name="checkCalendarResourcePasswordStrength" type="preset" targetType="calresource">
@@ -198,10 +202,6 @@
 <right name="reindexCalendarResourceMailbox" type="preset" targetType="calresource">
   <desc>reindex mailbox</desc>
 </right> 
-
-<right name="getCalendarResourceShareInfo" type="preset" targetType="calresource">
-  <desc>get share info on calendar resource</desc>
-</right>
 
 <right name="moveCalendarResourceMailbox" type="preset" targetType="calresource">
   <desc>move calendar resource mailbox</desc>
@@ -319,13 +319,50 @@
   <desc>remove member from distribution list</desc>
 </right>
 
-<right name="publishDistributionListShareInfo" type="preset" targetType="dl">
-  <desc>publish share info on distribution list</desc>
+
+<!-- 
+========================================================
+                 dynamic group
+========================================================
+-->
+
+<right name="getGroup" type="getAttrs" targetType="group">
+  <desc>get all group attributes</desc>
 </right>
 
-<right name="getDistributionListShareInfo" type="preset" targetType="dl">
-  <desc>get share info on distribution list</desc>
+<right name="modifyGroup" type="setAttrs" targetType="group">
+  <desc>set all group attributes</desc>
 </right>
+
+<right name="listGroup" type="preset" targetType="group">
+  <desc>see group in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameGroup" type="preset" targetType="group">
+  <desc>rename group</desc>
+</right>
+
+<right name="deleteGroup" type="preset" targetType="group">
+  <desc>delete group</desc>
+</right>
+
+<right name="addGroupAlias" type="preset" targetType="group">
+  <desc>add group alias</desc>
+</right>
+
+<right name="removeGroupAlias" type="preset" targetType="group">
+  <desc>remove group alias</desc>
+</right>
+
+<right name="addGroupMember" type="preset" targetType="group">
+  <desc>add member to group</desc>
+</right>
+
+<right name="removeGroupMember" type="preset" targetType="group">
+  <desc>remove member from group</desc>
+</right>
+
+
 
 <!-- 
 ========================================================
@@ -369,12 +406,20 @@
   <desc>create account in the domain</desc>
 </right>
 
+<right name="autoProvisionAccount" type="preset" targetType="domain">
+  <desc>auto provision account in the domain in MANUAL mode</desc>
+</right>
+
 <right name="createCalendarResource" type="preset" targetType="domain">
   <desc>create calendar resource in the domain</desc>
 </right>
 
 <right name="createDistributionList" type="preset" targetType="domain">
   <desc>create distribution list in the domain</desc>
+</right>
+
+<right name="createGroup" type="preset" targetType="domain">
+  <desc>create group in the domain</desc>
 </right>
 
 <right name="createAlias" type="preset" targetType="domain">
@@ -441,8 +486,7 @@
 </right>         
 
 
-
-    
+   
 <!-- 
 ========================================================
                     server rights
@@ -458,7 +502,7 @@
 </right>
 
 <right name="listServer" type="preset" targetType="server">
-  <desc>see server in GetAllCos/SearchDirectoryResponse</desc>
+  <desc>see server in GetAllServers/SearchDirectoryResponse</desc>
 </right>
 
 <right name="deleteServer" type="preset" targetType="server">
@@ -566,6 +610,33 @@
 </right>
 
 
+    
+<!-- 
+========================================================
+                    UC service rights
+========================================================
+-->   
+
+<right name="getUCService" type="getAttrs" targetType="ucservice">
+  <desc>get all UC service attributes</desc>
+</right>
+
+<right name="modifyUCService" type="setAttrs" targetType="ucservice">
+  <desc>set all UC service attributes</desc>
+</right>
+
+<right name="listUCService" type="preset" targetType="ucservice">
+  <desc>see UC service in GetAllUCServices/SearchDirectoryResponse</desc>
+</right>
+
+<right name="deleteUCService" type="preset" targetType="ucservice">
+  <desc>delete UC service</desc>
+</right>
+
+<right name="renameUCService" type="preset" targetType="ucservice">
+  <desc>rename UC service</desc>
+</right>
+
 <!-- 
 ========================================================
                     XMPP component rights
@@ -627,6 +698,10 @@
   <desc>create server</desc>
 </right>
 
+<right name="createUCService" type="preset" targetType="global">
+  <desc>create UC service</desc>
+</right>
+
 <right name="createTopDomain" type="preset" targetType="global">
   <desc>create a top-level domain</desc>
 </right>
@@ -649,6 +724,10 @@
 
 <right name="checkSoftwareUpdates" type="preset" targetType="global">
     <desc>check for Zimbra software updates</desc>
+</right>
+
+<right name="uploadClientSoftware" type="preset" targetType="global">
+    <desc>upload client software via Admin Console</desc>
 </right>
 
 <!-- 

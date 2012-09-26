@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rights>
+
+<ui name="Manage-Accounts-Account-GeneralInfo">Home -> Manage -> Accounts -> [pick an account] -> General Information </ui>>
+<ui name="Manage-Accounts-Account-GeneralInfo(modify)">Home -> Manage -> Accounts -> [pick an account] -> General Information (modify)</ui>>
+<ui name="Manage-Accounts-Account-GeneralInfo(view)">Home -> Manage -> Accounts -> [pick an account] -> General Information (view)</ui>>
+
+<ui name="Manage-Accounts-Account-ContactInfo">Home -> Manage -> Accounts -> [pick an account] -> Contact Information</ui>>
+<ui name="Manage-Accounts-Account-ContactInfo(modify)">Home -> Manage -> Accounts -> [pick an account] -> Contact Information (modify)</ui>>
+<ui name="Manage-Accounts-Account-ContactInfo(view)">Home -> Manage -> Accounts -> [pick an account] -> Contact Information (view)</ui>>
+
+<ui name="Manage-Accounts-Account-MemberOf">Home -> Manage -> Accounts -> [pick an account] -> Member Of</ui>
+
+<ui name="Manage-Accounts-Account-Aliases">Home -> Manage -> Accounts -> [pick an account] -> Aliases</ui>
+<ui name="Manage-Accounts-Account-Aliases(modify)">Home -> Manage -> Accounts -> [pick an account] -> Aliases (modify)</ui>
+<ui name="Manage-Accounts-Account-Aliases(view)">Home -> Manage -> Accounts -> [pick an account] -> Aliases (view)</ui>
+  
+<ui name="Manage-Accounts-Account-Features">Home -> Manage -> Accounts -> [pick an account] -> Features</ui>
+<ui name="Manage-Accounts-Account-Features(modify)">Home -> Manage -> Accounts -> [pick an account] -> Features (modify)</ui>
+<ui name="Manage-Accounts-Account-Features(view)">Home -> Manage -> Accounts -> [pick an account] -> Features (view)</ui>
+
+<ui name="Manage-Accounts-Account-Forwarding">Home -> Manage -> Accounts -> [pick an account] -> Forwarding</ui>
+<ui name="Manage-Accounts-Account-Forwarding(modify)">Home -> Manage -> Accounts -> [pick an account] -> Forwarding (modify)</ui>
+<ui name="Manage-Accounts-Account-Forwarding(view)">Home -> Manage -> Accounts -> [pick an account] -> Forwarding (view)</ui>
+
+<ui name="Manage-Accounts-Account-Preferences">Home -> Manage -> Accounts -> [pick an account] -> Preferences</ui>
+<ui name="Manage-Accounts-Account-Preferences(modify)">Home -> Manage -> Accounts -> [pick an account] -> Preferences (modify)</ui>
+<ui name="Manage-Accounts-Account-Preferences(view)">Home -> Manage -> Accounts -> [pick an account] -> Preferences (view)</ui>  
+
+<ui name="Manage-Accounts-Account-FreeBusyInterop">Home -> Manage -> Accounts -> [pick an account] -> Free/Busy Interop</ui>
+<ui name="Manage-Accounts-Account-FreeBusyInterop(modify)">Home -> Manage -> Accounts -> [pick an account] -> Free/Busy Interop (modify)</ui>
+<ui name="Manage-Accounts-Account-FreeBusyInterop(view)">Home -> Manage -> Accounts -> [pick an account] -> Free/Busy Interop (view)</ui>
+  
+<ui name="Manage-Accounts-Account-Themes">Home -> Manage -> Accounts -> [pick an account] -> Themes</ui>
+<ui name="Manage-Accounts-Account-Themes(modify)">Home -> Manage -> Accounts -> [pick an account] -> Themes (modify)</ui>
+<ui name="Manage-Accounts-Account-Themes(view)">Home -> Manage -> Accounts -> [pick an account] -> Themes (view)</ui>
+
+<ui name="Manage-Accounts-Account-Zimlets">Home -> Manage -> Accounts -> [pick an account] -> Zimlets</ui>
+<ui name="Manage-Accounts-Account-Zimlets(modify)">Home -> Manage -> Accounts -> [pick an account] -> Zimlets (modify)</ui>
+<ui name="Manage-Accounts-Account-Zimlets(view)">Home -> Manage -> Accounts -> [pick an account] -> Zimlets (view)</ui>
+
+<ui name="Manage-Accounts-Account-ACL">Home -> Manage -> Accounts -> [pick an account] -> ACL</ui>
+<ui name="Manage-Accounts-Account-ACL(modify)">Home -> Manage -> Accounts -> [pick an account] -> ACL (modify)</ui>
+<ui name="Manage-Accounts-Account-ACL(view)">Home -> Manage -> Accounts -> [pick an account] -> ACL (view)</ui>
+
+<ui name="Manage-DistributionLists-DistributionList-Members">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Members</ui>
+<ui name="Manage-DistributionLists-DistributionList-Members(modify)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Members (modify)</ui>
+<ui name="Manage-DistributionLists-DistributionList-Members(view)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Members (view)</ui>
+
+<ui name="Manage-DistributionLists-DistributionList-Notes">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Notes</ui>
+<ui name="Manage-DistributionLists-DistributionList-Notes(modify)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Notes (modify)</ui>
+<ui name="Manage-DistributionLists-DistributionList-Notes(view)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Notes (view)</ui>
+
+<ui name="Manage-DistributionLists-DistributionList-Aliases">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Aliases</ui>
+<ui name="Manage-DistributionLists-DistributionList-Aliases(modify)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Aliases (modify) </ui>
+<ui name="Manage-DistributionLists-DistributionList-Aliases(view)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> Aliases (view) </ui>
+
+<ui name="Manage-DistributionLists-DistributionList-ACL">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> ACL</ui>
+<ui name="Manage-DistributionLists-DistributionList-ACL(modify)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> ACL (modify) </ui>
+<ui name="Manage-DistributionLists-DistributionList-ACL(view)">Home -> Manage -> Distribution Lists -> [pick a distribution list] -> ACL (view) </ui>
+
+<ui name="Manage-Resources-Resource-Properties">Home -> Manage -> Resources -> [pick a resource] -> Properties</ui>
+<ui name="Manage-Resources-Resource-Properties(modify)">Home -> Manage -> Resources -> [pick a resource] -> Properties (modify) </ui>
+<ui name="Manage-Resources-Resource-Properties(view)">Home -> Manage -> Resources -> [pick a resource] -> Properties (view) </ui>
+
+<ui name="Manage-Resources-Resource-LocationAndContactInfo">Home -> Manage -> Resources -> [pick a resource] -> Location and Contact Information</ui>
+<ui name="Manage-Resources-Resource-LocationAndContactInfo(modify)">Home -> Manage -> Resources -> [pick a resource] -> Location and Contact Information (modify) </ui>
+<ui name="Manage-Resources-Resource-LocationAndContactInfo(view)">Home -> Manage -> Resources -> [pick a resource] -> Location and Contact Information (view) </ui>
+   
+<ui name="Configure-COSes-COS-GeneralInfo">Home -> Configure -> Class of Service -> [pick a COS] -> General Information</ui>
+<ui name="Configure-COSes-COS-GeneralInfo(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> General Information (modify) </ui>
+<ui name="Configure-COSes-COS-GeneralInfo(view)">Home -> Configure -> Class of Service -> [pick a COS] -> General Information (view) </ui>
+ 
+<ui name="Configure-COSes-COS-Features">Home -> Configure -> Class of Service -> [pick a COS] -> Features</ui>
+<ui name="Configure-COSes-COS-Features(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Features (modify) </ui>
+<ui name="Configure-COSes-COS-Features(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Features (view) </ui>
+
+<ui name="Configure-COSes-COS-Preferences">Home -> Configure -> Class of Service -> [pick a COS] -> Preferences</ui>
+<ui name="Configure-COSes-COS-Preferences(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Preferences (modify) </ui>
+<ui name="Configure-COSes-COS-Preferences(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Preferences (view) </ui>
+
+<ui name="Configure-COSes-COS-Themes">Home -> Configure -> Class of Service -> [pick a COS] -> Themes</ui>
+<ui name="Configure-COSes-COS-Themes(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Themes (modify) </ui>
+<ui name="Configure-COSes-COS-Themes(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Themes (view) </ui>
+    
+<ui name="Configure-COSes-COS-Zimlets">Home -> Configure -> Class of Service -> [pick a COS] -> Zimlets</ui>
+<ui name="Configure-COSes-COS-Zimlets(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Zimlets (modify) </ui>
+<ui name="Configure-COSes-COS-Zimlets(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Zimlets (view) </ui>
+    
+<ui name="Configure-COSes-COS-ServerPool">Home -> Configure -> Class of Service -> [pick a COS] -> Server Pool</ui>
+<ui name="Configure-COSes-COS-ServerPool(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Server Pool (modify) </ui>
+<ui name="Configure-COSes-COS-ServerPool(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Server Pool (view) </ui>
+    
+<ui name="Configure-COSes-COS-Advanced">Home -> Configure -> Class of Service -> [pick a COS] -> Advanced</ui>
+<ui name="Configure-COSes-COS-Advanced(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Advanced (modify) </ui>
+<ui name="Configure-COSes-COS-Advanced(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Advanced (view) </ui>
+   
+<ui name="Configure-COSes-COS-ACL">Home -> Configure -> Class of Service -> [pick a COS] -> AC</ui>
+<ui name="Configure-COSes-COS-ACL(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> ACL (modify) </ui>
+<ui name="Configure-COSes-COS-ACL(view)">Home -> Configure -> Class of Service -> [pick a COS] -> ACL (view) </ui>
+   
+<ui name="Configure-COSes-COS-MobileAccess">Home -> Configure -> Class of Service -> [pick a COS] -> Mobile Access</ui>
+<ui name="Configure-COSes-COS-MobileAccess(modify)">Home -> Configure -> Class of Service -> [pick a COS] -> Mobile Access (modify) </ui>
+<ui name="Configure-COSes-COS-MobileAccess(view)">Home -> Configure -> Class of Service -> [pick a COS] -> Mobile Access (view) </ui>
+        
+<ui name="Configure-Domains-Domain-New">Home -> Configure -> Domains -> New tool (for creating top domain)</ui>
+  
+        
+<ui name="Configure-Domains-Domain-GeneralInfo">Home -> Configure -> Domains -> [pick a domain] -> General Information</ui>
+<ui name="Configure-Domains-Domain-GeneralInfo(modify)">Home -> Configure -> Domains -> [pick a domain] -> General Information (modify) </ui>
+<ui name="Configure-Domains-Domain-GeneralInfo(view)">Home -> Configure -> Domains -> [pick a domain] -> General Information (view) </ui>
+            
+<ui name="Configure-Domains-Domain-GAL">Home -> Configure -> Domains -> [pick a domain] -> GAL</ui>
+<ui name="Configure-Domains-Domain-GAL-configure">Home -> Configure -> Domains -> [pick a domain] -> GAL (modify) </ui>
+<ui name="Configure-Domains-Domain-GAL-configure(modify)">Home -> Configure -> Domains -> [pick a domain] -> GAL (modify) </ui>
+<ui name="Configure-Domains-Domain-GAL-configure(view)">Home -> Configure -> Domains -> [pick a domain] -> GAL (view) </ui>
+          
+<ui name="Configure-Domains-Domain-Authentication">Home -> Configure -> Domains -> [pick a domain] -> Authentication</ui>
+<ui name="Configure-Domains-Domain-Authentication(modify)">Home -> Configure -> Domains -> [pick a domain] -> Authentication (modify) </ui>
+<ui name="Configure-Domains-Domain-Authentication(view)">Home -> Configure -> Domains -> [pick a domain] -> Authentication (view) </ui>
+          
+<ui name="Configure-Domains-Domain-VirtualHosts">Home -> Configure -> Domains -> [pick a domain] -> Virtual Hosts</ui>
+<ui name="Configure-Domains-Domain-VirtualHosts(modify)">Home -> Configure -> Domains -> [pick a domain] -> Virtual Hosts (modify) </ui>
+<ui name="Configure-Domains-Domain-VirtualHosts(view)">Home -> Configure -> Domains -> [pick a domain] -> Virtual Hosts (view) </ui>
+
+<ui name="Configure-Domains-Domain-FreeBusyInterop">Home -> Configure -> Domains -> [pick a domain] -> Free/Busy interop</ui>
+<ui name="Configure-Domains-Domain-FreeBusyInterop(modify)">Home -> Configure -> Domains -> [pick a domain] -> Free/Busy interop (modify) </ui>
+<ui name="Configure-Domains-Domain-FreeBusyInterop(view)">Home -> Configure -> Domains -> [pick a domain] -> Free/Busy interop (view) </ui>
+        
+<ui name="Configure-Domains-Domain-Zimlets">Home -> Configure -> Domains -> [pick a domain] -> Zimlets</ui>
+<ui name="Configure-Domains-Domain-Zimlets(modify)">Home -> Configure -> Domains -> [pick a domain] -> Zimlets (modify) </ui>
+<ui name="Configure-Domains-Domain-Zimlets(view)">Home -> Configure -> Domains -> [pick a domain] -> Zimlets (view) </ui>
+
+<ui name="Configure-Domains-Domain-Themes">Home -> Configure -> Domains -> [pick a domain] -> Themes</ui>
+<ui name="Configure-Domains-Domain-Themes(modify)">Home -> Configure -> Domains -> [pick a domain] -> Themes (modify) </ui>
+<ui name="Configure-Domains-Domain-Themes(view)">Home -> Configure -> Domains -> [pick a domain] -> Themes (view) </ui>
+    
+<ui name="Configure-Domains-Domain-AccountLimits">Home -> Configure -> Domains -> [pick a domain] -> Account Limits</ui>
+<ui name="Configure-Domains-Domain-AccountLimits(modify)">Home -> Configure -> Domains -> [pick a domain] -> Account Limits (modify) </ui>
+<ui name="Configure-Domains-Domain-AccountLimits(view)">Home -> Configure -> Domains -> [pick a domain] -> Account Limits (view) </ui>
+    
+<ui name="Configure-Domains-Domain-ACL">Home -> Configure -> Domains -> [pick a domain] -> AC</ui>
+<ui name="Configure-Domains-Domain-ACL(modify)">Home -> Configure -> Domains -> [pick a domain] -> ACL (modify) </ui>
+<ui name="Configure-Domains-Domain-ACL(view)">Home -> Configure -> Domains -> [pick a domain] -> ACL (view) </ui>
+    
+<ui name="Configure-Servers-Server-GeneralInfo">Home -> Configure -> Servers -> [pick a server] -> General Information</ui>
+<ui name="Configure-Servers-Server-GeneralInfo(modify)">Home -> Configure -> Servers -> [pick a server] -> General Information (modify) </ui>
+<ui name="Configure-Servers-Server-GeneralInfo(view)">Home -> Configure -> Servers -> [pick a server] -> General Information (view) </ui>
+
+<ui name="Configure-Servers-Server-Services">Home -> Configure -> Servers -> [pick a server] -> Services</ui>
+<ui name="Configure-Servers-Server-Services(modify)">Home -> Configure -> Servers -> [pick a server] -> Services (modify) </ui>
+<ui name="Configure-Servers-Server-Services(view)">Home -> Configure -> Servers -> [pick a server] -> Services (view) </ui>
+        
+<ui name="Configure-Servers-Server-MTA">Home -> Configure -> Servers -> [pick a server] -> MTA</ui>
+<ui name="Configure-Servers-Server-MTA(modify)">Home -> Configure -> Servers -> [pick a server] -> MTA (modify) </ui>
+<ui name="Configure-Servers-Server-MTA(view)">Home -> Configure -> Servers -> [pick a server] -> MTA (view) </ui>
+        
+<ui name="Configure-Servers-Server-IMAP">Home -> Configure -> Servers -> [pick a server] -> IMAP</ui>
+<ui name="Configure-Servers-Server-IMAP(modify)">Home -> Configure -> Servers -> [pick a server] -> IMAP (modify) </ui>
+<ui name="Configure-Servers-Server-IMAP(view)">Home -> Configure -> Servers -> [pick a server] -> IMAP (view) </ui>
+        
+<ui name="Configure-Servers-Server-POP">Home -> Configure -> Servers -> [pick a server] -> POP</ui>
+<ui name="Configure-Servers-Server-POP(modify)">Home -> Configure -> Servers -> [pick a server] -> POP (modify) </ui>
+<ui name="Configure-Servers-Server-POP(view)">Home -> Configure -> Servers -> [pick a server] -> POP (view) </ui>
+      
+<ui name="Configure-Servers-Server-Volumes">Home -> Configure -> Servers -> [pick a server] -> Volumes</ui>
+<ui name="Configure-Servers-Server-Volumes(modify)">Home -> Configure -> Servers -> [pick a server] -> Volumes (modify) </ui>
+<ui name="Configure-Servers-Server-Volumes(view)">Home -> Configure -> Servers -> [pick a server] -> Volumes (view) </ui>
+      
+<ui name="Configure-Servers-Server-BackupRestore">Home -> Configure -> Servers -> [pick a server] -> Backup/Restore</ui>
+<ui name="Configure-Servers-Server-BackupRestore(modify)">Home -> Configure -> Servers -> [pick a server] -> Backup/Restore (modify)</ui>
+<ui name="Configure-Servers-Server-BackupRestore(view)">Home -> Configure -> Servers -> [pick a server] -> Backup/Restore (view)</ui>
+      
+<ui name="Configure-Servers-Server-ACL">Home -> Configure -> Servers -> [pick a server] -> ACL</ui>
+<ui name="Configure-Servers-Server-ACL(modify)">Home -> Configure -> Servers -> [pick a server] -> ACL (modify)</ui>
+<ui name="Configure-Servers-Server-ACL(view)">Home -> Configure -> Servers -> [pick a server] -> ACL (view)</ui>
+
+<ui name="Configure-Zimlets-Zimlet-ACL">Home -> Configure -> Zimlets -> [pick a zimlet] -> ACL</ui>
+<ui name="Configure-Zimlets-Zimlet-ACL(modify)">Home -> Configure -> Zimlets -> [pick a zimlet] -> ACL (modify)</ui>
+<ui name="Configure-Zimlets-Zimlet-ACL(view)">Home -> Configure -> Zimlets -> [pick a zimlet] -> ACL (view)</ui>
+
+<ui name="Configure-AdminExtensions-AdminExtension-ACL">Home -> Configure -> Admin Extensions -> [pick an admin extension] -> ACL</ui>
+<ui name="Configure-AdminExtensions-AdminExtension-ACL(modify)">Home -> Configure -> Admin Extensions -> [pick an admin extension] -> ACL (modify)</ui>
+<ui name="Configure-AdminExtensions-AdminExtension-ACL(view)">Home -> Configure -> Admin Extensions -> [pick an admin extension] -> ACL (view)</ui>
+      
+<ui name="Configure-GlobalSettings-GeneralInfo">Home -> Configure -> Global Settings-> General Information</ui>
+<ui name="Configure-GlobalSettings-GeneralInfo(modify)">Home -> Configure -> Global Settings-> General Information (modify)</ui>
+<ui name="Configure-GlobalSettings-GeneralInfo(view)">Home -> Configure -> Global Settings-> General Information (view)</ui>
+      
+<ui name="Configure-GlobalSettings-Attachments">Home -> Configure -> Global Settings-> Attachments</ui>
+<ui name="Configure-GlobalSettings-Attachments(modify)">Home -> Configure -> Global Settings-> Attachments (modify)</ui>
+<ui name="Configure-GlobalSettings-Attachments(view)">Home -> Configure -> Global Settings-> Attachments (view)</ui>
+      
+<ui name="Configure-GlobalSettings-MTA">Home -> Configure -> Global Settings-> MTA</ui>
+<ui name="Configure-GlobalSettings-MTA(modify)">Home -> Configure -> Global Settings-> MTA (modify)</ui>
+<ui name="Configure-GlobalSettings-MTA(view)">Home -> Configure -> Global Settings-> MTA (view)</ui>
+     
+<ui name="Configure-GlobalSettings-IMAP">Home -> Configure -> Global Settings-> IMAP</ui>
+<ui name="Configure-GlobalSettings-IMAP(modify)">Home -> Configure -> Global Settings-> IMAP (modify)</ui>
+<ui name="Configure-GlobalSettings-IMAP(view)">Home -> Configure -> Global Settings-> IMAP (view)</ui>
+    
+<ui name="Configure-GlobalSettings-POP">Home -> Configure -> Global Settings-> POP</ui>
+<ui name="Configure-GlobalSettings-POP(modify)">Home -> Configure -> Global Settings-> POP (modify)</ui>
+<ui name="Configure-GlobalSettings-POP(view)">Home -> Configure -> Global Settings-> POP (view)</ui>
+      
+<ui name="Configure-GlobalSettings-AS/AV">Home -> Configure -> Global Settings-> AS/AV</ui>
+<ui name="Configure-GlobalSettings-AS/AV(modify)">Home -> Configure -> Global Settings-> AS/AV (modify)</ui>
+<ui name="Configure-GlobalSettings-AS/AV(view)">Home -> Configure -> Global Settings-> AS/AV (view)</ui>
+     
+<ui name="Configure-GlobalSettings-FreeBusyInterop">Home -> Configure -> Global Settings-> Free/Busy interop</ui>
+<ui name="Configure-GlobalSettings-FreeBusyInterop(modify)">Home -> Configure -> Global Settings-> Free/Busy interop (modify)</ui>
+<ui name="Configure-GlobalSettings-FreeBusyInterop(view)">Home -> Configure -> Global Settings-> Free/Busy interop (view)</ui>
+    
+<ui name="Configure-GlobalSettings-Themes">Home -> Configure -> Global Settings-> Themes</ui>
+<ui name="Configure-GlobalSettings-Themes(modify)">Home -> Configure -> Global Settings-> Themes (modify)</ui>
+<ui name="Configure-GlobalSettings-Themes(view)">Home -> Configure -> Global Settings-> Themes (view)</ui>
+    
+<ui name="Configure-GlobalSettings-BackupRestore">Home -> Configure -> Global Settings-> Backup/Restore</ui>
+<ui name="Configure-GlobalSettings-BackupRestore(modify)">Home -> Configure -> Global Settings-> Backup/Restore (modify)</ui>
+<ui name="Configure-GlobalSettings-BackupRestore(view)">Home -> Configure -> Global Settings-> Backup/Restore (view)</ui>
+    
+<ui name="Configure-GlobalSettings-ACL">Home -> Configure -> Global Settings-> ACL</ui>
+<ui name="Configure-GlobalSettings-ACL(modify)">Home -> Configure -> Global Settings-> ACL (modify)</ui>
+<ui name="Configure-GlobalSettings-ACL(view)">Home -> Configure -> Global Settings-> ACL (view)</ui>
+    
+<ui name="Configure-GlobalSettings-HSM">Home -> Configure -> Global Settings-> HSM</ui>
+<ui name="Configure-GlobalSettings-HSM(modify)">Home -> Configure -> Global Settings-> HSM (modify)</ui>
+<ui name="Configure-GlobalSettings-HSM(view)">Home -> Configure -> Global Settings-> HSM (view)</ui>
+    
+<ui name="Configure-GlobalSettings-License">Home -> Configure -> Global Settings-> License</ui>
+<ui name="Configure-GlobalSettings-License(modify)">Home -> Configure -> Global Settings-> License (modify)</ui>
+<ui name="Configure-GlobalSettings-License(view)">Home -> Configure -> Global Settings-> License (view)</ui>
+    
+<ui name="Manage-Accounts">Home -> Manage -> Accounts</ui>
+<ui name="Manage-Aliases">Home -> Manage -> Aliases</ui>
+<ui name="Manage-DistributionLists">Home -> Manage -> Distribution Lists</ui>
+<ui name="Manage-Resources">Home -> Manage -> Resources</ui>
+<ui name="Manage-COS">Home -> Configure -> Class of Service</ui>
+    
+<ui name="Monitor-ServerStatus">Home -> Monitor -> Server Status</ui>
+<ui name="Monitor-ServerStatistics">Home -> Monitor -> Server Statistics</ui>
+<ui name="Monitor-MailQueues">Home -> Monitor -> Mail Queues</ui>
+
+<ui name="Configure-Certificates">Home -> Configure -> Certificates</ui>
+<ui name="Configure-Domains">Home -> Configure -> Domains</ui>
+<ui name="Configure-Servers">Home -> Configure -> Servers</ui>
+<ui name="Configure-Zimlets">Home -> Configure -> Zimlets</ui>
+<ui name="Configure-Zimlets-Deploy">Home -> Configure -> Zimlets -> Deploy tool</ui>
+<ui name="Configure-AdminExtensions">Home -> Configure -> Admin Extensions</ui>
+<ui name="Configure-GlobalSettings">Home -> Configure -> Global Settings</ui>
+<ui name="Configure-Voice/Chat">Home -> Configure -> Voice/Chat Service</ui>
+   
+<ui name="Search-SavedSearches-SavedSearch-Edit">Home -> Search -> Saved Searches -> [pick a saved search] -> Edit</ui>
+  
+<ui name="ToolsAndMigration-AccountMigration">Home -> Tools and Migration -> Account Migration</ui>
+<ui name="ToolsAndMigration-Backups">Home -> Tools and Migration -> Backups</ui>
+<ui name="ToolsAndMigration-SearchMail">Home -> Tools and Migration -> Search Mail</ui>
+<ui name="ToolsAndMigration-SoftwareUpdates">Home -> Tools and Migration -> Software Updates</ui>
+<ui name="ToolsAndMigration-SoftwareUpdates(modify)">Home -> Tools and Migration -> Software Updates (modify)</ui>
+<ui name="ToolsAndMigration-SoftwareUpdates(view)">Home -> Tools and Migration -> Software Updates (view)</ui>
+
+<ui name="home">Home</ui>
+  
+</rights>

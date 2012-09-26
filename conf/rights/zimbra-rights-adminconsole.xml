@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
 <rights>
-
 
 <include file="zimbra-rights.xml"/>
 <include file="zimbra-rights-roles.xml"/>
+<include file="adminconsole-ui.xml"/>
+
 <!--
   =======================================================
     Admin Console Accounts List View
@@ -14,6 +14,7 @@
 <!-- Admin Console Accounts Info Tab -->
 <right name="setAdminConsoleAccountsInfoTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for accounts contact tab </desc>
+  <ui name="Manage-Accounts-Account-GeneralInfo(modify)"/>
   <attrs>
     <a n="givenName"/>
     <a n="initials"/>
@@ -36,6 +37,7 @@
 
 <right name="viewAdminConsoleAccountsInfoTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <ui name="Manage-Accounts-Account-GeneralInfo(view)"/>
   <attrs>
     <a n="givenName"/>
     <a n="initials"/>
@@ -59,8 +61,9 @@
   </attrs>
 </right>
 
-<right type="combo" name="adminConsoleAccountsInfoTabRights">
+<right name="adminConsoleAccountsInfoTabRights" type="combo">
   <desc> Admin Console rights for Accounts Info Tab </desc>
+  <ui name="Manage-Accounts-Account-GeneralInfo"/>
   <rights>
     <r n="setAdminConsoleAccountsInfoTab"/>
     <r n="viewAdminConsoleAccountsInfoTab"/>
@@ -75,6 +78,7 @@
 <!-- Admin Console Accounts Contact Tab -->
 <right name="setAdminConsoleAccountsContactTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for accounts contact tab </desc>
+  <ui name="Manage-Accounts-Account-ContactInfo(modify)"/>
   <attrs>
     <a n="telephoneNumber"/>
     <a n="homePhone"/>
@@ -93,6 +97,7 @@
 
 <right name="viewAdminConsoleAccountsContactTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <ui name="Manage-Accounts-Account-ContactInfo(view)"/>
   <attrs>
     <a n="telephoneNumber"/>
     <a n="homePhone"/>
@@ -111,6 +116,7 @@
 
 <right name="adminConsoleAccountsContactTabRights" type="combo">
   <desc> Admin Console rights for Accounts Contact Tab </desc>
+  <ui name="Manage-Accounts-Account-ContactInfo"/>
   <rights>
     <r n="setAdminConsoleAccountsContactTab"/>
     <r n="viewAdminConsoleAccountsContactTab"/>
@@ -128,6 +134,7 @@
 </right> -->
 <right name="adminConsoleAccountsMemberOfTabRights" type="combo">
   <desc> Admin Console rights for Accounts MemberOf Tab </desc>
+  <ui name="Manage-Accounts-Account-MemberOf"/>
   <rights>
     <r n="getAccountMembership"/>
   </rights>
@@ -136,18 +143,21 @@
 <!-- Admin Console Accounts Aliases Tab -->
 <right name="setAdminConsoleAccountsAliasesTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts Aliases Tab </desc>
+  <ui name="Manage-Accounts-Account-Aliases(modify)"/>
   <attrs>
     <a n="zimbraMailAlias"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleAccountsAliasesTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts Aliases Tab </desc>
+  <ui name="Manage-Accounts-Account-Aliases(view)"/>
   <attrs>
     <a n="zimbraMailAlias"/>
   </attrs>
 </right>
 <right name="adminConsoleAccountsAliasesTabRights" type="combo">
   <desc> Admin Console rights for Accounts Aliases Tab </desc>
+  <ui name="Manage-Accounts-Account-Aliases"/>
   <rights>
     <r n="setAdminConsoleAccountsAliasesTab"/>
     <r n="viewAdminConsoleAccountsAliasesTab"/>
@@ -161,6 +171,7 @@
 <!-- Admin Console Accounts Features Tab -->
 <right name="setAdminConsoleAccountsFeaturesTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts Features Tab </desc>
+  <ui name="Manage-Accounts-Account-Features(modify)"/>
   <attrs>
     <a n="zimbraImapEnabled"/>
     <a n="zimbraImapEnabled"/>
@@ -202,6 +213,7 @@
 </right>
 <right name="viewAdminConsoleAccountsFeaturesTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts Features Tab </desc>
+  <ui name="Manage-Accounts-Account-Features(view)"/>
   <attrs>
     <a n="zimbraImapEnabled"/>
     <a n="zimbraImapEnabled"/>
@@ -243,6 +255,7 @@
 </right>
 <right name="adminConsoleAccountsFeaturesTabRights" type="combo">
   <desc> Admin Console rights for Accounts Features Tab </desc>
+  <ui name="Manage-Accounts-Account-Features"/>
   <rights>
     <r n="setAdminConsoleAccountsFeaturesTab"/>
     <r n="viewAdminConsoleAccountsFeaturesTab"/>
@@ -252,6 +265,7 @@
 <!-- Admin Console Accounts Forwarding Tab -->
 <right name="setAdminConsoleAccountsForwardingTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts Forwarding Tab </desc>
+  <ui name="Manage-Accounts-Account-Forwarding(modify)"/>
   <attrs>
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraPrefMailLocalDeliveryDisabled"/>
@@ -262,6 +276,7 @@
 </right>
 <right name="viewAdminConsoleAccountsForwardingTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts Forwarding Tab </desc>
+  <ui name="Manage-Accounts-Account-Forwarding(view)"/>
   <attrs>
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraPrefMailLocalDeliveryDisabled"/>
@@ -272,6 +287,7 @@
 </right>
 <right name="adminConsoleAccountsForwardingTabRights" type="combo">
   <desc> Admin Console rights for Accounts Forwarding Tab </desc>
+  <ui name="Manage-Accounts-Account-Forwarding"/>
   <rights>
     <r n="setAdminConsoleAccountsForwardingTab"/>
     <r n="viewAdminConsoleAccountsForwardingTab"/>
@@ -282,6 +298,7 @@
 <!-- Admin Console Accounts Preferences Tab -->
 <right name="setAdminConsoleAccountsPreferencesTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts Preferences Tab </desc>
+  <ui name="Manage-Accounts-Account-Preferences(modify)"/>
   <attrs>
     <a n="zimbraPrefAppleIcalDelegationEnabled"/>
     <a n="zimbraPrefCalendarShowPastDueReminders"/>
@@ -359,6 +376,7 @@
 </right>
 <right name="viewAdminConsoleAccountsPreferencesTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts Preferences Tab </desc>
+  <ui name="Manage-Accounts-Account-Preferences(view)"/>
   <attrs>
     <a n="zimbraPrefAppleIcalDelegationEnabled"/>
     <a n="zimbraPrefCalendarShowPastDueReminders"/>
@@ -436,6 +454,7 @@
 </right>
 <right name="adminConsoleAccountsPreferencesTabRights" type="combo">
   <desc> Admin Console rights for Accounts Preferences Tab </desc>
+  <ui name="Manage-Accounts-Account-Preferences"/>
   <rights>
     <r n="setAdminConsoleAccountsPreferencesTab"/>
     <r n="viewAdminConsoleAccountsPreferencesTab"/>
@@ -445,18 +464,21 @@
 <!-- Admin Console Accounts FreeBusyInterop Tab -->
 <right name="setAdminConsoleAccountsFreeBusyInteropTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts FreeBusyInterop Tab </desc>
+  <ui name="Manage-Accounts-Account-FreeBusyInterop(modify)"/>
   <attrs>
     <a n="zimbraForeignPrincipal"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleAccountsFreeBusyInteropTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts FreeBusyInterop Tab </desc>
+  <ui name="Manage-Accounts-Account-FreeBusyInterop(view)"/>
   <attrs>
     <a n="zimbraForeignPrincipal"/>
   </attrs>
 </right>
 <right name="adminConsoleAccountsFreeBusyInteropTabRights" type="combo">
   <desc> Admin Console rights for Accounts FreeBusyInterop Tab </desc>
+  <ui name="Manage-Accounts-Account-FreeBusyInterop"/>
   <rights>
     <r n="setAdminConsoleAccountsFreeBusyInteropTab"/>
     <r n="viewAdminConsoleAccountsFreeBusyInteropTab"/>
@@ -466,6 +488,7 @@
 <!-- Admin Console Accounts Themes Tab -->
 <right name="setAdminConsoleAccountsThemesTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts Themes Tab </desc>
+  <ui name="Manage-Accounts-Account-Themes(modify)"/>
   <attrs>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraAvailableSkin"/>
@@ -473,6 +496,7 @@
 </right>
 <right name="viewAdminConsoleAccountsThemesTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts Themes Tab </desc>
+  <ui name="Manage-Accounts-Account-Themes(view)"/>
   <attrs>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraAvailableSkin"/>
@@ -480,6 +504,7 @@
 </right>
 <right name="adminConsoleAccountsThemesTabRights" type="combo">
   <desc> Admin Console rights for Accounts Themes Tab </desc>
+  <ui name="Manage-Accounts-Account-Themes"/>
   <rights>
     <r n="setAdminConsoleAccountsThemesTab"/>
     <r n="viewAdminConsoleAccountsThemesTab"/>
@@ -489,18 +514,21 @@
 <!-- Admin Console Accounts Zimlets Tab -->
 <right name="setAdminConsoleAccountsZimletsTab" type="setAttrs" targetType="account">
   <desc> Admin Console set attr rights for Accounts Zimlets Tab </desc>
+  <ui name="Manage-Accounts-Account-Zimlets(modify)"/>
   <attrs>
     <a n="zimbraZimletAvailableZimlets"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleAccountsZimletsTab" type="getAttrs" targetType="account">
   <desc> Admin Console view attr rights for Accounts Zimlets Tab </desc>
+  <ui name="Manage-Accounts-Account-Zimlets(view)"/>
   <attrs>
     <a n="zimbraZimletAvailableZimlets"/>
   </attrs>
 </right>
 <right name="adminConsoleAccountsZimletsTabRights" type="combo">
   <desc> Admin Console rights for Accounts Zimlets Tab </desc>
+  <ui name="Manage-Accounts-Account-Zimlets"/>
   <rights>
     <r n="setAdminConsoleAccountsZimletsTab"/>
     <r n="viewAdminConsoleAccountsZimletsTab"/>
@@ -585,18 +613,21 @@
 <!-- Admin Console Accounts ACL Tab -->
   <right name="setAdminConsoleAccountsACLTab" type="setAttrs" targetType="account">
     <desc> Admin Console set attr rights for Account ACL Tab </desc>
+    <ui name="Manage-Accounts-Account-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleAccountsACLTab" type="getAttrs" targetType="account">
     <desc> Admin Console view attr rights for Account ACL Tab </desc>
+    <ui name="Manage-Accounts-Account-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleAccountsACLTabRights" type="combo">
     <desc> Admin Console rights for Account ACL Tab </desc>
+    <ui name="Manage-Accounts-Account-ACL"/>
     <rights>
       <r n="setAdminConsoleAccountsACLTab"/>
       <r n="viewAdminConsoleAccountsACLTab"/>
@@ -619,6 +650,7 @@
 <!-- Admin Console DL Members Tab -->
 <right name="setAdminConsoleDLMembersTab" type="setAttrs" targetType="dl">
   <desc> Admin Console set attr rights for DL Members Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Members(modify)"/>
   <attrs>
     <a n="cn"/>
     <a n="displayName"/>
@@ -631,6 +663,7 @@
 </right>
 <right name="viewAdminConsoleDLMembersTab" type="getAttrs" targetType="dl">
   <desc> Admin Console view attr rights for DL Members Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Members(view)"/>
   <attrs>
     <a n="cn"/>
     <a n="displayName"/>
@@ -647,6 +680,7 @@
 </right>
 <right name="adminConsoleDLMembersTabRights" type="combo">
   <desc> Admin Console rights for DL Members Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Members"/>
   <rights>
     <r n="setAdminConsoleDLMembersTab"/>
     <r n="viewAdminConsoleDLMembersTab"/>
@@ -659,21 +693,25 @@
     <r n="removeDistributionListAlias"/>
   </rights>
 </right>
+
 <!-- Admin Console DL Notes Tab -->
 <right name="setAdminConsoleDLNotesTab" type="setAttrs" targetType="dl">
   <desc> Admin Console set attr rights for DL Notes Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Notes(modify)"/>
   <attrs>
     <a n="zimbraNotes"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleDLNotesTab" type="getAttrs" targetType="dl">
   <desc> Admin Console view attr rights for DL Notes Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Notes(view)"/>
   <attrs>
     <a n="zimbraNotes"/>
   </attrs>
 </right>
 <right name="adminConsoleDLNotesTabRights" type="combo">
   <desc> Admin Console rights for DL Notes Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Notes"/>
   <rights>
     <r n="setAdminConsoleDLNotesTab"/>
     <r n="viewAdminConsoleDLNotesTab"/>
@@ -691,18 +729,21 @@
 <!-- Admin Console DL Aliases Tab -->
 <right name="setAdminConsoleDLAliasesTab" type="setAttrs" targetType="dl">
   <desc> Admin Console set attr rights for DL Aliases Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Aliases(modify)"/>
   <attrs>
     <a n="zimbraMailAlias"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleDLAliasesTab" type="getAttrs" targetType="dl">
   <desc> Admin Console view attr rights for DL Aliases Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Aliases(view)"/>
   <attrs>
     <a n="zimbraMailAlias"/>
   </attrs>
 </right>
 <right name="adminConsoleDLAliasesTabRights" type="combo">
   <desc> Admin Console rights for DL Aliases Tab </desc>
+  <ui name="Manage-DistributionLists-DistributionList-Aliases"/>
   <rights>
     <r n="setAdminConsoleDLAliasesTab"/>
     <r n="viewAdminConsoleDLAliasesTab"/>
@@ -733,31 +774,34 @@
   <rights>
     <r n="setAdminConsoleDLSharesTab"/>
     <r n="viewAdminConsoleDLSharesTab"/>
-    <r n="getDistributionListShareInfo"/>
-    <r n="publishDistributionListShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console DL ACL Tab -->
   <right name="setAdminConsoleDLACLTab" type="setAttrs" targetType="dl">
     <desc> Admin Console set attr rights for DL ACL Tab </desc>
+    <ui name="Manage-DistributionLists-DistributionList-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleDLACLTab" type="getAttrs" targetType="dl">
     <desc> Admin Console view attr rights for DL ACL Tab </desc>
+    <ui name="Manage-DistributionLists-DistributionList-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleDLACLTabRights" type="combo">
     <desc> Admin Console rights for DL ACL Tab </desc>
+    <ui name="Manage-DistributionLists-DistributionList-ACL"/>
     <rights>
       <r n="setAdminConsoleDLACLTab"/>
       <r n="viewAdminConsoleDLACLTab"/>
     </rights>
   </right>
 <!-- Admin Console DL Admin View Tab -->
+
+
 <!--
   =======================================================
     Admin Console Resource List View
@@ -766,6 +810,7 @@
 <!-- Admin Console Resources Properties Tab -->
 <right name="setAdminConsoleResourcesPropertiesTab" type="setAttrs" targetType="calresource">
   <desc> Admin Console set attr rights for Resources Properties Tab </desc>
+  <ui name="Manage-Resources-Resource-Properties(modify)"/>
   <attrs>
     <a n="displayName"/>
     <a n="zimbraMailStatus"/>
@@ -799,6 +844,7 @@
 </right>
 <right name="viewAdminConsoleResourcesPropertiesTab" type="getAttrs" targetType="calresource">
   <desc> Admin Console view attr rights for Resources Properties Tab </desc>
+  <ui name="Manage-Resources-Resource-Properties(view)"/>
   <attrs>
     <a n="displayName"/>
     <a n="zimbraId"/>
@@ -834,6 +880,7 @@
 </right>
 <right name="adminConsoleResourcesPropertiesTabRights" type="combo">
   <desc> Admin Console rights for Resources Properties Tab </desc>
+  <ui name="Manage-Resources-Resource-Properties"/>
   <rights>
     <r n="setAdminConsoleResourcesPropertiesTab"/>
     <r n="viewAdminConsoleResourcesPropertiesTab"/>
@@ -844,12 +891,12 @@
     <r n="renameCalendarResource"/>
     <r n="deleteCalendarResource"/>
     <r n="setCalendarResourcePassword"/>
-    <r n="getCalendarResourceShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console Resources Location/Contact Tab -->
 <right name="setAdminConsoleResourcesContactTab" type="setAttrs" targetType="calresource">
   <desc> Admin Console set attr rights for Resources Contact Tab </desc>
+  <ui name="Manage-Resources-Resource-LocationAndContactInfo(modify)"/>
   <attrs>
     <a n="zimbraCalResLocationDisplayName"/>
     <a n="zimbraCalResSite"/>
@@ -871,6 +918,7 @@
 </right>
 <right name="viewAdminConsoleResourcesContactTab" type="getAttrs" targetType="calresource">
   <desc> Console view attr rights for Resources Contact Tab </desc>
+  <ui name="Manage-Resources-Resource-LocationAndContactInfo(view)"/>
   <attrs>
     <a n="zimbraCalResLocationDisplayName"/>
     <a n="zimbraCalResSite"/>
@@ -892,6 +940,7 @@
 </right>
 <right name="adminConsoleResourcesContactTabRights" type="combo">
   <desc> Admin Console rights for Resources Contact Tab </desc>
+  <ui name="Manage-Resources-Resource-LocationAndContactInfo"/>
   <rights>
     <r n="setAdminConsoleResourcesContactTab"/>
     <r n="viewAdminConsoleResourcesContactTab"/>
@@ -906,6 +955,7 @@
   <!-- Admin Console General Info Tab -->
   <right name="viewAdminConsoleCOSInfoTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS General Info Tab </desc>
+    <ui name="Configure-COSes-COS-GeneralInfo(view)"/>
     <attrs>
       <a n="cn"/>
       <a n="description"/>
@@ -914,6 +964,7 @@
   </right>
   <right name="setAdminConsoleCOSInfoTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS General Info Tab </desc>
+    <ui name="Configure-COSes-COS-GeneralInfo(modify)"/>
     <attrs>
       <a n="cn"/>
       <a n="description"/>
@@ -922,6 +973,7 @@
   </right>
   <right name="adminConsoleCOSInfoTabRights" type="combo">
     <desc> Admin Console rights for COS General Info Tab </desc>
+    <ui name="Configure-COSes-COS-GeneralInfo"/>
     <rights>
       <r n="setAdminConsoleCOSInfoTab"/>
       <r n="viewAdminConsoleCOSInfoTab"/>
@@ -931,6 +983,7 @@
   <!-- Admin Console Features Tab -->
   <right name="viewAdminConsoleCOSFeaturesTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS General Features Tab </desc>
+    <ui name="Configure-COSes-COS-Features(view)"/>
     <attrs>
       <!-- Major Features -->
       <a n="zimbraFeatureMailEnabled"/>
@@ -1003,6 +1056,7 @@
   </right>
   <right name="setAdminConsoleCOSFeaturesTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS General Features Tab </desc>
+    <ui name="Configure-COSes-COS-Features(modify)"/>
     <attrs>
       <!-- Major Features -->
       <a n="zimbraFeatureMailEnabled"/>
@@ -1075,6 +1129,7 @@
   </right>
   <right name="adminConsoleCOSFeaturesTabRights" type="combo">
     <desc> Admin Console rights for COS General Features Tab </desc>
+    <ui name="Configure-COSes-COS-Features"/>
     <rights>
       <r n="setAdminConsoleCOSFeaturesTab"/>
       <r n="viewAdminConsoleCOSFeaturesTab"/>
@@ -1084,6 +1139,7 @@
   <!-- Admin Console Preferences Tab -->
   <right name="viewAdminConsoleCOSPreferencesTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS General Preferences Tab </desc>
+    <ui name="Configure-COSes-COS-Preferences(view)"/>
     <attrs>
       <!-- General Options -->
       <a n="zimbraPrefClientType"/>
@@ -1161,6 +1217,7 @@
   </right>
   <right name="setAdminConsoleCOSPreferencesTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS General Preferences Tab </desc>
+    <ui name="Configure-COSes-COS-Preferences(modify)"/>
     <attrs>
       <!-- General Options -->
       <a n="zimbraPrefClientType"/>
@@ -1236,6 +1293,7 @@
   </right>
   <right name="adminConsoleCOSPreferencesTabRights" type="combo">
     <desc> Admin Console rights for COS General Preferences Tab </desc>
+    <ui name="Configure-COSes-COS-Preferences"/>
     <rights>
       <r n="setAdminConsoleCOSPreferencesTab"/>
       <r n="viewAdminConsoleCOSPreferencesTab"/>
@@ -1244,6 +1302,7 @@
   <!-- Admin Console Themes Tab -->
   <right name="viewAdminConsoleCOSThemesTab" type="setAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS Themes Tab </desc>
+    <ui name="Configure-COSes-COS-Themes(view)"/>
     <attrs>
       <a n="zimbraPrefSkin"/>
       <a n="zimbraAvailableSkin"/>
@@ -1251,6 +1310,7 @@
   </right>
   <right name="setAdminConsoleCOSThemesTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS Themes Tab </desc>
+    <ui name="Configure-COSes-COS-Themes(modify)"/>
     <attrs>
       <a n="zimbraPrefSkin"/>
       <a n="zimbraAvailableSkin"/>
@@ -1258,6 +1318,7 @@
   </right>
   <right name="adminConsoleCOSThemesTabRights" type="combo">
     <desc> Admin Console rights for COS Themes Tab </desc>
+    <ui name="Configure-COSes-COS-Themes"/>
     <rights>
       <r n="setAdminConsoleCOSThemesTab"/>
       <r n="viewAdminConsoleCOSThemesTab"/>
@@ -1266,18 +1327,21 @@
   <!-- Admin Console Zimlets Tab -->
   <right name="setAdminConsoleCOSZimletsTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS Zimlets Tab </desc>
+    <ui name="Configure-COSes-COS-Zimlets(modify)"/>
     <attrs>
       <a n="zimbraZimletAvailableZimlets"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleCOSZimletsTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS Zimlets Tab </desc>
+    <ui name="Configure-COSes-COS-Zimlets(view)"/>
     <attrs>
       <a n="zimbraZimletAvailableZimlets"/>
     </attrs>
   </right>
   <right name="adminConsoleCOSZimletsTabRights" type="combo">
     <desc> Admin Console rights for COS Zimlets Tab </desc>
+    <ui name="Configure-COSes-COS-Zimlets"/>
     <rights>
       <r n="setAdminConsoleCOSZimletsTab"/>
       <r n="viewAdminConsoleCOSZimletsTab"/>
@@ -1286,18 +1350,21 @@
   <!-- Admin Console Server Pool Tab -->
   <right name="setAdminConsoleCOSServerPoolTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS Server Pool Tab </desc>
+    <ui name="Configure-COSes-COS-ServerPool(modify)"/>
     <attrs>
       <a n="zimbraMailHostPool"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleCOSServerPoolTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS Server Pool Tab </desc>
+    <ui name="Configure-COSes-COS-ServerPool(view)"/>
     <attrs>
       <a n="zimbraMailHostPool"/>
     </attrs>
   </right>
   <right name="adminConsoleCOSServerPoolTabRights" type="combo">
     <desc> Admin Console rights for COS Server Pool Tab </desc>
+    <ui name="Configure-COSes-COS-ServerPool"/>
     <rights>
       <r n="setAdminConsoleCOSServerPoolTab"/>
       <r n="viewAdminConsoleCOSServerPoolTab"/>
@@ -1307,6 +1374,7 @@
   <!-- Admin Console Advanced Tab -->
   <right name="setAdminConsoleCOSAdvancedTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS Advanced Tab </desc>
+    <ui name="Configure-COSes-COS-Advanced(modify)"/>
     <attrs>
       <!-- Attachment Settings -->
       <a n="zimbraAttachmentsBlocked"/>
@@ -1349,6 +1417,7 @@
   </right>
   <right name="viewAdminConsoleCOSAdvancedTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS Advanced Tab </desc>
+    <ui name="Configure-COSes-COS-Advanced(view)"/>
     <attrs>
       <!-- Attachment Settings -->
       <a n="zimbraAttachmentsBlocked"/>
@@ -1391,6 +1460,7 @@
   </right>
   <right name="adminConsoleCOSAdvancedTabRights" type="combo">
     <desc> Admin Console rights for COS Advanced Tab </desc>
+    <ui name="Configure-COSes-COS-Advanced"/>
     <rights>
       <r n="setAdminConsoleCOSAdvancedTab"/>
       <r n="viewAdminConsoleCOSAdvancedTab"/>
@@ -1400,18 +1470,21 @@
   <!-- Admin Console ACL Tab -->
   <right name="setAdminConsoleCOSACLTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS ACL Tab </desc>
+    <ui name="Configure-COSes-COS-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleCOSACLTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS ACL Tab </desc>
+    <ui name="Configure-COSes-COS-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleCOSACLTabRights" type="combo">
     <desc> Admin Console rights for COS ACL Tab </desc>
+    <ui name="Configure-COSes-COS-ACL"/>
     <rights>
       <r n="setAdminConsoleCOSACLTab"/>
       <r n="viewAdminConsoleCOSACLTab"/>
@@ -1421,6 +1494,7 @@
   <!-- Admin Console Zimbra Mobile Tab -->
   <right name="setAdminConsoleCOSMobileTab" type="setAttrs" targetType="cos">
     <desc> Admin Console set attr rights for COS Mobile Tab </desc>
+    <ui name="Configure-COSes-COS-MobileAccess(modify)"/>
     <attrs>
       <a n="zimbraFeatureMobileSyncEnabled"/>
       <a n="zimbraFeatureMobilePolicyEnabled"/>
@@ -1442,6 +1516,7 @@
   </right>
   <right name="viewAdminConsoleCOSMobileTab" type="getAttrs" targetType="cos">
     <desc> Admin Console view attr rights for COS Mobile Tab </desc>
+    <ui name="Configure-COSes-COS-MobileAccess(view)"/>
     <attrs>
       <a n="zimbraFeatureMobileSyncEnabled"/>
       <a n="zimbraFeatureMobilePolicyEnabled"/>
@@ -1463,6 +1538,7 @@
   </right>
   <right name="adminConsoleCOSMobileTabRights" type="combo">
     <desc> Admin Console rights for COS Mobile Tab </desc>
+    <ui name="Configure-COSes-COS-MobileAccess"/>
     <rights>
       <r n="setAdminConsoleCOSMobileTab"/>
       <r n="viewAdminConsoleCOSMobileTab"/>
@@ -1473,6 +1549,7 @@
   <!-- Admin Console Domain General Info Tab -->
   <right name="setAdminConsoleDomainInfoTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain Info Tab </desc>
+    <ui name="Configure-Domains-Domain-GeneralInfo(modify)"/>
     <attrs>
       <a n="zimbraDomainName"/>
       <a n="description"/>
@@ -1487,6 +1564,7 @@
   </right>
   <right name="viewAdminConsoleDomainInfoTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain Info Tab </desc>
+    <ui name="Configure-Domains-Domain-GeneralInfo(view)"/>
     <attrs>
       <a n="zimbraDomainName"/>
       <a n="zimbraDomainType"/>  
@@ -1502,6 +1580,7 @@
   </right>
   <right name="adminConsoleDomainInfoTabRights" type="combo">
     <desc> Admin Console rights for Domain Info Tab </desc>
+    <ui name="Configure-Domains-Domain-GeneralInfo"/>
     <rights>
       <r n="setAdminConsoleDomainInfoTab"/>
       <r n="viewAdminConsoleDomainInfoTab"/>
@@ -1511,6 +1590,7 @@
   <!-- Admin Console Domain GAL Tab -->
   <right name="setAdminConsoleDomainGALTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain GAL Tab </desc>
+    <ui name="Configure-Domains-Domain-GAL-configure(modify)"/>
     <attrs>
       <a n="zimbraGalMode"/>
       <a n="zimbraGalMaxResults"/>    
@@ -1518,6 +1598,7 @@
   </right>
   <right name="viewAdminConsoleDomainGALTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain GAL Tab </desc>
+    <ui name="Configure-Domains-Domain-GAL-configure(view)"/>
     <attrs>
       <a n="zimbraGalMode"/>
       <a n="zimbraGalMaxResults"/>
@@ -1525,28 +1606,61 @@
   </right>
   <right name="adminConsoleDomainGALTabRights" type="combo">
     <desc> Admin Console rights for Domain GAL Tab </desc>
+    <ui name="Configure-Domains-Domain-GAL-configure"/>
     <rights>
       <r n="setAdminConsoleDomainGALTab"/>
       <r n="viewAdminConsoleDomainGALTab"/>
       <r n="configureExternalGAL"/>
     </rights>
   </right>
+  
+  <right name="adminConsoleCreateGALRights" type="setAttrs" targetType="account">
+    <desc> Admin Console set attr rights for create GAL sync account </desc>
+    <ui name="Configure-Domains-Domain-GAL"/>
+	<attrs>
+	  <a n="zimbraIsSystemResource"/>
+	  <a n="zimbraContactMaxNumEntries"/>
+	</attrs>
+  </right>
+
+  <right name="adminConsoleConfigGALRights" type="setAttrs" targetType="domain">
+    <desc> Admin Console set attr rights for configure GAL </desc>
+    <ui name="Configure-Domains-Domain-GAL-configure(modify)"/>
+	<attrs>
+	  <a n="zimbraGalAccountId"/>
+	  <a n="zimbraGalMode"/>
+	  <a n="zimbraGalLdapURL"/>
+	  <a n="zimbraGalLdapSearchBase"/>
+	  <a n="zimbraGalLdapBindDn"/>
+	  <a n="zimbraGalLdapBindPassword"/>
+	  <a n="zimbraGalLdapFilter"/>
+	  <a n="zimbraGalAutoCompleteLdapFilter"/>
+	  <a n="zimbraGalSyncLdapURL"/>
+	  <a n="zimbraGalSyncLdapBindPassword"/>
+	  <a n="zimbraGalSyncLdapBindDn"/>
+	  <a n="zimbraGalSyncLdapFilter"/>
+	  <a n="zimbraGalSyncLdapSearchBase"/>
+	</attrs>
+  </right>
 
   <!-- Admin Console Domain Authentication Tab -->
   <right name="setAdminConsoleDomainAuthenticationTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain Authentication Tab </desc>
+    <ui name="Configure-Domains-Domain-Authentication(modify)"/>
     <attrs>
       <a n="zimbraAuthMech"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleDomainAuthenticationTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain Authentication Tab </desc>
+    <ui name="Configure-Domains-Domain-Authentication(view)"/>
     <attrs>
       <a n="zimbraAuthMech"/>
     </attrs>
   </right>
   <right name="adminConsoleDomainAuthenticationTabRights" type="combo">
     <desc> Admin Console rights for Domain Authentication Tab </desc>
+    <ui name="Configure-Domains-Domain-Authentication"/>
     <rights>
       <r n="setAdminConsoleDomainAuthenticationTab"/>
       <r n="viewAdminConsoleDomainAuthenticationTab"/>
@@ -1557,18 +1671,21 @@
   <!-- Admin Console Domain Virtual Hosts Tab -->
   <right name="setAdminConsoleDomainVirtualHostsTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain VirtualHosts Tab </desc>
+    <ui name="Configure-Domains-Domain-VirtualHosts(modify)"/>
     <attrs>
       <a n="zimbraVirtualHostname"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleDomainVirtualHostsTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain VirtualHosts Tab </desc>
+    <ui name="Configure-Domains-Domain-VirtualHosts(view)"/>
     <attrs>
       <a n="zimbraVirtualHostname"/>
     </attrs>
   </right>
   <right name="adminConsoleDomainVirtualHostsTabRights" type="combo">
     <desc> Admin Console rights for Domain VirtualHosts Tab </desc>
+    <ui name="Configure-Domains-Domain-VirtualHosts"/>
     <rights>
       <r n="setAdminConsoleDomainVirtualHostsTab"/>
       <r n="viewAdminConsoleDomainVirtualHostsTab"/>
@@ -1600,6 +1717,7 @@
   <!-- Admin Console Domain Freebusy Tab -->
   <right name="setAdminConsoleDomainFreebusyTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain Freebusy Tab </desc>
+    <ui name="Configure-Domains-Domain-FreeBusyInterop(modify)"/>
     <attrs>
       <a n="zimbraFreebusyExchangeURL"/>
       <a n="zimbraFreebusyExchangeAuthScheme"/>
@@ -1610,6 +1728,7 @@
   </right>
   <right name="viewAdminConsoleDomainFreebusyTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain Freebusy Tab </desc>
+    <ui name="Configure-Domains-Domain-FreeBusyInterop(view)"/>
     <attrs>
       <a n="zimbraFreebusyExchangeURL"/>
       <a n="zimbraFreebusyExchangeAuthScheme"/>
@@ -1620,6 +1739,7 @@
   </right>
   <right name="adminConsoleDomainFreebusyTabRights" type="combo">
     <desc> Admin Console rights for Domain Freebusy Tab </desc>
+    <ui name="Configure-Domains-Domain-FreeBusyInterop"/>
     <rights>
       <r n="setAdminConsoleDomainFreebusyTab"/>
       <r n="viewAdminConsoleDomainFreebusyTab"/>
@@ -1630,18 +1750,21 @@
   <!-- Admin Console Domain Zimlets Tab -->
   <right name="setAdminConsoleDomainZimletsTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain Zimlets Tab </desc>
+    <ui name="Configure-Domains-Domain-Zimlets(modify)"/>
     <attrs>
       <a n="zimbraZimletDomainAvailableZimlets"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleDomainZimletsTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain Zimlets Tab </desc>
+    <ui name="Configure-Domains-Domain-Zimlets(view)"/>
     <attrs>
       <a n="zimbraZimletDomainAvailableZimlets"/>
     </attrs>
   </right>
   <right name="adminConsoleDomainZimletsTabRights" type="combo">
     <desc> Admin Console rights for Domain Zimlets Tab </desc>
+    <ui name="Configure-Domains-Domain-Zimlets"/>
     <rights>
       <r n="setAdminConsoleDomainZimletsTab"/>
       <r n="viewAdminConsoleDomainZimletsTab"/>
@@ -1651,6 +1774,7 @@
   <!-- Admin Console Domain Themes Tab -->
   <right name="setAdminConsoleDomainThemesTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain Themes Tab </desc>
+    <ui name="Configure-Domains-Domain-Themes(modify)"/>
     <attrs>
       <a n="zimbraSkinForegroundColor"/>
       <a n="zimbraSkinBackgroundColor"/>
@@ -1663,6 +1787,7 @@
   </right>
   <right name="viewAdminConsoleDomainThemesTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain Themes Tab </desc>
+    <ui name="Configure-Domains-Domain-Themes(view)"/>
     <attrs>
       <a n="zimbraSkinForegroundColor"/>
       <a n="zimbraSkinBackgroundColor"/>
@@ -1675,6 +1800,7 @@
   </right>
   <right name="adminConsoleDomainThemesTabRights" type="combo">
     <desc> Admin Console rights for Domain Themes Tab </desc>
+    <ui name="Configure-Domains-Domain-Themes"/>
     <rights>
       <r n="setAdminConsoleDomainThemesTab"/>
       <r n="viewAdminConsoleDomainThemesTab"/>
@@ -1686,6 +1812,7 @@
   <!-- Admin Console Domain Account Limits Tab -->
   <right name="setAdminConsoleDomainLimitsTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain Limits Tab </desc>
+    <ui name="Configure-Domains-Domain-AccountLimits(modify)"/>
     <attrs>
       <a n="zimbraDomainMaxAccounts"/>
       <a n="zimbraDomainCOSMaxAccounts"/>
@@ -1693,6 +1820,7 @@
   </right>
   <right name="viewAdminConsoleDomainLimitsTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain Limits Tab </desc>
+    <ui name="Configure-Domains-Domain-AccountLimits(view)"/>
     <attrs>
       <a n="zimbraDomainMaxAccounts"/>
       <a n="zimbraDomainCOSMaxAccounts"/>
@@ -1700,6 +1828,7 @@
   </right>
   <right name="adminConsoleDomainLimitsTabRights" type="combo">
     <desc> Admin Console rights for Domain Limits Tab </desc>
+    <ui name="Configure-Domains-Domain-AccountLimits"/>
     <rights>
       <r n="setAdminConsoleDomainLimitsTab"/>
       <r n="viewAdminConsoleDomainLimitsTab"/>
@@ -1709,18 +1838,21 @@
   <!-- Admin Console Domain ACL Tab -->
   <right name="setAdminConsoleDomainACLTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Domain ACL Tab </desc>
+    <ui name="Configure-Domains-Domain-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleDomainACLTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Domain ACL Tab </desc>
+    <ui name="Configure-Domains-Domain-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleDomainACLTabRights" type="combo">
     <desc> Admin Console rights for Domain ACL Tab </desc>
+    <ui name="Configure-Domains-Domain-ACL"/>
     <rights>
       <r n="setAdminConsoleDomainACLTab"/>
       <r n="viewAdminConsoleDomainACLTab"/>
@@ -1731,6 +1863,7 @@
   <!-- Admin Console Server General Info Tab -->
   <right name="setAdminConsoleServerInfoTab" type="setAttrs" targetType="server">
     <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-GeneralInfo(modify)"/>
     <attrs>
       <a n="cn"/>
       <a n="description"/>
@@ -1745,6 +1878,7 @@
   </right>
   <right name="viewAdminConsoleServerInfoTab" type="getAttrs" targetType="server">
     <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-GeneralInfo(view)"/>
     <attrs>
       <a n="cn"/>
       <a n="description"/>
@@ -1759,6 +1893,7 @@
   </right>
   <right name="adminConsoleServerInfoTabRights" type="combo">
     <desc> Admin Console rights for Server Info Tab </desc>
+    <ui name="Configure-Servers-Server-GeneralInfo"/>
     <rights>
       <r n="setAdminConsoleServerInfoTab"/>
       <r n="viewAdminConsoleServerInfoTab"/>
@@ -1768,12 +1903,14 @@
   <!-- Admin Console Server Services Tab -->
   <right name="setAdminConsoleServerServicesTab" type="setAttrs" targetType="server">
     <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-Services(modify)"/>
     <attrs>
       <a n="zimbraServiceEnabled"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleServerServicesTab" type="getAttrs" targetType="server">
     <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-Services(view)"/>
     <attrs>
       <a n="zimbraServiceEnabled"/>
       <a n="zimbraServiceInstalled"/>
@@ -1781,6 +1918,7 @@
   </right>
   <right name="adminConsoleServerServicesTabRights" type="combo">
     <desc> Admin Console rights for Server Services Tab </desc>
+    <ui name="Configure-Servers-Server-Services"/>
     <rights>
       <r n="setAdminConsoleServerServicesTab"/>
       <r n="viewAdminConsoleServerServicesTab"/>
@@ -1790,6 +1928,7 @@
   <!-- Admin Console Server MTA Tab -->
   <right name="setAdminConsoleServerMTATab" type="setAttrs" targetType="server">
     <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-MTA(modify)"/>
     <attrs>
       <a n="zimbraMtaAuthEnabled"/>
       <a n="zimbraMtaTlsAuthOnly"/>
@@ -1803,6 +1942,7 @@
   </right>
   <right name="viewAdminConsoleServerMTATab" type="getAttrs" targetType="server">
     <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-MTA(view)"/>
     <attrs>
       <a n="zimbraMtaAuthEnabled"/>
       <a n="zimbraMtaTlsAuthOnly"/>
@@ -1816,6 +1956,7 @@
   </right>
   <right name="adminConsoleServerMTATabRights" type="combo">
     <desc> Admin Console rights for Server MTA Tab </desc>
+    <ui name="Configure-Servers-Server-MTA"/>
     <rights>
       <r n="setAdminConsoleServerMTATab"/>
       <r n="viewAdminConsoleServerMTATab"/>
@@ -1825,6 +1966,7 @@
   <!-- Admin Console Server IMAP Tab -->
   <right name="setAdminConsoleServerIMAPTab" type="setAttrs" targetType="server">
     <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-IMAP(modify)"/>
     <attrs>
       <a n="zimbraImapServerEnabled"/>
       <a n="zimbraImapSSLServerEnabled"/>
@@ -1838,6 +1980,7 @@
   </right>
   <right name="viewAdminConsoleServerIMAPTab" type="getAttrs" targetType="server">
     <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-IMAP(view)"/>
     <attrs>
       <a n="zimbraImapServerEnabled"/>
       <a n="zimbraImapSSLServerEnabled"/>
@@ -1851,6 +1994,7 @@
   </right>
   <right name="adminConsoleServerIMAPTabRights" type="combo">
     <desc> Admin Console rights for Server IMAP Tab </desc>
+    <ui name="Configure-Servers-Server-IMAP"/>
     <rights>
       <r n="setAdminConsoleServerIMAPTab"/>
       <r n="viewAdminConsoleServerIMAPTab"/>
@@ -1860,6 +2004,7 @@
   <!-- Admin Console Server POP Tab -->
   <right name="setAdminConsoleServerPOPTab" type="setAttrs" targetType="server">
     <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-POP(modify)"/>
     <attrs>
       <a n="zimbraPop3ServerEnabled"/>
       <a n="zimbraPop3SSLServerEnabled"/>
@@ -1875,6 +2020,7 @@
   </right>
   <right name="viewAdminConsoleServerPOPTab" type="getAttrs" targetType="server">
     <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-POP(view)"/>
     <attrs>
       <a n="zimbraPop3ServerEnabled"/>
       <a n="zimbraPop3SSLServerEnabled"/>
@@ -1890,6 +2036,7 @@
   </right>
   <right name="adminConsoleServerPOPTabRights" type="combo">
     <desc> Admin Console rights for Server POP Tab </desc>
+    <ui name="Configure-Servers-Server-POP"/>
     <rights>
       <r n="setAdminConsoleServerPOPTab"/>
       <r n="viewAdminConsoleServerPOPTab"/>
@@ -1898,14 +2045,16 @@
 
   <!-- Admin Console Server Volumes Tab -->
   <right name="setAdminConsoleServerVolumesTab" type="setAttrs" targetType="server">
-    <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <desc> Admin Console set attr rights for Server Volumes Tab </desc>
+    <ui name="Configure-Servers-Server-Volumes(modify)"/>
     <attrs>
       <a n="zimbraHsmPolicy"/>
       <a n="zimbraHsmAge"/> <!-- deprecated -->
     </attrs>
   </right>
   <right name="viewAdminConsoleServerVolumesTab" type="getAttrs" targetType="server">
-    <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <desc> Admin Console view attr rights for Server Volumes Tab </desc>
+    <ui name="Configure-Servers-Server-Volumes(view)"/>
     <attrs>
       <a n="zimbraHsmPolicy"/>
       <a n="zimbraHsmAge"/>
@@ -1913,6 +2062,7 @@
   </right>
   <right name="adminConsoleServerVolumesTabRights" type="combo">
     <desc> Admin Console rights for Server Volumes Tab </desc>
+    <ui name="Configure-Servers-Server-Volumes"/>
     <rights>
       <r n="setAdminConsoleServerVolumesTab"/>
       <r n="viewAdminConsoleServerVolumesTab"/>
@@ -1924,7 +2074,8 @@
 
   <!-- Admin Console Server Backup/Restore Tab -->
   <right name="setAdminConsoleServerBackupRestoreTab" type="setAttrs" targetType="server">
-    <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <desc> Admin Console set attr rights for Server backup/restore Tab </desc>
+    <ui name="Configure-Servers-Server-BackupRestore(modify)"/>
     <attrs>
       <a n="zimbraBackupMode"/>
       <a n="zimbraBackupAutoGroupedInterval"/>
@@ -1933,7 +2084,8 @@
     </attrs>
   </right>
   <right name="viewAdminConsoleServerBackupRestoreTab" type="getAttrs" targetType="server">
-    <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <desc> Admin Console view attr rights for Server backup/restore Tab </desc>
+    <ui name="Configure-Servers-Server-BackupRestore(view)"/>
     <attrs>
       <a n="zimbraBackupMode"/>
       <a n="zimbraBackupAutoGroupedInterval"/>
@@ -1943,6 +2095,7 @@
   </right>
   <right name="adminConsoleServerBackupRestoreTabRights" type="combo">
     <desc> Admin Console rights for Server BackupRestore Tab </desc>
+    <ui name="Configure-Servers-Server-BackupRestore"/>
     <rights>
       <r n="setAdminConsoleServerBackupRestoreTab"/>
       <r n="viewAdminConsoleServerBackupRestoreTab"/>
@@ -1952,18 +2105,21 @@
   <!-- Admin Console Server ACL Tab -->
   <right name="setAdminConsoleServerACLTab" type="setAttrs" targetType="server">
     <desc> Admin Console set attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleServerACLTab" type="getAttrs" targetType="server">
     <desc> Admin Console view attr rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleServerACLTabRights" type="combo">
     <desc> Admin Console rights for Server ACL Tab </desc>
+    <ui name="Configure-Servers-Server-ACL"/>
     <rights>
       <r n="setAdminConsoleServerACLTab"/>
       <r n="viewAdminConsoleServerACLTab"/>
@@ -1975,18 +2131,21 @@
   <!-- Admin Console Zimlets ACL Tab -->
   <right name="setAdminConsoleZimletACLTab" type="setAttrs" targetType="zimlet">
     <desc> Admin Console set attr rights for Zimlet ACL Tab </desc>
+    <ui name="Configure-Zimlets-Zimlet-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleZimletACLTab" type="getAttrs" targetType="zimlet">
     <desc> Admin Console view attr rights for Zimlet ACL Tab </desc>
+    <ui name="Configure-Zimlets-Zimlet-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleZimletACLTabRights" type="combo">
     <desc> Admin Console rights for Zimlet ACL Tab </desc>
+    <ui name="Configure-Zimlets-Zimlet-ACL"/>
     <rights>
       <r n="setAdminConsoleZimletACLTab"/>
       <r n="viewAdminConsoleZimletACLTab"/>
@@ -1997,18 +2156,21 @@
   <!-- Admin Console Admin Extension ACL Tab  -->
   <right name="setAdminConsoleExtensionACLTab" type="setAttrs" targetType="domain">
     <desc> Admin Console set attr rights for Extensions ACL Tab </desc>
+    <ui name="Configure-AdminExtensions-AdminExtension-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleExtensionACLTab" type="getAttrs" targetType="domain">
     <desc> Admin Console view attr rights for Extensions ACL Tab </desc>
+    <ui name="Configure-AdminExtensions-AdminExtension-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleExtensionACLTabRights" type="combo">
     <desc> Admin Console rights for Extensions ACL Tab </desc>
+    <ui name="Configure-AdminExtensions-AdminExtension-ACL"/>
     <rights>
       <r n="setAdminConsoleExtensionACLTab"/>
       <r n="viewAdminConsoleExtensionACLTab"/>
@@ -2019,6 +2181,7 @@
   <!-- Admin Console Global Settings General Info Tab -->
   <right name="setAdminConsoleGlobalInfoTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for Global Info Tab </desc>
+    <ui name="Configure-GlobalSettings-GeneralInfo(modify)"/>
     <attrs>
       <a n="zimbraGalMaxResults"/>
       <a n="zimbraDefaultDomainName"/>
@@ -2029,6 +2192,7 @@
   </right>
   <right name="viewAdminConsoleGlobalInfoTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for Global Info Tab </desc>
+    <ui name="Configure-GlobalSettings-GeneralInfo(view)"/>
     <attrs>
       <a n="zimbraGalMaxResults"/>
       <a n="zimbraDefaultDomainName"/>
@@ -2039,6 +2203,7 @@
   </right>
   <right name="adminConsoleGlobalInfoTabRights" type="combo">
     <desc> Admin Console rights for Global Info Tab </desc>
+    <ui name="Configure-GlobalSettings-GeneralInfo"/>
     <rights>
       <r n="setAdminConsoleGlobalInfoTab"/>
       <r n="viewAdminConsoleGlobalInfoTab"/>
@@ -2048,6 +2213,7 @@
   <!-- Admin Console Global Settings Attachments Tab -->
   <right name="setAdminConsoleGlobalAttachmentsTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for Global Attachments Tab </desc>
+    <ui name="Configure-GlobalSettings-Attachments(modify)"/>
     <attrs>
       <a n="zimbraAttachmentsBlocked"/>
       <a n="zimbraMtaBlockedExtension"/>
@@ -2056,6 +2222,7 @@
   </right>
   <right name="viewAdminConsoleGlobalAttachmentsTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for Global Attachments Tab </desc>
+    <ui name="Configure-GlobalSettings-Attachments(view)"/>
     <attrs>
       <a n="zimbraAttachmentsBlocked"/>
       <a n="zimbraMtaBlockedExtension"/>
@@ -2064,6 +2231,7 @@
   </right>
   <right name="adminConsoleGlobalAttachmentsTabRights" type="combo">
     <desc> Admin Console rights for Global Attachments Tab </desc>
+    <ui name="Configure-GlobalSettings-Attachments"/>
     <rights>
       <r n="setAdminConsoleGlobalAttachmentsTab"/>
       <r n="viewAdminConsoleGlobalAttachmentsTab"/>
@@ -2073,6 +2241,7 @@
   <!-- Admin Console Global Settings MTA Tab -->
   <right name="setAdminConsoleGlobalMTATab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for Global MTA Tab </desc>
+    <ui name="Configure-GlobalSettings-MTA(modify)"/>
     <attrs>
       <a n="zimbraMtaAuthEnabled"/>
       <a n="zimbraMtaTlsAuthOnly"/>
@@ -2089,6 +2258,7 @@
   </right>
   <right name="viewAdminConsoleGlobalMTATab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for Global MTA Tab </desc>
+    <ui name="Configure-GlobalSettings-MTA(view)"/>
     <attrs>
       <a n="zimbraMtaAuthEnabled"/>
       <a n="zimbraMtaTlsAuthOnly"/>
@@ -2105,6 +2275,7 @@
   </right>
   <right name="adminConsoleGlobalMTATabRights" type="combo">
     <desc> Admin Console rights for Global MTA Tab </desc>
+    <ui name="Configure-GlobalSettings-MTA"/>
     <rights>
       <r n="setAdminConsoleGlobalMTATab"/>
       <r n="viewAdminConsoleGlobalMTATab"/>
@@ -2114,18 +2285,21 @@
   <!-- Admin Console Global Settings IMAP Tab -->
   <right name="setAdminConsoleGlobalIMAPTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for Global IMAP Tab </desc>
+    <ui name="Configure-GlobalSettings-IMAP(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalIMAPTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for Global IMAP Tab </desc>
+    <ui name="Configure-GlobalSettings-IMAP(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalIMAPTabRights" type="combo">
     <desc> Admin Console rights for Global IMAP Tab </desc>
+    <ui name="Configure-GlobalSettings-IMAP"/>
     <rights>
       <r n="setAdminConsoleGlobalIMAPTab"/>
       <r n="viewAdminConsoleGlobalIMAPTab"/>
@@ -2135,18 +2309,21 @@
   <!-- Admin Console Global Settings POP Tab -->
   <right name="setAdminConsoleGlobalPOPTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for Global POP Tab </desc>
+    <ui name="Configure-GlobalSettings-POP(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalPOPTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for Global POP Tab </desc>
+    <ui name="Configure-GlobalSettings-POP(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalPOPTabRights" type="combo">
     <desc> Admin Console rights for Global POP Tab </desc>
+    <ui name="Configure-GlobalSettings-POP"/>
     <rights>
       <r n="setAdminConsoleGlobalPOPTab"/>
       <r n="viewAdminConsoleGlobalPOPTab"/>
@@ -2156,18 +2333,21 @@
   <!-- Admin Console Global Settings AS/AV Tab -->
   <right name="setAdminConsoleGlobalASAVTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for Global AS/AV Tab </desc>
+    <ui name="Configure-GlobalSettings-AS/AV(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalASAVTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for Global AS/AV Tab </desc>
+    <ui name="Configure-GlobalSettings-AS/AV(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalASAVTabRights" type="combo">
     <desc> Admin Console rights for Global AS/AV Tab </desc>
+    <ui name="Configure-GlobalSettings-AS/AV"/>
     <rights>
       <r n="setAdminConsoleGlobalASAVTab"/>
       <r n="viewAdminConsoleGlobalASAVTab"/>
@@ -2177,18 +2357,21 @@
   <!-- Admin Console Global Settings Free/busy Interop Tab -->
   <right name="setAdminConsoleGlobalFreebusyTab" type="setAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalFreebusy Tab </desc>
+    <ui name="Configure-GlobalSettings-FreeBusyInterop(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalFreebusyTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalFreebusy Tab </desc>
+    <ui name="Configure-GlobalSettings-FreeBusyInterop(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalFreebusyTabRights" type="combo">
     <desc> Admin Console rights for GlobalFreebusy Tab </desc>
+    <ui name="Configure-GlobalSettings-FreeBusyInterop"/>
     <rights>
       <r n="setAdminConsoleGlobalFreebusyTab"/>
       <r n="viewAdminConsoleGlobalFreebusyTab"/>
@@ -2198,18 +2381,21 @@
   <!-- Admin Console Global Settings Themes Tab -->
   <right name="setAdminConsoleGlobalThemesTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for GlobalThemes Tab </desc>
+    <ui name="Configure-GlobalSettings-Themes(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalThemesTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalThemes Tab </desc>
+    <ui name="Configure-GlobalSettings-Themes(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalThemesTabRights" type="combo">
     <desc> Admin Console rights for GlobalThemes Tab </desc>
+    <ui name="Configure-GlobalSettings-Themes"/>
     <rights>
       <r n="setAdminConsoleGlobalThemesTab"/>
       <r n="viewAdminConsoleGlobalThemesTab"/>
@@ -2219,18 +2405,21 @@
   <!-- Admin Console Global Settings Backup/Restore Tab -->
   <right name="setAdminConsoleGlobalBackupRestoreTab" type="setAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalBackupRestore Tab </desc>
+    <ui name="Configure-GlobalSettings-BackupRestore(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalBackupRestoreTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalBackupRestore Tab </desc>
+    <ui name="Configure-GlobalSettings-BackupRestore(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalBackupRestoreTabRights" type="combo">
     <desc> Admin Console rights for GlobalBackupRestore Tab </desc>
+    <ui name="Configure-GlobalSettings-BackupRestore"/>
     <rights>
       <r n="setAdminConsoleGlobalBackupRestoreTab"/>
       <r n="viewAdminConsoleGlobalBackupRestoreTab"/>
@@ -2240,18 +2429,21 @@
   <!-- Admin Console Global Settings ACL Tab -->
   <right name="setAdminConsoleGlobalACLTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for GlobalACL Tab </desc>
+    <ui name="Configure-GlobalSettings-ACL(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalACLTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalACL Tab </desc>
+    <ui name="Configure-GlobalSettings-ACL(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalACLTabRights" type="combo">
     <desc> Admin Console rights for GlobalACL Tab </desc>
+    <ui name="Configure-GlobalSettings-ACL"/>
     <rights>
       <r n="setAdminConsoleGlobalACLTab"/>
       <r n="viewAdminConsoleGlobalACLTab"/>
@@ -2261,18 +2453,21 @@
   <!-- Admin Console Global Settings HSM Tab -->
   <right name="setAdminConsoleGlobalHSMTab" type="setAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalHSM Tab </desc>
+    <ui name="Configure-GlobalSettings-HSM(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalHSMTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalHSM Tab </desc>
+    <ui name="Configure-GlobalSettings-HSM(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalHSMTabRights" type="combo">
     <desc> Admin Console rights for GlobalHSM Tab </desc>
+    <ui name="Configure-GlobalSettings-HSM"/>
     <rights>
       <r n="setAdminConsoleGlobalHSMTab"/>
       <r n="viewAdminConsoleGlobalHSMTab"/>
@@ -2282,18 +2477,21 @@
   <!-- Admin Console Global Settings License Tab -->
   <right name="setAdminConsoleGlobalLicenseTab" type="setAttrs" targetType="config">
     <desc> Admin Console set attr rights for GlobalLicense Tab </desc>
+    <ui name="Configure-GlobalSettings-License(modify)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="viewAdminConsoleGlobalLicenseTab" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for GlobalLicense Tab </desc>
+    <ui name="Configure-GlobalSettings-License(view)"/>
     <attrs>
       <a n="zimbraACE"/>
     </attrs>
   </right>
   <right name="adminConsoleGlobalLicenseTabRights" type="combo">
     <desc> Admin Console rights for GlobalLicense Tab </desc>
+    <ui name="Configure-GlobalSettings-License"/>
     <rights>
       <r n="setAdminConsoleGlobalLicenseTab"/>
       <r n="viewAdminConsoleGlobalLicenseTab"/>
@@ -2312,6 +2510,7 @@
 <!-- Admin Console Server Status -->
 <right name="viewAdminConsoleServerStatus" type="getAttrs" targetType="config">
     <desc> Admin Console view attr rights for server status Tab </desc>
+    <ui name="Monitor-ServerStatus"/>
     <attrs>
       <a n="zimbraLogHostname"/>
     </attrs>
@@ -2349,6 +2548,7 @@
 -->
 <right type="combo" name="adminConsoleAccountRights">
   <desc>Admin Console Account Rights</desc>
+  <ui name="Manage-Accounts"/>
   <rights>
     <r n="getMailboxInfo"/> <!-- where does this go -->
     <r n="adminConsoleAccountsInfoTabRights"/>
@@ -2360,11 +2560,13 @@
     <r n="listAccount"/>
     <r n="viewAccountAdminUI"/>
     <r n="get.account.zimbraIsSystemResource"/>
+    <r n="get.account.zimbraIsSystemAccount"/>
   </rights>
 </right>
 
 <right type="combo" name="adminConsoleAliasRights">
   <desc>Admin Console Alias Rights</desc>
+  <ui name="Manage-Aliases"/>
   <rights>
     <r n="viewAccountAdminUI"/>
     <r n="listAlias"/>  
@@ -2373,6 +2575,7 @@
 
 <right type="combo" name="adminConsoleDLRights">
   <desc>Admin Console DL Rights</desc>
+  <ui name="Manage-DistributionLists"/>
   <rights>
     <r n="adminConsoleDLMembersTabRights"/>
     <r n="adminConsoleDLNotesTabRights"/>
@@ -2386,6 +2589,7 @@
 
 <right type="combo" name="adminConsoleResourceRights">
   <desc>Admin Console Resource Rights</desc>
+  <ui name="Manage-Resources"/>
   <rights>
     <r n="adminConsoleResourcesPropertiesTabRights"/>
     <r n="adminConsoleResourcesContactTabRights"/>
@@ -2396,6 +2600,7 @@
 
 <right type="combo" name="adminConsoleCOSRights">
   <desc>Admin Console COS Rights</desc>
+  <ui name="Manage-COS"/>
   <rights>
     <r n="adminConsoleResourcesPropertiesTabRights"/>
     <r n="adminConsoleCOSInfoTabRights"/>
@@ -2415,7 +2620,31 @@
 </right>
 
 <right type="combo" name="adminConsoleDomainRights">
-  <desc>Admin Console Domain Rights</desc>
+  <desc ui="">Admin Console Domain Rights</desc>
+  <ui name="Configure-Domains"/>
+  <rights>
+    <!-- View Accounts Button ?-->
+    <r n="adminConsoleDomainInfoTabRights"/>
+    <r n="adminConsoleDomainGALTabRights"/>
+    <r n="adminConsoleDomainAuthenticationTabRights"/>
+    <r n="adminConsoleDomainVirtualHostsTabRights"/>
+    <r n="adminConsoleDomainDocumentsTabRights"/>
+    <r n="adminConsoleDomainFreebusyTabRights"/>
+    <r n="adminConsoleDomainZimletsTabRights"/>
+    <r n="adminConsoleDomainThemesTabRights"/>
+    <r n="adminConsoleDomainLimitsTabRights"/>
+    <r n="adminConsoleDomainACLTabRights"/>
+    <r n="listAlias"/>
+    <r n="listDomain"/>
+    <r n="deleteDomain"/>
+    <r n="countAccount"/>
+    <r n="checkDomainMXRecord"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleSubDomainRights">
+  <desc ui="">Admin Console Sub Domain Rights</desc>
+  <ui name="Configure-Domains"/>
   <rights>
     <!-- View Accounts Button ?-->
     <r n="adminConsoleDomainInfoTabRights"/>
@@ -2437,42 +2666,18 @@
 </right>
 
 <right type="combo" name="adminConsoleSavedSearchRights">
-  <desc>Admin Console Extension Rights</desc>
+  <desc>Admin Console Saved Search Rights</desc>
+  <ui name="Search-SavedSearches-SavedSearch-Edit"/>
   <rights>
     <r n="setAdminSavedSearch"/>
     <r n="viewAdminSavedSearch"/>
   </rights>
 </right>
-<right name="adminConsoleCreateGALRights" type="setAttrs" targetType="account">
-  <desc> Admin Console set attr rights for create GAL sync account </desc>
-  <attrs>
-    <a n="zimbraIsSystemResource"/>
-    <a n="zimbraContactMaxNumEntries"/>
-  </attrs>
-</right>
-
-<right name="adminConsoleConfigGALRights" type="setAttrs" targetType="domain">
-  <desc> Admin Console set attr rights for configure GAL </desc>
-  <attrs>
-    <a n="zimbraGalAccountId"/>
-    <a n="zimbraGalMode"/>
-    <a n="zimbraGalLdapURL"/>
-    <a n="zimbraGalLdapSearchBase"/>
-    <a n="zimbraGalLdapBindDn"/>
-    <a n="zimbraGalLdapBindPassword"/>
-    <a n="zimbraGalLdapFilter"/>
-    <a n="zimbraGalAutoCompleteLdapFilter"/>
-    <a n="zimbraGalSyncLdapURL"/>
-    <a n="zimbraGalSyncLdapBindPassword"/>
-    <a n="zimbraGalSyncLdapBindDn"/>
-    <a n="zimbraGalSyncLdapFilter"/>
-    <a n="zimbraGalSyncLdapSearchBase"/>
-  </attrs>
-</right>
 
 <right type="combo" name="adminConsoleCreateTopDomainRights">
   <!-- set on the global target -->
   <desc>Admin Console Create Top Domain Rights</desc>
+  <ui name="Configure-Domains-Domain-New"/>
   <rights>
       <r n="createSubDomain"/>
       <r n="createTopDomain"/>
@@ -2487,8 +2692,36 @@
 </right>
 
 
+<right type="combo" name="adminConsoleCreateSubDomainModifierRights">
+   <!-- set on the domain target with subDomain modifier * to allow da
+   have the same right on the subdomain -->
+  <desc>Admin Console Create Sub Domain Rights</desc>
+  <ui name="Configure-Domains-Domain-New"/>
+  <rights>
+       <r n="adminConsoleDomainRights"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleCreateSubDomainRights">
+  <desc>Admin Console Create Sub Domain Account Rights</desc>
+  <ui name="Configure-Domains-Domain-New"/>
+  <rights>
+    <!-- View Accounts Button ?-->
+    <r n="adminConsoleAccountRights"></r>
+    <r n="adminConsoleDLRights"></r>
+    <r n="adminConsoleResourceRights"></r>
+    <r n="adminConsoleAliasRights"></r>
+    <r n="adminConsoleSavedSearchRights"></r>
+    <r n="adminConsoleDomainRights"></r>
+    <r n="adminConsoleCreateGALRights"></r>
+    <r n="createSubDomain"/>
+  </rights>
+</right>
+
+
 <right type="combo" name="adminConsoleServerRights">
   <desc>Admin Console Server Rights</desc>
+  <ui name="Configure-Servers"/>
   <rights>
     <!-- View Accounts Button ?-->
     <r n="adminConsoleServerInfoTabRights"/>
@@ -2508,6 +2741,7 @@
 
 <right type="combo" name="adminConsoleZimletRights">
   <desc>Admin Console Zimlet Rights</desc>
+  <ui name="Configure-Zimlets"/>
   <rights>
     <r n="adminConsoleZimletACLTabRights"/>
     <r n="listZimlet"/>
@@ -2521,6 +2755,7 @@
 
 <right type="combo" name="adminConsoleExtensionRights">
   <desc>Admin Console Extension Rights</desc>
+  <ui name="Configure-AdminExtensions"/>
   <rights>
     <r n="adminConsoleExtensionACLTabRights"/>
     <!-- todo deploy extension ? -->
@@ -2531,6 +2766,7 @@
 
 <right type="combo" name="adminConsoleGlobalRights">
   <desc>Admin Console Global Rights</desc>
+  <ui name="Configure-GlobalSettings"/>
   <rights>
     <r n="adminConsoleGlobalInfoTabRights"/>
     <r n="adminConsoleGlobalAttachmentsTabRights"/>
@@ -2549,6 +2785,7 @@
 
 <right type="combo" name="adminConsoleServerStatusRights">
   <desc>Admin Console Server Status Rights</desc>
+  <ui name="Monitor-ServerStatus"/>
   <rights>
     <r n="getServiceStatus"/>
     <r n="listServer"/>
@@ -2558,6 +2795,7 @@
 
 <right type="combo" name="adminConsoleServerStatisticRights">
   <desc>Admin Console Server Statistics Rights</desc>
+  <ui name="Monitor-ServerStatistics"/>
   <rights>
     <r n="getServerStats"/>
     <r n="listServer"/>
@@ -2567,6 +2805,7 @@
 
 <right type="combo" name="adminConsoleMailQueueRights">
   <desc>Admin Console Mail Queue Rights</desc>
+  <ui name="Monitor-MailQueues"/>
   <rights>
     <r n="mailQueueRights"/>
   </rights>
@@ -2574,6 +2813,7 @@
 
 <right type="combo" name="adminConsoleBackupRights">
   <desc>Admin Console Backup Rights</desc>
+  <ui name="ToolsAndMigration-Backups"/>
   <rights>
     <r n="backupAccount"/>
     <r n="restoreAccount"/>
@@ -2581,11 +2821,15 @@
     <r n="moveCalendarResourceMailbox"/>
     <r n="moveMailboxFromServer"/>
     <r n="moveMailboxToServer"/>
+    <r n="modifyZimlet"/>
+    <r n="listZimlet"/>
+    <r n="listServer"/>
   </rights>
 </right>
 
 <right type="combo" name="adminConsoleCrossMailboxSearchRights">
   <desc>Admin Console Cross Mailbox Search Rights</desc>
+  <ui name="ToolsAndMigration-SearchMail"/>
   <rights>
     <r n="crossMailboxSearchRights"/>
     <r n="listAccount"/>
@@ -2596,6 +2840,7 @@
 
 <right type="combo" name="adminConsoleCertificateRights">
   <desc>Rights for configuring SSL certificate on a server through Admin Console</desc>
+  <ui name="Configure-Certificates"/>
   <rights>
    <r n="listServer" />
    <r n="getCertificateInfo"/>
@@ -2606,7 +2851,8 @@
 </right>
 
 <right name="viewAdminConsoleSoftwareUpdatesConfigAttrs" type="getAttrs" targetType="config">
-  <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <desc> Admin Console view attr rights for software updates tab </desc>
+  <ui name="ToolsAndMigration-SoftwareUpdates(view)"/>
   <attrs>
 	<a n="zimbraVersionCheckLastAttempt"/>
 	<a n="zimbraVersionCheckLastSuccess"/>
@@ -2623,7 +2869,8 @@
 </right>
 
 <right name="setAdminConsoleSoftwareUpdatesConfigAttrs" type="setAttrs" targetType="config">
-  <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <desc> Admin Console view attr rights for software updates tab </desc>
+  <ui name="ToolsAndMigration-SoftwareUpdates(modify)"/>
   <attrs>
 	<a n="zimbraVersionCheckLastAttempt"/>
 	<a n="zimbraVersionCheckLastSuccess"/>
@@ -2639,7 +2886,8 @@
 </right>
 
 <right name="viewAdminConsoleSoftwareUpdatesServerAttrs" type="getAttrs" targetType="server">
-  <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <desc> Admin Console view attr rights for software updates tab </desc>
+  <ui name="ToolsAndMigration-SoftwareUpdates(view)"/>
   <attrs>
     <a n="zimbraId"/>
     <a n="cn"/>
@@ -2652,6 +2900,7 @@
 
 <right type="combo" name="adminConsoleMigrationRights">
   <desc>Rights for running migration tasks on a server through Admin Console</desc>
+  <ui name="ToolsAndMigration-AccountMigration"/>
   <rights>
    <r n="listServer" />
    <r n="getServer" />
@@ -2661,6 +2910,7 @@
 
 <right type="combo" name="adminConsoleSoftwareUpdatesRights">
   <desc>Rights for configuring software updates component a server through Admin Console</desc>
+  <ui name="ToolsAndMigration-SoftwareUpdates"/>  
   <rights>
    <r n="listServer" />
    <r n="listAccount" />
@@ -2671,8 +2921,27 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleClientUploadRights">
+    <desc>Rights for uploading client software through Admin Console</desc>
+    <ui name="Configure-Zimlets-Deploy"/>
+    <rights>
+        <r n="uploadClientSoftware" />
+        <r n="modifyZimlet"/>
+        <r n="listZimlet"/>
+    </rights>
+</right>
+
+<right type="combo" name="adminConsoleUCServiceRights">
+    <desc>Rights for viewing Voice/Chat services through Admin Console</desc>
+    <ui name="Configure-Voice/Chat"/>
+    <rights>
+        <r n="listUCService" />
+    </rights>
+</right>
+
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
+  <ui name="home"/>
   <rights>
     <r n="adminConsoleAccountRights"/>
     <r n="adminConsoleAliasRights"/>
@@ -2693,6 +2962,8 @@
     <r n="adminConsoleSavedSearchRights"/>
     <r n="adminConsoleSoftwareUpdatesRights"/>
     <r n="adminConsoleMigrationRights"/>
+    <r n="adminConsoleClientUploadRights"/>
+    <r n="adminConsoleUCServiceRights"/>
   </rights>
 </right>
 

@@ -2,15 +2,16 @@ SECTION amavis
 	REWRITE conf/amavisd.conf.in conf/amavisd.conf
 	POSTCONF content_filter 
 	if SERVICE antivirus
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	if SERVICE antispam
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	if SERVICE archiving
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	LOCAL amavis_dspam_enabled
+	LOCAL amavis_originating_bypass_sa
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
@@ -37,9 +38,11 @@ SECTION antivirus DEPENDS amavis
 	RESTART antivirus mta
 
 SECTION antispam DEPENDS amavis
-	REWRITE conf/salocal.cf.in conf/salocal.cf
+	REWRITE conf/salocal.cf.in conf/sa/salocal.cf
+	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
+	VAR zimbraIPMode
 	LOCAL antispam_mysql_enabled
 	LOCAL antispam_mysql_host
 	LOCAL antispam_mysql_port
@@ -53,6 +56,8 @@ SECTION archiving DEPENDS amavis
 SECTION mta DEPENDS amavis
 	LOCAL postfix_enable_smtpd_policyd
 	REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
+	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
+	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
 	REWRITE conf/mta_milter_options.in conf/mta_milter_options
 	VAR zimbraMilterServerEnabled
 	VAR zimbraIPMode
@@ -68,6 +73,12 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
+	if LOCAL postfix_enable_smtpd_policyd
+		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
+	fi
+	if LOCAL !postfix_enable_smtpd_policyd
+		POSTCONFD policy_time_limit
+	fi
 	if VAR zimbraMtaMyNetworks
 		POSTCONF mynetworks VAR zimbraMtaMyNetworks
 	fi
@@ -85,6 +96,9 @@ SECTION mta DEPENDS amavis
 	if VAR zimbraMtaNonSmtpdMilters
 		POSTCONF non_smtpd_milters VAR zimbraMtaNonSmtpdMilters
 	fi
+	if SERVICE !cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions
+	fi
 	LOCAL zimbra_server_hostname
 	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
 	POSTCONF myhostname		LOCAL zimbra_server_hostname
@@ -99,8 +113,8 @@ SECTION mta DEPENDS amavis
 	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit		                0
 	POSTCONF relayhost				                    VAR zimbraMtaRelayHost
-	POSTCONF smtpd_recipient_restrictions FILE postfix_recipient_restrictions.cf
-	POSTCONF smtpd_sender_restrictions FILE smtpd_sender_restrictions.cf
+	POSTCONF smtpd_recipient_restrictions FILE zmconfigd/postfix_recipient_restrictions.cf
+	POSTCONF smtpd_sender_restrictions FILE zmconfigd/smtpd_sender_restrictions.cf
 	POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
 
 	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
@@ -158,6 +172,17 @@ SECTION mta DEPENDS amavis
 	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
 	RESTART mta
 
+SECTION opendkim DEPENDS mta
+	LOCAL ldap_postfix_password
+	LOCAL ldap_starttls_supported
+	LOCAL av_notify_user
+	LOCAL ldap_url
+	VAR zimbraMtaMyNetworks
+	VAR zimbraIPMode
+	REWRITE conf/opendkim.conf.in conf/opendkim.conf
+	REWRITE conf/opendkim-localnets.conf.in conf/opendkim-localnets.conf
+	RESTART opendkim
+
 SECTION sasl
 	VAR getAllMtaAuthURLs
 	LOCAL sasl_smtpd_mech_list
@@ -168,6 +193,7 @@ SECTION sasl
 SECTION webxml
 	VAR zimbraMailPort
 	VAR zimbraMailSSLPort
+	VAR zimbraIPMode
 	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
 	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
@@ -296,7 +322,6 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_log_level
 	LOCAL cbpolicyd_log_mail
 	LOCAL cbpolicyd_log_detail
-	LOCAL cbpolicyd_bind_host
 	LOCAL cbpolicyd_bind_port
 	LOCAL cbpolicyd_timeout
 	LOCAL cbpolicyd_bypass_mode
@@ -307,11 +332,7 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_module_checkspf
 	LOCAL cbpolicyd_module_quotas
 	if SERVICE cbpolicyd
-		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
-		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
-	fi
-	if SERVICE !cbpolicyd
-		POSTCONF smtpd_end_of_data_restrictions
+		POSTCONF smtpd_end_of_data_restrictions FILE zmconfigd/smtpd_end_of_data_restrictions.cf
 	fi
 	RESTART cbpolicyd mta
 
