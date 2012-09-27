@@ -102,6 +102,22 @@ public class VersionTest {
         Assert.assertEquals(0, Version.compare("6.0.0", "6.0.0_GA"));
         Assert.assertEquals(1, Version.compare("6.0.0_RC1", "6.0.0_RC"));
         Assert.assertEquals(-1, Version.compare("6.0.0_RC", "6.0.0_RC1"));
+
+        Version v1 = new Version("8.0.0.621", false);
+        Version v2 = new Version("7.9.16");
+        Assert.assertEquals(1, v1.compareTo(v2));
+
+        v1 = new Version("8.0.0.621", false);
+        v2 = new Version("8.0.0");
+        Assert.assertEquals(0, v1.compareTo(v2));
+
+        v1 = new Version("8.0.0.621", false);
+        v2 = new Version("8.0.1");
+        Assert.assertEquals(-1, v1.compareTo(v2));
+
+        v1 = new Version("8.0.0.621", false);
+        v2 = new Version("9.0.0");
+        Assert.assertEquals(-1, v1.compareTo(v2));
     }
 
     @Test
