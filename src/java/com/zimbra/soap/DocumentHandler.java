@@ -627,7 +627,7 @@ public abstract class DocumentHandler {
             ", target account=" + targetAcctName);
     }
 
-    protected static Version zimbraConnectorClientVersion(ZimbraSoapContext zsc) {
+    protected static Pair<String, Version> zimbraConnectorClientVersion(ZimbraSoapContext zsc) {
         final String UA_ZCO = "ZimbraConnectorForOutlook";
         final String UA_ZCB = "ZimbraConnectorForBES";
         final String UA_MIGRATION = "ZimbraMigration";
@@ -646,7 +646,7 @@ public abstract class DocumentHandler {
 
                 if (UA_ZCO.equalsIgnoreCase(app) || UA_ZCB.equalsIgnoreCase(app) || UA_MIGRATION.equalsIgnoreCase(app)) {
                     try {
-                        return new Version(version, false);
+                        return new Pair<String, Version>(app, new Version(version, false));
                     } catch (ServiceException e) {
                         ZimbraLog.soap.debug("unable to parse zimbra connector client version", e);
                     }
