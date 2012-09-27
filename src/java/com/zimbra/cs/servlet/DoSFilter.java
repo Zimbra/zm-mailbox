@@ -15,10 +15,19 @@
 
 package com.zimbra.cs.servlet;
 
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletRequest;
+
+import com.zimbra.common.localconfig.LC;
 
 
 public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
+    
+    @Override
+    public void init(FilterConfig filterConfig) {
+        super.init(filterConfig);
+        _maxRequestsPerSec = LC.zimbra_dos_filter_max_requests_per_sec.intValue();
+    }
     
     @Override
     protected String extractUserId(ServletRequest request) {

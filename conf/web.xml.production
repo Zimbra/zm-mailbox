@@ -15,11 +15,6 @@
   <filter>
     <filter-name>DoSFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.DoSFilter</filter-class>
-    
-    <init-param>
-     <param-name>maxRequestsPerSec</param-name>
-     <param-value>30</param-value>
-    </init-param>
 
     <init-param>
      <param-name>delayMs</param-name>
