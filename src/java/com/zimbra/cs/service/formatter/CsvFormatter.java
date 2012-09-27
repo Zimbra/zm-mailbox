@@ -17,6 +17,8 @@ package com.zimbra.cs.service.formatter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,13 @@ import java.util.Map;
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Charsets;
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -34,10 +43,6 @@ import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
 
 public class CsvFormatter extends Formatter {
 
@@ -95,12 +100,34 @@ public class CsvFormatter extends Formatter {
     public boolean supportsSave() {
         return true;
     }
+    
+    private static final int READ_AHEAD_BUFFER_SIZE = 8192;
 
     @Override
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
-        InputStreamReader isr = new InputStreamReader(
-                context.getRequestInputStream(), context.getCharset());
+        // Detect the charset of upload file.
+        PushbackInputStream pis = new PushbackInputStream(context.getRequestInputStream(), READ_AHEAD_BUFFER_SIZE);
+        byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
+        int bytesRead = pis.read(buf, 0, READ_AHEAD_BUFFER_SIZE);
+        CharsetDetector detector = new CharsetDetector();
+        detector.setText(buf);
+        CharsetMatch match = detector.detect();
+        String guess = match.getName();
+        Charset charset;
+        if (guess != null) {
+            try {
+                charset = Charset.forName(guess);
+            } catch (IllegalArgumentException e) {
+                charset = Charsets.UTF_8;
+            }
+        } else {
+            charset = Charsets.UTF_8;
+        }
+        if (bytesRead > 0) {
+            pis.unread(buf, 0, bytesRead);
+        }
+        InputStreamReader isr = new InputStreamReader(pis, charset);
         BufferedReader reader = new BufferedReader(isr);
 
         try {
