@@ -1546,4 +1546,29 @@ public class CalendarUtils {
             }
         }
     }
+    
+    /**
+     * Checks whether two given addresses belong to same account
+     * @param address1
+     * @param address2
+     * @return true if addresses belong to same account, false otherwise.
+     * @throws ServiceException
+     */
+
+    public static boolean belongToSameAccount(String address1, String address2) throws ServiceException {
+        boolean isSameAccount = false;
+        if (address1 != null && address2 != null) {
+            // check if the addresses are equal
+            isSameAccount = address1.equalsIgnoreCase(address2);
+            if (!isSameAccount) { // check if the addresses belong to same account
+                Account acct = Provisioning.getInstance().get(AccountBy.name, address1);
+                if (acct != null) {
+                    // local user - consider aliases
+                    AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
+                    isSameAccount = acctMatcher.matches(address2);
+                }
+            }
+        }
+        return isSameAccount;
+    }
 }
