@@ -87,6 +87,7 @@ import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
+import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
@@ -2134,7 +2135,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     // Both old and new organizers are set.  They must be the
                     // same address.
                     String origOrgAddr = originalOrganizer.getAddress();
-                    if (newOrgAddr == null || !newOrgAddr.equalsIgnoreCase(origOrgAddr)) {
+                    if (newOrgAddr == null || !CalendarUtils.belongToSameAccount(origOrgAddr, newOrgAddr)) {
                         if (denyChange) {
                             throw ServiceException.INVALID_REQUEST(
                                     "Changing organizer of an appointment/task is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
