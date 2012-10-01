@@ -234,7 +234,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
             if (getName(null) != null) zjo.put("name", getName(null));
             if (getParentId(null) != null) zjo.put("parentId", getParentId(null));
             if (getFlags(null) != null) zjo.put("flags", getFlags(null));
-            if (getColor(null) != null) zjo.put("color", getColor(null).name());
+            if (getColor(null) != null) zjo.put("color", getColor(null).getName());
             if (getUnreadCount(-1) != -1) zjo.put("unreadCount", getUnreadCount(-1));
             if (getImapUnreadCount(-1) != -1) zjo.put("imapUnreadCount", getImapUnreadCount(-1));
             if (getMessageCount(-1) != -1) zjo.put("messageCount", getMessageCount(-1));

@@ -19,7 +19,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.zimbra.soap.mail.type.Acl;
 import org.json.JSONException;
@@ -29,6 +32,7 @@ import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.mail.type.Folder;
@@ -130,57 +134,74 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         }
     }
 
-    public enum Color {
+    public static class Color {
+        public final static String RGBCOLOR = "rgbColor";
+        public final static Color DEFAULTCOLOR = new Color("defaultColor",0);
+        public final static Color BLUE = new Color("blue",1);
+        public final static Color CYAN = new Color("cyan",2);
+        public final static Color GREEN = new Color("green",3);
+        public final static Color PURPLE = new Color("purple",4);
+        public final static Color RED = new Color("red",5);
+        public final static Color YELLOW = new Color("yellow",6);
+        public final static Color PINK = new Color("pink",7);
+        public final static Color GRAY = new Color("gray",8);
+        public final static Color ORANGE = new Color("orange",9);
 
-        defaultColor(0),
-        blue(1),
-        cyan(2),
-        green(3),
-        purple(4),
-        red(5),
-        yellow(6),
-        pink(7),
-        gray(8),
-        orange(9),
-        rgbColor;
+        private final static Map<String, Color> colorMap = new HashMap<String, Color>() {
+            {
+                put("defaultColor", DEFAULTCOLOR);
+                put("blue", BLUE);
+                put("cyan", CYAN);
+                put("green", GREEN);
+                put("purple", PURPLE);
+                put("red", RED);
+                put("yellow", YELLOW);
+                put("pink", PINK);
+                put("gray", GRAY);
+                put("orange", ORANGE);
+            }
+        };
 
+        private String mName;
         private long mValue;
 
+        private Color(String color, long value) {
+            this.mName = color;
+            this.mValue = value;
+        }
+
         public long getValue() { return mValue; }
+        public String getName() { return mName; }
 
         public static Color fromString(String s) throws ServiceException {
             try {
                 return fromInt(Integer.parseInt(s));
             } catch (NumberFormatException e) {
-            } catch (IndexOutOfBoundsException e) {
+            } catch (ServiceException e) {
             }
 
-            try {
-                return Color.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid color: "+s+", valid values: "+Arrays.asList(Color.values()), e);
+            if (colorMap.containsKey(s)) {
+                return colorMap.get(s);
+            } else {
+                throw ZClientException.CLIENT_ERROR("invalid color: "+ s +", valid values: "+ colorMap.keySet(), null);
             }
         }
 
-        Color(long value) { mValue = value; }
-
-        Color() {}
-
-        public Color setRgbColor(String s) {
-            mValue = new com.zimbra.common.mailbox.Color(s).getValue();
-            return this;
+        public static Color getRgbColorObj(String s) {
+            return new Color (RGBCOLOR, new com.zimbra.common.mailbox.Color(s).getValue());
         }
 
-        public String getRgbColor() {
+        public String getRgbColorValue() {
             return new com.zimbra.common.mailbox.Color(mValue).toString();
         }
 
-        public static Color fromInt(int i) throws ServiceException {
-            try {
-                return values()[i];
-            } catch (IndexOutOfBoundsException e) {
-                throw ZClientException.CLIENT_ERROR("invalid color: "+i+", must be between 0 and " + (values().length - 1), null);
+        public static Color fromInt(int value) throws ServiceException {
+            for (Color colorObj : colorMap.values()) {
+                if (value == colorObj.getValue()) {
+                    return colorObj;
+                }
             }
+            throw ZClientException.CLIENT_ERROR("invalid color: "+ value +", must be between 0 and " + (colorMap.size() - 1), null);
         }
     }
 
@@ -223,10 +244,10 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mRgb = e.getAttribute(MailConstants.A_RGB, null);
         if (mRgb != null) {
-            mColor =  Color.rgbColor.setRgbColor(mRgb);
+            mColor =  Color.getRgbColorObj(mRgb);
         } else {
             String s = e.getAttribute(MailConstants.A_COLOR, "0");
-            mColor = Color.values()[(byte)Long.parseLong(s)];
+            mColor = Color.fromString(s);
         }
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
         mImapUnreadCount = (int) e.getAttributeLong(MailConstants.A_IMAP_UNREAD, mUnreadCount);
@@ -282,9 +303,9 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mFlags = f.getFlags();
         mRgb = f.getRgb();
         if (mRgb != null) {
-            mColor =  Color.rgbColor.setRgbColor(mRgb);
+            mColor =  Color.getRgbColorObj(mRgb);
         } else {
-            mColor = ZFolder.Color.fromInt(SystemUtil.coalesce(f.getColor(), 0));
+            mColor = Color.fromInt(SystemUtil.coalesce(f.getColor(), 0));
         }
         mUnreadCount = SystemUtil.coalesce(f.getUnreadCount(), 0);
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
@@ -706,7 +727,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         jo.put("pathURLEncoded", getPathURLEncoded());
         jo.put("parentId", mParentId);
         jo.put("flags", mFlags);
-        jo.put("color", mColor.name());
+        jo.put("color", mColor.getName());
         jo.put("unreadCount", mUnreadCount);
         jo.put("imapUnreadCount", mImapUnreadCount);
         jo.put("itemCount", mMessageCount);
