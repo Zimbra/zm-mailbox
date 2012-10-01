@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,6 +26,7 @@ import org.apache.xerces.xni.XNIException;
 import org.cyberneko.html.filters.DefaultFilter;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.util.ZimbraLog;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,14 +36,14 @@ import java.net.URISyntaxException;
 
 /**
  * very Mutated version of ElementRemover.java filter from cyberneko html.
- * change accepted/removed elements to static hashmaps for one-time 
+ * change accepted/removed elements to static hashmaps for one-time
  * initialization, switched from Hashtable to HashMap, sanatize
- * attributes, etc. 
- * 
+ * attributes, etc.
+ *
  * TODO: more checks:
  * allow limited use of <meta> tags? like for Content-Type?
- * make sure any clicked links pop up in new window 
- * figure out how to block images by default, and how to re-enable them. styles?  
+ * make sure any clicked links pop up in new window
+ * figure out how to block images by default, and how to re-enable them. styles?
  * strict attr value checking?
  *  don't allow id attr in tags if we aren't putting html into an iframe (I'm assuming we are, and id's in iframes don't conflict with iframes elsewhere)
  */
@@ -52,7 +53,7 @@ public class DefangFilter extends DefaultFilter {
      * disable all form/input type tags
      */
     private static final boolean ENABLE_INPUT_TAGS = true;
-    
+
     /**
      * enable table tags
      */
@@ -62,17 +63,17 @@ public class DefangFilter extends DefaultFilter {
      * enable phrase tags (EM, STRONG, CITE, DFN, CODE, SAMP, KBD, VAR, ABBR, ACRONYM)
      */
     private static final boolean ENABLE_PHRASE_TAGS = true;
-    
+
     /**
      * enable list tags (UL, OL, LI, DL, DT, DD, DIR, MENU)
      */
     private static final boolean ENABLE_LIST_TAGS = true;
 
     /**
-     * enable font style tags (TT, I, B, BIG, SMALL, STRIKE, S, U) 
+     * enable font style tags (TT, I, B, BIG, SMALL, STRIKE, S, U)
      */
     private static final boolean ENABLE_FONT_STYLE_TAGS = true;
-    
+
     //
     // Constants
     //
@@ -83,11 +84,14 @@ public class DefangFilter extends DefaultFilter {
     // regexes inside of attr values to strip out
     private static final Pattern AV_JS_ENTITY = Pattern.compile("&\\{[^}]*\\}");
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
-    
+
     // regex for URLs href. TODO: beef this up
     private static final Pattern VALID_EXT_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_INT_IMG = Pattern.compile("^data:|^cid:");
     private static final Pattern VALID_IMG_FILE = Pattern.compile("\\.(jpg|jpeg|png|gif)$");
+
+    // matches the file format that convertd uses so it doesn't get 'pnsrc'ed
+    private static final Pattern VALID_CONVERTD_FILE = Pattern.compile("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
@@ -108,6 +112,7 @@ public class DefangFilter extends DefaultFilter {
 
     private String mBaseHref = null;
     private URI mBaseHrefURI = null;
+
 
     /** Strip images */
     boolean mNeuterImages;
@@ -134,7 +139,7 @@ public class DefangFilter extends DefaultFilter {
     private static String CORE_LANG = CORE+LANG;
     private static String KBD = "accesskey,tabindex,";
 
-    static {    
+    static {
         // set which elements to accept
         acceptElement("a", CORE+KBD+",charset,coords,href,hreflang,name,rel,rev,shape,target,type");
         acceptElement("address", CORE_LANG);
@@ -175,7 +180,7 @@ public class DefangFilter extends DefaultFilter {
 
         //acceptElement("title", CORE_LANG);
         acceptElement("title", "");
-        
+
         if (ENABLE_FONT_STYLE_TAGS) {
             acceptElement("b",  CORE_LANG);
             acceptElement("basefont", CORE_LANG+"color,face,size");
@@ -190,7 +195,7 @@ public class DefangFilter extends DefaultFilter {
         } else {
             // allow the text, just strip the tags
         }
-        
+
         if (ENABLE_LIST_TAGS) {
             acceptElement("dir", CORE_LANG+"compact");
             acceptElement("dl", CORE_LANG);
@@ -203,7 +208,7 @@ public class DefangFilter extends DefaultFilter {
         } else {
             // allow the text, just strip the tags
         }
-        
+
         if (ENABLE_PHRASE_TAGS) {
             acceptElement("abbr", CORE_LANG);
             acceptElement("acronym", CORE_LANG);
@@ -234,7 +239,7 @@ public class DefangFilter extends DefaultFilter {
             // allow the text, just strip the tags
         }
 
-        
+
         if (ENABLE_INPUT_TAGS) {
             acceptElement("area", CORE_LANG+KBD+"alt,coords,href,nohref,shape,target");
             acceptElement("button", CORE_LANG+KBD+"disabled,name,type,value");
@@ -260,7 +265,7 @@ public class DefangFilter extends DefaultFilter {
             removeElement("select");
             removeElement("textarea");
         }
-        
+
         // completely remove these elements and all enclosing tags/text
         removeElement("applet");
         removeElement("frame");
@@ -271,9 +276,9 @@ public class DefangFilter extends DefaultFilter {
 
         // don't remove "content" of these tags since they have none.
         //removeElement("meta");
-        //removeElement("param");        
+        //removeElement("param");
     }
-    
+
     /**
      * @param neuterImages
      */
@@ -281,7 +286,7 @@ public class DefangFilter extends DefaultFilter {
         mNeuterImages = neuterImages;
     }
 
-    /** 
+    /**
      * Specifies that the given element should be accepted and, optionally,
      * which attributes of that element should be kept.
      *
@@ -312,9 +317,9 @@ public class DefangFilter extends DefaultFilter {
         mAttrSetCache.put(attributes, set);
     }
 
-    /** 
+    /**
      * Specifies that the given element should be completely removed. If an
-     * element is encountered during processing that is on the remove list, 
+     * element is encountered during processing that is on the remove list,
      * the element's start and end tags as well as all of content contained
      * within the element will be removed from the processing stream.
      *
@@ -333,9 +338,9 @@ public class DefangFilter extends DefaultFilter {
     // since Xerces-J 2.2.0
 
     /** Start document. */
-    @Override 
-    public void startDocument(XMLLocator locator, String encoding, 
-                              NamespaceContext nscontext, Augmentations augs) 
+    @Override
+    public void startDocument(XMLLocator locator, String encoding,
+                              NamespaceContext nscontext, Augmentations augs)
     throws XNIException {
         mRemovalElementCount = 0;
         super.startDocument(locator, encoding, nscontext, augs);
@@ -397,7 +402,7 @@ public class DefangFilter extends DefaultFilter {
     }
 
     /** Characters. */
-    @Override public void characters(XMLString text, Augmentations augs) 
+    @Override public void characters(XMLString text, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             if (mStyleDepth > 0) {
@@ -422,7 +427,7 @@ public class DefangFilter extends DefaultFilter {
     }
 
     /** Ignorable whitespace. */
-    @Override public void ignorableWhitespace(XMLString text, Augmentations augs) 
+    @Override public void ignorableWhitespace(XMLString text, Augmentations augs)
     throws XNIException {
         if (mRemovalElementName == null) {
             super.ignorableWhitespace(text, augs);
@@ -546,11 +551,11 @@ public class DefangFilter extends DefaultFilter {
             if (eName.equals("img") || eName.equals("input")) {
                 fixUrlBase(attributes, "src");
             } else if (eName.equals("a") || eName.equals("area")) {
-                fixUrlBase(attributes, "href");                
+                fixUrlBase(attributes, "href");
             }
             fixUrlBase(attributes, "background");
 
-                            
+
             if (eName.equals("a") || eName.equals("area")) {
                 fixATag(attributes);
             }
@@ -562,7 +567,8 @@ public class DefangFilter extends DefaultFilter {
                        !VALID_IMG_FILE.matcher(srcValue).find())) {
                             neuterTag(attributes, "src", "df");
                         } else if (!VALID_INT_IMG.matcher(srcValue).find() &&
-                                VALID_IMG_FILE.matcher(srcValue).find()) {
+                                    VALID_IMG_FILE.matcher(srcValue).find() &&
+                                    !VALID_CONVERTD_FILE.matcher(srcValue).find()) {
                             neuterTag(attributes, "src", "pn");
                         }
                 }
@@ -656,7 +662,7 @@ public class DefangFilter extends DefaultFilter {
             }
         }
         // We'll treat the SRC a little different since deleting it
-        // may annoy the front end. Here, we'll check for 
+        // may annoy the front end. Here, we'll check for
         // a valid url as well as just a valid filename in the
         // case that its an inline image
         if(aName.equals("src")) {
@@ -672,8 +678,8 @@ public class DefangFilter extends DefaultFilter {
     /**
      * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
      * and <script> tags.
-     * 
-     * 
+     *
+     *
      */
     private void sanatizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
