@@ -1587,7 +1587,7 @@ abstract class ImapHandler {
             if (mboxobj instanceof Mailbox) {
                 ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
             } else if (mboxobj instanceof ZMailbox) {
-                ((ZMailbox) mboxobj).createFolder(null, path.asResolvedPath(), ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
+                ((ZMailbox) mboxobj).createFolder(null, path.asResolvedPath(), ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }

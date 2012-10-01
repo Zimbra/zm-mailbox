@@ -168,7 +168,7 @@ public class TestImap {
         Assert.assertEquals("T1", tags.get(0).getName());
 
         String folderName = "newfolder1";
-        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
+        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", tag.getId(), System.currentTimeMillis(), simpleMessage("foo1"), true);
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", "", System.currentTimeMillis(), simpleMessage("foo2"), true);
                 
@@ -306,7 +306,7 @@ public class TestImap {
         Assert.assertEquals("T1", tags.get(0).getName());
 
         String folderName = "newfolder1";
-        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
+        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", tag.getId(), System.currentTimeMillis(), simpleMessage("foo1"), true);
                 
         MailboxInfo info = connection.select("INBOX");
@@ -367,7 +367,7 @@ public class TestImap {
         Assert.assertTrue("INBOX does not contain expected flag "+tag2, info.getFlags().isSet(tag2));
 
         String folderName = "newfolder1";
-        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
+        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
         
         info = connection.select(folderName);
         Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));

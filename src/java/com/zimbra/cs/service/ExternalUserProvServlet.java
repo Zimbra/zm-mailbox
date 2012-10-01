@@ -144,7 +144,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 try {
                     zMtpt = zMailbox.createMountpoint(
                             String.valueOf(getMptParentFolderId(sharedFolderView, prov)), mountpointName,
-                            ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.defaultColor, null,
+                            ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.DEFAULTCOLOR, null,
                             ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
                 } catch (ServiceException e) {
                     logger.debug("Error in attempting to create mountpoint. Probably it already exists.", e);
