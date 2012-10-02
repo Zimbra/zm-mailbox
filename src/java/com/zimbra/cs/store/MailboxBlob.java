@@ -28,15 +28,19 @@ public abstract class MailboxBlob {
         private static final long serialVersionUID = 6378518636677970767L;
 
         public String accountId;
+        public int mailboxId;
         public int itemId;
         public int revision;
         public String locator;
+        public String digest;
 
-        public MailboxBlobInfo(String accountId, int itemId, int revision, String locator) {
+        public MailboxBlobInfo(String accountId, int mailboxId, int itemId, int revision, String locator, String digest) {
             this.accountId = accountId;
+            this.mailboxId = mailboxId;
             this.itemId = itemId;
             this.revision = revision;
             this.locator = locator;
+            this.digest = digest;
         }
     }
 

@@ -193,7 +193,7 @@ public final class MetadataDump {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(mboxId, groupId, fromDumpster) +
+            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(groupId, fromDumpster) +
                          " WHERE mailbox_id = " + mboxId + " AND id = " + itemId;
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -225,7 +225,7 @@ public final class MetadataDump {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(mboxId, groupId, fromDumpster) +
+            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(groupId, fromDumpster) +
                          " WHERE mailbox_id = " + mboxId + " AND item_id = " + itemId +
                          " ORDER BY mailbox_id, item_id, version DESC";
             stmt = conn.prepareStatement(sql);
@@ -287,18 +287,18 @@ public final class MetadataDump {
     public static void doDump(DbConnection conn, int mboxId, int itemId, boolean fromDumpster, PrintStream out) throws ServiceException {
         try {
             int groupId = getMailboxGroup(conn, mboxId);
-    
+
             boolean first = true;
-    
+
             Row item = getItemRow(conn, groupId, mboxId, itemId, fromDumpster);
             List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId, fromDumpster);
-    
+
             // main item
             if (!revs.isEmpty())
                 printBanner(out, "Current Revision");
             item.print(out);
             first = false;
-    
+
             // revisions
             for (Row rev : revs) {
                 String version = rev.get("version");

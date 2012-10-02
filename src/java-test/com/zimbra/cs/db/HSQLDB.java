@@ -26,8 +26,10 @@ import org.hsqldb.cmdline.SqlFile;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * HSQLDB is for unit test. All data is in memory, not persistent across JVM restarts.
@@ -192,4 +194,20 @@ public final class HSQLDB extends Db {
     public String limit(int offset, int limit) {
         return "LIMIT " + limit + " OFFSET " + offset;
     }
+
+    public void useMVCC(Mailbox mbox) throws ServiceException, SQLException {
+        //tell HSQLDB to use multiversion so our asserts can read while write is open
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        DbConnection conn = DbPool.getConnection(mbox);
+        try {
+            stmt = conn.prepareStatement("SET DATABASE TRANSACTION CONTROL MVCC");
+            stmt.executeUpdate();
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.quietCloseStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
 }

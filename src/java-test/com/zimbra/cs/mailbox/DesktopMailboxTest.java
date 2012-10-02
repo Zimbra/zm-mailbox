@@ -29,8 +29,10 @@ import org.junit.Test;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -71,21 +73,6 @@ public class DesktopMailboxTest {
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
 
-    private void useMVCC(Mailbox mbox) throws ServiceException, SQLException {
-        //tell HSQLDB to use multiversion so our asserts can read while write is open
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        DbConnection conn = DbPool.getConnection(mbox);
-        try {
-            stmt = conn.prepareStatement("SET DATABASE TRANSACTION CONTROL MVCC");
-            stmt.executeUpdate();
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.quietCloseStatement(stmt);
-            DbPool.quietClose(conn);
-        }
-    }
-
     private int countInboxMessages(Mailbox mbox) throws ServiceException, SQLException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -110,7 +97,8 @@ public class DesktopMailboxTest {
     public void nestedTxn() throws Exception {
         Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        useMVCC(mbox);
+        HSQLDB db = (HSQLDB) Db.getInstance();
+        db.useMVCC(mbox);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.lock.lock();
