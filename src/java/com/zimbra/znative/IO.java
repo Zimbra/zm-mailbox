@@ -19,12 +19,36 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class IO {
+    
+    public static class FileInfo {
+        private long inodeNum;
+        private long size;
+        private int linkCount;
+        
+        public FileInfo(long inodeNum, long size, int linkCount) {
+            this.inodeNum = inodeNum;
+            this.size = size;
+            this.linkCount = linkCount;
+        }
+        
+        public long getInodeNum() {
+            return inodeNum;
+        }
+        
+        public long getSize() {
+            return size;
+        }
+        
+        public int getLinkCount() {
+            return linkCount;
+        }
+    }
 
     private static native void link0(byte[] oldpath, byte[] newpath)
         throws IOException;
-	
-    private static native int linkCount0(byte[] path)
-        throws IOException;
+    
+    private static native FileInfo fileInfo0(byte[] path)
+    throws IOException;
 
     private static native void chmod0(byte[] path, long mode)
         throws IOException;
@@ -92,9 +116,23 @@ public class IO {
     public static int linkCount(String path) throws IOException {
         if (Util.haveNativeCode()) {
             // native method throws specified exception
-            return linkCount0(path.getBytes());
+            FileInfo info = fileInfo0(path.getBytes());
+            if (info != null) {
+                return info.getLinkCount();
+            } else {
+                return -1;
+            }
         } else {
             return 1;
+        }
+    }
+    
+    public static FileInfo fileInfo(String path) throws IOException {
+        if (Util.haveNativeCode()) {
+            // native method throws specified exception
+            return fileInfo0(path.getBytes());
+        } else {
+            return null;
         }
     }
 
