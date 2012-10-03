@@ -80,30 +80,36 @@ Java_com_zimbra_znative_IO_link0(JNIEnv *env,
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_linkCount0
+JNIEXPORT jobject JNICALL Java_com_zimbra_znative_IO_fileInfo0
 (JNIEnv *env, jclass clz, jbyteArray jpath)
 {
     struct stat sb;
     int len;
     char *path;
-
+	
     if (jpath == NULL) {
-        ZimbraThrowNPE(env, "IO.linkCount0 path");
-        return -1; /* retval ignored by on exception */
+        ZimbraThrowNPE(env, "IO.fileInfo0 path");
+        return NULL; /* retval ignored by on exception */
     }
-
+	
     len = (*env)->GetArrayLength(env, jpath);
     if (len <= 0) {
-        ZimbraThrowIAE(env, "IO.linkCount0 path length <= 0");
-        return -1;
+        ZimbraThrowIAE(env, "IO.fileInfo0 path length <= 0");
+        return NULL;
     }
-
+	
     path = alloca(len + 1);      /* +1 for \0 */
     memset(path, 0, len + 1); /* +1 for \0 */
     (*env)->GetByteArrayRegion(env, jpath, 0, len, (jbyte *)path);
-
+	
     if (stat(path, &sb) == 0) {
-        return (jint)sb.st_nlink;
+		jclass cls;
+		jmethodID constructor;
+		jobject object;
+		cls = (*env)->FindClass(env, "com/zimbra/znative/IO$FileInfo");
+		constructor = (*env)->GetMethodID(env, cls, "<init>", "(JJI)V");
+		object = (*env)->NewObject(env, cls, constructor, (jlong)sb.st_ino, (jlong)sb.st_size, (jint)sb.st_nlink);
+		return object;
     } else {
         char msg[2048];
         snprintf(msg, sizeof(msg), "stat(%s): %s", path, strerror(errno));
@@ -112,9 +118,9 @@ JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_linkCount0
         } else {
             ZimbraThrowIOE(env, msg);
         }
-        return -1;
+        return NULL;
     }
-} 
+}
 
 JNIEXPORT void JNICALL Java_com_zimbra_znative_IO_setStdoutStderrTo0
 (JNIEnv *env, jclass clz, jbyteArray jpath)
