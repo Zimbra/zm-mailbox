@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.zclient;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -45,11 +48,23 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         rgbColor;
 
         private long mValue;
+        private static Map<String,Color> colorMap = new HashMap<String,Color>();
+
+        static {
+          for (Color c : Color.values())
+                colorMap.put(c.toString(), c);
+        }
 
         public long getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
-            return Color.values()[MailItem.Color.getMappedColor(s)];
+            if (s != null) {
+                s = s.toLowerCase();
+                if (colorMap.containsKey(s)) {
+                    return colorMap.get(s);
+                }
+            }
+            return Color.values()[com.zimbra.common.mailbox.Color.getMappedColor(s)];
         }
 
         public Color setRgbColor(String s) {
