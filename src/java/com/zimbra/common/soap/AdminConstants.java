@@ -183,6 +183,8 @@ public final class AdminConstants {
     public static final String E_CHECK_BLOB_CONSISTENCY_RESPONSE = "CheckBlobConsistencyResponse";
     public static final String E_EXPORT_AND_DELETE_ITEMS_REQUEST = "ExportAndDeleteItemsRequest";
     public static final String E_EXPORT_AND_DELETE_ITEMS_RESPONSE = "ExportAndDeleteItemsResponse";
+    public static final String E_DEDUPE_BLOBS_REQUEST = "DedupeBlobsRequest";
+    public static final String E_DEDUPE_BLOBS_RESPONSE = "DedupeBlobsResponse";
 
     public static final String E_CREATE_DISTRIBUTION_LIST_REQUEST = "CreateDistributionListRequest";
     public static final String E_CREATE_DISTRIBUTION_LIST_RESPONSE = "CreateDistributionListResponse";
@@ -652,6 +654,8 @@ public final class AdminConstants {
     public static final QName CHECK_BLOB_CONSISTENCY_RESPONSE = QName.get(E_CHECK_BLOB_CONSISTENCY_RESPONSE, NAMESPACE);
     public static final QName EXPORT_AND_DELETE_ITEMS_REQUEST = QName.get(E_EXPORT_AND_DELETE_ITEMS_REQUEST, NAMESPACE);
     public static final QName EXPORT_AND_DELETE_ITEMS_RESPONSE = QName.get(E_EXPORT_AND_DELETE_ITEMS_RESPONSE, NAMESPACE);
+    public static final QName DEDUPE_BLOBS_REQUEST = QName.get(E_DEDUPE_BLOBS_REQUEST, NAMESPACE);
+    public static final QName DEDUPE_BLOBS_RESPONSE = QName.get(E_DEDUPE_BLOBS_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_DISTRIBUTION_LIST_REQUEST = QName.get(E_CREATE_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName CREATE_DISTRIBUTION_LIST_RESPONSE = QName.get(E_CREATE_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
@@ -1218,6 +1222,7 @@ public final class AdminConstants {
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
 
+    public static final String A_TOTAL_COUNT = "totalCount";
     // index stats
     public static final String A_MAX_DOCS = "maxDocs";
     public static final String A_DELETED_DOCS = "deletedDocs";
