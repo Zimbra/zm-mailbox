@@ -2869,3 +2869,14 @@ deleteTime - time (ms) for the delete operation
 <GetAllSkinsResponse>
   <skin name="{skin-name}"/>+
 </GetAllSkinsResponse>
+
+-----------------------------
+
+<DedupeBlobsRequest action="start|stop|status"/>
+  <volume id="..." />*
+</DedupeBlobsRequest>
+
+<DedupeBlobsResponse status="running|stopped" totalCount="{number of links created}" totalSize="{size saved}">
+</DedupeBlobsResponse>
+
+-----------------------------

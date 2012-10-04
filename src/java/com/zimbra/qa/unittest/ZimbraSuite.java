@@ -112,6 +112,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestContactCSV.class);
         sClasses.add(TestStoreManager.class);
         sClasses.add(TestSoapHarvest.class);
+        sClasses.add(TestBlobDeduper.class);
     }
 
     /**

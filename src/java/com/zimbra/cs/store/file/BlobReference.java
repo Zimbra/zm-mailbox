@@ -16,6 +16,8 @@ package com.zimbra.cs.store.file;
 
 import java.io.Serializable;
 
+import com.zimbra.znative.IO.FileInfo;
+
 public class BlobReference implements Serializable {
 
     private static final long serialVersionUID = -1132877177535802600L;
@@ -27,6 +29,7 @@ public class BlobReference implements Serializable {
     private int revision;
     private String digest;
     private boolean processed;
+    private FileInfo fileInfo;
 
     public long getId() {
         return id;
@@ -69,6 +72,14 @@ public class BlobReference implements Serializable {
     }
     public void setProcessed(boolean processed) {
         this.processed = processed;
+    }
+    
+    public FileInfo getFileInfo() {
+        return fileInfo;
+    }
+    
+    public void setFileInfo(FileInfo fileInfo) {
+        this.fileInfo = fileInfo;
     }
 
 }

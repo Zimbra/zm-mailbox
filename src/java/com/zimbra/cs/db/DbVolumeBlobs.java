@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.db;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -141,6 +143,14 @@ public final class DbVolumeBlobs {
         }
         return blobs;
     }
+    
+    private static SpoolingCache<String> fillBlobDigests(ResultSet rs) throws SQLException, IOException {
+        SpoolingCache<String> digests = new SpoolingCache<String>();
+        while (rs.next()) {
+            digests.add(rs.getString(1));
+        }
+        return digests;
+    }
 
     public static List<BlobReference> getBlobReferences(DbConnection conn, Volume vol) throws ServiceException {
         PreparedStatement stmt = null;
@@ -151,6 +161,25 @@ public final class DbVolumeBlobs {
             stmt.setShort(pos++, vol.getId());
             rs = stmt.executeQuery();
             return fillBlobReferences(rs);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("unable to query blob references", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
+    public static SpoolingCache<String> getUniqueDigests(DbConnection conn, Volume vol) throws ServiceException, IOException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT DISTINCT " + CN_DIGEST + " FROM " + TB_VOLUME_BLOBS + 
+                                         " WHERE " + CN_VOLUME_ID +  " = ? AND " + CN_PROCESSED + " = ? ");
+            int pos = 1;
+            stmt.setShort(pos++, vol.getId());
+            stmt.setBoolean(pos++, false);
+            rs = stmt.executeQuery();
+            return fillBlobDigests(rs);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("unable to query blob references", e);
         } finally {
