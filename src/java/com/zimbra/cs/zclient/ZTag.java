@@ -64,7 +64,7 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
                     return colorMap.get(s);
                 }
             }
-            return Color.values()[com.zimbra.common.mailbox.Color.getMappedColor(s)];
+            return Color.values()[MailItem.Color.getMappedColor(s)];
         }
 
         public Color setRgbColor(String s) {
