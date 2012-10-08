@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -71,6 +72,7 @@ public class ImapSession extends Session {
     private final boolean  mIsVirtual;
     private ImapFolderData mFolder;
     private ImapHandler handler;
+    private Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
@@ -146,6 +148,40 @@ public class ImapSession extends Session {
     boolean requiresReload() {
         ImapFolderData fdata = mFolder;
         return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
+    }
+
+    int getRenumberCount(ImapMessage msg) {
+        Integer count = renumberCount.get(msg.msgId);
+        return (count == null ? 0 : count);
+    }
+
+    void incrementRenumber(ImapMessage msg) {
+        Integer count = renumberCount.get(msg.msgId);
+        count = (count != null ? count + 1 : 1);
+        renumberCount.put(msg.msgId, count);
+    }
+
+    void resetRenumber() {
+        renumberCount.clear();
+    }
+
+    boolean hasFailedRenumber() {
+        //check if any id has been repeatedly renumbered
+        for (Integer count : renumberCount.values()) {
+            if (count > 5) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    boolean isFailedRenumber(ImapMessage msg) {
+        Integer count = renumberCount.get(msg.msgId);
+        return (count == null ? false : isFailed(count));
+    }
+
+    private boolean isFailed(Integer count) {
+        return count > 5;
     }
 
     void inactivate() {
@@ -330,7 +366,14 @@ public class ImapSession extends Session {
                     // need to switch target before replay (yes, this is inelegant)
                     mFolder = i4folder;
                     // replay all queued events into the restored folder
-                    paged.replay();
+                    try {
+                        paged.replay(); //catch some error and return null so we drop cache and reload from db
+                        if (hasFailedRenumber()) {
+                            return handleRenumberError(paged.getCacheKey());
+                        }
+                    } catch (ImapRenumberException e) {
+                        return handleRenumberError(paged.getCacheKey());
+                    }
                     // if it's a disconnected session, no need to track expunges
                     if (!isInteractive()) {
                         i4folder.collapseExpunged(false);
@@ -341,6 +384,13 @@ public class ImapSession extends Session {
         } finally {
             mbox.lock.release();
         }
+    }
+
+    ImapFolder handleRenumberError(String key) {
+        resetRenumber();
+        ZimbraLog.imap.warn("could not replay due to too many renumbers");
+        MANAGER.safeRemoveCache(key);
+        return null;
     }
 
     static class AddedItems {
@@ -627,6 +677,8 @@ public class ImapSession extends Session {
             if (queuedChanges == null) {
                 return;
             }
+
+            resetRenumber();
 
             for (Iterator<Map.Entry<Integer, PendingModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
                 Map.Entry<Integer, PendingModifications> entry = it.next();
