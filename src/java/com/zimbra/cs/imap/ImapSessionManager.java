@@ -342,6 +342,9 @@ final class ImapSessionManager {
                 synchronized (i4listener) {
                     try {
                         ImapFolder i4selected = i4listener.getImapFolder();
+                        if (i4selected == null) {
+                            return null;
+                        }
                         // found a matching session, so just copy its contents!
                         ZimbraLog.imap.debug("copying message data from existing session: %s", i4listener.getPath());
                         final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
@@ -582,7 +585,7 @@ final class ImapSessionManager {
             activeSessionCache.put(key, folder);
         }
     }
-    
+
     ImapFolder deserialize(String key) {
         if (!isActiveKey(key)) {
             return inactiveSessionCache.get(key);
@@ -591,12 +594,22 @@ final class ImapSessionManager {
             return folder;
         }
     }
-    
+
     void updateAccessTime(String key) {
         if (!isActiveKey(key)) {
             inactiveSessionCache.updateAccessTime(key);
         } else {
             activeSessionCache.updateAccessTime(key);
+        }
+    }
+
+    void safeRemoveCache(String key) {
+        //remove only from inactive
+        if (!isActiveKey(key)) {
+            inactiveSessionCache.remove(key);
+        } else {
+            //removal from active is unsafe; not great to have inconsistent state but it is nicer than bombing totally
+            ZimbraLog.imap.warn("Inconsistent active cache entry %s cannot be removed. Client state may not be accurate", key);
         }
     }
 
@@ -613,7 +626,7 @@ final class ImapSessionManager {
 
         /** Removes the folder from the cache. */
         void remove(String key);
-        
+
         /** Update the last access time without necessarily loading the underlying object **/
         void updateAccessTime(String key);
     }
