@@ -615,6 +615,16 @@ final class ImapSessionManager {
         }
     }
 
+    void safeRemoveCache(String key) {
+        //remove only from inactive
+        if (!isActiveKey(key)) {
+            inactiveSessionCache.remove(key);
+        } else {
+            //removal from active is unsafe; not great to have inconsistent state but it is nicer than bombing totally
+            ZimbraLog.imap.warn("Inconsistent active cache entry %s cannot be removed. Client state may not be accurate", key);
+        }
+    }
+
     public static boolean isActiveKey(String key) {
         return key.contains("_");
     }
