@@ -63,6 +63,7 @@ public class AclReports extends Report {
 	private void handlePrincipalPropertySearch(DavContext ctxt, Element query) throws DavException, ServiceException {
 		RequestProp reqProp = ctxt.getRequestProp();
 		DavResponse resp = ctxt.getDavResponse();
+		resp.getTop(DavElements.E_MULTISTATUS);  /* Creates top level element - needed even if there are no matches */
 		for (DavResource rs : getMatchingResources(ctxt, query))
             resp.addResource(ctxt, rs, reqProp, false);
 	}

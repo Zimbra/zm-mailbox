@@ -85,6 +85,7 @@ import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.UserServletUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.AccountUtil;
 
 /**
@@ -263,7 +264,7 @@ public class UserServlet extends ZimbraServlet {
             return;
         }
         if (ctxt != null &&!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
-            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);

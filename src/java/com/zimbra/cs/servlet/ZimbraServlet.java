@@ -66,6 +66,7 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -79,7 +80,6 @@ public class ZimbraServlet extends HttpServlet {
 
     private static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
 
-    protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     public static final String QP_ZAUTHTOKEN = "zauthtoken";
 
     protected String getRealmHeader(String realm)  { 
@@ -416,12 +416,12 @@ public class ZimbraServlet extends HttpServlet {
         if (!AuthProvider.allowBasicAuth(req, this))
             return null;
 
-        String auth = req.getHeader("Authorization");
+        String auth = req.getHeader(AuthUtil.HTTP_AUTH_HEADER);
 
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));            
+                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
             }
             return null;
@@ -453,7 +453,7 @@ public class ZimbraServlet extends HttpServlet {
         Account acct = prov.get(AccountBy.name, user);
         if (acct == null) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
             }
             return new GuestAccount(user, pass);
@@ -467,7 +467,7 @@ public class ZimbraServlet extends HttpServlet {
             prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);
         } catch (ServiceException se) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, prov.getDomain(acct)));
+                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, prov.getDomain(acct)));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
             }
             return null;

@@ -76,6 +76,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -87,7 +88,8 @@ public class DavServlet extends ZimbraServlet {
 	
 	private static Map<String, DavMethod> sMethods;
 	
-	public void init() throws ServletException {
+	@Override
+    public void init() throws ServletException {
 		super.init();
 		sMethods = new HashMap<String, DavMethod>();
 		addMethod(new Copy());
@@ -146,7 +148,8 @@ public class DavServlet extends ZimbraServlet {
     		return RequestType.authtoken;
     }
     
-	public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	@Override
+    public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		ZimbraLog.clearContext();
 		addRemoteIpToLoggingContext(req);
 		ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
@@ -158,19 +161,25 @@ public class DavServlet extends ZimbraServlet {
 			return;
 		}
 
-		/*
-		if (ZimbraLog.dav.isDebugEnabled()) {
-			java.util.Enumeration en = req.getHeaderNames();
-			while (en.hasMoreElements()) {
-				String n = (String)en.nextElement();
-				java.util.Enumeration vals = req.getHeaders(n);
-				while (vals.hasMoreElements()) {
-					String v = (String)vals.nextElement();
-		        	ZimbraLog.dav.debug("HEADER "+n+": "+v);
-				}
-			}
-		}
-		*/
+        if (ZimbraLog.dav.isDebugEnabled()) {
+            /* Headers can include vital information which affects the request like "If-None-Match" headers,
+             * so useful to be able to log them, skipping authentication related headers to avoid leaking passwords
+             */
+            java.util.Enumeration<?> en = req.getHeaderNames();
+            StringBuilder sb = new StringBuilder();
+            while (en.hasMoreElements()) {
+                String n = (String) en.nextElement();
+                if (! (AuthUtil.HTTP_AUTH_HEADER.equalsIgnoreCase(n) || 
+                        AuthUtil.WWW_AUTHENTICATE_HEADER.equalsIgnoreCase(n))) {
+                    java.util.Enumeration<?> vals = req.getHeaders(n);
+                    while (vals.hasMoreElements()) {
+                        String v = (String) vals.nextElement();
+                        sb.append(n).append(":").append(v).append("\n");
+                    }
+                }
+            }
+            ZimbraLog.dav.debug("REQUEST HTTP Headers:\n" + sb.toString());
+        }
         Account authUser = null;
 		DavContext ctxt;
 		try {
@@ -284,7 +293,6 @@ public class DavServlet extends ZimbraServlet {
         return getServiceUrl(account, DAV_PATH);
 	}
 
-	@SuppressWarnings("unchecked")
     private boolean isCtagRequest(DavContext ctxt) throws DavException {
 	    String httpMethod = ctxt.getRequest().getMethod();
 	    if (PropFind.PROPFIND.equalsIgnoreCase(httpMethod)) {
@@ -295,7 +303,7 @@ public class DavServlet extends ZimbraServlet {
             Element prop = top.element(DavElements.E_PROP);
             if (prop == null)
                 return false;
-            Iterator iter = prop.elementIterator();
+            Iterator<?> iter = prop.elementIterator();
             while (iter.hasNext()) {
                 prop = (Element) iter.next();
                 if (prop.getQName().equals(DavElements.E_GETCTAG))

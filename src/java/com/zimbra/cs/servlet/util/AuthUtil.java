@@ -44,7 +44,7 @@ public class AuthUtil {
     private static Log mLog = LogFactory.getLog(AuthUtil.class);
 
     public static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-
+    public static final String HTTP_AUTH_HEADER = "Authorization";
 
     /**
      * Checks to see if this is an admin request
@@ -163,7 +163,7 @@ public class AuthUtil {
     public static Account basicAuthRequest(HttpServletRequest req, boolean allowGuest)
         throws IOException, ServiceException, UserServletException
     {
-        String auth = req.getHeader("Authorization");
+        String auth = req.getHeader(HTTP_AUTH_HEADER);
 
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
