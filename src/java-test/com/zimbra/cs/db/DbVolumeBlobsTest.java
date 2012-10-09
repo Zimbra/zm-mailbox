@@ -121,6 +121,26 @@ public class DbVolumeBlobsTest {
 
         Assert.assertEquals(path, getPath(ref));
     }
+    
+    @Test
+    public void testIncrementalBlobs() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int ts1 = (int) (System.currentTimeMillis()/1000);
+        Message msg1 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
+        Thread.sleep(1000);
+        int ts2 = (int) (System.currentTimeMillis()/1000);
+        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
+        Thread.sleep(1000);
+        int ts3 = (int) (System.currentTimeMillis()/1000);
+        Iterable<MailboxBlobInfo> allBlobs = null;
+        Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), ts1, ts2);
+        Assert.assertEquals(msg1.getId(), allBlobs.iterator().next().itemId);
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), ts2, ts3);
+        Assert.assertEquals(msg2.getId(), allBlobs.iterator().next().itemId);
+    }
 
     @Test
     public void writeAllBlobRefs() throws Exception {
@@ -135,7 +155,7 @@ public class DbVolumeBlobsTest {
             digestToPath.put(msg.getDigest(), msg.getBlob().getLocalBlob().getFile().getPath());
         }
         Iterable<MailboxBlobInfo> allBlobs = null;
-        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), -1, -1);
         for (MailboxBlobInfo info : allBlobs) {
             DbVolumeBlobs.addBlobReference(conn, info);
         }
@@ -163,7 +183,7 @@ public class DbVolumeBlobsTest {
             mbox.addMessage(null, new ParsedMessage(("From: from" + i + "@zimbra.com\r\nTo: to1@zimbra.com").getBytes(), false), opt, null);
         }
         Iterable<MailboxBlobInfo> allBlobs = null;
-        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), -1, -1);
         for (MailboxBlobInfo info : allBlobs) {
             DbVolumeBlobs.addBlobReference(conn, info);
         }
@@ -188,7 +208,7 @@ public class DbVolumeBlobsTest {
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
 
         Iterable<MailboxBlobInfo> allBlobs = null;
-        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), -1, -1);
         for (MailboxBlobInfo info : allBlobs) {
             DbVolumeBlobs.addBlobReference(conn, info);
         }
@@ -225,7 +245,7 @@ public class DbVolumeBlobsTest {
         }
 
         Iterable<MailboxBlobInfo> allBlobs = null;
-        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), -1, -1);
         for (MailboxBlobInfo info : allBlobs) {
             DbVolumeBlobs.addBlobReference(conn, info);
         }
@@ -265,7 +285,7 @@ public class DbVolumeBlobsTest {
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
 
         Iterable<MailboxBlobInfo> allBlobs = null;
-        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), -1, -1);
         for (MailboxBlobInfo info : allBlobs) {
             DbVolumeBlobs.addBlobReference(conn, info);
         }

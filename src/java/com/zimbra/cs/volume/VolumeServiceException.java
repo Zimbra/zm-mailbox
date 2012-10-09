@@ -32,6 +32,7 @@ public final class VolumeServiceException extends ServiceException {
     public static final String INVALID_REQUEST               = "volume.INVALID_REQUEST";
     public static final String NOT_ABSOLUTE_PATH             = "volume.NOT_ABSOLUTE_PATH";
     public static final String SUBDIR_OF_ANOTHER_VOLUME      = "volume.SUBDIR_OF_ANOTHER_VOLUME";
+    public static final String INVALID_METADATA              = "volume.INVALID_METADATA";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -99,5 +100,9 @@ public final class VolumeServiceException extends ServiceException {
         return new VolumeServiceException("the path \"" + path + "\" is a subdirectory of another volume (id=" +
                 anotherVol.getId() + ", path=" + anotherVol.getRootPath() + ")",
                 SUBDIR_OF_ANOTHER_VOLUME, SENDERS_FAULT, null);
+    }
+    
+    public static VolumeServiceException INVALID_METADATA(Throwable cause) {
+        return new VolumeServiceException("could not decode metadata", INVALID_METADATA, true, cause);
     }
 }

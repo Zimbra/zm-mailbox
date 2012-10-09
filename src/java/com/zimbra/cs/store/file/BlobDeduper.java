@@ -21,19 +21,26 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.MultiMap;
 import org.apache.commons.collections.map.MultiValueMap;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbVolume;
 import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
 import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.Volume.VolumeMetadata;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
 
@@ -44,7 +51,7 @@ public class BlobDeduper {
     private int totalLinksCreated = 0;
     private long totalSizeSaved = 0;
     
-    private static BlobDeduper SINGLETON = new BlobDeduper();
+    private final static BlobDeduper SINGLETON = new BlobDeduper();
 
     private BlobDeduper() {
     }
@@ -201,7 +208,10 @@ public class BlobDeduper {
     }
     
     public synchronized void stopProcessing() {
-        stopProcessing = true;
+        if (inProgress) {
+            ZimbraLog.misc.info("Setting stopProcessing flag.");
+            stopProcessing = true;
+        }
     }
     
     private synchronized boolean isStopProcessing() {
@@ -236,6 +246,7 @@ public class BlobDeduper {
             totalSizeSaved = 0;
         }
         Thread thread = new BlobDeduperThread(volumeIds);
+        thread.setName("BlobDeduper");
         thread.start();
     }
     
@@ -246,10 +257,81 @@ public class BlobDeduper {
             this.volumeIds = volumeIds;
         }
         
+        private void populateVolumeBlobs(short volumeId, int groupId, int lastSyncDate, int currentSyncDate) throws ServiceException {
+            DbConnection conn = null;
+            Iterable<MailboxBlobInfo> allBlobs = null;
+            try {      
+                conn = DbPool.getConnection();
+                allBlobs = DbMailItem.getAllBlobs(conn, groupId, volumeId, lastSyncDate, currentSyncDate);
+                for (MailboxBlobInfo info : allBlobs) {
+                    DbVolumeBlobs.addBlobReference(conn, info);
+                }
+                conn.commit();
+            } finally {
+                DbPool.quietClose(conn);
+            }
+        }
+        
+        private Volume updateMetadata(short volumeId, VolumeMetadata metadata) throws ServiceException {
+            VolumeManager mgr = VolumeManager.getInstance();
+            Volume.Builder builder = Volume.builder(mgr.getVolume(volumeId));
+            builder.setMetadata(metadata);
+            return mgr.update(builder.build());
+        }
+        
+        private Set<Integer> getGroupIds() throws ServiceException {
+            DbConnection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                return DbMailbox.getMboxGroupIds(conn);
+            } finally {
+                DbPool.quietClose(conn);
+            }
+        }
+        
+        private void populateVolumeBlobs(Volume vol) throws ServiceException {
+            VolumeMetadata metadata = vol.getMetadata();
+            boolean resumed = false;
+            if (metadata.getCurrentSyncDate() == 0) {
+                // this is not a resume. update the current sync date.
+                metadata.setCurrentSyncDate((int) (System.currentTimeMillis() / 1000));
+            } else { // this is resumed request.
+                resumed = true;
+            }
+            if (DebugConfig.disableMailboxGroups) {
+                populateVolumeBlobs(vol.getId(), -1, metadata.getLastSyncDate(), metadata.getCurrentSyncDate());
+            } else {
+                Set<Integer> groupIds = getGroupIds();
+                for (int i = (resumed ? metadata.getGroupId() + 1 : 1); i <= DebugConfig.numMailboxGroups; i++) {
+                    if (!groupIds.contains(i)) {
+                        continue;
+                    }
+                    populateVolumeBlobs(vol.getId(), i, metadata.getLastSyncDate(), metadata.getCurrentSyncDate());
+                    metadata.setGroupId(i);
+                    vol = updateMetadata(vol.getId(), metadata);
+                    if (isStopProcessing()) {
+                        ZimbraLog.misc.info("Recieved the stop signal. Stopping the deduplication process.");
+                        throw ServiceException.INTERRUPTED("received stop signal");
+                    }
+                }
+            }
+            // reset group-id and update currentSync and lastSync.
+            metadata.setLastSyncDate(metadata.getCurrentSyncDate());
+            metadata.setCurrentSyncDate(0);
+            metadata.setGroupId(0);
+            vol = updateMetadata(vol.getId(), metadata);
+            // if this is a resumed sync, run another sync to catch up to current date.
+            if (resumed) {
+                populateVolumeBlobs(vol);
+            }
+        }
+        
         public void run() {   
             for (short volumeId : volumeIds) {
                 try {
                     Volume vol = VolumeManager.getInstance().getVolume(volumeId);
+                    // populate the volume_blox table first;
+                    populateVolumeBlobs(vol);
                     SpoolingCache<String> digests;
                     DbConnection conn = null;
                     try {

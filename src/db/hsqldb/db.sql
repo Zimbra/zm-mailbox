@@ -30,6 +30,7 @@ CREATE TABLE volume (
    mailbox_group_bits     SMALLINT NOT NULL,
    compress_blobs         BOOLEAN NOT NULL,
    compression_threshold  BIGINT NOT NULL,
+   metadata               VARCHAR(255),
 
    CONSTRAINT i_name UNIQUE (name),
    CONSTRAINT i_path UNIQUE (path)
