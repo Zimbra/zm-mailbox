@@ -550,7 +550,7 @@ abstract class Pop3Handler {
             Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), clientAddress, null);
             // auth failure was represented by Authenticator.authenticate() returning null
             if (acct == null) {
-                throw new Pop3CmdException("invalid username/password");
+                throw new Pop3CmdException("LOGIN failed");
             }
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false)) {
                 throw new Pop3CmdException("pop access not enabled for account");
@@ -571,7 +571,7 @@ abstract class Pop3Handler {
         } catch (ServiceException e) {
             String code = e.getCode();
             if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) || code.equals(AccountServiceException.AUTH_FAILED)) {
-                throw new Pop3CmdException("invalid username/password");
+                throw new Pop3CmdException("LOGIN failed");
             } else if (code.equals(AccountServiceException.CHANGE_PASSWORD)) {
                 throw new Pop3CmdException("your password has expired");
             } else if (code.equals(AccountServiceException.MAINTENANCE_MODE)) {
