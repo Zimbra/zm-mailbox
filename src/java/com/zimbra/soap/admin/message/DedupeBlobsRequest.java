@@ -46,7 +46,8 @@ public class DedupeBlobsRequest {
     public static enum DedupAction {
         start,
         status,
-        stop;
+        stop,
+        reset;
         
         public static Action fromString(String action) throws ServiceException {
             try {
