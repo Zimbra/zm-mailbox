@@ -2872,7 +2872,7 @@ deleteTime - time (ms) for the delete operation
 
 -----------------------------
 
-<DedupeBlobsRequest action="start|stop|status"/>
+<DedupeBlobsRequest action="start|stop|status|reset"/>
   <volume id="..." />*
 </DedupeBlobsRequest>
 

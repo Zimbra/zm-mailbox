@@ -35,7 +35,6 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.DbVolume;
 import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
@@ -235,6 +234,52 @@ public class BlobDeduper {
     public synchronized Pair<Integer, Long> getCountAndSize() {
         return new Pair<Integer,Long>(totalLinksCreated, totalSizeSaved);
     }
+    
+    public void resetVolumeBlobs(List<Short> volumeIds) throws ServiceException {
+        synchronized (this) {
+            if (inProgress) {
+                throw MailServiceException.TRY_AGAIN("Dedeupe is in prgoress. Stop the dedupe and then run reset again.");
+            }
+            inProgress = true;
+        }
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            if (volumeIds.isEmpty()) {
+                // truncate the volume_blobs
+                DbVolumeBlobs.deleteAllBlobRef(conn);
+                // update the volume metadata
+                for (Volume vol : VolumeManager.getInstance().getAllVolumes()) {
+                    switch (vol.getType()) {
+                        case Volume.TYPE_MESSAGE:
+                        case Volume.TYPE_MESSAGE_SECONDARY:
+                            // reset volume metadata.
+                            updateMetadata(vol.getId(), new VolumeMetadata(0, 0, 0));
+                            break;
+                    }
+                }
+            } else {
+                for (short volumeId : volumeIds) {
+                    Volume vol = VolumeManager.getInstance().getVolume(volumeId);
+                    // remove the entries from volume_blobs and reset volume metadata.
+                    DbVolumeBlobs.deleteBlobRef(conn, vol);
+                    // reset volume metadata.
+                    updateMetadata(vol.getId(), new VolumeMetadata(0, 0, 0));
+                }
+            }
+            conn.commit();
+        } finally {
+            DbPool.quietClose(conn);
+            resetProgress();
+        } 
+    }
+    
+    private Volume updateMetadata(short volumeId, VolumeMetadata metadata) throws ServiceException {
+        VolumeManager mgr = VolumeManager.getInstance();
+        Volume.Builder builder = Volume.builder(mgr.getVolume(volumeId));
+        builder.setMetadata(metadata);
+        return mgr.update(builder.build());
+    }
 
     public void process(List<Short> volumeIds) throws ServiceException, IOException {
         synchronized (this) {
@@ -264,19 +309,19 @@ public class BlobDeduper {
                 conn = DbPool.getConnection();
                 allBlobs = DbMailItem.getAllBlobs(conn, groupId, volumeId, lastSyncDate, currentSyncDate);
                 for (MailboxBlobInfo info : allBlobs) {
-                    DbVolumeBlobs.addBlobReference(conn, info);
+                    try {
+                        DbVolumeBlobs.addBlobReference(conn, info);
+                    } catch (MailServiceException se) {
+                        // ignore if the row already exists.
+                        if (!MailServiceException.ALREADY_EXISTS.equals(se.getCode())) {
+                            throw se;
+                        }
+                    }
                 }
                 conn.commit();
             } finally {
                 DbPool.quietClose(conn);
             }
-        }
-        
-        private Volume updateMetadata(short volumeId, VolumeMetadata metadata) throws ServiceException {
-            VolumeManager mgr = VolumeManager.getInstance();
-            Volume.Builder builder = Volume.builder(mgr.getVolume(volumeId));
-            builder.setMetadata(metadata);
-            return mgr.update(builder.build());
         }
         
         private Set<Integer> getGroupIds() throws ServiceException {

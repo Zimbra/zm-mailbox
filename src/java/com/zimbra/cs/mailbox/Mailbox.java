@@ -96,6 +96,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
@@ -2038,7 +2039,7 @@ public class Mailbox {
                     DbConnection conn = getOperationConnection();
                     DbMailbox.clearMailboxContent(this);
                     DbMailbox.deleteMailbox(conn, this);
-
+                    DbVolumeBlobs.deleteBlobRef(conn, this);
                     // Remove all data related to this mailbox from memcached, so the data doesn't
                     // get used by another user later by mistake if/when mailbox id gets reused.
                     MemcachedCacheManager.purgeMailbox(this);
