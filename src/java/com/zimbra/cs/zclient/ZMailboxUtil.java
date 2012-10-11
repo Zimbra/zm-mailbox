@@ -2705,6 +2705,9 @@ public class ZMailboxUtil implements DebugListener {
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             stdout.format("  %s: %s%n", entry.getKey(), entry.getValue());
         }
+        if (contact.isGroup()) {
+            stdout.format("GroupMembers: %s%n", contact.getMembers().keySet());
+        }
         stdout.println();
     }
 
