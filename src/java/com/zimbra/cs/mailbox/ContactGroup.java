@@ -152,7 +152,7 @@ public class ContactGroup {
         String before = dump();
         removeAllMembers();
         MigrateContactGroup.migrate(this, dlist);
-        
+
         ZimbraLog.contact.info("in-place migrated contact group from dlist: dlist=[%s], groupMember before migrate=[%s], groupMember after migrate=[%s]", 
                 dlist, before, dump());
     }
@@ -854,7 +854,13 @@ public class ContactGroup {
         public void handle() throws ServiceException {
             for (MailItem item : mbox.getItemList(octxt, MailItem.Type.CONTACT, -1)) {
                 Contact contact = (Contact) item;
-                migrate(contact);
+                try {
+                    migrate(contact);
+                } catch (Exception e) {
+                    if (contact.isGroup()) {
+                        ZimbraLog.contact.info("skipped migrating contact group %d", contact.getId(), e);
+                    }
+                }
             }
         }
         
@@ -862,30 +868,36 @@ public class ContactGroup {
             if (!contact.isGroup()) {
                 return;
             }
-            
+
             String dlist = contact.get(ContactConstants.A_dlist);
             if (Strings.isNullOrEmpty(dlist)) {
+                ZimbraLog.contact.info("skipped migrating contact group %d as dlist is empty", contact.getId());
                 return;
             }
-            
+
             ContactGroup contactGroup = ContactGroup.init();
+
             migrate(contactGroup, dlist);
-            
-            ParsedContact pc = new ParsedContact(contact);
-            
-            pc.modifyField(ContactConstants.A_groupMember, contactGroup.encode());
-            
-            // remove dlist.  
-            // TODO: should we do this? or should we keep dlist and hide it
-            // using zimbraContactHiddenAttributes? 
-            pc.modifyField(ContactConstants.A_dlist, null); 
-            
-            mbox.modifyContact(octxt, contact.getId(), pc);
-            
-            ZimbraLog.contact.info("migrated contact group %s: dlist=[%s], groupMember=[%s]", 
-                contact.getId(), dlist, contactGroup.dump());
+
+            if (contactGroup.hasMembers()) {
+                ParsedContact pc = new ParsedContact(contact);
+
+                pc.modifyField(ContactConstants.A_groupMember, contactGroup.encode());
+
+                // remove dlist.  
+                // TODO: should we do this? or should we keep dlist and hide it
+                // using zimbraContactHiddenAttributes? 
+                pc.modifyField(ContactConstants.A_dlist, null);
+
+                mbox.modifyContact(octxt, contact.getId(), pc);
+
+                ZimbraLog.contact.info("migrated contact group %s: dlist=[%s], groupMember=[%s]",
+                        contact.getId(), dlist, contactGroup.dump());
+            } else {
+                ZimbraLog.contact.info("aborted migrating contact group %d: dlist=[%s]", contact.getId(), dlist);
+            }
         }
-        
+
         // add each dlist member as an inlined member in groupMember
         static void migrate(ContactGroup contactGroup, String dlist) throws ServiceException {
             Matcher matcher = PATTERN.matcher(dlist);
@@ -898,7 +910,11 @@ public class ContactGroup {
                     }
                     String addr = token.trim();
                     if (!addr.isEmpty()) {
-                        contactGroup.addMember(Member.Type.INLINE, addr);
+                        try {
+                            contactGroup.addMember(Member.Type.INLINE, addr);
+                        } catch (ServiceException e) {
+                            ZimbraLog.contact.info("skipped contact group member %s", addr);
+                        }
                     }
                 }
             }

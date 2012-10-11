@@ -37,6 +37,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
@@ -474,10 +475,14 @@ public class CreateContact extends MailDocumentHandler  {
         Map<String, String> fields = pc.getFields();
         String dlist = fields.get(ContactConstants.A_dlist);
         if (dlist != null) {
-            ContactGroup contactGroup = ContactGroup.init();
-            contactGroup.migrateFromDlist(dlist);
-            fields.put(ContactConstants.A_groupMember, contactGroup.encode());
-            fields.remove(ContactConstants.A_dlist);
+            try {
+                ContactGroup contactGroup = ContactGroup.init();
+                contactGroup.migrateFromDlist(dlist);
+                fields.put(ContactConstants.A_groupMember, contactGroup.encode());
+                fields.remove(ContactConstants.A_dlist);
+            } catch (Exception e) {
+                ZimbraLog.contact.info("skipped migrating contact group, dlist=[%s]", dlist, e);
+            }
         }
     }
 }
