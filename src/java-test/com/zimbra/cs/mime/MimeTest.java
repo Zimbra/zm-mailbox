@@ -21,11 +21,14 @@ import java.util.Set;
 
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -38,20 +41,23 @@ public class MimeTest {
     private void testCP932(String contentType) throws IOException {
         Reader reader = Mime.getTextReader(getClass().getResourceAsStream("cp932.txt"), contentType, null);
         String result = IOUtils.toString(reader);
-        Assert.assertTrue(result.equals("2010/4/2,\u2161\u53f7\u5e97  \u30ab\u30aa\u30b9\u9928,\u3054\u672c\u4eba,1\u56de\u6255\u3044,,'10/05,9960,9960,,,,,\r\n"));
+        Assert.assertTrue(result
+                        .equals("2010/4/2,\u2161\u53f7\u5e97  \u30ab\u30aa\u30b9\u9928,\u3054\u672c\u4eba,1\u56de\u6255\u3044,,'10/05,9960,9960,,,,,\r\n"));
     }
 
     @Test
     public void getTextReader() throws Exception {
         Reader reader = Mime.getTextReader(getClass().getResourceAsStream("zimbra-shift-jis.txt"), "text/plain", null);
         String result = IOUtils.toString(reader);
-        Assert.assertTrue(result.startsWith("Zimbra Collaboration Suite\uff08ZCS\uff09\u306f\u3001Zimbra, Inc. " +
-                "\u304c\u958b\u767a\u3057\u305f\u30b3\u30e9\u30dc\u30ec\u30fc\u30b7\u30e7\u30f3\u30bd\u30d5\u30c8" +
-                "\u30a6\u30a7\u30a2\u88fd\u54c1\u3002"));
-        Assert.assertTrue(result.endsWith("\u65e5\u672c\u3067\u306f\u4f4f\u53cb\u5546\u4e8b\u304c\u7dcf\u8ca9\u58f2" +
-                "\u4ee3\u7406\u5e97\u3068\u306a\u3063\u3066\u3044\u308b\u3002"));
+        Assert.assertTrue(result
+                        .startsWith("Zimbra Collaboration Suite\uff08ZCS\uff09\u306f\u3001Zimbra, Inc. "
+                                        + "\u304c\u958b\u767a\u3057\u305f\u30b3\u30e9\u30dc\u30ec\u30fc\u30b7\u30e7\u30f3\u30bd\u30d5\u30c8"
+                                        + "\u30a6\u30a7\u30a2\u88fd\u54c1\u3002"));
+        Assert.assertTrue(result.endsWith("\u65e5\u672c\u3067\u306f\u4f4f\u53cb\u5546\u4e8b\u304c\u7dcf\u8ca9\u58f2"
+                        + "\u4ee3\u7406\u5e97\u3068\u306a\u3063\u3066\u3044\u308b\u3002"));
 
-        // ICU4J thinks it's UTF-32 with confidence 25. We only trust if the confidence is greater than 50.
+        // ICU4J thinks it's UTF-32 with confidence 25. We only trust if the
+        // confidence is greater than 50.
         reader = Mime.getTextReader(getClass().getResourceAsStream("p4-notification.txt"), "text/plain", null);
         result = IOUtils.toString(reader);
         Assert.assertTrue(result.startsWith("Change 259706"));
@@ -66,7 +72,8 @@ public class MimeTest {
     public void parseAddressHeader() throws Exception {
         InternetAddress[] addrs = Mime.parseAddressHeader("\" <test@zimbra.com>");
         Assert.assertEquals(1, addrs.length);
-        // Only verify an exception is not thrown. The new parser and the old parser don't get the same result.
+        // Only verify an exception is not thrown. The new parser and the old
+        // parser don't get the same result.
     }
 
     @Test
@@ -98,14 +105,145 @@ public class MimeTest {
 
     @Test
     public void emptyMultipart() throws Exception {
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), getClass().getResourceAsStream("bug50275.txt"));
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), getClass().getResourceAsStream(
+                        "bug50275.txt"));
         List<MPartInfo> parts = Mime.getParts(mm);
         Assert.assertNotNull(parts);
         Assert.assertEquals(1, parts.size());
         MPartInfo mpart = parts.get(0);
         Assert.assertEquals("text/plain", mpart.getContentType());
-        Assert.assertTrue(((String) mpart.getMimePart().getContent()).indexOf("por favor visite http://www.linux-magazine.es/Readers/Newsletter.") > -1);
+        Assert.assertTrue(((String) mpart.getMimePart().getContent())
+                        .indexOf("por favor visite http://www.linux-magazine.es/Readers/Newsletter.") > -1);
 
     }
 
+    String baseMpMixedContent = "From: user1@example.com\r\n" + "To: user2@example.com\r\n" + "Subject: test\r\n"
+                    + "Content-Type: multipart/mixed;\r\n" + "boundary=\"----------1111971890AC3BB91\"\r\n";
+
+    @Test
+    public void multiTextBody() throws Exception {
+
+        StringBuilder content = new StringBuilder(baseMpMixedContent);
+        int count = 5;
+        for (int i = 0; i < count; i++) {
+            content.append( "------------1111971890AC3BB91\r\n")
+                .append("Content-Type: text/html; charset=windows-1250\r\n")
+                .append("Content-Transfer-Encoding: quoted-printable\r\n\r\n")
+                .append("<html>Body ").append(i).append("</html>\r\n");
+        }
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.toString().getBytes()));
+
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(count + 1, parts.size());
+        MPartInfo mpart = parts.get(0);
+        Assert.assertEquals("multipart/mixed", mpart.getContentType());
+        List<MPartInfo> children = mpart.getChildren();
+        Assert.assertEquals(count, children.size());
+
+        Set<MPartInfo> bodies = Mime.getBody(parts, false);
+        Assert.assertEquals(count, bodies.size());
+        for (MPartInfo body : bodies) {
+            Assert.assertEquals("text/html", body.getContentType());
+            Object mimeContent = body.getMimePart().getContent();
+            Assert.assertTrue(mimeContent instanceof String);
+            String string = (String) mimeContent;
+            int idx = string.indexOf("" + (body.getPartNum() - 1)) ;
+            Assert.assertTrue(idx > 0); //body 0 is part 1, b1 is p2, and so on
+        }
+    }
+
+    @Test
+    public void imgCid() throws Exception {
+        String content = baseMpMixedContent
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: text/html; charset=windows-1250\r\n"
+                        + "Content-Transfer-Encoding: quoted-printable\r\n\r\n"
+                        + "<html>Email with img<img src=\"cid:12345_testemail\"/></html>\r\n"
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: image/jpeg;\r\n"
+                        + "name=\"img.jpg\"\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n"
+                        + "Content-ID: <12345_testemail>\r\n\r\n"
+                        + "R0a1231312ad124svsdsal=="; //obviously not a real image
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(3, parts.size());
+        MPartInfo mpart = parts.get(0);
+        Assert.assertEquals("multipart/mixed", mpart.getContentType());
+        List<MPartInfo> children = mpart.getChildren();
+        Assert.assertEquals(2, children.size());
+
+        Set<MPartInfo> bodies = Mime.getBody(parts, false);
+        Assert.assertEquals(1, bodies.size());
+        MPartInfo body = bodies.iterator().next();
+        Assert.assertEquals("text/html", body.getContentType());
+    }
+
+    @Test
+    public void textCid() throws Exception {
+        String content = baseMpMixedContent
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: text/html; charset=windows-1250\r\n"
+                        + "Content-Transfer-Encoding: quoted-printable\r\n"
+                        + "Content-ID: <text_testemail>\r\n\r\n" //barely valid, but we shouldn't break if a bad agent sends like this
+                        + "<html>Email with img<img src=\"cid:12345_testemail\"/></html>\r\n"
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: image/jpeg;\r\n"
+                        + "name=\"img.jpg\"\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n"
+                        + "Content-ID: <12345_testemail>\r\n\r\n"
+                        + "R0a1231312ad124svsdsal=="; //obviously not a real image
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(3, parts.size());
+        MPartInfo mpart = parts.get(0);
+        Assert.assertEquals("multipart/mixed", mpart.getContentType());
+        List<MPartInfo> children = mpart.getChildren();
+        Assert.assertEquals(2, children.size());
+
+        Set<MPartInfo> bodies = Mime.getBody(parts, false);
+        Assert.assertEquals(1, bodies.size());
+        MPartInfo body = bodies.iterator().next();
+        Assert.assertEquals("text/html", body.getContentType());
+    }
+
+    @Test
+    public void imgNoCid() throws Exception {
+        String content = baseMpMixedContent
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: text/html; charset=windows-1250\r\n"
+                        + "Content-Transfer-Encoding: quoted-printable\r\n\r\n"
+                        + "<html>Email no img</html>\r\n"
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: image/jpeg;\r\n"
+                        + "name=\"img.jpg\"\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n\r\n"
+                        //no CID here, so sender means for us to show it as body
+                        + "R0a1231312ad124svsdsal=="; //obviously not a real image
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(3, parts.size());
+        MPartInfo mpart = parts.get(0);
+        Assert.assertEquals("multipart/mixed", mpart.getContentType());
+        List<MPartInfo> children = mpart.getChildren();
+        Assert.assertEquals(2, children.size());
+
+        Set<MPartInfo> bodies = Mime.getBody(parts, false);
+        Assert.assertEquals(2, bodies.size());
+        Set<String> types = Sets.newHashSet("text/html","image/jpeg");
+        for (MPartInfo body : bodies) {
+            Assert.assertTrue("Expected: " +body.getContentType(), types.remove(body.getContentType()));
+        }
+    }
 }
