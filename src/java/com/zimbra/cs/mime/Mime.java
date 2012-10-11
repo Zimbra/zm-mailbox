@@ -1270,7 +1270,8 @@ public class Mime {
                         bodies = new LinkedHashSet<MPartInfo>(found.size());
                     bodies.addAll(found);
                 }
-            } else if (!mpi.getDisposition().equals(Part.ATTACHMENT) && !mpi.isMessage()) {
+            } else if (!mpi.getDisposition().equals(Part.ATTACHMENT) && !mpi.isMessage() &&
+                    (mpi.getContentID() == null || mpi.getContentType().matches(MimeConstants.CT_TEXT_WILD))) {
                 if (bodies == null)
                     bodies = new LinkedHashSet<MPartInfo>(1);
                 bodies.add(mpi);
