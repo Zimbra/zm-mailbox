@@ -197,7 +197,7 @@ public final class NativeFormatter extends Formatter {
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
 
-            if (!html || contentType.startsWith(MimeConstants.CT_TEXT_HTML)) {
+            if (!html || contentType.startsWith(MimeConstants.CT_TEXT_HTML) || contentType.matches(MimeConstants.CT_IMAGE_WILD)) {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
                 sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
