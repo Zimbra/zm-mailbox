@@ -223,7 +223,8 @@ public final class NativeFormatter extends Formatter {
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
             InputStream in = null;
             try {
-                if (!html || ExtensionUtil.getExtension("convertd") == null || contentType.startsWith(MimeConstants.CT_TEXT_HTML)) {
+                if (!html || ExtensionUtil.getExtension("convertd") == null ||
+                        contentType.startsWith(MimeConstants.CT_TEXT_HTML) || contentType.matches(MimeConstants.CT_IMAGE_WILD)) {
                     byte[] data = null;
 
                     // If this is an image that exceeds the max size, resize it.  Don't resize
