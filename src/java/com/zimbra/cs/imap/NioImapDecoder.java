@@ -76,7 +76,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
      */
     @Override
     protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out)
-            throws ProtocolDecoderException, IOException {
+            throws ProtocolDecoderException, IOException, Exception {
         int start = in.position(); // remember the initial position
         Context ctx = (Context) session.getAttribute(Context.class);
         if (ctx == null) {
@@ -100,6 +100,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                     ctx.literal = -1;
                     if (ctx.overflow) {
                         ctx.overflow = false;
+                        dispose(session);
                         throw new TooBigLiteralException(ctx.request);
                     }
                 }
@@ -131,11 +132,13 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                         try {
                             li = LiteralInfo.parse(line);
                         } catch (IllegalArgumentException e) {
+                            dispose(session);
                             throw new InvalidLiteralFormatException();
                         }
                         if (li != null && li.count > 0) { // ignore empty literal
                             if (maxLiteralSize >= 0 && li.count > maxLiteralSize) {
                                 if (li.isBlocking()) { // return a negative continuation response
+                                    dispose(session);
                                     throw new TooBigLiteralException(line);
                                 } else { // non-blocking, swallow the entire literal
                                     ctx.literal = li.count;
