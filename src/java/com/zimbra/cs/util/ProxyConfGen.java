@@ -26,6 +26,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -314,15 +315,9 @@ abstract class WebEnablerVar extends ProxyConfVar {
         super(keyword, null, defaultValue, 
                 ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, description);
     }
-    
-    private static String currentMailMode;
-    
+
     static String getZimbraReverseProxyMailMode() {
-        if (WebEnablerVar.currentMailMode == null) {
-            WebEnablerVar.currentMailMode = 
-                serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode, "both");
-        }
-        return WebEnablerVar.currentMailMode;
+        return serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode, "both");
     }
 }
 
@@ -342,7 +337,7 @@ class HttpEnablerVar extends WebEnablerVar {
         } else {
              mValue = true;
         }
-    }   
+    }
 }
 
 class HttpsEnablerVar extends WebEnablerVar {
@@ -359,7 +354,7 @@ class HttpsEnablerVar extends WebEnablerVar {
         } else {
             mValue = true;
         }
-    }   
+    }
 }
 
 abstract class IPModeEnablerVar extends ProxyConfVar {
@@ -1239,7 +1234,7 @@ public class ProxyConfGen
         mOptions.addOption("t", "templatedir", true, "Proxy Template Directory (defaults to $workdir/conf/nginx/templates)");
         mOptions.addOption("n", "dry-run", false, "Do not write any configuration, just show which files would be written");
         mOptions.addOption("d", "defaults", false, "Print default variable map");
-        mOptions.addOption("D", "definitions", false, "Print variable map Definitions after loading LDAP configuration (and processing overrides)");
+        mOptions.addOption("D", "definitions", false, "Print variable map Definitions after loading LDAP configuration (and processing overrides). -D requires -s upstream server. If \"-s upstream server\" is not specified, it just dumps the default varaible map");
         mOptions.addOption("p", "prefix", true, "Config File prefix (defaults to nginx.conf)");
         mOptions.addOption("P", "template-prefix", true, "Template File prefix (defaults to $prefix)");
         mOptions.addOption("i", "include-dir", true, "Directory Path (relative to $workdir/conf), where included configuration files will be written. Defaults to nginx/includes");
@@ -1792,6 +1787,17 @@ public class ProxyConfGen
         }
     }
 
+    /* Print the default variable map */
+    public static void displayDefaultVariables () throws ProxyConfException
+    {
+        for (ProxyConfVar var : mConfVars.values()) {
+            if (var instanceof TimeInSecVarWrapper) {
+                var = ((TimeInSecVarWrapper) var).mVar;
+            }
+            var.write(System.out);
+        }
+    }
+
     /* Print the variable map */
     public static void displayVariables () throws ProxyConfException
     {
@@ -2048,11 +2054,10 @@ public class ProxyConfGen
         buildDefaultVars();
 
         if (cl.hasOption('d')) {
-            displayVariables();
+            displayDefaultVariables();
             exitCode = 0;
             return(exitCode);
         }
-
 
         /* If a server object has been provided, then use that */
         if (cl.hasOption('s')) {
