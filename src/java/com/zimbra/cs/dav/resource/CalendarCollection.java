@@ -155,10 +155,10 @@ public class CalendarCollection extends Collection {
             try {
                 int start = href.lastIndexOf('/') + 1;
                 int end = href.lastIndexOf(".ics");
-                href = href.substring(start, end);
-                String hrefDecoded = URLDecoder.decode(href, "UTF-8");
+                String uid = href.substring(start, end);
+                uid = URLDecoder.decode(uid, "UTF-8");
                 if (start > 0 && end > 0 && end > start)
-                    uidmap.put(hrefDecoded, href);
+                    uidmap.put(uid, href);
             } catch (IOException e) {
                 ZimbraLog.dav.warn("can't decode href "+href, e);
             }
