@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Scanner;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -39,6 +40,7 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -53,6 +55,7 @@ public final class MetadataDump {
     private static final String OPT_DUMPSTER = "dumpster";
     private static final String OPT_FILE = "file";
     private static final String OPT_HELP = "h";
+    private static final String OPT_STR = "String";
 
     private static Options sOptions = new Options();
 
@@ -61,6 +64,7 @@ public final class MetadataDump {
         sOptions.addOption("i", OPT_ITEM_ID, true, "item id (required when --" + OPT_MAILBOX_ID + " is used)");
         sOptions.addOption(null, OPT_DUMPSTER, false, "Get data from the dumpster");
         sOptions.addOption("f", OPT_FILE, true, "Decode metadata value in a file (other options are ignored)");
+        sOptions.addOption("s", OPT_STR, true, "Decode metadata value from a string (other options are ignored)");
         sOptions.addOption(OPT_HELP, "help", false, "Show help (this output)");
     }
 
@@ -70,6 +74,7 @@ public final class MetadataDump {
         }
         System.err.println("Usage: zmmetadump -m <mailbox id/email> -i <item id> [--dumpster]");
         System.err.println("   or: zmmetadump -f <file containing encoded metadata>");
+        System.err.println("   or: zmmetadump -s <encoded string>");
     }
 
     private static CommandLine parseArgs(String args[]) {
@@ -255,17 +260,15 @@ public final class MetadataDump {
 
     private static String loadFromFile(File file) throws ServiceException {
         try {
-            long length = file.length();
-            byte[] buf = new byte[(int) length];
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(file);
-                int bytesRead = fis.read(buf);
-                if (bytesRead < length)
-                    throw ServiceException.FAILURE(
-                            "Read " + bytesRead + " bytes when expecting " + length +
-                            " bytes, from file " + file.getAbsolutePath(), null);
-                return DbMailItem.decodeMetadata(new String(buf, "utf-8"));
+                Scanner scan = new Scanner(fis);
+                StringBuilder builder = new StringBuilder();
+                while (scan.hasNextLine()) {
+                    builder.append(scan.nextLine());
+                }
+                return builder.toString();
             } finally {
                 if (fis != null)
                     fis.close();
@@ -343,6 +346,15 @@ public final class MetadataDump {
                     System.err.println("File " + infileName + " does not exist");
                     System.exit(1);
                 }
+            }
+
+            // Get data from input String.
+            String encoded = cl.getOptionValue(OPT_STR);
+            if (!StringUtil.isNullOrEmpty(encoded)) {
+                Metadata md = new Metadata(encoded);
+                String pretty = md.prettyPrint();
+                out.println(pretty);
+                return;
             }
 
             // Get data from db.
