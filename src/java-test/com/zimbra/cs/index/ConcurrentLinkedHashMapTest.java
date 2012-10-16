@@ -8,7 +8,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.googlecode.concurrentlinkedhashmap.CapacityLimiter;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 
@@ -17,12 +16,6 @@ public class ConcurrentLinkedHashMapTest {
     private static final ConcurrentMap<Integer, Object> gal_searcher_cache = 
         new ConcurrentLinkedHashMap.Builder<Integer, Object>()
         .maximumWeightedCapacity(5)
-        .capacityLimiter(new CapacityLimiter() {
-            @Override
-            public boolean hasExceededCapacity(ConcurrentLinkedHashMap<?,?> map) {
-                return (map.size() > 5);
-            }
-        })
         .listener(new EvictionListener<Integer, Object>() {
             @Override 
             public void onEviction(Integer key, Object value) {
