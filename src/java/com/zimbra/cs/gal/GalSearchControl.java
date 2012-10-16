@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.gal;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -395,8 +396,14 @@ public class GalSearchControl {
             if (!doLocalGalAccountSearch(galAcct))
                 throw new GalAccountNotConfiguredException();
         } else {
-            if (!proxyGalAccountSearch(galAcct))
+            try {
+                if (!proxyGalAccountSearch(galAcct))
+                    throw new GalAccountNotConfiguredException();
+            } catch (IOException e) {
+                ZimbraLog.gal.warn("remote search on GalSync account failed for " + galAcct.getName(), e);
+                // let the request fallback to ldap based search
                 throw new GalAccountNotConfiguredException();
+            }
         }
     }
 
@@ -406,11 +413,16 @@ public class GalSearchControl {
             throw new GalAccountNotConfiguredException();
         }
         if (Provisioning.onLocalServer(galAcct)) {
-            if (!doLocalGalAccountSync(galAcct))
-                throw new GalAccountNotConfiguredException();
+            doLocalGalAccountSync(galAcct);
         } else {
-            if (!proxyGalAccountSearch(galAcct))
-                throw new GalAccountNotConfiguredException();
+            try {
+                if (!proxyGalAccountSearch(galAcct))
+                    throw new GalAccountNotConfiguredException();
+            } catch (IOException e) {
+                ZimbraLog.gal.warn("remote sync on GalSync account failed for " + galAcct.getName(), e);
+                // remote server may be down, return the same sync token so that client can try again.
+                mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+            }
         }
     }
 
@@ -446,62 +458,25 @@ public class GalSearchControl {
         return true;
     }
 
-    private boolean doLocalGalAccountSync(Account galAcct) {
+    private void doLocalGalAccountSync(Account galAcct) throws ServiceException {
         GalSyncToken token = mParams.getGalSyncToken();
-        try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-            OperationContext octxt = new OperationContext(mbox);
-            GalSearchResultCallback callback = mParams.getResultCallback();
-            HashSet<Integer> folderIds = new HashSet<Integer>();
-            Domain domain = mParams.getDomain();
-            GalMode galMode = domain.getGalMode();
-            String syncToken = null;
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
+        OperationContext octxt = new OperationContext(mbox);
+        GalSearchResultCallback callback = mParams.getResultCallback();
+        HashSet<Integer> folderIds = new HashSet<Integer>();
+        Domain domain = mParams.getDomain();
+        GalMode galMode = domain.getGalMode();
+        String syncToken = null;
 
-            // bug 46608
-            // first do local resources sync if galMode == ldap
-            if (galMode == GalMode.ldap &&
-                    domain.isGalAlwaysIncludeLocalCalendarResources()) {
-                for (DataSource ds : galAcct.getAllDataSources()) {
-                    if (ds.getType() != DataSourceType.gal)
-                        continue;
-                    String galType = ds.getAttr(Provisioning.A_zimbraGalType);
-                    if (galType.compareTo("ldap") == 0)
-                        continue;
-                    int fid = ds.getFolderId();
-                    DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
-                    if (folderMapping.md == null)
-                        continue;
-                    folderIds.add(fid);
-                    syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
-                    int changeId = token.getChangeId(galAcct.getId());
-                    Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
-                            MailItem.Type.CONTACT, folderIds);
-
-                    int count = 0;
-                    for (int itemId : changed.getFirst()) {
-                        MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
-                        if (item instanceof Contact) {
-                            Contact c = (Contact)item;
-                            String accountType = c.get("zimbraAccountCalendarUserType");
-                            if (accountType != null && accountType.equals("RESOURCE"))
-                                callback.handleContact(c);
-                        }
-                        count++;
-                        if (count % 100 == 0)
-                            ZimbraLog.gal.debug("processing resources #"+count);
-                    }
-                    break;
-                }
-            }
-
-            folderIds.clear();
+        // bug 46608
+        // first do local resources sync if galMode == ldap
+        if (galMode == GalMode.ldap &&
+                domain.isGalAlwaysIncludeLocalCalendarResources()) {
             for (DataSource ds : galAcct.getAllDataSources()) {
                 if (ds.getType() != DataSourceType.gal)
                     continue;
                 String galType = ds.getAttr(Provisioning.A_zimbraGalType);
-                if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
-                    continue;
-                if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+                if (galType.compareTo("ldap") == 0)
                     continue;
                 int fid = ds.getFolderId();
                 DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
@@ -509,51 +484,82 @@ public class GalSearchControl {
                     continue;
                 folderIds.add(fid);
                 syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
-            }
-            int changeId = token.getChangeId(galAcct.getId());
-            List<Integer> deleted = null;
-            if (changeId > 0) {
-                try {
-                    deleted = mbox.getTombstones(changeId).getAllIds();
-                } catch (MailServiceException e) {
-                    if (MailServiceException.MUST_RESYNC == e.getCode()) {
-                        ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);
-                    } else {
-                        throw e;
+                int changeId = token.getChangeId(galAcct.getId());
+                Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
+                        MailItem.Type.CONTACT, folderIds);
+
+                int count = 0;
+                for (int itemId : changed.getFirst()) {
+                    MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
+                    if (item instanceof Contact) {
+                        Contact c = (Contact)item;
+                        String accountType = c.get("zimbraAccountCalendarUserType");
+                        if (accountType != null && accountType.equals("RESOURCE"))
+                            callback.handleContact(c);
                     }
+                    count++;
+                    if (count % 100 == 0)
+                        ZimbraLog.gal.debug("processing resources #"+count);
                 }
+                break;
             }
-                
-            Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
-                    MailItem.Type.CONTACT, folderIds);
-
-            int count = 0;
-            for (int itemId : changed.getFirst()) {
-                MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
-                if (item instanceof Contact)
-                    callback.handleContact((Contact)item);
-                count++;
-                if (count % 100 == 0)
-                    ZimbraLog.gal.debug("processing #"+count);
-            }
-
-            if (deleted != null) {
-                for (int itemId : deleted) {
-                    callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
-                }
-            }
-            GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
-            ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
-            callback.setNewToken(newToken);
-            callback.setHasMoreResult(false);
-        } catch (Exception e) {
-            ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
-            return false;
         }
-        return true;
+
+        folderIds.clear();
+        for (DataSource ds : galAcct.getAllDataSources()) {
+            if (ds.getType() != DataSourceType.gal)
+                continue;
+            String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+            if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
+                continue;
+            if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+                continue;
+            int fid = ds.getFolderId();
+            DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
+            if (folderMapping.md == null)
+                continue;
+            folderIds.add(fid);
+            syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+        }
+        int changeId = token.getChangeId(galAcct.getId());
+        List<Integer> deleted = null;
+        if (changeId > 0) {
+            try {
+                deleted = mbox.getTombstones(changeId).getAllIds();
+            } catch (MailServiceException e) {
+                if (MailServiceException.MUST_RESYNC == e.getCode()) {
+                    ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);
+                } else {
+                    throw e;
+                }
+            }
+        }
+                
+        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
+                MailItem.Type.CONTACT, folderIds);
+
+        int count = 0;
+        for (int itemId : changed.getFirst()) {
+            MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
+            if (item instanceof Contact)
+                callback.handleContact((Contact)item);
+            count++;
+            if (count % 100 == 0)
+                ZimbraLog.gal.debug("processing #"+count);
+        }
+
+        if (deleted != null) {
+            for (int itemId : deleted) {
+                callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
+            }
+        }
+        GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
+        ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
+        callback.setNewToken(newToken);
+        callback.setHasMoreResult(false);
     }
 
-    private boolean proxyGalAccountSearch(Account galSyncAcct) {
+    private boolean proxyGalAccountSearch(Account galSyncAcct) throws IOException, ServiceException {
         try {
             Provisioning prov = Provisioning.getInstance();
             String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galSyncAcct.getMailHost()));
@@ -622,9 +628,6 @@ public class GalSearchControl {
                 ZimbraLog.gal.warn("remote search on GalSync account failed for " + galSyncAcct.getName(), e);
                 return false;
             }
-        } catch (Exception e) {
-            ZimbraLog.gal.warn("remote search on GalSync account failed for " + galSyncAcct.getName(), e);
-            return false;
         }
 
         return true;
