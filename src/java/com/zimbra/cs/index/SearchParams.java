@@ -34,6 +34,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -73,7 +74,7 @@ public final class SearchParams implements Cloneable {
     private boolean wantExpandGroupInfo = false;
     private boolean neuterImages = false;
     private Set<String> inlinedHeaders;
-    private boolean recipients = false;
+    private String recipients;
     private long calItemExpandStart = -1;
     private long calItemExpandEnd = -1;
     private boolean inDumpster = false;  // search live data or dumpster data
@@ -161,7 +162,13 @@ public final class SearchParams implements Cloneable {
     }
 
     public OutputParticipants getWantRecipients() {
-        return recipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS;
+        if (StringUtil.equal(recipients, "2")) {
+            return OutputParticipants.PUT_BOTH;
+        } else if (StringUtil.equal(recipients, "1")) {
+            return OutputParticipants.PUT_RECIPIENTS;
+        } else {
+            return OutputParticipants.PUT_SENDERS;
+        }
     }
 
     public TimeZone getTimeZone() {
@@ -356,7 +363,7 @@ public final class SearchParams implements Cloneable {
         inlinedHeaders.add(value);
     }
 
-    public void setWantRecipients(boolean value) {
+    public void setWantRecipients(String value) {
         recipients = value;
     }
 
@@ -505,7 +512,7 @@ public final class SearchParams implements Cloneable {
                 params.addInlinedHeader(elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
             }
         }
-        params.setWantRecipients(request.getAttributeBool(MailConstants.A_RECIPIENTS, false));
+        params.setWantRecipients(request.getAttribute(MailConstants.A_RECIPIENTS, null));
 
         Element tz = request.getOptionalElement(MailConstants.E_CAL_TZ);
         if (tz != null) {
