@@ -3248,8 +3248,9 @@ public class DbMailItem {
 
         PreparedStatement stmt = null;
         try {
-            String query = "SELECT id, mod_content, locator, blob_digest FROM " + getMailItemTableName(groupId, false) +
-                            " WHERE blob_digest IS NOT NULL";
+            String query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", id, mod_content," +
+                    " locator, blob_digest FROM " + getMailItemTableName(groupId, false) +
+                    " WHERE blob_digest IS NOT NULL";
             if (volumeId > -1) {
                 stmt = conn.prepareStatement(query + " AND locator = ?");
                 stmt.setInt(1, volumeId);
@@ -3260,8 +3261,9 @@ public class DbMailItem {
             stmt.close();
             stmt = null;
 
-            query = "SELECT id, mod_content, locator, blob_digest FROM " + getMailItemTableName(groupId, true) +
-                            " WHERE blob_digest IS NOT NULL";
+            query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", id, mod_content," +
+                    " locator, blob_digest FROM " + getMailItemTableName(groupId, true) +
+                    " WHERE blob_digest IS NOT NULL";
             if (volumeId > -1) {
                 stmt = conn.prepareStatement(query + " AND locator = ?");
                 stmt.setInt(1, volumeId);
@@ -3272,8 +3274,9 @@ public class DbMailItem {
             stmt.close();
             stmt = null;
 
-            query = "SELECT item_id, mod_content, locator, blob_digest FROM " + getRevisionTableName(groupId, false) +
-                            " WHERE blob_digest IS NOT NULL";
+            query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", item_id, mod_content," +
+                    " locator, blob_digest FROM " + getRevisionTableName(groupId, false) +
+                    " WHERE blob_digest IS NOT NULL";
             if (volumeId > -1) {
                 stmt = conn.prepareStatement(query + " AND locator = ?");
                 stmt.setInt(1, volumeId);
@@ -3284,7 +3287,8 @@ public class DbMailItem {
             stmt.close();
             stmt = null;
 
-            query = "SELECT item_id, mod_content, locator, blob_digest FROM " + getRevisionTableName(groupId, true) +
+            query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", item_id, mod_content," +
+                    " locator, blob_digest FROM " + getRevisionTableName(groupId, true) +
                     " WHERE blob_digest IS NOT NULL";
             if (volumeId > -1) {
                 stmt = conn.prepareStatement(query + " AND locator = ?");
@@ -3354,7 +3358,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                blobs.add(new MailboxBlob.MailboxBlobInfo(null, -1, rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4)));
+                blobs.add(new MailboxBlob.MailboxBlobInfo(null, rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5)));
             }
         } finally {
             DbPool.closeResults(rs);
