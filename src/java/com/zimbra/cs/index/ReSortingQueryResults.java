@@ -104,6 +104,11 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
         return getNext();
     }
 
+    @Override
+    public boolean isPreSorted() {
+        return results.isPreSorted();
+    }
+
     private List<ZimbraHit> getHitBuffer() throws ServiceException {
         if (mHitBuffer == null) {
             bufferAllHits();
@@ -236,9 +241,11 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
             if (mHitBuffer.size() >= MAX_BUFFERED_HITS) {
                 break;
             }
-
         }
-        Collections.sort(mHitBuffer, comp);
+
+        if (!results.isPreSorted()) {
+            Collections.sort(mHitBuffer, comp);
+        }
     }
 
 }

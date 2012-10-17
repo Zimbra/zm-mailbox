@@ -408,7 +408,13 @@ public final class SearchParams implements Cloneable {
         el.addAttribute(MailConstants.E_QUERY, getQueryString(), Element.Disposition.CONTENT);
         el.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(types));
         if (sortBy != null) {
-            el.addAttribute(MailConstants.A_SORTBY, sortBy.toString());
+            if (SortBy.NAME_LOCALIZED_ASC.equals(sortBy)) {
+                el.addAttribute(MailConstants.A_SORTBY, SortBy.NAME_ASC.toString());
+            } else if (SortBy.NAME_LOCALIZED_DESC.equals(sortBy)) {
+                el.addAttribute(MailConstants.A_SORTBY, SortBy.NAME_DESC.toString());
+            } else {
+                el.addAttribute(MailConstants.A_SORTBY, sortBy.toString());
+            }
         }
         if (getInlineRule() != null) {
             el.addAttribute(MailConstants.A_FETCH, getInlineRule().toString());
