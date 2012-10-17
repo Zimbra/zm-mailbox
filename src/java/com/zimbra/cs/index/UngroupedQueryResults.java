@@ -70,4 +70,8 @@ final class UngroupedQueryResults extends ZimbraQueryResultsImpl {
         return results.getResultInfo();
     }
 
+    @Override
+    public boolean isPreSorted() {
+        return results.isPreSorted();
+    }
 }

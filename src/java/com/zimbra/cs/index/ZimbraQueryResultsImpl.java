@@ -253,4 +253,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return result;
     }
 
+    @Override
+    public boolean isPreSorted() {
+        return false;
+    }
 }

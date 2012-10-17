@@ -143,6 +143,11 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
         return peekNext() != null;
     }
 
+    @Override
+    public boolean isPreSorted() {
+        return results.isPreSorted();
+    }
+
     /**
      * @return TRUE if the passed-in hit should be filtered (removed) from
      * the result set

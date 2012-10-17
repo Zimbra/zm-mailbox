@@ -278,6 +278,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
         assert(bufferStartOffset == hitOffset);
 
+        SortBy sb = getSortBy();
         // put these hits into our buffer!
         int bufferIdx = 0;
         int stop = bufferEndOffset - bufferStartOffset;
@@ -288,7 +289,12 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
                     queryInfo.add(new ProxiedQueryInfo(info));
                 }
             } else {
-                hitBuffer.add(bufferIdx++, new ProxiedHit(this, el, el.getAttribute(MailConstants.A_SORT_FIELD)));
+                if ((SortBy.NAME_LOCALIZED_ASC.equals(sb)) || (SortBy.NAME_LOCALIZED_DESC.equals(sb))) {
+                    hitBuffer.add(bufferIdx++,
+                            new ProxiedContactHit(this, el, el.getAttribute(MailConstants.A_FILE_AS_STR)));
+                } else {
+                    hitBuffer.add(bufferIdx++, new ProxiedHit(this, el, el.getAttribute(MailConstants.A_SORT_FIELD)));
+                }
             }
         }
 
@@ -316,4 +322,12 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         return queryInfo;
     }
 
+    /**
+     * The results of the proxied search are added to the hit array in the same order as in the proxied search
+     * response - so there should be no need to sort the results again.
+     */
+    @Override
+    public boolean isPreSorted() {
+        return true;
+    }
 }

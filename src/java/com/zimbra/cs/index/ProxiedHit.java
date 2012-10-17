@@ -28,7 +28,7 @@ import com.zimbra.cs.mailbox.MailItem;
  * @since Mar 28, 2005
  * @author tim
  */
-public final class ProxiedHit extends ZimbraHit  {
+public class ProxiedHit extends ZimbraHit  {
     private int proxiedConvId = -1;
     private int proxiedMsgId = -1;
     private ItemId itemId;

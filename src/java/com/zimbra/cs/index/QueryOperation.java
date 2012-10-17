@@ -45,6 +45,11 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         return context.getParams().getSortBy();
     }
 
+    @Override
+    public boolean isPreSorted() {
+        return false;
+    }
+
     /**
      * @return A representation of this operation as a parsable query string
      */

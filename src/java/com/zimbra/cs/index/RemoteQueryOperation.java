@@ -128,4 +128,9 @@ final class RemoteQueryOperation extends FilterQueryOperation {
             return Collections.emptyList();
         }
     }
+
+    @Override
+    public boolean isPreSorted() {
+        return results.isPreSorted();
+    }
 }
