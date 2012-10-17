@@ -1473,10 +1473,14 @@ if fetch="all", all hits are expanded inline
     + if max="{max-inlined-length}" is specified, inlined body content in limited to the given length;
          if the part is truncated, truncated="1" is specified on the <mp> in question
 
-if recip="1" is specified
+if recip="2" is specified
+      returned both "From:" Senders and "To:" recipients
+else if recip="1" is specified
     + returned sent messages will contain the set of "To:" recipients instead of the sender
     + returned conversations whose first hit was sent by the user will contain
       that hit's "To:" recipients instead of the conversation's sender list
+else
+    return "From:" Senders only
 
 unless include-imap-deleted="1", items with the \Deleted flag are omitted from the search results (defaults to "0")
 if include-muted="0", items with the \Muted flag are omitted from the search results (defaults to "1")
