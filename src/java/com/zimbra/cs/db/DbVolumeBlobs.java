@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -30,6 +29,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
 import com.zimbra.cs.store.file.BlobReference;
 import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.volume.Volume;
 
 

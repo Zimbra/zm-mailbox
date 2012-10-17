@@ -32,7 +32,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -51,6 +50,7 @@ import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.BlobReference;
 import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 
