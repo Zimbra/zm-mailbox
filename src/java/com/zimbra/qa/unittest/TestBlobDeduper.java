@@ -14,16 +14,11 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
 import com.zimbra.cs.store.file.BlobDeduper;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.Volume;
@@ -64,18 +59,8 @@ public final class TestBlobDeduper extends TestCase {
         for (int i = 0; i < 4; i++) {
             Assert.assertFalse(IO.fileInfo(paths[i]).getInodeNum() == IO.fileInfo(paths[i+1]).getInodeNum());
         }
-        Iterable<MailboxBlobInfo> allBlobs = null;
-        DbConnection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
-            for (MailboxBlobInfo info : allBlobs) {
-                DbVolumeBlobs.addBlobReference(conn, info);
-            }
-            conn.commit();
-        } finally {
-            DbPool.quietClose(conn);
-        }
+        // wait for a seconds, so that timestamp gets changed.
+        Thread.sleep(1000);
         BlobDeduper deduper = BlobDeduper.getInstance();
         List<Short> volumeIds = new ArrayList<Short>();
         volumeIds.add(vol.getId());

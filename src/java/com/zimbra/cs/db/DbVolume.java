@@ -23,7 +23,10 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.Volume.VolumeMetadata;
 import com.zimbra.cs.volume.VolumeServiceException;
 
 /**
@@ -44,6 +47,7 @@ public final class DbVolume {
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
     private static final String CN_COMPRESS_BLOBS = "compress_blobs";
     private static final String CN_COMPRESSION_THRESHOLD = "compression_threshold";
+    private static final String CN_METADATA = "metadata";
 
     public static synchronized Volume create(DbConnection conn, Volume volume) throws ServiceException {
         short nextId = volume.getId();
@@ -56,8 +60,8 @@ public final class DbVolume {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO volume (id, type, name, path, mailbox_group_bits, " +
-                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
             stmt.setShort(pos++, volume.getType());
@@ -69,6 +73,7 @@ public final class DbVolume {
             stmt.setShort(pos++, volume.getFileBits());
             stmt.setBoolean(pos++, volume.isCompressBlobs());
             stmt.setLong(pos++, volume.getCompressionThreshold());
+            stmt.setString(pos++, volume.getMetadata().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -82,12 +87,28 @@ public final class DbVolume {
         return get(conn, nextId);
     }
 
+    public static Volume updateMetadata(DbConnection conn, short volumeId, VolumeMetadata volumeMetadata) throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE volume SET metadata = ? WHERE id = ?");
+            int pos = 1;
+            stmt.setString(pos++, volumeMetadata.toString());
+            stmt.setShort(pos++, volumeId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("updating volume " + volumeId, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+        return get(conn, volumeId);
+    }
+
     public static Volume update(DbConnection conn, Volume volume) throws ServiceException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE volume SET type = ?, name = ?, path = ?, " +
                     "mailbox_group_bits = ?, mailbox_bits = ?, file_group_bits = ?, file_bits = ?, " +
-                    "compress_blobs = ?, compression_threshold = ? WHERE id = ?");
+                    "compress_blobs = ?, compression_threshold = ? , metadata = ? WHERE id = ?");
             int pos = 1;
             stmt.setShort(pos++, volume.getType());
             stmt.setString(pos++, volume.getName());
@@ -98,6 +119,7 @@ public final class DbVolume {
             stmt.setShort(pos++, volume.getFileBits());
             stmt.setBoolean(pos++, volume.isCompressBlobs());
             stmt.setLong(pos++, volume.getCompressionThreshold());
+            stmt.setString(pos++, volume.getMetadata().toString());
             stmt.setShort(pos++, volume.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -265,12 +287,21 @@ public final class DbVolume {
     }
 
     private static Volume constructVolume(ResultSet rs) throws SQLException, VolumeServiceException {
+        VolumeMetadata metadata;
+        try {
+            metadata = new VolumeMetadata(new Metadata(rs.getString(CN_METADATA)));
+        } catch (MailServiceException e) {
+            throw VolumeServiceException.INVALID_METADATA(e);
+        } catch (ServiceException e) {
+            throw VolumeServiceException.INVALID_METADATA(e);
+        }
         return Volume.builder().setId(rs.getShort(CN_ID)).setType(rs.getShort(CN_TYPE)).setName(rs.getString(CN_NAME))
                 .setPath(Volume.getAbsolutePath(rs.getString(CN_PATH)), false)
                 .setMboxGroupBits(rs.getShort(CN_MAILBOX_GROUP_BITS)).setMboxBit(rs.getShort(CN_MAILBOX_BITS))
                 .setFileGroupBits(rs.getShort(CN_FILE_GROUP_BITS)).setFileBits(rs.getShort(CN_FILE_BITS))
                 .setCompressBlobs(rs.getBoolean(CN_COMPRESS_BLOBS))
-                .setCompressionThreshold(rs.getLong(CN_COMPRESSION_THRESHOLD)).build();
+                .setCompressionThreshold(rs.getLong(CN_COMPRESSION_THRESHOLD))
+                .setMetadata(metadata).build();
     }
 
     public static boolean isVolumeReferenced(DbConnection conn, short volumeId) throws ServiceException {

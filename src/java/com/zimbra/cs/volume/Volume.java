@@ -19,6 +19,8 @@ import java.io.File;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
@@ -58,6 +60,65 @@ public final class Volume {
     private int fileGroupBitmask;
     private boolean compressBlobs;
     private long compressionThreshold;
+    private Metadata metadata;
+    
+    public static class VolumeMetadata {
+        private int lastSyncDate;
+        private int currentSyncDate;
+        private int groupId;
+
+        private static final String FN_DATE_LASTSYNC = "lsd";
+        private static final String FN_DATE_CURRENTSYNC = "csd";
+        private static final String FN_LAST_GROUP_ID = "gid";
+
+        Metadata serialize() {
+            Metadata meta = new Metadata();
+            meta.put(FN_DATE_LASTSYNC, lastSyncDate);
+            meta.put(FN_DATE_CURRENTSYNC, currentSyncDate);
+            meta.put(FN_LAST_GROUP_ID, groupId);
+            return meta;
+        }
+
+        public VolumeMetadata(Metadata meta) throws ServiceException {
+            this.lastSyncDate = meta.getInt(FN_DATE_LASTSYNC, 0);
+            this.currentSyncDate = meta.getInt(FN_DATE_CURRENTSYNC, 0);
+            this.groupId = meta.getInt(FN_LAST_GROUP_ID, 0);
+        }
+        
+        public VolumeMetadata(int lastSyncDate, int currentSyncDate, int groupId) {
+            this.lastSyncDate = lastSyncDate;
+            this.currentSyncDate = currentSyncDate;
+            this.groupId = groupId;
+        }
+        
+        public int getLastSyncDate() {
+            return lastSyncDate;
+        }
+        
+        public int getCurrentSyncDate() {
+            return currentSyncDate;
+        }
+        
+        public int getGroupId() {
+            return groupId;
+        }
+        
+        public void setLastSyncDate(int date) {
+            this.lastSyncDate = date;
+        }
+        
+        public void setCurrentSyncDate(int date) {
+            this.currentSyncDate = date;
+        }
+        
+        public void setGroupId(int id) {
+            this.groupId = id;
+        }
+        
+        public String toString() {
+            return serialize().toString();
+        }
+    }
 
     private Volume() {
     }
@@ -87,6 +148,8 @@ public final class Volume {
             volume.fileBits = copy.fileBits;
             volume.compressBlobs = copy.compressBlobs;
             volume.compressionThreshold = copy.compressionThreshold;
+            volume.metadata = copy.metadata;
+            
         }
 
         public Builder setId(short id) {
@@ -142,6 +205,11 @@ public final class Volume {
             volume.compressionThreshold = value;
             return this;
         }
+        
+        public Builder setMetadata(VolumeMetadata metadata) {
+            volume.metadata = metadata.serialize();
+            return this;
+        }
 
         public Volume build() throws VolumeServiceException {
             switch (volume.id) {
@@ -183,6 +251,9 @@ public final class Volume {
             }
             volume.mboxGroupBitmask = (int) ((long) Math.pow(2, volume.mboxGroupBits) - 1L);
             volume.fileGroupBitmask = (int) ((long) Math.pow(2, volume.fileGroupBits) - 1L);
+            if (volume.metadata == null) {
+                volume.metadata = new VolumeMetadata(0, 0, 0).serialize();
+            }
             return volume;
         }
     }
@@ -237,6 +308,10 @@ public final class Volume {
 
     public long getCompressionThreshold() {
         return compressionThreshold;
+    }
+    
+    public VolumeMetadata getMetadata() throws ServiceException {
+        return new VolumeMetadata(metadata);
     }
 
     public static String getAbsolutePath(String path) {

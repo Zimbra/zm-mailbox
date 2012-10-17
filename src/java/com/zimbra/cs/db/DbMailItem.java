@@ -3238,68 +3238,28 @@ public class DbMailItem {
         }
     }
 
-    public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(DbConnection conn, int groupId) throws ServiceException {
-        return getAllBlobs(conn, groupId, -1);
-    }
-
-    public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(DbConnection conn, int groupId, int volumeId) throws ServiceException {
+    public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(DbConnection conn, int groupId, int volumeId,
+            int lastSyncDate, int currentSyncDate) throws ServiceException {
         SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = new SpoolingCache<MailboxBlob.MailboxBlobInfo>(5000);
-
-
         PreparedStatement stmt = null;
         try {
-            String query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", id, mod_content," +
-                    " locator, blob_digest FROM " + getMailItemTableName(groupId, false) +
-                    " WHERE blob_digest IS NOT NULL";
-            if (volumeId > -1) {
-                stmt = conn.prepareStatement(query + " AND locator = ?");
-                stmt.setInt(1, volumeId);
-            } else {
+            boolean[] dumpsterOrNot = new boolean[] { false, true };
+            for (boolean fromDumpster : dumpsterOrNot) {
+                String query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", id, mod_content," +
+                " locator, blob_digest FROM " + getMailItemTableName(groupId, fromDumpster) + " WHERE blob_digest IS NOT NULL " +
+                (currentSyncDate > 0 ? " AND ((date >= ? AND date < ?) OR (change_date >= ? AND change_date < ?))" : "") +
+                (volumeId > -1 ? " AND locator = ?" : "");
                 stmt = conn.prepareStatement(query);
-            }
-            getAllBlobs(stmt, blobs);
-            stmt.close();
-            stmt = null;
-
-            query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", id, mod_content," +
-                    " locator, blob_digest FROM " + getMailItemTableName(groupId, true) +
-                    " WHERE blob_digest IS NOT NULL";
-            if (volumeId > -1) {
-                stmt = conn.prepareStatement(query + " AND locator = ?");
-                stmt.setInt(1, volumeId);
-            } else {
+                getAllBlobs(stmt, volumeId, lastSyncDate, currentSyncDate, blobs);
+            
+                query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", item_id, mod_content," +
+                " locator, blob_digest FROM " + getRevisionTableName(groupId, fromDumpster) + " WHERE blob_digest IS NOT NULL " +
+                (currentSyncDate > 0 ? " AND ((date >= ? AND date < ?) OR (change_date >= ? AND change_date < ?))" : "") +
+                (volumeId > -1 ? " AND locator = ?" : "");
                 stmt = conn.prepareStatement(query);
+                getAllBlobs(stmt, volumeId, lastSyncDate, currentSyncDate, blobs);
             }
-            getAllBlobs(stmt, blobs);
-            stmt.close();
-            stmt = null;
-
-            query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", item_id, mod_content," +
-                    " locator, blob_digest FROM " + getRevisionTableName(groupId, false) +
-                    " WHERE blob_digest IS NOT NULL";
-            if (volumeId > -1) {
-                stmt = conn.prepareStatement(query + " AND locator = ?");
-                stmt.setInt(1, volumeId);
-            } else {
-                stmt = conn.prepareStatement(query);
-            }
-            getAllBlobs(stmt, blobs);
-            stmt.close();
-            stmt = null;
-
-            query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", item_id, mod_content," +
-                    " locator, blob_digest FROM " + getRevisionTableName(groupId, true) +
-                    " WHERE blob_digest IS NOT NULL";
-            if (volumeId > -1) {
-                stmt = conn.prepareStatement(query + " AND locator = ?");
-                stmt.setInt(1, volumeId);
-            } else {
-                stmt = conn.prepareStatement(query);
-            }
-            getAllBlobs(stmt, blobs);
-
             ZimbraLog.mailbox.info("got blob list for group %d volume %d (%d blobs)", groupId, volumeId, blobs.size());
-
             return blobs;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching blob list for group " + groupId, e);
@@ -3308,7 +3268,6 @@ public class DbMailItem {
         } finally {
             DbPool.closeStatement(stmt);
         }
-
     }
 
 
@@ -3352,18 +3311,28 @@ public class DbMailItem {
         }
     }
 
-    private static void getAllBlobs(PreparedStatement stmt, SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs) throws SQLException, IOException, ServiceException {
+    private static void getAllBlobs(PreparedStatement stmt, int volumeId, int lastSyncDate, int currentSyncDate,
+            SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException, SQLException, IOException {
         ResultSet rs = null;
         try {
+            int pos = 1;
+            if (currentSyncDate > 0) {
+                stmt.setInt(pos++, lastSyncDate);
+                stmt.setInt(pos++, currentSyncDate);
+                stmt.setInt(pos++, lastSyncDate);
+                stmt.setInt(pos++, currentSyncDate);
+            }
+            if (volumeId > -1) {
+                stmt.setInt(pos++, volumeId);
+            }
             rs = stmt.executeQuery();
-
             while (rs.next()) {
                 blobs.add(new MailboxBlob.MailboxBlobInfo(null, rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5)));
             }
+            stmt.close();
         } finally {
             DbPool.closeResults(rs);
         }
-
     }
 
     private static void getAllBlobs(PreparedStatement stmt, String accountId, int mboxId, SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs)
@@ -3407,6 +3376,8 @@ public class DbMailItem {
             visitAllBlobDigests(stmt, mbox, callback);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("visiting blob digests list for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);  
         }
     }
 
