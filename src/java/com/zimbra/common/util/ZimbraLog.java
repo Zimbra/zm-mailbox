@@ -720,6 +720,28 @@ public final class ZimbraLog {
         sContextString.remove();
     }
 
+    public static String getStackTrace(int maxDepth) {
+        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
+        StackTraceElement [] stElems = new Throwable().getStackTrace();
+
+        if (stElems == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        int count = -1;
+        for (StackTraceElement stElem : stElems) {
+            count++;
+            if (count == 0) {
+                continue;  // Skip element for this method.
+            }
+            sb.append(stElem.toString()).append('\n');
+            if (count >= maxDepth) {
+                break;
+            }
+        }
+        return sb.toString();
+    }
+
     /**
      * Setup log4j for our command line tools.
      *
