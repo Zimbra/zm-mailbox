@@ -520,6 +520,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateXMbxSearchResponse.class,
             com.zimbra.soap.admin.message.CreateZimletRequest.class,
             com.zimbra.soap.admin.message.CreateZimletResponse.class,
+            com.zimbra.soap.admin.message.DedupeBlobsRequest.class,
+            com.zimbra.soap.admin.message.DedupeBlobsResponse.class,
             com.zimbra.soap.admin.message.DelegateAuthRequest.class,
             com.zimbra.soap.admin.message.DelegateAuthResponse.class,
             com.zimbra.soap.admin.message.DeleteAccountRequest.class,
