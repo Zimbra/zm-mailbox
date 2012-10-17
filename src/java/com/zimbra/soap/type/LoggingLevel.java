@@ -16,6 +16,8 @@
 package com.zimbra.soap.type;
 
 import java.util.Arrays;
+import java.util.Locale;
+
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
@@ -28,14 +30,12 @@ public enum LoggingLevel {
     // keep in sync with com.zimbra.common.util.Log.Level
     error, warn, info, debug, trace;
 
-    public static LoggingLevel fromString(String s)
-    throws ServiceException {
+    public static LoggingLevel fromString(String s) throws ServiceException {
         try {
-            return LoggingLevel.valueOf(s);
-        } catch (IllegalArgumentException e) {
-           throw ServiceException.INVALID_REQUEST("unknown Logging Level: " + s + ", valid values: " +
-                   Arrays.asList(LoggingLevel.values()), null);
+            return LoggingLevel.valueOf(s.toLowerCase(Locale.ENGLISH));
+        } catch (IllegalArgumentException iae) {
+            throw ServiceException.INVALID_REQUEST("unknown Logging Level: " + s + ", valid values: " +
+                            Arrays.asList(LoggingLevel.values()), null);
         }
     }
-
 }

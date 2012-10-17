@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.type.LoggingLevel;
@@ -54,8 +55,8 @@ public final class LoggerInfo {
         return new LoggerInfo(category, level);
     }
 
-    public static LoggerInfo createForCategoryAndLevelString(String category, String level) {
-        return new LoggerInfo(category, LoggingLevel.valueOf(level));
+    public static LoggerInfo createForCategoryAndLevelString(String category, String level) throws ServiceException {
+        return new LoggerInfo(category, LoggingLevel.fromString(level));
     }
 
     public String getCategory() { return category; }
