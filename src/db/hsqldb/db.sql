@@ -52,6 +52,21 @@ INSERT INTO volume (id, type, name, path, file_bits, file_group_bits, mailbox_bi
   VALUES (2, 10, 'index1', 'build/test/index', 12, 8, 12, 8, 0, 4096);
 INSERT INTO current_volumes (message_volume_id, index_volume_id, next_mailbox_id) VALUES (1, 2, 1);
 
+create table volume_blobs (
+  id IDENTITY,
+  volume_id TINYINT NOT NULL,
+  mailbox_id INTEGER NOT NULL,
+  item_id INTEGER NOT NULL,
+  revision INTEGER NOT NULL,
+  blob_digest VARCHAR(44),
+  processed BOOLEAN default false
+  
+  -- FK constraints disabled for now; maybe enable them in 9.0 when we have time to deal with delete cases
+  -- CONSTRAINT fk_volume_blobs_volume_id FOREIGN KEY (volume_id) REFERENCES volume(id),
+  -- CONSTRAINT fk_volume_blobs_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id)
+);
+
+
 CREATE TABLE mailbox (
    id                  INTEGER NOT NULL PRIMARY KEY,
    group_id            INTEGER NOT NULL,

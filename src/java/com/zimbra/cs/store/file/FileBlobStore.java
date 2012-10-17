@@ -393,8 +393,12 @@ public final class FileBlobStore extends StoreManager {
     }
 
     public static String getBlobPath(Mailbox mbox, int itemId, int revision, short volumeId) throws ServiceException {
+        return getBlobPath(mbox.getId(), itemId, revision, volumeId);
+    }
+
+    public static String getBlobPath(int mboxId, int itemId, int revision, short volumeId) throws ServiceException {
         Volume vol = MANAGER.getVolume(volumeId);
-        String path = vol.getBlobDir(mbox.getId(), itemId);
+        String path = vol.getBlobDir(mboxId, itemId);
         int buflen = path.length() + 15 + (revision < 0 ? 0 : 11);
 
         StringBuilder sb = new StringBuilder(buflen);

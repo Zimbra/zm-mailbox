@@ -16,6 +16,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.mail.internet.MimeMessage;
 
@@ -23,6 +24,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
@@ -131,7 +133,7 @@ public final class MailboxTestUtil {
         MailboxIndex.shutdown();
         File index = new File("build/test/index");
         if (index.isDirectory()) {
-            Files.deleteDirectoryContents(index);
+            deleteDirContents(index);
         }
         StoreManager sm = StoreManager.getInstance();
         if (sm instanceof MockStoreManager) {
@@ -139,6 +141,29 @@ public final class MailboxTestUtil {
         } else if (sm instanceof MockHttpStoreManager) {
             MockHttpStore.purge();
         }
+    }
+
+    private static void deleteDirContents(File dir) throws IOException {
+        deleteDirContents(dir, 0);
+    }
+
+    private static void deleteDirContents(File dir, int recurCount) throws IOException {
+        try {
+            Files.deleteDirectoryContents(dir);
+        } catch (IOException ioe) {
+            if (recurCount > 10) {
+                throw new IOException("Gave up after multiple IOExceptions", ioe);
+            }
+            ZimbraLog.test.info("delete dir failed due to IOException (probably files still in use). Waiting a moment and trying again");
+            //wait a moment and try again; this can bomb if files still being written by some thread
+            try {
+                Thread.sleep(2500);
+            } catch (InterruptedException ie) {
+
+            }
+            deleteDirContents(dir, recurCount+1);
+        }
+
     }
 
     public static void setFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag) throws ServiceException {

@@ -29,7 +29,7 @@ import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
 public class MailboxBlobTest {
     @Test
     public void serialization() throws Exception {
-        MailboxBlobInfo mbinfo = new MailboxBlobInfo(MockProvisioning.DEFAULT_ACCOUNT_ID, Mailbox.FIRST_USER_ID, 1, "locator");
+        MailboxBlobInfo mbinfo = new MailboxBlobInfo(MockProvisioning.DEFAULT_ACCOUNT_ID, 1, Mailbox.FIRST_USER_ID, 1, "locator", "digest123");
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -39,8 +39,10 @@ public class MailboxBlobTest {
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
         MailboxBlobInfo mbi2 = (MailboxBlobInfo) ois.readObject();
         Assert.assertEquals(mbinfo.accountId, mbi2.accountId);
+        Assert.assertEquals(mbinfo.mailboxId, mbi2.mailboxId);
         Assert.assertEquals(mbinfo.itemId, mbi2.itemId);
         Assert.assertEquals(mbinfo.revision, mbi2.revision);
         Assert.assertEquals(mbinfo.locator, mbi2.locator);
+        Assert.assertEquals(mbinfo.digest, mbi2.digest);
     }
 }

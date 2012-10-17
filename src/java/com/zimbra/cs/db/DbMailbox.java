@@ -647,7 +647,7 @@ public final class DbMailbox {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     public static void updateLastPurgeAt(Mailbox mbox, long lastPurgeAt) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -758,16 +758,16 @@ public final class DbMailbox {
             DbPool.closeStatement(stmt);
         }
     }
-    
-    /** 
+
+    /**
      * Returns IDs of mailboxes on which the last purge was run before the given time.
-     * 
+     *
      * @param conn An open database connection.
      * @param time Cut-off time in milliseconds.
      * @return A <code>Set</code> of mailbox IDs.
      * @throws ServiceException
      */
-    
+
     public static Set<Integer> listPurgePendingMailboxes(DbConnection conn, long time) throws ServiceException {
         Set<Integer> result = new HashSet<Integer>();
         if (DebugConfig.externalMailboxDirectory) {
@@ -1199,6 +1199,28 @@ public final class DbMailbox {
             data.recentMessages = rs.getInt(pos++);
             results.add(data);
         }
+    }
+
+
+    public static Set<Integer> getMboxGroupIds(DbConnection conn) throws ServiceException {
+        Set<Integer> groups = new HashSet<Integer>();
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT DISTINCT group_id FROM mailbox");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                groups.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting distinct account ids", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return groups;
     }
 
 }
