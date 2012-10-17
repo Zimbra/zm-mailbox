@@ -32,6 +32,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -148,6 +149,26 @@ public class DbVolumeBlobsTest {
         }
 
         Assert.assertTrue(digestToPath.isEmpty());
+    }
+    
+    @Test
+    public void testUniqueBlobDigests() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
+
+        for (int i = 0; i < 5; i++) {
+            mbox.addMessage(null, new ParsedMessage(("From: from" + i + "@zimbra.com\r\nTo: to1@zimbra.com").getBytes(), false), opt, null);
+            mbox.addMessage(null, new ParsedMessage(("From: from" + i + "@zimbra.com\r\nTo: to1@zimbra.com").getBytes(), false), opt, null);
+        }
+        Iterable<MailboxBlobInfo> allBlobs = null;
+        allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId());
+        for (MailboxBlobInfo info : allBlobs) {
+            DbVolumeBlobs.addBlobReference(conn, info);
+        }
+        SpoolingCache<String> digests = DbVolumeBlobs.getUniqueDigests(conn, vol);
+        Assert.assertEquals(5, digests.size());
     }
 
     @Test

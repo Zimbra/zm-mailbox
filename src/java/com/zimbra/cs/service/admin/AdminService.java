@@ -115,6 +115,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.SET_CURRENT_VOLUME_REQUEST, new SetCurrentVolume());
         dispatcher.registerHandler(AdminConstants.CHECK_BLOB_CONSISTENCY_REQUEST, new CheckBlobConsistency());
         dispatcher.registerHandler(AdminConstants.EXPORT_AND_DELETE_ITEMS_REQUEST, new ExportAndDeleteItems());
+        dispatcher.registerHandler(AdminConstants.DEDUPE_BLOBS_REQUEST, new DedupeBlobs());
 
         dispatcher.registerHandler(AdminConstants.CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
         dispatcher.registerHandler(AdminConstants.GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
