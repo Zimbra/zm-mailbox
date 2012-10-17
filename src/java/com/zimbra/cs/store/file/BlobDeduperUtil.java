@@ -26,9 +26,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
@@ -67,7 +65,7 @@ public class BlobDeduperUtil {
         }
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
-            "zmdedupe [options] start/stop", null, options, 2, 2,
+            "zmdedupe [options] start/status/stop", null, options, 2, 2,
             "\nThe \"start/stop\" command is required, to avoid unintentionally running a blob dedupe.  " +
             "Id values are separated by commas.");
         System.exit(exitStatus);
@@ -93,6 +91,12 @@ public class BlobDeduperUtil {
             return;
         } else if (cl.getArgs()[0].equals("start")) {
             action = DedupeBlobsRequest.DedupAction.start;
+        } else if (cl.getArgs()[0].equals("reset")) {
+            if (CliUtil.confirm("This will remove all the metadata used by dedupe process. Continue?")) {
+                action = DedupeBlobsRequest.DedupAction.reset;
+            } else {
+                System.exit(0);
+            }
         } else {
             usage(null);
         }

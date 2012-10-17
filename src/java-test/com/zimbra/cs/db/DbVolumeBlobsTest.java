@@ -123,6 +123,25 @@ public class DbVolumeBlobsTest {
     }
     
     @Test
+    public void testDuplicateRow() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
+
+        Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
+        MailboxBlobInfo blobInfo = new MailboxBlobInfo(null, mbox.getId(), msg.getId(), msg.getSavedSequence(), String.valueOf(vol.getId()), null);
+        DbVolumeBlobs.addBlobReference(conn, blobInfo);
+        try {
+            DbVolumeBlobs.addBlobReference(conn, blobInfo);
+            Assert.fail("expected exception");
+        } catch (ServiceException e) {
+           // expected
+        }
+    }
+    
+    @Test
     public void testIncrementalBlobs() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions opt = new DeliveryOptions();
@@ -321,6 +340,26 @@ public class DbVolumeBlobsTest {
         DbVolumeBlobs.deleteBlobRef(conn, blobs.get(0).getId());
 
         blobs = DbVolumeBlobs.getBlobReferences(conn, digest, vol);
+        Assert.assertEquals(0, blobs.size());
+    }
+    
+    @Test
+    public void deleteAllBlobRef() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
+
+        Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
+
+        DbVolumeBlobs.addBlobReference(conn, mbox, vol, msg);
+
+        List<BlobReference> blobs = DbVolumeBlobs.getBlobReferences(conn, vol);
+        Assert.assertEquals(1, blobs.size());
+
+        DbVolumeBlobs.deleteAllBlobRef(conn);
+
+        blobs = DbVolumeBlobs.getBlobReferences(conn, vol);
         Assert.assertEquals(0, blobs.size());
     }
 

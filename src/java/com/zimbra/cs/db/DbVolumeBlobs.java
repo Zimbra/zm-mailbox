@@ -236,5 +236,16 @@ public final class DbVolumeBlobs {
         }
     }
 
+    public static void deleteAllBlobRef(DbConnection conn) throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("TRUNCATE TABLE " + TB_VOLUME_BLOBS);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("unable to delete blob references", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
 
 }
