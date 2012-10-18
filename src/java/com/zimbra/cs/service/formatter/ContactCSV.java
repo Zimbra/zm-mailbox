@@ -277,6 +277,10 @@ public final class ContactCSV {
     }
 
     private void addMultiValueField(CsvColumn col, Map <String, String> fieldMap, ContactMap contact) {
+        if ("birthday".equals(col.field) || "anniversary".equals(col.field)) {
+            addMultiValueDateField(col, fieldMap, contact);
+            return;
+        }
         StringBuilder buf = new StringBuilder();
         for (String n : col.names) {
             String v = fieldMap.get(n.toLowerCase());
@@ -368,6 +372,10 @@ public final class ContactCSV {
                     // e.g. 12/2005/25
                     zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[1], dateFs[0], dateFs[2], false);
                 }
+                if ((zimbraDateValue == null) && (dateFs[0] > 31)) {
+                    // e.g. 2005/06/01 - realistically, no-one uses YDM, so only possibility is YMD
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[0], dateFs[1], dateFs[2], true);
+                }
                 if (zimbraDateValue == null) {
                     String dateOrder = dateOrderInfo.get(dateOrderKey);
                     if (dateOrder != null) {
@@ -392,6 +400,53 @@ public final class ContactCSV {
                 contact.put(field, "'" + value + "'");
             } else {
                 contact.put(field, value);
+            }
+        }
+    }
+
+    /**
+     * Multi-valued fields that map to dates should be in month/day/year order
+     */
+    private void addMultiValueDateField(CsvColumn col, Map <String, String> fieldMap, ContactMap contact) {
+        String zimbraDateValue = null;
+        if (col.names.size() == 3) {
+            int dateFs[] = new int[3];
+            int ndx = 0;
+            try {
+                for (String n : col.names) {
+                    String v = fieldMap.get(n.toLowerCase());
+                    if (v != null) {
+                        dateFs[ndx] = Integer.parseInt(v);
+                    }
+                    ndx++;
+                }
+                zimbraDateValue = populateDateFieldsIfUnambiguous(dateFs[2], dateFs[0], dateFs[1], true);
+            } catch (NumberFormatException ioe) {
+            }
+        }
+        if (zimbraDateValue != null) {
+            contact.put(col.field, zimbraDateValue);
+        } else {
+            StringBuilder buf = new StringBuilder();
+            for (String n : col.names) {
+                String v = fieldMap.get(n.toLowerCase());
+                if (v != null) {
+                    if (buf.length() > 0) {
+                        buf.append("-");
+                    }
+                    buf.append(v);
+                }
+            }
+            if (buf.length() == 0) {
+                return;
+            }
+            zimbraDateValue = buf.toString();
+            // We were unable to recognise the date format for this value :-(
+            if (Character.isDigit(zimbraDateValue.charAt(0))) {
+                // Avoid later corruption from trying to process as a valid date.
+                contact.put(col.field, "'" + zimbraDateValue + "'");
+            } else {
+                contact.put(col.field, zimbraDateValue);
             }
         }
     }
