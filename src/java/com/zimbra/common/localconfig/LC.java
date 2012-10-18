@@ -719,8 +719,6 @@ public final class LC {
     public static final KnownKey calendar_cache_max_stale_items = KnownKey.newKey(10);
     public static final KnownKey calendar_exchange_form_auth_url = KnownKey.newKey("/exchweb/bin/auth/owaauth.dll");
 
-    public static final KnownKey syncgal_non_idonly_use_ldap = KnownKey.newKey(true);
-
     public static final KnownKey spnego_java_options =  KnownKey.newKey(
             "-Djava.security.krb5.conf=${mailboxd_directory}/etc/krb5.ini " +
             "-Djava.security.auth.login.config=${mailboxd_directory}/etc/spnego.conf " +
