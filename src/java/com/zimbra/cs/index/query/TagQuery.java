@@ -16,7 +16,9 @@ package com.zimbra.cs.index.query;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
+import com.zimbra.cs.index.NoResultsQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -42,7 +44,16 @@ public class TagQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
         DBQueryOperation op = new DBQueryOperation();
-        op.addTag(mbox.getTagByName(null, name), evalBool(bool));
+        try {
+            op.addTag(mbox.getTagByName(null, name), evalBool(bool));
+        } catch (MailServiceException mse) {
+            if (MailServiceException.NO_SUCH_TAG.equals(mse.getCode())) {
+                // Probably clicked on a remote tag for an item in a shared folder which isn't mirrored by a local tag
+                // Would be too confusing for UI to then claim that there was no such tag (Bug 77646)
+                return new NoResultsQueryOperation();
+            }
+            throw mse;
+        }
         return op;
     }
 
