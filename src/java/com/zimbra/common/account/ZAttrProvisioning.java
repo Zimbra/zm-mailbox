@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120724-1526 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -843,8 +843,7 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefFileSharingApplication {
-        briefcase("briefcase"),
-        octopus("octopus");
+        briefcase("briefcase");
         private String mValue;
         private PrefFileSharingApplication(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -855,7 +854,6 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBriefcase() { return this == briefcase;}
-        public boolean isOctopus() { return this == octopus;}
     }
 
     public static enum PrefForwardIncludeOriginalText {
@@ -1151,7 +1149,6 @@ public class ZAttrProvisioning {
     }
 
     public static enum Product {
-        OCTOPUS("OCTOPUS"),
         ZCS("ZCS");
         private String mValue;
         private Product(String value) { mValue = value; }
@@ -1162,7 +1159,6 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isOCTOPUS() { return this == OCTOPUS;}
         public boolean isZCS() { return this == ZCS;}
     }
 
@@ -2285,7 +2281,25 @@ public class ZAttrProvisioning {
      * singleton listener instance is invoked after each account is auto
      * created in Zimbra. Listener can be plugged in as a server extension to
      * handle tasks like updating the account auto provision status in the
-     * external LDAP directory.
+     * external LDAP directory. At each eager provision interval, ZCS does an
+     * LDAP search based on the value configured in
+     * zimbraAutoProvLdapSearchFilter. Returned entries from this search are
+     * candidates to be auto provisioned in this batch. The
+     * zimbraAutoProvLdapSearchFilter should include an assertion that will
+     * only hit entries in the external directory that have not yet been
+     * provisioned in ZCS, otherwise it&#039;s likely the same entries will
+     * be repeated pulled in to ZCS. After an account is auto provisioned in
+     * ZCS,
+     * com.zimbra.cs.account.Account.AutoProvisionListener.postCreate(Domain
+     * domain, Account acct, String externalDN) will be called by the auto
+     * provisioning framework. Customer can implement the
+     * AutoProvisionListener interface in a ZCS server extension and get
+     * their AutoProvisionListener.postCreate() get called. The
+     * implementation of customer&#039;s postCreate method can be, for
+     * example, setting an attribute in the external directory on the account
+     * just provisioned in ZCS. The attribute can be included as a condition
+     * in the zimbraAutoProvLdapSearchFilter, so the entry won&#039;t be
+     * returned again by the LDAP search in the next interval.
      *
      * @since ZCS 8.0.0
      */
@@ -4542,7 +4556,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
 
     /**
-     * whether crash reporting is enabled in the Octopus Android client
+     * whether crash reporting is enabled in the Android client
      *
      * @since ZCS 8.0.0
      */
@@ -4610,7 +4624,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileExternalShareLifetime = "zimbraFileExternalShareLifetime";
 
     /**
-     * whether crash reporting is enabled in the Octopus IOS client
+     * whether crash reporting is enabled in the IOS client
      *
      * @since ZCS 8.0.0
      */
@@ -5716,6 +5730,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1382)
     public static final String A_zimbraLastPurgeMaxDuration = "zimbraLastPurgeMaxDuration";
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public static final String A_zimbraLdapGalSyncDisabled = "zimbraLdapGalSyncDisabled";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -9479,7 +9501,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
 
     /**
-     * whether this instance of Zimbra is running ZCS or OCTOPUS
+     * whether this instance of Zimbra is running ZCS or some other
+     * derivative product
      *
      * @since ZCS 8.0.0
      */
