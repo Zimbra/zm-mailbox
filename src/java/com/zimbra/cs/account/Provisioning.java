@@ -301,7 +301,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public boolean isOctopus() throws ServiceException {
-        return getConfig().getProduct() == Product.OCTOPUS;
+        return getConfig().getProduct() != Product.ZCS;
     }
 
     /**

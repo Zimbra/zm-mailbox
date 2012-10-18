@@ -177,10 +177,11 @@ public class GalSearchControl {
         mParams.setNeedSMIMECerts(true);
         Account galAcct = mParams.getGalSyncAccount();
         GalSyncToken gst = mParams.getGalSyncToken();
+        Domain domain = mParams.getDomain();
         
         // if the presented sync token is old LDAP timestamp format, we need to sync
         // against LDAP server to keep the client up to date.
-        boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || !LC.syncgal_non_idonly_use_ldap.booleanValue());
+        boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || domain.isLdapGalSyncDisabled());
         if (useGalSyncAccount) {
             try {
                 synchronized (SyncClients) {
@@ -213,13 +214,18 @@ public class GalSearchControl {
                 }
             }
         }
-        if (mParams.isIdOnly() || !LC.syncgal_non_idonly_use_ldap.booleanValue()) {
+        if (mParams.isIdOnly() || domain.isLdapGalSyncDisabled()) {
             // add recommendation to perform fullsync if there is a valid GSA.
             try {
                 if (getGalSyncAccount() != null) {
                     mParams.getResultCallback().setFullSyncRecommended(true);
                 }
             } catch (GalAccountNotConfiguredException e) {}
+        }
+        if (domain.isLdapGalSyncDisabled()) {
+            // return the same sync token.
+            mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+            return;
         }
         ldapSearch();
     }
