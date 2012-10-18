@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 rgadipuuri 20120726-0313 */
+    /* build: 7.0.0_BETA1_1111 pburgu 20121018-1432 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4513,6 +4513,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=114)
     public static final String A_zimbraLastLogonTimestampFrequency = "zimbraLastLogonTimestampFrequency";
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public static final String A_zimbraLdapGalSyncDisabled = "zimbraLdapGalSyncDisabled";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname

@@ -41,7 +41,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 rgadipuuri 20120726-0313 */
+    /* build: 7.0.0_BETA1_1111 pburgu 20121018-1432 */
 
     /**
      * RFC2256: descriptive information
@@ -8762,6 +8762,78 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "");
+        return attrs;
+    }
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @return zimbraLdapGalSyncDisabled, or false if unset
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public boolean isLdapGalSyncDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraLdapGalSyncDisabled, false);
+    }
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @param zimbraLdapGalSyncDisabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public void setLdapGalSyncDisabled(boolean zimbraLdapGalSyncDisabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGalSyncDisabled, zimbraLdapGalSyncDisabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @param zimbraLdapGalSyncDisabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public Map<String,Object> setLdapGalSyncDisabled(boolean zimbraLdapGalSyncDisabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGalSyncDisabled, zimbraLdapGalSyncDisabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public void unsetLdapGalSyncDisabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGalSyncDisabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether ldap based galsync disabled or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1420)
+    public Map<String,Object> unsetLdapGalSyncDisabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGalSyncDisabled, "");
         return attrs;
     }
 
