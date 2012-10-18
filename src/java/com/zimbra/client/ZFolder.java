@@ -442,6 +442,15 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         return mName;
     }
 
+	public String getNameURLEncoded() {
+		try {
+			return URLEncoder.encode(mName, "utf-8");
+		}
+		catch (UnsupportedEncodingException e) {
+			return mName;
+		}
+	}
+
     /** Returns the folder's absolute path.  Paths are UNIX-style with
      *  <code>'/'</code> as the path delimiter.  Paths are relative to
      *  the user root folder,
@@ -469,7 +478,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         if (mParent == null)
             return ZMailbox.PATH_SEPARATOR;
         else {
-            String pp = mParent.getPath();
+            String pp = mParent.getPathURLEncoded();
             String n = null;
             try {
                 n = URLEncoder.encode(mName, "utf-8").replace("+", "%20");
