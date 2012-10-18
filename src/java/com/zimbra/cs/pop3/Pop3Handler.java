@@ -450,9 +450,9 @@ abstract class Pop3Handler {
             throw new Pop3CmdException("username length too long");
         }
         if (username.endsWith("}")) {
-            int p = user.indexOf('{');
+            int p = username.indexOf('{');
             if (p != -1) {
-                username = username.substring(0, p);
+                user = username.substring(0, p);
                 query = username.substring(p + 1, username.length() - 1);
             } else {
                 user = username;
