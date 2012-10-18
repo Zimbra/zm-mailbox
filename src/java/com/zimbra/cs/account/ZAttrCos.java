@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 rgadipuuri 20120724-1526 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11196,7 +11196,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus Android client
+     * whether crash reporting is enabled in the Android client
      *
      * @return zimbraFileAndroidCrashReportingEnabled, or true if unset
      *
@@ -11208,7 +11208,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus Android client
+     * whether crash reporting is enabled in the Android client
      *
      * @param zimbraFileAndroidCrashReportingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11223,7 +11223,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus Android client
+     * whether crash reporting is enabled in the Android client
      *
      * @param zimbraFileAndroidCrashReportingEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11239,7 +11239,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus Android client
+     * whether crash reporting is enabled in the Android client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11253,7 +11253,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus Android client
+     * whether crash reporting is enabled in the Android client
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11801,7 +11801,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus IOS client
+     * whether crash reporting is enabled in the IOS client
      *
      * @return zimbraFileIOSCrashReportingEnabled, or true if unset
      *
@@ -11813,7 +11813,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus IOS client
+     * whether crash reporting is enabled in the IOS client
      *
      * @param zimbraFileIOSCrashReportingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11828,7 +11828,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus IOS client
+     * whether crash reporting is enabled in the IOS client
      *
      * @param zimbraFileIOSCrashReportingEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11844,7 +11844,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus IOS client
+     * whether crash reporting is enabled in the IOS client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11858,7 +11858,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether crash reporting is enabled in the Octopus IOS client
+     * whether crash reporting is enabled in the IOS client
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -27255,7 +27255,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @return zimbraPrefFileSharingApplication, or ZAttrProvisioning.PrefFileSharingApplication.briefcase if unset and/or has invalid value
      *
@@ -27269,7 +27269,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @return zimbraPrefFileSharingApplication, or "briefcase" if unset
      *
@@ -27283,7 +27283,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @param zimbraPrefFileSharingApplication new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27300,7 +27300,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @param zimbraPrefFileSharingApplication new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27318,7 +27318,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @param zimbraPrefFileSharingApplication new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27335,7 +27335,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @param zimbraPrefFileSharingApplication new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27353,7 +27353,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -27369,7 +27369,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * indicates which application to use for file sharing
      *
-     * <p>Valid values: [octopus, briefcase]
+     * <p>Valid values: [briefcase]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
