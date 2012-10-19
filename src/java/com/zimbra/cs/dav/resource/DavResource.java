@@ -18,13 +18,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
@@ -215,7 +218,9 @@ public abstract class DavResource {
 	}
 	
 	protected void setLastModifiedDate(long ts) {
-		setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC822Date(new Date(ts)));
+	    Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+	    cal.setTimeInMillis(ts);
+	    setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC822Date(cal));
 	}
 	
 	protected void addProperty(ResourceProperty prop) {
