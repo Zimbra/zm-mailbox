@@ -3270,11 +3270,20 @@ public class DbMailItem {
         }
     }
 
-
+    /**
+     * Get the list of blobs related to this mailbox. This must be called inside the mailbox transaction.
+     * @param mbox 
+     * @return all the blobs related to this mailbox
+     * @throws ServiceException
+     */
     public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(Mailbox mbox) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        return getAllBlobs(conn, mbox);
+    }
+
+    public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(DbConnection conn, Mailbox mbox) throws ServiceException {
         SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = new SpoolingCache<MailboxBlob.MailboxBlobInfo>(5000);
 
-        DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("SELECT id, mod_content, locator, blob_digest FROM " + getMailItemTableName(mbox) +
