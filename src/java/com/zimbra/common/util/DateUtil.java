@@ -132,6 +132,10 @@ public final class DateUtil {
     public static String toRFC822Date(Date date) {
         Calendar cal = new GregorianCalendar();
         cal.setTime(date);
+        return toRFC822Date(cal);
+    }
+
+    public static String toRFC822Date(Calendar cal) {
 
         String tzabbr = getTimezoneAbbreviation(cal.getTimeZone().getID(), cal.get(Calendar.DST_OFFSET) != 0);
         int tzoffset = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / 60000;
