@@ -55,6 +55,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.index.MailboxIndex;
@@ -275,6 +276,19 @@ public abstract class ArchiveFormatter extends Formatter {
                             (query == null ? "" : " " + query);
                     }
                 }
+                String taskQuery = query;
+                if (query == null) {
+                    query = "";
+                }
+                String calendarQuery = query;
+                if (context.getStartTime() != TIME_UNSPECIFIED) {
+                    query = query + " after:" + context.getStartTime();
+                    calendarQuery = calendarQuery + " appt-start:>=" + context.getStartTime();
+                }
+                if (context.getEndTime() != TIME_UNSPECIFIED) {
+                    query = query + " before:" + context.getEndTime();
+                    calendarQuery = calendarQuery + " appt-end:<" + context.getEndTime();
+                }
                 if (query == null || query.equals("")) {
                     SortPath sp = new SortPath();
 
@@ -290,26 +304,45 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     query = "is:local";
                 }
-                results = context.targetMailbox.search(context.opContext,
-                    query, searchTypes, SortBy.NONE,
-                    LC.zimbra_archive_formatter_search_chunk_size.intValue());
-                try {
-                    while (results.hasNext()) {
-                        if (saveTargetFolder) {
-                            saveTargetFolder = false;
-                            aos = saveItem(context, context.target,
+                Map<byte[], String> typesMap = new HashMap<byte[], String>();
+                if (context.getStartTime() != TIME_UNSPECIFIED || context.getEndTime() != TIME_UNSPECIFIED) {
+                    Arrays.sort(searchTypes);
+                    int idx = Arrays.binarySearch(searchTypes, MailItem.TYPE_APPOINTMENT);
+                    if (idx >= 0) {
+                        System.arraycopy(searchTypes, idx+1, searchTypes, idx, searchTypes.length-1-idx);
+                        searchTypes = Arrays.copyOf(searchTypes, searchTypes.length-1);
+                        typesMap.put(new byte[] {MailItem.TYPE_APPOINTMENT}, calendarQuery);
+                    }
+                    idx = Arrays.binarySearch(searchTypes, MailItem.TYPE_TASK);
+                    if (idx >= 0) {
+                        System.arraycopy(searchTypes, idx+1, searchTypes, idx, searchTypes.length-1-idx);
+                        searchTypes = Arrays.copyOf(searchTypes, searchTypes.length-1);
+                        typesMap.put(new byte[] {MailItem.TYPE_TASK}, (StringUtil.isNullOrEmpty(taskQuery)) ? "is:local" : taskQuery);
+                    }
+                }
+                typesMap.put(searchTypes, query);
+                for (Map.Entry<byte[], String> entry : typesMap.entrySet()) {
+                    results = context.targetMailbox.search(context.opContext,
+                            entry.getValue(), entry.getKey(), SortBy.NONE,
+                            LC.zimbra_archive_formatter_search_chunk_size.intValue());
+                    try {
+                        while (results.hasNext()) {
+                            if (saveTargetFolder) {
+                                saveTargetFolder = false;
+                                aos = saveItem(context, context.target,
+                                        fldrs, cnts, false, aos, encoder, names);
+                            }
+                            aos = saveItem(context, results.getNext().getMailItem(),
                                     fldrs, cnts, false, aos, encoder, names);
                         }
-                        aos = saveItem(context, results.getNext().getMailItem(),
-                                fldrs, cnts, false, aos, encoder, names);
-                    }
-                    results.doneWithSearchResults();
-                    results = null;
-                } catch (Exception e) {
-                    warn(e);
-                } finally {
-                    if (results != null)
                         results.doneWithSearchResults();
+                        results = null;
+                    } catch (Exception e) {
+                        warn(e);
+                    } finally {
+                        if (results != null)
+                            results.doneWithSearchResults();
+                    }
                 }
             }
             if (aos == null) {
