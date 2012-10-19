@@ -327,7 +327,7 @@ public final class LC {
     @Reloadable
     @Supported
     public static final KnownKey servlet_max_concurrent_requests_per_session = KnownKey.newKey(0);
-    
+
     @Reloadable
     @Supported
     public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
@@ -1215,6 +1215,8 @@ public final class LC {
     public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
 
     public static final KnownKey octopus_public_static_folder = KnownKey.newKey("${zimbra_home}/jetty/static");
+
+    public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
 
     static {
         // Automatically set the key name with the variable name.
