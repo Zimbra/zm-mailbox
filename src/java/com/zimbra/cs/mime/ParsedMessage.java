@@ -1266,12 +1266,14 @@ public final class ParsedMessage {
             }
 
             // trim mailing list prefixes (e.g. "[rev-dandom]")
-            int bclose;
-            if (braced && (bclose = subject.indexOf(']')) > 0 && subject.lastIndexOf('[', bclose) == 0) {
-                String remainder = subject.substring(bclose + 1).trim();
-                if (remainder.length() > 0) {
-                    subject = remainder;
-                    continue;
+            if (LC.conversation_ignore_maillist_prefix.booleanValue()) {
+                int bclose;
+                if (braced && (bclose = subject.indexOf(']')) > 0 && subject.lastIndexOf('[', bclose) == 0) {
+                    String remainder = subject.substring(bclose + 1).trim();
+                    if (remainder.length() > 0) {
+                        subject = remainder;
+                        continue;
+                    }
                 }
             }
 
