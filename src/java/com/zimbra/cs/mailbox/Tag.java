@@ -221,6 +221,34 @@ public class Tag extends MailItem {
         return tag;
     }
 
+    /**
+     * Create a minimal Tag object but don't persist any equivalent of it to the mail store.
+     * This is useful when searching for remote tags (e.g. By clicking on a remote tag on an item in a
+     * shared folder - see Bug 77646)
+     */
+    public static Tag createPseudoRemoteTag(Mailbox mbox, String requestedName) throws ServiceException {
+        String name = validateItemName(requestedName);
+        try {
+            // if we can successfully get a tag with that name, we've got a naming conflict
+            mbox.getTagByName(name);
+            throw MailServiceException.ALREADY_EXISTS(name);
+        } catch (MailServiceException.NoSuchItemException nsie) {}
+
+        UnderlyingData data = new UnderlyingData();
+        data.id = Mailbox.ID_AUTO_INCREMENT;  /* faked */
+        data.type = Type.TAG.toByte();
+        data.folderId = Mailbox.ID_FOLDER_TAGS;
+        data.name = name;
+        data.setSubject(name);
+        data.metadata = null;
+        // Need to keep this out of the cache so that the user is still able to add a local tag with the same name after
+        // having clicked on a remote tag.
+        data.setFlags(data.getFlags() | Flag.BITMASK_UNCACHED);
+        Tag tag = new Tag(mbox, data);
+        return tag;
+    }
+
+
     /** Updates the unread state of all items with the tag.  Persists the
      *  change to the database and cache, and also updates the unread counts
      *  for the tag and the affected items' parents and {@link Folder}s
