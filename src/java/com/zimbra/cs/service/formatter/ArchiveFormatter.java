@@ -355,7 +355,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     context.resp.setHeader("Content-Disposition", null);
                     throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "No data found");
                 }
-                context.resp.setHeader("Content-Disposition", HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT, filename));
+                context.resp.setHeader("Content-Disposition", HttpUtil.createContentDisposition(context.req, Part.ATTACHMENT, emptyname));
                 aos = getOutputStream(context, UTF8);
             }
         } finally {
