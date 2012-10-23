@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pburgu 20121018-1432 */
+    /* build: 7.0.0_BETA1_1111 administrator 20120726-1726 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2564,6 +2564,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=717)
     public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
+
+    /**
+     * whether to invoke data imports for all data sources owned by an
+     * account after successful user login from the login page
+     *
+     * @since ZCS 7.2.2
+     */
+    @ZAttr(id=1418)
+    public static final String A_zimbraDataSourceImportOnLogin = "zimbraDataSourceImportOnLogin";
 
     /**
      * indicates that this datasource is used for one way (incoming) import

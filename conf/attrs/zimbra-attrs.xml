@@ -5742,6 +5742,11 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1418" name="zimbraDataSourceImportOnLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="7.2.2">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to invoke data imports for all data sources owned by an account after successful user login from the login page</desc>
+</attr>
+
 <attr id="1420" name="zimbraLdapGalSyncDisabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="7.2.2">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether ldap based galsync disabled or not</desc>
