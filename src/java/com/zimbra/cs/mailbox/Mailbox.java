@@ -7855,7 +7855,7 @@ public class Mailbox {
                     }
 
                     long folderTimeout = getOperationTimestampMillis() - folderLifetime;
-                    int numPurged = Folder.purgeMessages(this, folder, folderTimeout, null, false, true, maxItemsPerFolder);
+                    int numPurged = Folder.purgeMessages(this, folder, folderTimeout, null, false, false, maxItemsPerFolder);
                     purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 }
             }
