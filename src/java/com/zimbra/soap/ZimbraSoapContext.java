@@ -31,7 +31,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -576,14 +575,13 @@ public final class ZimbraSoapContext {
         return mWaitForNotifications;
     }
 
-
     /**
      * Serializes this object for use in a proxied SOAP request.
      * <p>
-     * The attributes encapsulated by the {@link ZimbraSoapContext} -- the
-     * response protocol, the auth token, etc. -- are carried forward.
+     * The attributes encapsulated by the {@link ZimbraSoapContext} -- the response protocol, the auth token, etc. are
+     * carried forward, except that if {@code excludeAccountDetails} is set, any account details are omitted.
      */
-    Element toProxyContext(SoapProtocol proto) {
+    Element toProxyContext(SoapProtocol proto, boolean excludeAccountDetails) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
 
         ctxt.addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount);
@@ -614,9 +612,12 @@ public final class ZimbraSoapContext {
             ctxt.addUniqueElement(HeaderConstants.E_SESSION).addAttribute(HeaderConstants.A_PROXIED, true);
         }
 
-        Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
-        if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId)) {
-            eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
+        if (!excludeAccountDetails) {
+            Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(
+                                            HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
+            if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId)) {
+                eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
+            }
         }
 
         if (mUnqualifiedItemIds) {
@@ -627,6 +628,16 @@ public final class ZimbraSoapContext {
         ua.addAttribute(HeaderConstants.A_VERSION, BuildInfo.VERSION);
         ctxt.addUniqueElement(HeaderConstants.E_VIA).setText(getNextVia());
         return ctxt;
+    }
+
+    /**
+     * Serializes this object for use in a proxied SOAP request.
+     * <p>
+     * The attributes encapsulated by the {@link ZimbraSoapContext} -- the
+     * response protocol, the auth token, etc. -- are carried forward.
+     */
+    Element toProxyContext(SoapProtocol proto) {
+        return toProxyContext(proto, false);
     }
 
     /**
