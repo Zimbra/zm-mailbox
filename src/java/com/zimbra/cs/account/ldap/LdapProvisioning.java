@@ -2390,6 +2390,8 @@ public class LdapProvisioning extends Provisioning {
 
         ZimbraLdapContext zlc = null;
         Account acct = getAccountById(zimbraId, zlc, true);
+        // prune cache
+        accountCache.remove(acct);
         LdapEntry entry = (LdapEntry) acct;
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
@@ -2473,38 +2475,33 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.mapToAttrs(newAttrs, attributes);
 
             if (dnChanged) {
-                zlc.createEntry(newDn, attributes, "createAccount");
+                zlc.renameEntry(oldDn, newDn);
+                // re-get the acct object, make sure we don't get it from cache
+                // Note: this account object contains the old address, it should never
+                // be cached
+                String escapedZimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+                String filter = LdapFilter.accountById(escapedZimbraId);
+                acct = getAccountByQuery(mDIT.mailBranchBaseDN(), filter, zlc, true);
+                if (acct == null) {
+                    throw ServiceException.FAILURE("cannot find account by id after modrdn", null);
+                }
             }
 
-            try {
-                if (dnChanged)
-                    zlc.moveChildren(oldDn, newDn);
+            // rename the account and all it's renamed aliases to the new name in all distribution lists
+            // doesn't throw exceptions, just logs
+            renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
 
-                // rename the account and all it's renamed aliases to the new name in all distribution lists
-                // doesn't throw exceptions, just logs
-                renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
-
-                // MOVE OVER ALL aliases
-                // doesn't throw exceptions, just logs
-                if (domainChanged)
-                    moveAliases(zlc, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
-
-                if (!dnChanged)
-                    modifyAttrs(acct, newAttrs, false, false);
-            } catch (ServiceException e) {
-                throw e;
-            } finally {
-                if (dnChanged)
-                    zlc.unbindEntry(oldDn);  // unbind old dn
+            // MOVE OVER ALL aliases
+            // doesn't throw exceptions, just logs
+            if (domainChanged) {
+                moveAliases(zlc, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
             }
-
+            modifyAttrsInternal(acct, zlc, newAttrs);
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
         } finally {
-            // prune cache
-            accountCache.remove(acct);
             ZimbraLdapContext.closeContext(zlc);
         }
 
