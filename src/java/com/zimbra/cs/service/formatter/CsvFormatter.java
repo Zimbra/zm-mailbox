@@ -28,9 +28,14 @@ import java.util.Set;
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.io.EndPoint;
+import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
+import org.eclipse.jetty.server.AbstractHttpConnection;
+
 import com.google.common.base.Charsets;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -64,6 +69,9 @@ public class CsvFormatter extends Formatter {
 
     @Override
     public void formatCallback(UserServletContext context) throws IOException, ServiceException {
+        // Disable the jetty timeout
+        disableJettyTimeout();
+
         Iterator<? extends MailItem> iterator = null;
         StringBuilder sb = new StringBuilder();
         try {
@@ -110,6 +118,8 @@ public class CsvFormatter extends Formatter {
     @Override
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
+        // Disable the jetty timeout
+        disableJettyTimeout();
         // Detect the charset of upload file.
         PushbackInputStream pis = new PushbackInputStream(context.getRequestInputStream(), READ_AHEAD_BUFFER_SIZE);
         byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
@@ -153,4 +163,30 @@ public class CsvFormatter extends Formatter {
         }
     }
 
+    /**
+     * Implemented for bug 77682..
+     *
+     * Disable the Jetty timeout for the SelectChannelConnector and the SSLSelectChannelConnector
+     * for this request.
+     *
+     * By default (and our normal configuration) Jetty has a 30 second idle timeout (10 if the server is busy) for
+     * connection endpoints. There's another task that keeps track of what connections have timeouts and periodically
+     * works over a queue and closes endpoints that have been timed out. This plays havoc with downloads to slow connections
+     * and whenever we have a long pause while working to create an archive.
+     *
+     * This method instructs Jetty not to close the connection when the idle time is reached. Given that we don't send a content-length
+     * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that..
+     * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not
+     * in this case.
+     * @throws IOException
+     */
+    private void disableJettyTimeout() throws IOException {
+        if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
+            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                scEndPoint.setMaxIdleTime(0);
+            }
+        }
+    }
 }
