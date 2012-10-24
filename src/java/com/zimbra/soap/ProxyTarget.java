@@ -15,13 +15,14 @@
 package com.zimbra.soap;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -118,7 +119,13 @@ public final class ProxyTarget {
         if (proto == SoapProtocol.Soap12 && zsc.getRequestProtocol() == SoapProtocol.Soap11) {
             proto = SoapProtocol.Soap11;
         }
-        Element envelope = proto.soapEnvelope(request, zsc.toProxyContext(proto));
+        /* Bug 77604 When a user has been configured to change their password on next login, the resulting proxied
+         * ChangePasswordRequest was failing because account was specified in context but no authentication token
+         * was supplied.  The server handler rejects a context which has account information but no authentication
+         * info - see ZimbraSoapContext constructor - solution is to exclude the account info from the context.
+         */
+        boolean excludeAccountDetails = AccountConstants.CHANGE_PASSWORD_REQUEST.equals(request.getQName());
+        Element envelope = proto.soapEnvelope(request, zsc.toProxyContext(proto, excludeAccountDetails));
 
         SoapHttpTransport transport = null;
         try {
