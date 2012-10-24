@@ -15,22 +15,13 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.MailboxBlobConsistency;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DEDUPE_BLOBS_RESPONSE)
@@ -53,7 +44,13 @@ public class DedupeBlobsResponse {
    
     @XmlAttribute(name=AdminConstants.A_TOTAL_COUNT, required=false)
     private Integer totalCount;
+
+    @XmlAttribute(name=AdminConstants.A_VOLUME_BLOBS_PROGRESS, required=false)
+    private String volumeBlobsProgress;
     
+    @XmlAttribute(name=AdminConstants.A_BLOB_DIGESTS_PROGRESS , required=false)
+    private String blobDigestsProgress;
+
     public DedupeBlobsResponse() {
     }
     
@@ -69,6 +66,14 @@ public class DedupeBlobsResponse {
         this.totalSize = size;
     }
     
+    public void setVolumeBlobsProgress(String progress) {
+        this.volumeBlobsProgress = progress;
+    }
+
+    public void setBlobDigestsProgress(String progress) {
+        this.blobDigestsProgress = progress;
+    }
+    
     public DedupStatus getStatus() {
         return status;
     }
@@ -80,5 +85,12 @@ public class DedupeBlobsResponse {
     public Long getTotalSize() {
         return totalSize;
     }
+    
+    public String getVolumeBlobsProgress() {
+        return volumeBlobsProgress;
+    }
 
+    public String getBlobDigestsProgress() {
+        return blobDigestsProgress;
+    }
 }
