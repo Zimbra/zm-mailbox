@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- *
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,25 +69,6 @@ public class StringUtil {
         if (s1 != null) {
             if (s2 != null) {
                 return s1.compareTo(s2);
-            } else {
-                return 1;
-            }
-        } else {  // s1 == null
-            if (s2 != null) {
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-    }
-
-    /** Compares two string ignoring case differences.
-     *
-     */
-    public static int compareToIgnoreCase(String s1, String s2) {
-        if (s1 != null) {
-            if (s2 != null) {
-                return s1.compareToIgnoreCase(s2);
             } else {
                 return 1;
             }
@@ -354,23 +334,6 @@ public class StringUtil {
             addToMultiMap(oldMap, entry.getKey(), entry.getValue());
         }
         return oldMap;
-    }
-
-    public static String[] toStringArray(Object obj) {
-
-        if (obj == null) {
-            return null;
-        }
-
-        String[] strArray;
-        if (obj instanceof String) {
-            strArray = new String[]{(String)obj};
-        } else if (obj instanceof String[]) {
-            strArray = (String[])obj;
-        } else {
-            throw new UnsupportedOperationException();
-        }
-        return strArray;
     }
 
     private static final int TERM_WHITESPACE = 1;
@@ -710,6 +673,26 @@ public class StringUtil {
     }
 
     /**
+     * Returns the simple class name (the name after the last dot)
+     * from a fully-qualified class name.  Behavior is the same as
+     * {@link FileUtil#getExtension}.
+     */
+    public static String getSimpleClassName(String className) {
+        return FileUtil.getExtension(className);
+    }
+
+    /**
+     * Returns the simple class name (the name after the last dot)
+     * for the specified object.
+     */
+    public static String getSimpleClassName(Object o) {
+        if (o == null) {
+            return null;
+        }
+        return FileUtil.getExtension(o.getClass().getName());
+    }
+
+    /**
      * Returns <code>true</code> if the secified string is <code>null</code> or its
      * length is <code>0</code>.
      */
@@ -786,26 +769,6 @@ public class StringUtil {
             }
         }
         return result.toString();
-    }
-
-    /**
-     * Unescapes a string containing entity escapes to a string containing the actual Unicode characters
-     * corresponding to the escapes.
-     */
-    public static String unEscapeHtml(String text) {
-        if (text == null || text.length() == 0) {
-            return "";
-        }
-
-        String result = text;
-        result = result.replace("&lt;", "<");
-        result = result.replace("&gt;", ">");
-        result = result.replace("&amp;", "&");
-        result = result.replace("&quot;", "\"");
-        result = result.replace("&#034;", "\"");
-        result = result.replace("&#039;", "\'");
-
-        return result;
     }
 
     private static Set<String> sJavaReservedWords =
@@ -901,36 +864,29 @@ public class StringUtil {
     public static String enclose(String strToEnclose, char encloseWith) {
         return new StringBuilder().append(encloseWith).append(strToEnclose).append(encloseWith).toString();
     }
-
+    
     private static Map<String, Pattern> patternCache = MapUtil.newLruMap(1000);
-
+    
     /**
      * Returns a new {@code Matcher} object for the given regular expression and
      * string.  The underlying {@link Pattern} is cached, so that regular expressions
      * aren't recompiled.
      */
     public static Matcher newMatcher(String regex, CharSequence s) {
-        return getCachedPattern(regex).matcher(s);
-    }
-
-    /**
-     * Returns a precompiled {@link Pattern} for the given regular expression.
-     */
-    public static Pattern getCachedPattern(String regex) {
         Pattern pattern = null;
         synchronized (patternCache) {
             pattern = patternCache.get(regex);
         }
-
+        
         if (pattern == null) {
             pattern = Pattern.compile(regex);
             synchronized (patternCache) {
                 patternCache.put(regex, pattern);
             }
         }
-        return pattern;
+        return pattern.matcher(s);
     }
-
+    
     /**
      * Does the same thing as {@link String#replaceAll(String, String)}, but uses
      * the pattern cache to avoid recompiling.
@@ -971,15 +927,5 @@ public class StringUtil {
             }
         }
         return sb.toString();
-    }
-
-    public static boolean isUUID(String value) {
-        if (value.length() == 36 &&
-            value.charAt(8) == '-' &&
-            value.charAt(13) == '-' &&
-            value.charAt(18) == '-' &&
-            value.charAt(23) == '-')
-            return true;
-        return false;
     }
 }

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE root [
-    <!ENTITY entity "<!--comment--><i/>text">
-]>
-<root>&entity;</root>

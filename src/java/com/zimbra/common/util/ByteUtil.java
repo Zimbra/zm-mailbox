@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- *
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -179,13 +178,9 @@ public class ByteUtil {
             if (length == 0)
                 return new byte[0];
 
-            BufferStream bs;
-            if (sizeLimit == -1)
-                bs = new BufferStream(sizeHint, Integer.MAX_VALUE, Integer.MAX_VALUE);
-            else if (sizeLimit > Integer.MAX_VALUE)
-                bs = new BufferStream(sizeHint, Integer.MAX_VALUE, sizeLimit);
-            else
-                bs = new BufferStream(sizeHint, (int) sizeLimit, sizeLimit);
+            BufferStream bs = sizeLimit == -1 ?
+                    new BufferStream(sizeHint, Integer.MAX_VALUE, Integer.MAX_VALUE) :
+                    new BufferStream(sizeHint, (int) sizeLimit, sizeLimit);
 
             bs.readFrom(is, length == -1 ? Long.MAX_VALUE : length);
             if (sizeLimit > 0 && bs.size() > sizeLimit)
@@ -202,7 +197,7 @@ public class ByteUtil {
      * Reads a <tt>String</tt> from the given <tt>Reader</tt>.  Reads
      * until the either end of the stream is hit or until <tt>length</tt> characters
      * are read.
-     *
+     * 
      * @param reader the content source
      * @param length number of characters to read, or <tt>-1</tt> for no limit
      * @param close <tt>true</tt> to close the <tt>Reader</tt> when done
@@ -387,7 +382,7 @@ public class ByteUtil {
             baos = new ByteArrayOutputStream(data.length); //data.length overkill
             gos = new GZIPOutputStream(baos);
             gos.write(data);
-            gos.finish();
+            gos.finish();            
             return baos.toByteArray();
         } finally {
             if (gos != null) {
@@ -487,20 +482,11 @@ public class ByteUtil {
             if (encoded[i] == (byte) '/')
                 encoded[i] = (byte) ',';
         }
-        try {
-            return new String(encoded, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;  // this shouldn't happen
-        }
+        return new String(encoded);
     }
 
-    public static byte[] decodeFSSafeBase64(String str) {
-        byte[] bytes = null;
-        try {
-            bytes = str.getBytes("utf-8");
-        } catch (UnsupportedEncodingException e) {
-            // this shouldn't happen
-        }
+    private static byte[] decodeFSSafeBase64(String str) {
+        byte[] bytes = str.getBytes();
         // Undo the mapping done in encodeFSSafeBase64().
         for (int i = 0; i < bytes.length; i++) {
             if (bytes[i] == (byte) ',')
@@ -508,30 +494,29 @@ public class ByteUtil {
         }
         return Base64.decodeBase64(bytes);
     }
-
+    
     public static String encodeLDAPBase64(byte[] data) {
         return new String(Base64.encodeBase64(data));
     }
-
+    
     public static byte[] decodeLDAPBase64(String str) {
         return Base64.decodeBase64(str);
     }
 
     /**
-     * Returns the digest of the supplied data.
-     * @param algorithm e.g. "SHA1"
+     * Returns the SHA1 digest of the supplied data.
      * @param data data to digest
      * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
      *  as hex string.
-     * @return hex or base64 string
+     * @return
      */
-    public static String getDigest(String algorithm, byte[] data, boolean base64) {
+    public static String getSHA1Digest(byte[] data, boolean base64) {
         try {
-            MessageDigest md = MessageDigest.getInstance(algorithm);
+            MessageDigest md = MessageDigest.getInstance("SHA1");
             byte[] digest = md.digest(data);
             if (base64)
                 return encodeFSSafeBase64(digest);
-            else
+            else 
                 return new String(Hex.encodeHex(digest));
         } catch (NoSuchAlgorithmException e) {
             // this should never happen unless the JDK is foobar
@@ -542,17 +527,16 @@ public class ByteUtil {
 
     /**
      * Reads the given <tt>InputStream</tt> in its entirety, closes
-     * the stream, and returns the digest of the read data.
-     * @param algorithm e.g. "SHA1"
+     * the stream, and returns the SHA1 digest of the read data.
      * @param in data to digest
      * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
      *  as hex string.
-     * @return hex or base64 string
+     * @return
      */
-    public static String getDigest(String algorithm, InputStream in, boolean base64)
+    public static String getSHA1Digest(InputStream in, boolean base64)
     throws IOException {
         try {
-            MessageDigest md = MessageDigest.getInstance(algorithm);
+            MessageDigest md = MessageDigest.getInstance("SHA1");
             byte[] buffer = new byte[1024];
             int numBytes;
             while ((numBytes = in.read(buffer)) >= 0) {
@@ -573,71 +557,33 @@ public class ByteUtil {
     }
 
     /**
-     * Returns the SHA1 digest of the supplied data.
-     * @param data data to digest
-     * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
-     *  as hex string.
-     * @return hex or base64 string
-     */
-    public static String getSHA1Digest(byte[] data, boolean base64) {
-        return getDigest("SHA1", data, base64);
-    }
-
-    /**
-     * Reads the given <tt>InputStream</tt> in its entirety, closes
-     * the stream, and returns the SHA1 digest of the read data.
-     * @param in data to digest
-     * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
-     *  as hex string.
-     * @return hex or base64 string
-     */
-    public static String getSHA1Digest(InputStream in, boolean base64)
-    throws IOException {
-        return getDigest("SHA1", in, base64);
-    }
-
-    /**
-     * Returns the SHA-256 digest of the supplied data.
-     * @param data data to digest
-     * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
-     *  as hex string.
-     * @return hex or base64 string
-     */
-    public static String getSHA256Digest(byte[] data, boolean base64) {
-        return getDigest("SHA-256", data, base64);
-    }
-
-    /**
-     * Reads the given <tt>InputStream</tt> in its entirety, closes
-     * the stream, and returns the SHA-256 digest of the read data.
-     * @param in data to digest
-     * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
-     *  as hex string.
-     * @return hex or base64 string
-     */
-    public static String getSHA256Digest(InputStream in, boolean base64)
-    throws IOException {
-        return getDigest("SHA-256", in, base64);
-    }
-
-    /**
      * return the MD5 digest of the supplied data.
      * @param data data to digest
      * @param base64 if true, return as base64 String, otherwise return
      *  as hex string.
-     * @return hex or base64 string
+     * @return
      */
     public static String getMD5Digest(byte[] data, boolean base64) {
-        return getDigest("MD5", data, base64);
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(data);
+            if (base64)
+                return encodeFSSafeBase64(digest);
+            else 
+                return new String(Hex.encodeHex(digest));
+        } catch (NoSuchAlgorithmException e) {
+            // this should never happen unless the JDK is foobar
+            //	e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     /**
-     * Returns the SHA256 digest for the given data, encoded
+     * Returns the SHA1 digest for the given data, encoded
      * as base64.
-     * @return hex or base64 string
      */
     public static String getDigest(byte[] data) {
-        return getSHA256Digest(data, true);
+        return getSHA1Digest(data, true);
     }
 
     /**
@@ -825,7 +771,7 @@ public class ByteUtil {
         return buf.toByteArray();
     }
 
-    // Custom read/writeUTF8 methods to replace DataInputStream.readUTF() and
+    // Custom read/writeUTF8 methods to replace DataInputStream.readUTF() and 
     // DataOutputStream.writeUTF() which have 64KB limit
 
     private static final int MAX_STRING_LEN = 32 * 1024 * 1024;     // 32MB
@@ -907,7 +853,7 @@ public class ByteUtil {
 
     /**
      * Calculates the number of bytes read from the wrapped stream.
-     *
+     * 
      * @see PositionInputStream#getPosition()
      */
     public static class PositionInputStream extends FilterInputStream {

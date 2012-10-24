@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- *
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -82,11 +82,6 @@ public class L10nUtil {
 
         calendarUserReplyPermissionDenied,
 
-        // Calendar Forward Notifications
-        calendarForwardNotificationSubject,
-        calendarForwardNotificationBody,
-        calendarForwardNotificationBodyHtml,
-
         // calendar item reminder alerts
         apptReminderEmailSubject,
         apptReminderEmailBody,
@@ -106,48 +101,25 @@ public class L10nUtil {
         // carddav messages
         carddavAddressbookDescription,
 
-        // default fragment for encrypted mail
-        encryptedMessageFragment,
-
         // share notification
-        mail,
-        calendar,
-        task,
-        addressBook,
-        briefcase,
-
         shareNotifSubject,
-        sharedBySubject,
-        shareNotifBodyText,
-        shareNotifBodyHtml,
 
-        shareModifySubject,
-        shareModifyBodyText,
-        shareModifyBodyHtml,
-
-        shareRevokeSubject,
-        shareRevokeBodyText,
-        shareRevokeBodyHtml,
-
-        shareExpireSubject,
-        shareExpireBodyText,
-        shareExpireBodyHtml,
+        shareNotifBodyIntro,
 
         shareNotifBodyAddedToGroup1,
         shareNotifBodyAddedToGroup2,
 
-        shareNameDefault,
-
         shareNotifBodyGranteeRoleViewer,
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
-        shareNotifBodyGranteeRoleNone,
 
+        shareNotifBodySharedItem,
         shareNotifBodyFolderDesc,
-        shareNotifBodyExternalShareText,
-        shareNotifBodyExternalShareHtml,
-        shareNotifBodyNotesText,
-        shareNotifBodyNotesHtml,
+        shareNotifBodyOwner,
+        shareNotifBodyGrantee,
+        shareNotifBodyRole,
+        shareNotifBodyAllowedActions,
+        shareNotifBodyNotes,
 
         shareNotifBodyActionRead,
         shareNotifBodyActionWrite,
@@ -158,20 +130,7 @@ public class L10nUtil {
         shareNotifBodyActionPrivate,
         shareNotifBodyActionFreebusy,
         shareNotifBodyActionSubfolder,
-        shareNotifBodyActionNone,
         //////////////////////
-
-        // group subscription request
-        dlSubscriptionRequestSubject,
-        dlSubscribeRequestText,
-        dlUnsubscribeRequestText,
-
-        // group subscription response
-        dlSubscriptionResponseSubject,
-        dlSubscribeResponseAcceptedText,
-        dlSubscribeResponseRejectedText,
-        dlUnsubscribeResponseAcceptedText,
-        dlUnsubscribeResponseRejectedText,
 
         // read-receipt notification body
         readReceiptNotification,
@@ -235,16 +194,8 @@ public class L10nUtil {
         errUnsupportedFormat,
         errResourceNotAllowedOnPort,
 
-        passwordViolation,
-
-        domainAggrQuotaWarnMsgSubject,
-        domainAggrQuotaWarnMsgBody,
-
-        octopus_share_notification_email_subject,
-        octopus_share_notification_email_message,
-        octopus_share_notification_email_accept,
-        octopus_share_notification_email_ignore,
-        octopus_share_notification_email_bodyFolderDesc
+        passwordViolation
+        
         // add other messages in the future...
     }
 
@@ -280,7 +231,7 @@ public class L10nUtil {
 
     public static ClassLoader getMsgClassLoader() {
         return sMsgClassLoader;
-    }
+    } 
 
     public static String getMessage(MsgKey key, Object... args) {
         return getMessage(key.toString(), (Locale) null, args);
@@ -325,18 +276,16 @@ public class L10nUtil {
     public static String getMessage(String basename, String key, Locale lc, Object... args) {
         ResourceBundle rb;
         try {
-            if (lc == null) {
+            if (lc == null)
                 lc = Locale.getDefault();
-            }
             rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
             String fmt = rb.getString(key);
-            if (fmt != null && args != null && args.length > 0) {
+            if (fmt != null && args != null && args.length > 0)
                 return MessageFormat.format(fmt, args);
-            } else {
+            else
                 return fmt;
-            }
         } catch (MissingResourceException e) {
-            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " +
+            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " + 
                     "(locale=" + key + ")", e);
             return null;
         }
@@ -360,13 +309,12 @@ public class L10nUtil {
     public static Set<String> getBundleKeySet(String basename, Locale lc) {
         ResourceBundle rb;
         try {
-            if (lc == null) {
+            if (lc == null)
                 lc = Locale.getDefault();
-            }
             rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
             Set<String> result = new HashSet<String>();
             Enumeration<String> keysEnum =  rb.getKeys();
-            while (keysEnum.hasMoreElements()) {
+            while(keysEnum.hasMoreElements()) {
                 result.add(keysEnum.nextElement());
             }
             return result;
@@ -392,9 +340,8 @@ public class L10nUtil {
         for (File file : dir.listFiles(new MatchingPropertiesFilter(new String[] { MSG_FILE_BASENAME }))) {
             Locale locale = getLocaleForPropertiesFile(file, false);
             if (locale != null) {
-                for (MsgKey key : msgkeys) {
+                for (MsgKey key : msgkeys)
                     messages.add(getMessage(key, locale));
-                }
             }
         }
         messages.remove(null);
@@ -413,15 +360,12 @@ public class L10nUtil {
             }
         }
 
-        @Override
         public boolean accept(File dir, String name) {
-            if (!name.endsWith(".properties")) {
+            if (!name.endsWith(".properties"))
                 return false;
-            }
             for (String prefix : prefixes) {
-                if (name.startsWith(prefix)) {
+                if (name.startsWith(prefix))
                     return true;
-                }
             }
             return false;
         }
@@ -433,19 +377,16 @@ public class L10nUtil {
     static Locale getLocaleForPropertiesFile(File file, boolean debug) {
         String[] localeParts = file.getName().split("\\.")[0].split("_");
         if (localeParts.length == 2) {
-            if (debug) {
+            if (debug)
                 ZimbraLog.misc.debug("        found locale: " + localeParts[1]);
-            }
             return new Locale(localeParts[1]);
         } else if (localeParts.length == 3) {
-            if (debug) {
+            if (debug)
                 ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2]);
-            }
             return new Locale(localeParts[1], localeParts[2]);
         } else if (localeParts.length == 4) {
-            if (debug) {
+            if (debug)
                 ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2] + " " + localeParts[3]);
-            }
             return new Locale(localeParts[1], localeParts[2], localeParts[3]);
         }
         return null;
@@ -464,16 +405,14 @@ public class L10nUtil {
                 lc = sLocaleMap.get(name);
                 if (lc == null) {
                     String parts[] = name.indexOf('_') != -1 ? name.split("_") : name.split("-");
-                    if (parts.length == 1) {
+                    if (parts.length == 1)
                         lc = new Locale(parts[0]);
-                    } else if (parts.length == 2) {
+                    else if (parts.length == 2)
                         lc = new Locale(parts[0], parts[1]);
-                    } else if (parts.length >= 3) {
+                    else if (parts.length >= 3)
                         lc = new Locale(parts[0], parts[1], parts[2]);
-                    }
-                    if (lc != null) {
+                    if (lc != null)
                         sLocaleMap.put(name, lc);
-                    }
                 }
             }
         }
@@ -481,12 +420,11 @@ public class L10nUtil {
     }
 
     private static class LocaleComparatorByDisplayName implements Comparator<Locale> {
-        private final Locale mInLocale;
+        private Locale mInLocale;
         LocaleComparatorByDisplayName(Locale inLocale) {
             mInLocale = inLocale;
         }
 
-        @Override
         public int compare(Locale a, Locale b) {
             String da = a.getDisplayName(mInLocale);
             String db = b.getDisplayName(mInLocale);
@@ -505,7 +443,7 @@ public class L10nUtil {
     }
 
     /**
-     * Return all localized(i.e. translated) locales sorted by their inLocale display name
+     * Return all localized(i.e. translated) locales sorted by their inLocale display name 
      * @return
      */
     public static Locale[] getLocalesSorted(Locale inLocale) {
@@ -522,9 +460,9 @@ public class L10nUtil {
     private static class LocalizedClientLocales {
         enum ClientResource {
             // I18nMsg,  // generated, all locales are there, so we don't count this resource
-            AjxMsg,
-            ZMsg,
-            ZaMsg,
+            AjxMsg, 
+            ZMsg, 
+            ZaMsg, 
             ZhMsg,
             ZmMsg
         }
@@ -538,7 +476,7 @@ public class L10nUtil {
 
         /*
          * load only those supported by JAVA
-         */
+         */ 
         private static void loadBundlesByJavaLocal(Set<Locale> locales, String msgsDir) {
             ClassLoader classLoader = getClassLoader(msgsDir);
             Locale[] allLocales = Locale.getAvailableLocales();
@@ -550,9 +488,9 @@ public class L10nUtil {
                         Locale rbLocale = rb.getLocale();
                         if (rbLocale.equals(locale)) {
                             /*
-                             * found a resource for the locale, a locale is considered "installed" as long as
+                             * found a resource for the locale, a locale is considered "installed" as long as 
                              * any of its resource (the list in ClientResource) is present
-                             */
+                             */ 
                             ZimbraLog.misc.info("Adding locale " + locale.toString());
                             locales.add(locale);
                             break;
@@ -602,8 +540,8 @@ public class L10nUtil {
             loadBundlesByDiskScan(sLocalizedLocales, msgsDir);
 
             /*
-             * UI displays locales with country in sub menus.
-             *
+             * UI displays locales with country in sub menus. 
+             * 
              * E.g. if there are:
              *      id: "zh_CN", name: "Chinese (China)"
              *      id: "zh_HK", name: "Chinese (Hong Kong)"
@@ -613,11 +551,11 @@ public class L10nUtil {
              *                   Chinese (China)
              *                   Chinese (Hong Kong)
              *
-             *      UI relies on the presence of a "language only" entry
-             *      for the top level label "Chinese".
+             *      UI relies on the presence of a "language only" entry 
+             *      for the top level label "Chinese".    
              *      i.e. id: "zh", name: "Chinese"
-             *
-             *      Thus we need to add a "language only" pseudo entry for locales that have
+             *          
+             *      Thus we need to add a "language only" pseudo entry for locales that have 
              *      a country part but the "language only" entry is not already there.
              */
             Set<Locale> pseudoLocales = new HashSet<Locale>();

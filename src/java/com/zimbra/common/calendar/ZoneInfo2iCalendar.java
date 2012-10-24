@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- *
+ * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -273,7 +273,7 @@ public class ZoneInfo2iCalendar {
             if (tzname != null)
                 sb.append("TZNAME:").append(iCalEscape(tzname)).append(CRLF);
         }
-        sb.append("DTSTART:").append("16010101T");  // YYYYMMDD fixed to 16010101 (MS Outlook style)
+        sb.append("DTSTART:").append("19710101T");  // YYYYMMDD fixed to 19710101
         Time at = rline.getAt();
         Time onset;
         switch (at.getType()) {
@@ -341,7 +341,7 @@ public class ZoneInfo2iCalendar {
         sb.append(CRLF);
         if (tznameFormat != null && tznameFormat.length() > 0 && !tznameFormat.contains("%"))
             sb.append("TZNAME:").append(iCalEscape(tznameFormat)).append(CRLF);
-        sb.append("DTSTART:16010101T000000").append(CRLF);  // YYYYMMDDThhmmss fixed to 16010101T000000 (MS Outlook style)
+        sb.append("DTSTART:19710101T000000").append(CRLF);  // YYYYMMDDThhmmss fixed to 19710171T000000
         String offset = getUtcOffset(gmtOffset);
         sb.append("TZOFFSETTO:").append(offset).append(CRLF);
         sb.append("TZOFFSETFROM:").append(offset).append(CRLF);
@@ -419,7 +419,6 @@ public class ZoneInfo2iCalendar {
 
     private static class ZoneComparatorByGmtOffset implements Comparator<Zone> {
 
-        @Override
         public int compare(Zone z1, Zone z2) {
             if (z1 == null && z2 == null)
                 return 0;
@@ -782,9 +781,9 @@ public class ZoneInfo2iCalendar {
                 Integer matchScore = sMatchScores.get(tzid);
                 if (matchScore == null) {
                     if (isPrimary)
-                        matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_PRIMARY);
+                        matchScore = new Integer(TZIDMapper.DEFAULT_MATCH_SCORE_PRIMARY);
                     else
-                        matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
+                        matchScore = new Integer(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
                 }
                 Set<String> aliases = zone.getAliases();
                 ZoneLine zline = getZoneLineForYear(zone, params.year);

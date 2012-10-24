@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -24,6 +24,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 
 import org.apache.commons.cli.*;
+import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
@@ -176,7 +177,7 @@ public class SoapTestHarness {
     }
 
     public static void main(String args[]) 
-    throws HarnessException, IOException, ServiceException {
+    throws HarnessException, IOException, DocumentException, ServiceException {
         SoapTestHarness harness = new SoapTestHarness();
         harness.runTests(args);
     }
@@ -189,7 +190,7 @@ public class SoapTestHarness {
     }
 
     public void runTests(String args[]) 
-    throws HarnessException, IOException, ServiceException {
+    throws HarnessException, IOException, DocumentException, ServiceException {
 
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("SoapTestHarness", null);

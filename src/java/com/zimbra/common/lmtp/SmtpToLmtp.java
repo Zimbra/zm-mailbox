@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -230,17 +230,13 @@ public class SmtpToLmtp {
             
             public void run() {
                 InputStream in = null;
-                LmtpClient client = null;
                 try {
-                    client = new LmtpClient(lmtpHost, lmtpPort);
+                    LmtpClient client = new LmtpClient(lmtpHost, lmtpPort);
                     in = new FileInputStream(data.file);
                     client.sendMessage(in, data.recipients, data.sender, SmtpToLmtp.class.getSimpleName(), data.file.length());
                 } catch (Throwable e) {
                     ZimbraLog.smtp.warn("Error occurred", e);
                 } finally {
-                    if (client != null) {
-                        client.close();
-                    }
                     ByteUtil.closeStream(in);
                     data.file.delete();
                 }
