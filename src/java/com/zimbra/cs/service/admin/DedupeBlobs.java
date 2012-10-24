@@ -100,6 +100,8 @@ public final class DedupeBlobs extends AdminDocumentHandler {
         } else {
             resp.setStatus(DedupStatus.stopped);
         }
+        resp.setVolumeBlobsProgress(deduper.getVolumeBlobsProgress());
+        resp.setBlobDigestsProgress(deduper.getBlobDigestsProgress());
         Pair<Integer, Long> pair = deduper.getCountAndSize();
         resp.setTotalCount(pair.getFirst());
         resp.setTotalSize(pair.getSecond());

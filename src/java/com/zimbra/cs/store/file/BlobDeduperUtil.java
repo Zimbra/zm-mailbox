@@ -129,6 +129,8 @@ public class BlobDeduperUtil {
             System.out.println("Dedupe scheduled. Run \"zmdedupe status\" to check the status.");
         }
         System.out.println("Status = " + response.getStatus().name());
+        System.out.println("Groups populated in volume blobs (volumeId - groups/total_groups) = " + response.getVolumeBlobsProgress());
+        System.out.println("Digests Processed (volumeId - digests/total_digests) = " + response.getBlobDigestsProgress());
         System.out.println("Links created = " + response.getTotalCount());
         System.out.println("Size saved = " + response.getTotalSize());
     }

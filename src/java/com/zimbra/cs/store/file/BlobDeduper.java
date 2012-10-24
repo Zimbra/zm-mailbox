@@ -49,6 +49,8 @@ public class BlobDeduper {
     private boolean stopProcessing = false;
     private int totalLinksCreated = 0;
     private long totalSizeSaved = 0;
+    private String volumeBlobsProgress = "1 - 0/" + (DebugConfig.disableMailboxGroups ? 1 : DebugConfig.numMailboxGroups);
+    private String blobDigestsProgress = " 1 - 0/0";
     
     private final static BlobDeduper SINGLETON = new BlobDeduper();
 
@@ -235,6 +237,22 @@ public class BlobDeduper {
         return new Pair<Integer,Long>(totalLinksCreated, totalSizeSaved);
     }
     
+    public synchronized String getVolumeBlobsProgress() {
+        return volumeBlobsProgress;
+    }
+    
+    public synchronized void setVolumeBlobsProgress(String str) {
+        volumeBlobsProgress = str;
+    }
+
+    public synchronized String getBlobDigestsProgress() {
+        return blobDigestsProgress;
+    }
+    
+    public synchronized void setBlobDigestsProgress(String str) {
+        blobDigestsProgress = str;
+    }
+
     public void resetVolumeBlobs(List<Short> volumeIds) throws ServiceException {
         synchronized (this) {
             if (inProgress) {
@@ -289,6 +307,7 @@ public class BlobDeduper {
             inProgress = true;
             totalLinksCreated = 0;
             totalSizeSaved = 0;
+            volumeBlobsProgress = "1 - 0/" + (DebugConfig.disableMailboxGroups ? 1 : DebugConfig.numMailboxGroups);
         }
         Thread thread = new BlobDeduperThread(volumeIds);
         thread.setName("BlobDeduper");
@@ -345,15 +364,18 @@ public class BlobDeduper {
             }
             if (DebugConfig.disableMailboxGroups) {
                 populateVolumeBlobs(vol.getId(), -1, metadata.getLastSyncDate(), metadata.getCurrentSyncDate());
+                setVolumeBlobsProgress(vol.getId() + " - 1/1");
             } else {
                 Set<Integer> groupIds = getGroupIds();
                 for (int i = (resumed ? metadata.getGroupId() + 1 : 1); i <= DebugConfig.numMailboxGroups; i++) {
                     if (!groupIds.contains(i)) {
+                        setVolumeBlobsProgress(vol.getId() + " - " + i + "/" + DebugConfig.numMailboxGroups);
                         continue;
                     }
                     populateVolumeBlobs(vol.getId(), i, metadata.getLastSyncDate(), metadata.getCurrentSyncDate());
                     metadata.setGroupId(i);
                     vol = updateMetadata(vol.getId(), metadata);
+                    setVolumeBlobsProgress(vol.getId() + " - " + i + "/" + DebugConfig.numMailboxGroups);
                     if (isStopProcessing()) {
                         ZimbraLog.misc.info("Recieved the stop signal. Stopping the deduplication process.");
                         throw ServiceException.INTERRUPTED("received stop signal");
@@ -374,6 +396,7 @@ public class BlobDeduper {
         public void run() {   
             for (short volumeId : volumeIds) {
                 try {
+                    ZimbraLog.misc.info("Running deduper for volume ", volumeId);
                     Volume vol = VolumeManager.getInstance().getVolume(volumeId);
                     // populate the volume_blox table first;
                     populateVolumeBlobs(vol);
@@ -385,9 +408,13 @@ public class BlobDeduper {
                     } finally {
                         DbPool.quietClose(conn);
                     }
+                    int count = 0;
+                    setBlobDigestsProgress(volumeId + " - " + count + "/" + digests.size());
                     for (String digest : digests) {
                         Pair<Integer, Long> pair = processDigest(digest, vol);
                         incrementCountAndSize(pair.getFirst(), pair.getSecond());
+                        count++;
+                        setBlobDigestsProgress(volumeId + " - " + count + "/" + digests.size());
                         if (isStopProcessing()) {
                             ZimbraLog.misc.info("Recieved the stop signal. Stopping the deduplication process.");
                             break;
