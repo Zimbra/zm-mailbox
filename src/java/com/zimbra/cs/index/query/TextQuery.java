@@ -27,6 +27,7 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -140,6 +141,19 @@ public class TextQuery extends Query {
         out.append(field);
         out.append(':');
         Joiner.on(',').appendTo(out, tokens);
+        if (quick || text.endsWith("*")) {
+            out.append("[*]");
+        }
+    }
+
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append(field);
+        out.append(':');
+        out.append(Strings.repeat("$TEXT,", tokens.size()));
+        if (out.charAt(out.length()-1) == ',') {
+            out.deleteCharAt(out.length()-1);
+        }
         if (quick || text.endsWith("*")) {
             out.append("[*]");
         }

@@ -95,6 +95,14 @@ log4j.appender.ACTIVITY.File=/opt/zimbra/log/activity.log
 log4j.appender.ACTIVITY.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.ACTIVITY.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
+# Appender SEARCHSTAT writes to the file "searchstat.log".
+log4j.appender.SEARCHSTAT=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.SEARCHSTAT.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.SEARCHSTAT.RollingPolicy.FileNamePattern=/opt/zimbra/log/searchstat.log.%d{yyyy-MM-dd}
+log4j.appender.SEARCHSTAT.File=/opt/zimbra/log/searchstat.log
+log4j.appender.SEARCHSTAT.layout=com.zimbra.common.util.ZimbraPatternLayout
+log4j.appender.SEARCHSTAT.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
+
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
 
@@ -113,6 +121,7 @@ log4j.additivity.zimbra.milter=false
 log4j.logger.zimbra.milter=INFO,MILTER
 log4j.additivity.zimbra.activity=false
 log4j.logger.zimbra.activity=INFO,ACTIVITY
+log4j.logger.zimbra.searchstat=INFO,SEARCHSTAT
 
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN

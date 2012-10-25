@@ -459,4 +459,14 @@ public final class DateQuery extends Query {
         out.append('-');
         out.append(DateTools.timeToString(highestTime, DateTools.Resolution.MINUTE));
     }
+    
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("DATE:");
+        out.append(type);
+        out.append(',');
+        out.append("$DATE");
+        out.append('-');
+        out.append("$DATE");
+    }
 }

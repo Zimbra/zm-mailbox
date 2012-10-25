@@ -161,6 +161,15 @@ public final class FieldQuery extends TextQuery {
             out.append(range);
             out.append(number);
         }
+
+        @Override
+        void sanitizedDump(StringBuilder out) {
+            out.append('#');
+            out.append(name);
+            out.append("#:");
+            out.append(range);
+            out.append("$NUM");
+        }
     }
 
 }

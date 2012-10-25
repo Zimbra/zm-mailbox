@@ -91,4 +91,8 @@ public final class SenderQuery extends Query {
         out.append("SENDER:").append(comparison).append(sender);
     }
 
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("SENDER:").append(comparison).append("$TEXT");
+    }
 }

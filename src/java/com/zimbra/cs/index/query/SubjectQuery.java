@@ -82,4 +82,13 @@ public final class SubjectQuery extends Query {
         out.append(subject);
     }
 
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("SUBJECT:");
+        out.append(lt ? '<' : '>');
+        if (inclusive) {
+            out.append('=');
+        }
+        out.append("$TEXT");
+    }
 }

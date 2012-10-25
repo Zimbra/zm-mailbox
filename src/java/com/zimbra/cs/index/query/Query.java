@@ -156,6 +156,13 @@ public abstract class Query {
         dump(out);
         return out.append(')');
     }
+    
+    public StringBuilder toSanitizedString(StringBuilder out) {
+        out.append(modifier);
+        out.append("Q(");
+        sanitizedDump(out);
+        return out.append(')');
+    }
 
     /**
      * Sub classes must implement this method to dump the internal information
@@ -164,6 +171,10 @@ public abstract class Query {
      * @param out output
      */
     abstract void dump(StringBuilder out);
+    
+    void sanitizedDump(StringBuilder out) {
+        dump(out);
+    }
 
     /**
      * Convenient method to dump a list of query clauses.

@@ -26,6 +26,7 @@ import org.apache.lucene.search.PrefixQuery;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
@@ -91,6 +92,15 @@ public final class ContactQuery extends Query {
     void dump(StringBuilder out) {
         out.append("CONTACT:");
         Joiner.on(',').appendTo(out, tokens);
+    }
+    
+    @Override
+    void sanitizedDump(StringBuilder out) {
+        out.append("CONTACT:");
+        out.append(Strings.repeat("$TEXT,", tokens.size()));
+        if (out.charAt(out.length()-1) == ',') {
+            out.deleteCharAt(out.length()-1);
+        }
     }
 
 }

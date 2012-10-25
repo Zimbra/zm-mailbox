@@ -205,6 +205,7 @@ public final class MailboxIndex {
     private ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
         SearchParams params = zq.getParams();
         ZimbraLog.search.debug("query: %s", params.getQueryString());
+        ZimbraLog.searchstat.debug("query: %s", zq.toSanitizedtring());
 
         // handle special-case Task-only sorts: convert them to a "normal sort" and then re-sort them at the end
         // TODO: this hack (converting the sort) should be able to go away w/ the new SortBy implementation, if the

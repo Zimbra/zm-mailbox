@@ -64,4 +64,10 @@ public class TagQuery extends Query {
         out.append(name);
     }
 
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("TAG:");
+        out.append("$TAG");
+    }
+
 }
