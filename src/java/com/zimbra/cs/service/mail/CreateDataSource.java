@@ -54,7 +54,7 @@ public class CreateDataSource extends MailDocumentHandler {
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
 
         // Common attributes
-        validateFolderId(account, mbox, eDataSource);
+        validateFolderId(account, mbox, eDataSource, type);
         String name = eDataSource.getAttribute(MailConstants.A_NAME);
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
@@ -124,7 +124,7 @@ public class CreateDataSource extends MailDocumentHandler {
      * Confirms that the folder attribute specifies a valid folder id and is not
      * within the subtree of another datasource
      */
-    static void validateFolderId(Account account, Mailbox mbox, Element eDataSource)
+    static void validateFolderId(Account account, Mailbox mbox, Element eDataSource, DataSource.Type dsType)
     throws ServiceException {
         int folderId = (int) eDataSource.getAttributeLong(MailConstants.A_FOLDER);
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
@@ -140,8 +140,11 @@ public class CreateDataSource extends MailDocumentHandler {
             try {
                 for (Folder fldr : mbox.getFolderById(null, ds.getFolderId()).getSubfolderHierarchy()) {
                     if (fldr.getId() == folderId)
-                        throw ServiceException.INVALID_REQUEST("Folder location conflict: " +
-                            fldr.getPath(), null);
+                        if ( (DataSource.Type.pop3.equals(dsType)) && (DataSource.Type.pop3.equals(ds.getType())) ) {
+                            // Allows unified inbox to work for more than one Pop3 datasource
+                        } else {
+                            throw ServiceException.INVALID_REQUEST("Folder location conflict: " + fldr.getPath(), null);
+                        }
                 }
             } catch (NoSuchItemException e) {
             }
