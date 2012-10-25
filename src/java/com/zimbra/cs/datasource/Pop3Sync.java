@@ -213,15 +213,20 @@ public class Pop3Sync extends MailItemImport {
         if (count == 0) {
             return; // No new messages
         }
-        if (poppingSelf(uids[0])) {
-            throw ServiceException.INVALID_REQUEST(
-                "User attempted to import messages from his own mailbox", null);
-        }
         IOExceptionHandler.getInstance().resetSyncCounter(mbox);
+        boolean checkForSelfPopping = true;
         for (int msgno = uids.length; msgno > 0; --msgno) {
             String uid = uids[msgno - 1];
 
             if (!existingUids.contains(uid)) {
+                if (checkForSelfPopping) {
+                    //  Only check new messages else could match one we previously synced.
+                    if (poppingSelf(uid)) {
+                        throw ServiceException.INVALID_REQUEST(
+                            "User attempted to import messages from his own mailbox", null);
+                    }
+                    checkForSelfPopping = false; // Only need to check one message
+                }
                 LOG.debug("Fetching message with uid %s", uid);
                 IOExceptionHandler.getInstance().trackSyncItem(mbox, msgno);
                 // Don't allow filtering to a mountpoint when retaining the
