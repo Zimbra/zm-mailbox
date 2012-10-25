@@ -814,8 +814,12 @@ public class Invite {
             }
 
             Object mmInvContent = mmInv.getContent();
-            if (!(mmInvContent instanceof MimeMultipart))
+            if (!(mmInvContent instanceof MimeMultipart)) {
+                if (mmInvContent instanceof InputStream) {
+                    ByteUtil.closeStream((InputStream) mmInvContent);
+                }
                 return null;
+            }
             MimeMultipart mm = (MimeMultipart) mmInvContent;
 
             // If top-level is multipart, get description from text/* part.
@@ -832,18 +836,15 @@ public class Invite {
                         byte[] descBytes = ByteUtil.getContent(part.getInputStream(), part.getSize());
                         return new String(descBytes, charset);
                     }
+                    // If part is a multipart, recurse.
+                    if (ct.getBaseType().matches(MimeConstants.CT_MULTIPART_WILD)) {
+                        String str = getDescription(part, mimeType);
+                        if (str != null) {
+                            return str;
+                        }
+                    }
                 } catch (javax.mail.internet.ParseException e) {
                     ZimbraLog.calendar.warn("Invalid Content-Type found: \"" + ctStr + "\"; skipping part", e);
-                }
-
-                // If part is a multipart, recurse.
-                Object mmObj = part.getContent();
-                if (mmObj instanceof MimeMultipart) {
-                    String str = getDescription(part, mimeType);
-                    if (str != null)
-                        return str;
-                } else if (mmObj instanceof InputStream) {
-                    ByteUtil.closeStream((InputStream) mmObj);
                 }
             }
         } catch (IOException e) {
