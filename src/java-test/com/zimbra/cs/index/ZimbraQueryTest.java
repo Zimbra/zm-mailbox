@@ -102,6 +102,29 @@ public final class ZimbraQueryTest {
             Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
         }
     }
+    
+    @Test
+    public void testSanitizedQuery() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        SearchParams params = new SearchParams();
+        params.setSortBy(SortBy.NONE);
+        params.setQueryString("in:inbox content:test");
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertEquals("Q(IN:$FOLDER)Q(&&)Q(l.content:$TEXT)", query.toSanitizedtring());
+        
+        params.setQueryString("in:inbox");
+        query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertEquals("Q(IN:$FOLDER)", query.toSanitizedtring());
+        
+        params.setQueryString("conv:\"-554\" (underid:1 AND NOT underid:3 AND NOT underid:4)");
+        query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertEquals("Q(ITEMID,$TEXT)Q(&&)Q(Q(UNDER:ANY_FOLDER)Q(&&)-Q(UNDER:$FOLDER)Q(&&)-Q(UNDER:$FOLDER))", query.toSanitizedtring());
+        
+        params.setQueryString("inid:15");
+        query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertEquals("Q(IN:$FOLDER)", query.toSanitizedtring());
+    }
 
     @Test
     public void searchResultMode() throws Exception {
