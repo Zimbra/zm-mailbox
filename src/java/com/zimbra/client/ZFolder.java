@@ -444,7 +444,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
 
 	public String getNameURLEncoded() {
 		try {
-			return URLEncoder.encode(mName, "utf-8");
+			return URLEncoder.encode(mName, "utf-8").replace("+", "%20");
 		}
 		catch (UnsupportedEncodingException e) {
 			return mName;
