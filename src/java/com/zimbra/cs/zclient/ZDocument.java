@@ -21,6 +21,9 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.mime.MimeConstants;
 import org.json.JSONException;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 public class ZDocument implements ZItem, ToZJSONObject {
 
 	private boolean mIsWiki;
@@ -91,6 +94,16 @@ public class ZDocument implements ZItem, ToZJSONObject {
 	public String getName() {
 		return mName;
 	}
+
+	public String getNameURLEncoded() {
+		try {
+			return URLEncoder.encode(name, "utf-8").replace("+", "%20");
+		}
+		catch (UnsupportedEncodingException e) {
+			return name;
+		}
+	}
+
 	public String getFolderId() {
 		return mFolderId;
 	}
