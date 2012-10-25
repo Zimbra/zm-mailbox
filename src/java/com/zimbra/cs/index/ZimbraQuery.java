@@ -824,5 +824,13 @@ public final class ZimbraQuery {
         }
         return operation.toQueryString();
     }
+    
+    public String toSanitizedtring() throws ServiceException {
+        StringBuilder out = new StringBuilder();
+        for (Query clause : clauses) {
+            clause.toSanitizedString(out);
+        }
+        return out.toString();
+    }
 
 }

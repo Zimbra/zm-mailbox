@@ -17,6 +17,7 @@ package com.zimbra.cs.index.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.NoResultsQueryOperation;
@@ -100,6 +101,18 @@ public final class ItemQuery extends Query {
                 out.append(',');
                 out.append(id.toString());
             }
+        }
+    }
+
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("ITEMID");
+        if (isAllQuery) {
+            out.append(",all");
+        } else if (isNoneQuery) {
+            out.append(",none");
+        } else {
+            out.append(Strings.repeat(",$TEXT", itemIds.size()));
         }
     }
 }

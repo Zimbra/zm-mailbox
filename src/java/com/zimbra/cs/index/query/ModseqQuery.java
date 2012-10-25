@@ -101,4 +101,11 @@ public final class ModseqQuery extends Query {
         out.append(operator);
         out.append(modseq);
     }
+
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("MODSEQ:");
+        out.append(operator);
+        out.append("$NUM");
+    }
 }

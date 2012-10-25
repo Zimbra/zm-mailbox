@@ -68,4 +68,11 @@ public class SubQuery extends Query {
         }
     }
 
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        for (Query sub : clauses) {
+            sub.toSanitizedString(out);
+        }
+    }
+
 }

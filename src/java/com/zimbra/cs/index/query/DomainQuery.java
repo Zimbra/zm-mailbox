@@ -53,4 +53,10 @@ public final class DomainQuery extends Query {
         out.append("DOMAIN:");
         out.append(term);
     }
+    
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("DOMAIN:");
+        out.append("$TEXT");
+    }
 }

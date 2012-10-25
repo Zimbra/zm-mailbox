@@ -290,5 +290,32 @@ public final class InQuery extends Query {
             }
         }
     }
+    
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append(includeSubfolders ? "UNDER:" : "IN:");
+        if (specialTarget != null) {
+            switch (specialTarget) {
+                case ANY:
+                    out.append("ANY_FOLDER");
+                    break;
+                case LOCAL:
+                    out.append("LOCAL");
+                    break;
+                case REMOTE:
+                    out.append("REMOTE");
+                    break;
+                case NONE:
+                    out.append("NONE");
+                    break;
+            }
+        } else {
+            out.append(remoteId != null ? "$REMOTEFOLDER" : (folder != null ? "$FOLDER" : "ANY_FOLDER"));
+            if (subfolderPath != null) {
+                out.append('/');
+                out.append("$SUBFOLDER");
+            }
+        }
+    }
 
 }

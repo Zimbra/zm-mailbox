@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index.query;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,6 +46,16 @@ public final class ConvCountQuery extends Query {
         out.append(' ');
         out.append(higherEq? "<=" : "<");
         out.append(highestCount);
+    }
+    
+    @Override
+    void sanitizedDump(StringBuilder out) {
+        out.append("ConvCount:");
+        out.append(lowerEq ? ">=" : ">");
+        out.append("$NUM");
+        out.append(' ');
+        out.append(higherEq? "<=" : "<");
+        out.append("$NUM");
     }
 
     @Override

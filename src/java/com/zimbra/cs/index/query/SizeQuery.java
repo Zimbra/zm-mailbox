@@ -139,4 +139,11 @@ public final class SizeQuery extends Query {
         out.append(type);
         out.append(size);
     }
+
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("SIZE:");
+        out.append(type);
+        out.append("$NUM");
+    }
 }

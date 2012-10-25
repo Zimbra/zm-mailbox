@@ -71,5 +71,11 @@ public final class ConvQuery extends Query {
         out.append("CONV:");
         out.append(convId);
     }
+    
+    @Override
+    public void sanitizedDump(StringBuilder out) {
+        out.append("CONV:");
+        out.append("$NUM");
+    }
 
 }
