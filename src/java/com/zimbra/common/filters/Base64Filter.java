@@ -61,7 +61,7 @@ public class Base64Filter implements Filter {
         }
     }
 
-    boolean isEncodeable(HttpServletRequest request) {
+    public static boolean isEncodeable(HttpServletRequest request) {
         String ae = request.getHeader("x-zimbra-encoding");
         return ae != null && (ae.trim().equals("base64") || ae.trim().equals("x-base64"));
     }
