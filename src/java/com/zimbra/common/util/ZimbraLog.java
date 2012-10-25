@@ -130,6 +130,11 @@ public final class ZimbraLog {
     public static final Log search = LogFactory.getLog("zimbra.search");
 
     /**
+     * the "zimbra.searchstat" logger. For search statistics.
+     */
+    public static final Log searchstat = LogFactory.getLog("zimbra.searchstat");
+
+    /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
      */
     public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
