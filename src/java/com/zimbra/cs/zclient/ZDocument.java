@@ -97,10 +97,10 @@ public class ZDocument implements ZItem, ToZJSONObject {
 
 	public String getNameURLEncoded() {
 		try {
-			return URLEncoder.encode(name, "utf-8").replace("+", "%20");
+			return URLEncoder.encode(mName, "utf-8").replace("+", "%20");
 		}
 		catch (UnsupportedEncodingException e) {
-			return name;
+			return mName;
 		}
 	}
 
