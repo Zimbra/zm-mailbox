@@ -32,10 +32,11 @@ public final class ContentInputStream extends InputStream {
         sbuf.setLength(0);
     }
 
+    @Override
     public int read() throws IOException {
         if (pos == -1) return -1;
         if (pos >= sbuf.length()) {
-            if (!fillBuffer()) return -1;
+            if (!fillBufferWithNextLine()) return -1;
         }
         return sbuf.charAt(pos++);
     }
@@ -43,7 +44,7 @@ public final class ContentInputStream extends InputStream {
     public String readLine() throws IOException {
         if (pos == -1) return null;
         if (pos >= sbuf.length()) {
-            if (!fillBuffer()) return null;
+            if (!fillBufferWithNextLine()) return null;
         }
         // Return rest of line excluding trailing "\r\n"
         int len = sbuf.length() - pos;
@@ -52,6 +53,7 @@ public final class ContentInputStream extends InputStream {
         return line;
     }
 
+    @Override
     public void close() throws IOException {
         skipRemaining();
     }
@@ -62,28 +64,44 @@ public final class ContentInputStream extends InputStream {
         }
     }
 
-    // Fill input buffer with next line of content
-    private boolean fillBuffer() throws IOException {
+    /**
+     * Fill input buffer with next line of content.
+     *
+     * <br />{@code http://tools.ietf.org/html/rfc1939 - section 3. Basic Operation} talks about multi-line response
+     * as follows:<br />
+     *     Responses to certain commands are multi-line.  In these cases, which are clearly indicated below, after
+     *     sending the first line of the response and a CRLF, any additional lines are sent, each terminated by a CRLF
+     *     pair.  When all lines of the response have been sent, a final line is sent, consisting of a termination
+     *     octet (decimal code 046, ".") and a CRLF pair.  If any line of the multi-line response begins with the
+     *     termination octet, the line is "byte-stuffed" by pre-pending the termination octet to that line of the
+     *     response. Hence a multi-line response is terminated with the five octets "CRLF.CRLF".  When examining a
+     *     multi-line response, the client checks to see if the line begins with the termination octet.  If so and if
+     *     octets other than CRLF follow, the first octet of the line (the termination octet) is stripped away.  If so
+     *     and if CRLF immediately follows the termination character, then the response from the POP server is ended
+     *     and the line containing ".CRLF" is not considered part of the multi-line response.
+     *
+     * i.e.  Any real data line that begins with "." should have been prefixed with a single "." in the response.
+     */
+    private boolean fillBufferWithNextLine() throws IOException {
         sbuf.setLength(0);
-        int b = 0;
-        char lastChar;
+        int currChar = 0;
+        int prevChar;
         do {
-            lastChar = (char) b;
-            b = in.read();
-            if (b == -1) {
-                throw new EOFException(
-                    "Unexpected end of stream while reading content");
+            prevChar = currChar;
+            currChar = in.read();
+            if (currChar == -1) {
+                throw new EOFException("Unexpected end of stream while reading content");
             }
-            sbuf.append((char) b);
-        } while (!(b == '\n' && lastChar == '\r'));
+            sbuf.append((char) currChar);
+        } while (!(currChar == '\n' && prevChar == '\r'));
         int len = sbuf.length();
-        // Check for end of content
+        // Check for end of content - ".\r\n"
         if (len == 3 && sbuf.charAt(0) == '.') {
             pos = -1;
             return false;
         }
         // Check for quoted "." at beginning of line
-        if (len == 4 && sbuf.charAt(0) == '.' && sbuf.charAt(1) == '.') {
+        if (len >= 4 && sbuf.charAt(0) == '.') {
             sbuf.deleteCharAt(0);
         }
         pos = 0;
