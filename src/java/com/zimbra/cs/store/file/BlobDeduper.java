@@ -256,7 +256,7 @@ public class BlobDeduper {
     public void resetVolumeBlobs(List<Short> volumeIds) throws ServiceException {
         synchronized (this) {
             if (inProgress) {
-                throw MailServiceException.TRY_AGAIN("Dedeupe is in progress. Stop the dedupe and then run reset again.");
+                throw MailServiceException.TRY_AGAIN("Dedupe is in progress. Stop the dedupe and then run reset again.");
             }
             inProgress = true;
         }
@@ -302,7 +302,7 @@ public class BlobDeduper {
     public void process(List<Short> volumeIds) throws ServiceException, IOException {
         synchronized (this) {
             if (inProgress) {
-                throw MailServiceException.TRY_AGAIN("Dedeupe is already in progress. Only one request can be run at a time.");
+                throw MailServiceException.TRY_AGAIN("Dedupe is already in progress. Only one request can be run at a time.");
             }
             inProgress = true;
             totalLinksCreated = 0;
