@@ -41,8 +41,9 @@ public class MessageContent {
         if (sizeHint < StoreManager.getDiskStreamingThreshold()) {
             BufferStream bs = new BufferStream(sizeHint);
             
-            if (bs.readFrom(is) != sizeHint) {
-                // ZimbraLog.datasource.debug("Content size mismatch: expected %d but got %d bytes", size, baos.size());
+            long realSize = bs.readFrom(is);
+            if (realSize != sizeHint) {
+                // ZimbraLog.datasource.debug("Content size mismatch: expected %d but got %d bytes", sizeHint, realSize);
             }
             data = bs.toByteArray();
             bs.close();
