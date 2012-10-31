@@ -420,10 +420,8 @@ public class BlobDeduper {
                             break;
                         }
                     }
-                } catch (ServiceException e) {
-                    ZimbraLog.misc.error("error while performing deduplication", e);
-                } catch (IOException e) {
-                    ZimbraLog.misc.error("error while performing deduplication", e);
+                } catch (Throwable t) {
+                    ZimbraLog.misc.error("error while performing deduplication", t);
                 } finally {
                     resetProgress();
                 }
