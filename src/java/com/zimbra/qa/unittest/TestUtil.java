@@ -240,6 +240,12 @@ extends Assert {
             .withFrom(sender).withDate(date).create();
     }
 
+    public static String getTestMessage(String subject, String recipient, String sender, String body, Date date)
+    throws ServiceException, MessagingException, IOException {
+        return new MessageBuilder().withSubject(subject).withToRecipient(recipient)
+            .withFrom(sender).withDate(date).withBody(body).create();
+    }
+
     static String addDomainIfNecessary(String user)
     throws ServiceException {
         if (StringUtil.isNullOrEmpty(user) || user.contains("@")) {
@@ -256,6 +262,12 @@ extends Assert {
     public static boolean addMessageLmtp(String subject, String[] recipients, String sender)
     throws Exception {
         String message = getTestMessage(subject, recipients[0], sender, null);
+        return addMessageLmtp(recipients, sender, message);
+    }
+
+    public static boolean addMessageLmtp(String subject, String[] recipients, String sender, String body)
+    throws Exception {
+        String message = getTestMessage(subject, recipients[0], sender, body, null);
         return addMessageLmtp(recipients, sender, message);
     }
 
@@ -899,7 +911,7 @@ extends Assert {
             }
         }
 
-        String context = String.format("Could not find '%s' in message:\n", firstLine, message);
+        String context = String.format("Could not find '%s' in message:\n%s", firstLine, message);
         assertTrue(context, foundFirstLine);
 
         while(true) {

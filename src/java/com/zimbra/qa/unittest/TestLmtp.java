@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -563,6 +564,16 @@ extends TestCase {
             buf.append('x');
         }
         assertFalse(TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, buf.toString()));
+    }
+
+    public void testTransparency() throws Exception {
+        String subject = NAME_PREFIX + " LMTPTransparency1";
+        String body = "line1\r\n.line2\r\n..line3\r\n...line4\r\n";
+        assertTrue(TestUtil.addMessageLmtp(subject, new String[] { USER_NAME } , USER_NAME, body));
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        String currentBody = msg.getMimeStructure().getContent();
+        TestUtil.assertMessageContains(currentBody, body);
     }
 
     /**
