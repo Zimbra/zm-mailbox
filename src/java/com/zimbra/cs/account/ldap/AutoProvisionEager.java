@@ -19,30 +19,28 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 import com.zimbra.cs.util.Zimbra;
 
 public class AutoProvisionEager extends AutoProvision {
@@ -201,7 +199,8 @@ public class AutoProvisionEager extends AutoProvision {
         // need to refresh the domain entry, because this modify is not done via the normal 
         // LdapProvisioning.modifyAttr path.  
         prov.reload(domain, true);
-        
+        ZimbraLog.autoprov.debug("lock domain %s", gotLock ? "successful" : "failed");
+
         return gotLock;
     }
     
@@ -215,8 +214,9 @@ public class AutoProvisionEager extends AutoProvision {
         // need to refresh the domain entry, because this modify is not done via the normal 
         // LdapProvisioning.modifyAttr path.  
         prov.reload(domain, true);
+        ZimbraLog.autoprov.debug("domain unlocked");
     }
-    
+
     private boolean searchAccounts(final List<ExternalEntry> entries) 
     throws ServiceException {
         int maxResults = domain.getAutoProvBatchSize();
@@ -234,7 +234,7 @@ public class AutoProvisionEager extends AutoProvision {
         boolean hitSizeLimitExceededException = 
                 AutoProvision.searchAutoProvDirectory(prov, domain, null, null, 
                         lastPolledAt, returnAttrs, maxResults, visitor, true);
-        
+        ZimbraLog.autoprov.debug("searched external LDAP source, hit size limit ? %s", hitSizeLimitExceededException);
         return hitSizeLimitExceededException;
     }
 

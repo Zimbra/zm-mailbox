@@ -16,12 +16,10 @@ package com.zimbra.cs.account;
 
 import java.util.Set;
 
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.cs.util.Zimbra;
 
 public class AutoProvisionThread extends Thread implements Provisioning.EagerAutoProvisionScheduler{
@@ -91,7 +89,7 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
                 autoProvThread.interrupt();
                 autoProvThread = null;
             } else {
-                ZimbraLog.autoprov.debug("shutdown() called, but auto provision thread is not running.");
+                ZimbraLog.autoprov.info("shutdown() called, but auto provision thread is not running.");
             }
         }
     }
@@ -177,13 +175,13 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
      */
     private void sleep() {
         long interval = getSleepInterval();
-        ZimbraLog.autoprov.debug("Sleeping for %d milliseconds.", interval);
-        
+        ZimbraLog.autoprov.info("Sleeping for %d milliseconds.", interval);
+
         if (interval > 0) {
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                ZimbraLog.autoprov.debug("Auto provision thread was interrupted.");
+                ZimbraLog.autoprov.info("Auto provision thread was interrupted.");
                 shutdownRequested = true;
             }
         } else {
