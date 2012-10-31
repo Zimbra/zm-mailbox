@@ -295,7 +295,7 @@ public class CreateContact extends MailDocumentHandler  {
                         throw ServiceException.INVALID_REQUEST("invalid contact part number: " + part, null);
                     } else {
                         VCard vcf = VCard.formatContact(contact);
-                        return new Attachment(vcf.formatted.getBytes("utf-8"), "text/x-vcard; charset=utf-8", name, vcf.fn + ".vcf");
+                        return new Attachment(vcf.getFormatted().getBytes("utf-8"), "text/x-vcard; charset=utf-8", name, vcf.fn + ".vcf");
                     }
                 } else if (item instanceof Message) {
                     Message msg = (Message) item;

@@ -228,7 +228,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 baos.write(header.toString().getBytes(MimeConstants.P_CHARSET_ASCII));
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
-                baos.write(vcard.formatted.getBytes(MimeConstants.P_CHARSET_UTF8));
+                baos.write(vcard.getFormatted().getBytes(MimeConstants.P_CHARSET_UTF8));
                 return new Pair<Long, InputStream>((long) baos.size(), new SharedByteArrayInputStream(baos.toByteArray()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);

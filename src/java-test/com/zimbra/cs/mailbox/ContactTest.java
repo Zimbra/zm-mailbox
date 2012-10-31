@@ -46,6 +46,7 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -114,6 +115,26 @@ public final class ContactTest {
                 mbox.getId(), contact.getId()).getString(1));
 
         conn.closeQuietly();
+    }
+
+    /**
+     * Bug 77746 Test that VCARD formatting escapes ';' and ',' chars which are part of name components
+     */
+    @Test
+    public void semiColonAndCommaInName() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_lastName, "Last");
+        fields.put(ContactConstants.A_firstName, "First ; SemiColon");
+        fields.put(ContactConstants.A_middleName, "Middle , Comma");
+        fields.put(ContactConstants.A_namePrefix, "Ms.");
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        VCard vcard = VCard.formatContact(contact);
+        String vcardAsString = vcard.getFormatted();
+        String expectedPattern = "N:Last;First \\; SemiColon;Middle \\, Comma;Ms.;";
+        String assertMsg = String.format("Vcard\n%s\nshould contain string [%s]", vcardAsString, expectedPattern);
+        Assert.assertTrue(assertMsg, vcardAsString.contains(expectedPattern));
     }
 
     @Test

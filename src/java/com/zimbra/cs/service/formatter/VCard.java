@@ -49,7 +49,7 @@ public class VCard {
 
     public String uid;
     public String fn;
-    public String formatted;
+    private String formatted;
     public Map<String, String> fields;
     public List<Attachment> attachments;
 
@@ -192,7 +192,7 @@ public class VCard {
             try {
                 if (encoding == Encoding.B) {
                     byte[] encoded = value.getBytes();
-                    if (Base64.isArrayByteBase64(encoded))
+                    if (Base64.isBase64(encoded))
                         value = new String(Base64.decodeBase64(encoded), charset);
                 } else if (encoding == Encoding.Q) {
                     value = new QuotedPrintableCodec(charset).decode(value);
@@ -205,7 +205,7 @@ public class VCard {
         byte[] getDecoded() {
             byte[] encoded = value.getBytes();
             try {
-                if (encoding == Encoding.B && Base64.isArrayByteBase64(encoded))
+                if (encoding == Encoding.B && Base64.isBase64(encoded))
                     encoded = Base64.decodeBase64(encoded);
                 encoding = Encoding.NONE;
             } catch (Exception ignored) { }
@@ -346,7 +346,9 @@ public class VCard {
             // decode the property's value and assign to the appropriate contact field(s)
             if (name.equals("FN"))             addField(ContactConstants.A_fullName, vcfDecode(value), "altFullName", 2, fields);
             else if (name.equals("N"))         decodeStructured(value, NAME_FIELDS, fields);
-            else if (name.equals("NICKNAME"))  addField(ContactConstants.A_nickname, vcfDecode(value), "altNickName", 2, fields);
+            else if (name.equals("NICKNAME"))  // TODO: VCARD 4 NICKNAME is multi-valued (COMMA separated)
+                                               //       It is treated as a single value here
+                                               addField(ContactConstants.A_nickname, vcfDecode(value), "altNickName", 2, fields);
             else if (name.equals("PHOTO"))     fields.put(ContactConstants.A_image, vcfDecode(value)); // Assumption: Do not want multiple photos.
             else if (name.equals("BDAY"))      addField(ContactConstants.A_birthday, vcfDecode(value), null, 2, fields);
             else if (name.equals("ADR"))       decodeAddress(value, vcprop, fields);
@@ -880,13 +882,26 @@ public class VCard {
     private static String vcfEncode(String value) {
         return vcfEncode(value, false);
     }
+
+    /**
+     * Encode a value of a property for use in VCARD.
+     * @param value <table>
+     * <tr><td>Property with multiple values separated by COMMA characters</td>
+     *     <td>Use this method to get the encoding separately for each individual value.</td></tr>
+     * <tr><td>Property with multiple fields separated by SEMICOLON characters</td>
+     *     <td>Use this method to get the encoding separately for each individual field.</td></tr>
+     * <tr><td>Property with single value</td>
+     *     <td>Use this method to get the whole value.</td></tr>
+     * </table>
+     * @param newlineToComma Set true if new lines in {@code value} should be replaced with ","
+     */
     private static String vcfEncode(String value, boolean newlineToComma) {
         if (value == null || value.equals(""))
             return "";
         StringBuilder sb = new StringBuilder();
         for (int i = 0, len = value.length(); i < len; i++) {
             char c = value.charAt(i);
-            if (c == '\\' || c == ',')
+            if (c == '\\' || c == ',' || c == ';')
                 sb.append('\\').append(c);
             else if (c == '\n')
                 sb.append(newlineToComma ? "," : "\\N");
@@ -896,6 +911,9 @@ public class VCard {
         return sb.toString();
     }
 
+    public String getFormatted() {
+        return formatted;
+    }
 
     public static void main(String args[]) throws ServiceException {
         parseVCard("BEGIN:VCARD\r\n\r\nFN\n :dr. john doe\nADR;HOME;WORK:;;Hambone Ltd.\\N5 Main St.;Charlotte;NC;24243\nEMAIL:foo@bar.con\nEMAIL:bar@goo.com\nN:doe;john;\\;\\\\;dr.;;;;\nEND:VCARD\n");

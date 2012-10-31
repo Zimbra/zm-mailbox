@@ -194,14 +194,14 @@ public class AddressObject extends MailItemResource {
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
         populateContactGroupAppleXProps(ctxt, contact);
-        return VCard.formatContact(contact, null, true, false).formatted;
+        return VCard.formatContact(contact, null, true, false).getFormatted();
     }
     public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
         if (attrs == null || attrs.isEmpty())
             return toVCard(ctxt);
         Contact contact = (Contact)getMailItem(ctxt);
         populateContactGroupAppleXProps(ctxt, contact);
-        return VCard.formatContact(contact, attrs, true).formatted;
+        return VCard.formatContact(contact, attrs, true).getFormatted();
     }
 
     public static DavResource create(DavContext ctxt, String name, Collection where) throws DavException, IOException {

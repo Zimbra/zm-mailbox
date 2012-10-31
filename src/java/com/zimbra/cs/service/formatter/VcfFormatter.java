@@ -75,7 +75,7 @@ public class VcfFormatter extends Formatter {
                 if (!(item instanceof Contact))
                     continue;
                 VCard vcf = VCard.formatContact((Contact) item);
-                context.resp.getOutputStream().write(vcf.formatted.getBytes(charset));
+                context.resp.getOutputStream().write(vcf.getFormatted().getBytes(charset));
                 count++;
             }
         } finally {

@@ -602,7 +602,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 data = writer.toString().getBytes(charsetEncoder.charset());
             } else if (mi instanceof Contact) {
                 VCard vcf = VCard.formatContact((Contact) mi);
-                data = vcf.formatted.getBytes(charsetEncoder.charset());
+                data = vcf.getFormatted().getBytes(charsetEncoder.charset());
             } else if (mi instanceof Message) {
                 if (context.hasPart()) {
                     MimeMessage mm = ((Message)mi).getMimeMessage();

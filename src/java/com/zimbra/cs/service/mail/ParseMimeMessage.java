@@ -712,12 +712,12 @@ public final class ParseMimeMessage {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
         VCard vcf = VCard.formatContact(mbox.getContactById(ctxt.octxt, iid.getId()));
 
-        ctxt.incrementSize("contact", vcf.formatted.length());
+        ctxt.incrementSize("contact", vcf.getFormatted().length());
         String filename = vcf.fn + ".vcf";
-        String charset = CharsetUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
+        String charset = CharsetUtil.checkCharset(vcf.getFormatted(), ctxt.defaultCharset);
 
         MimeBodyPart mbp = new ZMimeBodyPart();
-        mbp.setText(vcf.formatted, charset);
+        mbp.setText(vcf.getFormatted(), charset);
         mbp.setHeader("Content-Type", new ContentType("text/x-vcard", ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).setParameter("charset", charset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
         mbp.setContentID(contentID);
