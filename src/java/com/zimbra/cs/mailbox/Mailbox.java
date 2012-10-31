@@ -2128,6 +2128,20 @@ public class Mailbox {
         }
     }
 
+    public void resetMailboxForRestore() throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("resetMailboxForRestore", null);
+            for (int tagId : REIFIED_FLAGS) {
+                DbTag.deleteTag(new Tag(this, Flag.of(this, tagId).mData));
+            }
+            DbMailbox.updateVersion(this, null);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     void updateVersion(MailboxVersion vers) throws ServiceException {
         boolean success = false;
         try {
