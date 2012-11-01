@@ -87,6 +87,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
     public ZimbraLmtpBackend(LmtpConfig lmtpConfig) {
         config = lmtpConfig;
+        checkDedupeCacheSize(); // This initializes receivedMessageIDs
     }
 
     /**
@@ -260,6 +261,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             }
         } catch (ServiceException e) {
             ZimbraLog.lmtp.warn("Unable to update dedupe cache size.", e);
+            // create an empty lru map if it doesn't exist already.
+            synchronized (ZimbraLmtpBackend.class) {
+                if (receivedMessageIDs == null) {
+                    receivedMessageIDs = new LruMap<String, Set<Integer>>(0);
+                }
+            }
         }
     }
 
