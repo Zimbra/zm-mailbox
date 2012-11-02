@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2012 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,14 +19,19 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeInfo;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -45,13 +50,34 @@ public class ModifyPrefs extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("can not modify options");
 
         HashMap<String, Object> prefs = new HashMap<String, Object>();
+        Map<String, Set<String>> name2uniqueAttrValues = new HashMap<String, Set<String>>();
         for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
             String name = kvp.getKey(), value = kvp.getValue();
             char ch = name.length() > 0 ? name.charAt(0) : 0;
             int offset = ch == '+' || ch == '-' ? 1 : 0;
             if (!name.startsWith(PREF_PREFIX, offset))
                 throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
-            StringUtil.addToMultiMap(prefs, name, value);
+
+            AttributeInfo attrInfo = AttributeManager.getInstance().getAttributeInfo(name);
+            if (attrInfo == null) {
+                throw ServiceException.INVALID_REQUEST("no such attribute: " + name, null);
+            }
+            if (attrInfo.isCaseInsensitive()) {
+                value = Strings.nullToEmpty(value).toLowerCase();
+                if (name2uniqueAttrValues.get(name) == null) {
+                    Set<String> set = new HashSet<String>();
+                    set.add(value);
+                    name2uniqueAttrValues.put(name, set);
+                    StringUtil.addToMultiMap(prefs, name, value);
+                } else {
+                    Set<String> set = name2uniqueAttrValues.get(name);
+                    if (set.add(value)) {
+                        StringUtil.addToMultiMap(prefs, name, value);
+                    }
+                }
+            } else {
+                StringUtil.addToMultiMap(prefs, name, value);
+            }
         }
 
         if (prefs.containsKey(Provisioning.A_zimbraPrefMailForwardingAddress)) {
