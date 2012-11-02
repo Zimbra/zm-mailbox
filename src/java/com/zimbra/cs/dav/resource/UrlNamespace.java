@@ -198,10 +198,12 @@ public class UrlNamespace {
                     // collection and the list of folders the authUser has access to.
                     rss.add(new Collection("/", user));
                     ctxt.setCollectionPath("/");
-                    try {
-                        rss.addAll(getFolders(ctxt, user));
-                    } catch (ServiceException e) {
-                        ZimbraLog.dav.warn("can't get folders for "+user, e);
+                    if (includeChildren) {
+                        try {
+                            rss.addAll(getFolders(ctxt, user));
+                        } catch (ServiceException e) {
+                            ZimbraLog.dav.warn("can't get folders for "+user, e);
+                        }
                     }
                     return rss;
                 } else {

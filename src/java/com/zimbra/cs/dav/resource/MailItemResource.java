@@ -143,6 +143,14 @@ public abstract class MailItemResource extends DavResource {
 
     public MailItemResource(String path, String acct) {
         super(path, acct);
+        mDeadProps = new HashMap<QName,Element>();
+        try {
+            Account account = Provisioning.getInstance().getAccountByName(acct);
+            if (account != null) {
+                mOwnerId = account.getId();
+            }
+        } catch (ServiceException ignore) {
+        }
     }
 
     private static String getItemPath(DavContext ctxt, MailItem item) {
