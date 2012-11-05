@@ -58,7 +58,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
             if (!name.startsWith(PREF_PREFIX, offset))
                 throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
 
-            AttributeInfo attrInfo = AttributeManager.getInstance().getAttributeInfo(name);
+            AttributeInfo attrInfo = AttributeManager.getInstance().getAttributeInfo(name.substring(offset));
             if (attrInfo == null) {
                 throw ServiceException.INVALID_REQUEST("no such attribute: " + name, null);
             }
