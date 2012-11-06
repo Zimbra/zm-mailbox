@@ -254,6 +254,7 @@ public class ContactAutoComplete {
     private static final Splitter TOKEN_SPLITTER = Splitter.on(CharMatcher.WHITESPACE).omitEmptyStrings().trimResults();
     public static final int FOLDER_ID_GAL = 0;
     public static final int FOLDER_ID_UNKNOWN = -1;
+    public static final int FOLDER_ID_MOUNTPOINT_SUBFOLDER = -2;
 
     private boolean mIncludeGal;
     private boolean mNeedCanExpand; // whether the canExpand info is needed for GAL groups
@@ -727,6 +728,8 @@ public class ContactAutoComplete {
                         // if the hit came from a descendant folder of
                         // the mountpoint, we don't have a peer folder ID.
                         fid = mp.getId();
+                    } else {
+                        fid = FOLDER_ID_MOUNTPOINT_SUBFOLDER;
                     }
                     for (Element elt : top.listElements(MailConstants.E_ATTRIBUTE)) {
                         try {
