@@ -76,7 +76,7 @@ public final class SizeQuery extends Query {
 
         // size:100b size:1kb size:1mb bigger:10kb smaller:3gb
         //
-        // n+{b,kb,mb}    // default is b
+        // n+{b,kb,mb,gb}    // default is b
         int multiplier = 1;
         switch (typeChar) {
             case 'k':
@@ -85,6 +85,9 @@ public final class SizeQuery extends Query {
             case 'm':
                 multiplier = 1024 * 1024;
                 break;
+            case 'g':
+                multiplier = 1024 * 1024 * 1024;
+                break;
         }
 
         if (multiplier > 1) {
@@ -92,7 +95,7 @@ public final class SizeQuery extends Query {
         }
 
         try {
-            size = Integer.parseInt(text.trim()) * multiplier;
+            size = Long.parseLong(text.trim()) * multiplier;
         } catch (NumberFormatException e) {
             throw new ParseException(text, 0);
         }

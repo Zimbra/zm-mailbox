@@ -356,7 +356,7 @@ public final class DbSearch {
                     encodeLongRange("mi.mod_metadata", (DbSearchConstraints.NumericRange) entry.getValue(), 1L);
                     break;
                 case SIZE:
-                    encodeIntRange("mi.size", (DbSearchConstraints.NumericRange) entry.getValue(), 0);
+                    encodeLongRange("mi.size", (DbSearchConstraints.NumericRange) entry.getValue(), 0);
                     break;
                 case CAL_START_DATE:
                     if (inCalTable) {
