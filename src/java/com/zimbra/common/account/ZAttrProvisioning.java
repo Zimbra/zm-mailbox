@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 9.0.0_BETA1_1111 dywang 20121101-0451 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3221,7 +3221,7 @@ public class ZAttrProvisioning {
      * whether to invoke data imports for all data sources owned by an
      * account after successful user login from the login page
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public static final String A_zimbraDataSourceImportOnLogin = "zimbraDataSourceImportOnLogin";
@@ -6761,6 +6761,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=157)
     public static final String A_zimbraMimeType = "zimbraMimeType";
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public static final String A_zimbraMobileNotificationAdminAddress = "zimbraMobileNotificationAdminAddress";
+
+    /**
+     * whether to permit mobile sync notification
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public static final String A_zimbraMobileNotificationEnabled = "zimbraMobileNotificationEnabled";
 
     /**
      * whether the Bluetooth capabilities are allowed on the device. The
