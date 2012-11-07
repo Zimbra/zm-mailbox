@@ -1351,8 +1351,10 @@ public class Mime {
     private static Set<MPartInfo> getReportBodySubpart(List<MPartInfo> children, boolean preferHtml) {
         //get all text subparts which match the preferHtml argument
         //if none match, return all alternative text subparts
+        //in either case, text/rfc822-headers part is included in returned bodies if present
         Set<MPartInfo> subparts = new HashSet<MPartInfo>();
         Set<MPartInfo> alternatives = new HashSet<MPartInfo>();
+        Set<MPartInfo> headers = new HashSet<MPartInfo>();
         for (MPartInfo mpi : children) {
             boolean isAttachment = mpi.getDisposition().equals(Part.ATTACHMENT);
             // the Content-Type we want and the one we'd settle for...
@@ -1364,16 +1366,19 @@ public class Mime {
                 subparts.add(mpi);
             } else if (!isAttachment && altTypes.contains(ctype)) {
                 alternatives.add(mpi);
+            } else if (!isAttachment && ctype.equals(MimeConstants.CT_TEXT_RFC822_HEADERS)) {
+                headers.add(mpi);
             } else if (mpi.isMultipart()) {
                 Set<MPartInfo> body;
                 if ((body = getBodySubparts(mpi, preferHtml)) != null)
                     subparts.addAll(body);
             }
         }
-
         if (subparts.size() == 0) {
+            alternatives.addAll(headers);
             return (alternatives.size() == 0 ? null : alternatives);
         } else {
+            subparts.addAll(headers);
             return subparts;
         }
     }
