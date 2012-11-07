@@ -7095,4 +7095,13 @@ TODO: delete them permanently from here
   <desc>whether ldap based galsync disabled or not</desc>
 </attr>
 
+<attr id="1421" name="zimbraMobileNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether mobile sync notification enabled or not</desc>
+</attr>
+
+<attr id="1422" name="zimbraMobileNotificationAdminAddress" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+  <desc>admin email address used for receiving notifications</desc>
+</attr>
+
 </attrs>

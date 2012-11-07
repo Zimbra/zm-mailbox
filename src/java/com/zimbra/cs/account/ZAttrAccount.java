@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 9.0.0_BETA1_1111 dywang 20121101-0451 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -6750,7 +6750,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraDataSourceImportOnLogin, or false if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public boolean isDataSourceImportOnLogin() {
@@ -6764,7 +6764,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraDataSourceImportOnLogin new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public void setDataSourceImportOnLogin(boolean zimbraDataSourceImportOnLogin) throws com.zimbra.common.service.ServiceException {
@@ -6781,7 +6781,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public Map<String,Object> setDataSourceImportOnLogin(boolean zimbraDataSourceImportOnLogin, Map<String,Object> attrs) {
@@ -6796,7 +6796,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public void unsetDataSourceImportOnLogin() throws com.zimbra.common.service.ServiceException {
@@ -6812,7 +6812,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public Map<String,Object> unsetDataSourceImportOnLogin(Map<String,Object> attrs) {
@@ -23220,6 +23220,150 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMemberOf(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMemberOf, "");
+        return attrs;
+    }
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @return zimbraMobileNotificationAdminAddress, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public String getMobileNotificationAdminAddress() {
+        return getAttr(Provisioning.A_zimbraMobileNotificationAdminAddress, null);
+    }
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @param zimbraMobileNotificationAdminAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public void setMobileNotificationAdminAddress(String zimbraMobileNotificationAdminAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationAdminAddress, zimbraMobileNotificationAdminAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @param zimbraMobileNotificationAdminAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public Map<String,Object> setMobileNotificationAdminAddress(String zimbraMobileNotificationAdminAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationAdminAddress, zimbraMobileNotificationAdminAddress);
+        return attrs;
+    }
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public void unsetMobileNotificationAdminAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationAdminAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public Map<String,Object> unsetMobileNotificationAdminAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationAdminAddress, "");
+        return attrs;
+    }
+
+    /**
+     * whether to permit mobile sync notification
+     *
+     * @return zimbraMobileNotificationEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public boolean isMobileNotificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileNotificationEnabled, true);
+    }
+
+    /**
+     * whether to permit mobile sync notification
+     *
+     * @param zimbraMobileNotificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public void setMobileNotificationEnabled(boolean zimbraMobileNotificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationEnabled, zimbraMobileNotificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to permit mobile sync notification
+     *
+     * @param zimbraMobileNotificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public Map<String,Object> setMobileNotificationEnabled(boolean zimbraMobileNotificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationEnabled, zimbraMobileNotificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to permit mobile sync notification
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public void unsetMobileNotificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to permit mobile sync notification
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public Map<String,Object> unsetMobileNotificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileNotificationEnabled, "");
         return attrs;
     }
 
