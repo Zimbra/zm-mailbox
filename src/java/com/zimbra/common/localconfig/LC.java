@@ -576,7 +576,7 @@ public final class LC {
     public static final KnownKey postfix_smtp_cname_overrides_servername = KnownKey.newKey("no");
     public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
     public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
-    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey("may");
+    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey(null);
     public static final KnownKey postfix_smtp_sasl_mechanism_filter = KnownKey.newKey(null);
     public static final KnownKey postfix_smtp_sasl_password_maps = KnownKey.newKey(null);
 
@@ -589,7 +589,6 @@ public final class LC {
     public static final KnownKey postfix_smtpd_tls_cert_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.crt");
     public static final KnownKey postfix_smtpd_tls_key_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.key");
     public static final KnownKey postfix_smtpd_tls_loglevel = KnownKey.newKey(1);
-    public static final KnownKey postfix_smtpd_tls_security_level = KnownKey.newKey("may");
     public static final KnownKey postfix_transport_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-transport.cf");
     public static final KnownKey postfix_virtual_alias_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vad.cf");
     public static final KnownKey postfix_virtual_alias_expansion_limit = KnownKey.newKey(10000);
