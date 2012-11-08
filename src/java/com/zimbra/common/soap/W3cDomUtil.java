@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -33,6 +34,10 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -41,11 +46,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-
-import org.w3c.dom.CDATASection;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
 
 public class W3cDomUtil {
     private static final Log LOG = ZimbraLog.misc;
@@ -60,6 +60,7 @@ public class W3cDomUtil {
                     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                     dbf.setNamespaceAware(true);
                     dbf.setIgnoringComments(true);
+                    dbf.setExpandEntityReferences(false);  // Prevent external entity reference attack.
                     return dbf.newDocumentBuilder();
                 } catch (javax.xml.parsers.ParserConfigurationException pce) {
                     ZimbraLog.misc.error("Problem setting up w3c DOM builder", pce);
@@ -230,7 +231,7 @@ public class W3cDomUtil {
         return false;
     }
 
-    private static final String XMLNS_COLON = Element.XMLElement.A_NAMESPACE + ":"; 
+    private static final String XMLNS_COLON = Element.XMLElement.A_NAMESPACE + ":";
 
     public static Element nodeToElement(Node node, ElementFactory factory) {
         int nodeType = node.getNodeType();
@@ -341,7 +342,7 @@ public class W3cDomUtil {
         public void warning(SAXParseException spe) throws SAXException {
             ZimbraLog.misc.warn(getParseExceptionInfo("Warning", spe));
         }
-        
+
         @Override
         public void error(SAXParseException spe) throws SAXException {
             throw new SAXException(getParseExceptionInfo("Error", spe));

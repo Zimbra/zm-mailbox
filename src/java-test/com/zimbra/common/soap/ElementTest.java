@@ -385,19 +385,18 @@ public class ElementTest {
     }
 
     /**
-     * Note that old dom4j based Element.parseXML threw:
-     *     org.dom4j.DocumentException: inline DTD not allowed Nested exception: inline DTD not allowed
-     * The new JAXP based parseXML expands the entity reference.
+     * Validate entity references are not expanded. (security issue)
      */
     @Test
-    public void parseXmlWithEnityReference()
+    public void parseXmlWithEntityReference()
     throws XmlParseException {
         ByteArrayInputStream bais = toBais(ElementTest.class.getResourceAsStream("entityRef.xml"));
         Element elem = Element.parseXML(bais);
         // Expect :    <root>&lt;i/>text</root>
         logInfo("       Element value:\n%1$s", elem.toString());
         Assert.assertEquals("root elem name", "root", elem.getName());
-        Assert.assertEquals("root elem content", "<i/>text", elem.getText());
+//        Assert.assertEquals("root elem content", "<i/>text", elem.getText());  // this is the case if entity ref expansion was allowed
+        Assert.assertEquals("root elem content", "", elem.getText());
     }
 
     private static final String xmlCdata = "<xml>\n" +
