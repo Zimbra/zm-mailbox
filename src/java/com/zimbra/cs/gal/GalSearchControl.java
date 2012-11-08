@@ -170,64 +170,66 @@ public class GalSearchControl {
         String id = Thread.currentThread().getName() + " / " + mParams.getUserInfo();
         int capacity = mParams.getDomain().getGalSyncMaxConcurrentClients();
         boolean limitReached = true;
-        
-        mParams.setQuery("");
-        mParams.setOp(GalOp.sync);
-        mParams.setFetchGroupMembers(true);
-        mParams.setNeedSMIMECerts(true);
-        Account galAcct = mParams.getGalSyncAccount();
-        GalSyncToken gst = mParams.getGalSyncToken();
-        Domain domain = mParams.getDomain();
-        
-        // if the presented sync token is old LDAP timestamp format, we need to sync
-        // against LDAP server to keep the client up to date.
-        boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || domain.isLdapGalSyncDisabled());
-        if (useGalSyncAccount) {
-            try {
-                synchronized (SyncClients) {
-                    // allow the sync only when the # of sync clients
-                    // are within the capacity.
-                    if (SyncClients.size() < capacity) {
-                        SyncClients.add(id);
-                        limitReached = false;
-                    }
-                }
-                if (limitReached) {
-                    logCurrentSyncClients();
-                    // return "no change".
-                    mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
-                    mParams.getResultCallback().setThrottled(true);
-                    return;
-                }
-                if (galAcct == null)
-                    galAcct = getGalSyncAccountForSync();                
-                accountSync(galAcct);
-                // account based sync was finished
-                return;
-            } catch (GalAccountNotConfiguredException e) {
-                // if there was an error in GAL sync account based sync,
-                // fallback to ldap search
-                mParams.getResultCallback().reset(mParams);
-            } finally {
-                synchronized (SyncClients) {
-                    SyncClients.remove(id);
-                }
+
+        synchronized (SyncClients) {
+            // allow the sync only when the # of sync clients
+            // are within the capacity.
+            if (SyncClients.size() < capacity) {
+                SyncClients.add(id);
+                limitReached = false;
             }
         }
-        if (mParams.isIdOnly() || domain.isLdapGalSyncDisabled()) {
-            // add recommendation to perform fullsync if there is a valid GSA.
-            try {
-                if (getGalSyncAccount() != null) {
-                    mParams.getResultCallback().setFullSyncRecommended(true);
-                }
-            } catch (GalAccountNotConfiguredException e) {}
-        }
-        if (domain.isLdapGalSyncDisabled()) {
-            // return the same sync token.
+        if (limitReached) {
+            logCurrentSyncClients();
+            // return "no change".
             mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+            mParams.getResultCallback().setThrottled(true);
             return;
         }
-        ldapSearch();
+
+        try {
+            mParams.setQuery("");
+            mParams.setOp(GalOp.sync);
+            mParams.setFetchGroupMembers(true);
+            mParams.setNeedSMIMECerts(true);
+            Account galAcct = mParams.getGalSyncAccount();
+            GalSyncToken gst = mParams.getGalSyncToken();
+            Domain domain = mParams.getDomain();
+            // if the presented sync token is old LDAP timestamp format, we need to sync
+            // against LDAP server to keep the client up to date.
+            boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || domain.isLdapGalSyncDisabled());
+            if (useGalSyncAccount) {
+                try {
+                    if (galAcct == null)
+                        galAcct = getGalSyncAccountForSync();                
+                    accountSync(galAcct);
+                    // account based sync was finished
+                    return;
+                } catch (GalAccountNotConfiguredException e) {
+                    // if there was an error in GAL sync account based sync,
+                    // fallback to ldap search
+                    mParams.getResultCallback().reset(mParams);
+                }
+            }
+            if (mParams.isIdOnly() || domain.isLdapGalSyncDisabled()) {
+                // add recommendation to perform fullsync if there is a valid GSA.
+                try {
+                    if (getGalSyncAccount() != null) {
+                        mParams.getResultCallback().setFullSyncRecommended(true);
+                    }
+                } catch (GalAccountNotConfiguredException e) {}
+            }
+            if (domain.isLdapGalSyncDisabled()) {
+                // return the same sync token.
+                mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+                return;
+            }
+            ldapSearch();
+        }  finally {
+            synchronized (SyncClients) {
+                SyncClients.remove(id);
+            }
+        }
     }
 
     private void logCurrentSyncClients() {
