@@ -23,7 +23,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.dom4j.DocumentException;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -42,6 +41,7 @@ public class FixCalendarTZUtil extends SoapCLI {
     protected static final String O_AFTER = "after";
     protected static final String O_SYNC = "sync";
 
+    @Override
     protected void setupCommandLineOptions() {
         super.setupCommandLineOptions();
         Options options = getOptions();
@@ -61,6 +61,7 @@ public class FixCalendarTZUtil extends SoapCLI {
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
     }
 
+    @Override
     protected String getCommandUsage() {
         return "zmtzupdate --rulefile <rule file> -a <account(s)> [options]";
     }
@@ -101,7 +102,7 @@ public class FixCalendarTZUtil extends SoapCLI {
     }
 
     private static Element parseRuleFile(String ruleFilePath)
-    throws IOException, DocumentException, ServiceException {
+    throws IOException, ServiceException {
         File ruleFile = new File(ruleFilePath);
         if (!ruleFile.exists())
             throw new IOException("Missing rule file " + ruleFile.getAbsolutePath());
@@ -114,7 +115,7 @@ public class FixCalendarTZUtil extends SoapCLI {
     }
 
     private void doit(ZAuthToken zat, String ruleFilePath, String[] accts, String after, boolean sync)
-    throws SoapFaultException, IOException, DocumentException, ServiceException {
+    throws SoapFaultException, IOException, ServiceException {
         Element req = new Element.XMLElement(AdminConstants.FIX_CALENDAR_TZ_REQUEST);
 
         Element tzfixupElem = parseRuleFile(ruleFilePath);

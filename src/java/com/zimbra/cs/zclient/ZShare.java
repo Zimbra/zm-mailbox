@@ -17,9 +17,9 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZFolder.View;
-import org.dom4j.DocumentException;
 import org.json.JSONException;
 
 public class ZShare implements ToZJSONObject {
@@ -60,7 +60,7 @@ public class ZShare implements ToZJSONObject {
     public static ZShare parseXml(String xml) throws ServiceException {
         try {
             return new ZShare(Element.parseXML(xml));
-        } catch (DocumentException e) {
+        } catch (XmlParseException e) {
             throw ZClientException.ZIMBRA_SHARE_PARSE_ERROR("can't parse share", e);
         }
     }

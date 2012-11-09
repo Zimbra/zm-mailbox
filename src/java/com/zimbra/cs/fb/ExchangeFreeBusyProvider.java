@@ -43,6 +43,7 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
@@ -415,7 +416,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 				response = Element.parseXML(buf);
 			} else
 				response = Element.parseXML(method.getResponseBodyAsStream());
-		} catch (DocumentException e) {
+		} catch (XmlParseException e) {
 			ZimbraLog.fb.warn("error parsing fb response from exchange", e);
 			return getEmptyList(req);
 		} catch (IOException e) {

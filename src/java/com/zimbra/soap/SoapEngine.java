@@ -24,6 +24,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -50,8 +51,6 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
-import org.dom4j.DocumentException;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -229,12 +228,12 @@ public final class SoapEngine {
                 document = Element.parseXML(in);
             else
                 document = Element.parseJSON(in);
-        } catch (DocumentException de) {
-            SoapProtocol soapProto = chooseFaultProtocolFromBadXml(new ByteArrayInputStream(soapMessage));
-            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(de.getMessage(), de));
         } catch (SoapParseException e) {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
+        } catch (XmlParseException e) {
+            SoapProtocol soapProto = chooseFaultProtocolFromBadXml(new ByteArrayInputStream(soapMessage));
+            return soapFaultEnv(soapProto, "SOAP exception", e);
         }
         Element resp = dispatch(path, document, context);
 

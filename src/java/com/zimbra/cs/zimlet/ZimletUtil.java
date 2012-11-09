@@ -436,7 +436,7 @@ public class ZimletUtil {
 			zf.getZimletDescription().addToElement(entry);
 			String config = zimlet.getHandlerConfig();
 			if (config != null)
-			    entry.addElement(Element.parseXML(config, elem.getFactory()));
+			    entry.addElement(W3cDomUtil.parseXML(config, elem.getFactory()));
 		} catch (Exception e) {
 		    ZimbraLog.zimlet.warn("error loading zimlet "+zimlet, e);
 		}
