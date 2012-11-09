@@ -304,7 +304,7 @@ public abstract class SoapTransport {
                 env = Element.parseXML(envelopeStr);
             else
                 env = Element.parseJSON(envelopeStr);
-        } catch (DocumentException de) {
+        } catch (XmlParseException e) {
             throw new SoapParseException("unable to parse response", envelopeStr);
         }
 

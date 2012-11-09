@@ -1,0 +1,14 @@
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Header>
+    <context xmlns="urn:zimbra">
+      <authToken>0_817b05823c48b547835c3ba5007f0b64c8eb44df_69643d33363a65306661666438392d313336302d313164392d383636312d3030306139356439386566323b6578703d31333a313334303430363237343430333b61646d696e3d313a313b747970653d363a7a696d6272613b</authToken>
+      <nosession/>
+      <userAgent name="zmsoap"/>
+    </context>
+  </soap:Header>
+  <soap:Body>
+    <GetAccountInfoRequest xmlns="urn:zimbraAdmin">
+      <account by="name">user1</account>
+    </GetAccountInfoRequest>
+  </soap:Body>
+</soap:Envelope>
