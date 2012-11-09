@@ -43,6 +43,7 @@ public class MigrateAccount extends AdminDocumentHandler {
 
     private static enum Action {
         bug72174,
+        bug78254,
         contactGroup,
         wiki;
         
@@ -86,6 +87,9 @@ public class MigrateAccount extends AdminDocumentHandler {
             case bug72174:
                 migrateCalendar(account);
                 break;
+            case bug78254:
+                migrateFlagsAndTags(account);
+                break;
             default: 
                 throw ServiceException.INVALID_REQUEST("unsupported action " + action.name(), null);
         }
@@ -100,6 +104,14 @@ public class MigrateAccount extends AdminDocumentHandler {
         }
         
         MailboxUpgrade.migrateContactGroups(mbox);
+    }
+    
+    private void migrateFlagsAndTags(Account account) throws ServiceException {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
+        if (mbox == null) {
+            throw ServiceException.INVALID_REQUEST("no mailbox", null);
+        }
+        MailboxUpgrade.migrateFlagsAndTags(mbox);
     }
     
     private void migrateWiki(Account account) throws ServiceException {
