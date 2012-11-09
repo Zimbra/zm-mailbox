@@ -2396,6 +2396,7 @@ public class LdapProvisioning extends Provisioning {
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
         String oldEmail = acct.getName();
+        Account oldAccount = acct;
 
         boolean domainChanged = false;
         try {
@@ -2473,14 +2474,14 @@ public class LdapProvisioning extends Provisioning {
 
             Attributes attributes = new BasicAttributes(true);
             LdapUtil.mapToAttrs(newAttrs, attributes);
+            String escapedZimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            String filter = LdapFilter.accountById(escapedZimbraId);
 
             if (dnChanged) {
                 zlc.renameEntry(oldDn, newDn);
                 // re-get the acct object, make sure we don't get it from cache
                 // Note: this account object contains the old address, it should never
                 // be cached
-                String escapedZimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-                String filter = LdapFilter.accountById(escapedZimbraId);
                 acct = getAccountByQuery(mDIT.mailBranchBaseDN(), filter, zlc, true);
                 if (acct == null) {
                     throw ServiceException.FAILURE("cannot find account by id after modrdn", null);
@@ -2497,12 +2498,19 @@ public class LdapProvisioning extends Provisioning {
                 moveAliases(zlc, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
             }
             modifyAttrsInternal(acct, zlc, newAttrs);
+            // re-get the account again, now attrs contains new addrs
+            acct = getAccountByQuery(mDIT.mailBranchBaseDN(), filter, zlc, true);
+            if (acct == null) {
+                throw ServiceException.FAILURE("cannot find account by id after modifying the attributes", null);
+            }
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
+            // prune cache
+            accountCache.remove(oldAccount);
         }
 
         // reload it to cache using the master, bug 45736
