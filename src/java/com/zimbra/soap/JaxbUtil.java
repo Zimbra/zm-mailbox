@@ -1,8 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
@@ -16,20 +16,11 @@
 package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.DocumentSource;
@@ -141,23 +132,6 @@ public final class JaxbUtil {
             throw ServiceException.FAILURE(
                     "Unable to unmarshal response for " + e.getName(), ex);
         }
-    }
-
-    public static String domToString(org.w3c.dom.Document document) {
-        try {
-            Source xmlSource = new DOMSource(document);
-            StreamResult result = new StreamResult(new ByteArrayOutputStream());
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty("indent", "yes"); //Java XML Indent
-            transformer.transform(xmlSource, result);
-            return result.getOutputStream().toString();
-        } catch (TransformerFactoryConfigurationError factoryError) {
-            ZimbraLog.soap.error("Error creating TransformerFactory", factoryError);
-        } catch (TransformerException transformerError) {
-            ZimbraLog.soap.error( "Error transforming document", transformerError);
-        }
-        return null;
     }
 
     private static JAXBContext getContext()

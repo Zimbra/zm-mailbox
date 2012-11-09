@@ -32,6 +32,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.W3cDomUtil;
 
 /**
  * Unit test for {@link GetInfoResponse} which exercises
@@ -119,8 +120,7 @@ public class JaxbToElementTest {
         Element el = JaxbUtil.jaxbToElement(getInfoResp);
         org.w3c.dom.Document doc = el.toW3cDom();
         if (LOG.isDebugEnabled())
-            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" +
-                    JaxbUtil.domToString(doc));
+            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + W3cDomUtil.asXML(doc));
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
         }
@@ -132,11 +132,8 @@ public class JaxbToElementTest {
         Element el = env.listElements().get(0);
         org.w3c.dom.Document doc = el.toW3cDom();
         if (LOG.isDebugEnabled())
-            LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" +
-                    JaxbUtil.domToString(doc));
-        getInfoResp = JaxbUtil.elementToJaxb(el);
-        Assert.assertEquals("Account name", "user1@ysasaki.local",
-             getInfoResp.getAccountName());
+            LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + W3cDomUtil.asXML(doc));
+        GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(el);
+        Assert.assertEquals("Account name", "user1@ysasaki.local", getInfoResp.getAccountName());
     }
-
 }
