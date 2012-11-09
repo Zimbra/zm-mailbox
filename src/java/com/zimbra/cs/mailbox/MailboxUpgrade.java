@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.security.SecureRandom;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -216,6 +217,25 @@ public final class MailboxUpgrade {
         }
     }
 
+    public static void migrateFlagsAndTags(Mailbox mbox) throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mbox);
+        try {
+            migrateFlagColumn(conn, mbox, true);
+            migrateTagColumn(conn, mbox, true);
+            // the tag load when the Mailbox object was constructed returned no tags
+            //   because we hadn't migrated the tags yet, so force a reload
+            mbox.purge(MailItem.Type.TAG);
+            // any items already in the item cache don't have their tags set because
+            //   we hadn't migrated the tags when they were loaded, so purge them
+            mbox.purge(MailItem.Type.CONTACT);
+            conn.commit();
+        } catch (ServiceException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.closeQuietly();
+        }
+    }
 
     public static void upgradeTo2_1(Mailbox mbox) throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);
@@ -223,8 +243,12 @@ public final class MailboxUpgrade {
             if (alreadyUpgradedTo2_1(conn, mbox)) {
                 ZimbraLog.mailbox.warn("detected already-migrated mailbox %d during migration to version 2.1; skipping.", mbox.getId());
             } else {
-                migrateFlagColumn(conn, mbox);
-                migrateTagColumn(conn, mbox);
+                // for flags that we want to be searchable, put an entry in the TAG table
+                for (int tagId : Mailbox.REIFIED_FLAGS) {
+                    DbTag.createTag(conn, mbox, Flag.of(mbox, tagId).mData, null, false);
+                }
+                migrateFlagColumn(conn, mbox, false);
+                migrateTagColumn(conn, mbox, false);
 
                 // the tag load when the Mailbox object was constructed returned no tags
                 //   because we hadn't migrated the tags yet, so force a reload
@@ -278,7 +302,7 @@ public final class MailboxUpgrade {
             // get all the different FLAGS column values for the mailbox
             List<Long> flagsets = getTagsets(conn, mbox, "flags");
             // create rows in the TAGGED_ITEM table for flagged items
-            migrateColumnToTaggedItem(conn, mbox, "flags", Flag.ID_PRIORITY, matchTagsets(flagsets, Flag.BITMASK_PRIORITY));
+            migrateColumnToTaggedItem(conn, mbox, "flags", Flag.ID_PRIORITY, matchTagsets(flagsets, Flag.BITMASK_PRIORITY), false);
             conn.commit();
         } catch (ServiceException e) {
             conn.rollback();
@@ -357,28 +381,23 @@ public final class MailboxUpgrade {
         DbMailItem.assignUuids(mbox, false);
     }
 
-    private static void migrateFlagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {
-        // for flags that we want to be searchable, put an entry in the TAG table
-        for (int tagId : Mailbox.REIFIED_FLAGS) {
-            DbTag.createTag(conn, mbox, Flag.of(mbox, tagId).mData, null, false);
-        }
-
+    private static void migrateFlagColumn(DbConnection conn, Mailbox mbox, boolean checkDuplicates) throws ServiceException {
         // get all the different FLAGS column values for the mailbox
         List<Long> flagsets = getTagsets(conn, mbox, "flags");
 
         // create rows in the new TAGGED_ITEM table for flagged items
         for (int tagId : Mailbox.REIFIED_FLAGS) {
             long bitmask = Flag.of(mbox, tagId).toBitmask();
-            migrateColumnToTaggedItem(conn, mbox, "flags", tagId, matchTagsets(flagsets, bitmask));
+            migrateColumnToTaggedItem(conn, mbox, "flags", tagId, matchTagsets(flagsets, bitmask), checkDuplicates);
         }
 
         // create rows in the new TAGGED_ITEM table for unread items
-        migrateColumnToTaggedItem(conn, mbox, "unread", Flag.ID_UNREAD, ImmutableList.of(1L));
+        migrateColumnToTaggedItem(conn, mbox, "unread", Flag.ID_UNREAD, ImmutableList.of(1L), checkDuplicates);
     }
 
-    private static void migrateTagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {
+    private static void migrateTagColumn(DbConnection conn, Mailbox mbox, boolean checkDuplicates) throws ServiceException {
         // create rows in the new TAG table for existing tags
-        Map<Integer, String> tagNames = createTagRows(conn, mbox);
+        Map<Integer, String> tagNames = createTagRows(conn, mbox, checkDuplicates);
         if (tagNames.isEmpty())
             return;
 
@@ -390,7 +409,7 @@ public final class MailboxUpgrade {
         // create rows in the new TAGGED_ITEM table for tagged items
         for (int tagId : tagNames.keySet()) {
             long bitmask = 1L << (tagId - 64);
-            migrateColumnToTaggedItem(conn, mbox, "tags", tagId, matchTagsets(tagsets, bitmask));
+            migrateColumnToTaggedItem(conn, mbox, "tags", tagId, matchTagsets(tagsets, bitmask), checkDuplicates);
         }
 
         // calculate tag unread/item counts
@@ -403,18 +422,22 @@ public final class MailboxUpgrade {
         deleteTagRows(conn, mbox);
     }
 
-    private static void migrateColumnToTaggedItem(DbConnection conn, Mailbox mbox, String column, int tagId, List<Long> matches)
+    private static void migrateColumnToTaggedItem(DbConnection conn, Mailbox mbox, String column, int tagId, List<Long> matches, boolean checkDuplicates)
     throws ServiceException {
         if (matches.isEmpty())
             return;
 
         PreparedStatement stmt = null;
-        ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + DbTag.getTaggedItemTableName(mbox) + "(mailbox_id, tag_id, item_id)" +
+            String sql = "INSERT INTO " + DbTag.getTaggedItemTableName(mbox) + "(mailbox_id, tag_id, item_id)" +
                     " SELECT " + DbMailItem.MAILBOX_ID_VALUE + "?, id FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "type NOT IN " + DbMailItem.NON_SEARCHABLE_TYPES +
-                    " AND " + DbUtil.whereIn(column, matches.size()));
+                    " t1 WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "type NOT IN " + DbMailItem.NON_SEARCHABLE_TYPES +
+                    " AND " + DbUtil.whereIn(column, matches.size());
+            if (checkDuplicates) {
+                sql = sql + " AND NOT EXISTS(SELECT mailbox_id, tag_id, item_id FROM " + DbTag.getTaggedItemTableName(mbox) + 
+                        " t2 WHERE mailbox_id = ? AND tag_id = ? AND t2.item_id = t1.id)";
+            }
+            stmt = conn.prepareStatement(sql);
             int pos = 1;
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, tagId);
@@ -422,12 +445,15 @@ public final class MailboxUpgrade {
             for (long match : matches) {
                 stmt.setLong(pos++, match);
             }
+            if (checkDuplicates) {
+                stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, tagId);
+            }
 
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("creating rows in TAGGED_ITEM for tag/flag " + tagId + " in mbox " + mbox.getId(), e);
         } finally {
-            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
@@ -479,7 +505,7 @@ public final class MailboxUpgrade {
         return DbTag.serializeTags(matches.toArray(new String[matches.size()]));
     }
 
-    private static Map<Integer, String> createTagRows(DbConnection conn, Mailbox mbox) throws ServiceException {
+    private static Map<Integer, String> createTagRows(DbConnection conn, Mailbox mbox, boolean checkDuplicates) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -496,7 +522,18 @@ public final class MailboxUpgrade {
                 data.modMetadata = rs.getInt(3);
                 Color color = Color.fromMetadata(new Metadata(rs.getString(4)).getLong(Metadata.FN_COLOR, MailItem.DEFAULT_COLOR));
 
-                DbTag.createTag(conn, mbox, data, color.getMappedColor() == MailItem.DEFAULT_COLOR ? null : color, true);
+                try {
+                    DbTag.createTag(conn, mbox, data, color.getMappedColor() == MailItem.DEFAULT_COLOR ? null : color, true);
+                } catch (ServiceException se) {
+                    if (checkDuplicates && se.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+                        // tag name already exist. append a random number to the tag name.
+                        SecureRandom sr = new SecureRandom();
+                        data.name = data.name + sr.nextInt();
+                        DbTag.createTag(conn, mbox, data, color.getMappedColor() == MailItem.DEFAULT_COLOR ? null : color, true);
+                    } else {
+                        throw se;
+                    }
+                }
 
                 tagNames.put(data.id, data.name);
             }
