@@ -692,15 +692,27 @@ public final class DbTag {
             stmt = null;
 
             // then we can delete the TAG row, which automatically cascades into TAGGED_ITEM
-            stmt = conn.prepareStatement("DELETE FROM " + getTagTableName(mbox) +
-                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
-            pos = 1;
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, tag.getId());
-
-            stmt.executeUpdate();
+            deleteTagRow(mbox, tag.getId());
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating counts for tag " + tag.getName(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void deleteTagRow(Mailbox mbox, int tagId) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            // delete the TAG row, which automatically cascades into TAGGED_ITEM
+            stmt = conn.prepareStatement("DELETE FROM " + getTagTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, tagId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("deleting tag row for tagId " + tagId, e);
         } finally {
             DbPool.closeStatement(stmt);
         }

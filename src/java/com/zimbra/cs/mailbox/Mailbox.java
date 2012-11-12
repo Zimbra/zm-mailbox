@@ -2133,7 +2133,7 @@ public class Mailbox {
         try {
             beginTransaction("resetMailboxForRestore", null);
             for (int tagId : REIFIED_FLAGS) {
-                DbTag.deleteTag(new Tag(this, Flag.of(this, tagId).mData));
+                DbTag.deleteTagRow(this, tagId);
             }
             DbMailbox.updateVersion(this, null);
             success = true;
