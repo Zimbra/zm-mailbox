@@ -63,15 +63,15 @@ public class ModifyPrefs extends AccountDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("no such attribute: " + name, null);
             }
             if (attrInfo.isCaseInsensitive()) {
-                value = Strings.nullToEmpty(value).toLowerCase();
+                String valueLowerCase = Strings.nullToEmpty(value).toLowerCase();
                 if (name2uniqueAttrValues.get(name) == null) {
                     Set<String> set = new HashSet<String>();
-                    set.add(value);
+                    set.add(valueLowerCase);
                     name2uniqueAttrValues.put(name, set);
                     StringUtil.addToMultiMap(prefs, name, value);
                 } else {
                     Set<String> set = name2uniqueAttrValues.get(name);
-                    if (set.add(value)) {
+                    if (set.add(valueLowerCase)) {
                         StringUtil.addToMultiMap(prefs, name, value);
                     }
                 }
