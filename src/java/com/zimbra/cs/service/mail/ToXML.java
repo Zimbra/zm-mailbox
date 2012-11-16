@@ -46,6 +46,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -83,6 +84,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
@@ -92,6 +94,7 @@ import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
@@ -520,25 +523,6 @@ public final class ToXML {
             Mountpoint mpt, int fields) throws ServiceException {
 
         Element el = parent.addElement(MailConstants.E_MOUNT);
-        // check to see if this is a delegate request (like bes)
-        boolean remote = octx != null && octx.isDelegatedRequest(mpt.getMailbox());
-
-        try {
-            // only construct the external url if this isn't a remote request.
-            // remote/delegate requests have managed to ping pong back and forth between
-            // servers and tie things up.
-            if(!remote){
-                String remoteUrl = UserServlet.getExternalRestUrl(octx, mpt);
-                if (remoteUrl != null) {
-                    el.addAttribute(MailConstants.A_REST_URL, remoteUrl);
-                }
-            }
-        } catch (ServiceException e) {
-            if (!ServiceException.PERM_DENIED.equalsIgnoreCase(e.getCode())) {
-                ZimbraLog.soap.warn("unable to create rest url for remote mountpoint", e);
-            }
-        }
-
         encodeFolderCommon(el, ifmt, mpt, fields);
         if (needToOutput(fields, Change.CONTENT)) {
             el.addAttribute(MailConstants.A_ZIMBRA_ID, mpt.getOwnerId());
@@ -556,12 +540,37 @@ public final class ToXML {
         return el;
     }
 
+    private static String getRestUrl(String ownerName, String folderPath) {
+        if (ownerName == null || folderPath == null) {
+            return null;
+        }
+        Provisioning prov = Provisioning.getInstance();
+        Account targetAccount;
+        try {
+            targetAccount = prov.get(AccountBy.name, ownerName);
+            if (targetAccount == null) {
+                // Remote owner account has been deleted.
+                return null;
+            }
+            Server targetServer = prov.getServer(targetAccount);
+            return URLUtil.getServiceURL(targetServer, UserServlet.SERVLET_PATH + 
+                    HttpUtil.urlEscape(UserServlet.getAccountPath(targetAccount) + folderPath) , true);
+        } catch (ServiceException e) {
+            ZimbraLog.soap.warn("unable to create rest url for mountpoint", e);
+            return null;
+        }
+    }
+
     public static void transferMountpointContents(Element elem, Element mptTarget) {
         // transfer folder counts to the serialized mountpoint from the serialized target folder
         transferLongAttribute(elem, mptTarget, MailConstants.A_UNREAD);
         transferLongAttribute(elem, mptTarget, MailConstants.A_NUM);
         transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
         elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
+        String ownerName = elem.getAttribute(MailConstants.A_OWNER_NAME, null);
+        String ownerFolderPath = mptTarget.getAttribute(MailConstants.A_FOLDER_PATH, null);
+        // construct rest url based on owner name and folder name.
+        elem.addAttribute(MailConstants.A_REST_URL, getRestUrl(ownerName, ownerFolderPath));
         elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
         elem.addAttribute(MailConstants.A_RIGHTS, mptTarget.getAttribute(MailConstants.A_RIGHTS, null));
         if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1) {
