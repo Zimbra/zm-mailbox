@@ -404,26 +404,6 @@ public final class ToXML {
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx, Mountpoint mpt, int fields) {
 
         Element elem = parent.addElement(MailConstants.E_MOUNT);
-        // check to see if this is a delegate request (like bes)
-        boolean remote = octx != null && octx.isDelegatedRequest(mpt.getMailbox());
-
-        try {
-            // only construct the external url if this isn't a remote request.
-            // remote/delegate requests have managed to ping pong back and forth between
-            // servers and tie things up.
-            if(!remote){
-                String remoteUrl = UserServlet.getExternalRestUrl(octx.getAuthToken(), mpt);
-                if(remoteUrl != null) {
-                    elem.addAttribute(MailConstants.A_REST_URL, remoteUrl);
-                }
-            }
-        }
-
-         catch (ServiceException e) {
-            ZimbraLog.soap.warn("unable to create rest url for remote mountpoint", e);
-        }
-
-
         encodeFolderCommon(elem, ifmt, mpt, fields);
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             elem.addAttribute(MailConstants.A_ZIMBRA_ID, mpt.getOwnerId());

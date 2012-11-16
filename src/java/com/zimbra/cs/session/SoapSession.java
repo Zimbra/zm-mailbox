@@ -31,6 +31,7 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -54,6 +55,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
@@ -1124,8 +1126,26 @@ public class SoapSession extends Session {
 
         for (Element eSubfolder : eFolder.listElements()) {
             Element match = findRemoteFolder(id, eSubfolder);
-            if (match != null)
+            if (match != null) {
+                // Assemble the absolute folder path in remote account. This will be used for calculating REST url.
+                String folderPath = match.getAttribute(MailConstants.A_FOLDER_PATH, null);
+                if (folderPath == null) {
+                    folderPath = match.getAttribute(MailConstants.A_NAME, null);
+                }
+                if (folderPath != null) {
+                    String parentFolderName = eFolder.getAttribute(MailConstants.A_NAME, null);
+                    if (parentFolderName != null) {
+                        String newPath;
+                        if (parentFolderName.equals("USER_ROOT")) {
+                            newPath = "/" + folderPath;
+                        } else {
+                            newPath = parentFolderName + "/" + folderPath;
+                        }
+                        match.addAttribute(MailConstants.A_FOLDER_PATH, newPath);
+                    }
+                }
                 return match;
+            }
         }
         return null;
     }
@@ -1149,12 +1169,37 @@ public class SoapSession extends Session {
         }
     }
 
+    private static String getRestUrl(String ownerName, String folderPath) {
+        if (ownerName == null || folderPath == null) {
+            return null;
+        }
+        Provisioning prov = Provisioning.getInstance();
+        Account targetAccount;
+        try {
+            targetAccount = prov.get(AccountBy.name, ownerName);
+            if (targetAccount == null) {
+                // Remote owner account has been deleted.
+                return null;
+            }
+            Server targetServer = prov.getServer(targetAccount);
+            return URLUtil.getServiceURL(targetServer, UserServlet.SERVLET_PATH +
+                    HttpUtil.urlEscape(UserServlet.getAccountPath(targetAccount) + folderPath) , true);
+        } catch (ServiceException e) {
+            ZimbraLog.soap.warn("unable to create rest url for mountpoint", e);
+            return null;
+        }
+    }
+
     public static void transferMountpointContents(Element elem, Element mptTarget) {
         // transfer folder counts to the serialized mountpoint from the serialized target folder
         transferLongAttribute(elem, mptTarget, MailConstants.A_UNREAD);
         transferLongAttribute(elem, mptTarget, MailConstants.A_NUM);
         transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
         elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
+        String ownerName = elem.getAttribute(MailConstants.A_OWNER_NAME, null);
+        String ownerFolderPath = mptTarget.getAttribute(MailConstants.A_FOLDER_PATH, null); 
+        // construct rest url based on owner name and folder name.
+        elem.addAttribute(MailConstants.A_REST_URL, getRestUrl(ownerName, ownerFolderPath));
         elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
         elem.addAttribute(MailConstants.A_RIGHTS, mptTarget.getAttribute(MailConstants.A_RIGHTS, null));
         if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
