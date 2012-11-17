@@ -55,13 +55,16 @@
       <mkdir dir="${test.classes.dir}"/>
       <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
         debug="true" classpathref="class.path" target="${javac.target}"/>
+      <copy todir="${test.classes.dir}">
+        <fileset dir="${test.src.dir}" excludes="**/*.java"/>
+      </copy>
   </target>
 
   <target name="test" depends="test-compile" description="Run unit tests">
       <delete dir="${test.dir}" quiet="true"/>
       <mkdir dir="${test.dir}/output"/>
       <mkdir dir="${test.dir}/report"/>
-      <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+      <junit printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}">
           <classpath refid="class.path"/>
           <classpath path="${test.classes.dir}"/>
           <formatter type="xml"/>
@@ -76,6 +79,7 @@
           <report todir="${test.dir}/report"/>
       </junitreport>
       <echo>Test Report: ${test.dir}/report/index.html</echo>
+      <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
 </project>

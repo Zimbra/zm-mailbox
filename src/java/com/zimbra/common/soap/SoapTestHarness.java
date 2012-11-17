@@ -24,7 +24,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 
 import org.apache.commons.cli.*;
-import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
@@ -177,7 +176,7 @@ public class SoapTestHarness {
     }
 
     public static void main(String args[]) 
-    throws HarnessException, IOException, DocumentException, ServiceException {
+    throws HarnessException, IOException, ServiceException {
         SoapTestHarness harness = new SoapTestHarness();
         harness.runTests(args);
     }
@@ -190,7 +189,7 @@ public class SoapTestHarness {
     }
 
     public void runTests(String args[]) 
-    throws HarnessException, IOException, DocumentException, ServiceException {
+    throws HarnessException, IOException, ServiceException {
 
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("SoapTestHarness", null);

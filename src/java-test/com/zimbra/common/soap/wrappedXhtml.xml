@@ -1,0 +1,26 @@
+<xml attr="aval">
+<fun a="b"/>
+<wrapper>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+    <title>Fun</title>
+</head>
+<body>
+<script type="text/javascript">
+//<![CDATA[
+    var time=new Date().getHours();
+    if (time<12)
+    {
+        alert("Good morning");
+    } else {
+        alert("Good afternoon");
+    }
+//]]>
+</script>
+Simple test
+</body>
+
+</html>
+</wrapper>
+</xml>
