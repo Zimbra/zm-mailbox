@@ -471,6 +471,7 @@ public class ProvUtil implements HttpDebugListener {
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
+        AUTO_PROV_CONTROL("autoProvControl", "apc", "{start|status|stop}", Category.COMMANDS, 1, 1),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}", Category.RIGHT, 3, 4, null, new RightCommandHelp()),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
@@ -808,6 +809,9 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case AUTO_COMPLETE_GAL:
                 doAutoCompleteGal(args);
+                break;
+            case AUTO_PROV_CONTROL:
+                prov.autoProvControl(args[1]);
                 break;
             case COPY_COS:
                 console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());

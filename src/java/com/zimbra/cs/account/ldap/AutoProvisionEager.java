@@ -147,8 +147,9 @@ public class AutoProvisionEager extends AutoProvision {
         long polledAt = System.currentTimeMillis();
         
         List<ExternalEntry> entries = new ArrayList<ExternalEntry>();
-        boolean hitSizeLimitExceededException = searchAccounts(entries);
-        
+        boolean hitSizeLimitExceededException = searchAccounts(entries, domain.getAutoProvBatchSize());
+        ZimbraLog.autoprov.info("%d external LDAP entries returned as search result", entries.size());
+        int stuckAcctNum = 0;
         for (ExternalEntry entry : entries) {
             if (scheduler.isShutDownRequested()) {
                 ZimbraLog.autoprov.info("eager auto provision aborted");
@@ -158,15 +159,28 @@ public class AutoProvisionEager extends AutoProvision {
             try {
                 ZAttributes externalAttrs = entry.getAttrs();
                 String acctZimbraName = mapName(externalAttrs, null);
-                
-                ZimbraLog.autoprov.info("auto creating account in EAGER mode: " + acctZimbraName);
+
+                ZimbraLog.autoprov.info("auto creating account in EAGER mode: " + acctZimbraName + ", dn=\"" + entry.getDN() + "\"");
                 Account acct = createAccount(acctZimbraName, entry, null, AutoProvMode.EAGER);
+                if (acct == null) {
+                    stuckAcctNum++;
+                }
             } catch (ServiceException e) {
                 // log and continue with next entry
-                ZimbraLog.autoprov.warn("unable to auto create account " + entry.getDN(), e);
+                ZimbraLog.autoprov.warn("unable to auto create account, dn=\"" + entry.getDN() + "\"", e);
+                stuckAcctNum++;
             }
         }
-        
+
+        //if we hit size limit and all returning items are stuck items, increase batch size to keep processing batches,
+        //in the last batch we won't hit size limit, then the last polled timstamp will be set, we can forget about the stuck ones
+        if (hitSizeLimitExceededException && entries.size() == stuckAcctNum) {
+            ZimbraLog.autoprov.info("search result contains unsuccessful external entries, increasing batch size by %d", stuckAcctNum);
+            int currentBatchSize = domain.getAutoProvBatchSize();
+            domain.setAutoProvBatchSize(currentBatchSize + stuckAcctNum);
+            ZimbraLog.autoprov.info("batch size is %d now", domain.getAutoProvBatchSize());
+        }
+
         // Keep track of the last polled timestamp.
         // The next batch will fetch entries with createTimeStamp later than the last polled 
         // timestamp in this batch.
@@ -182,10 +196,11 @@ public class AutoProvisionEager extends AutoProvision {
         //
         if (!hitSizeLimitExceededException) {
             String lastPolledAt = DateUtil.toGeneralizedTime(new Date(polledAt));
+            ZimbraLog.autoprov.info("Auto Provisioning has finished for now, setting last polled timestamp: " + lastPolledAt);
             domain.setAutoProvLastPolledTimestampAsString(lastPolledAt);
         }
     }
-    
+
     private boolean lockDomain(ZLdapContext zlc) throws ServiceException {
         Server localServer = prov.getLocalServer();
         
@@ -217,9 +232,8 @@ public class AutoProvisionEager extends AutoProvision {
         ZimbraLog.autoprov.debug("domain unlocked");
     }
 
-    private boolean searchAccounts(final List<ExternalEntry> entries) 
+    private boolean searchAccounts(final List<ExternalEntry> entries, int batchSize) 
     throws ServiceException {
-        int maxResults = domain.getAutoProvBatchSize();
         String lastPolledAt = domain.getAutoProvLastPolledTimestampAsString();
         String[] returnAttrs = getAttrsToFetch();
         
@@ -233,7 +247,7 @@ public class AutoProvisionEager extends AutoProvision {
 
         boolean hitSizeLimitExceededException = 
                 AutoProvision.searchAutoProvDirectory(prov, domain, null, null, 
-                        lastPolledAt, returnAttrs, maxResults, visitor, true);
+                        lastPolledAt, returnAttrs, batchSize, visitor, true);
         ZimbraLog.autoprov.debug("searched external LDAP source, hit size limit ? %s", hitSizeLimitExceededException);
         return hitSizeLimitExceededException;
     }

@@ -103,6 +103,7 @@ import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
+import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
@@ -2678,6 +2679,11 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void renameUCService(String zimbraId, String newName) throws ServiceException {
         invokeJaxb(new RenameUCServiceRequest(zimbraId, newName));
+    }
+
+    @Override
+    public void autoProvControl(String action) throws ServiceException {
+        invokeJaxb(new AutoProvTaskControlRequest(Action.fromString(action)));
     }
 
     /* Convert to equivalent JAXB object */

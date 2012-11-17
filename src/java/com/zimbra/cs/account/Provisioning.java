@@ -855,6 +855,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public void autoProvControl(String action) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public static interface DirectoryEntryVisitor {
         void visit(String dn, Map<String, Object> attrs);
     };
