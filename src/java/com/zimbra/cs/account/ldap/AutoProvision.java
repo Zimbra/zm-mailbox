@@ -42,7 +42,6 @@ import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
@@ -148,6 +147,11 @@ public abstract class AutoProvision {
             AutoProvisionListener listener = AutoProvisionCachedInfo.getInfo(domain).getListener();
             if (listener != null) {
                 listener.postCreate(domain, acct, externalEntry.getDN());
+            } else {
+                //eager mode should configure Listener
+                if (mode == AutoProvMode.EAGER) {
+                    ZimbraLog.autoprov.warn("EAGER mode should configure " + Provisioning.A_zimbraAutoProvListenerClass);
+                }
             }
         } catch (ServiceException e) {
             // exception during the post create listener should not fail this method

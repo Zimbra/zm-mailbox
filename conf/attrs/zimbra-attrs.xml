@@ -5910,7 +5910,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1228" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1228" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" callback="AutoProvLdapSearchFilter" since="8.0.0">
   <desc>
      EAGER mode: required
       LAZY mode: optional (if not using zimbraAutoProvLdapBindDn) 
