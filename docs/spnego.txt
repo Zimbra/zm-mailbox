@@ -177,12 +177,12 @@ On the Windows Server AD domain controller:
     
 (D) Place the Keytab File on Zimbraserver   
     copy jetty.keytab created in step (C) to the zimbra server (e.g. dogfood.zimbra.com) as /opt/zimbra/data/mailboxd/spnego/jetty.keytab
-    
+
     Note: Do not rename the keytab file, the name(jetty.keytab) is referenced from various configuration files.
 
+In a proxy - multi mailstore set-up, create a keytab file with proxy hostname as did on step (A) and copy it to all mailstores as did in step (D).
 
-Repeat steps (A) to (D) for each zimbra server(e.g. catfood.zimbra.com, corp.zimbra.com).
-
+For a non proxy - multil mailstore set-up, Repeat steps (A) to (D) for each zimbra server(e.g. catfood.zimbra.com, corp.zimbra.com).
 
 =====================
 2. Configure Zimbra
