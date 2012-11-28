@@ -25,6 +25,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
@@ -44,6 +45,8 @@ public class LdapGalMapRules {
     private GalGroupHandler mGroupHandler;
     private boolean mFetchGroupMembers;
     private boolean mNeedSMIMECerts;
+    private static final String CURRENT_DEFAULT_GROUPHANDLER = "com.zimbra.cs.gal.ADGalGroupHandler";
+    private static final String FUTURE_DEFAULT_GROUPHANDLER = "com.zimbra.cs.account.grouphandler.ADGroupHandler";
 
     public LdapGalMapRules(String[] rules, String[] valueMaps, String groupHandlerClass) {
         init(rules, valueMaps, groupHandlerClass);
@@ -81,7 +84,10 @@ public class LdapGalMapRules {
         mBinaryLdapAttrs = new HashSet<String>();
         for (String rule: rules)
             add(rule);
-        
+        // load the correct default group handler class  (bug 78755)
+        if (StringUtil.equal(groupHandlerClass, FUTURE_DEFAULT_GROUPHANDLER)) {
+            groupHandlerClass = CURRENT_DEFAULT_GROUPHANDLER;
+        }
         mGroupHandler = GalGroupHandler.getHandler(groupHandlerClass);
         ZimbraLog.gal.debug("groupHandlerClass=" + groupHandlerClass + ", handler instantiated=" + mGroupHandler.getClass().getCanonicalName());
     }
