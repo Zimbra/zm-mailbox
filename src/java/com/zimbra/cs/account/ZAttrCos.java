@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121121-1553 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20121128-1557 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -36879,9 +36879,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder. This attribute is
-     * deprecated and will be removed in a future release. See bug 23886 for
-     * details.
+     * of being automatically filed into the Junk folder.
      *
      * @return zimbraSpamApplyUserFilters, or false if unset
      *
@@ -36894,9 +36892,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder. This attribute is
-     * deprecated and will be removed in a future release. See bug 23886 for
-     * details.
+     * of being automatically filed into the Junk folder.
      *
      * @param zimbraSpamApplyUserFilters new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36912,9 +36908,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder. This attribute is
-     * deprecated and will be removed in a future release. See bug 23886 for
-     * details.
+     * of being automatically filed into the Junk folder.
      *
      * @param zimbraSpamApplyUserFilters new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36931,9 +36925,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder. This attribute is
-     * deprecated and will be removed in a future release. See bug 23886 for
-     * details.
+     * of being automatically filed into the Junk folder.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36948,9 +36940,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder. This attribute is
-     * deprecated and will be removed in a future release. See bug 23886 for
-     * details.
+     * of being automatically filed into the Junk folder.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
