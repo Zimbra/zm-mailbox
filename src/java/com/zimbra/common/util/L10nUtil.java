@@ -246,6 +246,7 @@ public class L10nUtil {
         mobile_notification_skip_item_reason_cannot_permit,
         mobile_notification_skip_item_reason_choke_device,
         mobile_notification_skip_item_reason_other,
+        mobile_notification_skip_item_attachment_name,
 
         //TODO remove octopus
         octopus_share_notification_email_subject,

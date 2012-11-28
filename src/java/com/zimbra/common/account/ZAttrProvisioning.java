@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121101-0451 */
+    /* build: 9.0.0_BETA1_1111 dywang 20121121-1553 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6763,6 +6763,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
+
+    /**
      * admin email address used for receiving notifications
      *
      * @since ZCS 9.0.0
@@ -6771,7 +6780,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileNotificationAdminAddress = "zimbraMobileNotificationAdminAddress";
 
     /**
-     * whether to permit mobile sync notification
+     * whether mobile sync notification enabled or not
      *
      * @since ZCS 9.0.0
      */
