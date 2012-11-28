@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121101-0451 */
+    /* build: 9.0.0_BETA1_1111 dywang 20121121-1553 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -23224,6 +23224,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @return zimbraMobileAttachSkippedItemEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public boolean isMobileAttachSkippedItemEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileAttachSkippedItemEnabled, false);
+    }
+
+    /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @param zimbraMobileAttachSkippedItemEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public void setMobileAttachSkippedItemEnabled(boolean zimbraMobileAttachSkippedItemEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAttachSkippedItemEnabled, zimbraMobileAttachSkippedItemEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @param zimbraMobileAttachSkippedItemEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public Map<String,Object> setMobileAttachSkippedItemEnabled(boolean zimbraMobileAttachSkippedItemEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAttachSkippedItemEnabled, zimbraMobileAttachSkippedItemEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public void unsetMobileAttachSkippedItemEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAttachSkippedItemEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public Map<String,Object> unsetMobileAttachSkippedItemEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAttachSkippedItemEnabled, "");
+        return attrs;
+    }
+
+    /**
      * admin email address used for receiving notifications
      *
      * @return zimbraMobileNotificationAdminAddress, or null if unset
@@ -23296,9 +23373,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether to permit mobile sync notification
+     * whether mobile sync notification enabled or not
      *
-     * @return zimbraMobileNotificationEnabled, or false if unset
+     * @return zimbraMobileNotificationEnabled, or true if unset
      *
      * @since ZCS 9.0.0
      */
@@ -23308,7 +23385,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether to permit mobile sync notification
+     * whether mobile sync notification enabled or not
      *
      * @param zimbraMobileNotificationEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23323,7 +23400,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether to permit mobile sync notification
+     * whether mobile sync notification enabled or not
      *
      * @param zimbraMobileNotificationEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23339,7 +23416,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether to permit mobile sync notification
+     * whether mobile sync notification enabled or not
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -23353,7 +23430,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether to permit mobile sync notification
+     * whether mobile sync notification enabled or not
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

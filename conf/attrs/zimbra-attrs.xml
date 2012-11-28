@@ -7104,4 +7104,9 @@ TODO: delete them permanently from here
   <desc>admin email address used for receiving notifications</desc>
 </attr>
 
+<attr id="1423" name="zimbraMobileAttachSkippedItemEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether mobile sync should zip the skipped item and attach it to the notification mail</desc>
+</attr>
+
 </attrs>
