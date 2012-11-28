@@ -151,7 +151,6 @@
     <a n="zimbraMaxContactsPerPage"/>
     <a n="zimbraMaxMailItemsPerPage"/>
     <a n="zimbraMaxVoiceItemsPerPage"/>
-    <a n="zimbraMobileNotificationEnabled"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
