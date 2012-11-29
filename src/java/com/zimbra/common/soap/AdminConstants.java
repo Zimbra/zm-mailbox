@@ -1220,8 +1220,9 @@ public final class AdminConstants {
     public static final String A_TOTAL_SIZE = "totalSize";
 
     public static final String A_TOTAL_COUNT = "totalCount";
-    public static final String A_VOLUME_BLOBS_PROGRESS = "volumeBlobsProgress";
-    public static final String A_BLOB_DIGESTS_PROGRESS = "blobDigestsProgress";
+    public static final String A_PROGRESS = "progress";
+    public static final String E_VOLUME_BLOBS_PROGRESS = "volumeBlobsProgress";
+    public static final String E_BLOB_DIGESTS_PROGRESS = "blobDigestsProgress";
     // index stats
     public static final String A_MAX_DOCS = "maxDocs";
     public static final String A_DELETED_DOCS = "deletedDocs";
