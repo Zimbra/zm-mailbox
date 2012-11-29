@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,7 @@
 
 package com.zimbra.soap.admin.message;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -36,7 +37,7 @@ public class CheckBlobConsistencyResponse {
     /**
      * @zm-api-field-description Information for mailboxes
      */
-    @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
+    @XmlElement(name=AdminConstants.E_MAILBOX /* mbox */, required=false)
     private List<MailboxBlobConsistency> mailboxes = Lists.newArrayList();
 
     public CheckBlobConsistencyResponse() {
@@ -45,17 +46,25 @@ public class CheckBlobConsistencyResponse {
     public void setMailboxes(Iterable <MailboxBlobConsistency> mailboxes) {
         this.mailboxes.clear();
         if (mailboxes != null) {
-            Iterables.addAll(this.mailboxes,mailboxes);
+            Iterables.addAll(this.mailboxes, mailboxes);
         }
     }
 
-    public CheckBlobConsistencyResponse addMailbox(
-                MailboxBlobConsistency mailbox) {
-        this.mailboxes.add(mailbox);
-        return this;
+    public void addMailboxe(MailboxBlobConsistency mailboxe) {
+        this.mailboxes.add(mailboxe);
     }
 
     public List<MailboxBlobConsistency> getMailboxes() {
         return Collections.unmodifiableList(mailboxes);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("mailboxes", mailboxes);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

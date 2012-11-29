@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,7 @@
 
 package com.zimbra.soap.admin.message;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -48,36 +49,38 @@ public class CheckBlobConsistencyRequest {
      * compressed blobs in order to calculate size.
      */
     @XmlAttribute(name=AdminConstants.A_CHECK_SIZE /* checkSize */, required=false)
-    private final ZmBoolean checkSize;
+    private ZmBoolean checkSize;
 
+
+    /**
+     * @zm-api-field-tag report-used-blobs
+     * @zm-api-field-description If set a complete list of all blobs used by the mailbox(es) is returned
+     */
+    @XmlAttribute(name=AdminConstants.A_REPORT_USED_BLOBS /* reportUsedBlobs */, required=false)
+    private ZmBoolean reportUsedBlobs;
+
+    // ShortIdAttr would be a more accurate fit
     /**
      * @zm-api-field-description Volumes
      */
-    @XmlElement(name=AdminConstants.E_VOLUME, required=false)
+    @XmlElement(name=AdminConstants.E_VOLUME /* volume */, required=false)
     private List<IntIdAttr> volumes = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Mailboxes
      */
-    @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
+    @XmlElement(name=AdminConstants.E_MAILBOX /* mbox */, required=false)
     private List<IntIdAttr> mailboxes = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private CheckBlobConsistencyRequest() {
-        this((Boolean) null);
+    public CheckBlobConsistencyRequest() {
     }
 
-    public CheckBlobConsistencyRequest(Boolean checkSize) {
-        this.checkSize = ZmBoolean.fromBool(checkSize);
-    }
-
+    public void setCheckSize(Boolean checkSize) { this.checkSize = ZmBoolean.fromBool(checkSize); }
+    public void setReportUsedBlobs(Boolean reportUsedBlobs) { this.reportUsedBlobs = ZmBoolean.fromBool(reportUsedBlobs); }
     public void setVolumes(Iterable <IntIdAttr> volumes) {
         this.volumes.clear();
         if (volumes != null) {
-            Iterables.addAll(this.volumes,volumes);
+            Iterables.addAll(this.volumes, volumes);
         }
     }
 
@@ -89,7 +92,7 @@ public class CheckBlobConsistencyRequest {
     public void setMailboxes(Iterable <IntIdAttr> mailboxes) {
         this.mailboxes.clear();
         if (mailboxes != null) {
-            Iterables.addAll(this.mailboxes,mailboxes);
+            Iterables.addAll(this.mailboxes, mailboxes);
         }
     }
 
@@ -99,10 +102,24 @@ public class CheckBlobConsistencyRequest {
     }
 
     public Boolean getCheckSize() { return ZmBoolean.toBool(checkSize); }
+    public Boolean getReportUsedBlobs() { return ZmBoolean.toBool(reportUsedBlobs); }
     public List<IntIdAttr> getVolumes() {
         return Collections.unmodifiableList(volumes);
     }
     public List<IntIdAttr> getMailboxes() {
         return Collections.unmodifiableList(mailboxes);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("checkSize", checkSize)
+            .add("reportUsedBlobs", reportUsedBlobs)
+            .add("volumes", volumes)
+            .add("mailboxes", mailboxes);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

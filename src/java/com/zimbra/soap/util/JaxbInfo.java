@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 
 /**
  * Zimbra SOAP interfaces are more flexible than Jaxb in what is acceptable.
@@ -104,6 +105,8 @@ public final class JaxbInfo {
      */
     private final List<JaxbNodeInfo> jaxbElemNodeInfo = Lists.newArrayList();
     private JaxbValueInfo elementValue = null;
+    private boolean haveKvpXmlInfo = false;
+    private KeyValuePairXmlRepresentationInfo kvpXmlInfo;
 
     /**
      * @param klass is a JAXB annotated class associated with a particular element
@@ -285,6 +288,80 @@ public final class JaxbInfo {
             rootElementName = getRootElementName(jaxbClass);
         }
         return rootElementName;
+    }
+
+    public final class KeyValuePairXmlRepresentationInfo {
+        private final String xmlElementName;
+        private final String xmlAttributeName;
+        public KeyValuePairXmlRepresentationInfo(String elemName, String attrName) {
+            xmlElementName = elemName;
+            xmlAttributeName = attrName;
+        }
+        public String getXmlElementName() { return xmlElementName; }
+        public String getXmlAttributeName() { return xmlAttributeName; }
+    }
+
+    /**
+     * If this object has keyvaluepairs for children, this returns information about them, otherwise returns null.
+     * Note implicit assumption that there can only be one set of keyvaluepairs - this is because the JSON
+     * representation would be unable to differentiate between them.
+     */
+    public KeyValuePairXmlRepresentationInfo getKeyValuePairElementInfo() {
+        if (haveKvpXmlInfo) {
+            return kvpXmlInfo;
+        }
+        String elemName = null;
+        String attrName = null;
+        Field fields[] = jaxbClass.getDeclaredFields();
+        for (Field field: fields) {
+            ZimbraKeyValuePairs annot = (ZimbraKeyValuePairs) field.getAnnotation(ZimbraKeyValuePairs.class);
+            if (annot == null) {
+                continue;
+            }
+            XmlElement xmlElemAnnot = (XmlElement) field.getAnnotation(XmlElement.class);
+            if (xmlElemAnnot != null) {
+                elemName = xmlElemAnnot.name();
+            } else {
+                elemName = field.getName();
+            }
+        }
+        if (elemName != null) {
+            Method methods[] = jaxbClass.getDeclaredMethods();
+            for (Method method : methods) {
+                ZimbraKeyValuePairs annot = (ZimbraKeyValuePairs) method.getAnnotation(ZimbraKeyValuePairs.class);
+                if (annot == null) {
+                    continue;
+                }
+                XmlElement xmlElemAnnot = (XmlElement) method.getAnnotation(XmlElement.class);
+                if (xmlElemAnnot != null) {
+                    elemName = xmlElemAnnot.name();
+                } else {
+                    elemName = method.getName();
+                }
+            }
+        }
+        if (elemName != null) {
+            Class<?> kvpElemClass = this.getClassForElement(elemName);
+            if (kvpElemClass != null) {
+                JaxbInfo kvpJaxbInfo = JaxbInfo.getFromCache(kvpElemClass);
+                if (kvpJaxbInfo != null) {
+                    Iterable<String> attribNames = kvpJaxbInfo.getAttributeNames();
+                    if (attribNames != null) {
+                        for (String attribName : attribNames) { // Should only be one...
+                            attrName = attribName;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if ((elemName != null) && (attrName != null)) {
+            kvpXmlInfo = new KeyValuePairXmlRepresentationInfo(elemName, attrName);
+        } else {
+            kvpXmlInfo = null;
+        }
+        haveKvpXmlInfo = true;
+        return kvpXmlInfo;
     }
 
     public static String getRootElementNamespace(Class<?> kls) {

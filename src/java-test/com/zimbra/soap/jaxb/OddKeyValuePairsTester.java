@@ -21,23 +21,23 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.Element;
+import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
-import com.zimbra.soap.type.KeyValuePair;
 
 /**
- * Test {@link ZimbraKeyValuePairs} annotation
+ * Test {@link ZimbraKeyValuePairs} annotation, where the key/value pairs use different key/value names
+ * to the default
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="key-value-pairs-tester")
-public class KeyValuePairsTester {
-    @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
+public class OddKeyValuePairsTester {
+    @XmlElement(name="oddElemName")
     @ZimbraKeyValuePairs
-    private List<KeyValuePair> attrList;
+    private List<Attr> attrList;
 
-    public KeyValuePairsTester() { }
-    public KeyValuePairsTester(List<KeyValuePair> attrs) { setAttrList(attrs); }
+    public OddKeyValuePairsTester() { }
+    public OddKeyValuePairsTester(List<Attr> attrs) { setAttrList(attrs); }
 
-    public List<KeyValuePair> getAttrList() { return attrList; }
-    public void setAttrList(List<KeyValuePair> attrList) { this.attrList = attrList; }
+    public List<Attr> getAttrList() { return attrList; }
+    public void setAttrList(List<Attr> attrList) { this.attrList = attrList; }
 }
