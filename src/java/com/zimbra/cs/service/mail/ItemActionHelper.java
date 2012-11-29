@@ -451,7 +451,15 @@ public class ItemActionHelper {
                     getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
-                    getMailbox().setTags(getOpCtxt(), mIds, type, Flag.toBitmask(mFlags), mTags, mTargetConstraint);
+                    int flagMask = Flag.toBitmask(mFlags);
+                    if (mFlags == null) {
+                        flagMask = MailItem.FLAG_UNCHANGED;
+                    }
+
+                    if (mTags == null) {
+                        mTags = MailItem.TAG_UNCHANGED;
+                    }
+                    getMailbox().setTags(getOpCtxt(), mIds, type, flagMask, mTags, mTargetConstraint);
                 }
                 if (mColor != null) {
                     getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
@@ -690,7 +698,7 @@ public class ItemActionHelper {
                     takeoverAsOrganizer = inv != null && inv.isOrganizer();
                     blockMove =  takeoverAsOrganizer && inv.hasOtherAttendees();
                 }
-                
+
                 if (blockMove) {
                     throw MailServiceException.INVALID_REQUEST(
                         "This operation requires change of organizer and it is not permitted", null);

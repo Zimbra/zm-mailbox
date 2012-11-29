@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -239,4 +240,59 @@ public class ItemActionTest {
         Assert.assertFalse("reply still read", msg2.isUnread());
         Assert.assertFalse("reply now unmuted", msg2.isTagged(Flag.FlagInfo.MUTED));
     }
+    
+    @Test
+    public void deleteAllTagKeepsStatusOfFlags() throws Exception {
+        //Bug 76781
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, 
+            "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+
+        // setup: add the root message
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(
+            Mailbox.ID_FOLDER_INBOX);        
+        mbox.addMessage(null, pm, dopt, null);
+
+        // add additional messages for conversation
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
+        int msgId = mbox.addMessage(null, pm, dopt, null).getId(); 
+        // set flag to unread for  this message
+        MailboxTestUtil.setFlag(mbox, msgId, Flag.FlagInfo.UNREAD);
+       
+        
+        MailItem item = mbox.getItemById(null, msgId, MailItem.Type.UNKNOWN);
+        // verify message unread flag is set
+        Assert.assertEquals("Verifying Unread flag is set.", Flag.BITMASK_UNREAD, 
+            item.getFlagBitmask());
+        
+        // add 2 tags
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, true, null);
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag2, true, null);
+        
+               
+        Element request = new Element.XMLElement(
+            MailConstants.ITEM_ACTION_REQUEST);
+        Element action = request.addElement(MailConstants.E_ACTION);
+        action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_UPDATE);
+        action.addAttribute(MailConstants.A_ITEM_TYPE, "");
+        action.addAttribute(MailConstants.A_ID, msgId);
+        
+        new ItemAction().handle(request, ServiceTestUtil.getRequestContext(acct));
+        Assert.assertEquals("Verifying unread flag is set after tag deletion",
+            Flag.BITMASK_UNREAD, 
+            item.getFlagBitmask());   
+        
+        Tag tag = mbox.getTagByName(null, tag1);
+        Assert.assertEquals(tag1+ " (tag messages)", 0, tag.getSize());
+        
+        tag = mbox.getTagByName(null, tag2);
+        Assert.assertEquals(tag1+ " (tag messages)", 0, tag.getSize());
+        
+    }
+    
+    
+    private static final String tag1 = "foo", tag2 = "bar";
 }
