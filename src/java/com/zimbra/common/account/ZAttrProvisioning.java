@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20121128-1557 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -10841,9 +10841,7 @@ public class ZAttrProvisioning {
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder. This attribute is
-     * deprecated and will be removed in a future release. See bug 23886 for
-     * details.
+     * of being automatically filed into the Junk folder.
      *
      * @since ZCS 5.0.2
      */
