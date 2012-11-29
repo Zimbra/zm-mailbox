@@ -2876,8 +2876,9 @@ deleteTime - time (ms) for the delete operation
   <volume id="..." />*
 </DedupeBlobsRequest>
 
-<DedupeBlobsResponse status="running|stopped" volumeBlobsProgress="{groups populated in volume blobs}" 
-            blobDigestsProgress="{digests processed}" totalCount="{number of links created}" totalSize="{size saved}">
+<DedupeBlobsResponse status="running|stopped" totalCount="{number of links created}" totalSize="{size saved}">
+	<volumeBlobsProgress volumeId="{volumeId}" progress="{progress}"/>*
+	<blobDigestsProgress volumeId="{volumeId}" progress="{progress}"/>*
 </DedupeBlobsResponse>
 
 -----------------------------

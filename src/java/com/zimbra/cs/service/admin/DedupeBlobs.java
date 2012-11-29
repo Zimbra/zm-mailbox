@@ -35,6 +35,7 @@ import com.zimbra.soap.admin.message.DedupeBlobsRequest;
 import com.zimbra.soap.admin.message.DedupeBlobsResponse;
 import com.zimbra.soap.admin.message.DedupeBlobsResponse.DedupStatus;
 import com.zimbra.soap.admin.type.IntIdAttr;
+import com.zimbra.soap.admin.type.VolumeIdAndProgress;
 
 public final class DedupeBlobs extends AdminDocumentHandler {
 
@@ -100,8 +101,20 @@ public final class DedupeBlobs extends AdminDocumentHandler {
         } else {
             resp.setStatus(DedupStatus.stopped);
         }
-        resp.setVolumeBlobsProgress(deduper.getVolumeBlobsProgress());
-        resp.setBlobDigestsProgress(deduper.getBlobDigestsProgress());
+        Map<Short, String> volumeBlobsProgress = deduper.getVolumeBlobsProgress();
+        VolumeIdAndProgress[] blobProgress = new VolumeIdAndProgress[volumeBlobsProgress.size()];
+        int i=0;
+        for (Map.Entry<Short, String> entry : volumeBlobsProgress.entrySet()) {
+        	blobProgress[i++] = new VolumeIdAndProgress(String.valueOf(entry.getKey()), entry.getValue());
+        }
+        resp.setVolumeBlobsProgress(blobProgress);
+        Map<Short, String> blobDigestsProgress = deduper.getBlobDigestsProgress();
+        VolumeIdAndProgress[] digestProgress = new VolumeIdAndProgress[blobDigestsProgress.size()];
+        i=0;
+        for (Map.Entry<Short, String> entry : blobDigestsProgress.entrySet()) {
+        	digestProgress[i++] = new VolumeIdAndProgress(String.valueOf(entry.getKey()), entry.getValue());
+        }
+        resp.setBlobDigestsProgress(digestProgress);
         Pair<Integer, Long> pair = deduper.getCountAndSize();
         resp.setTotalCount(pair.getFirst());
         resp.setTotalSize(pair.getSecond());

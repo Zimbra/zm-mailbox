@@ -33,6 +33,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.DedupeBlobsRequest;
 import com.zimbra.soap.admin.message.DedupeBlobsResponse;
 import com.zimbra.soap.admin.type.IntIdAttr;
+import com.zimbra.soap.admin.type.VolumeIdAndProgress;
 
 public class BlobDeduperUtil {
 
@@ -49,7 +50,7 @@ public class BlobDeduperUtil {
         options = new Options();
 
         options.addOption(new Option("h", LO_HELP, false, "Display this help message."));
-        options.addOption(new Option("v", LO_VERBOSE, false, "Display verbose output.  Display stack trace on error."));
+        options.addOption(new Option("v", LO_VERBOSE, false, "Display stack trace on error."));
 
         Option o = new Option(null, LO_VOLUMES, true, "Specify which volumes to dedupe.  If not specified, dedupe all volumes.");
         o.setArgName("volume-ids");
@@ -127,12 +128,25 @@ public class BlobDeduperUtil {
         DedupeBlobsResponse response = JaxbUtil.elementToJaxb(respElem);
         if (action == DedupeBlobsRequest.DedupAction.start) {
             System.out.println("Dedupe scheduled. Run \"zmdedupe status\" to check the status.");
+        } else {
+            System.out.println("Status = " + response.getStatus().name());
+            System.out.println("Total links created = " + response.getTotalCount());
+            System.out.println("Total size saved = " + response.getTotalSize());
+            VolumeIdAndProgress[] volumeBlobsProgress = response.getVolumeBlobsProgress();
+            if (volumeBlobsProgress != null && volumeBlobsProgress.length > 0) {
+                System.out.printf("%32s : %10s - %s\n", "Groups populated in volume blobs", "volumeId", "groups/total_groups");
+                for (VolumeIdAndProgress idAndProgress : volumeBlobsProgress) {
+                    System.out.printf("%32s   %10s - %s\n", "", idAndProgress.getVolumeId(), idAndProgress.getProgress());
+                }
+            }
+            VolumeIdAndProgress[] blobDigestsProgress = response.getBlobDigestsProgress();
+            if (blobDigestsProgress != null && blobDigestsProgress.length > 0) {
+                System.out.printf("%32s : %10s - %s\n", "Digests Processed", "volumeId", "digests/total_digests");
+                for (VolumeIdAndProgress idAndProgress : blobDigestsProgress) {
+                    System.out.printf("%32s   %10s - %s\n", "", idAndProgress.getVolumeId(), idAndProgress.getProgress());
+                }
+            }
         }
-        System.out.println("Status = " + response.getStatus().name());
-        System.out.println("Groups populated in volume blobs (volumeId - groups/total_groups) = " + response.getVolumeBlobsProgress());
-        System.out.println("Digests Processed (volumeId - digests/total_digests) = " + response.getBlobDigestsProgress());
-        System.out.println("Links created = " + response.getTotalCount());
-        System.out.println("Size saved = " + response.getTotalSize());
     }
 
     public static void main(String[] args) {
