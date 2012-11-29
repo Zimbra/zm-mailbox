@@ -556,6 +556,7 @@ public final class LC {
     public static final KnownKey postfix_enable_smtpd_policyd = KnownKey.newKey("no");
     public static final KnownKey postfix_delay_warning_time = KnownKey.newKey("0h");
     public static final KnownKey postfix_header_checks = KnownKey.newKey("pcre:${zimbra_home}/conf/postfix_header_checks");
+    public static final KnownKey postfix_import_environment = KnownKey.newKey("");
     public static final KnownKey postfix_in_flow_delay = KnownKey.newKey("1s");
     public static final KnownKey postfix_lmtp_connection_cache_destinations = KnownKey.newKey("");
     public static final KnownKey postfix_lmtp_connection_cache_time_limit = KnownKey.newKey("4s");
