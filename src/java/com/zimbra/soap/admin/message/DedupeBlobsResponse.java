@@ -18,10 +18,12 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.VolumeIdAndProgress;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DEDUPE_BLOBS_RESPONSE)
@@ -45,11 +47,11 @@ public class DedupeBlobsResponse {
     @XmlAttribute(name=AdminConstants.A_TOTAL_COUNT, required=false)
     private Integer totalCount;
 
-    @XmlAttribute(name=AdminConstants.A_VOLUME_BLOBS_PROGRESS, required=false)
-    private String volumeBlobsProgress;
+    @XmlElement(name=AdminConstants.E_VOLUME_BLOBS_PROGRESS, required=false)
+    private VolumeIdAndProgress[] volumeBlobsProgress;
     
-    @XmlAttribute(name=AdminConstants.A_BLOB_DIGESTS_PROGRESS , required=false)
-    private String blobDigestsProgress;
+    @XmlElement(name=AdminConstants.E_BLOB_DIGESTS_PROGRESS , required=false)
+    private VolumeIdAndProgress[] blobDigestsProgress;
 
     public DedupeBlobsResponse() {
     }
@@ -66,11 +68,11 @@ public class DedupeBlobsResponse {
         this.totalSize = size;
     }
     
-    public void setVolumeBlobsProgress(String progress) {
+    public void setVolumeBlobsProgress(VolumeIdAndProgress[] progress) {
         this.volumeBlobsProgress = progress;
     }
 
-    public void setBlobDigestsProgress(String progress) {
+    public void setBlobDigestsProgress(VolumeIdAndProgress[] progress) {
         this.blobDigestsProgress = progress;
     }
     
@@ -86,11 +88,11 @@ public class DedupeBlobsResponse {
         return totalSize;
     }
     
-    public String getVolumeBlobsProgress() {
+    public VolumeIdAndProgress[] getVolumeBlobsProgress() {
         return volumeBlobsProgress;
     }
 
-    public String getBlobDigestsProgress() {
+    public VolumeIdAndProgress[] getBlobDigestsProgress() {
         return blobDigestsProgress;
     }
 }
