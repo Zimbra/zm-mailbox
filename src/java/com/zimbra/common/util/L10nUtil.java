@@ -240,6 +240,15 @@ public class L10nUtil {
         domainAggrQuotaWarnMsgSubject,
         domainAggrQuotaWarnMsgBody,
 
+        // mobile notification
+        mobile_notification_skip_item_subject,
+        mobile_notification_skip_item_message,
+        mobile_notification_skip_item_reason_cannot_permit,
+        mobile_notification_skip_item_reason_choke_device,
+        mobile_notification_skip_item_reason_other,
+        mobile_notification_skip_item_attachment_name,
+
+        //TODO remove octopus
         octopus_share_notification_email_subject,
         octopus_share_notification_email_message,
         octopus_share_notification_email_accept,
