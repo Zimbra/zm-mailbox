@@ -644,7 +644,7 @@ public final class LC {
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -XX:+UseConcMarkSweepGC" +
             " -XX:PermSize=128m" +
-            " -XX:MaxPermSize=128m" +
+            " -XX:MaxPermSize=350m" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
