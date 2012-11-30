@@ -7382,6 +7382,7 @@ public class Mailbox {
 
         // add the newly-fetched items to the folder
         Set<String> calUidsSeen = new HashSet<String>();
+        int numSkipped = 0;
         for (Object obj : items) {
             try {
                 if (obj instanceof Invite) {
@@ -7440,13 +7441,24 @@ public class Mailbox {
                                     }
                                 }
                                 importIt = sameFolder && changed;
+                                if (!importIt && ZimbraLog.calendar.isDebugEnabled()) {
+                                    if (sameFolder) {
+                                        ZimbraLog.calendar.debug("Skip importing UID=%s. Already present & not newer", uid);
+                                    } else {
+                                        ZimbraLog.calendar.debug("Skip importing UID=%s. Already in different folder id=%d",
+                                                uid, curFolder.getId());
+                                    }
+                                }
                             }
                         }
                         if (importIt) {
                             addInvite(octxtNoConflicts, inv, folder.getId(), true, addRevision);
+                        } else {
+                            numSkipped++;
                         }
                     } catch (ServiceException e) {
-                        ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
+                        ZimbraLog.calendar.warn("Skipping bad iCalendar object UID=%s during import into folder id=%d",
+                                inv.getUid(), folder.getId(), e);
                     }
                 } else if (obj instanceof ParsedMessage) {
                     DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(Flag.BITMASK_UNREAD);
@@ -7457,6 +7469,9 @@ public class Mailbox {
             }
         }
 
+        if (numSkipped > 0) {
+            ZimbraLog.calendar.warn("Skipped importing %d iCalendar objects with clashing UIDs", numSkipped);
+        }
         // Delete calendar items that have been deleted in the source feed.
         for (int i : toRemove) {
             delete(octxtNoConflicts, i, MailItem.Type.UNKNOWN);
