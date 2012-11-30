@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,15 +34,14 @@ import java.util.regex.Pattern;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class SmtpToLmtp {
-
+    
     private static final Pattern PAT_MAIL_FROM = Pattern.compile("MAIL FROM:<(.*)>", Pattern.CASE_INSENSITIVE);
     private static final Pattern PAT_RCPT_TO = Pattern.compile("RCPT TO:<(.+)>", Pattern.CASE_INSENSITIVE);
-
+    
     public interface RecipientValidator {
         /**
          * Validates the recipient passed in by the SMTP client.
@@ -51,14 +50,13 @@ public class SmtpToLmtp {
          */
         public Iterable<String> validate(String recipient);
     }
-
+    
     private static final RecipientValidator DUMMY_VALIDATOR = new RecipientValidator() {
-        @Override
         public Iterable<String> validate(String recipient) {
             return Arrays.asList(recipient);
         }
     };
-
+    
     private class LmtpData {
         String sender;
         List<String> recipients = Lists.newArrayList();
@@ -69,23 +67,23 @@ public class SmtpToLmtp {
     private String lmtpHost;
     private int lmtpPort;
     private RecipientValidator validator = DUMMY_VALIDATOR;
-
+    
     public SmtpToLmtp(int smtpPort, String lmtpHost, int lmtpPort) {
         this.smtpPort = smtpPort;
         this.lmtpHost = lmtpHost;
         this.lmtpPort = lmtpPort;
     }
-
+    
     public void setRecipientValidator(RecipientValidator validator) {
         assert(validator != null);
         this.validator = validator;
     }
-
+    
     private void run() {
         SmtpServer server = new SmtpServer();
         server.run();
     }
-
+    
     private void start() {
         SmtpServer server = new SmtpServer();
         Thread thread = new Thread(server);
@@ -93,7 +91,7 @@ public class SmtpToLmtp {
         thread.setDaemon(true);
         thread.start();
     }
-
+    
     /**
      * Starts the {@code SmtpServer} thread.
      */
@@ -102,10 +100,9 @@ public class SmtpToLmtp {
         server.start();
         return server;
     }
-
+    
     private class SmtpServer
     implements Runnable {
-        @Override
         public void run() {
             try {
                 ServerSocket serverSocket = new ServerSocket(smtpPort);
@@ -122,29 +119,28 @@ public class SmtpToLmtp {
             }
         }
     }
-
+    
     /**
      * Handles an incoming SMTP connection and establishes the outbound
      * LMTP connection.
      */
     private class SmtpHandler
     implements Runnable {
-
+        
         private InputStream smtpIn;
         private PrintWriter smtpOut;
-
+        
         private SmtpHandler(InputStream smtpIn, OutputStream smtpOut) {
             this.smtpIn = smtpIn;
             this.smtpOut = new PrintWriter(smtpOut);
         }
 
-        @Override
         public void run() {
             LmtpData data = null;
-
+            
             try {
                 send(smtpOut, "220 " + SmtpToLmtp.class.getSimpleName());
-
+                
                 while (true) {
                     String command = readLine(smtpIn);
                     String uc = command.toUpperCase();
@@ -156,7 +152,7 @@ public class SmtpToLmtp {
                         send(smtpOut, "250 OK");
                         continue;
                     }
-
+                    
                     m = PAT_RCPT_TO.matcher(command);
                     if (m.matches()) {
                         Iterable<String> validRecipients = validator.validate(m.group(1));
@@ -164,7 +160,7 @@ public class SmtpToLmtp {
                             validRecipients = Collections.emptyList();
                         }
                         Iterables.addAll(data.recipients, validRecipients);
-
+                        
                         if (Iterables.isEmpty(validRecipients)) {
                             send(smtpOut, "550 No such user here");
                         } else {
@@ -174,7 +170,7 @@ public class SmtpToLmtp {
                         send(smtpOut, "354 Start mail input; end with <CRLF>.<CRLF>");
                         data.file = readData(smtpIn);
                         send(smtpOut, "250 OK");
-
+                        
                         LmtpClientThread thread = new LmtpClientThread(data);
                         thread.start();
                     } else if (uc.startsWith("RSET")) {
@@ -195,13 +191,7 @@ public class SmtpToLmtp {
                 ByteUtil.closeWriter(smtpOut);
             }
         }
-
-        /**
-         * From part of http://tools.ietf.org/html/rfc5321 Section 4.5.2.  Transparency:
-         *     When a line of mail text is received by the SMTP server, it checks the line.  If the line is composed of
-         *     a single period, it is treated as the end of mail indicator.  If the first character is a period and
-         *     there are other characters on the line, the first character is deleted.
-         */
+        
         private File readData(InputStream in)
         throws IOException {
             // Write content to a temp file.
@@ -210,17 +200,13 @@ public class SmtpToLmtp {
 
             try {
                 fileOut = new FileOutputStream(tempFile);
-
+                
                 while (true) {
                     String line = readLine(smtpIn);
                     if (line.equals(".")) {
                         break;
                     }
-                    if (line.startsWith(".")) {
-                        fileOut.write(line.substring(1).getBytes(CharsetUtil.ISO_8859_1));
-                    } else {
-                        fileOut.write(line.getBytes(CharsetUtil.ISO_8859_1));
-                    }
+                    fileOut.write(line.getBytes());
                     fileOut.write('\r');
                     fileOut.write('\n');
                 }
@@ -230,19 +216,18 @@ public class SmtpToLmtp {
             } finally {
                 ByteUtil.closeStream(fileOut);
             }
-
+            
             return tempFile;
         }
-
+        
         private class LmtpClientThread
         extends Thread {
             LmtpData data;
-
+            
             LmtpClientThread(LmtpData data) {
                 this.data = data;
             }
-
-            @Override
+            
             public void run() {
                 InputStream in = null;
                 LmtpClient client = null;
@@ -261,7 +246,7 @@ public class SmtpToLmtp {
                 }
             }
         }
-
+        
         private void send(PrintWriter out, String response) {
             ZimbraLog.smtp.trace("S: %s", response);
             out.print(response + "\r\n");
