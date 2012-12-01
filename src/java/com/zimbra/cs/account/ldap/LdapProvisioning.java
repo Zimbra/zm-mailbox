@@ -494,7 +494,6 @@ public class LdapProvisioning extends LdapProv {
                         LdapUsage.modifyEntryfromEntryType(entry.getEntryType()));
             }
             helper.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
-            refreshEntry(entry, zlc);
         } catch (LdapInvalidAttrNameException e) {
             throw AccountServiceException.INVALID_ATTR_NAME(
                     "invalid attr name: " + e.getMessage(), e);
@@ -505,6 +504,7 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to modify attrs: "
                     + e.getMessage(), e);
         } finally {
+            refreshEntry(entry, zlc);
             if (initZlc == null) {
                 LdapClient.closeContext(zlc);
             }
