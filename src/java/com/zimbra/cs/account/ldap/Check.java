@@ -232,24 +232,24 @@ public class Check {
     	return new Result(STATUS_OK, "", null);
     }
     
-  public static Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
-	try {
-    	int code = ExchangeEWSFreeBusyProvider.checkAuth(sinfo, acct);
-    	switch (code) {
-    	case 400:
-    	case 404:
-            return new Result(STATUS_BAD_URL, "", null);
-    	case 401:
-    	case 403:
-            return new Result(STATUS_AUTH_FAILED, "", null);
-    	}
-	} catch (IOException e) {
-	    return toResult(e, "");
-    }
-	return new Result(STATUS_OK, "", null);
-}    
+    public static Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) {
+        try {
+            int code = ExchangeEWSFreeBusyProvider.checkAuth(sinfo, acct);
+            switch (code) {
+            case 400:
+            case 404:
+                return new Result(STATUS_BAD_URL, "", null);
+            case 401:
+            case 403:
+                return new Result(STATUS_AUTH_FAILED, "", null);
+            }
+        } catch (Exception e) {
+            return toResult(e, "");
+        }
+        return new Result(STATUS_OK, "", null);
+    }    
     
-    private static Result toResult(IOException e, String dn) {
+    private static Result toResult(Exception e, String dn) {
         if (e instanceof UnknownHostException) {
             return new Result(STATUS_UNKNOWN_HOST, e, dn);
         } else if (e instanceof ConnectException) {

@@ -178,6 +178,16 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return 0;
 	}
 
+    @Override
+    public long cachedFreeBusyStartTime(String accountId) {
+        return 0;
+    }
+
+    @Override
+    public long cachedFreeBusyEndTime(String accountId) {
+        return 0;
+    }
+
 	public boolean handleMailboxChange(String accountId) {
 		return true;
 	}

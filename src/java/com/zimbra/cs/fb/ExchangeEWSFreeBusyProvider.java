@@ -31,9 +31,13 @@ import java.util.TimeZone;
 
 import javax.activation.CommandMap;
 import javax.activation.MailcapCommandMap;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.HostnameVerifier;
@@ -75,16 +79,15 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeUserResolver;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ServerInfo;
-import com.zimbra.cs.fb.FreeBusyProvider.Request;
 import com.zimbra.cs.mailbox.MailItem;
 
 public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     public static final int FB_INTERVAL = 30;
 	public static final String TYPE_EWS = "ews";
-    static ExchangeServicePortType service = null;
-
-    boolean Initialize(ServerInfo info) throws MalformedURLException {
-    	
+    private ExchangeServicePortType service = null;
+    private static ExchangeWebService factory = null;
+    
+    static {
         ZimbraLog.fb.debug("Setting MailcapCommandMap handlers back to default");
         MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
         mc.addMailcap("application/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
@@ -94,10 +97,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
     	
         URL wsdlUrl = ExchangeWebService.class.getResource("/Services.wsdl");
-        ExchangeWebService factory =
-            new ExchangeWebService(wsdlUrl,
+        factory = new ExchangeWebService(wsdlUrl,
                 new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
                     "ExchangeWebService"));
+    }
+
+    boolean initService(ServerInfo info) throws MalformedURLException {
         service = factory.getExchangeWebPort();
 
         ((BindingProvider)service).getRequestContext()
@@ -142,14 +147,14 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         }
     };
 
-    /* Enable the following static block to accept self signed certificates */
-    // private static void setSSLConfig() throws Exception {
-    // SSLContext context = SSLContext.getInstance("SSL");
-    // context.init(null, trustAllCerts, new SecureRandom());
-    // HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
-    // HttpsURLConnection.setDefaultHostnameVerifier(hv);
-    //
-    // }
+    /* Enable and call the following static block in initService() to accept self signed certificates */
+    /* private static void setSSLConfig() throws Exception {
+         SSLContext context = SSLContext.getInstance("SSL");
+         context.init(null, trustAllCerts, new SecureRandom());
+         HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
+         HttpsURLConnection.setDefaultHostnameVerifier(hv);
+     }
+    */
 
     private static class BasicUserResolver implements ExchangeUserResolver {
         @Override
@@ -528,7 +533,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         }
         if (null == service) {
             try {
-                if (!Initialize(serverInfo)) {
+                if (!initService(serverInfo)) {
                     ZimbraLog.fb.error("failed to initialize exchange service object " +
                         serverInfo.url);
                     ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
@@ -869,11 +874,15 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     public static int checkAuth(ServerInfo info, Account requestor)
         throws ServiceException, IOException {
-        // TODO make a dummy call to check we're passing
-        if (null != service) {
-            return 200;
+        ExchangeEWSFreeBusyProvider provider = new ExchangeEWSFreeBusyProvider();
+        provider.initService(info);
+        FolderType publicFolderRoot =
+            (FolderType)provider.bindFolder(DistinguishedFolderIdNameType.PUBLICFOLDERSROOT,
+                DefaultShapeNamesType.ALL_PROPERTIES);
+        if (publicFolderRoot == null) {
+            return 400;
         }
-        return 400;
+        return 200;
     }
 
     public ExchangeEWSFreeBusyProvider getInstance() {
@@ -890,7 +899,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             if (info != null) {
                 if (null == service) {
                     try {
-                        Initialize(info);
+                        initService(info);
                     } catch (MalformedURLException e) {
                         ZimbraLog.fb.warn("failed to initialize provider", e);
                     }
@@ -963,18 +972,27 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return EXCHANGE_EWS;
     }
 
+    @Override
     public int registerForItemTypes() {
-		return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT);
-	}
+        return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT);
+    }
+    
+    private long getTimeInterval(String attr, String accountId, long defaultValue) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        if (accountId != null) {
+            Account acct = prov.get(AccountBy.id, accountId);
+            if (acct != null) {
+                return acct.getTimeInterval(attr, defaultValue);
+            }
+        }
+        return prov.getConfig().getTimeInterval(attr, defaultValue);
+    }
 
     @Override
-    public long cachedFreeBusyStartTime() {
+    public long cachedFreeBusyStartTime(String accountId) {
         Calendar cal = GregorianCalendar.getInstance();
         try {
-            Config config = Provisioning.getInstance().getConfig();
-            long dur =
-                config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart,
-                    0);
+            long dur = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, accountId, 0);
             cal.setTimeInMillis(System.currentTimeMillis() - dur);
         } catch (ServiceException se) {
             // set to 1 week ago
@@ -989,21 +1007,28 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     @Override
-    public long cachedFreeBusyEndTime() {
+    public long cachedFreeBusyEndTime(String accountId) {
         long duration = Constants.MILLIS_PER_MONTH * 2;
         Calendar cal = GregorianCalendar.getInstance();
         try {
-            Config config = Provisioning.getInstance().getConfig();
-            duration =
-                config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval,
-                    duration);
+            duration = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, accountId, duration);
         } catch (ServiceException se) {}
-        cal.setTimeInMillis(cachedFreeBusyStartTime() + duration);
+        cal.setTimeInMillis(cachedFreeBusyStartTime(accountId) + duration);
         // normalize the time to 00:00:00
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         return cal.getTimeInMillis();
+    }
+    
+    @Override
+    public long cachedFreeBusyStartTime() {
+        return cachedFreeBusyStartTime(null);
+    }
+
+    @Override
+    public long cachedFreeBusyEndTime() {
+        return cachedFreeBusyEndTime(null);
     }
 
     @Override

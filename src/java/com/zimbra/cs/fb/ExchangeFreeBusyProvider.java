@@ -37,8 +37,6 @@ import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -50,7 +48,6 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -243,11 +240,22 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         return getServerInfo(email) != null;
 	}
 	
-	public long cachedFreeBusyStartTime() {
+    private long getTimeInterval(String attr, String accountId, long defaultValue) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        if (accountId != null) {
+            Account acct = prov.get(AccountBy.id, accountId);
+            if (acct != null) {
+                return acct.getTimeInterval(attr, defaultValue);
+            }
+        }
+        return prov.getConfig().getTimeInterval(attr, defaultValue);
+    }
+	
+    @Override
+	public long cachedFreeBusyStartTime(String accountId) {
 		Calendar cal = GregorianCalendar.getInstance();
 		try {
-			Config config = Provisioning.getInstance().getConfig();
-			long dur = config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 0);
+			long dur = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, accountId, 0);
 			cal.setTimeInMillis(System.currentTimeMillis() - dur);
 		} catch (ServiceException se) {
 			// set to 1 week ago
@@ -259,13 +267,13 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		cal.set(Calendar.SECOND, 0);
 		return cal.getTimeInMillis();
 	}
-	
-	public long cachedFreeBusyEndTime() {
+
+    @Override
+	public long cachedFreeBusyEndTime(String accountId) {
 		long duration = Constants.MILLIS_PER_MONTH * 2;
 		Calendar cal = GregorianCalendar.getInstance();
 		try {
-			Config config = Provisioning.getInstance().getConfig();
-			duration = config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, duration);
+			duration = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, accountId, duration);
 		} catch (ServiceException se) {
 		}
 		cal.setTimeInMillis(cachedFreeBusyStartTime() + duration);
@@ -275,6 +283,16 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		cal.set(Calendar.SECOND, 0);
 		return cal.getTimeInMillis();
 	}
+    
+    @Override
+    public long cachedFreeBusyStartTime() {
+        return cachedFreeBusyStartTime(null);
+    }
+
+    @Override
+    public long cachedFreeBusyEndTime() {
+        return cachedFreeBusyEndTime(null);
+    }
 	
 	public boolean handleMailboxChange(String accountId) {
 		String email = getEmailAddress(accountId);

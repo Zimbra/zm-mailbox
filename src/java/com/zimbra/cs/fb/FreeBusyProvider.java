@@ -77,7 +77,9 @@ public abstract class FreeBusyProvider {
 	public abstract int registerForItemTypes();
 	public abstract boolean handleMailboxChange(String accountId);
 	public abstract long cachedFreeBusyStartTime();
+	public abstract long cachedFreeBusyStartTime(String accountId);
 	public abstract long cachedFreeBusyEndTime();
+	public abstract long cachedFreeBusyEndTime(String accountId);
 	public abstract String foreignPrincipalPrefix();
 	
 	public static void register(FreeBusyProvider p) {
@@ -165,7 +167,7 @@ public abstract class FreeBusyProvider {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
 		if (mbox == null)
 			return null;
-		return mbox.getFreeBusy(null, cachedFreeBusyStartTime(), cachedFreeBusyEndTime(), folderId);
+		return mbox.getFreeBusy(null, cachedFreeBusyStartTime(accountId), cachedFreeBusyEndTime(accountId), folderId);
 	}
 	
 	protected String getEmailAddress(String accountId) {
