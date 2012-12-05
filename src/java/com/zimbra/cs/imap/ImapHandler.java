@@ -1948,8 +1948,17 @@ abstract class ImapHandler extends ProtocolHandler {
 
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(mCredentials)) {
-            Folder folder = (Folder) path.getFolder();
-            return folder.isTagged(Flag.ID_FLAG_SUBSCRIBED);
+            Object folderObj = path.getFolder();
+            if (folderObj instanceof Folder) {
+                Folder folder = (Folder) path.getFolder();
+                return folder.isTagged(Flag.ID_FLAG_SUBSCRIBED);
+            } else if (folderObj instanceof ZFolder) {
+                ZFolder folder = (ZFolder) path.getFolder();
+                return folder.isIMAPSubscribed();
+            } else {
+                ZimbraLog.imap.info("Unexpected class %s for folder for path %s",
+                        folderObj.getClass().getName(), path.asZimbraPath());
+            }
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
                 if (sub.equalsIgnoreCase(path.asImapPath()))
