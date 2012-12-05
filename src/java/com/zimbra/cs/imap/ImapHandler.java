@@ -2170,8 +2170,17 @@ abstract class ImapHandler {
 
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(credentials)) {
-            Folder folder = (Folder) path.getFolder();
-            return folder.isTagged(Flag.FlagInfo.SUBSCRIBED);
+            Object folderObj = path.getFolder();
+            if (folderObj instanceof Folder) {
+                Folder folder = (Folder) path.getFolder();
+                return folder.isTagged(Flag.FlagInfo.SUBSCRIBED);
+            } else if (folderObj instanceof ZFolder) {
+                ZFolder folder = (ZFolder) path.getFolder();
+                return folder.isIMAPSubscribed();
+            } else {
+                ZimbraLog.imap.info("Unexpected class %s for folder for path %s",
+                        folderObj.getClass().getName(), path.asZimbraPath());
+            }
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
                 if (sub.equalsIgnoreCase(path.asImapPath())) {
