@@ -3131,33 +3131,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     public MimeMessage getMimeMessage() throws ServiceException {
-        InputStream is = null;
-        MimeMessage mm = null;
-        try {
-            is = getRawMessage();
-            if (is == null)
-                return null;
-            mm = new ZMimeMessage(JMSession.getSession(), is);
-            ByteUtil.closeStream(is);
-
-            try {
-                for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
-                    visitor.newInstance().accept(mm);
-            } catch (Exception e) {
-                // If the conversion bombs for any reason, revert to the original
-                ZimbraLog.mailbox.warn(
-                    "MIME converter failed for message " + getId(), e);
-                is = getRawMessage();
-                mm = new ZMimeMessage(JMSession.getSession(), is);
-                ByteUtil.closeStream(is);
-            }
-
-            return mm;
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
-        } finally {
-            ByteUtil.closeStream(is);
-        }
+        return MessageCache.getMimeMessage(this, !DebugConfig.disableMimeConvertersForCalendarBlobs);
     }
 
     /**
@@ -3199,37 +3173,26 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     private MimeBodyPart findBodyBySubId(int subId) throws ServiceException {
         if (getSize() <= 0)
             return null;
-        InputStream is = null;
         MimeMessage mm = null;
         try {
-            is = getRawMessage();
-            if (is == null)
-                return null;
-            mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            ByteUtil.closeStream(is);
-
-            if (!DebugConfig.disableMimeConvertersForCalendarBlobs) {
-                try {
-                    for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
-                        visitor.newInstance().accept(mm);
-                } catch (Exception e) {
-                    // If the conversion bombs for any reason, revert to the original
-                    ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
-                    is = getRawMessage();
-                    mm = new MimeMessage(JMSession.getSession(), is);
-                    ByteUtil.closeStream(is);
-                }
-            }
-
+            mm = MessageCache.getMimeMessage(this, !DebugConfig.disableMimeConvertersForCalendarBlobs);
             // It should be multipart/digest.
             MimeMultipart mmp;
-            Object obj = mm.getContent();
-            if (obj instanceof MimeMultipart)
-                mmp = (MimeMultipart) obj;
-            else
-                throw ServiceException.FAILURE(
+            Object obj = null;
+            try {
+                obj = mm.getContent();
+                if (obj instanceof MimeMultipart) {
+                    mmp = (MimeMultipart) obj;
+                } else {
+                    throw ServiceException.FAILURE(
                         "Expected MimeMultipart, but got " + obj.getClass().getName() +
                         ": id=" + mId + ", content=" + obj.toString(), null);
+                }
+            } finally {
+                if (obj instanceof InputStream) {
+                    ByteUtil.closeStream((InputStream)obj);
+                }
+            }
 
             // find the matching parts...
             int numParts = mmp.getCount();
@@ -3246,8 +3209,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
-        } finally {
-            ByteUtil.closeStream(is);
         }
     }
 
