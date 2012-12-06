@@ -159,14 +159,14 @@ public class GalExtraSearchFilter {
     
         public void enterMulti(Multi term) {
             parentTerms.push(term);
-            if (term.isNegation()) 
-                query.append("-(");
+            if (term.isNegation()) {
+                query.append("-");
+            }
+            query.append("(");
         }
     
         public void leaveMulti(Multi term) {
-            if (term.isNegation()) 
-                query.append(')');
-            
+            query.append(')');
             parentTerms.remove(term);
         }
     }
