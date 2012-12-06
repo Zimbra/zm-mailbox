@@ -174,7 +174,7 @@ public class GalSearchControl {
         synchronized (SyncClients) {
             // allow the sync only when the # of sync clients
             // are within the capacity.
-            if (SyncClients.size() < capacity) {
+            if (capacity == 0 || SyncClients.size() < capacity) {
                 SyncClients.add(id);
                 limitReached = false;
             }
