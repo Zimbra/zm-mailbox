@@ -7108,4 +7108,8 @@ TODO: delete them permanently from here
   <desc>whether mobile sync should zip the skipped item and attach it to the notification mail</desc>
 </attr>
 
+<attr id="1424" name="zimbraPrefColorMessagesEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.0.3">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not to use tag color as the color for message items</desc>
+</attr>
 </attrs>

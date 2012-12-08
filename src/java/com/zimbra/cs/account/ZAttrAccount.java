@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20121128-1557 */
+    /* build: 9.0.0_BETA1_1111 dywang 20121207-1529 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -34163,6 +34163,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefClientType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefClientType, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to use tag color as the color for message items
+     *
+     * @return zimbraPrefColorMessagesEnabled, or false if unset
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1424)
+    public boolean isPrefColorMessagesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefColorMessagesEnabled, false);
+    }
+
+    /**
+     * whether or not to use tag color as the color for message items
+     *
+     * @param zimbraPrefColorMessagesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1424)
+    public void setPrefColorMessagesEnabled(boolean zimbraPrefColorMessagesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefColorMessagesEnabled, zimbraPrefColorMessagesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to use tag color as the color for message items
+     *
+     * @param zimbraPrefColorMessagesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1424)
+    public Map<String,Object> setPrefColorMessagesEnabled(boolean zimbraPrefColorMessagesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefColorMessagesEnabled, zimbraPrefColorMessagesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to use tag color as the color for message items
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1424)
+    public void unsetPrefColorMessagesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefColorMessagesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to use tag color as the color for message items
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1424)
+    public Map<String,Object> unsetPrefColorMessagesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefColorMessagesEnabled, "");
         return attrs;
     }
 
