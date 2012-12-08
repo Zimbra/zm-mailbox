@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20121128-1557 */
+    /* build: 9.0.0_BETA1_1111 dywang 20121207-1529 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8356,6 +8356,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=453)
     public static final String A_zimbraPrefClientType = "zimbraPrefClientType";
+
+    /**
+     * whether or not to use tag color as the color for message items
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1424)
+    public static final String A_zimbraPrefColorMessagesEnabled = "zimbraPrefColorMessagesEnabled";
 
     /**
      * direction for composing messages in the web client UI
