@@ -7079,4 +7079,9 @@ TODO: delete them permanently from here
   <desc>whether ldap based galsync disabled or not</desc>
 </attr>
 
+<attr id="1424" name="zimbraPrefColorMessagesEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.0.3">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not to use tag color as the color for message items</desc>
+</attr>
+</attrs>
 </attrs>
