@@ -98,6 +98,76 @@ public class DbBlobConsistency {
         return blobs;
     }
 
+
+    public static Collection<BlobInfo> getExternalMailItemBlobInfo(DbConnection conn, Mailbox mbox, int minId, int maxId) throws ServiceException {
+        return getExternalMailItemBlobInfo(conn, mbox, minId, maxId, false);
+    }
+
+    public static Collection<BlobInfo> getExternalMailItemDumpsterBlobInfo(DbConnection conn, Mailbox mbox, int minId, int maxId) throws ServiceException {
+        return getExternalMailItemBlobInfo(conn, mbox, minId, maxId, true);
+    }
+
+    private static Collection<BlobInfo> getExternalMailItemBlobInfo(DbConnection conn, Mailbox mbox, int minId, int maxId, boolean dumpster) throws ServiceException {
+        String query = "SELECT id, mod_content, 0, size, locator " +
+                        "FROM " + DbMailItem.getMailItemTableName(mbox, dumpster) +
+                        " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                        " id BETWEEN " + minId + " AND " + maxId +
+                        " AND blob_digest IS NOT NULL";
+        return getExternalBlobInfo(conn, mbox, query);
+    }
+
+    public static Collection<BlobInfo> getExternalRevisionBlobInfo(DbConnection conn, Mailbox mbox, int minId, int maxId) throws ServiceException {
+        return getExternalRevisionBlobInfo(conn, mbox, minId, maxId, false);
+    }
+
+    public static Collection<BlobInfo> getExternalRevisionDumpsterBlobInfo(DbConnection conn, Mailbox mbox, int minId, int maxId) throws ServiceException {
+        return getExternalRevisionBlobInfo(conn, mbox, minId, maxId, true);
+    }
+
+    private static Collection<BlobInfo> getExternalRevisionBlobInfo(DbConnection conn, Mailbox mbox, int minId, int maxId, boolean dumpster) throws ServiceException {
+        String query = "SELECT item_id, mod_content, version, size, locator " +
+                        "FROM " + DbMailItem.getRevisionTableName(mbox, dumpster) +
+                        " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                        " item_id BETWEEN " + minId + " AND " + maxId +
+                        " AND blob_digest IS NOT NULL";
+        return getExternalBlobInfo(conn, mbox, query);
+    }
+
+    private static Collection<BlobInfo> getExternalBlobInfo(DbConnection conn, Mailbox mbox, String query)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<BlobInfo> blobs = new ArrayList<BlobInfo>();
+
+        try {
+            stmt = conn.prepareStatement(query);
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(1, mbox.getId());
+            }
+            Db.getInstance().enableStreaming(stmt);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                BlobInfo info = new BlobInfo();
+                info.itemId = rs.getInt(1);
+                info.modContent = rs.getInt(2);
+                info.version = rs.getInt(3);
+                info.dbSize = rs.getLong(4);
+                info.path = rs.getString(5);
+                info.external = true;
+                blobs.add(info);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting items with blobs for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.quietCloseStatement(stmt);
+        }
+
+        return blobs;
+    }
+
+
+
     public static int getMaxId(DbConnection conn, Mailbox mbox)
     throws ServiceException {
         int maxId = 0;

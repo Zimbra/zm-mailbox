@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -48,59 +48,69 @@ public class BlobConsistencyUtil {
     private static final String LO_INCORRECT_REVISION_RENAME_FILE = "incorrect-revision-rename-file";
     private static final String LO_EXPORT_DIR = "export-dir";
     private static final String LO_NO_EXPORT = "no-export";
-    
-    private Options mOptions;
-    private List<Integer> mMailboxIds;
-    private List<Short> mVolumeIds = new ArrayList<Short>();
-    private boolean mSkipSizeCheck = false;
-    private boolean mVerbose = false;
-    private String mUnexpectedBlobList;
-    private PrintWriter mUnexpectedBlobWriter;
-    private boolean mMissingBlobDeleteItem = false;
-    private boolean mNoExport = false;
-    private String mExportDir;
-    private boolean mIncorrectRevisionRenameFile = false;
-    
+    private static final String LO_OUTPUT_USED_BLOBS = "output-used-blobs";
+    private static final String LO_USED_BLOB_LIST = "used-blob-list";
+
+    private Options options;
+    private List<Integer> mailboxIds;
+    private List<Short> volumeIds = new ArrayList<Short>();
+    private boolean skipSizeCheck = false;
+    private boolean verbose = false;
+    private String unexpectedBlobList;
+    private PrintWriter unexpectedBlobWriter;
+    private boolean missingBlobDeleteItem = false;
+    private boolean noExport = false;
+    private String exportDir;
+    private boolean incorrectRevisionRenameFile = false;
+    private boolean outputUsedBlobs = false;
+    private String usedBlobList;
+    private PrintWriter usedBlobWriter;
+
     private BlobConsistencyUtil() {
-        mOptions = new Options();
-        
-        mOptions.addOption(new Option("h", LO_HELP, false, "Display this help message."));
-        mOptions.addOption(new Option("v", LO_VERBOSE, false, "Display verbose output.  Display stack trace on error."));
-        mOptions.addOption(new Option(null, LO_SKIP_SIZE_CHECK, false, "Skip blob size check."));
-        
+        options = new Options();
+
+        options.addOption(new Option("h", LO_HELP, false, "Display this help message."));
+        options.addOption(new Option("v", LO_VERBOSE, false, "Display verbose output.  Display stack trace on error."));
+        options.addOption(new Option(null, LO_SKIP_SIZE_CHECK, false, "Skip blob size check."));
+        options.addOption(new Option(null, LO_OUTPUT_USED_BLOBS, false, "Output listing of all blobs referenced by the mailbox(es)"));
+
         Option o = new Option(null, LO_VOLUMES, true, "Specify which volumes to check.  If not specified, check all volumes.");
         o.setArgName("volume-ids");
-        mOptions.addOption(o);
-        
+        options.addOption(o);
+
         o = new Option("m", LO_MAILBOXES, true, "Specify which mailboxes to check.  If not specified, check all mailboxes.");
         o.setArgName("mailbox-ids");
-        mOptions.addOption(o);
-        
+        options.addOption(o);
+
         o = new Option(null, LO_UNEXPECTED_BLOB_LIST, true, "Write the paths of any unexpected blobs to a file.");
         o.setArgName("path");
-        mOptions.addOption(o);
-        
-        mOptions.addOption(null, LO_MISSING_BLOB_DELETE_ITEM, false, "Delete any items that have a missing blob.");
-        
+        options.addOption(o);
+
+        o = new Option(null, LO_USED_BLOB_LIST, true, "Write the paths of all used blobs to a file.");
+        o.setArgName("path");
+        options.addOption(o);
+
+        options.addOption(null, LO_MISSING_BLOB_DELETE_ITEM, false, "Delete any items that have a missing blob.");
+
         o = new Option(null, LO_EXPORT_DIR, true, "Target directory for database export files.");
         o.setArgName("path");
-        mOptions.addOption(o);
-        
-        mOptions.addOption(null, LO_NO_EXPORT, false, "Delete items without exporting.");
-        mOptions.addOption(new Option(null, LO_INCORRECT_REVISION_RENAME_FILE, false,
+        options.addOption(o);
+
+        options.addOption(null, LO_NO_EXPORT, false, "Delete items without exporting.");
+        options.addOption(new Option(null, LO_INCORRECT_REVISION_RENAME_FILE, false,
             "Rename the file on disk when the revision number doesn't match."));
     }
-    
+
     private void usage(String errorMsg) {
         int exitStatus = 0;
-        
+
         if (errorMsg != null) {
             System.err.println(errorMsg);
             exitStatus = 1;
         }
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
-            "zmblobchk [options] start", null, mOptions, 2, 2,
+            "zmblobchk [options] start", null, options, 2, 2,
             "\nThe \"start\" command is required, to avoid unintentionally running a blob check.  " +
             "Id values are separated by commas.");
         System.exit(exitStatus);
@@ -109,8 +119,8 @@ public class BlobConsistencyUtil {
     private void parseArgs(String[] args)
     throws ParseException {
         GnuParser parser = new GnuParser();
-        CommandLine cl = parser.parse(mOptions, args);
-        
+        CommandLine cl = parser.parse(options, args);
+
         if (CliUtil.hasOption(cl, LO_HELP)) {
             usage(null);
         }
@@ -119,71 +129,81 @@ public class BlobConsistencyUtil {
         if (cl.getArgs().length == 0 || !cl.getArgs()[0].equals("start")) {
             usage(null);
         }
-        
+
         String volumeList = CliUtil.getOptionValue(cl, LO_VOLUMES);
         if (volumeList != null) {
             for (String id : volumeList.split(",")) {
                 try {
-                    mVolumeIds.add(Short.parseShort(id));
+                    volumeIds.add(Short.parseShort(id));
                 } catch (NumberFormatException e) {
                     usage("Invalid volume id: " + id);
                 }
             }
         }
-        
+
         String mailboxList = CliUtil.getOptionValue(cl, LO_MAILBOXES);
         if (mailboxList != null) {
-            mMailboxIds = new ArrayList<Integer>();
+            mailboxIds = new ArrayList<Integer>();
             for (String id : mailboxList.split(",")) {
                 try {
-                    mMailboxIds.add(Integer.parseInt(id));
+                    mailboxIds.add(Integer.parseInt(id));
                 } catch (NumberFormatException e) {
                     usage("Invalid mailbox id: " + id);
                 }
             }
         }
 
-        mSkipSizeCheck = CliUtil.hasOption(cl, LO_SKIP_SIZE_CHECK);
-        mVerbose = CliUtil.hasOption(cl, LO_VERBOSE);
-        mUnexpectedBlobList = CliUtil.getOptionValue(cl, LO_UNEXPECTED_BLOB_LIST);
-        mMissingBlobDeleteItem = CliUtil.hasOption(cl, LO_MISSING_BLOB_DELETE_ITEM);
-        mExportDir = CliUtil.getOptionValue(cl, LO_EXPORT_DIR);
-        
-        if (mMissingBlobDeleteItem) {
+        skipSizeCheck = CliUtil.hasOption(cl, LO_SKIP_SIZE_CHECK);
+        verbose = CliUtil.hasOption(cl, LO_VERBOSE);
+        unexpectedBlobList = CliUtil.getOptionValue(cl, LO_UNEXPECTED_BLOB_LIST);
+        missingBlobDeleteItem = CliUtil.hasOption(cl, LO_MISSING_BLOB_DELETE_ITEM);
+        exportDir = CliUtil.getOptionValue(cl, LO_EXPORT_DIR);
+        outputUsedBlobs = CliUtil.hasOption(cl, LO_OUTPUT_USED_BLOBS);
+        usedBlobList = CliUtil.getOptionValue(cl, LO_USED_BLOB_LIST);
+
+        if (missingBlobDeleteItem) {
             // --export-dir overrides --no-export
-            if (mExportDir == null) {
-                mNoExport = CliUtil.hasOption(cl, LO_NO_EXPORT);
-                if (!mNoExport) {
+            if (exportDir == null) {
+                noExport = CliUtil.hasOption(cl, LO_NO_EXPORT);
+                if (!noExport) {
                     usage("Please specify either " + LO_EXPORT_DIR + " or " + LO_NO_EXPORT + " when using " + LO_MISSING_BLOB_DELETE_ITEM);
                 }
             }
         }
-        
-        mIncorrectRevisionRenameFile = CliUtil.hasOption(cl, LO_INCORRECT_REVISION_RENAME_FILE);
+
+        incorrectRevisionRenameFile = CliUtil.hasOption(cl, LO_INCORRECT_REVISION_RENAME_FILE);
     }
-    
+
     private void run()
     throws Exception {
-        if (mUnexpectedBlobList != null) {
-            mUnexpectedBlobWriter = new PrintWriter(new FileOutputStream(mUnexpectedBlobList), true);
+        if (unexpectedBlobList != null) {
+            unexpectedBlobWriter = new PrintWriter(new FileOutputStream(unexpectedBlobList), true);
         }
-        
+
+        if (usedBlobList != null) {
+            usedBlobWriter = new PrintWriter(new FileOutputStream(usedBlobList), true);
+        }
+
         CliUtil.toolSetup();
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
-        if (mMailboxIds == null) {
-            mMailboxIds = getAllMailboxIds(prov);
+        if (mailboxIds == null) {
+            mailboxIds = getAllMailboxIds(prov);
         }
-        for (int mboxId : mMailboxIds) {
+        for (int mboxId : mailboxIds) {
             System.out.println("Checking mailbox " + mboxId + ".");
             checkMailbox(mboxId, prov);
         }
-        
-        if (mUnexpectedBlobWriter != null) {
-            mUnexpectedBlobWriter.close();
+
+        if (unexpectedBlobWriter != null) {
+            unexpectedBlobWriter.close();
+        }
+
+        if (usedBlobWriter != null) {
+            usedBlobWriter.close();
         }
     }
-    
+
     private List<Integer> getAllMailboxIds(SoapProvisioning prov)
     throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
@@ -194,55 +214,74 @@ public class BlobConsistencyUtil {
         }
         return ids;
     }
-    
+
+    private String locatorText(BlobInfo blob) {
+        if (blob.external) {
+            return String.format("locator %s", blob.path);
+        } else {
+            return String.format("volume %d, %s", blob.volumeId, blob.path);
+        }
+    }
+
     private void checkMailbox(int mboxId, SoapProvisioning prov)
     throws ServiceException {
         XMLElement request = new XMLElement(AdminConstants.CHECK_BLOB_CONSISTENCY_REQUEST);
-        for (short volumeId : mVolumeIds) {
+        for (short volumeId : volumeIds) {
             request.addElement(AdminConstants.E_VOLUME).addAttribute(AdminConstants.A_ID, volumeId);
         }
         request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
-        request.addAttribute(AdminConstants.A_CHECK_SIZE, !mSkipSizeCheck);
-        
+        request.addAttribute(AdminConstants.A_CHECK_SIZE, !skipSizeCheck);
+        request.addAttribute(AdminConstants.A_REPORT_USED_BLOBS, outputUsedBlobs || usedBlobWriter != null);
+
         Element response = prov.invoke(request);
         for (Element mboxEl : response.listElements(AdminConstants.E_MAILBOX)) {
             // Print results.
             BlobConsistencyChecker.Results results = new BlobConsistencyChecker.Results(mboxEl);
             for (BlobInfo blob : results.missingBlobs.values()) {
-                System.out.format("Mailbox %d, item %d, rev %d, volume %d, %s: blob not found.\n",
-                    results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path);
+                System.out.format("Mailbox %d, item %d, rev %d, %s: blob not found.\n",
+                    results.mboxId, blob.itemId, blob.modContent, locatorText(blob));
             }
             for (BlobInfo blob : results.incorrectSize.values()) {
                 System.out.format(
-                    "Mailbox %d, item %d, rev %d, volume %d, %s: incorrect data size.  Expected %d, was %d.  File size is %d.\n",
-                    results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path,
+                    "Mailbox %d, item %d, rev %d, %s: incorrect data size.  Expected %d, was %d.  File size is %d.\n",
+                    results.mboxId, blob.itemId, blob.modContent, locatorText(blob),
                     blob.dbSize, blob.fileDataSize,
                     blob.fileSize);
             }
             for (BlobInfo blob : results.unexpectedBlobs.values()) {
                 System.out.format(
-                    "Mailbox %d, volume %d, %s: unexpected blob.  File size is %d.\n",
-                    results.mboxId, blob.volumeId, blob.path, blob.fileSize);
-                if (mUnexpectedBlobWriter != null) {
-                    mUnexpectedBlobWriter.println(blob.path);
+                    "Mailbox %d, %s: unexpected blob.  File size is %d.\n",
+                    results.mboxId, locatorText(blob), blob.fileSize);
+                if (unexpectedBlobWriter != null) {
+                    unexpectedBlobWriter.println(blob.path);
                 }
             }
             for (BlobInfo blob : results.incorrectModContent.values()) {
                 System.out.format(
-                    "Mailbox %d, item %d, rev %d, volume %d, %s: file has incorrect revision.\n",
-                    results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path);
+                                "Mailbox %d, item %d, rev %d, %s: file has incorrect revision.\n",
+                                results.mboxId, blob.itemId, blob.modContent, locatorText(blob));
             }
-            
+            for (BlobInfo blob : results.usedBlobs.values()) {
+                if (outputUsedBlobs) {
+                    System.out.format(
+                                    "Used blob: Mailbox %d, item %d, rev %d, %s.\n",
+                                    results.mboxId, blob.itemId, blob.version, locatorText(blob));
+                }
+                if (usedBlobWriter != null) {
+                    usedBlobWriter.println(blob.path);
+                }
+            }
+
             // Fix inconsistencies.
-            if (mMissingBlobDeleteItem && results.missingBlobs.size() > 0) {
+            if (missingBlobDeleteItem && results.missingBlobs.size() > 0) {
                 exportAndDelete(prov, results);
             }
-            if (mIncorrectRevisionRenameFile) {
+            if (incorrectRevisionRenameFile) {
                 for (BlobInfo blob : results.incorrectModContent.values()) {
                     File file = new File(blob.path);
                     File dir = file.getParentFile();
                     if (dir != null) {
-                        File newFile = new File(dir, FileBlobStore.getFilename((int) blob.itemId, blob.modContent));
+                        File newFile = new File(dir, FileBlobStore.getFilename(blob.itemId, blob.modContent));
                         System.out.format("Renaming %s to %s.\n", file.getAbsolutePath(), newFile.getAbsolutePath());
                         if (!file.renameTo(newFile)) {
                             System.err.format("Unable to rename %s to %s.\n", file.getAbsolutePath(), newFile.getAbsolutePath());
@@ -254,13 +293,13 @@ public class BlobConsistencyUtil {
             }
         }
     }
-    
+
     private void exportAndDelete(SoapProvisioning prov, BlobConsistencyChecker.Results results)
     throws ServiceException {
         System.out.format("Deleting %d items from mailbox %d.\n", results.missingBlobs.size(), results.mboxId);
-        
+
         Element request = new XMLElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_REQUEST);
-        request.addAttribute(AdminConstants.A_EXPORT_DIR, mExportDir);
+        request.addAttribute(AdminConstants.A_EXPORT_DIR, exportDir);
         request.addAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, "mbox" + results.mboxId + "_");
         Element mboxEl = request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, results.mboxId);
         for (BlobInfo blob : results.missingBlobs.values()) {
@@ -271,17 +310,17 @@ public class BlobConsistencyUtil {
 
     public static void main(String[] args) {
         BlobConsistencyUtil app = new BlobConsistencyUtil();
-        
+
         try {
             app.parseArgs(args);
         } catch (ParseException e) {
             app.usage(e.getMessage());
         }
-        
+
         try {
             app.run();
         } catch (Exception e) {
-            if (app.mVerbose) {
+            if (app.verbose) {
                 e.printStackTrace(new PrintWriter(System.err, true));
             } else {
                 String msg = e.getMessage();
@@ -293,5 +332,5 @@ public class BlobConsistencyUtil {
             System.exit(1);
         }
     }
-    
+
 }

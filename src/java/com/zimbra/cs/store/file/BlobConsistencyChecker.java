@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -28,6 +29,7 @@ import java.util.zip.GZIPInputStream;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -35,7 +37,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -45,7 +47,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 
-public final class BlobConsistencyChecker {
+public class BlobConsistencyChecker {
 
     public static class BlobInfo {
         public int itemId;
@@ -58,14 +60,33 @@ public final class BlobConsistencyChecker {
         public int fileModContent;
         public Long fileDataSize;
         public Long fileSize;
+
+        public boolean external;
+        public IOException fetchException;
+        public String locator;
     }
 
     public static class Results {
         public int mboxId;
-        public Multimap<Integer, BlobInfo> missingBlobs = HashMultimap.create();
-        public Multimap<Integer, BlobInfo> incorrectSize = HashMultimap.create();
-        public Multimap<Integer, BlobInfo> unexpectedBlobs = HashMultimap.create();
-        public Multimap<Integer, BlobInfo> incorrectModContent = HashMultimap.create();
+        public Multimap<Integer, BlobInfo> missingBlobs = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> incorrectSize = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> unexpectedBlobs = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> incorrectModContent = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> usedBlobs = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+
+        class IntegerComparator implements Comparator<Integer> {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1.compareTo(o2);
+            }
+        }
+
+        class BlobInfoComparator implements Comparator<BlobInfo> {
+            @Override
+            public int compare(BlobInfo o1, BlobInfo o2) {
+                return o1.path.compareTo(o2.path);
+            }
+        }
 
         public Results() {
         }
@@ -83,6 +104,7 @@ public final class BlobConsistencyChecker {
                 blob.dbSize = item.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) item.getAttributeLong(AdminConstants.A_VOLUME_ID);
                 blob.path = item.getAttribute(AdminConstants.A_BLOB_PATH);
+                blob.external = item.getAttributeBool(AdminConstants.A_EXTERNAL, false);
                 missingBlobs.put(blob.itemId, blob);
             }
             for (Element itemEl : mboxElement.getElement(AdminConstants.E_INCORRECT_SIZE).listElements(AdminConstants.E_ITEM)) {
@@ -96,6 +118,7 @@ public final class BlobConsistencyChecker {
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileDataSize = blobEl.getAttributeLong(AdminConstants.A_SIZE);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
+                blob.external = blobEl.getAttributeBool(AdminConstants.A_EXTERNAL, false);
                 incorrectSize.put(blob.itemId, blob);
             }
             for (Element blobEl : mboxElement.getElement(AdminConstants.E_UNEXPECTED_BLOBS).listElements(AdminConstants.E_BLOB)) {
@@ -103,6 +126,7 @@ public final class BlobConsistencyChecker {
                 blob.volumeId = (short) blobEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
+                blob.external = blobEl.getAttributeBool(AdminConstants.A_EXTERNAL, false);
                 unexpectedBlobs.put(blob.itemId, blob);
             }
             for (Element itemEl : mboxElement.getElement(AdminConstants.E_INCORRECT_REVISION).listElements(AdminConstants.E_ITEM)) {
@@ -116,7 +140,21 @@ public final class BlobConsistencyChecker {
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
                 blob.fileModContent = (int) blobEl.getAttributeLong(MailConstants.A_REVISION);
+                blob.external = blobEl.getAttributeBool(AdminConstants.A_EXTERNAL, false);
                 incorrectModContent.put(blob.itemId, blob);
+            }
+            for (Element itemEl : mboxElement.getElement(AdminConstants.E_USED_BLOBS).listElements(AdminConstants.E_ITEM)) {
+                BlobInfo blob = new BlobInfo();
+                blob.itemId = (int) itemEl.getAttributeLong(AdminConstants.A_ID);
+                blob.version = (int) itemEl.getAttributeLong(AdminConstants.A_REVISION);
+                blob.dbSize = itemEl.getAttributeLong(AdminConstants.A_SIZE);
+                blob.volumeId = (short) itemEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
+
+                Element blobEl = itemEl.getElement(AdminConstants.E_BLOB);
+                blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
+                blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
+                blob.external = blobEl.getAttributeBool(AdminConstants.A_EXTERNAL, false);
+                usedBlobs.put(blob.itemId, blob);
             }
         }
 
@@ -130,6 +168,7 @@ public final class BlobConsistencyChecker {
             Element incorrectSizeEl = parent.addElement(AdminConstants.E_INCORRECT_SIZE);
             Element unexpectedBlobsEl = parent.addElement(AdminConstants.E_UNEXPECTED_BLOBS);
             Element incorrectRevisionEl = parent.addElement(AdminConstants.E_INCORRECT_REVISION);
+            Element usedBlobEl = parent.addElement(AdminConstants.E_USED_BLOBS);
 
             for (BlobInfo blob : missingBlobs.values()) {
                 missingEl.addElement(AdminConstants.E_ITEM)
@@ -137,7 +176,8 @@ public final class BlobConsistencyChecker {
                     .addAttribute(AdminConstants.A_REVISION, blob.modContent)
                     .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
                     .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
-                    .addAttribute(AdminConstants.A_BLOB_PATH, blob.path);
+                    .addAttribute(AdminConstants.A_BLOB_PATH, blob.path)
+                    .addAttribute(AdminConstants.A_EXTERNAL, blob.external);
             }
             for (BlobInfo blob : incorrectSize.values()) {
                 Element itemEl = incorrectSizeEl.addElement(AdminConstants.E_ITEM)
@@ -148,13 +188,15 @@ public final class BlobConsistencyChecker {
                 itemEl.addElement(AdminConstants.E_BLOB)
                     .addAttribute(AdminConstants.A_PATH, blob.path)
                     .addAttribute(AdminConstants.A_SIZE, blob.fileDataSize)
-                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
+                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize)
+                    .addAttribute(AdminConstants.A_EXTERNAL, blob.external);
             }
             for (BlobInfo blob : unexpectedBlobs.values()) {
                 unexpectedBlobsEl.addElement(AdminConstants.E_BLOB)
                     .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
                     .addAttribute(AdminConstants.A_PATH, blob.path)
-                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
+                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize)
+                    .addAttribute(AdminConstants.A_EXTERNAL, blob.external);
             }
             for (BlobInfo blob : incorrectModContent.values()) {
                 Element itemEl = incorrectRevisionEl.addElement(AdminConstants.E_ITEM)
@@ -165,30 +207,45 @@ public final class BlobConsistencyChecker {
                 itemEl.addElement(AdminConstants.E_BLOB)
                     .addAttribute(AdminConstants.A_PATH, blob.path)
                     .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize)
-                    .addAttribute(MailConstants.A_REVISION, blob.fileModContent);
+                    .addAttribute(MailConstants.A_REVISION, blob.fileModContent)
+                    .addAttribute(AdminConstants.A_EXTERNAL, blob.external);
+            }
+            for (BlobInfo blob : usedBlobs.values()) {
+                Element itemEl = usedBlobEl.addElement(AdminConstants.E_ITEM)
+                    .addAttribute(AdminConstants.A_ID, blob.itemId)
+                    .addAttribute(MailConstants.A_REVISION, blob.version)
+                    .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
+                    .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId);
+                itemEl.addElement(AdminConstants.E_BLOB)
+                    .addAttribute(AdminConstants.A_PATH, blob.path)
+                    .addAttribute(AdminConstants.A_SIZE, blob.fileDataSize)
+                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize)
+                    .addAttribute(AdminConstants.A_EXTERNAL, blob.external);
             }
         }
     }
 
-    private static final Log sLog = LogFactory.getLog(BlobConsistencyChecker.class);
-    private Results mResults;
-    private int mMailboxId;
-    private boolean mCheckSize = true;
+    protected static final Log log = ZimbraLog.store;
+    protected Results results;
+    protected int mailboxId;
+    protected boolean checkSize = true;
+    protected boolean reportUsedBlobs = false;
 
     public BlobConsistencyChecker() {
     }
 
-    public Results check(Collection<Short> volumeIds, int mboxId, boolean checkSize)
+    public Results check(Collection<Short> volumeIds, int mboxId, boolean checkSize, boolean reportUsedBlobs)
     throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         if (!(sm instanceof FileBlobStore)) {
             throw ServiceException.INVALID_REQUEST(sm.getClass().getSimpleName() + " is not supported", null);
         }
 
-        mMailboxId = mboxId;
-        mCheckSize = checkSize;
-        mResults = new Results();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
+        mailboxId = mboxId;
+        this.checkSize = checkSize;
+        this.reportUsedBlobs = reportUsedBlobs;
+        results = new Results();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
         DbConnection conn = null;
 
         try {
@@ -197,7 +254,7 @@ public final class BlobConsistencyChecker {
             for (short volumeId : volumeIds) {
                 Volume vol = VolumeManager.getInstance().getVolume(volumeId);
                 if (vol.getType() == Volume.TYPE_INDEX) {
-                    sLog.warn("Skipping index volume %d.  Only message volumes are supported.", vol.getId());
+                    log.warn("Skipping index volume %d.  Only message volumes are supported.", vol.getId());
                     continue;
                 }
                 int numGroups = 1 << vol.getFileGroupBits();
@@ -236,7 +293,7 @@ public final class BlobConsistencyChecker {
         } finally {
             DbPool.quietClose(conn);
         }
-        return mResults;
+        return results;
     }
 
     private static final Pattern PAT_BLOB_FILENAME = Pattern.compile("([0-9]+)-([0-9]+)\\.msg");
@@ -253,7 +310,7 @@ public final class BlobConsistencyChecker {
         if (files == null) {
             files = new File[0];
         }
-        sLog.info("Comparing %d items to %d files in %s.", blobsById.size(), files.length, blobDirPath);
+        log.info("Comparing %d items to %d files in %s.", blobsById.size(), files.length, blobDirPath);
         for (File file : files) {
             // Parse id and mod_content value from filename.
             Matcher matcher = PAT_BLOB_FILENAME.matcher(file.getName());
@@ -281,15 +338,17 @@ public final class BlobConsistencyChecker {
                 unexpected.volumeId = volumeId;
                 unexpected.path = file.getAbsolutePath();
                 unexpected.fileSize = file.length();
-                mResults.unexpectedBlobs.put(itemId, unexpected);
+                results.unexpectedBlobs.put(itemId, unexpected);
             } else {
                 blob.fileSize = file.length();
                 blob.fileModContent = modContent;
-
-                if (mCheckSize) {
+                if (reportUsedBlobs) {
+                    results.usedBlobs.put(blob.itemId, blob);
+                }
+                if (checkSize) {
                     blob.fileDataSize = getDataSize(file, blob.dbSize);
                     if (blob.dbSize != blob.fileDataSize) {
-                        mResults.incorrectSize.put(blob.itemId, blob);
+                        results.incorrectSize.put(blob.itemId, blob);
                     }
                 }
             }
@@ -297,17 +356,17 @@ public final class BlobConsistencyChecker {
 
         // Any remaining items have missing blobs.
         for (BlobInfo blob : blobsById.values()) {
-            mResults.missingBlobs.put(blob.itemId, blob);
+            results.missingBlobs.put(blob.itemId, blob);
         }
 
         // Redefining incorrect revisions for all items that support single revision
         // If there exists a single item with the same itemID in both missingBlobs and unexpectedBlobs
         // and if there aren't any items with same itemId in revisions then it is categorised as incorrect revision
-        Iterator<Integer> keyIterator = mResults.missingBlobs.keySet().iterator();
+        Iterator<Integer> keyIterator = results.missingBlobs.keySet().iterator();
         while (keyIterator.hasNext()) {
-            int itemId = (Integer) keyIterator.next();
-            List<BlobInfo> missingBlobs = new ArrayList<BlobInfo>(mResults.missingBlobs.get(itemId));
-            List<BlobInfo> unexpectedBlobs = new ArrayList<BlobInfo>(mResults.unexpectedBlobs.get(itemId));
+            int itemId = keyIterator.next();
+            List<BlobInfo> missingBlobs = new ArrayList<BlobInfo>(results.missingBlobs.get(itemId));
+            List<BlobInfo> unexpectedBlobs = new ArrayList<BlobInfo>(results.unexpectedBlobs.get(itemId));
             if (missingBlobs.size() == 1 && unexpectedBlobs.size() == 1 && revisions.get(itemId).size() == 0) {
                 BlobInfo incorrectRevision = new BlobInfo();
                 BlobInfo missingBlob = missingBlobs.get(0);
@@ -321,14 +380,14 @@ public final class BlobConsistencyChecker {
                 incorrectRevision.fileSize = unexpectedBlob.fileSize;
                 incorrectRevision.fileModContent = unexpectedBlob.fileModContent;
 
-                mResults.incorrectModContent.put(incorrectRevision.itemId, incorrectRevision);
+                results.incorrectModContent.put(incorrectRevision.itemId, incorrectRevision);
                 keyIterator.remove();
-                mResults.unexpectedBlobs.removeAll(itemId);
+                results.unexpectedBlobs.removeAll(itemId);
             }
         }
     }
 
-    private static long getDataSize(File file, long expected)
+    protected long getDataSize(File file, long expected)
     throws IOException {
         long fileLen = file.length();
         if (fileLen != expected && FileUtil.isGzipped(file)) {
@@ -337,4 +396,5 @@ public final class BlobConsistencyChecker {
             return fileLen;
         }
     }
+
 }

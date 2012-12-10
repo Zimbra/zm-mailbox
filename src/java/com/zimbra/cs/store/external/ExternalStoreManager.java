@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
@@ -164,10 +166,13 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         return new BlobInputStream(blob);
     }
 
-    protected Blob getLocalBlob(Mailbox mbox, String locator) throws IOException {
-        FileCache.Item cached = localCache.get(locator);
-        if (cached != null) {
-            return new ExternalBlob(cached);
+    protected Blob getLocalBlob(Mailbox mbox, String locator, boolean fromCache) throws IOException {
+        FileCache.Item cached = null;
+        if (fromCache) {
+            cached = localCache.get(locator);
+            if (cached != null) {
+                return new ExternalBlob(cached);
+            }
         }
 
         InputStream is = readStreamFromStore(locator, mbox);
@@ -177,6 +182,10 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
             cached = localCache.put(locator, is);
             return new ExternalBlob(cached);
         }
+    }
+
+    protected Blob getLocalBlob(Mailbox mbox, String locator) throws IOException {
+        return getLocalBlob(mbox, locator, true);
     }
 
     @Override
@@ -272,6 +281,16 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
         return builder.init().append(data).finish();
+    }
+
+    /**
+     * Get a set of all blobs which exist in the store associated with a mailbox
+     * Optional operation used to find orphaned blobs
+     * If the blob store does not partition based on mailbox this method should not be overridden
+     * @throws IOException
+     */
+    public List<String> getAllBlobPaths(Mailbox mbox) throws IOException {
+        return new ArrayList<String>();
     }
 
     @Override
