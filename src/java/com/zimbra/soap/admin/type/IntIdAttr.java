@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,22 +15,21 @@
 
 package com.zimbra.soap.admin.type;
 
+import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class IntIdAttr {
 
     /**
      * @zm-api-field-tag id
      * @zm-api-field-description ID
      */
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    @XmlAttribute(name=AdminConstants.A_ID /* id */, required=true)
     private final int id;
 
     /**
@@ -46,4 +45,14 @@ public class IntIdAttr {
     }
 
     public int getId() { return id; }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("id", id);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
+    }
 }
