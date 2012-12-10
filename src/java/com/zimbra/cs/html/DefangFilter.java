@@ -88,9 +88,12 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern VALID_EXT_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_INT_IMG = Pattern.compile("^data:|^cid:");
     private static final Pattern VALID_IMG_FILE = Pattern.compile("\\.(jpg|jpeg|png|gif)$");
-    
+
     // matches the file format that convertd uses so it doesn't get 'pnsrc'ed
-    private static final Pattern VALID_CONVERTD_FILE = Pattern.compile("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
+    private static final Pattern VALID_CONVERTD_FILE = Pattern.compile("^index\\..*\\..*\\.(jpg|jpeg|png|gif)");
+
+    //regex for external image URLs with params
+    private static final Pattern VALID_EXT_URL_WITH_PARAMS = Pattern.compile("[^(\\)](.*)[(jpg|jpeg|png|gif)](\\w*=\\w*&)+");
 
     //
     // Data
@@ -667,7 +670,8 @@ public class DefangFilter extends DefaultFilter {
         if(aName.equals("src")) {
             if (!(VALID_EXT_URL.matcher(value).find() ||
                 VALID_INT_IMG.matcher(value).find() ||
-                VALID_IMG_FILE.matcher(value).find())) {
+                VALID_IMG_FILE.matcher(value).find() ||
+                VALID_EXT_URL_WITH_PARAMS.matcher(value).find())) {
                 attributes.setValue(i, "#");
                 return false;
             }

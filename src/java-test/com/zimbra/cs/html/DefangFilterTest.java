@@ -396,4 +396,15 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("(min-height: 750px) and (max-height: 770px)"));
 
     }
+
+    @Test
+    public void testBug73874() throws Exception {
+        String fileName = "bug_73874.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+
+        // and make sure we have the the complete URL for
+        Assert.assertTrue(result.contains("thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?version=1&modificationDate=1335967057000"));
+    }
 }
