@@ -33,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
@@ -2097,6 +2098,10 @@ abstract class ImapHandler {
         }
     }
 
+    private static boolean pathMatches(SubscribedImapPath path, Pattern pattern) {
+        return pattern.matcher(path.asImapPath().toUpperCase()).matches();
+    }
+
     private static boolean pathMatches(ImapPath path, Pattern pattern) {
         return pattern.matcher(path.asImapPath().toUpperCase()).matches();
     }
@@ -2208,13 +2213,14 @@ abstract class ImapHandler {
             // you cannot access your own mailbox via the /home/username mechanism
             String owner = patternPath.getOwner();
             if (owner == null || owner.indexOf('*') != -1 || owner.indexOf('%') != -1 || !patternPath.belongsTo(credentials)) {
-                Map<ImapPath, Boolean> hits = new HashMap<ImapPath, Boolean>();
+                Map<SubscribedImapPath, Boolean> hits = new HashMap<SubscribedImapPath, Boolean>();
 
                 if (owner == null) {
                     Mailbox mbox = credentials.getMailbox();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
                         if (folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
-                            checkSubscription(new ImapPath(null, folder, credentials), pattern, childPattern, hits);
+                            checkSubscription(new SubscribedImapPath(
+                                    new ImapPath(null, folder, credentials)), pattern, childPattern, hits);
                         }
                     }
                 }
@@ -2224,13 +2230,13 @@ abstract class ImapHandler {
                     for (String sub : remoteSubscriptions) {
                         ImapPath subscribed = new ImapPath(sub, credentials);
                         if ((owner == null) == (subscribed.getOwner() == null)) {
-                            checkSubscription(subscribed, pattern, childPattern, hits);
+                            checkSubscription(new SubscribedImapPath(subscribed), pattern, childPattern, hits);
                         }
                     }
                 }
 
                 subscriptions = new ArrayList<String>(hits.size());
-                for (Map.Entry<ImapPath, Boolean> hit : hits.entrySet()) {
+                for (Entry<SubscribedImapPath, Boolean> hit : hits.entrySet()) {
                     String attrs = hit.getValue() ? "" : "\\NoSelect";
                     subscriptions.add("LSUB (" + attrs + ") \"/\" " + hit.getKey().asUtf7String());
                 }
@@ -2252,7 +2258,49 @@ abstract class ImapHandler {
         return true;
     }
 
-    private void checkSubscription(ImapPath path, Pattern pattern, Pattern childPattern, Map<ImapPath, Boolean> hits)
+    /**
+     * Lightweight version of ImapPath, designed to avoid heap bloat in Map used during gathering of information for
+     * LSUB - see Bug 78659
+     */
+    private class SubscribedImapPath implements Comparable<SubscribedImapPath> {
+        private String imapPathString;
+        private boolean visible;
+        public SubscribedImapPath(ImapPath path) throws ServiceException {
+            visible = path.isVisible();
+            imapPathString = path.asImapPath();
+        }
+        public boolean isVisible() throws ServiceException {
+            return visible;
+        }
+        public String asImapPath() {
+            return imapPathString;
+        }
+        public String asUtf7String() {
+            return ImapPath.asUtf7String(imapPathString);
+        }
+
+        public void addUnsubsribedMatchingParents(Pattern pattern, Map<SubscribedImapPath, Boolean> hits) throws ServiceException {
+            int delimiter = imapPathString.lastIndexOf('/');
+            String pathString = imapPathString;
+            ImapPath path;
+            while (delimiter > 0) {
+                path = new ImapPath(pathString.substring(0, delimiter), credentials);
+                pathString = path.asImapPath();
+                SubscribedImapPath subsPath = new SubscribedImapPath(path);
+                if (!hits.containsKey(subsPath) && pathMatches(path, pattern)) {
+                    hits.put(subsPath, Boolean.FALSE);
+                }
+                delimiter = pathString.lastIndexOf('/');
+            }
+        }
+
+        @Override
+        public int compareTo(SubscribedImapPath other) {
+            return asImapPath().compareToIgnoreCase(other.asImapPath());
+        }
+    }
+    
+    private void checkSubscription(SubscribedImapPath path, Pattern pattern, Pattern childPattern, Map<SubscribedImapPath, Boolean> hits)
             throws ServiceException {
         try {
             if (!path.isVisible()) { // hidden folders are not exposed even if subscribed
@@ -2281,14 +2329,7 @@ abstract class ImapHandler {
         //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
 
         // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
-        int delimiter = path.asImapPath().lastIndexOf('/');
-        while (delimiter > 0) {
-            path = new ImapPath(path.asImapPath().substring(0, delimiter), credentials);
-            if (!hits.containsKey(path) && pathMatches(path, pattern)) {
-                hits.put(path, Boolean.FALSE);
-            }
-            delimiter = path.asImapPath().lastIndexOf('/');
-        }
+        path.addUnsubsribedMatchingParents(pattern, hits);
     }
 
     static final int STATUS_MESSAGES      = 0x01;
