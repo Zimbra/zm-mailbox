@@ -15,6 +15,12 @@
 
 package com.zimbra.cs.html;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.regex.Pattern;
+
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -26,12 +32,6 @@ import org.apache.xerces.xni.XNIException;
 import org.cyberneko.html.filters.DefaultFilter;
 
 import com.google.common.base.Strings;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.regex.Pattern;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * very Mutated version of ElementRemover.java filter from cyberneko html.
@@ -87,7 +87,7 @@ public class DefangFilter extends DefaultFilter {
     // regex for URLs href. TODO: beef this up
 	private static final Pattern VALID_EXT_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_INT_IMG = Pattern.compile("^data:|^cid:|\\.(jpg|jpeg|png|gif)$");
-
+    
     //
     // Data
     //
@@ -411,7 +411,7 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern COMMENT = Pattern.compile("/\\*.*\\*/");
     // matches functions (like url(), expression(), etc), except rgb()
     private static final Pattern STYLE_UNWANTED_FUNC =
-            Pattern.compile("[\\S&&[^:]]+(?<!rgb)\\s*\\(.*\\)", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("[\\S&&[^:]]+(?<!rgb)\\s*\\(.[^:]*\\)", Pattern.CASE_INSENSITIVE);
 
     private static String sanitizeStyleValue(String value) {
         // remove comments

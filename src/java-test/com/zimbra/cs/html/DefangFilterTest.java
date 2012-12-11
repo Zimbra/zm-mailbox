@@ -24,7 +24,7 @@ import com.zimbra.cs.mime.ParsedMessage;
  */
 public class DefangFilterTest {
     private static final String EMAIL_BASE_DIR = "./data/unittest/email/";
-    
+
     /**
      * Check to makes sure ftp:// urls are passed through...
      * @throws Exception
@@ -33,11 +33,11 @@ public class DefangFilterTest {
     public void testBug37098() throws Exception {
         String fileName = "bug_37098.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         // Make sure it didn't delete ftp://
         Assert.assertTrue(result.contains("ftp://ftp.perftech.com/hidden/aaeon/cpupins.jpg"));
-        
+
     }
 
     /**
@@ -48,7 +48,7 @@ public class DefangFilterTest {
     public void testBug46948() throws Exception {
         String fileName = "bug_46948.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         // Make sure each area tag has a target
         int index = result.indexOf("<area");
@@ -62,7 +62,7 @@ public class DefangFilterTest {
             index = result.indexOf("<area", index+1);
         }
     }
-    
+
     /**
      * Check to make sure we don't defang a url because we don't like the end of it.
      * @throws Exception
@@ -71,13 +71,13 @@ public class DefangFilterTest {
     public void testBug49452() throws Exception {
         String fileName = "bug_49452.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-        // make sure the link is still there 
+        // make sure the link is still there
         // There should be a bunch of data after this link, but there's a few \n that seem to break it up.
         Assert.assertTrue(result.contains("https://www.plus1staging.net/plus1staging.net/companyAuthorization.jsp"));
     }
-    
+
     /**
      * Checks to make sure the base url is prepended to any of the relative links
      * @throws Exception
@@ -86,14 +86,14 @@ public class DefangFilterTest {
     public void testBug11464() throws Exception {
         String fileName = "bug_11464.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-        
+
         // Make sure this has been replaced
         Assert.assertTrue(!result.contains("src=\"_media/zimbra_logo.gif\""));
     }
 
-    
+
     /**
      * Utility method that gets the html body part from a mime message and returns its input stream
      * @param fileName The name of the email file to load from the unit test data dir
@@ -105,7 +105,7 @@ public class DefangFilterTest {
         InputStream inputStream = new FileInputStream(EMAIL_BASE_DIR + fileName);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ByteUtil.copy(inputStream, true, baos, true);
-        
+
         ParsedMessage msg = new ParsedMessage(baos.toByteArray(), false);
         Set<MPartInfo> bodyparts = Mime.getBody(msg.getMessageParts(), true);
 
@@ -117,7 +117,7 @@ public class DefangFilterTest {
         }
         return htmlStream;
     }
-    
+
     /**
      * Utility method that gets the html body part from a mime message and returns its input stream
      * @param fileName The name of the email file to load from the unit test data dir
@@ -129,7 +129,7 @@ public class DefangFilterTest {
         InputStream inputStream = new FileInputStream(EMAIL_BASE_DIR + fileName);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ByteUtil.copy(inputStream, true, baos, true);
-        
+
         ParsedMessage msg = new ParsedMessage(baos.toByteArray(), false);
         List<MPartInfo> parts = msg.getMessageParts();//Mime.getBody(msg.getMessageParts(), true);
 
@@ -141,7 +141,7 @@ public class DefangFilterTest {
         }
         return htmlStream;
     }
-    
+
     /**
      * Tests to make sure we allow just image names to come through
      * @throws Exception
@@ -150,15 +150,15 @@ public class DefangFilterTest {
     public void testBug60769() throws Exception {
         String fileName = "bug_60769.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-                
+
         Assert.assertTrue(!result.contains("dfsrc=\"image001.gif\""));
         Assert.assertTrue(result.contains("src=\"image001.gif\""));
     }
     
     /**
-     * Tests to make sure we can handle inline image data embeded with a data: protocol 
+     * Tests to make sure we can handle inline image data embeded with a data: protocol
      * without tying up the system
      * @throws Exception
      */
@@ -169,13 +169,13 @@ public class DefangFilterTest {
         long startTime = System.currentTimeMillis();
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         long endTime = System.currentTimeMillis();
-        
+
         // Make sure this takes less than one second
         Assert.assertTrue("Possible slowness in a regex", (endTime - startTime) < 1000);
         // Make sure this has been replaced
         Assert.assertTrue(result.contains("src=\"data:"));
     }
-    
+
     /**
      * Makes sure we don't defang inline images
      * @throws Exception
@@ -184,15 +184,15 @@ public class DefangFilterTest {
     public void testBug62632() throws Exception {
         String fileName = "bug_62632.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-                
+
         // Mare sure dfsrc isn't in there
         Assert.assertTrue(!result.contains("dfsrc=\"data:"));
         // and make sure we still have the src link..
         Assert.assertTrue(result.contains("src=\"data:"));
     }
-    
+
     /**
      * Makes sure we don't defang inline images
      * @throws Exception
@@ -201,13 +201,13 @@ public class DefangFilterTest {
     public void testBug63150() throws Exception {
         String fileName = "bug_63150.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-                
+
         // Check to make sure the link needed is still in there.
         Assert.assertTrue(result.contains("BillingInfoDisplayCmd?bi_URL"));
     }
-    
+
     /**
      * Makes sure we don't defang input button images
      * @throws Exception
@@ -217,9 +217,9 @@ public class DefangFilterTest {
         String fileName = "bug_62346.txt";
         InputStream htmlStream = getHtmlPart(fileName, 2);
         Assert.assertNotNull(htmlStream);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, false);
-                
+
         // Check to make sure the link needed is still in there.
         Assert.assertTrue(result.contains("https://secure.sslpost.com/static/images/open_document.png"));
     }
@@ -232,11 +232,11 @@ public class DefangFilterTest {
         String fileName = "bug_64188.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         Assert.assertNotNull(htmlStream);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
          // just make sure we made it here, as this was NPEing out..
         Assert.assertNotNull(result);
-       
+
     }
     /**
      * Checks to make sure we actually defang external content
@@ -247,16 +247,16 @@ public class DefangFilterTest {
         String fileName = "bug_64726.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         Assert.assertNotNull(htmlStream);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
          // just make sure we made it here, as this was NPEing out..
-        
-        
+
+
         Assert.assertNotNull(result);
         // Make sure the input got changed
         Assert.assertTrue(result.contains("dfsrc=\"http://www.google.com/intl/en_com/images/srpr/logo3w.png\""));
     }
-    
+
     /**
      * Checks to ensure that we're properly swapping src to dfsrc for input tags as well.
      * @throws Exception
@@ -266,16 +266,16 @@ public class DefangFilterTest {
         String fileName = "bug_58889.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         Assert.assertNotNull(htmlStream);
-        
+
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
          // just make sure we made it here, as this was NPEing out..
-        
-        
+
+
         Assert.assertNotNull(result);
-       
+
         Assert.assertFalse(result.contains(" src=\"https://grepular.com/email_privacy_tester/"));
         Assert.assertTrue(result.contains(" dfsrc=\"https://grepular.com/email_privacy_tester/"));
-       
+
     }
 
     /**
@@ -340,5 +340,48 @@ public class DefangFilterTest {
         InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("rgb(16, 16, 255)"));
+    }
+
+    @Test
+    public void testBug78997() throws Exception {
+        String fileName = "bug_78997.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        // and make sure we still have the @media link and the device width attribute..
+        Assert.assertTrue(result.contains("and (max-device-width: 480px)"));
+
+        //Some more tests with different media attributes
+        String html = " @media (max-width: 480px) {.body{font-size: 0.938em;} }";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(max-width: 480px)"));
+
+        html = " @media only screen and (-webkit-min-device-pixel-ratio: 2) {body {font-size: 0.938em;}  }";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("and (-webkit-min-device-pixel-ratio: 2)"));
+
+        html = "@media (min-width: 1200px) {.two{margin-top:8em;} }";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(min-width: 1200px)"));
+
+        html = "@media (max-height: 600px) {.two{margin-top:4em;} }";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(max-height: 600px) {.two{margin-top:4em;} }"));
+
+        html = " @media (min-height: 1020px) { .two{margin-top:9em;} }";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(min-height: 1020px) { .two{margin-top:9em;} }"));
+
+
+        html = "@media (min-height: 750px) and (max-height: 770px) {"
+              + ".two{margin-top:7em;} }";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(min-height: 750px) and (max-height: 770px)"));
+
     }
 }
