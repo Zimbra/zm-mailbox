@@ -401,10 +401,69 @@ public class DefangFilterTest {
     public void testBug73874() throws Exception {
         String fileName = "bug_73874.txt";
         InputStream htmlStream = getHtmlBody(fileName);
-
-        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
 
         // and make sure we have the the complete URL for
-        Assert.assertTrue(result.contains("thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?version=1&modificationDate=1335967057000"));
+        Assert.assertTrue(result
+          .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?" +
+          		"version=1&modificationDate=1335967057000"));
+
+        // case where base URL does not have a trailing '/'
+        String html = "<html><head><base href=\"https://wiki.tomsawyer.com\"/>"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"/download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png?version=3D1&modificationDate=3D1335967057"
+            + "000\"/></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?"
+                    + "version=3D1&modificationDate=3D1335967057"));
+
+        // case where base URL has a trailing '/'
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png?version=3D1&modificationDate=3D1335967057"
+            + "000\"/></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?"
+                    + "version=3D1&modificationDate=3D1335967057"));
+
+       // case where base URL has a single parameter'/'
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png?version=3D1\"/></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?"
+                    + "version=3D1"));
+
+     // case where base URL no parameters
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png\"/></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png"));
+
+     // case where relative URL is invalidsomething like.pngxxx.gif
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot.pngTest.gif\"/></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(!result
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png"));
     }
+
+
+
 }
