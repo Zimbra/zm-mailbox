@@ -363,17 +363,21 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             }
         }
 
-        private void metadataChanged(Mailbox mbox) throws ServiceException {
+        private void metadataChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
             modMetadata = mbox.getOperationChangeID();
             dateChanged = mbox.getOperationTimestamp();
-            if (!isAcceptableType(Type.FOLDER, Type.of(type)) && !isAcceptableType(Type.TAG, Type.of(type))) {
+            if (updateFolderMODSEQ && !isAcceptableType(Type.FOLDER, Type.of(type)) && !isAcceptableType(Type.TAG, Type.of(type))) {
                 mbox.getFolderById(folderId).updateHighestMODSEQ();
             }
         }
+        
+        void contentChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
+            metadataChanged(mbox, updateFolderMODSEQ);
+            modContent = modMetadata;
+        }
 
         void contentChanged(Mailbox mbox) throws ServiceException {
-            metadataChanged(mbox);
-            modContent = modMetadata;
+            contentChanged(mbox, true);
         }
 
         private static final String FN_ID           = "id";
@@ -1981,6 +1985,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     void addRevision(boolean persist) throws ServiceException {
+        addRevision(persist, true);
+    }
+
+    void addRevision(boolean persist, boolean updateFolderMODSEQ) throws ServiceException {
         // don't take two revisions for the same data
         if (mData.modMetadata == mMailbox.getOperationChangeID())
             return;
@@ -2063,7 +2071,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             }
         }
 
-        metadataChanged();
+        metadataChanged(updateFolderMODSEQ);
         if (persist) {
             saveData(new DbMailItem(mMailbox));
         }
@@ -3727,9 +3735,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return parent.getEffectiveACL();
     }
 
-    void metadataChanged() throws ServiceException {
+    void metadataChanged(boolean updateFolderMODSEQ) throws ServiceException {
         ++mMetaVersion;
-        mData.metadataChanged(mMailbox);
+        mData.metadataChanged(mMailbox, updateFolderMODSEQ);
+    }
+    
+    void metadataChanged() throws ServiceException {
+        metadataChanged(true);
     }
 
     void contentChanged() throws ServiceException {
