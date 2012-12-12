@@ -1314,7 +1314,7 @@ If reportUsedBlobs is set to 1 a complete list of all blobs used by the mailbox(
 
 <ExportAndDeleteItemsRequest [exportDir="path"] [exportFilenamePrefix="name"]>
   <mbox id="{id}">
-    <item id="{id}" />
+    <item id="{id}" version={ver}/>
     ...
   </mbox>
 </ExportAndDeleteItemsRequest>
