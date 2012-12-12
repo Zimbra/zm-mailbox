@@ -246,15 +246,23 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         void metadataChanged(Mailbox mbox) throws ServiceException {
+            metadataChanged(mbox, true);
+        }
+
+        void metadataChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
             modMetadata = mbox.getOperationChangeID();
             dateChanged = mbox.getOperationTimestamp();
-            if (!isAcceptableType(TYPE_FOLDER, type))
+            if (updateFolderMODSEQ && !isAcceptableType(TYPE_FOLDER, type))
                 mbox.getFolderById(folderId).updateHighestMODSEQ();
+        }
+        
+        void contentChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
+            metadataChanged(mbox, updateFolderMODSEQ);
+            modContent = modMetadata;
         }
 
         void contentChanged(Mailbox mbox) throws ServiceException {
-            metadataChanged(mbox);
-            modContent = modMetadata;
+            contentChanged(mbox, true);
         }
 
         private static final String FN_ID           = "id";
@@ -1611,6 +1619,10 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     void addRevision(boolean persist) throws ServiceException {
+        addRevision(persist, true);
+    }
+
+    void addRevision(boolean persist, boolean updateFolderMODSEQ) throws ServiceException {
         // don't take two revisions for the same data
         if (mData.modMetadata == mMailbox.getOperationChangeID())
             return;
@@ -1691,7 +1703,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_VERSIONED), false);
         }
 
-        mData.metadataChanged(mMailbox);
+        mData.metadataChanged(mMailbox, updateFolderMODSEQ);
         if (persist)
             saveData(getSender());
     }

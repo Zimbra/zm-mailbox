@@ -495,7 +495,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         data.subject  = DbMailItem.truncateSubjectToMaxAllowedLength(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
-        data.contentChanged(mbox);
+        data.contentChanged(mbox, false);
         if (!firstInvite.hasRecurId())
             ZimbraLog.calendar.info(
                     "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s",
@@ -524,7 +524,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         }
         item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, defaultPartStat);
         item.finishCreation(null);
-
+        folder.updateHighestMODSEQ();
         if (pm != null)
             item.createBlob(pm, firstInvite);
 
@@ -1942,11 +1942,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             mInvites.remove(i.intValue());
         }
 
-        if (getFolderId() != folderId) {
-            // Move appointment/task to a different folder.
-            move(folder);
-        }
-
         // Check if there are any surviving non-cancel invites after applying the update.
         // Also check for changes in flags.
         int oldFlags = mData.flags;
@@ -2006,6 +2001,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                                         newInvite.getPartStat());
                     }
 
+                    if (getFolderId() != folderId) {
+                        // Move appointment/task to a different folder.
+                        move(folder);
+                    }
+
                     // Did the appointment have a blob before the change?
                     boolean hadBlobPart = false;
                     Invite[] oldInvs = getInvites();
@@ -2050,6 +2050,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     return true;
                 }
             } else {
+                if (getFolderId() != folderId) {
+                    // Move appointment/task to a different folder.
+                    move(folder);
+                }
                 return false;
             }
         }
@@ -3818,7 +3822,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     public void snapshotRevision() throws ServiceException {
-        addRevision(false);
+        snapshotRevision(true);
+    }
+    
+    public void snapshotRevision(boolean updateFolderMODSEQ) throws ServiceException {
+        addRevision(false, updateFolderMODSEQ);
     }
 
     @Override

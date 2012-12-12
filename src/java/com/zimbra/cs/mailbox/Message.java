@@ -892,7 +892,7 @@ public class Message extends MailItem {
                                 // passed-in folderId which will usually be Inbox.  Leave
                                 // the calendar item in the folder it's currently in.
                                 if (addRevision)
-                                    calItem.snapshotRevision();
+                                    calItem.snapshotRevision(false);
                                 // If updating (but not canceling) an appointment in trash folder,
                                 // use default calendar folder and discard all existing invites.
                                 boolean discardExistingInvites = false;
@@ -922,6 +922,7 @@ public class Message extends MailItem {
 
                                 modifiedCalItem = calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
                                 calItemFolderId = calFolderId;
+                                calItem.getFolder().updateHighestMODSEQ();
                             }
                         }
                     }
