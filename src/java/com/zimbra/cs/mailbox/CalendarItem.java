@@ -495,7 +495,7 @@ public abstract class CalendarItem extends MailItem {
         data.setSubject(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
-        data.contentChanged(mbox);
+        data.contentChanged(mbox, false);
 
         if (!firstInvite.hasRecurId()) {
             ZimbraLog.calendar.info(
@@ -537,7 +537,7 @@ public abstract class CalendarItem extends MailItem {
         }
         item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, defaultPartStat);
         item.finishCreation(null);
-
+        folder.updateHighestMODSEQ();
         if (pm != null) {
             item.createBlob(pm, firstInvite);
         }
@@ -1974,11 +1974,6 @@ public abstract class CalendarItem extends MailItem {
             mInvites.remove(i.intValue());
         }
 
-        if (getFolderId() != folderId) {
-            // Move appointment/task to a different folder.
-            move(folder);
-        }
-
         // Check if there are any surviving non-cancel invites after applying the update.
         // Also check for changes in flags.
         int oldFlags = mData.getFlags();
@@ -2038,6 +2033,11 @@ public abstract class CalendarItem extends MailItem {
                                         newInvite.getPartStat());
                     }
 
+                    if (getFolderId() != folderId) {
+                        // Move appointment/task to a different folder.
+                        move(folder);
+                    }
+
                     // Did the appointment have a blob before the change?
                     boolean hadBlobPart = false;
                     Invite[] oldInvs = getInvites();
@@ -2093,6 +2093,10 @@ public abstract class CalendarItem extends MailItem {
                     return true;
                 }
             } else {
+                if (getFolderId() != folderId) {
+                    // Move appointment/task to a different folder.
+                    move(folder);
+                }
                 return false;
             }
         }
@@ -4019,7 +4023,11 @@ public abstract class CalendarItem extends MailItem {
     }
 
     public void snapshotRevision() throws ServiceException {
-        addRevision(false);
+        snapshotRevision(true);
+    }
+    
+    public void snapshotRevision(boolean updateFolderMODSEQ) throws ServiceException {
+        addRevision(false, updateFolderMODSEQ);
     }
 
     @Override
