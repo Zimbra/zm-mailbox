@@ -18,20 +18,27 @@ package com.zimbra.cs.service.admin;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ExportAndDeleteItems extends AdminDocumentHandler {
@@ -45,9 +52,9 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         Element mboxEl = request.getElement(AdminConstants.E_MAILBOX);
         int mboxId = (int) mboxEl.getAttributeLong(AdminConstants.A_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        List<Integer> itemIds = new ArrayList<Integer>();
+        Multimap<Integer, Integer> idRevs = HashMultimap.create();
         for (Element itemEl : mboxEl.listElements(AdminConstants.E_ITEM)) {
-            itemIds.add((int) itemEl.getAttributeLong(AdminConstants.A_ID));
+            idRevs.put((int) itemEl.getAttributeLong(AdminConstants.A_ID), (int) itemEl.getAttributeLong(AdminConstants.A_VERSION_INFO_VERSION));
         }
         String dirPath = request.getAttribute(AdminConstants.A_EXPORT_DIR, null);
         String prefix = request.getAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, null);
@@ -55,41 +62,63 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         // Lock the mailbox, to make sure that another thread doesn't modify the items we're exporting/deleting.
         mbox.lock.lock();
         try {
-            // Export items to SQL files.
-            if (dirPath != null) {
-                File exportDir = new File(dirPath);
-                if (!exportDir.isDirectory()) {
-                    throw ServiceException.INVALID_REQUEST(dirPath + " is not a directory", null);
-                }
+            DbConnection conn = null;
 
-                DbConnection conn = null;
-                try {
-                    conn = DbPool.getConnection();
+            try {
+                conn = DbPool.getConnection();
+                if (dirPath != null) {
+                    File exportDir = new File(dirPath);
+                    if (!exportDir.isDirectory()) {
+                        DbPool.quietClose(conn);
+                        throw ServiceException.INVALID_REQUEST(dirPath + " is not a directory", null);
+                    }
+
                     String filePath = makePath(dirPath, DbMailItem.TABLE_MAIL_ITEM, prefix);
-                    export(conn, mbox, DbMailItem.TABLE_MAIL_ITEM, "id", itemIds, filePath);
+                    export(conn, mbox, DbMailItem.TABLE_MAIL_ITEM, "id", idRevs, filePath);
                     filePath = makePath(dirPath, DbMailItem.TABLE_MAIL_ITEM_DUMPSTER, prefix);
-                    export(conn, mbox, DbMailItem.TABLE_MAIL_ITEM_DUMPSTER, "id", itemIds, filePath);
+                    export(conn, mbox, DbMailItem.TABLE_MAIL_ITEM_DUMPSTER, "id", idRevs, filePath);
 
                     filePath = makePath(dirPath, DbMailItem.TABLE_REVISION, prefix);
-                    export(conn, mbox, DbMailItem.TABLE_REVISION, "item_id", itemIds, filePath);
+                    export(conn, mbox, DbMailItem.TABLE_REVISION, "item_id", idRevs, filePath);
                     filePath = makePath(dirPath, DbMailItem.TABLE_REVISION_DUMPSTER, prefix);
-                    export(conn, mbox, DbMailItem.TABLE_REVISION_DUMPSTER, "item_id", itemIds, filePath);
+                    export(conn, mbox, DbMailItem.TABLE_REVISION_DUMPSTER, "item_id", idRevs, filePath);
 
                     filePath = makePath(dirPath, DbMailItem.TABLE_APPOINTMENT, prefix);
-                    export(conn, mbox, DbMailItem.TABLE_APPOINTMENT, "item_id", itemIds, filePath);
+                    export(conn, mbox, DbMailItem.TABLE_APPOINTMENT, "item_id", idRevs, filePath);
                     filePath = makePath(dirPath, DbMailItem.TABLE_APPOINTMENT_DUMPSTER, prefix);
-                    export(conn, mbox, DbMailItem.TABLE_APPOINTMENT_DUMPSTER, "item_id", itemIds, filePath);
-                } finally {
-                    DbPool.quietClose(conn);
+                    export(conn, mbox, DbMailItem.TABLE_APPOINTMENT_DUMPSTER, "item_id", idRevs, filePath);
                 }
-            }
 
-            // Delete items.
-            int[] idArray = new int[itemIds.size()];
-            for (int i = 0; i < itemIds.size(); i++) {
-                idArray[i] = itemIds.get(i);
+                // delete item from mail_item and revision table
+                for (Integer itemId : idRevs.keySet()) {
+                    Collection<Integer> revs = idRevs.get(itemId);
+                    for (int rev : revs) {
+                        if (rev == 0) {
+                            // delete all revisions to make sure we delete all blobs
+                            List<MailItem> list = mbox.getAllRevisions(null, itemId, MailItem.Type.UNKNOWN);
+                            for (MailItem item : list) {
+                                if (item.getType() == MailItem.Type.DOCUMENT) {
+                                    mbox.purgeRevision(null, itemId, item.getVersion(), false);
+                                }
+                            }
+                            mbox.delete(null, itemId, MailItem.Type.UNKNOWN, null);
+                            break;
+                        } else if (!revs.contains(0)) {
+                            try {
+                                mbox.purgeRevision(null, itemId, rev, false);
+                            } catch (NoSuchItemException ex) {
+                                // exception happens when we try to delete a revision which is already in revision_dumpster
+                            }
+                        }
+                    }
+                }
+                // Delete items from mail_item_dumpster & revision_dumpster tables just
+                // incase moved to dumpster tables
+                DbBlobConsistency.delete(conn, mbox, idRevs);
+            } finally {
+                conn.commit();
+                DbPool.quietClose(conn);
             }
-            mbox.delete(null, idArray, MailItem.Type.UNKNOWN, null);
         } finally {
             mbox.lock.release();
         }
@@ -98,10 +127,10 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
     }
 
     private void export(DbConnection conn, Mailbox mbox, String tableName, String idColName,
-                        Collection<Integer> itemIds, String filePath)
+                        Multimap<Integer, Integer> idRevs, String filePath)
     throws ServiceException {
-        if (DbBlobConsistency.getNumRows(conn, mbox, tableName, idColName, itemIds) > 0) {
-            DbBlobConsistency.export(conn, mbox, tableName, idColName, itemIds, filePath);
+        if (DbBlobConsistency.getNumRows(conn, mbox, tableName, idColName, idRevs) > 0) {
+            DbBlobConsistency.export(conn, mbox, tableName, idColName, idRevs, filePath);
         }
     }
 
