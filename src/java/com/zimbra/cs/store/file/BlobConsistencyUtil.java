@@ -303,7 +303,7 @@ public class BlobConsistencyUtil {
         request.addAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, "mbox" + results.mboxId + "_");
         Element mboxEl = request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, results.mboxId);
         for (BlobInfo blob : results.missingBlobs.values()) {
-            mboxEl.addElement(AdminConstants.E_ITEM).addAttribute(AdminConstants.A_ID, blob.itemId);
+            mboxEl.addElement(AdminConstants.E_ITEM).addAttribute(AdminConstants.A_ID, blob.itemId).addAttribute(AdminConstants.A_VERSION_INFO_VERSION, blob.version);
         }
         prov.invoke(request);
     }
