@@ -1128,11 +1128,11 @@ public class SoapSession extends Session {
             Element match = findRemoteFolder(id, eSubfolder);
             if (match != null) {
                 // Assemble the absolute folder path in remote account. This will be used for calculating REST url.
-                String folderPath = match.getAttribute(MailConstants.A_FOLDER_PATH, null);
+                String folderPath = match.getAttribute(MailConstants.A_ABS_FOLDER_PATH, null);
                 if (folderPath == null) {
                     folderPath = match.getAttribute(MailConstants.A_NAME, null);
                 }
-                if (folderPath != null) {
+                if (folderPath != null && !folderPath.startsWith("/")) {
                     String parentFolderName = eFolder.getAttribute(MailConstants.A_NAME, null);
                     if (parentFolderName != null) {
                         String newPath;
@@ -1141,7 +1141,7 @@ public class SoapSession extends Session {
                         } else {
                             newPath = parentFolderName + "/" + folderPath;
                         }
-                        match.addAttribute(MailConstants.A_FOLDER_PATH, newPath);
+                        match.addAttribute(MailConstants.A_ABS_FOLDER_PATH, newPath);
                     }
                 }
                 return match;
@@ -1197,7 +1197,7 @@ public class SoapSession extends Session {
         transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
         elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
         String ownerName = elem.getAttribute(MailConstants.A_OWNER_NAME, null);
-        String ownerFolderPath = mptTarget.getAttribute(MailConstants.A_FOLDER_PATH, null); 
+        String ownerFolderPath = mptTarget.getAttribute(MailConstants.A_ABS_FOLDER_PATH, null); 
         // construct rest url based on owner name and folder name.
         elem.addAttribute(MailConstants.A_REST_URL, getRestUrl(ownerName, ownerFolderPath));
         elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));

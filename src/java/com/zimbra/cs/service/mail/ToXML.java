@@ -341,6 +341,7 @@ public final class ToXML {
                 String name = folder.getName();
                 if (name != null && name.length() > 0)
                     elem.addAttribute(MailConstants.A_NAME, name);
+                elem.addAttribute(MailConstants.A_ABS_FOLDER_PATH, folder.getPath());
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
                 elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
