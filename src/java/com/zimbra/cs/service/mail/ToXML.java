@@ -447,6 +447,7 @@ public final class ToXML {
                 if (!Strings.isNullOrEmpty(name)) {
                     elem.addAttribute(MailConstants.A_NAME, name);
                 }
+                elem.addAttribute(MailConstants.A_ABS_FOLDER_PATH, folder.getPath());
             }
             if (needToOutput(fields, Change.FOLDER)) {
                 elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
@@ -568,7 +569,7 @@ public final class ToXML {
         transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
         elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
         String ownerName = elem.getAttribute(MailConstants.A_OWNER_NAME, null);
-        String ownerFolderPath = mptTarget.getAttribute(MailConstants.A_FOLDER_PATH, null);
+        String ownerFolderPath = mptTarget.getAttribute(MailConstants.A_ABS_FOLDER_PATH, null);
         // construct rest url based on owner name and folder name.
         elem.addAttribute(MailConstants.A_REST_URL, getRestUrl(ownerName, ownerFolderPath));
         elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
