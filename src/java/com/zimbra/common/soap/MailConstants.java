@@ -621,6 +621,7 @@ public final class MailConstants {
     public static final String A_DATE_COMPARISON = "dateComparison";
     public static final String A_CONDITION = "condition";
     public static final String A_NEGATIVE = "negative";
+    public static final String A_ABS_FOLDER_PATH = "absFolderPath";
     public static final String A_FOLDER_PATH = "folderPath";
     public static final String A_FLAG_NAME = "flagName";
     public static final String A_TAG_NAME = "tagName";
