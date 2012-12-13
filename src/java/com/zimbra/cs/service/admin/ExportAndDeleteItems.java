@@ -16,19 +16,14 @@
 package com.zimbra.cs.service.admin;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbMailItem;
@@ -38,26 +33,29 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
+import com.zimbra.soap.admin.type.ExportAndDeleteItemSpec;
+import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 
 public class ExportAndDeleteItems extends AdminDocumentHandler {
 
     @Override
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element requst, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
         // Parse request.
-        Element mboxEl = request.getElement(AdminConstants.E_MAILBOX);
-        int mboxId = (int) mboxEl.getAttributeLong(AdminConstants.A_ID);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        ExportAndDeleteItemsRequest req = JaxbUtil.elementToJaxb(requst);
+        ExportAndDeleteMailboxSpec mailbox = req.getMailbox();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailbox.getId());
         Multimap<Integer, Integer> idRevs = HashMultimap.create();
-        for (Element itemEl : mboxEl.listElements(AdminConstants.E_ITEM)) {
-            idRevs.put((int) itemEl.getAttributeLong(AdminConstants.A_ID), (int) itemEl.getAttributeLong(AdminConstants.A_VERSION_INFO_VERSION));
+        for (ExportAndDeleteItemSpec item : mailbox.getItems()) {
+            idRevs.put(item.getId(), item.getVersion());
         }
-        String dirPath = request.getAttribute(AdminConstants.A_EXPORT_DIR, null);
-        String prefix = request.getAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, null);
+        String dirPath = req.getExportDir();
+        String prefix = req.getExportFilenamePrefix();
 
         // Lock the mailbox, to make sure that another thread doesn't modify the items we're exporting/deleting.
         mbox.lock.lock();
