@@ -35,6 +35,9 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
+import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
+import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
+import com.zimbra.soap.admin.type.ExportAndDeleteItemSpec;
 
 public class BlobConsistencyUtil {
 
@@ -298,14 +301,13 @@ public class BlobConsistencyUtil {
     throws ServiceException {
         System.out.format("Deleting %d items from mailbox %d.\n", results.missingBlobs.size(), results.mboxId);
 
-        Element request = new XMLElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_REQUEST);
-        request.addAttribute(AdminConstants.A_EXPORT_DIR, exportDir);
-        request.addAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, "mbox" + results.mboxId + "_");
-        Element mboxEl = request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, results.mboxId);
+        ExportAndDeleteMailboxSpec mailbox = new ExportAndDeleteMailboxSpec(results.mboxId);
+        ExportAndDeleteItemsRequest jaxbRequest = new ExportAndDeleteItemsRequest(exportDir,
+                "mbox" + results.mboxId + "_", mailbox);
         for (BlobInfo blob : results.missingBlobs.values()) {
-            mboxEl.addElement(AdminConstants.E_ITEM).addAttribute(AdminConstants.A_ID, blob.itemId).addAttribute(AdminConstants.A_VERSION_INFO_VERSION, blob.version);
+            mailbox.addItem(ExportAndDeleteItemSpec.createForIdAndVersion(blob.itemId, blob.version));
         }
-        prov.invoke(request);
+        prov.invokeJaxb(jaxbRequest);
     }
 
     public static void main(String[] args) {
