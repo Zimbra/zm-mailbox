@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class MailboxIdAndItems {
+public class ExportAndDeleteMailboxSpec {
 
     /**
      * @zm-api-field-tag id
@@ -42,34 +42,34 @@ public class MailboxIdAndItems {
      * @zm-api-field-description Items
      */
     @XmlElement(name=AdminConstants.E_ITEM, required=false)
-    private List<IntIdAttr> items = Lists.newArrayList();
+    private List<ExportAndDeleteItemSpec> items = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private MailboxIdAndItems() {
+    private ExportAndDeleteMailboxSpec() {
         this(-1);
     }
 
-    public MailboxIdAndItems(int id) {
+    public ExportAndDeleteMailboxSpec(int id) {
         this.id = id;
     }
 
-    public void setItems(Iterable <IntIdAttr> items) {
+    public void setItems(Iterable <ExportAndDeleteItemSpec> items) {
         this.items.clear();
         if (items != null) {
             Iterables.addAll(this.items,items);
         }
     }
 
-    public MailboxIdAndItems addItem(IntIdAttr item) {
+    public ExportAndDeleteMailboxSpec addItem(ExportAndDeleteItemSpec item) {
         this.items.add(item);
         return this;
     }
 
     public int getId() { return id; }
-    public List<IntIdAttr> getItems() {
+    public List<ExportAndDeleteItemSpec> getItems() {
         return Collections.unmodifiableList(items);
     }
 }

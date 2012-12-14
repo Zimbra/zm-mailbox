@@ -69,20 +69,28 @@ public class MissingBlobInfo {
     private final ZmBoolean external;
 
     /**
+     * @zm-api-field-tag version
+     * @zm-api-field-description Version
+     */
+    @XmlAttribute(name=AdminConstants.A_VERSION_INFO_VERSION /* version */, required=true)
+    private final int version;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private MissingBlobInfo() {
-        this(-1, -1, -1L, (short)-1, (String) null, false);
+        this(-1, -1, -1L, (short)-1, (String) null, false, -1);
     }
 
-    public MissingBlobInfo(int id, int revision, long size, short volumeId, String blobPath, boolean external) {
+    public MissingBlobInfo(int id, int revision, long size, short volumeId, String blobPath, boolean external, int version) {
         this.id = id;
         this.revision = revision;
         this.size = size;
         this.volumeId = volumeId;
         this.blobPath = blobPath;
         this.external = ZmBoolean.fromBool(external);
+        this.version = version;
     }
 
     public int getId() { return id; }
@@ -91,6 +99,7 @@ public class MissingBlobInfo {
     public short getVolumeId() { return volumeId; }
     public String getBlobPath() { return blobPath; }
     public boolean getExternal() { return ZmBoolean.toBool(external); }
+    public int getVersion() { return version; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
@@ -99,7 +108,8 @@ public class MissingBlobInfo {
             .add("size", size)
             .add("volumeId", volumeId)
             .add("blobPath", blobPath)
-            .add("external", external);
+            .add("external", external)
+            .add("version", version);
     }
 
     @Override

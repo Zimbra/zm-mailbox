@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
+ * Copyright (C) 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.MailboxIdAndItems;
+import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 
 /**
  * @zm-api-command-auth-required true
@@ -40,32 +40,32 @@ public class ExportAndDeleteItemsRequest {
      * @zm-api-field-tag export-dir-path
      * @zm-api-field-description Path for export dir
      */
-    @XmlAttribute(name=AdminConstants.A_EXPORT_DIR, required=false)
+    @XmlAttribute(name=AdminConstants.A_EXPORT_DIR /* exportDir */, required=false)
     private final String exportDir;
 
     /**
      * @zm-api-field-tag filename-prefix
      * @zm-api-field-description Export filename prefix
      */
-    @XmlAttribute(name=AdminConstants.A_EXPORT_FILENAME_PREFIX, required=false)
+    @XmlAttribute(name=AdminConstants.A_EXPORT_FILENAME_PREFIX /* exportFilenamePrefix */, required=false)
     private final String exportFilenamePrefix;
 
     /**
      * @zm-api-field-description Mailbox
      */
-    @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
-    private final MailboxIdAndItems mailbox;
+    @XmlElement(name=AdminConstants.E_MAILBOX /* mbox */, required=true)
+    private final ExportAndDeleteMailboxSpec mailbox;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ExportAndDeleteItemsRequest() {
-        this((String) null, (String) null, (MailboxIdAndItems) null);
+        this((String) null, (String) null, (ExportAndDeleteMailboxSpec) null);
     }
 
     public ExportAndDeleteItemsRequest(String exportDir,
-                    String exportFilenamePrefix, MailboxIdAndItems mailbox) {
+                    String exportFilenamePrefix, ExportAndDeleteMailboxSpec mailbox) {
         this.exportDir = exportDir;
         this.exportFilenamePrefix = exportFilenamePrefix;
         this.mailbox = mailbox;
@@ -73,5 +73,5 @@ public class ExportAndDeleteItemsRequest {
 
     public String getExportDir() { return exportDir; }
     public String getExportFilenamePrefix() { return exportFilenamePrefix; }
-    public MailboxIdAndItems getMailbox() { return mailbox; }
+    public ExportAndDeleteMailboxSpec getMailbox() { return mailbox; }
 }
