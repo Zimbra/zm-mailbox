@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,17 +36,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
-/*
-<folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
-               u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
-               [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
-  [<acl> <grant .../> </acl>]
-</folder>
-*/
-
 // Root element name needed to differentiate between types of folder
-// MailConstants.E_FOLDER == "folder"
-@XmlRootElement(name=MailConstants.E_FOLDER)
+@XmlRootElement(name=MailConstants.E_FOLDER /* folder */)
 @XmlType(propOrder = {"metadatas", "acl", "retentionPolicy", "subfolders"})
 public class Folder {
 
@@ -114,6 +105,13 @@ public class Folder {
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
+
+    /**
+     * @zm-api-field-tag folder-path
+     * @zm-api-field-description Absolute Folder path
+     */
+    @XmlAttribute(name=MailConstants.A_ABS_FOLDER_PATH /* absFolderPath */, required=false)
+    private String absoluteFolderPath;
 
     /**
      * @zm-api-field-tag parent-id
@@ -412,5 +410,13 @@ public class Folder {
 
     public void setFolderUuid(String folderUuid) {
         this.folderUuid = folderUuid;
+    }
+
+    public String getAbsoluteFolderPath() {
+        return absoluteFolderPath;
+    }
+
+    public void setAbsoluteFolderPath(String absoluteFolderPath) {
+        this.absoluteFolderPath = absoluteFolderPath;
     }
 }
