@@ -28,6 +28,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
@@ -37,11 +38,16 @@ import org.apache.lucene.index.LogByteSizeMergePolicy;
 import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.util.Version;
 
@@ -71,7 +77,7 @@ import com.zimbra.cs.volume.VolumeManager;
  * @author tim
  * @author ysasaki
  */
-public final class LuceneIndex implements IndexStore {
+public final class LuceneIndex extends IndexStore {
 
     /**
      * We don't want to enable StopFilter preserving position increments, which is enabled on or after 2.9, because we
@@ -268,7 +274,7 @@ public final class LuceneIndex implements IndexStore {
         long start = System.currentTimeMillis();
         IndexSearcher searcher = null;
         try {
-            searcher = openSearcher();
+            searcher = (IndexSearcher) openSearcher();
             searcher.search(new TermQuery(new Term(LuceneFields.L_CONTENT, "zimbra")), 1,
                     new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true)));
         } catch (IOException e) {
@@ -373,7 +379,7 @@ public final class LuceneIndex implements IndexStore {
      * @throws IOException if opening an {@link IndexReader} failed
      */
     @Override
-    public synchronized IndexSearcher openSearcher() throws IOException {
+    public synchronized ZimbraIndexSearcher openSearcher() throws IOException {
         IndexSearcherImpl searcher = null;
         try {
             if (mailbox.isGalSyncMailbox()) {
@@ -777,7 +783,7 @@ public final class LuceneIndex implements IndexStore {
         }
 
         @Override
-        public LuceneIndex getInstance(Mailbox mbox) throws ServiceException {
+        public LuceneIndex getIndexStore(Mailbox mbox) throws ServiceException {
             return new LuceneIndex(mbox);
         }
 
@@ -802,7 +808,7 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public void close() throws IOException {
             writer.index.commitWriter();
-            IndexSearcher searcher = null;
+            ZimbraIndexSearcher searcher = null;
             try {
                 if (writer.getIndex().mailbox.isGalSyncMailbox()) {
                     searcher = GAL_SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
@@ -814,7 +820,8 @@ public final class LuceneIndex implements IndexStore {
                     ZimbraLog.search.warn(e);
             }
             if (searcher != null) {
-                IndexReader newReader = IndexReader.openIfChanged(searcher.getIndexReader(), true);
+                ZimbraLuceneIndexReader ndxReader = (ZimbraLuceneIndexReader)searcher.getIndexReader();
+                IndexReader newReader = IndexReader.openIfChanged(ndxReader.getLuceneReader(), true);
                 if (newReader != null) {
                     if (writer.getIndex().mailbox.isGalSyncMailbox()) {
                         //make sure that we close the previous value associated with the key
@@ -969,11 +976,14 @@ public final class LuceneIndex implements IndexStore {
     /**
      * Custom {@link IndexSearcher} that supports a reference counter.
      */
-    private static final class IndexSearcherImpl extends IndexSearcher {
+    private static final class IndexSearcherImpl implements ZimbraIndexSearcher {
         private final AtomicInteger count = new AtomicInteger(1);
+        private final IndexSearcher luceneSearcher;
+        private final ZimbraIndexReader luceneReader;
 
         IndexSearcherImpl(IndexReader reader) {
-            super(reader);
+            luceneSearcher = new IndexSearcher(reader);
+            luceneReader = new ZimbraLuceneIndexReader(luceneSearcher.getIndexReader());
         }
 
         void inc() {
@@ -985,13 +995,75 @@ public final class LuceneIndex implements IndexStore {
             if (count.decrementAndGet() == 0) {
                 ZimbraLog.search.debug("Close IndexSearcher");
                 try {
-                    super.close();
+                    luceneSearcher.close();
                 } finally {
                     Closeables.closeQuietly(getIndexReader());
                     READER_THROTTLE.release();
                 }
             }
         }
+
+        @Override
+        public Document doc(int docID) throws IOException {
+            return luceneSearcher.doc(docID);
+        }
+
+        @Override
+        public int docFreq(Term term) throws IOException {
+            return luceneSearcher.docFreq(term);
+        }
+
+        @Override
+        public ZimbraIndexReader getIndexReader() {
+            return luceneReader;
+        }
+
+        @Override
+        public TopDocs search(Query query, int n) throws IOException {
+            return luceneSearcher.search(query, n);
+        }
+
+        @Override
+        public TopDocs search(Query query, Filter filter, int n) throws IOException {
+            return luceneSearcher.search(query, filter, n);
+        }
+
+        @Override
+        public TopFieldDocs search(Query query, Filter filter, int n, Sort sort) throws IOException {
+            return luceneSearcher.search(query, filter, n, sort);
+        }
     }
 
+    public static final class ZimbraLuceneIndexReader implements ZimbraIndexReader {
+
+        private final IndexReader luceneReader;
+
+        private ZimbraLuceneIndexReader(IndexReader indexReader) {
+            luceneReader = indexReader;
+        }
+        
+        @Override
+        public void close() throws IOException {
+            getLuceneReader().close();
+        }
+
+        @Override
+        public int numDocs() {
+            return getLuceneReader().numDocs();
+        }
+
+        @Override
+        public int numDeletedDocs() {
+            return getLuceneReader().numDeletedDocs();
+        }
+
+        @Override
+        public TermEnum terms(Term t) throws IOException {
+            return getLuceneReader().terms(t);
+        }
+
+        public IndexReader getLuceneReader() {
+            return luceneReader;
+        }
+    }
 }

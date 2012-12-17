@@ -29,6 +29,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.MockStoreManager;
@@ -96,7 +97,7 @@ public final class MailboxTestUtil {
         HSQLDB.createDatabase(zimbraServerDir, OctopusInstance);
 
         MailboxManager.setInstance(null);
-        MailboxIndex.setIndexStoreFactory("lucene");
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
@@ -110,7 +111,7 @@ public final class MailboxTestUtil {
         HSQLDB.createDatabase(zimbraServerDir, false);
 
         MailboxManager.setInstance(null);
-        MailboxIndex.setIndexStoreFactory("lucene");
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();

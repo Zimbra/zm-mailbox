@@ -67,6 +67,7 @@ import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -93,10 +94,6 @@ public final class MailboxIndex {
     private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
             0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             new ThreadFactoryBuilder().setNameFormat("ReIndex-%d").setDaemon(true).build());
-    private static IndexStore.Factory indexStoreFactory;
-    static {
-        setIndexStoreFactory(LC.index_store.value());
-    }
 
     private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
@@ -121,12 +118,6 @@ public final class MailboxIndex {
         analyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
     }
 
-    @VisibleForTesting
-    static void setIndexStoreFactory(String name) {
-        indexStoreFactory = new LuceneIndex.Factory();
-        ZimbraLog.index.info("Using %s", indexStoreFactory.getClass().getDeclaringClass().getSimpleName());
-    }
-
     /**
      * Starts all index threads.
      */
@@ -135,7 +126,7 @@ public final class MailboxIndex {
     }
 
     public static void shutdown() {
-        indexStoreFactory.destroy();
+        IndexStore.getFactory().destroy();
     }
 
     public Analyzer getAnalyzer() {
@@ -143,7 +134,7 @@ public final class MailboxIndex {
     }
 
     void open() throws ServiceException {
-        indexStore = indexStoreFactory.getInstance(mailbox);
+        indexStore = IndexStore.getFactory().getIndexStore(mailbox);
     }
 
     public final IndexStore getIndexStore() {
@@ -268,7 +259,7 @@ public final class MailboxIndex {
             }
         }
 
-        IndexSearcher searcher = indexStore.openSearcher();
+        ZimbraIndexSearcher searcher = indexStore.openSearcher();
         try {
             for (InternetAddress addr : addrs) {
                 if (!Strings.isNullOrEmpty(addr.getAddress())) {
@@ -1014,7 +1005,7 @@ public final class MailboxIndex {
      */
     public int numDeletedDocs() throws ServiceException {
         try {
-            IndexSearcher searcher = indexStore.openSearcher();
+            ZimbraIndexSearcher searcher = indexStore.openSearcher();
             try {
                 return searcher.getIndexReader().numDeletedDocs();
             } finally {
@@ -1075,7 +1066,7 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        IndexSearcher searcher = indexStore.openSearcher();
+        ZimbraIndexSearcher searcher = indexStore.openSearcher();
         try {
             TermEnum terms = searcher.getIndexReader().terms(new Term(field, ""));
             do {
@@ -1106,7 +1097,7 @@ public final class MailboxIndex {
     public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        IndexSearcher searcher = indexStore.openSearcher();
+        ZimbraIndexSearcher searcher = indexStore.openSearcher();
         try {
             TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_ATTACHMENTS, ""));
             do {
@@ -1134,7 +1125,7 @@ public final class MailboxIndex {
     public List<BrowseTerm> getObjects(String regex) throws IOException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        IndexSearcher searcher = indexStore.openSearcher();
+        ZimbraIndexSearcher searcher = indexStore.openSearcher();
         try {
             TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_OBJECTS, ""));
             do {

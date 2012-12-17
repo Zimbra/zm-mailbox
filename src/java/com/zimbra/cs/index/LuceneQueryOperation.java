@@ -88,7 +88,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     private TopDocs hits;
     private int topDocsLen = 0; // number of hits fetched
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
-    private IndexSearcher searcher;
+    private ZimbraIndexSearcher searcher;
     private Sort sort;
 
     /**
