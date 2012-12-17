@@ -332,8 +332,6 @@ public final class LC {
     @Supported
     public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
 
-    public static final KnownKey index_store = KnownKey.newKey("lucene");
-
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
 
@@ -801,6 +799,7 @@ public final class LC {
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
     public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
+    public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
     public static final KnownKey zimbra_class_application = KnownKey.newKey("com.zimbra.cs.util.ZimbraApplication");
     public static final KnownKey zimbra_class_rulerewriterfactory = KnownKey.newKey("com.zimbra.cs.filter.RuleRewriterFactory");
     public static final KnownKey zimbra_class_datasourcemanager = KnownKey.newKey("com.zimbra.cs.datasource.DataSourceManager");
