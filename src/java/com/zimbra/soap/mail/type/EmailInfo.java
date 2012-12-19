@@ -37,7 +37,7 @@ implements EmailInfoInterface {
      * @zm-api-field-tag email-address
      * @zm-api-field-description the user@domain part of an email address
      */
-    @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=true)
+    @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=false)
     private final String address;
 
     /**
@@ -45,14 +45,14 @@ implements EmailInfoInterface {
      * @zm-api-field-description Display name. If we have personal name, first word in "word1 word2" format, or last
      * word in "word1, word2" format.  If no personal name, take string before "@" in email-address.
      */
-    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=true)
+    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
     private final String display;
 
     /**
      * @zm-api-field-tag personal name
      * @zm-api-field-description The comment/name part of an address
      */
-    @XmlAttribute(name=MailConstants.A_PERSONAL /* p */, required=true)
+    @XmlAttribute(name=MailConstants.A_PERSONAL /* p */, required=false)
     private final String personal;
 
     /**
@@ -70,7 +70,7 @@ implements EmailInfoInterface {
      * <br />
      * Note that "rf" addresses can only be <b>returned</b> on a message; when sending a message, "rf" is ignored
      */
-    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE /* t */, required=true)
+    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE /* t */, required=false)
     private final String addressType;
 
     /**
