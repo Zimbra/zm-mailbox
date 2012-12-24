@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121207-1529 */
+    /* build: 9.0.0_BETA1_1111 dywang 20121219-1442 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6770,6 +6770,27 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1423)
     public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public static final String A_zimbraMobileItemsToTrackPerFolderMaxSize = "zimbraMobileItemsToTrackPerFolderMaxSize";
+
+    /**
+     * whether or not to enable truncating on client metadata size, if
+     * enabled server will only track recent items on client device instead
+     * of all
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1425)
+    public static final String A_zimbraMobileMetadataMaxSizeEnabled = "zimbraMobileMetadataMaxSizeEnabled";
 
     /**
      * admin email address used for receiving notifications
