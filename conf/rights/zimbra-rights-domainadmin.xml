@@ -151,8 +151,10 @@
     <a n="zimbraMaxContactsPerPage"/>
     <a n="zimbraMaxMailItemsPerPage"/>
     <a n="zimbraMaxVoiceItemsPerPage"/>
-    <a n="zimbraMobileNotificationEnabled"/>
     <a n="zimbraMobileAttachSkippedItemEnabled"/>
+    <a n="zimbraMobileItemsToTrackPerFolderMaxSize"/>
+    <a n="zimbraMobileMetadataMaxSizeEnabled"/>
+    <a n="zimbraMobileNotificationEnabled"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
@@ -464,7 +466,10 @@
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraMailStatus"/>
     <a n="zimbraMailTrustedSenderListMaxNumEntries"/>
+    <a n="zimbraMobileItemsToTrackPerFolderMaxSize"/>
+    <a n="zimbraMobileMetadataMaxSizeEnabled"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPrefColorMessagesEnabled"/>
     <a n="zimbraPrefMailTrustedSenderList"/>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
