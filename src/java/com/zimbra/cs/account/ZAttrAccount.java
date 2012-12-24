@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121207-1529 */
+    /* build: 9.0.0_BETA1_1111 dywang 20121219-1442 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -23297,6 +23297,249 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMobileAttachSkippedItemEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileAttachSkippedItemEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @return zimbraMobileItemsToTrackPerFolderMaxSize, or empty array if unset
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public String[] getMobileItemsToTrackPerFolderMaxSize() {
+        return getMultiAttr(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize);
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param zimbraMobileItemsToTrackPerFolderMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public void setMobileItemsToTrackPerFolderMaxSize(String[] zimbraMobileItemsToTrackPerFolderMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, zimbraMobileItemsToTrackPerFolderMaxSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param zimbraMobileItemsToTrackPerFolderMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public Map<String,Object> setMobileItemsToTrackPerFolderMaxSize(String[] zimbraMobileItemsToTrackPerFolderMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, zimbraMobileItemsToTrackPerFolderMaxSize);
+        return attrs;
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param zimbraMobileItemsToTrackPerFolderMaxSize new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public void addMobileItemsToTrackPerFolderMaxSize(String zimbraMobileItemsToTrackPerFolderMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, zimbraMobileItemsToTrackPerFolderMaxSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param zimbraMobileItemsToTrackPerFolderMaxSize new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public Map<String,Object> addMobileItemsToTrackPerFolderMaxSize(String zimbraMobileItemsToTrackPerFolderMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, zimbraMobileItemsToTrackPerFolderMaxSize);
+        return attrs;
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param zimbraMobileItemsToTrackPerFolderMaxSize existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public void removeMobileItemsToTrackPerFolderMaxSize(String zimbraMobileItemsToTrackPerFolderMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, zimbraMobileItemsToTrackPerFolderMaxSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param zimbraMobileItemsToTrackPerFolderMaxSize existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public Map<String,Object> removeMobileItemsToTrackPerFolderMaxSize(String zimbraMobileItemsToTrackPerFolderMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, zimbraMobileItemsToTrackPerFolderMaxSize);
+        return attrs;
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public void unsetMobileItemsToTrackPerFolderMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max size of items in a folder that server tracks, categorized by
+     * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
+     * the max size of items to track for an Email folder to be 3000. If not
+     * specify, default value is Integer.MAX_VALUE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1426)
+    public Map<String,Object> unsetMobileItemsToTrackPerFolderMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to enable truncating on client metadata size, if
+     * enabled server will only track recent items on client device instead
+     * of all
+     *
+     * @return zimbraMobileMetadataMaxSizeEnabled, or false if unset
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1425)
+    public boolean isMobileMetadataMaxSizeEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, false);
+    }
+
+    /**
+     * whether or not to enable truncating on client metadata size, if
+     * enabled server will only track recent items on client device instead
+     * of all
+     *
+     * @param zimbraMobileMetadataMaxSizeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1425)
+    public void setMobileMetadataMaxSizeEnabled(boolean zimbraMobileMetadataMaxSizeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, zimbraMobileMetadataMaxSizeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to enable truncating on client metadata size, if
+     * enabled server will only track recent items on client device instead
+     * of all
+     *
+     * @param zimbraMobileMetadataMaxSizeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1425)
+    public Map<String,Object> setMobileMetadataMaxSizeEnabled(boolean zimbraMobileMetadataMaxSizeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, zimbraMobileMetadataMaxSizeEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to enable truncating on client metadata size, if
+     * enabled server will only track recent items on client device instead
+     * of all
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1425)
+    public void unsetMobileMetadataMaxSizeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to enable truncating on client metadata size, if
+     * enabled server will only track recent items on client device instead
+     * of all
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1425)
+    public Map<String,Object> unsetMobileMetadataMaxSizeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, "");
         return attrs;
     }
 

@@ -7112,4 +7112,13 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not to use tag color as the color for message items</desc>
 </attr>
+
+<attr id="1425" name="zimbraMobileMetadataMaxSizeEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.3">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether or not to enable truncating on client metadata size, if enabled server will only track recent items on client device instead of all</desc>
+</attr>
+
+<attr id="1426" name="zimbraMobileItemsToTrackPerFolderMaxSize" type="string" max="30" cardinality="multi" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.3">
+  <desc>Max size of items in a folder that server tracks, categorized by collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes the max size of items to track for an Email folder to be 3000. If not specify, default value is Integer.MAX_VALUE</desc>
+</attr>
 </attrs>
