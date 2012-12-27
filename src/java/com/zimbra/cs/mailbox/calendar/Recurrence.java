@@ -510,6 +510,7 @@ public class Recurrence
      *
      */
     public static class SimpleRepeatingRule implements IInstanceGeneratingRule {
+        Map<String, List<Instance>> expandMap = new HashMap<String, List<Instance>>();
         public SimpleRepeatingRule(ParsedDateTime dtstart, ParsedDuration duration, 
                 ZRecur recur, InviteInfo invId)
         {
@@ -676,11 +677,14 @@ public class Recurrence
                 ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
                 return new ArrayList<Instance>();
             }
-
+            String KEY = String.valueOf(calItemId) + '-' + start + '-' + end;
+            List<Instance> toRet = expandMap.get(KEY);
+            if (toRet != null) {
+                return toRet;
+            }
             ICalTimeZone tz = mDtStart.getTimeZone();
             if (tz == null)
                 tz = ICalTimeZone.getUTC();
-            List<Instance> toRet = null;
             try {
                 long duration = 0;
                 if (mDuration != null) {
@@ -719,6 +723,8 @@ public class Recurrence
             	ZimbraLog.calendar.warn("Invalid recurrence rule: " + mRecur.toString(), iae);
                 toRet = new ArrayList<Instance>();
             }
+            // cache and return;
+            expandMap.put(KEY, toRet);
             return toRet;
         }
         
