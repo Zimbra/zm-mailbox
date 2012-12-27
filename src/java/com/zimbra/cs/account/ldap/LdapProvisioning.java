@@ -88,9 +88,8 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ProvisioningExt;
-import com.zimbra.cs.account.SearchAccountsOptions;
-import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.ProvisioningExt.PostCreateAccountListener;
+import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
@@ -99,6 +98,7 @@ import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
@@ -113,11 +113,11 @@ import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.cache.DomainCache;
+import com.zimbra.cs.account.cache.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.cache.IAccountCache;
 import com.zimbra.cs.account.cache.IDomainCache;
 import com.zimbra.cs.account.cache.IMimeTypeCache;
 import com.zimbra.cs.account.cache.INamedEntryCache;
-import com.zimbra.cs.account.cache.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -4211,7 +4211,7 @@ public class LdapProvisioning extends LdapProv {
             try {
                 addr = getEmailAddrByDomainAlias(addr);
                 if (addr != null) {
-                    isDL = allDLs.isGroup(addr);    
+                    isDL = allDLs.isGroup(addr);
                 }
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to get local domain address of " + addr, e);
@@ -6986,6 +6986,19 @@ public class LdapProvisioning extends LdapProv {
 
         boolean setAsDefault = false;
         List<Signature> existing = getAllSignatures(account);
+
+        // If the signature id is supplied with the request, check that it
+        // is not associated with an existing signature
+        String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
+        if (signatureId != null) {
+           for (Signature signature : existing) {
+               if (signatureId.equals(signature.getAttr(Provisioning.A_zimbraSignatureId))) {
+                   throw AccountServiceException.SIGNATURE_EXISTS(signatureId);
+               }
+           }
+        }
+
+
         int numSigs = existing.size();
         if (numSigs >= account.getLongAttr(A_zimbraSignatureMaxNumEntries, 20))
             throw AccountServiceException.TOO_MANY_SIGNATURES();
@@ -7001,7 +7014,7 @@ public class LdapProvisioning extends LdapProv {
         AttributeManager.getInstance().preModify(signatureAttrs, null,
                 callbackContext, checkImmutable);
 
-        String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
+
         if (signatureId == null) {
             signatureId = LdapUtil.generateUUID();
             signatureAttrs.put(Provisioning.A_zimbraSignatureId, signatureId);
