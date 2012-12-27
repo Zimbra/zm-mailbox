@@ -14,19 +14,19 @@
  */
 package com.zimbra.cs.dav.service.method;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.net.URI;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DavContext.RequestProp;
+import com.zimbra.cs.dav.resource.AddressObject;
 import com.zimbra.cs.dav.resource.AddressbookCollection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
@@ -45,11 +45,14 @@ public class AddressbookMultiget extends Report {
         RequestProp reqProp = ctxt.getRequestProp();
         for (Object obj : query.elements(DavElements.E_HREF)) {
             if (obj instanceof Element) {
-                String href;
-                try {
-                    href = URLDecoder.decode(((Element)obj).getText(), MimeConstants.P_CHARSET_UTF8);
-                } catch (UnsupportedEncodingException e) {
-                    href = URLDecoder.decode(((Element)obj).getText());
+                String href = ((Element)obj).getText();
+                URI uri = URI.create(href);
+                if (uri.getPath().toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
+                    // double encode the last fragment
+                    String[] fragments = HttpUtil.getPathFragments(uri);
+                    fragments[fragments.length - 1] = HttpUtil.urlEscapeIncludingSlash(fragments[fragments.length - 1]);
+                    uri = HttpUtil.getUriFromFragments(fragments, uri.getQuery(), true, false);
+                    href = uri.getPath();
                 }
                 DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href);
                 if (rs != null)

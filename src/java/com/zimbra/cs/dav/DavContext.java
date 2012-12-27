@@ -16,8 +16,10 @@ package com.zimbra.cs.dav;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +46,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.dav.resource.AddressObject;
+import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.resource.Collection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
@@ -219,6 +223,30 @@ public class DavContext {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo();
 		if (mUri != null && mUri.length() > 1) {
+		    // Special handling for .ics and .vcf urls
+            if (mUri.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION) || mUri.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
+                String rawUri = req.getRequestURI();
+                String[] fragments = HttpUtil.getPathFragments(URI.create(rawUri));
+
+                if (!req.getContextPath().isEmpty() && fragments.length > 0 && HttpUtil.urlUnescape(req.getContextPath()).equals("/" + fragments[0])) {
+                    // Ignore the first fragment
+                    fragments = Arrays.copyOfRange(fragments, 1, fragments.length);
+                }
+                String servletPath = req.getServletPath();
+                if (!servletPath.isEmpty()) {
+                    String[] servletPathFragments = HttpUtil.getPathFragments(URI.create(servletPath));
+                    for (String servletPathFragment : servletPathFragments) {
+                        if (fragments.length > 0 && servletPathFragment.equals(fragments[0])) {
+                            fragments = Arrays.copyOfRange(fragments, 1, fragments.length);
+                        }
+                    }
+                }
+                // Encode the last fragment again
+                fragments[fragments.length - 1] = HttpUtil.urlEscapeIncludingSlash(fragments[fragments.length - 1]);
+                URI uri = HttpUtil.getUriFromFragments(fragments, req.getQueryString(), true, false);
+                mUri = uri.getPath();
+            }
+	            
 		    int index = mUri.indexOf('/', 1);
             if (index > 0) {
                 String reqType = mUri.substring(1, index);

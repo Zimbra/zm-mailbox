@@ -66,6 +66,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.calendar.ZCalendar;
@@ -152,11 +153,12 @@ public class CalendarCollection extends Collection {
         HashMap<String,String> uidmap = new HashMap<String,String>();
         for (String href : hrefs) {
             try {
+                int start = href.lastIndexOf('/') + 1;
+                int end = href.lastIndexOf(".ics");
+                href = href.substring(start, end);
                 String hrefDecoded = URLDecoder.decode(href, "UTF-8");
-                int start = hrefDecoded.lastIndexOf('/') + 1;
-                int end = hrefDecoded.lastIndexOf(".ics");
                 if (start > 0 && end > 0 && end > start)
-                    uidmap.put(hrefDecoded.substring(start, end), href);
+                    uidmap.put(hrefDecoded, href);
             } catch (IOException e) {
                 ZimbraLog.dav.warn("can't decode href "+href, e);
             }
@@ -296,8 +298,11 @@ public class CalendarCollection extends Collection {
 
         //String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
 
-        if (name.endsWith(CalendarObject.CAL_EXTENSION))
+        if (name.endsWith(CalendarObject.CAL_EXTENSION)) {
             name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
+            // Unescape the name (It was encoded in DavContext intentionally)
+            name = HttpUtil.urlUnescape(name);
+        }
 
         Provisioning prov = Provisioning.getInstance();
         try {
