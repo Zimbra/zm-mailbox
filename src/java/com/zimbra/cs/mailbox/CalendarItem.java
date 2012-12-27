@@ -72,6 +72,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -1391,7 +1392,7 @@ public abstract class CalendarItem extends MailItem {
             method.equals(ICalTok.CANCEL.toString()) ||
             method.equals(ICalTok.PUBLISH.toString())) {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
-                                                   preserveAlarms, replaceExistingInvites);
+                                                   preserveAlarms, replaceExistingInvites, true);
         } else if (method.equals(ICalTok.REPLY.toString())) {
             return processNewInviteReply(invite, null);
         } else if (method.equals(ICalTok.COUNTER.toString())) {
@@ -1401,6 +1402,17 @@ public abstract class CalendarItem extends MailItem {
         if (!method.equals(ICalTok.DECLINECOUNTER.toString()))
             ZimbraLog.calendar.warn("Unsupported METHOD " + method);
         return false;
+    }
+    
+    void processNewInviteExceptions(List<SetCalendarItemData> scidList,
+            int folderId, long nextAlarm,
+            boolean preserveAlarms, boolean replaceExistingInvites) throws ServiceException {
+        for (SetCalendarItemData scid : scidList) {
+            processNewInviteRequestOrCancel(scid.message, scid.invite, folderId, nextAlarm,
+                                                preserveAlarms, replaceExistingInvites, false);
+        }
+        // now update the recurrence.
+        updateRecurrence(nextAlarm);
     }
 
     /**
@@ -1423,7 +1435,8 @@ public abstract class CalendarItem extends MailItem {
                                                     int folderId,
                                                     long nextAlarm,
                                                     boolean preserveAlarms,
-                                                    boolean discardExistingInvites)
+                                                    boolean discardExistingInvites,
+                                                    boolean updateRecur)
     throws ServiceException {
         // trace logging
         if (!newInvite.hasRecurId())
@@ -2016,7 +2029,7 @@ public abstract class CalendarItem extends MailItem {
                 modifiedCalItem = true;
 
             if (modifiedCalItem) {
-                if (!updateRecurrence(nextAlarm)) {
+                if (updateRecur && !updateRecurrence(nextAlarm)) {
                     // no default invite!  This appointment/task no longer valid
                     ZimbraLog.calendar.warn(
                             "Invalid state: deleting calendar item " + getId() +
