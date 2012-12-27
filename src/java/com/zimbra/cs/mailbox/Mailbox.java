@@ -4546,7 +4546,6 @@ public class Mailbox {
 
             redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
 
-            boolean first = true;
             AlarmData oldAlarmData = null;
             for (SetCalendarItemData scid : scidList) {
                 if (scid.message == null) {
@@ -4558,45 +4557,47 @@ public class Mailbox {
                                 octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
                     }
                 }
+            }
 
-                if (first) {
-                    // usually the default invite
-                    first = false;
-                    if (calItem == null) {
-                        // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
-                        String method = scid.invite.getMethod();
-                        if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
-                            try {
-                                calItem = createCalendarItem(folderId, flags, ntags, scid.invite.getUid(), scid.message, scid.invite, null);
-                            } catch (MailServiceException e) {
-                                if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                                    //bug 49106 - did not find the appointment above in getCalendarItemByUid(), but the mail_item exists
-                                    ZimbraLog.calendar.error("failed to create calendar item; already exists. cause: " +
-                                            (scidList.isEmpty() ? "no items in uid list." :
-                                                "uid not found in appointment: " + scidList.get(0).invite.getUid() +
-                                                " or bad mail_item type"));
-                                }
-                                throw e;
+            if (scidList.size() > 0) {
+                SetCalendarItemData scid = scidList.get(0);
+                if (calItem == null) {
+                    // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
+                    String method = scid.invite.getMethod();
+                    if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
+                        try {
+                            calItem = createCalendarItem(folderId, flags, ntags, scid.invite.getUid(), scid.message, scid.invite, null);
+                        } catch (MailServiceException e) {
+                            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                                //bug 49106 - did not find the appointment above in getCalendarItemByUid(), but the mail_item exists
+                                ZimbraLog.calendar.error("failed to create calendar item; already exists. cause: " +
+                                        (scidList.isEmpty() ? "no items in uid list." :
+                                            "uid not found in appointment: " + scidList.get(0).invite.getUid() +
+                                        " or bad mail_item type"));
                             }
-                        } else {
-                            return null; // for now, just ignore this Invitation
+                            throw e;
                         }
                     } else {
-                        calItem.snapshotRevision();
-
-                        // Preserve alarm time before any modification is made to the item.
-                        if (calItem.getAlarmData() != null) {
-                            oldAlarmData = (AlarmData) calItem.getAlarmData().clone();
-                        }
-
-                        calItem.setTags(flags, ntags);
-                        calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, true);
+                        return null; // for now, just ignore this Invitation
                     }
-                    redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
                 } else {
-                    // exceptions
-                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, false);
+                    calItem.snapshotRevision();
+
+                    // Preserve alarm time before any modification is made to the item.
+                    if (calItem.getAlarmData() != null) {
+                        oldAlarmData = (AlarmData) calItem.getAlarmData().clone();
+                    }
+
+                    calItem.setTags(flags, ntags);
+                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, true);
                 }
+                redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
+            } 
+            if (scidList.size() > 1){
+                // remove the first one. it is already processed
+                scidList.remove(0);
+                // exceptions
+                calItem.processNewInviteExceptions(scidList, folderId, nextAlarm, false, false);
             }
 
             // Recompute alarm time after processing all Invites.
