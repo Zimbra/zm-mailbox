@@ -65,9 +65,9 @@ public abstract class DocumentHandler {
     protected Element getResponseElement(ZimbraSoapContext zc) {
         return zc.createElement(responseQName);
     }
-    
+
     /**
-     * Set the timeout in milli seconds for SoapHttpTransport when this request gets proxied. 
+     * Set the timeout in milli seconds for SoapHttpTransport when this request gets proxied.
      * @param timeoutMsecs
      */
 
@@ -654,5 +654,13 @@ public abstract class DocumentHandler {
             }
         }
         return null;
+    }
+
+
+    @VisibleForTesting
+    public static void resetLocalHost() {
+
+        LOCAL_HOST = "";
+        LOCAL_HOST_ID = "";
     }
 }

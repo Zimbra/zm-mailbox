@@ -17,19 +17,23 @@ package com.zimbra.cs.mailbox;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.MockStoreManager;
@@ -37,6 +41,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.http.HttpStoreManagerTest.MockHttpStoreManager;
 import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.DocumentHandler;
 
 public final class MailboxTestUtil {
 
@@ -142,6 +147,7 @@ public final class MailboxTestUtil {
         } else if (sm instanceof MockHttpStoreManager) {
             MockHttpStore.purge();
         }
+        DocumentHandler.resetLocalHost();
     }
 
     private static void deleteDirContents(File dir) throws IOException {
@@ -190,5 +196,14 @@ public final class MailboxTestUtil {
         mm.setHeader("Subject", subject);
         mm.setText("nothing to see here");
         return new ParsedMessage(mm, false);
+    }
+
+    public static Invite generateInvite(Account account, String fragment,
+                ZVCalendar cals) throws Exception {
+
+        List<Invite> invites = Invite.createFromCalendar(account, fragment, cals,
+            true);
+
+        return invites.get(0);
     }
 }

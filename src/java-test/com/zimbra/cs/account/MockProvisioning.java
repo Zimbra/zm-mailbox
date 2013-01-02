@@ -190,7 +190,7 @@ public final class MockProvisioning extends Provisioning {
                 if (value instanceof List) { // Convert list to string array.
                     List<?> list = (List<?>) value;
                     String[] strArray = new String[list.size()];
-                    for (int i = 0; i < list.size(); i++) { 
+                    for (int i = 0; i < list.size(); i++) {
                         strArray[i] = list.get(i).toString();
                     }
                     value = strArray;
@@ -252,7 +252,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public GlobalGrant getGlobalGrant() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
