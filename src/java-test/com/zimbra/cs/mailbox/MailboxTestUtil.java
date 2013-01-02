@@ -69,6 +69,7 @@ public final class MailboxTestUtil {
         LC.reload();
         LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "conf/attrs");
         LC.zimbra_rights_directory.setDefault(zimbraServerDir + "conf/rights");
+        LC.timezone_file.setDefault(zimbraServerDir + "conf/timezones.ics");
 
         // default MIME handlers are now set up in MockProvisioning constructor
         Provisioning.setInstance(new MockProvisioning());
