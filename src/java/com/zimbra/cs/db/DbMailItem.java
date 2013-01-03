@@ -1231,13 +1231,13 @@ public class DbMailItem {
         }
     }
     
-    public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, int itemId, int revision, String locator,
-            String digest) throws ServiceException {
+    public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, String idColumn, int itemId,
+            int revision, String locator, String digest) throws ServiceException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + tableName +
                         " SET locator = ?, blob_digest = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND mod_content=?");
+                        " WHERE " + IN_THIS_MAILBOX_AND + idColumn + " = ? AND mod_content=?");
             int pos = 1;
             stmt.setString(pos++, locator);
             stmt.setString(pos++, digest);
