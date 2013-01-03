@@ -1230,6 +1230,27 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
+    
+    public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, int itemId, int revision, String locator,
+            String digest) throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + tableName +
+                        " SET locator = ?, blob_digest = ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND mod_content=?");
+            int pos = 1;
+            stmt.setString(pos++, locator);
+            stmt.setString(pos++, digest);
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, itemId);
+            stmt.setInt(pos++, revision);
+            return stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("updating locator and digest " + itemId + "-" + revision, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
 
     public static void saveImapUid(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
