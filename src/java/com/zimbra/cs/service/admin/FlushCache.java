@@ -24,28 +24,26 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CacheEntryType;
-import com.zimbra.cs.account.Config;
 
 public class FlushCache extends AdminDocumentHandler {
 
@@ -110,6 +108,7 @@ public class FlushCache extends AdminDocumentHandler {
 			case all:
 				flushLdapCache(cacheType, eCache);
 				Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
+				break;
 			case galgroup:
 				GalGroup.flushCache(getCacheEntries(eCache));
 				break;
