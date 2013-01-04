@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.localconfig.DebugConfig;
@@ -496,7 +497,7 @@ public class FileLogWriter implements LogWriter {
         private static final long MAX_SLEEP_MILLIS = 1000;  // never sleep longer than 1 seconds
 
         public FsyncThread(long fsyncIntervalMS) {
-            super("FileLogWriter.FsyncThread");
+            super("FileLogWriter.FsyncThread-"+System.currentTimeMillis());
             // Sanity check the sleep interval.
             if (fsyncIntervalMS < MIN_SLEEP_MILLIS) {
                 ZimbraLog.redolog.warn("Invalid fsync thread sleep interval %dms; using %dms instead",
@@ -515,10 +516,13 @@ public class FileLogWriter implements LogWriter {
 
         @Override public void run() {
             boolean running = true;
+        	ZimbraLog.redolog.info("Starting fsync thread with interval %d", mSleepMS);
             while (running) {
                 // Sleep between fsyncs.
                 try {
+                	ZimbraLog.redolog.trace("Sleeping for %s", mSleepMS);
                     Thread.sleep(mSleepMS);
+                	ZimbraLog.redolog.trace("Slept for %s running? %s", mSleepMS, mRunning);
                 } catch (InterruptedException e) {
                     ZimbraLog.redolog.warn("Sync thread interrupted", e);
                 }
@@ -534,6 +538,7 @@ public class FileLogWriter implements LogWriter {
                     running = mRunning;
                 }
             }
+            ZimbraLog.redolog.info("fsync thread exiting");
         }
 
         // Stop the fsync thread.  Wait until the thread really stops.
@@ -542,7 +547,15 @@ public class FileLogWriter implements LogWriter {
                 mRunning = false;
             }
             try {
-                join();
+            	while (isAlive()) {
+            		if (ZimbraLog.redolog.isTraceEnabled()) {
+            			ZimbraLog.redolog.trace("waiting for %s to finish. running? %s", getName(), mRunning);
+            		} else {
+            			ZimbraLog.redolog.info("waiting for %s to finish.", getName());
+            		}
+            		join(Constants.MILLIS_PER_MINUTE);
+            	}
+            	ZimbraLog.redolog.info("%s finished", getName());
             } catch (InterruptedException e) {
                 ZimbraLog.redolog.warn("InterruptedException while stopping FsyncThread", e);
             }
