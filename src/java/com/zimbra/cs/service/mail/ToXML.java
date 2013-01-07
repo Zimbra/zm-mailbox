@@ -1019,7 +1019,7 @@ public final class ToXML {
     private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
             throws ServiceException {
-        boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS) && needToOutput(fields, Change.SENDERS);
 
         Mailbox mbox = conv.getMailbox();
@@ -1744,7 +1744,7 @@ public final class ToXML {
         if (!needToOutput(fields, Change.CONTENT)) {
             return el;
         }
-        boolean addRecips = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addRecips = (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS);
         if (addRecips) {
             addEmails(el, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
