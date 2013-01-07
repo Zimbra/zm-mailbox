@@ -2772,7 +2772,7 @@ public class LdapProvisioning extends LdapProv {
         Map<String, Object> allNewAttrs = new HashMap<String, Object>(allAttrs);
         for (String attr : allAttrs.keySet()) {
             AttributeInfo info = AttributeManager.getInstance().getAttributeInfo(attr);
-            if (info.isDeprecated()) {
+            if (info != null && info.isDeprecated()) {
                 allNewAttrs.remove(attr);
             }
         }
