@@ -977,6 +977,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     @Override
     public long cachedFreeBusyStartTime(String accountId) {
         Calendar cal = GregorianCalendar.getInstance();
+        int curYear = cal.get(Calendar.YEAR);
         try {
             long dur = getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, accountId, 0);
             cal.setTimeInMillis(System.currentTimeMillis() - dur);
@@ -989,6 +990,11 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
+        if (cal.get(Calendar.YEAR) < curYear) {
+            // Exchange accepts FB info for only one calendar year. If the start date falls in the previous year
+            // change it to beginning of the current year.
+            cal.set(curYear, 0, 1);
+        }
         return cal.getTimeInMillis();
     }
 
