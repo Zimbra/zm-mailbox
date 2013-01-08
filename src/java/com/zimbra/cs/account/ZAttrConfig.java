@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121219-1442 */
+    /* build: 9.0.0_BETA1_1111 gren 20130108-1655 */
 
     /**
      * RFC2256: descriptive information
@@ -22102,7 +22102,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
-     * also used as value for postconf message_size_limit
+     * also used as value for postconf message_size_limit. 0 means &quot;no
+     * limit&quot;
      *
      * @return zimbraMtaMaxMessageSize, or 10240000 if unset
      */
@@ -22113,7 +22114,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
-     * also used as value for postconf message_size_limit
+     * also used as value for postconf message_size_limit. 0 means &quot;no
+     * limit&quot;
      *
      * @param zimbraMtaMaxMessageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22127,7 +22129,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
-     * also used as value for postconf message_size_limit
+     * also used as value for postconf message_size_limit. 0 means &quot;no
+     * limit&quot;
      *
      * @param zimbraMtaMaxMessageSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22142,7 +22145,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
-     * also used as value for postconf message_size_limit
+     * also used as value for postconf message_size_limit. 0 means &quot;no
+     * limit&quot;
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -22155,7 +22159,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
-     * also used as value for postconf message_size_limit
+     * also used as value for postconf message_size_limit. 0 means &quot;no
+     * limit&quot;
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

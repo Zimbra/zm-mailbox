@@ -228,7 +228,8 @@ final class AppendMessage {
     void checkContent() throws IOException, ImapException, ServiceException {
         getContent();
         long size = content.getRawSize();
-        if (size > handler.getConfig().getMaxMessageSize()) {
+        long maxMsgSize = handler.getConfig().getMaxMessageSize();
+        if ((maxMsgSize != 0 /* 0 means unlimited */) && (size > handler.getConfig().getMaxMessageSize())) {
             cleanup();
             if (catenate) {
                 throw new ImapParseException(tag, "TOOBIG", "maximum message size exceeded", false);

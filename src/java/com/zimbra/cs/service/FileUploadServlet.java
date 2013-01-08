@@ -718,9 +718,17 @@ public class FileUploadServlet extends ZimbraServlet {
         long maxSize = DEFAULT_MAX_SIZE;
         try {
             if (limitByFileUploadMaxSize) {
-                maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+                maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(
+                        Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
             } else {
-                maxSize = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+                maxSize = Provisioning.getInstance().getConfig().getLongAttr(
+                        Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+                if (maxSize == 0) {
+                    /* zimbraMtaMaxMessageSize=0 means "no limit".  The return value from this function gets used
+                     * by FileUploadBase "sizeMax" where "-1" means "no limit"
+                     */
+                    maxSize = -1;
+                }
             }
         } catch (ServiceException e) {
             mLog.error("Unable to read " +

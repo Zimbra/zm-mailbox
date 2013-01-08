@@ -47,7 +47,7 @@ final class TcpImapRequest extends ImapRequest {
         if (isAppend()) {
             try {
                 long msgLimit = mHandler.getConfig().getMaxMessageSize();
-                if (msgLimit < maxLiteralSize) {
+                if ((msgLimit != 0 /* 0 means unlimited */) && (msgLimit < maxLiteralSize)) {
                     if (size > msgLimit) {
                         throwSizeExceeded("message");
                     } 

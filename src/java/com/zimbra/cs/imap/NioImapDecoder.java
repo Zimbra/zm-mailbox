@@ -37,10 +37,10 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
 
     private int maxChunkSize = 1024;
     private int maxLineLength = 1024;
-    private long maxLiteralSize = -1L;
+    private long maxLiteralSize = -1L; /* -1 means "no limit" */
 
     void setMaxChunkSize(int bytes) {
-        Preconditions.checkArgument(bytes > 0);
+        Preconditions.checkArgument(bytes > 0, "Maximum chunk size must be >0 bytes - value given=%s", bytes);
         maxChunkSize = bytes;
     }
 
@@ -51,7 +51,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
      * @param value max line length in bytes
      */
     void setMaxLineLength(int bytes) {
-        Preconditions.checkArgument(bytes > 0);
+        Preconditions.checkArgument(bytes > 0, "Maximum Line length must be >0 bytes - value given=%s", bytes);
         maxLineLength = bytes;
     }
 
@@ -62,8 +62,12 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
      * @param bytes max literal size in bytes
      */
     void setMaxLiteralSize(long bytes) {
-        Preconditions.checkArgument(bytes > 0);
-        maxLiteralSize = bytes;
+        Preconditions.checkArgument(bytes >= -1L, "Maximum Literal size must be >=-1 bytes - value given=%s", bytes);
+        if (bytes == 0) {
+            maxLiteralSize = -1; /* means "no limit" */
+        } else {
+            maxLiteralSize = bytes;
+        }
     }
 
     /**
