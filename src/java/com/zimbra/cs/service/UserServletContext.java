@@ -558,10 +558,13 @@ public class UserServletContext {
         final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
         if (limit == 0) {
-            if (req.getParameter("lbfums") != null)
-                limit = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
-            else
-                limit = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+            if (req.getParameter("lbfums") != null) {
+                limit = Provisioning.getInstance().getLocalServer().getLongAttr(
+                        Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+            } else {
+                limit = Provisioning.getInstance().getConfig().getLongAttr(
+                        Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+            }
         }
         if (ServletFileUpload.isMultipartContent(req)) {
             ServletFileUpload sfu = new ServletFileUpload();

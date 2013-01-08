@@ -139,6 +139,9 @@ public class ImapConfig extends ServerConfig {
         return getIntAttr(A_zimbraImapMaxRequestSize, LC.imap_max_request_size.intValue());
     }
 
+    /**
+     * @return maximum message size where 0 means "no limit"
+     */
     public long getMaxMessageSize() throws ServiceException {
         return Provisioning.getInstance().getConfig().getLongAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
     }

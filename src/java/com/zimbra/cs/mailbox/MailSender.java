@@ -460,8 +460,9 @@ public class MailSender {
                 size = (int) ByteUtil.getDataLength(Mime.getInputStream(mm));
             }
 
-            if (size > maxSize)
+            if ((maxSize != 0 /* 0 means "no limit" */) && (size > maxSize)) {
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
+            }
 
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();

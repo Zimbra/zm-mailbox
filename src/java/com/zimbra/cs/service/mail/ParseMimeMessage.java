@@ -127,8 +127,9 @@ public final class ParseMimeMessage {
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("encoding error", e);
         }
-        long maxSize = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
-        if (content.length > maxSize) {
+        long maxSize = Provisioning.getInstance().getConfig().getLongAttr(
+                Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+        if ((maxSize != 0 /* 0 means "no limit" */) && (content.length > maxSize)) {
             throw ServiceException.INVALID_REQUEST("inline message too large", null);
         }
 
@@ -253,7 +254,7 @@ public final class ParseMimeMessage {
         ParseMessageContext() {
             try {
                 Config config = Provisioning.getInstance().getConfig();
-                maxSize = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+                maxSize = config.getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
             } catch (ServiceException e) {
                 ZimbraLog.soap.warn("Unable to determine max message size.  Disabling limit check.", e);
             }
@@ -265,7 +266,7 @@ public final class ParseMimeMessage {
         void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
             ZimbraLog.soap.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
-            if (size > maxSize) {
+            if ((maxSize != 0 /* 0 means "no limit" */) && (size > maxSize)) {
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
             }
         }
