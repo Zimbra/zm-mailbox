@@ -103,6 +103,6 @@ public class Version {
 
     @Override public boolean equals(Object obj) {
         Version b = (Version) obj;
-        return b.mMajorVer == mMajorVer && b.mMinorVer == mMinorVer;
+        return b != null && b.mMajorVer == mMajorVer && b.mMinorVer == mMinorVer;
     }
 }
