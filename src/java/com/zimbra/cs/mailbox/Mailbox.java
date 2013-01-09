@@ -224,8 +224,8 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
+import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.Policy;
@@ -4592,7 +4592,7 @@ public class Mailbox {
                     calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, true);
                 }
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
-            } 
+            }
             if (scidList.size() > 1){
                 // remove the first one. it is already processed
                 scidList.remove(0);
@@ -6931,6 +6931,11 @@ public class Mailbox {
                 result.add(createContact(octxt, new ParsedContact(new ParsedAddress(addr).getAttributes()),
                         Mailbox.ID_FOLDER_AUTO_CONTACTS, null));
             } catch (ServiceException e) {
+                if (e.getCode().equals(MailServiceException.TOO_MANY_CONTACTS)) {
+                    ZimbraLog.mailbox.warn("Aborting contact addition, " +
+                    		"Failed to auto-add contact addr=%s", addr, e);
+                    return result;
+                }
                 ZimbraLog.mailbox.warn("Failed to auto-add contact addr=%s", addr, e);
             }
         }

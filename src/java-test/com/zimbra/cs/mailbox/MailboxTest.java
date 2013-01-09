@@ -14,20 +14,27 @@
  */
 package com.zimbra.cs.mailbox;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -297,12 +304,12 @@ public final class MailboxTest {
 
         item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
-        
+
         // Index the mailbox so that mime message gets cached
         mbox.index.indexDeferredItems();
         // make sure digest is in message cache.
         Assert.assertTrue(MessageCache.contains(item.getDigest()));
-        
+
         mbox.deleteMailbox(Mailbox.DeleteBlobs.NEVER);
         Assert.assertEquals("end with 1 blob in the store", 1, sm.size());
         // make sure digest is still present in message cache.
@@ -421,5 +428,42 @@ public final class MailboxTest {
                 Assert.assertTrue(iinfo + ": uuid contained in set", uuids.remove(iinfo.getUuid()));
             }
         }
+    }
+
+    @Test
+    public void createAutoContactTestWhenMaxEntriesLimitIsReached() throws Exception {
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Collection<InternetAddress> addrs = new ArrayList<InternetAddress>();
+        addrs.add(new InternetAddress("user2@email.com"));
+        addrs.add(new InternetAddress("user3@email.com"));
+        addrs.add(new InternetAddress("user4@email.com"));
+
+        Provisioning prov = Provisioning.getInstance();
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraContactMaxNumEntries, Integer.toString(2));
+        prov.modifyAttrs(acct1, attrs);
+        List<Contact> contactList = mbox.createAutoContact(null, addrs);
+        assertEquals(2, contactList.size());
+
+
+        attrs.put(Provisioning.A_zimbraContactMaxNumEntries, Integer.toString(10));
+        prov.modifyAttrs(acct1, attrs);
+        addrs = new ArrayList<InternetAddress>();
+        addrs.add(new InternetAddress("user2@email.com"));
+        addrs.add(new InternetAddress("user3@email.com"));
+        addrs.add(new InternetAddress("user4@email.com"));
+        contactList = mbox.createAutoContact(null, addrs);
+        assertEquals(3, contactList.size());
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
+
     }
 }
