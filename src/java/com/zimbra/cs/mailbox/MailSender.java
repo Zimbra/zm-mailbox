@@ -1049,6 +1049,11 @@ public class MailSender {
                     ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
                 }
             } catch (ServiceException e) {
+            	if (e.getCode().equals(MailServiceException.TOO_MANY_CONTACTS)) {
+                    ZimbraLog.mailbox.warn("Aborting contact addition, " +
+                    		"Failed to auto-add contact addr=%s", inetaddr, e); 
+                    return;
+                }
                 ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
             }
         }
