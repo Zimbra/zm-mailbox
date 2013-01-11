@@ -144,9 +144,12 @@ public final class LuceneIndex extends IndexStore {
             return writerRef;
         }
 
+        /**
+         * @param newRef index writer reference.  If null, there are no writers
+         */
         public void setWriterRef(IndexWriterRef newRef)
         throws IOException {
-            if (isPendingDelete()) {
+            if ((newRef != null) && isPendingDelete()) {
                 throw new IndexPendingDeleteException();
             }
             lock.lock();
