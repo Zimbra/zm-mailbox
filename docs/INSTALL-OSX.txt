@@ -23,7 +23,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   export ZIMBRA_HOSTNAME={your computer name}.local
 
 5. $ source ~/.bash_profile
-6. $ mkdir -p /opt/zimbra
+6. $ sudo mkdir -p /opt/zimbra
 7. $ mkdir ~/p4 
    $ mkdir ~/p4/main
    $ cd ~/p4/main
@@ -59,27 +59,31 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   Grab the DMG version and install the two packages (MySQL and the startup item).
 
 13. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql  (RHEL command, sudo ln -s /usr/local/mysql /usr)
-14. $ sudo vi /opt/zimbra/mysql/data/my.cnf (RHEL command, sudo vi /var/lib/mysql)
+
+14. $ sudo chown {username} /opt/zimbra
+
+15. $ sudo vi /opt/zimbra/mysql/data/my.cnf (RHEL command, sudo vi /var/lib/mysql)
 
   [mysqld]
   port = 7306
 
-15. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
+16. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
   * With MySQLStartupItem package installed, mysqld will start automatically on reboot.
+  * If the "mysqld_safe" command doesn't exist, just use "mysqld" instead.
   * MySQL log file can be found at: /opt/zimbra/mysql/data/{server-name}.err
   * May need to press Enter to return to the prompt
 
-16. $ /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
+17. $ /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
 
 
-17. $ sudo visudo
+18. $ sudo visudo
 
   {username} ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
 
   * {username} is your local username and be sure to insert a [TAB] between {username} and "ALL".
 
-18. $ cd ~/p4/main/ZimbraServer
-19. $ ant reset-all
+19. $ cd ~/p4/main/ZimbraServer
+20. $ ant reset-all
 
   * $ ant -p
   Buildfile: build.xml
@@ -103,7 +107,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    test                    Run unit tests
   Default target: jar
 
-20. open http://localhost:7070/zimbra
+21. open http://localhost:7070/zimbra
 
   Username: user1 / Password: test123
 
