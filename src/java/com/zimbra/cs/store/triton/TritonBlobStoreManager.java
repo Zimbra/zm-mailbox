@@ -32,14 +32,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.external.ExternalUploadedBlob;
 import com.zimbra.cs.store.external.ExternalResumableIncomingBlob;
 import com.zimbra.cs.store.external.ExternalResumableUpload;
+import com.zimbra.cs.store.external.ExternalUploadedBlob;
 import com.zimbra.cs.store.external.SisStore;
 
 /**
@@ -98,10 +99,18 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     @Override
     public byte[] getHash(Blob blob) throws ServiceException, IOException {
         MessageDigest digest = newDigest();
-        DigestInputStream dis = new DigestInputStream(blob.getInputStream(), digest);
-        while (dis.read() >= 0) {
+        DigestInputStream dis = null;
+        InputStream bis = null;
+        try {
+            bis = blob.getInputStream();
+            dis = new DigestInputStream(bis, digest);
+	        while (dis.read() >= 0) {
+	        }
+	        return digest.digest();
+        } finally {
+            ByteUtil.closeStream(bis);
+            ByteUtil.closeStream(dis);
         }
-        return digest.digest();
     }
 
     private MessageDigest newDigest() throws ServiceException {

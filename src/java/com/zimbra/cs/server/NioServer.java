@@ -55,6 +55,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -101,16 +102,22 @@ public abstract class NioServer implements Server {
     }
 
     private static SSLContext initSSLContext() throws Exception {
-        KeyStore ks = KeyStore.getInstance("JKS");
-        char[] pass = LC.mailboxd_keystore_password.value().toCharArray();
-        ks.load(new FileInputStream(LC.mailboxd_keystore.value()), pass);
-        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-        kmf.init(ks, pass);
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-        tmf.init(ks);
-        SSLContext context = SSLContext.getInstance("TLS");
-        context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-        return context;
+        FileInputStream fis = null;
+        try {
+	        KeyStore ks = KeyStore.getInstance("JKS");
+	        char[] pass = LC.mailboxd_keystore_password.value().toCharArray();
+	        fis = new FileInputStream(LC.mailboxd_keystore.value());
+	        ks.load(fis, pass);
+	        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+	        kmf.init(ks, pass);
+	        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+	        tmf.init(ks);
+	        SSLContext context = SSLContext.getInstance("TLS");
+	        context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+	        return context;
+        } finally {
+            ByteUtil.closeStream(fis);
+        }
     }
 
     /**

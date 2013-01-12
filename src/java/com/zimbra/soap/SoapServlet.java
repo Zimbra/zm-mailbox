@@ -38,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.BufferStream;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
@@ -238,14 +239,20 @@ public class SoapServlet extends ZimbraServlet {
             if (len > maxSize) {
                 success = false;
             } else {
-                BufferStream bs = new BufferStream(len, maxSize, maxSize);
-                int in = (int)bs.readFrom(req.getInputStream(), len >= 0 ? len :
-                    Integer.MAX_VALUE);
+                BufferStream bs = null;
 
-                if (len > 0 && in < len)
-                    throw new EOFException("SOAP content truncated " + in + "!=" + len);
-                success = in <= maxSize;
-                buffer = bs.toByteArray();
+                try {
+                    bs = new BufferStream(len, maxSize, maxSize);
+	                int in = (int)bs.readFrom(req.getInputStream(), len >= 0 ? len :
+	                    Integer.MAX_VALUE);
+
+	                if (len > 0 && in < len)
+	                    throw new EOFException("SOAP content truncated " + in + "!=" + len);
+	                success = in <= maxSize;
+	                buffer = bs.toByteArray();
+                } finally {
+                    ByteUtil.closeStream(bs);
+                }
             }
 
             // Handle requests that exceed the size limit
@@ -268,7 +275,7 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SERVLET_CONTEXT, getServletContext());
         context.put(SERVLET_REQUEST, req);
         context.put(SERVLET_RESPONSE, resp);
-        
+
         try {
             Boolean isAdminReq = isAdminRequest(req);
             context.put(IS_ADMIN_REQUEST, isAdminReq);
