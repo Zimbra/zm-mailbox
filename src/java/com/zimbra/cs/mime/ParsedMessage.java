@@ -136,6 +136,7 @@ public final class ParsedMessage {
     private String subject;
     private String normalizedSubject;
     private boolean subjectIsReply;
+    private Boolean hasReplyToHeader = null;
     private final List<IndexDocument> luceneDocuments = new ArrayList<IndexDocument>(2);
     private CalendarPartInfo calendarPartInfo;
     private boolean wasMutated;
@@ -603,9 +604,24 @@ public final class ParsedMessage {
         return false;
     }
 
+    private boolean isInReplyTo() {
+        if (hasReplyToHeader != null) {
+            return hasReplyToHeader;
+        }
+        String[] replyTo;
+        try {
+            replyTo = getMimeMessage().getHeader("In-Reply-To");
+            hasReplyToHeader = replyTo != null && replyTo.length > 0 && replyTo[0].length() > 0;
+            return hasReplyToHeader;
+        } catch (MessagingException e) {
+            LOG.warn("messaging exception getting In-Reply-To header", e);
+            return false;
+        }
+    }
+
     public boolean isReply() {
         normalizeSubject();
-        return subjectIsReply;
+        return subjectIsReply || isInReplyTo();
     }
 
     public String getSubject() {
