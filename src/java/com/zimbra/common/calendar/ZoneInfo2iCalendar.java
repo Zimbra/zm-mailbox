@@ -671,7 +671,8 @@ public class ZoneInfo2iCalendar {
                         continue;
                     // Skip some known non data files: *.tab, *.sh and "factory".
                     String name = file.getName();
-                    if (name.endsWith(".tab") || name.endsWith(".sh") || name.equalsIgnoreCase("factory"))
+                    if (name.endsWith(".tab") || name.endsWith(".sh") || name.equalsIgnoreCase("factory") ||
+                            name.equalsIgnoreCase("Makefile"))
                         continue;
                     if (!file.canRead())
                         throw new IOException("Permission denied on file " + file.getAbsolutePath());
