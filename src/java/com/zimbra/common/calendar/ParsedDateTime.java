@@ -2,19 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 /**
- * 
+ *
  */
 package com.zimbra.common.calendar;
 
@@ -34,14 +34,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 
 public final class ParsedDateTime {
-    
+
     /**
      * This means that "Date" events are treated as having a time of 00:00:00 in the
      * creator's default timezone, UNLESS they have the "UTC only" flag set
      */
     private static final boolean OUTLOOK_COMPAT_ALLDAY =
         LC.calendar_outlook_compatible_allday_events.booleanValue();
-    
+
     // YYYYMMDD'T'HHMMSSss'Z' YYYY MM DD 'T' HH MM SS Z
     // or YYYY'-'MM'-'DD'T'HH':'MM':'ss'.'SSS'Z'
     static Pattern sDateTimePattern = Pattern
@@ -50,7 +50,7 @@ public final class ParsedDateTime {
     public static ParsedDateTime fromUTCTime(long utc) {
         return new ParsedDateTime(new java.util.Date(utc));
     }
-    
+
     public static ParsedDateTime fromUTCTime(long millis, ICalTimeZone tz) {
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTimeInMillis(millis);
@@ -60,7 +60,7 @@ public final class ParsedDateTime {
 
     public static ParsedDateTime parseUtcOnly(String str) throws ParseException {
         return parse(str, null, null, null, true);
-    }    
+    }
 
     public static ParsedDateTime parse(String str, TimeZoneMap tzmap, ICalTimeZone tz, ICalTimeZone localTZ)
     throws ParseException {
@@ -77,14 +77,14 @@ public final class ParsedDateTime {
     	assert(tzmap != null || utcOnly);
 
     	Matcher m = sDateTimePattern.matcher(str);
-        
+
         if (m.matches()) {
             int year, month, date;
             int hour = -1;
             int minute = -1;
             int second = -1;
             boolean zulu = false;
-            
+
             year = Integer.parseInt(m.group(1));
             month = Integer.parseInt(m.group(2)) - 1; // java months are
             // 0-indexed!
@@ -99,7 +99,7 @@ public final class ParsedDateTime {
                 if (m.group(7) != null && m.group(7).equals("Z")) {
                     zulu = true;
                 }
-                
+
                 if (zulu || utcOnly) {
                     // RFC2445 Section 4.3.5 Date-Time
                     // FORM #2: DATE WITH UTC TIME
@@ -117,11 +117,11 @@ public final class ParsedDateTime {
             	// no timezone if it is a DATE entry....note that we *DO* need a
             	// 'local time zone' as a fallback: if we're in OUTLOOK_COMPAT_ALLDAY
             	// mode we will need to use this local time zone as the zone to render
-            	// the appt in (remember, outlook all-day-appts must be 0:00-0:00 in 
+            	// the appt in (remember, outlook all-day-appts must be 0:00-0:00 in
             	// the client's timezone!)
             	tz = null;
             }
-            
+
             GregorianCalendar cal = new GregorianCalendar();
             cal.clear();
             if (zulu || utcOnly) {
@@ -148,7 +148,7 @@ public final class ParsedDateTime {
                 hasTime = true;
             } else {
                 cal.set(year, month, date, 0, 0, 0);
-                if (cal.get(Calendar.DATE) != date) { 
+                if (cal.get(Calendar.DATE) != date) {
                     // 12AM does not exist for this date and timezone. This is possible if the day light cross over happens at mid night
                     // and this date happens to be day light cross over date (bug 51966). Set the time to the correct mid night (i.e> 1AM)
                     cal.set(year, month, date, (int) (tz.getDSTSavings()/MSECS_PER_HOUR), 0, 0);
@@ -162,7 +162,7 @@ public final class ParsedDateTime {
                 // format, but we'll try to work with it, by ignoring
                 // the unnecessary "Z".
             	//
-            	// Since they requested "Z", we'll pass in UTC as their 'default timezone' 
+            	// Since they requested "Z", we'll pass in UTC as their 'default timezone'
             	// just in case it somehow comes to that (ie Outlook hack)
                 return parse(str.substring(0, 8), tzmap, tz, ICalTimeZone.getUTC(), utcOnly);
             } else
@@ -174,14 +174,14 @@ public final class ParsedDateTime {
     throws ParseException, ServiceException {
     	assert(tzmap != null);
         String tzname = prop.getParameterVal(ICalTok.TZID, null);
-        
+
         ICalTimeZone tz = null;
-        if (tzname != null) 
+        if (tzname != null)
         	tz = tzmap.lookupAndAdd(tzname);
 
-        if (tz == null) 
+        if (tz == null)
             tz = tzmap.getLocalTimeZone();
-        
+
         return parse(prop.getValue(), tzmap, tz, tzmap.getLocalTimeZone());
     }
 
@@ -226,16 +226,16 @@ public final class ParsedDateTime {
         cal.setTimeZone(ICalTimeZone.getUTC());
         MAX_DATETIME = new ParsedDateTime(cal, ICalTimeZone.getUTC(), false);
     }
-    
-    private GregorianCalendar mCal;
-    
+
+    private final GregorianCalendar mCal;
+
     public ICalTimeZone getTimeZone() { return mICalTimeZone; }
-    
+
 
     // can't rely on cal.isSet, even though we want to -- because cal.toString()
     // sets the flag!!!
     private boolean mHasTime = false;
-    
+
     private ICalTimeZone mICalTimeZone;
 
     private ParsedDateTime(GregorianCalendar cal, ICalTimeZone iCalTimeZone, boolean hasTime) {
@@ -243,7 +243,7 @@ public final class ParsedDateTime {
         mHasTime = hasTime;
         mICalTimeZone = iCalTimeZone;
     }
-    
+
     ParsedDateTime(java.util.Date utc) {
         mCal = new GregorianCalendar(ICalTimeZone.getUTC());
         mCal.setTime(utc);
@@ -272,13 +272,14 @@ public final class ParsedDateTime {
      */
     public ParsedDateTime cloneWithNewDate(ParsedDateTime date) {
         GregorianCalendar cal = (GregorianCalendar) mCal.clone();
-        GregorianCalendar calDate = (GregorianCalendar) date.mCal;
+        GregorianCalendar calDate = date.mCal;
         cal.set(calDate.get(java.util.Calendar.YEAR),
                 calDate.get(java.util.Calendar.MONTH),
                 calDate.get(java.util.Calendar.DAY_OF_MONTH));
         return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
     }
 
+    @Override
     public Object clone() {
         GregorianCalendar cal = (GregorianCalendar) mCal.clone();
         return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
@@ -300,9 +301,10 @@ public final class ParsedDateTime {
     public int compareTo(ParsedDateTime other) {
         return compareTo(other.getDate());
     }
-    
+
+    @Override
     public boolean equals(Object obj) {
-        return (compareTo(obj) == 0);
+        return (obj != null && compareTo(obj) == 0);
     }
 
     /**
@@ -362,7 +364,7 @@ public final class ParsedDateTime {
         long myTime = mCal.getTimeInMillis();
         long otherTime = other.mCal.getTimeInMillis();
         long diff = myTime - otherTime;
-        
+
         // Adjust for shift in GMT offset if there was a DST transition between the two times.
         if (mICalTimeZone != null && mICalTimeZone.useDaylightTime()) {
             long myOffset = mICalTimeZone.getOffset(myTime);
@@ -385,16 +387,16 @@ public final class ParsedDateTime {
                 weeks = (int) (diff / MSECS_PER_WEEK);
             } else {
                 long dleft = diff;
-    
+
                 days = (int) (dleft / MSECS_PER_DAY);
                 dleft = dleft % MSECS_PER_DAY;
-                
+
                 hours = (int) (dleft/ MSECS_PER_HOUR);
                 dleft = dleft % MSECS_PER_HOUR;
-                
+
                 mins = (int) (dleft/ MSECS_PER_MIN);
                 dleft = dleft % MSECS_PER_MIN;
-                
+
                 secs = (int) (dleft/ MSECS_PER_SEC);
             }
         } else {
@@ -457,14 +459,14 @@ public final class ParsedDateTime {
     }
 
     /**
-     * @return The YYYYMMDD['T'HHMMSS[Z]] part  
+     * @return The YYYYMMDD['T'HHMMSS[Z]] part
      */
     public String getDateTimePartString() {
         return getDateTimePartString(OUTLOOK_COMPAT_ALLDAY);
     }
 
     /**
-     * @return The YYYYMMDD['T'HHMMSS[Z]] part  
+     * @return The YYYYMMDD['T'HHMMSS[Z]] part
      */
     public String getDateTimePartString(boolean useOutlookCompatMode) {
         DecimalFormat fourDigitFormat = new DecimalFormat("0000");
@@ -502,7 +504,7 @@ public final class ParsedDateTime {
             }
         } else if (useOutlookCompatMode) {
             toRet.append("T000000");
-        	// OUTLOOK HACK -- remember, outlook all-day-appts 
+        	// OUTLOOK HACK -- remember, outlook all-day-appts
         	// must be rendered as 0:00-0:00 in the client's timezone...but we
             // need to correctly fallback to UTC here (e.g. UNTILs w/ DATE values
             // that are implicitly therefore in UTC) in some cases.  Sheesh.
@@ -510,10 +512,10 @@ public final class ParsedDateTime {
                 toRet.append("Z");
             }
         }
-        
+
         return toRet.toString();
     }
-    
+
     public boolean isUTC() {
         if (mICalTimeZone.getID()!=null && mICalTimeZone.getID().equals("Z")) {
             return true;
@@ -553,7 +555,7 @@ public final class ParsedDateTime {
     public GregorianCalendar getCalendarCopy() {
         return (GregorianCalendar)(mCal.clone());
     }
-    
+
 
     public long getUtcTime() {
         return mCal.getTimeInMillis();
@@ -598,6 +600,7 @@ public final class ParsedDateTime {
         return milli == 0;
     }
 
+    @Override
     public String toString() {
         if (mHasTime) {
             String tzName = getTZName();
@@ -609,17 +612,17 @@ public final class ParsedDateTime {
             return "VALUE=DATE:" + getDateTimePartString(false);
         }
     }
-    
+
     public ZProperty toProperty(ICalTok tok, boolean useOutlookCompatMode) {
         ZProperty toRet = new ZProperty(tok, getDateTimePartString(useOutlookCompatMode));
-        
+
         String tzName = getTZName();
         if (!useOutlookCompatMode && !hasTime()) {
             toRet.addParameter(new ZParameter(ICalTok.VALUE, ICalTok.DATE.toString()));
         } else {
             if (tzName != null) {
                 toRet.addParameter(new ZParameter(ICalTok.TZID, tzName));
-            } 
+            }
         }
         return toRet;
     }
