@@ -242,38 +242,32 @@
         </javadoc>
     </target>
 
-  <target name="javacc">
-    <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"
-      outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
-    <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"
-      outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
-  </target>
+    <target name="javacc">
+        <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"
+          outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
+        <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"
+          outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
+    </target>
 
     <target name="generate-buildinfo" depends="build-init">
-        <if>
-            <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
-            <then>
-                <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
-                <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
-                    package com.zimbra.cs.util;
+        <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
+        <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
+            package com.zimbra.cs.util;
 
-                    class BuildInfoGenerated {
-                        public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
-                        public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
-                        public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
-                        public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
-                        public static final String RELNUM = "${zimbra.buildinfo.relnum}";
-                        public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
-                        public static final String VERSION = "${zimbra.buildinfo.version}";
-                        public static final String TYPE = "${zimbra.buildinfo.type}";
-                        public static final String RELEASE = "${zimbra.buildinfo.release}";
-                        public static final String DATE = "${DSTAMP}-${TSTAMP}";
-                        public static final String HOST = "${zimbra.buildinfo.host}";
-                    }
-                </echo>
-          </then>
-        </if>
-
+            class BuildInfoGenerated {
+                public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
+                public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
+                public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
+                public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
+                public static final String RELNUM = "${zimbra.buildinfo.relnum}";
+                public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
+                public static final String VERSION = "${zimbra.buildinfo.version}";
+                public static final String TYPE = "${zimbra.buildinfo.type}";
+                public static final String RELEASE = "${zimbra.buildinfo.release}";
+                public static final String DATE = "${DSTAMP}-${TSTAMP}";
+                public static final String HOST = "${zimbra.buildinfo.host}";
+            }
+        </echo>
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
@@ -341,7 +335,7 @@
         </if>
     </target>
 
-    <target name="generate-getters" depends="compile">
+    <target name="generate-getters" depends="compile,generate-buildinfo" description="generate methods for attributes in zimbra-attrs.xml">
         <antcall target="generate-getter">
             <param name="getter.class" value="account"/>
             <param name="getter.output" value="ZAttrAccount.java"/>
