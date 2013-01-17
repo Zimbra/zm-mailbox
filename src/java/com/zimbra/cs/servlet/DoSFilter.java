@@ -15,10 +15,18 @@
 
 package com.zimbra.cs.servlet;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletRequest;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 
 
 public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
@@ -27,6 +35,30 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
     public void init(FilterConfig filterConfig) {
         super.init(filterConfig);
         _maxRequestsPerSec = LC.zimbra_dos_filter_max_requests_per_sec.intValue();
+        StringBuilder whitelist = new StringBuilder();
+        try {
+            List<Server> servers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
+            for (Server server : servers) {
+                try {
+                    InetAddress[] addresses = InetAddress.getAllByName(server.getServiceHostname());
+                    for (InetAddress address : addresses) {
+                        whitelist.append(address.getHostAddress()).append(',');
+                    }
+                } catch (UnknownHostException e) {
+                    ZimbraLog.misc.warn("Invalid hostname: " + server.getServiceHostname(), e);
+                }
+            }
+            String[] ips = Provisioning.getInstance().getLocalServer().getHttpThrottleSafeIPs();
+            for (String ip : ips) {
+                whitelist.append(ip).append(',');
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.misc.warn("Unable to get throttle safe IPs", e);
+        }
+        // add loopback addresses
+        whitelist.append("127.0.0.1,::1");
+        _whitelistStr = whitelist.toString();
+        initWhitelist();
     }
     
     @Override

@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121219-1442 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1151 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4697,6 +4697,140 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetHttpSSLNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHttpSSLNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @return zimbraHttpThrottleSafeIPs, or empty array if unset
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public String[] getHttpThrottleSafeIPs() {
+        return getMultiAttr(Provisioning.A_zimbraHttpThrottleSafeIPs);
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param zimbraHttpThrottleSafeIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public void setHttpThrottleSafeIPs(String[] zimbraHttpThrottleSafeIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThrottleSafeIPs, zimbraHttpThrottleSafeIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param zimbraHttpThrottleSafeIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public Map<String,Object> setHttpThrottleSafeIPs(String[] zimbraHttpThrottleSafeIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThrottleSafeIPs, zimbraHttpThrottleSafeIPs);
+        return attrs;
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param zimbraHttpThrottleSafeIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public void addHttpThrottleSafeIPs(String zimbraHttpThrottleSafeIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHttpThrottleSafeIPs, zimbraHttpThrottleSafeIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param zimbraHttpThrottleSafeIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public Map<String,Object> addHttpThrottleSafeIPs(String zimbraHttpThrottleSafeIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHttpThrottleSafeIPs, zimbraHttpThrottleSafeIPs);
+        return attrs;
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param zimbraHttpThrottleSafeIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public void removeHttpThrottleSafeIPs(String zimbraHttpThrottleSafeIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHttpThrottleSafeIPs, zimbraHttpThrottleSafeIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param zimbraHttpThrottleSafeIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public Map<String,Object> removeHttpThrottleSafeIPs(String zimbraHttpThrottleSafeIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHttpThrottleSafeIPs, zimbraHttpThrottleSafeIPs);
+        return attrs;
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public void unsetHttpThrottleSafeIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThrottleSafeIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public Map<String,Object> unsetHttpThrottleSafeIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThrottleSafeIPs, "");
         return attrs;
     }
 
