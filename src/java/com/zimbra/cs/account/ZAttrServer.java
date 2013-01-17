@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1151 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1454 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4375,6 +4375,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Maximum Idle time in milli seconds for a connection. This is applied
+     * when waiting for a new request to be received on a connection; when
+     * reading the headers and content of a request; when writing the headers
+     * and content of a response.
+     *
+     * @return zimbraHttpConnectorMaxIdleTimeMillis, or 60000 if unset
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1428)
+    public int getHttpConnectorMaxIdleTimeMillis() {
+        return getIntAttr(Provisioning.A_zimbraHttpConnectorMaxIdleTimeMillis, 60000);
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a connection. This is applied
+     * when waiting for a new request to be received on a connection; when
+     * reading the headers and content of a request; when writing the headers
+     * and content of a response.
+     *
+     * @param zimbraHttpConnectorMaxIdleTimeMillis new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1428)
+    public void setHttpConnectorMaxIdleTimeMillis(int zimbraHttpConnectorMaxIdleTimeMillis) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpConnectorMaxIdleTimeMillis, Integer.toString(zimbraHttpConnectorMaxIdleTimeMillis));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a connection. This is applied
+     * when waiting for a new request to be received on a connection; when
+     * reading the headers and content of a request; when writing the headers
+     * and content of a response.
+     *
+     * @param zimbraHttpConnectorMaxIdleTimeMillis new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1428)
+    public Map<String,Object> setHttpConnectorMaxIdleTimeMillis(int zimbraHttpConnectorMaxIdleTimeMillis, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpConnectorMaxIdleTimeMillis, Integer.toString(zimbraHttpConnectorMaxIdleTimeMillis));
+        return attrs;
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a connection. This is applied
+     * when waiting for a new request to be received on a connection; when
+     * reading the headers and content of a request; when writing the headers
+     * and content of a response.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1428)
+    public void unsetHttpConnectorMaxIdleTimeMillis() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpConnectorMaxIdleTimeMillis, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a connection. This is applied
+     * when waiting for a new request to be received on a connection; when
+     * reading the headers and content of a request; when writing the headers
+     * and content of a response.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1428)
+    public Map<String,Object> unsetHttpConnectorMaxIdleTimeMillis(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpConnectorMaxIdleTimeMillis, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable http debug handler on a server
      *
      * @return zimbraHttpDebugHandlerEnabled, or true if unset
@@ -4697,6 +4784,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetHttpSSLNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHttpSSLNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * The maximum thread idle time in milli seconds. Threads that are idle
+     * for longer than this period may be stopped.
+     *
+     * @return zimbraHttpThreadPoolMaxIdleTimeMillis, or 10000 if unset
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1429)
+    public int getHttpThreadPoolMaxIdleTimeMillis() {
+        return getIntAttr(Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis, 10000);
+    }
+
+    /**
+     * The maximum thread idle time in milli seconds. Threads that are idle
+     * for longer than this period may be stopped.
+     *
+     * @param zimbraHttpThreadPoolMaxIdleTimeMillis new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1429)
+    public void setHttpThreadPoolMaxIdleTimeMillis(int zimbraHttpThreadPoolMaxIdleTimeMillis) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis, Integer.toString(zimbraHttpThreadPoolMaxIdleTimeMillis));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum thread idle time in milli seconds. Threads that are idle
+     * for longer than this period may be stopped.
+     *
+     * @param zimbraHttpThreadPoolMaxIdleTimeMillis new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1429)
+    public Map<String,Object> setHttpThreadPoolMaxIdleTimeMillis(int zimbraHttpThreadPoolMaxIdleTimeMillis, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis, Integer.toString(zimbraHttpThreadPoolMaxIdleTimeMillis));
+        return attrs;
+    }
+
+    /**
+     * The maximum thread idle time in milli seconds. Threads that are idle
+     * for longer than this period may be stopped.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1429)
+    public void unsetHttpThreadPoolMaxIdleTimeMillis() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum thread idle time in milli seconds. Threads that are idle
+     * for longer than this period may be stopped.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.3
+     */
+    @ZAttr(id=1429)
+    public Map<String,Object> unsetHttpThreadPoolMaxIdleTimeMillis(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis, "");
         return attrs;
     }
 
