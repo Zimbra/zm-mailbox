@@ -7121,4 +7121,8 @@ TODO: delete them permanently from here
 <attr id="1426" name="zimbraMobileItemsToTrackPerFolderMaxSize" type="string" max="30" cardinality="multi" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.3">
   <desc>Max size of items in a folder that server tracks, categorized by collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes the max size of items to track for an Email folder to be 3000. If not specify, default value is Integer.MAX_VALUE</desc>
 </attr>
+
+<attr id="1427" name="zimbraHttpThrottleSafeIPs" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.3">
+  <desc>IP addresses to ignore when applying Jetty DosFilter.</desc>
+</attr>
 </attrs>
