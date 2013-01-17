@@ -19,6 +19,7 @@
       <New id="pool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
         <Set name="minThreads">10</Set>
         <Set name="maxThreads">%%zimbraHttpNumThreads%%</Set>
+        <Set name="maxIdleTimeMs">%%zimbraHttpThreadPoolMaxIdleTimeMillis%%</Set>
       </New>
     </Set>
 
@@ -36,8 +37,7 @@
       <Arg>
         <New id="http" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
           <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
@@ -54,8 +54,7 @@
       <Arg>
         <New id="http_local" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
           <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="Acceptors">1</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
@@ -74,9 +73,8 @@
         <New id="ssl" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set> 
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
-	  <Set name="soLingerTime">1</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set> 
+          <Set name="soLingerTime">1</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -101,8 +99,7 @@
         <New id="ssl-clientcert" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLClientCertPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set> 
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -134,7 +131,7 @@
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
-	  <Set name="soLingerTime">5</Set>
+          <Set name="soLingerTime">5</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -158,7 +155,7 @@
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
-	  <Set name="soLingerTime">5</Set>
+          <Set name="soLingerTime">5</Set>
           <Set name="Acceptors">1</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
@@ -183,8 +180,7 @@
         <New id="ext" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
           <Set name="Port">7072</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="Acceptors">2</Set>
           <Set name="Host">%%zimbraExtensionBindAddress%%</Set>
           <Set name="Forwarded">true</Set>
