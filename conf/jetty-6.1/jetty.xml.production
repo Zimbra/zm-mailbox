@@ -22,6 +22,7 @@
         <Set name="minThreads">10</Set>
         <Set name="lowThreads">50</Set>
         <Set name="maxThreads">%%zimbraHttpNumThreads%%</Set>
+        <Set name="maxIdleTimeMs">%%zimbraHttpThreadPoolMaxIdleTimeMillis%%</Set>
       </New>
     </Set>
 
@@ -44,8 +45,7 @@
       <Arg>
         <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
           <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="Acceptors">2</Set> 
           <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
@@ -63,8 +63,7 @@
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set> 
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="responseBufferSize">15360</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
@@ -89,8 +88,7 @@
         <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLClientCertPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set> 
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="responseBufferSize">15360</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
@@ -146,8 +144,7 @@
         <New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
           <Set name="Port">7072</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
-          <Set name="maxIdleTime">30000</Set>
-          <Set name="lowResourcesMaxIdleTime">10000</Set>
+          <Set name="maxIdleTime">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
           <Set name="Acceptors">2</Set>
         </New>
       </Arg>
