@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20121219-1442 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1151 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5349,6 +5349,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpSSLNumThreads = "zimbraHttpSSLNumThreads";
 
     /**
+     * IP addresses to ignore when applying Jetty DosFilter.
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1427)
+    public static final String A_zimbraHttpThrottleSafeIPs = "zimbraHttpThrottleSafeIPs";
+
+    /**
      * Zimbra Systems Unique ID
      */
     @ZAttr(id=1)
@@ -7353,7 +7361,8 @@ public class ZAttrProvisioning {
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
-     * also used as value for postconf message_size_limit
+     * also used as value for postconf message_size_limit. 0 means &quot;no
+     * limit&quot;
      */
     @ZAttr(id=198)
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
