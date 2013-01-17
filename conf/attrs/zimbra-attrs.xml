@@ -7125,4 +7125,14 @@ TODO: delete them permanently from here
 <attr id="1427" name="zimbraHttpThrottleSafeIPs" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.3">
   <desc>IP addresses to ignore when applying Jetty DosFilter.</desc>
 </attr>
+
+<attr id="1428" name="zimbraHttpConnectorMaxIdleTimeMillis" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.2.3">
+  <globalConfigValue>60000</globalConfigValue>
+  <desc>Maximum Idle time in milli seconds for a connection. This is applied when waiting for a new request to be received on a connection; when reading the headers and content of a request; when writing the headers and content of a response.</desc>
+</attr>
+
+<attr id="1429" name="zimbraHttpThreadPoolMaxIdleTimeMillis" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.2.3">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>The maximum thread idle time in milli seconds. Threads that are idle for longer than this period may be stopped.</desc>
+</attr>
 </attrs>
