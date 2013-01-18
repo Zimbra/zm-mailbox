@@ -399,6 +399,40 @@ public class ElementTest {
         Assert.assertEquals("root elem content", "", elem.getText());
     }
 
+    /**
+     * Validate entity references are not evaluated. (security issue)
+     */
+    @Test
+    public void parseXmlWithEntityReferenceToNonExistentFile() {
+        ByteArrayInputStream bais = toBais(ElementTest.class.getResourceAsStream("refNonExistentFileInEntity.xml"));
+        try {
+            Element elem = Element.parseXML(bais);
+            logInfo("       Element value:\n%1$s", elem.toString());
+        } catch (XmlParseException e) {
+            // Before fix to Bug 79719 would get an error like:
+            //    parse error: /tmp/not/there/non-existent.xml (No such file or directory)
+            LOG.info("Exception thrown from parseXML", e);
+            Assert.fail("Unexpected exception thrown.  Shouldn't have looked for non-existent file err=" +
+                        e.getMessage());
+        }
+    }
+
+    /**
+     * Validate that entity expansion is not taken to extreme. (denial of service security issue)
+     */
+    @Test
+    public void parseXmlWithExcessiveEntityExpansion() {
+        ByteArrayInputStream bais = toBais(ElementTest.class.getResourceAsStream("recursiveEntity.xml"));
+        try {
+            Element.parseXML(bais);
+            Assert.fail("Should have failed as there are too many recursive entity expansions");
+        } catch (XmlParseException e) {
+            // Should be an error like:
+            //    parse error: Fatal Error: Problem on line 19 of document : The parser has encountered more than
+            //    "100,000" entity expansions in this document; this is the limit imposed by the application.
+        }
+    }
+
     private static final String xmlCdata = "<xml>\n" +
             "<cdatawrap><![CDATA[if (a>b) a++;\n]]>\n</cdatawrap>\n" +
             "<elem/>\n" +

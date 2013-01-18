@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -60,7 +61,17 @@ public class W3cDomUtil {
                     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                     dbf.setNamespaceAware(true);
                     dbf.setIgnoringComments(true);
-                    dbf.setExpandEntityReferences(false);  // Prevent external entity reference attack.
+                    // Prevent external entity reference attack.
+                    dbf.setExpandEntityReferences(false);
+                    dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                    // protect against recursive entity expansion DOS attack and perhaps other things
+                    dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                    try {
+                        // Default with Java 6 is 100,000 - think 100 would actually be generous for our usage
+                        // However, property does not appear to be recognized on Java 6
+                        dbf.setAttribute("http://apache.org/xml/properties/entity-expansion-limit", new Integer("100"));
+                    } catch (IllegalArgumentException iae) {
+                    }
                     return dbf.newDocumentBuilder();
                 } catch (javax.xml.parsers.ParserConfigurationException pce) {
                     ZimbraLog.misc.error("Problem setting up w3c DOM builder", pce);
