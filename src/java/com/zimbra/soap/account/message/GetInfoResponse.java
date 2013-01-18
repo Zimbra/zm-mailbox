@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2013 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -64,77 +64,6 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
  * Note that LicenseAdminService and LicenseService both register a handler (the same one) which
  * extends com.zimbra.cs.service.account.GetInfo - this adds the "license" element
  *
-<GetInfoResponse>
-   <version>{version}</version>
-   <id>{account-id}</id>
-   <name>{account-name}</name>
-   <lifetime>...</lifetime>
-   [<adminDelegated>{admin-delegated}</adminDelegated>]
-   [<rest>{account-base-REST-url}</rest>
-    <used>{used}</used>
-    <prevSession>{previous-SOAP-session}</prevSession>
-    <accessed>{last-SOAP-access}</accessed>
-    <recent>{recent-messages}</recent>
-   ]
-   <docSizeLimit>{document-size-limit}</docSizeLimit>
-   <attSizeLimit>{attachment-size-limit}</attSizeLimit>
-   <cos name="cos-name" id="cos-id"/>
-   <attrs>
-    <attr name="{name}">{value}</a>
-     ...
-    <attr name="{name}">{value}</a>
-   </attrs>
-   <prefs>
-     <pref name="{name}">{value}</pref>
-     ...
-     <pref name="{name}">{value}</pref>
-   </prefs>
-   <props>
-     <prop zimlet="{zimlet-name}" name="{name}">{value}</prop>
-     ...
-     <prop zimlet="{zimlet-name}" name="{name}">{value}</prop>
-   </props>
-   <zimlets>
-     <zimlet>
-       <zimletContext baseUrl="..." priority="..." presence="{zimlet-presence}"/>
-       <zimlet>...</zimlet>
-       <zimletConfig>...</zimletConfig>
-     </zimlet>
-     ...
-   </zimlets>
-   <soapURL>{soap-url}</soapURL>
-   <publicURL>{account-base-public-url}</publicURL>
-   <identities>
-     <identity name={identity-name} id="...">
-       <a name="{name}">{value}</a>
-       ...
-       <a name="{name}">{value}</a>
-     </identity>*
-   </identities>
-   <signatures>
-     <signature name={signature-name} id="...">
-       <a name="{name}">{value}</a>
-       ...
-       <a name="{name}">{value}</a>
-     </signature>*
-   </signatures>
-   <dataSources>
-     {data-source}
-     ...
-   </dataSources>*
-   <childAccounts>
-     <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}">
-         <attrs>
-            <attr name="{name}">{value}</a>*
-         </attrs>
-     </childAccount>*
-   </childAccounts>
-   <rights>
-     {discovered-rights}
-   </right>*
-   [<license status="inGracePeriod|bad"/>]
-</GetInfoResponse>
- *
  * @zm-api-response-description The response to a request for account information
  */
 @XmlAccessorType(XmlAccessType.NONE)
@@ -150,7 +79,7 @@ public final class GetInfoResponse {
 
     /**
      * @zm-api-field-tag att-size-limit
-     * @zm-api-field-description The size limit for attachments
+     * @zm-api-field-description The size limit for attachments - Use "-1" to mean unlimited
      */
     @XmlAttribute(name=AccountConstants.A_ATTACHMENT_SIZE_LIMIT /* attSizeLimit */, required=false)
     private Long attachmentSizeLimit;
