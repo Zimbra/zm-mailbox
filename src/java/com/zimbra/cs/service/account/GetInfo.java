@@ -157,7 +157,11 @@ public class GetInfo extends AccountDocumentHandler  {
             }
             Config config = prov.getConfig();
             if (config != null) {
-                response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, config.getMtaMaxMessageSize());
+                long maxAttachSize = config.getMtaMaxMessageSize();
+                if (maxAttachSize == 0) {
+                    maxAttachSize = -1;  /* means unlimited */
+                }
+                response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, maxAttachSize);
             }
         } catch (ServiceException e) {
         }
