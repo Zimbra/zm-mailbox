@@ -604,7 +604,7 @@ public class FileUploadServlet extends ZimbraServlet {
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
             long size = ByteUtil.copy(req.getInputStream(), false, fi.getOutputStream(), true, upload.getSizeMax() * 3);
-            if (size > upload.getSizeMax()) {
+            if ((upload.getSizeMax() >= 0 /* -1 would mean "no limit" */) && (size > upload.getSizeMax())) {
                 mLog.debug("handlePlainUpload(): deleting %s", fi);
                 fi.delete();
                 mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + acct.getId());
