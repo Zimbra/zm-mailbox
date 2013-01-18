@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1454 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1610 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5338,6 +5338,25 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1043)
     public static final String A_zimbraHttpDebugHandlerEnabled = "zimbraHttpDebugHandlerEnabled";
+
+    /**
+     * Delay imposed on all requests over the rate limit, before they are
+     * considered at all. -1 = Reject request, 0 = No delay, any other value
+     * = Delay in ms
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1430)
+    public static final String A_zimbraHttpDosFilterDelayMillis = "zimbraHttpDosFilterDelayMillis";
+
+    /**
+     * Maximum number of requests from a connection per second. Requests in
+     * excess of this are throttled.
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1431)
+    public static final String A_zimbraHttpDosFilterMaxRequestsPerSec = "zimbraHttpDosFilterMaxRequestsPerSec";
 
     /**
      * number of http handler threads

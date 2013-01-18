@@ -858,8 +858,6 @@ public final class LC {
     public static final KnownKey zimbra_waitset_initial_sleep_time = KnownKey.newKey(1000);
     public static final KnownKey zimbra_waitset_nodata_sleep_time = KnownKey.newKey(3000);
 
-    public static final KnownKey zimbra_dos_filter_max_requests_per_sec  = KnownKey.newKey(30);
-
     public static final KnownKey zimbra_csv_mapping_file = KnownKey.newKey("${zimbra_home}/conf/zimbra-contact-fields.xml");
 
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
