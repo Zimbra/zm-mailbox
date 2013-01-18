@@ -932,7 +932,7 @@ public class ProvUtil implements HttpDebugListener {
                 dumpCos(lookupCos(args[1]), getArgNameSet(args, 2));
                 break;
             case GET_DISTRIBUTION_LIST_MEMBERSHIP:
-                doGetDistributionListMembership(args);
+                doGetDistributionListMembership(lookupGroup(args[1]));
                 break;
             case GET_DOMAIN:
                 doGetDomain(args);
@@ -1793,24 +1793,20 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doGetDistributionListMembership(String[] args) throws ServiceException {
-        String key = args[1];
-        Group group = lookupGroup(key);
-
-        if (group.isDynamic()) {
-            throw ServiceException.INVALID_REQUEST(
-                    "getDistributionListMembership is not applicable to dynamic group", null);
+    private void doGetDistributionListMembership(Group group) throws ServiceException {
+        String[] members;
+        if (group instanceof DynamicGroup) {
+            members = ((DynamicGroup)group).getAllMembers(true);
+        } else {
+            members = group.getAllMembers();
         }
 
-        HashMap<String,String> via = new HashMap<String, String>();
-        List<DistributionList> lists = prov.getDistributionLists((DistributionList)group, false, via);
-        for (DistributionList dl: lists) {
-            String viaDl = via.get(dl.getName());
-            if (viaDl != null) {
-                console.println(dl.getName() + " (via " + viaDl + ")");
-            } else {
-                console.println(dl.getName());
-            }
+        int count = members == null ? 0 : members.length;
+        console.println("# distributionList " + group.getName() + " memberCount=" + count);
+        console.println();
+        console.println("members");
+        for (String member : members) {
+            console.println(member);
         }
     }
 
