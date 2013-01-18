@@ -704,7 +704,7 @@ public class ByteUtil {
      * @param out the <tt>OutputStream</tt>
      * @param closeOut if <tt>true</tt>, the <tt>OutputStream</tt> is closed before returning, even
      *                 when there is an error.
-     * @param maxLength maximum number of bytes to copy
+     * @param maxLength maximum number of bytes to copy (negative values mean "no limit")
      * @return the number of bytes copied
      * @throws IOException
      */
