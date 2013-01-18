@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1454 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130117-1610 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4530,6 +4530,165 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetHttpDebugHandlerEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHttpDebugHandlerEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Delay imposed on all requests over the rate limit, before they are
+     * considered at all. -1 = Reject request, 0 = No delay, any other value
+     * = Delay in ms
+     *
+     * @return zimbraHttpDosFilterDelayMillis, or -1 if unset
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1430)
+    public int getHttpDosFilterDelayMillis() {
+        return getIntAttr(Provisioning.A_zimbraHttpDosFilterDelayMillis, -1);
+    }
+
+    /**
+     * Delay imposed on all requests over the rate limit, before they are
+     * considered at all. -1 = Reject request, 0 = No delay, any other value
+     * = Delay in ms
+     *
+     * @param zimbraHttpDosFilterDelayMillis new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1430)
+    public void setHttpDosFilterDelayMillis(int zimbraHttpDosFilterDelayMillis) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterDelayMillis, Integer.toString(zimbraHttpDosFilterDelayMillis));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Delay imposed on all requests over the rate limit, before they are
+     * considered at all. -1 = Reject request, 0 = No delay, any other value
+     * = Delay in ms
+     *
+     * @param zimbraHttpDosFilterDelayMillis new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1430)
+    public Map<String,Object> setHttpDosFilterDelayMillis(int zimbraHttpDosFilterDelayMillis, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterDelayMillis, Integer.toString(zimbraHttpDosFilterDelayMillis));
+        return attrs;
+    }
+
+    /**
+     * Delay imposed on all requests over the rate limit, before they are
+     * considered at all. -1 = Reject request, 0 = No delay, any other value
+     * = Delay in ms
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1430)
+    public void unsetHttpDosFilterDelayMillis() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterDelayMillis, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Delay imposed on all requests over the rate limit, before they are
+     * considered at all. -1 = Reject request, 0 = No delay, any other value
+     * = Delay in ms
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1430)
+    public Map<String,Object> unsetHttpDosFilterDelayMillis(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterDelayMillis, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of requests from a connection per second. Requests in
+     * excess of this are throttled.
+     *
+     * @return zimbraHttpDosFilterMaxRequestsPerSec, or 30 if unset
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1431)
+    public int getHttpDosFilterMaxRequestsPerSec() {
+        return getIntAttr(Provisioning.A_zimbraHttpDosFilterMaxRequestsPerSec, 30);
+    }
+
+    /**
+     * Maximum number of requests from a connection per second. Requests in
+     * excess of this are throttled.
+     *
+     * @param zimbraHttpDosFilterMaxRequestsPerSec new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1431)
+    public void setHttpDosFilterMaxRequestsPerSec(int zimbraHttpDosFilterMaxRequestsPerSec) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterMaxRequestsPerSec, Integer.toString(zimbraHttpDosFilterMaxRequestsPerSec));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of requests from a connection per second. Requests in
+     * excess of this are throttled.
+     *
+     * @param zimbraHttpDosFilterMaxRequestsPerSec new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1431)
+    public Map<String,Object> setHttpDosFilterMaxRequestsPerSec(int zimbraHttpDosFilterMaxRequestsPerSec, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterMaxRequestsPerSec, Integer.toString(zimbraHttpDosFilterMaxRequestsPerSec));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of requests from a connection per second. Requests in
+     * excess of this are throttled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1431)
+    public void unsetHttpDosFilterMaxRequestsPerSec() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterMaxRequestsPerSec, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of requests from a connection per second. Requests in
+     * excess of this are throttled.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.3
+     */
+    @ZAttr(id=1431)
+    public Map<String,Object> unsetHttpDosFilterMaxRequestsPerSec(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDosFilterMaxRequestsPerSec, "");
         return attrs;
     }
 

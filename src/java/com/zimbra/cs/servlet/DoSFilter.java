@@ -22,7 +22,6 @@ import java.util.List;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletRequest;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -34,7 +33,6 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
     @Override
     public void init(FilterConfig filterConfig) {
         super.init(filterConfig);
-        _maxRequestsPerSec = LC.zimbra_dos_filter_max_requests_per_sec.intValue();
         StringBuilder whitelist = new StringBuilder();
         try {
             List<Server> servers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
