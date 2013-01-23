@@ -567,6 +567,21 @@ public final class ZimbraQuery {
                 includeSpam = authAcct.isPrefIncludeSpamInSearch();
             }
             if (!includeTrash || !includeSpam) {
+                // First check that we aren't specifically looking for items in one of these.
+                // For instance, in ZWC, if "Include Shared Items" is selected, the Trash list may currently use a
+                // search similar to : 'in:"trash" (inid:565 OR is:local)'
+                // where 565 is the folder ID for a shared folder.  We don't want to end up doing a search for items
+                // that are both in "trash" and NOT in "trash"...
+                for (Query q : clauses) {
+                    if (q.toString().equalsIgnoreCase("Q(IN:Trash)")) {
+                        includeTrash = true;
+                    }
+                    if (q.toString().equalsIgnoreCase("Q(IN:Junk)")) {
+                        includeSpam = true;
+                    }
+                }
+            }
+            if (!includeTrash || !includeSpam) {
                 List<QueryOperation> toAdd = new ArrayList<QueryOperation>();
                 for (Iterator<QueryOperation> iter = localOps.operations.iterator(); iter.hasNext();) {
                     QueryOperation cur = iter.next();
