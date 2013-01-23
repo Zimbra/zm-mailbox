@@ -2264,13 +2264,8 @@ abstract class ImapHandler {
      */
     private class SubscribedImapPath implements Comparable<SubscribedImapPath> {
         private String imapPathString;
-        private boolean visible;
         public SubscribedImapPath(ImapPath path) throws ServiceException {
-            visible = path.isVisible();
             imapPathString = path.asImapPath();
-        }
-        public boolean isVisible() throws ServiceException {
-            return visible;
         }
         public String asImapPath() {
             return imapPathString;
@@ -2302,20 +2297,23 @@ abstract class ImapHandler {
     
     private void checkSubscription(SubscribedImapPath path, Pattern pattern, Pattern childPattern, Map<SubscribedImapPath, Boolean> hits)
             throws ServiceException {
-        try {
-            if (!path.isVisible()) { // hidden folders are not exposed even if subscribed
-                return;
-            }
-        } catch (NoSuchItemException ignore) {
-            // 6.3.9.  LSUB Command
-            //   The server MUST NOT unilaterally remove an existing mailbox name
-            //   from the subscription list even if a mailbox by that name no
-            //   longer exists.
-        } catch (AccountServiceException e) { // ignore NO_SUCH_ACCOUNT as well
-            if (!AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode())) {
-                throw e;
-            }
-        }
+        // Some notes from the IMAP RFC relating to subscriptions:
+        // http://tools.ietf.org/html/rfc3501
+        // 6.3.9 LSUB Command:
+        //     The server MUST NOT unilaterally remove an existing mailbox name from the subscription list even if a
+        //     mailbox by that name no longer exists.
+        //
+        // 6.3.6 SUBSCRIBE Command goes into some of the thinking behind this:
+        //     A server MAY validate the mailbox argument to SUBSCRIBE to verify that it exists.  However, it MUST NOT
+        //     unilaterally remove an existing mailbox name from the subscription list even if a mailbox by that name
+        //     no longer exists.
+        //
+        //         Note: This requirement is because a server site can choose to routinely remove a mailbox with a
+        //               well-known name (e.g., "system-alerts") after its contents expire, with the intention of
+        //               recreating it when new contents are appropriate.
+        //
+        // Used to check whether a folder was hidden but the above notes suggest that was incorrect behavior.  (A
+        // folder could have been hidden or deleted temporarily...)
         if (pathMatches(path, pattern)) {
             hits.put(path, Boolean.TRUE);
             return;
