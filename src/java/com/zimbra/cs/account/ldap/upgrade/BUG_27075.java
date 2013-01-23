@@ -275,10 +275,42 @@ public class BUG_27075 extends UpgradeOp {
             }
         }
     }
+    
+    private void doBug79208(Config config) throws ServiceException {
+        // perform this step if the following condition is met (IV = installed version)
+        // ((IV < 7.2.3) OR ((IV >= 8.0.0) AND (IV < 8.0.3)) 
+        boolean stepRequired = mSince.compare("7.2.3") < 0  || (mSince.compare("8.0.0") >= 0 && mSince.compare("8.0.3") < 0);
+        if (!stepRequired) {
+            return;
+        }
+        // check if the attribute already exists. It's possible that server may have been upgraded from 
+        // 7.2.2->7.2.3, 7.2.3->8.0.0 and then 8.0.0->8.0.3. The 7.2.2->7.2.3 would have already added the attribute.
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        String attr = Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis;
+        String curVal = config.getAttr(attr, null);
+        if (curVal == null) {
+            attrs.put(attr, config.getHttpThreadPoolMaxIdleTimeMillis());
+        }
+        attr = Provisioning.A_zimbraHttpConnectorMaxIdleTimeMillis;
+        curVal = config.getAttr(attr, null);
+        if (curVal == null) {
+            attrs.put(attr, config.getHttpConnectorMaxIdleTimeMillis());
+        }
+        if (!attrs.isEmpty()) {
+            try {
+                printer.println("Setting " + attrs.keySet() + " on globalConfig");
+                prov.modifyAttrs(config, attrs);
+            } catch (ServiceException e) {
+                printer.println("Caught ServiceException while setting " + attrs.keySet() + " on globalConfig");
+                printer.printStackTrace(e);
+            }
+        }
+    }
 
     private void doGlobalConfig(ZLdapContext zlc) throws ServiceException {
         Config config = prov.getConfig();
         doEntry(zlc, config, "global config", AttributeClass.globalConfig);
+        doBug79208(config);
     }
 
     private void doAllCos(ZLdapContext zlc) throws ServiceException {
