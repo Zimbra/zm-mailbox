@@ -20,12 +20,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -54,14 +58,30 @@ public class BlobConsistencyChecker {
         public int fileModContent;
         public Long fileDataSize;
         public Long fileSize;
+        
+        public boolean external;
     }
     
     public static class Results {
         public int mboxId;
-        public Collection<BlobInfo> missingBlobs = new ArrayList<BlobInfo>();
-        public Collection<BlobInfo> incorrectSize = new ArrayList<BlobInfo>();
-        public Collection<BlobInfo> unexpectedBlobs = new ArrayList<BlobInfo>();
-        public Collection<BlobInfo> incorrectModContent = new ArrayList<BlobInfo>();
+        public Multimap<Integer, BlobInfo> missingBlobs = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> incorrectSize = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> unexpectedBlobs = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+        public Multimap<Integer, BlobInfo> incorrectModContent = TreeMultimap.create(new IntegerComparator(), new BlobInfoComparator());
+
+        class IntegerComparator implements Comparator<Integer> {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1.compareTo(o2);
+            }
+        }
+
+        class BlobInfoComparator implements Comparator<BlobInfo> {
+            @Override
+            public int compare(BlobInfo o1, BlobInfo o2) {
+                return o1.path.compareTo(o2.path);
+            }
+        }
 
         public Results() {
         }
@@ -94,14 +114,14 @@ public class BlobConsistencyChecker {
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileDataSize = blobEl.getAttributeLong(AdminConstants.A_SIZE);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
-                incorrectSize.add(blob);
+                incorrectSize.put(blob.itemId, blob);
             }
             for (Element blobEl : mboxElement.getElement(AdminConstants.E_UNEXPECTED_BLOBS).listElements(AdminConstants.E_BLOB)) {
                 BlobInfo blob = new BlobInfo();
                 blob.volumeId = (short) blobEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
-                unexpectedBlobs.add(blob);
+                unexpectedBlobs.put(blob.itemId, blob);
             }
             for (Element itemEl : mboxElement.getElement(AdminConstants.E_INCORRECT_REVISION).listElements(AdminConstants.E_ITEM)) {
                 BlobInfo blob = new BlobInfo();
@@ -114,7 +134,7 @@ public class BlobConsistencyChecker {
                 blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
                 blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
                 blob.fileModContent = (int) blobEl.getAttributeLong(MailConstants.A_REVISION);
-                incorrectModContent.add(blob);
+                incorrectModContent.put(blob.itemId, blob);
             }
         }
         
@@ -129,7 +149,7 @@ public class BlobConsistencyChecker {
             Element unexpectedBlobsEl = parent.addElement(AdminConstants.E_UNEXPECTED_BLOBS);
             Element incorrectRevisionEl = parent.addElement(AdminConstants.E_INCORRECT_REVISION);
             
-            for (BlobInfo blob : missingBlobs) {
+            for (BlobInfo blob : missingBlobs.values()) {
                 missingEl.addElement(AdminConstants.E_ITEM)
                     .addAttribute(AdminConstants.A_ID, blob.itemId)
                     .addAttribute(AdminConstants.A_REVISION, blob.modContent)
@@ -139,7 +159,7 @@ public class BlobConsistencyChecker {
                     .addAttribute(AdminConstants.A_EXTERNAL, blob.external)
                     .addAttribute(AdminConstants.A_VERSION_INFO_VERSION, blob.version);
             }
-            for (BlobInfo blob : incorrectSize) {
+            for (BlobInfo blob : incorrectSize.values()) {
                 Element itemEl = incorrectSizeEl.addElement(AdminConstants.E_ITEM)
                     .addAttribute(AdminConstants.A_ID, blob.itemId)
                     .addAttribute(MailConstants.A_REVISION, blob.modContent)
@@ -150,13 +170,13 @@ public class BlobConsistencyChecker {
                     .addAttribute(AdminConstants.A_SIZE, blob.fileDataSize)
                     .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
             }
-            for (BlobInfo blob : unexpectedBlobs) {
+            for (BlobInfo blob : unexpectedBlobs.values()) {
                 unexpectedBlobsEl.addElement(AdminConstants.E_BLOB)
                     .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
                     .addAttribute(AdminConstants.A_PATH, blob.path)
                     .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
             }
-            for (BlobInfo blob : incorrectModContent) {
+            for (BlobInfo blob : incorrectModContent.values()) {
                 Element itemEl = incorrectRevisionEl.addElement(AdminConstants.E_ITEM)
                     .addAttribute(AdminConstants.A_ID, blob.itemId)
                     .addAttribute(MailConstants.A_REVISION, blob.modContent)
@@ -268,7 +288,7 @@ public class BlobConsistencyChecker {
                 unexpected.volumeId = volumeId;
                 unexpected.path = file.getAbsolutePath();
                 unexpected.fileSize = file.length();
-                mResults.unexpectedBlobs.add(unexpected);
+                mResults.unexpectedBlobs.put(unexpected.itemId, unexpected);
             } else {
                 blob.fileSize = file.length();
                 blob.fileModContent = modContent;
@@ -276,20 +296,20 @@ public class BlobConsistencyChecker {
                 if (mCheckSize) {
                     blob.fileDataSize = getDataSize(file, blob.dbSize);
                     if (blob.dbSize != blob.fileDataSize) {
-                        mResults.incorrectSize.add(blob);
+                    	mResults.incorrectSize.put(blob.itemId, blob);
                     }
                 }
 
                 if (blob.modContent != blob.fileModContent) {
                     blob.path = file.getAbsolutePath();
-                    mResults.incorrectModContent.add(blob);
+                    mResults.incorrectModContent.put(blob.itemId, blob);
                 }
             }
         }
         
         // Any remaining items have missing blobs.
         for (BlobInfo blob : blobsById.values()) {
-            mResults.missingBlobs.add(blob);
+            mResults.missingBlobs.put(blob.itemId, blob);
         }
     }
     
