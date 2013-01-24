@@ -1212,7 +1212,7 @@ calculate size.
 
 <ExportAndDeleteItemsRequest [exportDir="path"] [exportFilenamePrefix="name"]>
   <mbox id="{id}">
-    <item id="{id}" />
+    <item id="{id}" version={ver}/>
     ...
   </mbox>
 </ExportAndDeleteItemsRequest>

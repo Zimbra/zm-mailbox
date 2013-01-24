@@ -79,7 +79,9 @@ public class BlobConsistencyChecker {
                 blob.dbSize = item.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) item.getAttributeLong(AdminConstants.A_VOLUME_ID);
                 blob.path = item.getAttribute(AdminConstants.A_BLOB_PATH);
-                missingBlobs.add(blob);
+                blob.external = item.getAttributeBool(AdminConstants.A_EXTERNAL, false);
+                blob.version = (int) item.getAttributeLong(AdminConstants.A_VERSION_INFO_VERSION);
+                missingBlobs.put(blob.itemId, blob);
             }
             for (Element itemEl : mboxElement.getElement(AdminConstants.E_INCORRECT_SIZE).listElements(AdminConstants.E_ITEM)) {
                 BlobInfo blob = new BlobInfo();
@@ -133,7 +135,9 @@ public class BlobConsistencyChecker {
                     .addAttribute(AdminConstants.A_REVISION, blob.modContent)
                     .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
                     .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
-                    .addAttribute(AdminConstants.A_BLOB_PATH, blob.path);
+                    .addAttribute(AdminConstants.A_BLOB_PATH, blob.path)
+                    .addAttribute(AdminConstants.A_EXTERNAL, blob.external)
+                    .addAttribute(AdminConstants.A_VERSION_INFO_VERSION, blob.version);
             }
             for (BlobInfo blob : incorrectSize) {
                 Element itemEl = incorrectSizeEl.addElement(AdminConstants.E_ITEM)
