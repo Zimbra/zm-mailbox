@@ -962,8 +962,10 @@ public final class LuceneIndex implements IndexStore {
         }
 
         void dec() {
-            if (count.decrementAndGet() <= 0) {
-                index.closeWriter();
+            synchronized (index) {
+                if (count.decrementAndGet() <= 0) {
+                    index.closeWriter();
+                }
             }
         }
 
