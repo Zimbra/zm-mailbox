@@ -4157,7 +4157,7 @@ public class DbMailItem {
      * Returns a comma-separated list of ids for logging.  If the <tt>String</tt> is
      * more than 200 characters long, cuts off the list and appends &quot...&quot.
      */
-    private static String getIdListForLogging(Collection<Integer> ids) {
+   static String getIdListForLogging(Collection<Integer> ids) {
         if (ids == null)
             return null;
         StringBuilder idList = new StringBuilder();
