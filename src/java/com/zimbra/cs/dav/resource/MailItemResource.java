@@ -462,6 +462,11 @@ public abstract class MailItemResource extends DavResource {
                     try {
                         Mailbox mbox = getMailbox(ctxt);
                         mbox.setFolderDefaultView(ctxt.getOperationContext(), mId, type);
+                        // Update the view for this collection. This collection may get cached if display name is modified.
+                        // See UrlNamespace.addToRenamedResource()
+                        if (this instanceof Collection) {
+                            ((Collection)this).view = type;
+                        }
                     } catch (ServiceException se) {
                         ctxt.getResponseProp().addPropError(name, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
                     }
