@@ -612,6 +612,7 @@ public class AdminConstants {
     public static final String A_VOLUME_ID = "volumeId";
     public static final String A_EXPORT_DIR = "exportDir";
     public static final String A_EXPORT_FILENAME_PREFIX = "exportFilenamePrefix";
+    public static final String A_EXTERNAL = "external";
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
