@@ -28,10 +28,10 @@ import java.util.Set;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Ints;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.op.DeleteItem;
@@ -171,7 +171,7 @@ public class DbBlobConsistency {
                 }
 
                 if (rev_itemIds.size() > 0) {
-                    sql.append(DbUtil.whereIn(Db.getInstance().concat(idColName, "'-'", "version"), rev_itemIds.size()));
+                    sql.append(DbUtil.whereIn(idColName+"'-'"+"version", rev_itemIds.size()));
                 }
             }
 
@@ -243,7 +243,7 @@ public class DbBlobConsistency {
                     sql.append(" OR ");
                 }
                 if (rev_itemIds.size() > 0) {
-                    sql.append(DbUtil.whereIn(Db.getInstance().concat(idColName, "'-'", "version"), rev_itemIds.size()));
+                    sql.append(DbUtil.whereIn(idColName+"'-'"+"version", rev_itemIds.size()));
                 }
             }
             sql.append(" INTO OUTFILE ?");
@@ -271,7 +271,7 @@ public class DbBlobConsistency {
         }
     }
 
-    public static void delete(DbConnection conn, Mailbox mbox, Multimap<Integer, Integer> idRevs)
+    public static void delete(Connection conn, Mailbox mbox, Multimap<Integer, Integer> idRevs)
     throws ServiceException {
         Set<Integer> mail_itemIds = new HashSet<Integer>();
         Multimap<Integer, Integer> rev_itemIds = HashMultimap.create();
@@ -315,8 +315,7 @@ public class DbBlobConsistency {
                 StringBuffer sql = new StringBuffer();
                 sql.append("DELETE FROM ").append(
                         DbMailItem.getRevisionTableName(mbox, true)).append(" WHERE ").append(
-                                DbMailItem.IN_THIS_MAILBOX_AND).append(DbUtil.whereIn(
-                                        Db.getInstance().concat("item_id", "'-'", "version"), rev_itemIds.size()));
+                                DbMailItem.IN_THIS_MAILBOX_AND).append(DbUtil.whereIn("item_id"+"'-'"+"version", rev_itemIds.size()));
 
                 revDumpstmt = conn.prepareStatement(sql.toString());
                 int pos = 1;

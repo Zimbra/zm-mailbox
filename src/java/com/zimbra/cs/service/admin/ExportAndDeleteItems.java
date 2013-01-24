@@ -33,36 +33,31 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
-import com.zimbra.soap.admin.type.ExportAndDeleteItemSpec;
-import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 
 public class ExportAndDeleteItems extends AdminDocumentHandler {
 
     @Override
-    public Element handle(Element requst, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
-        
+
         // Parse request.
-        ExportAndDeleteItemsRequest req = JaxbUtil.elementToJaxb(requst);
-        ExportAndDeleteMailboxSpec mailbox = req.getMailbox();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailbox.getId());
+        Element mboxEl = request.getElement(AdminConstants.E_MAILBOX);
+        int mboxId = (int) mboxEl.getAttributeLong(AdminConstants.A_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         Multimap<Integer, Integer> idRevs = HashMultimap.create();
-        for (ExportAndDeleteItemSpec item : mailbox.getItems()) {
-            idRevs.put(item.getId(), item.getVersion());
+        for (Element itemEl : mboxEl.listElements(AdminConstants.E_ITEM)) {
+            idRevs.put((int) itemEl.getAttributeLong(AdminConstants.A_ID), (int) itemEl.getAttributeLong(AdminConstants.A_VERSION_INFO_VERSION));
         }
-        String dirPath = req.getExportDir();
-        String prefix = req.getExportFilenamePrefix();
+        String dirPath = request.getAttribute(AdminConstants.A_EXPORT_DIR, null);
+        String prefix = request.getAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, null);
 
         // Synchronize on the mailbox, to make sure that another thread doesn't
         // modify the items we're exporting/deleting.
        
-	mbox.lock.lock(); 
-        try {
-            DbConnection conn = null;
+        synchronized (mbox) {
+        	Connection conn = null;
 
             try {
                 conn = DbPool.getConnection();
@@ -95,13 +90,13 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                     for (int rev : revs) {
                         if (rev == 0) {
                             // delete all revisions to make sure we delete all blobs
-                            List<MailItem> list = mbox.getAllRevisions(null, itemId, MailItem.Type.UNKNOWN);
+                            List<MailItem> list = mbox.getAllRevisions(null, itemId, MailItem.TYPE_UNKNOWN);
                             for (MailItem item : list) {
-                                if (item.getType() == MailItem.Type.DOCUMENT) {
+                                if (item.getType() == MailItem.TYPE_DOCUMENT) {
                                     mbox.purgeRevision(null, itemId, item.getVersion(), false);
                                 }
                             }
-                            mbox.delete(null, itemId, MailItem.Type.UNKNOWN, null);
+                            mbox.delete(null, itemId, MailItem.TYPE_UNKNOWN, null);
                             break;
                         } else if (!revs.contains(0)) {
                             try {
@@ -119,8 +114,6 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                 conn.commit();
                 DbPool.quietClose(conn);
             }
-        } finally {
-            mbox.lock.release();
         }
         
         return zsc.createElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_RESPONSE);
