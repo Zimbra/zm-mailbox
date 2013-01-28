@@ -173,8 +173,8 @@ public class FileDescriptorCache
                     // be in the cache for at least a minute.
                     throw new IOException("Unable to get uncompressed file for " + path);
                 }
-                sharedFile = new SharedFile(uncompressed.file);
             }
+            sharedFile = new SharedFile(uncompressed.file);
         } else {
             sLog.debug("Opening new file descriptor for %s.", path);
             sharedFile = new SharedFile(file);
