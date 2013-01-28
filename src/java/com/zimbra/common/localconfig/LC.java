@@ -1116,7 +1116,7 @@ public final class LC {
     public static final KnownKey antispam_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/antispam-mysqld.log");
     public static final KnownKey antispam_mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/antispam-my.cnf");
     public static final KnownKey antispam_mysql_pidfile = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/mysql.pid");
-    public static final KnownKey antispam_mysql_host = KnownKey.newKey("localhost");
+    public static final KnownKey antispam_mysql_host = KnownKey.newKey("");
     public static final KnownKey antispam_mysql_port = KnownKey.newKey(7308);
     public static final KnownKey antispam_mysql_socket = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/mysql.sock");
     public static final KnownKey antispam_mysql_user = KnownKey.newKey("zimbra");
