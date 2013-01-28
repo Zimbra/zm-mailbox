@@ -1043,6 +1043,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
     public Domain getDomainByForeignName(String realm) throws ServiceException { return get(DomainBy.foreignName, realm); }
 
+    public Domain getDomainByEmailAddr(String emailAddr) throws ServiceException{
+        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(emailAddr);
+        Domain domain = Provisioning.getInstance().get(DomainBy.name, domainName);
+        if (domain == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+        }
+        return domain;
+    }
 
     public abstract List<Domain> getAllDomains()  throws ServiceException;
 
