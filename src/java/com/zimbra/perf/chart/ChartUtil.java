@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -77,7 +77,7 @@ public class ChartUtil {
     private static final String OPT_AGGREGATE_START_AT = "aggregate-start-at";
     private static final String OPT_AGGREGATE_END_AT = "aggregate-end-at";
     private static final String OPT_NO_SUMMARY = "no-summary";
-    
+
     private final static String GROUP_PLOT_SYNTHETIC = "group-plot-synthetic$";
     private final static String RATIO_PLOT_SYNTHETIC = "ratio-plot-synthetic$";
 
@@ -87,40 +87,40 @@ public class ChartUtil {
 
     private static final String SUMMARY_CSV = SummaryConstants.SUMMARY_CSV;
 
-    private File[] mConfs;
-    private File[] mSrcDirs;
-    private File mDestDir;
-    private String mTitle;
+    private final File[] mConfs;
+    private final File[] mSrcDirs;
+    private final File mDestDir;
+    private final String mTitle;
     private Date mStartAt = null;
     private Date mEndAt = null;
     private Date mAggregateStartAt = null;
     private Date mAggregateEndAt = null;
-    private boolean mSkipSummary;
+    private final boolean mSkipSummary;
 
-    private List<ChartSettings> mSyntheticChartSettings =
+    private final List<ChartSettings> mSyntheticChartSettings =
         new ArrayList<ChartSettings>();
-    private List<JFreeChart> mCharts = new ArrayList<JFreeChart>();
-    private Set<DataColumn> mUniqueDataColumns;
-    private Set<DataColumn> mUniqueStringColumns;
-    private Map<String /* infile */, Set<Pair<String /* column */, DataSeries>>> mColumnsByInfile;
-    private Map<ChartSettings,JFreeChart> mChartMap =
+    private final List<JFreeChart> mCharts = new ArrayList<JFreeChart>();
+    private final Set<DataColumn> mUniqueDataColumns;
+    private final Set<DataColumn> mUniqueStringColumns;
+    private final Map<String /* infile */, Set<Pair<String /* column */, DataSeries>>> mColumnsByInfile;
+    private final Map<ChartSettings,JFreeChart> mChartMap =
         new HashMap<ChartSettings,JFreeChart>();
-    private Map<DataColumn, DataSeries> mDataSeries;
-    private Map<DataColumn, StringSeries> mStringSeries;
-    private Map<DataColumn, Double> mAggregates;
-    private Map<String, Double> mStats;
-    private Aggregator mAggregator;
+    private final Map<DataColumn, DataSeries> mDataSeries;
+    private final Map<DataColumn, StringSeries> mStringSeries;
+    private final Map<DataColumn, Double> mAggregates;
+    private final Map<String, Double> mStats;
+    private final Aggregator mAggregator;
 
     private long mMinDate = Long.MAX_VALUE;
     private long mMaxDate = Long.MIN_VALUE;
 
     // uniquely identifies a data source
     private static class DataColumn {
-        private String mInfile;
+        private final String mInfile;
 
-        private String mColumn;
+        private final String mColumn;
 
-        private int mHashCode;
+        private final int mHashCode;
 
         public DataColumn(String infile, String column) {
             mInfile = infile;
@@ -137,13 +137,15 @@ public class ChartUtil {
             return mColumn;
         }
 
+        @Override
         public int hashCode() {
             return mHashCode;
         }
 
+        @Override
         public boolean equals(Object obj) {
             DataColumn other = (DataColumn) obj;
-            return mInfile.equals(other.mInfile)
+            return other != null && mInfile.equals(other.mInfile)
                     && mColumn.equals(other.mColumn);
         }
         @Override
@@ -232,17 +234,17 @@ public class ChartUtil {
         Options opts = getOptions();
         try {
             CommandLine cl = clParser.parse(opts, args);
-    
+
             if (cl.hasOption('h'))
                 usage(opts);
             if (!cl.hasOption('s') && !cl.hasOption('d'))
                 usage(opts, "-s and -d options are required");
             if (!cl.hasOption('s'))
                 usage(opts, "Missing required -s option");
-            
+
             if (!cl.hasOption('d'))
                 usage(opts, "Missing required -d option");
-    
+
             String[] confs = cl.getOptionValues(OPT_CONF);
             if (confs == null || confs.length == 0)
                 usage(opts, "Missing --" + OPT_CONF + " option");
@@ -256,7 +258,7 @@ public class ChartUtil {
                 }
                 confFiles[i] = conf;
             }
-    
+
             String[] srcDirStrs = cl.getOptionValues(OPT_SRCDIR);
             if (srcDirStrs == null || srcDirStrs.length == 0)
                 usage(opts, "Missing --" + OPT_SRCDIR + " option");
@@ -273,7 +275,7 @@ public class ChartUtil {
                 usage(opts, "No valid source directory found");
             File[] srcDirs = new File[srcDirsList.size()];
             srcDirsList.toArray(srcDirs);
-    
+
             String destDirStr = cl.getOptionValue(OPT_DESTDIR);
             if (destDirStr == null)
                 usage(opts, "Missing --" + OPT_DESTDIR + " option");
@@ -292,16 +294,16 @@ public class ChartUtil {
                         destDir.getAbsolutePath());
                 System.exit(1);
             }
-    
+
             String title = cl.getOptionValue(OPT_TITLE);
             if (title == null)
                 title = srcDirs[0].getAbsoluteFile().getName();
-    
+
             Date startAt = parseTimestampOption(cl, opts, OPT_START_AT);
             Date endAt = parseTimestampOption(cl, opts, OPT_END_AT);
             Date aggStartAt = parseTimestampOption(cl, opts, OPT_AGGREGATE_START_AT);
             Date aggEndAt = parseTimestampOption(cl, opts, OPT_AGGREGATE_END_AT);
-    
+
             boolean noSummary = cl.hasOption('n');
             ChartUtil app = new ChartUtil(confFiles, srcDirs, destDir, title,
                     startAt, endAt, aggStartAt, aggEndAt, noSummary);
@@ -653,8 +655,8 @@ public class ChartUtil {
      * file and gzipped version are considered.
      */
     private static class MultipleDirsFileReader extends Reader {
-        private String mFilename;
-        private File[] mDirs;
+        private final String mFilename;
+        private final File[] mDirs;
         private int mFileIndex;
         private Reader mReader;
 
@@ -796,7 +798,7 @@ public class ChartUtil {
                 continue;
             }
             CsvReader csv = null;
-            
+
             try {
                 csv = new CsvReader(reader);
                 int line = 1;
@@ -806,7 +808,7 @@ public class ChartUtil {
                     Date ts = null;
                     try {
                         ts = readTS(csv, ctx);
-                    }              
+                    }
                     catch (ParseException e) {
                         if (e.getMessage().compareTo(
                                 "Unparseable date: \"timestamp\"") != 0) {
@@ -815,7 +817,7 @@ public class ChartUtil {
                         }
                         continue;
                     }
-                    
+
                     if (ts.before(mStartAt) || ts.after(mEndAt))
                         continue;
                     if (minDate == null) {
@@ -827,7 +829,7 @@ public class ChartUtil {
                         if (ts.compareTo(maxDate) > 0)
                             maxDate = ts;
                     }
-                    
+
                     String value = csv.getValue(c.getColumn());
                     data.AddEntry(ts, value);
                 }
@@ -970,8 +972,8 @@ public class ChartUtil {
 
         private static enum Func { IDENTITY, DIFF, SUM };
 
-        private PlotSettings mPlotSettings;
-        private DataSeries mDataSeries;
+        private final PlotSettings mPlotSettings;
+        private final DataSeries mDataSeries;
         private long mLastTstamp;
         private Func mFunc;
         private double mSum;
@@ -996,10 +998,12 @@ public class ChartUtil {
                 mFunc = Func.IDENTITY;
         }
 
+        @Override
         public boolean hasNext() {
             return mIndex < mDataSeries.size();
         }
 
+        @Override
         public Pair<Date, Double> next() {
             if (!hasNext())
                 return null;
@@ -1044,17 +1048,19 @@ public class ChartUtil {
             return new Pair<Date, Double>(t, val);
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
     }
 
     private static class PlotAggregatePair implements Comparable<PlotAggregatePair> {
-        private PlotSettings ps;
-        private double aggregate;
+        private final PlotSettings ps;
+        private final double aggregate;
         PlotAggregatePair(PlotSettings ps, double aggregate) {
             this.ps = ps; this.aggregate = aggregate;
         }
+        @Override
         public int compareTo(PlotAggregatePair o) {
             double comparison = o.aggregate - aggregate;
             if (comparison == 0.0)
@@ -1167,26 +1173,26 @@ public class ChartUtil {
                 columnName = RATIO_PLOT_SYNTHETIC + ps.getRatioTop() +
                         "/" + ps.getRatioBottom();
                 String infile = ps.getInfile();
-                
+
                 String[] top = ps.getRatioTop().split("\\+");
                 String[] bottom = ps.getRatioBottom().split("\\+");
-                
+
                 DataColumn[] ratioTop = new DataColumn[top.length];
                 DataColumn[] ratioBottom = new DataColumn[bottom.length];
-                
+
                 for (int i = 0, j = top.length; i < j; i++)
                     ratioTop[i] = new DataColumn(infile, top[i]);
                 for (int i = 0, j = bottom.length; i < j; i++)
                     ratioBottom[i] = new DataColumn(infile, bottom[i]);
-                
+
                 DataSeries[] topData = new DataSeries[ratioTop.length];
                 DataSeries[] bottomData = new DataSeries[ratioBottom.length];
-                
+
                 for (int i = 0, j = ratioTop.length; i < j; i++)
                     topData[i] = mDataSeries.get(ratioTop[i]);
                 for (int i = 0, j = ratioBottom.length; i < j; i++)
                     bottomData[i] = mDataSeries.get(ratioBottom[i]);
-                
+
                 DataSeries ds = new DataSeries();
                 for (int i = 0, j = topData[0].size(); i < j; i++) {
                     double topValue = 0.0;
