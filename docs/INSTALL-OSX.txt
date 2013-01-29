@@ -130,3 +130,21 @@ For RHEL:
 1. $ cd /opt/zimbra
 2. $ sudo ln -s /usr/java/latest/ java
 
+
+NETWORK EDITION DEPLOYMENT
+================================================================================
+
+1. $ cd ~/p4/main/ZimbraServer
+2. $ ant reset-all
+ 
+3. $ cd ~/p4/main/ZimbraLicenseExtension
+4. $ ant deploy-dev
+ 
+5. $ cd ~/p4/main/ZimbraNetwork
+6. $ ant dev-deploy
+
+Many of the admin functions require that you deploy admin extensions.  These may require additional paths in your P4 workspace and additional services be deployed for those extensions to function correctly. ymmv.
+
+Example for deploying an individual admin extension (ex. delegated admin extension)
+1. $ cd ~p4/main/ZimbraNetwork/ZimbraAdminExt
+2. $ ant -Dext.name=com_zimbra_delegatedadmin -Dext.dir=DelegatedAdmin deploy-zimlet
