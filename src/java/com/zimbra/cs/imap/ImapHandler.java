@@ -2034,13 +2034,26 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     /**
-     * Lightweight version of ImapPath, designed to avoid heap bloat in Map used during gathering of information for
-     * LSUB - see Bug 78659
+     * Lightweight version of ImapPath, designed to avoid heap bloat in Map used during gathering
+     * of information for LSUB - see Bug 78659
      */
     private class SubscribedImapPath implements Comparable<SubscribedImapPath> {
         private String imapPathString;
-        public SubscribedImapPath(ImapPath path) throws ServiceException {
+        private boolean validSubscribeImapPath;
+        public SubscribedImapPath(ImapPath path)
+        throws ServiceException {
+            validSubscribeImapPath = path.isValidImapPath();
             imapPathString = path.asImapPath();
+        }
+
+        /**
+         *
+         * @return true if this path is acceptable to keep in the list of subscribed folders.  Note, it does NOT have
+         * to be accessible or even exist to pass this test.
+         * @throws ServiceException
+         */
+        public boolean isValidSubscribeImapPath() throws ServiceException {
+            return validSubscribeImapPath;
         }
         public String asImapPath() {
             return imapPathString;
@@ -2049,7 +2062,8 @@ abstract class ImapHandler extends ProtocolHandler {
             return ImapPath.asUtf7String(imapPathString);
         }
 
-        public void addUnsubsribedMatchingParents(Pattern pattern, Map<SubscribedImapPath, Boolean> hits) throws ServiceException {
+        public void addUnsubsribedMatchingParents(Pattern pattern, Map<SubscribedImapPath, Boolean> hits)
+        throws ServiceException {
             int delimiter = imapPathString.lastIndexOf('/');
             String pathString = imapPathString;
             ImapPath path;
@@ -2086,9 +2100,9 @@ abstract class ImapHandler extends ProtocolHandler {
         //         Note: This requirement is because a server site can choose to routinely remove a mailbox with a
         //               well-known name (e.g., "system-alerts") after its contents expire, with the intention of
         //               recreating it when new contents are appropriate.
-        //
-        // Used to check whether a folder was hidden but the above notes suggest that was incorrect behavior.  (A
-        // folder could have been hidden or deleted temporarily...)
+        if (!path.isValidSubscribeImapPath()) {
+            return;
+        }
         if (pathMatches(path, pattern)) {
             hits.put(path, Boolean.TRUE);
             return;
