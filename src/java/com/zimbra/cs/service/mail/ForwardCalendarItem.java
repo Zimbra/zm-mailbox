@@ -330,14 +330,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                 }
 
                 if (descPlain != null && descPlain.length() > 0) {
-                    // Remove Outlook-style *~*~*~ header block.  Remove separator plus two newlines.
-                    int delim = descPlain.indexOf(Invite.HEADER_SEPARATOR);
-                    if (delim >= 0) {
-                        descPlain = descPlain.substring(delim + Invite.HEADER_SEPARATOR.length());
-                        descPlain = descPlain.replaceFirst("^\\r?\\n\\r?\\n", "");
-                    }
-                    if (descPlain.length() > 0)
-                        comp.addProperty(new ZProperty(ICalTok.DESCRIPTION, descPlain));
+                    comp.addProperty(new ZProperty(ICalTok.DESCRIPTION, descPlain));
                 }
                 if (descHtml != null && descHtml.length() > 0) {
                     ZProperty prop = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
