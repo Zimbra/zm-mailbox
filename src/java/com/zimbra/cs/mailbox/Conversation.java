@@ -741,7 +741,11 @@ public class Conversation extends MailItem {
         recalculateMetadata();
 
         // delete the old conversation (must do this after moving the messages because of cascading delete)
-        other.delete();
+        if (other instanceof VirtualConversation) {
+            other.removeChild(((VirtualConversation) other).getMessage());
+        } else {
+            other.delete();
+        }
     }
 
     /** Determines the set of {@link Message}s to be deleted from this
