@@ -83,6 +83,7 @@ public class DefangFilter extends DefaultFilter {
     // regexes inside of attr values to strip out
     private static final Pattern AV_JS_ENTITY = Pattern.compile("&\\{[^}]*\\}");
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern AV_JAVASCRIPT = Pattern.compile("javascript", Pattern.CASE_INSENSITIVE);
 
     // regex for URLs href. TODO: beef this up
     private static final Pattern VALID_EXT_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
@@ -540,7 +541,7 @@ public class DefangFilter extends DefaultFilter {
                         attributes.removeAttributeAt(i--);
                         attributeCount--;
                     } else {
-                        sanatizeAttrValue(eName, aName, attributes, i);
+                        sanitizeAttrValue(eName, aName, attributes, i);
                     }
                 }
             } else {
@@ -655,11 +656,18 @@ public class DefangFilter extends DefaultFilter {
         String value = attributes.getValue(i);
         // get rid of any spaces that might throw off the regex
         value = value == null? null: value.trim();
-        if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
-            if (!VALID_EXT_URL.matcher(value).find()) {
-                return true;
-            }
-        }
+
+		if (aName.equalsIgnoreCase("href")) {
+			if (VALID_EXT_URL.matcher(value).find()) {
+				return false;
+			}
+			sanitizeAttrValue(eName, aName, attributes, i);
+		} else if (aName.equalsIgnoreCase("longdesc")
+				|| aName.equalsIgnoreCase("usemap")) {
+			if (!VALID_EXT_URL.matcher(value).find()) {
+				return true;
+			}
+		}
         // We'll treat the SRC a little different since deleting it
         // may annoy the front end. Here, we'll check for
         // a valid url as well as just a valid filename in the
@@ -680,10 +688,14 @@ public class DefangFilter extends DefaultFilter {
      *
      *
      */
-    private void sanatizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
+    private void sanitizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
         String result = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
+
+        if (aName.equalsIgnoreCase("href")) {
+        	result =  AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED");
+        }
         if (aName.equalsIgnoreCase("style")) {
             result = sanitizeStyleValue(value);
         }
