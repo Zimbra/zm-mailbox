@@ -465,5 +465,46 @@ public class DefangFilterTest {
     }
 
 
+	@Test
+	public void testBug78902() throws Exception {
+
+		String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
+		InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+		String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+				.defang(htmlStream, true);
+		Assert.assertTrue(result
+				.contains("<a target=\"_blank\" href=\"Neptune.gif\"></a>"));
+
+
+		html = "<html><body>My pictures <a href=\"javascript:document.write('%3C%61%20%68%72%65%66%3D%22%6A%61%76%"
+			+ "61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%31%29%22%20%6F%6E%4D%6F%75%73%65%4F%76%65%72%3D%61%6C%65%"
+			+ "72%74%28%5C%22%70%30%77%6E%5C%22%29%3E%4D%6F%75%73%65%20%6F%76%65%72%20%68%65%72%65%3C%2F%61%3E')\">here</a></body></html>";
+		htmlStream = new ByteArrayInputStream(html.getBytes());
+		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+				.defang(htmlStream, true);
+		Assert.assertTrue(result
+				.contains("JAVASCRIPT-BLOCKED"));
+
+		html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
+		htmlStream = new ByteArrayInputStream(html.getBytes());
+		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+				.defang(htmlStream, true);
+		Assert.assertTrue(result
+				.contains("<a target=\"_blank\" href=\"Neptune.txt\"></a>"));
+
+		html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
+		htmlStream = new ByteArrayInputStream(html.getBytes());
+		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+				.defang(htmlStream, true);
+		Assert.assertTrue(result
+				.contains("<a target=\"_blank\" href=\"Neptune.pptx\"></a>"));
+
+		html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
+		htmlStream = new ByteArrayInputStream(html.getBytes());
+		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+				.defang(htmlStream, true);
+		Assert.assertTrue(!result
+				.contains("<script>"));
+	}
 
 }
