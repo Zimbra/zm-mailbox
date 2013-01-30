@@ -3221,7 +3221,7 @@ public class ZAttrProvisioning {
      * whether to invoke data imports for all data sources owned by an
      * account after successful user login from the login page
      *
-     * @since ZCS 7.2.2
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1418)
     public static final String A_zimbraDataSourceImportOnLogin = "zimbraDataSourceImportOnLogin";
@@ -6810,15 +6810,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
-     * whether mobile sync should zip the skipped item and attach it to the
-     * notification mail
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1423)
-    public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
-
-    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
@@ -6838,22 +6829,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1425)
     public static final String A_zimbraMobileMetadataMaxSizeEnabled = "zimbraMobileMetadataMaxSizeEnabled";
-
-    /**
-     * admin email address used for receiving notifications
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1422)
-    public static final String A_zimbraMobileNotificationAdminAddress = "zimbraMobileNotificationAdminAddress";
-
-    /**
-     * whether mobile sync notification enabled or not
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1421)
-    public static final String A_zimbraMobileNotificationEnabled = "zimbraMobileNotificationEnabled";
 
     /**
      * whether the Bluetooth capabilities are allowed on the device. The
