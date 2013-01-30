@@ -77,7 +77,10 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     @Override
     public void exceptionCaught(Throwable e) throws IOException {
         try {
-            if (e instanceof NioImapDecoder.TooBigLiteralException) {
+            if (e instanceof javax.net.ssl.SSLException) {
+                ZimbraLog.imap.error("Error detected by SSL subsystem, dropping connection:" + e);
+                dropConnection(true);  // Bug 79904 prevent using SSL port in plain text
+            } else if (e instanceof NioImapDecoder.TooBigLiteralException) {
                 String tag;
                 if (request != null) {
                     tag = request.getTag();

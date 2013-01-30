@@ -61,7 +61,10 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
 
     @Override
     public void exceptionCaught(Throwable e) throws IOException {
-        if (e instanceof RecoverableProtocolDecoderException) {
+        if (e instanceof javax.net.ssl.SSLException) {
+            ZimbraLog.pop.error("Error detected by SSL subsystem, dropping connection:" + e);
+            dropConnection();  // Bug 79904 prevent using SSL port in plain text
+        } else if (e instanceof RecoverableProtocolDecoderException) {
             RecoverableProtocolDecoderException re = (RecoverableProtocolDecoderException) e;
             int hexdumpIdx = re.getMessage() != null ? re.getMessage().indexOf("(Hexdump:") : -1;
             if (hexdumpIdx >= 0) {
