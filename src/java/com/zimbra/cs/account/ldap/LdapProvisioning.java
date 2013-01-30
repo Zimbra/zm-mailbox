@@ -238,15 +238,28 @@ public class LdapProvisioning extends LdapProv {
     private String[] BASIC_DYNAMIC_GROUP_ATTRS;
     private String[] BASIC_GROUP_ATTRS;
 
-    private static LdapProvisioning SINGLETON = null;
+    private static LdapProvisioning instanceWithCache = null;
+    private static LdapProvisioning instanceWithouCache = null;
 
-    private static synchronized void ensureSingleton(LdapProvisioning prov) {
-        if (SINGLETON != null) {
-            // pass an exception to have the stack logged
-            Zimbra.halt("Only one instance of LdapProvisioning can be created",
-                    ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
+    private static void ensureSingleton(LdapProvisioning prov, CacheMode mode) {
+        if (mode == CacheMode.OFF) {
+            synchronized (LdapProvisioning.class) {
+                if (instanceWithouCache != null) {
+                    Zimbra.halt("Only one instance of LdapProvisioning without cache can be created",
+                            ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
+                }
+                instanceWithouCache = prov;
+            }
+        } else {
+            synchronized (LdapProvisioning.class) {
+                if (instanceWithCache != null) {
+                    // pass an exception to have the stack logged
+                    Zimbra.halt("Only one instance of LdapProvisioning with cache can be created",
+                            ServiceException.FAILURE("failed to instantiate LdapProvisioning", null));
+                }
+                instanceWithCache = prov;
+            }
         }
-        SINGLETON = prov;
     }
 
     public LdapProvisioning() {
@@ -254,7 +267,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     public LdapProvisioning(CacheMode cacheMode) {
-        ensureSingleton(this);
+        ensureSingleton(this, cacheMode);
 
         useCache = true;
         if (cacheMode == CacheMode.OFF) {
