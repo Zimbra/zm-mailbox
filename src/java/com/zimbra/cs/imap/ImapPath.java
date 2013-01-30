@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -594,13 +595,6 @@ public class ImapPath implements Comparable<ImapPath> {
             if (mCredentials.isFolderHidden(this)) {
                 return false;
             }
-
-            if (mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
-                String lcname = mPath.toLowerCase();
-                if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/')) {
-                    return false;
-                }
-            }
         }
 
         try {
@@ -612,64 +606,105 @@ public class ImapPath implements Comparable<ImapPath> {
             throw e;
         }
 
-        // you cannot access your own mailbox via the /home/username mechanism
-        if (mOwner != null && belongsTo(mCredentials))
-            return false;
-
         if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
-            // hide all system folders and the user root folder
             if (folder.isHidden()) {
                 return false;
             }
-            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
-                return false;
-            }
-            // hide spam folder unless anti-spam feature is enabled.
-            if (folder.getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
-                return false;
-            }
-            if (!isVisible(folder.getDefaultView())) {
-                return false;
-            }
-            // hide subfolders of trashed mountpoints
-            if (mReferent != this && folder.inTrash() && !((Mountpoint) folder).getTarget().equals(mReferent.asItemId())) {
-                return false;
-            }
-            // hide other users' mountpoints and mountpoints that point to the same mailbox
-            if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED) {
-                return false;
-            }
-            // search folder visibility depends on an account setting
-            if (folder instanceof SearchFolder) {
-                return ((SearchFolder) folder).isImapVisible() && ImapFolder.getTypeConstraint((SearchFolder) folder).size() > 0;
-            }
-        } else {
-            ZFolder zfolder = (ZFolder) mFolder;
-            int folderId = asItemId().getId();
-            // the mailbox root folder is not visible
-            if (folderId == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
-                return false;
-            }
-            // hide spam folder unless anti-spam feature is enabled.
-            if (folderId == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
-                return false;
-            }
-            // calendars, briefcases, etc. are not surfaced in IMAP
-            ZFolder.View view = zfolder.getDefaultView();
-            if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document) {
-                return false;
-            }
-            // hide other users' mountpoints and mountpoints that point to the same mailbox
-            if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED) {
-                return false;
-            }
-            // hide all remote searchfolders
-            if (zfolder instanceof ZSearchFolder) {
-                return false;
+        }
+        boolean okPath = isValidImapPath();
+        if (!okPath) {
+            return false;
+        }
+        return mReferent == this ? true : mReferent.isVisible();
+    }
+
+    /**
+     * Mostly checking that the path doesn't clash with any paths we don't want to expose via IMAP.
+     * Separated out from isVisible() to aid IMAP LSUB command support.
+     */
+    boolean isValidImapPath() throws ServiceException {
+        if (mCredentials != null) {
+            if (mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
+                String lcname = mPath.toLowerCase();
+                if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+                    return false;
             }
         }
-        return (mReferent == this ? true : mReferent.isVisible());
+        try {
+            // you cannot access your own mailbox via the /home/username mechanism
+            if (mOwner != null && belongsTo(mCredentials))
+                return false;
+            getFolder();
+            if (mFolder instanceof Folder) {
+                Folder folder = (Folder) mFolder;
+                // hide all system folders and the user root folder
+                if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
+                    return false;
+                }
+                // hide spam folder unless anti-spam feature is enabled.
+                if (folder.getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                    return false;
+                }
+                if (!isVisible(folder.getDefaultView())) {
+                    return false;
+                }
+                // hide subfolders of trashed mountpoints
+                if (mReferent != this && folder.inTrash() &&
+                        !((Mountpoint) folder).getTarget().equals(mReferent.asItemId())) {
+                    return false;
+                }
+                // hide other users' mountpoints and mountpoints that point to the same mailbox
+                if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED) {
+                    return false;
+                }
+                // search folder visibility depends on an account setting
+                if (folder instanceof SearchFolder) {
+                    return ((SearchFolder) folder).isImapVisible() &&
+                            ImapFolder.getTypeConstraint((SearchFolder) folder).size() > 0;
+                }
+            } else {
+                ZFolder zfolder = (ZFolder) mFolder;
+                int folderId = asItemId().getId();
+                // the mailbox root folder is not visible
+                if (folderId == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
+                    return false;
+                }
+                // hide spam folder unless anti-spam feature is enabled.
+                if (folderId == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                    return false;
+                }
+                // calendars, briefcases, etc. are not surfaced in IMAP
+                ZFolder.View view = zfolder.getDefaultView();
+                if (view == ZFolder.View.appointment || view == ZFolder.View.task ||
+                        view == ZFolder.View.wiki || view == ZFolder.View.document) {
+                    return false;
+                }
+                // hide other users' mountpoints and mountpoints that point to the same mailbox
+                if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED) {
+                    return false;
+                }
+                // hide all remote searchfolders
+                if (zfolder instanceof ZSearchFolder) {
+                    return false;
+                }
+            }
+        } catch (NoSuchItemException ignore) {
+            // 6.3.9.  LSUB Command
+            //   The server MUST NOT unilaterally remove an existing mailbox name from the subscription list even if a
+            //   mailbox by that name no longer exists.
+        } catch (AccountServiceException ase) {
+            if (!AccountServiceException.NO_SUCH_ACCOUNT.equals(ase.getCode())) {
+                throw ase;
+            }
+        } catch (ServiceException se) {
+            if (ServiceException.PERM_DENIED.equals(se.getCode())) {
+                // Path probably OK.  For subscriptions, don't disallow path for possibly temporary permissions issue
+                return true;
+            }
+            throw se;
+        }
+        return mReferent == this ? true : mReferent.isValidImapPath();
     }
 
 
