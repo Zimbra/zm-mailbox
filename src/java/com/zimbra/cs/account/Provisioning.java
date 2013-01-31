@@ -14,29 +14,28 @@
  */
 package com.zimbra.cs.account;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.cs.extension.ExtensionUtil;
-
-import javax.mail.internet.InternetAddress;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.mail.internet.InternetAddress;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
+import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.names.NameUtil;
+import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
  * @since Sep 23, 2004
@@ -254,74 +253,79 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     private List<ProvisioningValidator> validators = new ArrayList<ProvisioningValidator>();
 
-    private static Provisioning sProvisioning;
+    private static volatile Provisioning singleton;
 
     public static enum CacheMode {
         DEFAULT,  // use the Provisioning implementation's default caching mode
         ON,
         OFF
     }
-    
-    public synchronized static Provisioning getInstance() {
+
+    public static Provisioning getInstance() {
         return getInstance(CacheMode.DEFAULT);
     }
-    
+
     /**
-     * This signature allows callsites to specify whether cache should be used in the 
-     * Provisioning instance returned.  
-     * 
-     * !!!Note!!!: setting useCache to false will hurt performance badly, as ***nothing*** 
-     * is cached.  For LdapProvisionig, each LDAP related method will cost one or more LDAP 
+     * This signature allows callsites to specify whether cache should be used in the
+     * Provisioning instance returned.
+     *
+     * !!!Note!!!: setting useCache to false will hurt performance badly, as ***nothing***
+     * is cached.  For LdapProvisionig, each LDAP related method will cost one or more LDAP
      * trips.  The only usage for useCache=false is zmconfigd. (bug 70975 and 71267)
-     * 
-     * @param useCache 
+     *
+     * @param useCache
      * @return
      */
-    public synchronized static Provisioning getInstance(CacheMode cacheMode) {
-        if (sProvisioning == null) {
-            if (cacheMode == null) {
-                cacheMode = CacheMode.DEFAULT;
-            }
-            
-            String className = LC.zimbra_class_provisioning.value();
-            
-            if (className != null && !className.equals("")) {
-                Class<?> klass = null;
-                try {
-                    try {
-                        klass = Class.forName(className);
-                    } catch (ClassNotFoundException cnfe) {
-                        // ignore and look in extensions
-                        klass = ExtensionUtil.findClass(className);
+    public static Provisioning getInstance(CacheMode cacheMode) {
+        if (singleton == null) {
+            synchronized (Provisioning.class) {
+                if (singleton == null) {
+                    if (cacheMode == null) {
+                        cacheMode = CacheMode.DEFAULT;
                     }
-                    
-                    if (cacheMode != CacheMode.DEFAULT) {
+
+                    String className = LC.zimbra_class_provisioning.value();
+
+                    if (className != null && !className.equals("")) {
+                        Class<?> klass = null;
                         try {
-                            sProvisioning = (Provisioning) klass.getConstructor(CacheMode.class).newInstance(cacheMode);
-                        } catch (NoSuchMethodException e) {
-                            ZimbraLog.account.error("could not find constructor with CacheMode parameter '" + 
+                            try {
+                                klass = Class.forName(className);
+                            } catch (ClassNotFoundException cnfe) {
+                                // ignore and look in extensions
+                                klass = ExtensionUtil.findClass(className);
+                            }
+
+                            if (cacheMode != CacheMode.DEFAULT) {
+                                try {
+                                    singleton =
+                                            (Provisioning) klass.getConstructor(CacheMode.class).newInstance(cacheMode);
+                                } catch (NoSuchMethodException e) {
+                                    ZimbraLog.account.error("could not find constructor with CacheMode parameter '" +
+                                            className + "'; defaulting to LdapProvisioning", e);
+                                }
+                            } else {
+                                singleton = (Provisioning) klass.newInstance();
+                            }
+                        } catch (Exception e) {
+                            ZimbraLog.account.error("could not instantiate Provisioning interface of class '" +
                                     className + "'; defaulting to LdapProvisioning", e);
                         }
-                    } else {
-                        sProvisioning = (Provisioning) klass.newInstance();
                     }
-                } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + 
-                            className + "'; defaulting to LdapProvisioning", e);
+
+                    if (singleton == null) {
+                        singleton = new com.zimbra.cs.account.ldap.LdapProvisioning(cacheMode);
+                        ZimbraLog.account.error("defaulting to " + singleton.getClass().getCanonicalName());
+                    }
                 }
             }
-            
-            if (sProvisioning == null) {
-                sProvisioning = new com.zimbra.cs.account.ldap.LdapProvisioning(cacheMode);
-                ZimbraLog.account.error("defaulting to " + sProvisioning.getClass().getCanonicalName());
-            }
         }
-        return sProvisioning;
+        return singleton;
     }
 
     @VisibleForTesting
     public synchronized static void setInstance(Provisioning prov) {
-        sProvisioning = prov;
+        singleton = prov;
     }
 
     public boolean idIsUUID() {
