@@ -1113,6 +1113,8 @@ public class LdapProvisioning extends LdapProv {
                     ocs.add(additionalObjectClasses[i]);
             }
 
+            boolean skipCountingLicenseQuota = false;
+
             /* bug 48226
              *
              * Check if any of the OCs in the backup is a structural OC that subclasses
@@ -1128,6 +1130,19 @@ public class LdapProvisioning extends LdapProv {
 
                 if (!LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC.equalsIgnoreCase(mostSpecificOC)) {
                     ocs.add(mostSpecificOC);
+                }
+
+                //calendar resource doesn't count against license quota
+                if (origAttrs.get(A_zimbraCalResType) != null) {
+                    skipCountingLicenseQuota = true;
+                }
+                if (origAttrs.get(A_zimbraIsSystemResource) != null) {
+                    entry.setAttr(A_zimbraIsSystemResource, "TRUE");
+                    skipCountingLicenseQuota = true;
+                }
+                if (origAttrs.get(A_zimbraIsExternalVirtualAccount) != null) {
+                    entry.setAttr(A_zimbraIsExternalVirtualAccount, "TRUE");
+                    skipCountingLicenseQuota = true;
                 }
             }
 
@@ -1242,8 +1257,7 @@ public class LdapProvisioning extends LdapProv {
 
             AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
             removeExternalAddrsFromAllDynamicGroups(acct.getAllAddrsSet(), zlc);
-            validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED,
-                    emailAddress, acct);
+            validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, emailAddress, acct, skipCountingLicenseQuota);
             return acct;
         } catch (LdapEntryAlreadyExistException e) {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, e);
@@ -2973,6 +2987,7 @@ public class LdapProvisioning extends LdapProv {
 
             zlc.deleteChildren(entry.getDN());
             zlc.deleteEntry(entry.getDN());
+            validate(ProvisioningValidator.DELETE_ACCOUNT_SUCCEEDED, zimbraId);
             accountCache.remove(acc);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
