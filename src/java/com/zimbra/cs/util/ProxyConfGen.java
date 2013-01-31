@@ -1906,6 +1906,7 @@ public class ProxyConfGen
         mConfVars.put("zmlookup.dpasswd", new ProxyConfVar("zmlookup.dpasswd", "ldap_nginx_password", "zmnginx", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "Password for master credentials used by NGINX to log in to upstream for GSSAPI authentication"));
         mConfVars.put("zmlookup.caching", new ProxyConfVar("zmlookup.caching", null, true, ProxyConfValueType.BOOLEAN, ProxyConfOverride.NONE, "Whether to turn on nginx lookup caching"));
         mConfVars.put("zmlookup.unqual", new ProxyConfVar("zmlookup.unqual", null, false, ProxyConfValueType.BOOLEAN, ProxyConfOverride.NONE, "Deprecated - always set to false"));
+        mConfVars.put("zmprefix.url", new ProxyConfVar("zmprefix.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "http URL prefix for where the zimbra app resides on upstream server"));
         mConfVars.put("web.sso.certauth.port", new ProxyConfVar("web.sso.certauth.port", Provisioning.A_zimbraMailSSLProxyClientCertPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"reverse proxy client cert auth port"));
         mConfVars.put("web.sso.certauth.default.enabled", new ZMSSOCertAuthDefaultEnablerVar());
         mConfVars.put("web.sso.enabled", new ZMSSOEnablerVar());
