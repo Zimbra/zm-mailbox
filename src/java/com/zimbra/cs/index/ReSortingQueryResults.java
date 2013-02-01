@@ -241,6 +241,11 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
             if (mHitBuffer.size() >= MAX_BUFFERED_HITS) {
                 break;
             }
+            // If it turns out that the results were sorted remotely, we can bail out early.  Go 1 beyond what we
+            // need so that 'more' setting will be correct.
+            if (params.getLimit() > 0 && results.isPreSorted() && mHitBuffer.size() >= (params.getLimit() + 1)) {
+                break;
+            }
         }
 
         if (!results.isPreSorted()) {
