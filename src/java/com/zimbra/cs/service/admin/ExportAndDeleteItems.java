@@ -44,12 +44,12 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
         // Parse request.
-        ExportAndDeleteItemsRequest req = JaxbUtil.elementToJaxb(requst);
-        ExportAndDeleteMailboxSpec mailbox = req.getMailbox();
-        if (mailbox == null) {
+        Element mboxEl = request.getElement(AdminConstants.E_MAILBOX);
+        int mboxId = (int) mboxEl.getAttributeLong(AdminConstants.A_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        if (mbox == null) {
             throw ServiceException.INVALID_REQUEST("empty mbox id", null);
         }
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailbox.getId());
         Multimap<Integer, Integer> idRevs = HashMultimap.create();
         for (Element itemEl : mboxEl.listElements(AdminConstants.E_ITEM)) {
             idRevs.put((int) itemEl.getAttributeLong(AdminConstants.A_ID), (int) itemEl.getAttributeLong(AdminConstants.A_VERSION_INFO_VERSION));
