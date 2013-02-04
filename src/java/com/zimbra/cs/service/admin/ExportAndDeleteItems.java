@@ -24,6 +24,7 @@ import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbMailItem;
@@ -49,6 +50,9 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         // Parse request.
         ExportAndDeleteItemsRequest req = JaxbUtil.elementToJaxb(requst);
         ExportAndDeleteMailboxSpec mailbox = req.getMailbox();
+        if (mailbox == null) {
+            throw ServiceException.INVALID_REQUEST("empty mbox id", null);
+        }
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailbox.getId());
         Multimap<Integer, Integer> idRevs = HashMultimap.create();
         for (ExportAndDeleteItemSpec item : mailbox.getItems()) {
