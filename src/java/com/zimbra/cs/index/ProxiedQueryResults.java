@@ -67,6 +67,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     protected SoapProtocol responseProto = null;
 
     private SearchParams searchParams;
+    private boolean singleShotRemoteRequest = false;
 
     /**
      * read timeout for the proxy SOAP request. -1 mean use default SOAP http client timeout.
@@ -104,7 +105,6 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
             SearchParams.Fetch fetch) {
         super(params.getTypes(), params.getSortBy(), fetch);
         setSearchParams(params);
-        searchParams.setOffset(0);
         this.authToken = authToken;
         this.server = server;
         this.responseProto = respProto;
@@ -112,10 +112,24 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     private void setSearchParams(SearchParams params) {
         searchParams = (SearchParams) params.clone();
-        searchParams.setCursor(null);
-        // when doing offset-paging, since we do a mergesort locally, the remote query must start
-        // at offset 0 and page through all the results
-        searchParams.setOffset(0);
+        if ((searchParams.getCursor() != null) && (searchParams.getLimit() > 0) && (searchParams.getLimit() < 500)) {
+            SortBy sb = getSortBy();
+            // Using a fairly restrictive match in order to reduce scope of "singleShot" change
+            if (sb != null && ((SortBy.NAME_LOCALIZED_ASC.equals(sb)) || (SortBy.NAME_LOCALIZED_DESC.equals(sb)) ||
+                (SortBy.NAME_ASC.equals(sb)) || (SortBy.NAME_DESC.equals(sb)))) {
+                singleShotRemoteRequest = true;
+                if (searchParams.getLimit() > 0) {
+                    // Go 1 beyond what we need so that 'more' setting will be correct.
+                    searchParams.setLimit(searchParams.getLimit() + 1);
+                }
+            }
+        }
+        if (!singleShotRemoteRequest) {
+            searchParams.setCursor(null);
+            // when doing offset-paging, since we do a mergesort locally, the remote query must start
+            // at offset 0 and page through all the results
+            searchParams.setOffset(0);
+        }
     }
 
     private void setSearchParams(SearchParams params, String queryString) {
@@ -209,12 +223,17 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
         bufferStartOffset = iterOffset;
 
-        int chunkSizeToUse = searchParams.getLimit() * 2;
-        if (chunkSizeToUse < MIN_BUFFER_CHUNK_SIZE) {
-            chunkSizeToUse = MIN_BUFFER_CHUNK_SIZE;
-        }
-        if (chunkSizeToUse > 500) {
-            chunkSizeToUse = 500;
+        int chunkSizeToUse;
+        if (singleShotRemoteRequest) {
+            chunkSizeToUse = searchParams.getLimit();
+        } else {
+            chunkSizeToUse = searchParams.getLimit() * 2;
+            if (chunkSizeToUse < MIN_BUFFER_CHUNK_SIZE) {
+                chunkSizeToUse = MIN_BUFFER_CHUNK_SIZE;
+            }
+            if (chunkSizeToUse > 500) {
+                chunkSizeToUse = 500;
+            }
         }
 
         bufferEndOffset = bufferStartOffset + chunkSizeToUse;
@@ -225,6 +244,16 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         searchParams.setOffset(bufferStartOffset);
         searchParams.setLimit(chunkSizeToUse);
         searchParams.encodeParams(searchElt);
+        if (singleShotRemoteRequest && (searchParams.getCursor() != null)) {
+            Element cursorElt = searchElt.addElement(MailConstants.E_CURSOR);
+            cursorElt.addAttribute(MailConstants.A_ID, searchParams.getCursor().getItemId().getId());
+            if (searchParams.getCursor().getSortValue() != null) {
+                cursorElt.addAttribute(MailConstants.A_SORTVAL, searchParams.getCursor().getSortValue());
+            }
+            if (searchParams.getCursor().getEndSortValue() != null) {
+                cursorElt.addAttribute(MailConstants.A_ENDSORTVAL, searchParams.getCursor().getEndSortValue());
+            }
+        }
 
         // call the remote server now!
         Server targetServer = Provisioning.getInstance().get(Key.ServerBy.name, server);
@@ -273,7 +302,12 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
             ZimbraLog.index.debug("Remote query took " + elapsed + "ms; URL=" + proxy.toString() + "; QUERY=" + searchElt.toString());
         }
 
-        int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
+        int hitOffset;
+        if (singleShotRemoteRequest) {
+            hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET, bufferStartOffset);
+        } else {
+            hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
+        }
         boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
 
         assert(bufferStartOffset == hitOffset);
@@ -289,7 +323,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
                     queryInfo.add(new ProxiedQueryInfo(info));
                 }
             } else {
-                if ((SortBy.NAME_LOCALIZED_ASC.equals(sb)) || (SortBy.NAME_LOCALIZED_DESC.equals(sb))) {
+                if (sb != null && ((SortBy.NAME_LOCALIZED_ASC.equals(sb)) || (SortBy.NAME_LOCALIZED_DESC.equals(sb)))) {
                     hitBuffer.add(bufferIdx++,
                             new ProxiedContactHit(this, el, el.getAttribute(MailConstants.A_FILE_AS_STR)));
                 } else {
@@ -309,6 +343,9 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
             atEndOfList = true;
         } else {
             assert(bufferEndOffset == bufferStartOffset+bufferIdx);
+        }
+        if (singleShotRemoteRequest) {
+            atEndOfList = true;
         }
 
         assert(bufferStartOffset <= iterOffset);
