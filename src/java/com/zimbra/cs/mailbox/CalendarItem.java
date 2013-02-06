@@ -1392,7 +1392,7 @@ public abstract class CalendarItem extends MailItem {
             method.equals(ICalTok.CANCEL.toString()) ||
             method.equals(ICalTok.PUBLISH.toString())) {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
-                                                   preserveAlarms, replaceExistingInvites, true);
+                                                   preserveAlarms, replaceExistingInvites, false);
         } else if (method.equals(ICalTok.REPLY.toString())) {
             return processNewInviteReply(invite, null);
         } else if (method.equals(ICalTok.COUNTER.toString())) {
@@ -1409,10 +1409,16 @@ public abstract class CalendarItem extends MailItem {
             boolean preserveAlarms, boolean replaceExistingInvites) throws ServiceException {
         for (SetCalendarItemData scid : scidList) {
             processNewInviteRequestOrCancel(scid.message, scid.invite, folderId, nextAlarm,
-                                                preserveAlarms, replaceExistingInvites, false);
+                                                preserveAlarms, replaceExistingInvites, true);
         }
         // now update the recurrence.
         updateRecurrence(nextAlarm);
+        // persist the data to the DB.
+        try {
+            setContent(null, null);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException", e);
+        }
     }
 
     /**
@@ -1429,6 +1435,20 @@ public abstract class CalendarItem extends MailItem {
         else
             return r2 == null;
     }
+    
+    /**
+     * 
+     * @param pm
+     * @param newInvite
+     * @param folderId
+     * @param nextAlarm
+     * @param preserveAlarms
+     * @param discardExistingInvites
+     * @param batch - if true this call will not update the recurrence and may not persist to the data. 
+     *                The caller needs to persist the data by calling setContent().
+     * @return
+     * @throws ServiceException
+     */
 
     private boolean processNewInviteRequestOrCancel(ParsedMessage pm,
                                                     Invite newInvite,
@@ -1436,7 +1456,7 @@ public abstract class CalendarItem extends MailItem {
                                                     long nextAlarm,
                                                     boolean preserveAlarms,
                                                     boolean discardExistingInvites,
-                                                    boolean updateRecur)
+                                                    boolean batch)
     throws ServiceException {
         // trace logging
         if (!newInvite.hasRecurId())
@@ -2029,7 +2049,7 @@ public abstract class CalendarItem extends MailItem {
                 modifiedCalItem = true;
 
             if (modifiedCalItem) {
-                if (updateRecur && !updateRecurrence(nextAlarm)) {
+                if (!batch && !updateRecurrence(nextAlarm)) {
                     // no default invite!  This appointment/task no longer valid
                     ZimbraLog.calendar.warn(
                             "Invalid state: deleting calendar item " + getId() +
@@ -2082,7 +2102,9 @@ public abstract class CalendarItem extends MailItem {
                         try {
                             // call setContent here so that MOD_CONTENT is updated...this is required
                             // for the index entry to be correctly updated (bug 39463)
-                            setContent(null, null);
+                            if (!batch) {
+                                setContent(null, null);
+                            }
                         } catch (IOException e) {
                             throw ServiceException.FAILURE("IOException", e);
                         }
