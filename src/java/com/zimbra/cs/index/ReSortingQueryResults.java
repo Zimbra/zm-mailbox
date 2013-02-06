@@ -192,6 +192,14 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                 break;
         }
 
+        int maxIfPresorted = MAX_BUFFERED_HITS;
+        if (params != null && params.getCursor() == null) {
+            maxIfPresorted = params.getLimit();
+            if (maxIfPresorted > 0) {
+                // 1 is added so that the 'more' setting will be correct.
+                maxIfPresorted = maxIfPresorted + 1 + params.getOffset();
+            }
+        }
         ZimbraHit cur;
         while ((cur = results.getNext()) != null) {
 
@@ -239,6 +247,10 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                 mHitBuffer.add(cur);
             }
             if (mHitBuffer.size() >= MAX_BUFFERED_HITS) {
+                break;
+            }
+            // If it turns out that the results were sorted remotely, we can bail out early.
+            if (results.isPreSorted() && mHitBuffer.size() >= maxIfPresorted) {
                 break;
             }
         }
