@@ -140,6 +140,9 @@ public final class LC {
     public static final KnownKey zimbra_admin_service_port = KnownKey.newKey(7071);
 
     @Supported
+    public static final KnownKey zimbra_mail_service_port = KnownKey.newKey(80);
+
+    @Supported
     public static final KnownKey zimbra_admin_service_scheme = KnownKey.newKey("https://");
 
     @Supported
