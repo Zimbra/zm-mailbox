@@ -96,7 +96,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                             // delete all revisions to make sure we delete all blobs
                             List<MailItem> list = null;
                             try {
-                                list = mbox.getAllRevisions(null, itemId, MailItem.Type_UNKNOWN);
+                                list = mbox.getAllRevisions(null, itemId, MailItem.TYPE_UNKNOWN);
                             } catch (NoSuchItemException ex) {
                                 // exception happens when we try to delete a mail_item which is already in mail_item_dumpster
                                 continue;
