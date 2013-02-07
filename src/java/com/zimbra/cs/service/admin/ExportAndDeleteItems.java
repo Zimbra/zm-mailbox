@@ -97,7 +97,14 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                     for (int rev : revs) {
                         if (rev == 0) {
                             // delete all revisions to make sure we delete all blobs
-                            List<MailItem> list = mbox.getAllRevisions(null, itemId, MailItem.Type.UNKNOWN);
+                            List<MailItem> list = null;
+                            try {
+                                list = mbox.getAllRevisions(null, itemId, MailItem.Type.UNKNOWN);
+                            } catch (NoSuchItemException ex) {
+                                // exception happens when we try to delete a mail_item which is already in mail_item_dumpster
+                                continue;
+                            }
+
                             for (MailItem item : list) {
                                 if (item.getType() == MailItem.Type.DOCUMENT) {
                                     mbox.purgeRevision(null, itemId, item.getVersion(), false);
@@ -110,6 +117,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                                 mbox.purgeRevision(null, itemId, rev, false);
                             } catch (NoSuchItemException ex) {
                                 // exception happens when we try to delete a revision which is already in revision_dumpster
+                                continue;
                             }
                         }
                     }
