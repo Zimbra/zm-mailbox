@@ -144,7 +144,8 @@ public class ZMailboxUtil implements DebugListener {
     private ZAuthToken mAdminAuthToken = null;
 
     private static final String DEFAULT_ADMIN_URL = "https://"+LC.zimbra_zmprov_default_soap_server.value()+":" + LC.zimbra_admin_service_port.intValue()+"/";
-    private static final String DEFAULT_URL = "http://"+LC.zimbra_zmprov_default_soap_server.value()+"/";
+    private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value()
+                    + (LC.zimbra_mail_service_port.intValue() == 80 ? "" : ":" + LC.zimbra_mail_service_port.intValue()) + "/";
 
     private String mUrl = DEFAULT_URL;
 
@@ -1649,7 +1650,7 @@ public class ZMailboxUtil implements DebugListener {
         switch (type) {
         case usr:
         case grp:
-        case cos:    
+        case cos:
         case dom:
             if (args.length != 4) {
                 throw ZClientException.CLIENT_ERROR("not enough args", null);
