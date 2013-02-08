@@ -370,7 +370,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 mbox.getFolderById(folderId).updateHighestMODSEQ();
             }
         }
-        
+
         void contentChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
             metadataChanged(mbox, updateFolderMODSEQ);
             modContent = modMetadata;
@@ -3166,6 +3166,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             for (Integer convId : info.cascadeIds) {
                 mbox.markItemDeleted(Type.CONVERSATION, convId);
+                mbox.uncacheItem(convId);
             }
             try {
                 DbMailItem.delete(mbox, info.cascadeIds, false);
@@ -3739,7 +3740,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         ++mMetaVersion;
         mData.metadataChanged(mMailbox, updateFolderMODSEQ);
     }
-    
+
     void metadataChanged() throws ServiceException {
         metadataChanged(true);
     }
