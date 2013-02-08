@@ -75,6 +75,26 @@ public final class ContactHit extends ZimbraHit {
         return cachedName;
     }
 
+    /**
+     * Returns the sort value.
+     *
+     * @throws ServiceException failed to get the sort field
+     */
+    @Override
+    public Object getSortField(SortBy sort) throws ServiceException {
+        Object sortField = super.getSortField(sort);
+        if ((sortField == null || "".equals(sortField.toString())) && (sort != null)) {
+            switch (sort) {
+                case NAME_ASC:
+                case NAME_DESC:
+                case NAME_LOCALIZED_ASC:
+                case NAME_LOCALIZED_DESC:
+                    sortField = getName();
+            }
+        }
+        return sortField;
+    }
+
     @Override
     public String toString() {
         try {
