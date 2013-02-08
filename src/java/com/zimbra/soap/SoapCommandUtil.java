@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -60,7 +60,9 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String DEFAULT_ADMIN_URL = String.format("https://%s:%d/service/admin/soap",
         LC.zimbra_zmprov_default_soap_server.value(),
         LC.zimbra_admin_service_port.intValue());
-    private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value() + "/service/soap";
+    private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value()
+                    + (LC.zimbra_mail_service_port.intValue() == 80 ? "" : ":" + LC.zimbra_mail_service_port.intValue())
+                    + "/service/soap";
 
     private static final String LO_HELP = "help";
     private static final String LO_MAILBOX = "mailbox";
@@ -89,7 +91,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String TYPE_MOBILE = "mobile";
     private static final String TYPE_OFFLINE = "offline";
     private static final String TYPE_VOICE = "voice";
-    
+
     static {
         // Namespaces
         sTypeToNamespace.put(TYPE_MAIL, Namespace.get("urn:zimbraMail"));
@@ -100,8 +102,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         sTypeToNamespace.put(TYPE_OFFLINE, Namespace.get("urn:zimbraOffline"));
         sTypeToNamespace.put(TYPE_VOICE, Namespace.get("urn:zimbraVoice"));
     }
-    
-    private Options mOptions = new Options();
+
+    private final Options mOptions = new Options();
     private String mUrl;
     private String mType;
     private Namespace mNamespace;
@@ -146,24 +148,24 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt = new Option("p", LO_PASSWORD, true, "Password.");
         opt.setArgName("password");
         mOptions.addOption(opt);
-        
+
         opt = new Option("P", LO_PASSFILE, true, "Read password from file.");
         opt.setArgName("path");
         mOptions.addOption(opt);
-        
+
         opt = new Option("u", LO_URL, true, "SOAP service URL, usually " +
                 "http[s]://host:port/service/soap or https://host:port/service/admin/soap.");
         opt.setArgName("url");
         mOptions.addOption(opt);
-        
+
         mOptions.addOption(new Option("z", LO_ZADMIN, false,
             "Authenticate with zimbra admin name/password from localconfig."));
-        mOptions.addOption(new Option("v", LO_VERBOSE, false, 
+        mOptions.addOption(new Option("v", LO_VERBOSE, false,
             "Print the request."));
         mOptions.addOption(new Option("vv", LO_VERY_VERBOSE, false,
             "Print URLs and all requests and responses with envelopes."));
         mOptions.addOption(new Option("n", LO_NO_OP, false, "Print the SOAP request only.  Don't send it."));
-        
+
         opt = new Option(null, LO_SELECT, true, "Select an element or attribute from the response.");
         opt.setArgName("xpath");
         mOptions.addOption(opt);
@@ -180,13 +182,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt = new Option("f", LO_FILE, true, "Read request from file.");
         opt.setArgName("path");
         mOptions.addOption(opt);
-        
+
         String types = StringUtil.join(",", sTypeToNamespace.keySet());
         opt = new Option("t", LO_TYPE, true,
             "SOAP request type: " + types + ".  Default is admin, or mail if -m is specified.");
         opt.setArgName("type");
         mOptions.addOption(opt);
-        
+
         mOptions.addOption(new Option(null, LO_USE_SESSION, false, "Use a SOAP session."));
 
         try {
@@ -196,7 +198,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     private void usage(String errorMsg) {
         int exitStatus = 0;
-        
+
         if (errorMsg != null) {
             System.err.println(errorMsg);
             exitStatus = 1;
@@ -213,17 +215,17 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             System.exit(exitStatus);
     }
 
-    
+
     private void parseCommandLine(String[] args)
     throws ParseException {
         // Parse command line
         GnuParser parser = new GnuParser();
         CommandLine cl = parser.parse(mOptions, args);
-        
+
         if (CliUtil.hasOption(cl, LO_HELP)) {
             usage(null);
         }
-        
+
         // Set member variables
         String val = CliUtil.getOptionValue(cl, LO_PASSFILE);
         if (!StringUtil.isNullOrEmpty(val)) {
@@ -257,7 +259,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (StringUtil.isNullOrEmpty(mAuthAccountName) && StringUtil.isNullOrEmpty(mAdminAccountName)) {
             usage("Authentication account not specified.");
         }
-        
+
         if (CliUtil.hasOption(cl, LO_TYPE)) {
             mType = CliUtil.getOptionValue(cl, LO_TYPE);
             if (!sTypeToNamespace.containsKey(mType)) {
@@ -275,11 +277,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             }
         }
         mNamespace = sTypeToNamespace.get(mType);
-        
+
         mUrl = CliUtil.getOptionValue(cl, LO_URL);
         if (StringUtil.isNullOrEmpty(mUrl)) {
             if (!StringUtil.isNullOrEmpty(mAdminAccountName)) {
-                mUrl = DEFAULT_ADMIN_URL;  
+                mUrl = DEFAULT_ADMIN_URL;
             } else {
                 mUrl = DEFAULT_URL;
             }
@@ -287,7 +289,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
         mVeryVerbose = CliUtil.hasOption(cl, LO_VERY_VERBOSE);
         mVerbose = CliUtil.hasOption(cl, LO_VERBOSE);
-        
+
         mPaths = cl.getArgs();
         mNoOp = CliUtil.hasOption(cl, LO_NO_OP);
         mSelect = CliUtil.getOptionValue(cl, LO_SELECT);
@@ -308,9 +310,10 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
         mUseSession = CliUtil.hasOption(cl, LO_USE_SESSION);
     }
-    
+
     private static final String[] XPATH_PASSWORD = new String[] { "Body", AdminConstants.AUTH_REQUEST.getName(), AdminConstants.E_PASSWORD };
-    
+
+    @Override
     public void sendSoapMessage(Element envelope) {
         if (mVeryVerbose) {
             // Obscure password if this is an AuthRequest.
@@ -320,38 +323,39 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
                 originalPassword = passwordElement.getText();
                 passwordElement.setText("***");
             }
-            
+
             mOut.println(envelope.prettyPrint());
-            
+
             if (passwordElement != null) {
                 passwordElement.setText(originalPassword);
             }
         }
     }
-    
+
+    @Override
     public void receiveSoapMessage(Element envelope) {
         if (mVeryVerbose) {
             mOut.println(envelope.prettyPrint());
         }
     }
-    
+
     private void adminAuth()
     throws ServiceException, IOException {
         // Create auth element
         Element auth = mFactory.createElement(AdminConstants.AUTH_REQUEST);
         auth.addElement(AdminConstants.E_NAME).setText(mAdminAccountName);
         auth.addElement(AdminConstants.E_PASSWORD).setText(mPassword);
-        
+
         // Authenticate and get auth token
         Element response = null;
-        
+
         if (mVeryVerbose) {
             mOut.println("Sending admin auth request to " + mUrl);
         }
-        
+
         response = getTransport().invoke(auth, false, !mUseSession, null);
         handleAuthResponse(response);
-        
+
         // Do delegate auth if this is a mail or account service request
         if (!mType.equals(TYPE_ADMIN) && !StringUtil.isNullOrEmpty(mAuthAccountName)) {
             boolean nameIsUUID = StringUtil.isUUID(mAuthAccountName);
@@ -364,19 +368,19 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             }
             response = getTransport().invoke(getInfo, false, !mUseSession, null);
             String userServiceUrl = response.getElement(AdminConstants.E_SOAP_URL).getText();
-            
+
             // Get delegate auth token
             Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
             account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mAuthAccountName);
             account.addAttribute(AdminConstants.A_BY, nameIsUUID ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
             response = getTransport().invoke(delegateAuth, false, !mUseSession, null);
             handleAuthResponse(response);
-            
+
             // Set URL for subsequent mail and account requests.
             mUrl = userServiceUrl;
         }
     }
-    
+
     private SoapHttpTransport getTransport() {
         if (mTransport == null || !Objects.equal(mTransport.getURI(), mUrl)) {
             mTransport = new SoapHttpTransport(mUrl);
@@ -387,7 +391,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mTransport.setTimeout(0);
         return mTransport;
     }
-    
+
     private void handleAuthResponse(Element authResponse)
     throws ServiceException {
         mAuthToken = authResponse.getAttribute(AccountConstants.E_AUTH_TOKEN);
@@ -396,7 +400,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mSessionId = sessionEl.getAttribute(HeaderConstants.A_ID);
         }
     }
-    
+
     private void mailboxAuth()
     throws ServiceException, IOException {
         if (mVeryVerbose) {
@@ -461,7 +465,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
                 ByteUtil.closeStream(in);
             }
         }
-        
+
         // Find the root.
         Element request = element;
         if (request == null) {
@@ -470,7 +474,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         while (request.getParent() != null) {
             request = request.getParent();
         }
-        
+
         if (mNoOp) {
             mOut.println(request.prettyPrint());
             return;
@@ -482,33 +486,33 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         } else {
             mailboxAuth();
         }
-        
+
         // Send request and print response.
         if (!mType.equals(TYPE_ADMIN) && !StringUtil.isNullOrEmpty(mTargetAccountName) &&
             !StringUtil.equalIgnoreCase(mAuthAccountName, mTargetAccountName)) {
             getTransport().setTargetAcctName(mTargetAccountName);
         }
         Element response = null;
-        
+
         if (mVeryVerbose) {
             System.out.println("Sending request to " + mUrl);
         }
         if (mVerbose) {
             System.out.println(request.prettyPrint());
         }
-        
+
         response = getTransport().invoke(request, false, !mUseSession, null);
 
         // Select result.
         List<Element> results = null;
         String resultString = null;
-        
+
         if (mSelect != null) {
-            // Create bogus root element, to allow us to find the first element in the path. 
+            // Create bogus root element, to allow us to find the first element in the path.
             Element root = response.getFactory().createElement("root");
             response.detach();
             root.addElement(response);
-            
+
             String[] parts = mSelect.split("/");
             if (parts.length > 0) {
                 String lastPart = parts[parts.length - 1];
@@ -523,14 +527,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             results = new ArrayList<Element>();
             results.add(response);
         }
-        
+
         if (!mVeryVerbose) { // Envelope was already printed if we're doing very verbose logging.
             if (resultString == null && results != null) {
                 StringBuilder buf = new StringBuilder();
                 boolean first = true;
                 for (Element e : results) {
                     if (first) {
-                        first = false; 
+                        first = false;
                     } else {
                         buf.append('\n');
                     }
@@ -544,35 +548,35 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mOut.println(resultString);
         }
     }
-    
+
     private static Pattern PAT_PATH_AND_VALUE = Pattern.compile("([^=]*)=(.*)");
 
     /**
      * Processes a path that's relative to the given root.  The path
      * is in an XPath-like format:
-     * 
+     *
      * <p><tt>element1/element2[/@attr][=value]</tt></p>
-     * 
+     *
      * If a value is specified, it sets the text of the last element
      * or attribute in the path.
-     * 
+     *
      * @param start <tt>Element</tt> that the path is relative to, or <tt>null</tt>
      * for the root
      * @param path an XPath-like path of elements and attributes
      */
     private Element processPath(Element start, String path, ElementFactory factory) {
         String value = null;
-        
+
         // Parse out value, if it's specified.
         Matcher m = PAT_PATH_AND_VALUE.matcher(path);
         if (m.matches()) {
             path = m.group(1);
             value = m.group(2);
         }
-        
+
         // Find the first element.
         Element element = start;
-        
+
         // Walk parts and implicitly create elements.
         String[] parts = path.split("/");
         String part = null;
@@ -587,7 +591,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
                 element = element.addElement(part);
             }
         }
-        
+
         // Set either element text or attribute value
         if (value != null && part != null) {
             if (part.startsWith("@")) {
@@ -602,10 +606,10 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     private static String formatServiceException(ServiceException e) {
         Throwable cause = e.getCause();
-        return "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-            (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");  
+        return "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" +
+            (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
     }
-    
+
     public static void main(String[] args) {
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("zmsoap", null);
@@ -615,7 +619,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         } catch (ParseException e) {
             app.usage(e.getMessage());
         }
-        
+
         try {
             app.run();
         } catch (ServiceException e) {
