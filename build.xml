@@ -1020,7 +1020,6 @@
         <include name="jaxen*.jar"/>
         <include name="jcommon*.jar"/>
         <include name="jfreechart*.jar"/>
-        <include name="junit*.jar"/>
         <include name="jzlib-1.0.7.jar"/>
         <include name="nekohtml-1.9.13.1z.jar"/>
         <include name="tnef*.jar"/>
