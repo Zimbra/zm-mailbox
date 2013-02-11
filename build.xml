@@ -65,9 +65,11 @@
     <path refid="jaxws.classpath"/>
     <pathelement location="${build.classes.dir}" />
     <fileset dir="${common.jars.dir}">
-        <include name="**/junit*.jar"/>
         <include name="**/guava*.jar"/>
         <include name="**/log4j*.jar"/>
+    </fileset>
+    <fileset dir="${common.internal.jars.dir}">
+        <include name="**/junit*.jar"/>
     </fileset>
   </path>
 
