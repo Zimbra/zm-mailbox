@@ -1035,7 +1035,7 @@
         <include name="log4j-*.jar"/>
         <include name="apache-log4j-extras-*.jar"/>      	
       </fileset>
-      <fileset dir="{common.internal.jars.dir}">
+      <fileset dir="${common.internal.jars.dir}">
         <include name="junit*.jar"/>
       </fileset>
     </copy>
