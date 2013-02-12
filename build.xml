@@ -48,6 +48,9 @@
     <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
     </fileset>
+      <fileset dir="${common.internal.jars.dir}">
+        <include name="**/junit*.jar"/>
+    </fileset>
   </path>
 
   <path id="jaxws.classpath">
@@ -67,10 +70,7 @@
     <fileset dir="${common.jars.dir}">
         <include name="**/guava*.jar"/>
         <include name="**/log4j*.jar"/>
-    </fileset>
-    <fileset dir="${common.internal.jars.dir}">
-        <include name="**/junit*.jar"/>
-    </fileset>
+    </fileset> 
   </path>
 
   <path id="soapdocs.class.path">
