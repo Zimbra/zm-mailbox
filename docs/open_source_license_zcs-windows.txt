@@ -1,6 +1,6 @@
 open_source_license.txt
 
-VMware Zimbra Windows Components 8.0.2 GA
+VMware Zimbra Windows Components 8.0.3 Beta
 
 
 ===========================================================================
@@ -171,4 +171,4 @@ years from the date you acquired this Software product. Alternatively,
 the Source Files may accompany the VMware product.
 
 
-[ZCSWINDOWS802GAKD120512]
+[ZCSWINDOWS803BKD020113]
