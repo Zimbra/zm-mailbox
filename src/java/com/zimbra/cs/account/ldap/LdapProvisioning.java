@@ -2980,14 +2980,14 @@ public class LdapProvisioning extends LdapProv {
             // eat the exception and continue
             ZimbraLog.account.warn("cannot revoke grants", e);
         }
-
+        final Map<String, Object> attrs = new HashMap<String, Object>(acc.getAttrs());
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_ACCOUNT);
 
             zlc.deleteChildren(entry.getDN());
             zlc.deleteEntry(entry.getDN());
-            validate(ProvisioningValidator.DELETE_ACCOUNT_SUCCEEDED, zimbraId);
+            validate(ProvisioningValidator.DELETE_ACCOUNT_SUCCEEDED, attrs);
             accountCache.remove(acc);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
