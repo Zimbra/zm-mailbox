@@ -48,7 +48,7 @@
     <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
     </fileset>
-      <fileset dir="${common.internal.jars.dir}">
+    <fileset dir="${common.internal.jars.dir}">
         <include name="**/junit*.jar"/>
     </fileset>
   </path>
@@ -71,6 +71,9 @@
         <include name="**/guava*.jar"/>
         <include name="**/log4j*.jar"/>
     </fileset> 
+    <fileset dir="${common.internal.jars.dir}">
+        <include name="**/junit*.jar"/>
+    </fileset>
   </path>
 
   <path id="soapdocs.class.path">
@@ -204,6 +207,14 @@
       <service-client-support svcname="ZimbraService" pathelem="zcs" svcclassname="ZcsService"/>
   </target>
 
+  <target name="check-zimbra-identity">
+      <available file="/opt/zimbra/.ssh/zimbra_identity" property="ssh.zimbra.identity.present"/>
+  </target>
+
+  <target name="zimbra-identity" depends="check-zimbra-identity" unless="ssh.zimbra.identity.present">
+      <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
+  </target>
+
   <target name="wsdl-test-compile" depends="compile,wsdl-client-support">
     <mkdir dir="${wsdl.test.classes.dir}"/>
     <javac srcdir="${wsdl.test.src.dir}" destdir="${wsdl.test.classes.dir}"
@@ -214,7 +225,7 @@
   </target>
 
   <!-- WSDL client tests that require ZimbraServer installed and some setup in place -->
-  <target name="wsdl-test" depends="wsdl-test-compile" description="Run WSDL client unit tests">
+  <target name="wsdl-test" depends="wsdl-test-compile,zimbra-identity" description="Run WSDL client unit tests">
     <delete dir="${wsdl.test.dir}" quiet="true"/>
     <mkdir dir="${wsdl.test.dir}/output"/>
     <mkdir dir="${wsdl.test.dir}/report"/>
