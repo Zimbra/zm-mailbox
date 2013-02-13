@@ -104,7 +104,8 @@ public class SearchLdapOptions {
     private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE;
     private ZSearchScope searchScope;
     private SearchLdapOptions.SearchLdapVisitor visitor;
-    
+    private boolean isUseControl = true;
+
     // TODO: retire this
     public SearchLdapOptions(String searchbase, String filterStr, 
             String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
@@ -190,5 +191,13 @@ public class SearchLdapOptions {
     
     public void setVisitor(SearchLdapOptions.SearchLdapVisitor visitor) {
         this.visitor = visitor;
+    }
+
+    public boolean isUseControl() {
+        return isUseControl;
+    }
+
+    public void setUseControl(boolean isUseControl) {
+        this.isUseControl = isUseControl;
     }
 }
