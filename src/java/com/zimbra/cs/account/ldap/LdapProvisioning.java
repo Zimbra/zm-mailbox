@@ -1965,7 +1965,7 @@ public class LdapProvisioning extends LdapProv {
             SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, filter,
                     returnAttrs, opts.getMaxResults(), null, ZSearchScope.SEARCH_SCOPE_SUBTREE,
                     searchObjectsVisitor);
-
+            searchObjectsOptions.setUseControl(opts.isUseControl());
             zlc.searchPaged(searchObjectsOptions);
         } catch (LdapSizeLimitExceededException e) {
             throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);

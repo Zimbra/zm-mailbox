@@ -1835,6 +1835,7 @@ public class ProvUtil implements HttpDebugListener {
         };
 
         SearchAccountsOptions options = new SearchAccountsOptions(domain);
+        options.setUseControl(false);
         options.setIncludeType(IncludeType.ACCOUNTS_ONLY);
         if (verbose && applyDefault) {
             // ldapProv.getAllAccounts(domain, server, visitor);

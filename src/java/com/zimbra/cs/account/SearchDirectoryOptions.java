@@ -163,7 +163,8 @@ public class SearchDirectoryOptions {
     private SearchDirectoryOptions.SortOpt sortOpt = DEFAULT_SORT_OPT;
     private String sortAttr = DEFAULT_SORT_ATTR;
     private boolean convertIDNToAscii;
-    
+    private boolean isUseControl = true;
+
     public SearchDirectoryOptions() {
     }
     
@@ -438,5 +439,13 @@ public class SearchDirectoryOptions {
     
     public boolean getConvertIDNToAscii() {
         return convertIDNToAscii;
+    }
+
+    public boolean isUseControl() {
+        return isUseControl;
+    }
+
+    public void setUseControl(boolean isUseControl) {
+        this.isUseControl = isUseControl;
     }
 }

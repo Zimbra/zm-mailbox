@@ -25,8 +25,8 @@ import javax.net.ssl.SSLContext;
 import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.Control;
-import com.unboundid.ldap.sdk.DereferencePolicy;
 import com.unboundid.ldap.sdk.DN;
+import com.unboundid.ldap.sdk.DereferencePolicy;
 import com.unboundid.ldap.sdk.ExtendedResult;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -34,25 +34,23 @@ import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPResult;
 import com.unboundid.ldap.sdk.ModifyRequest;
 import com.unboundid.ldap.sdk.ResultCode;
-import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
+import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.controls.AssertionRequestControl;
 import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
 import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
-
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.ldap.LdapServerConfig;
-import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
-import com.zimbra.cs.ldap.LdapServerConfig.ZimbraLdapConfig;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapOp;
+import com.zimbra.cs.ldap.LdapServerConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerConfig.ZimbraLdapConfig;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -468,11 +466,15 @@ public class UBIDLdapContext extends ZLdapContext {
             //Set the page size and initialize the cookie that we pass back in subsequent pages
             int pageSize = searchOptions.getResultPageSize();
             ASN1OctetString cookie = null;
-            
+
             do {
-                searchRequest.setControls(
-                        new Control[] { new SimplePagedResultsControl(pageSize, cookie) });
-                
+                if (searchOptions.isUseControl()) {
+                    searchRequest.setControls(
+                            new Control[] { new SimplePagedResultsControl(pageSize, cookie) });
+                } else {
+                    searchRequest.setControls(new Control[0]);
+                }
+
                 SearchResult result = null;
                 try {
                     result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
