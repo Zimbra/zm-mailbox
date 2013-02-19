@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,14 +28,11 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
@@ -85,7 +82,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
     private boolean hasSpamTrashSetting = false;
 
-    private TopDocs hits;
+    private ZimbraTopDocs hits;
     private int topDocsLen = 0; // number of hits fetched
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
     private ZimbraIndexSearcher searcher;
@@ -308,7 +305,7 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         long start = System.currentTimeMillis();
         LuceneResultsChunk result = new LuceneResultsChunk();
-        int luceneLen = hits != null ? hits.totalHits : 0;
+        int luceneLen = hits != null ? hits.getTotalHits() : 0;
         while ((result.size() < max) && (curHitNo < luceneLen)) {
             if (topDocsLen <= curHitNo) {
                 topDocsLen += topDocsChunkSize;
@@ -324,9 +321,10 @@ public final class LuceneQueryOperation extends QueryOperation {
 
             Document doc;
             try {
-                doc = searcher.doc(hits.scoreDocs[curHitNo].doc);
+                doc = searcher.doc(hits.getScoreDoc(curHitNo).getDocumentID());
             } catch (Exception e) {
-                ZimbraLog.search.error("Failed to retrieve Lucene document: %d", hits.scoreDocs[curHitNo].doc, e);
+                ZimbraLog.search.error("Failed to retrieve Lucene document: %s",
+                        hits.getScoreDoc(curHitNo).getDocumentID().toString(), e);
                 return result;
             }
             curHitNo++;
@@ -406,7 +404,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                 hits = searcher.search(luceneQuery, filter, topDocsLen, sort);
             }
             ZimbraLog.search.debug("LuceneSearch query=%s,n=%d,total=%d,elapsed=%d",
-                    luceneQuery, topDocsLen, hits.totalHits, System.currentTimeMillis() - start);
+                    luceneQuery, topDocsLen, hits.getTotalHits(), System.currentTimeMillis() - start);
         } catch (IOException e) {
             ZimbraLog.search.error("Failed to search query=%s", luceneQuery, e);
             Closeables.closeQuietly(searcher);
@@ -515,7 +513,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      * @return number of hits in this search
      */
     private long getTotalHitCount() {
-        return hits != null ? hits.totalHits : 0;
+        return hits != null ? hits.getTotalHits() : 0;
     }
 
     @Override

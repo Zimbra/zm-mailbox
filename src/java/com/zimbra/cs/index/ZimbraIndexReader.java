@@ -30,7 +30,8 @@ public interface ZimbraIndexReader extends Closeable, Cloneable {
     public int numDocs();
 
     /**
-     * Returns the number of deleted documents.
+     * Number of documents marked for deletion but not yet fully removed from the index
+     * @return number of deleted documents for this index
      */
     public int numDeletedDocs();
 

@@ -53,8 +53,11 @@ public interface Indexer extends Closeable {
     void compact();
 
     /**
-     * Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer), not counting deletions.
-     * @return total number of docs
+     * Modeled on {@link org.apache.lucene.index.IndexReader} {@code maxDoc()} whose description is: <br />
+     * Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer),
+     * not counting deletions.
+     * <p>Used from SOAP GetIndexStatsRequest</p>
+     * @return total number of documents in this index excluding deletions
      */
     int maxDocs();
 }

@@ -46,7 +46,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.util.Version;
@@ -289,7 +288,7 @@ public final class LuceneIndex extends IndexStore {
     }
 
     /**
-     * Removes from cache.
+     * Removes IndexSearcher used for this index from cache.
      */
     @Override
     public void evict() {
@@ -871,6 +870,8 @@ public final class LuceneIndex extends IndexStore {
 
         @Override
         public synchronized int maxDocs() {
+            // IndexWriter.maxDoc() - Returns total number of docs in this index, including docs not yet flushed
+            //                        (still in the RAM buffer), not counting deletions.
             return writer.get().maxDoc();
         }
 
@@ -904,23 +905,7 @@ public final class LuceneIndex extends IndexStore {
             for (IndexDocument doc : docs) {
                 // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
                 synchronized (doc) {
-                    doc.removeSortSubject();
-                    doc.addSortSubject(item.getSortSubject());
-
-                    doc.removeSortName();
-                    doc.addSortName(item.getSortSender());
-
-                    doc.removeMailboxBlobId();
-                    doc.addMailboxBlobId(item.getId());
-
-                    // If this doc is shared by multi threads, then the date might just be wrong,
-                    // so remove and re-add the date here to make sure the right one gets written!
-                    doc.removeSortDate();
-                    doc.addSortDate(item.getDate());
-
-                    doc.removeSortSize();
-                    doc.addSortSize(item.getSize());
-
+                    setFields(item, doc);
                     writer.get().addDocument(doc.toDocument());
                 }
             }
@@ -1009,8 +994,12 @@ public final class LuceneIndex extends IndexStore {
         }
 
         @Override
-        public Document doc(int docID) throws IOException {
-            return luceneSearcher.doc(docID);
+        public Document doc(ZimbraIndexDocumentID docID) throws IOException {
+            if (docID instanceof ZimbraLuceneDocumentID) {
+                ZimbraLuceneDocumentID zlDocID = (ZimbraLuceneDocumentID)docID;
+                return luceneSearcher.doc(zlDocID.getLuceneDocID());
+            }
+            throw new IllegalArgumentException("Expected a ZimbraLuceneDocumentID");
         }
 
         @Override
@@ -1024,18 +1013,18 @@ public final class LuceneIndex extends IndexStore {
         }
 
         @Override
-        public TopDocs search(Query query, int n) throws IOException {
-            return luceneSearcher.search(query, n);
+        public ZimbraTopDocs search(Query query, int n) throws IOException {
+            return ZimbraTopDocs.create(luceneSearcher.search(query, n));
         }
 
         @Override
-        public TopDocs search(Query query, Filter filter, int n) throws IOException {
-            return luceneSearcher.search(query, filter, n);
+        public ZimbraTopDocs search(Query query, Filter filter, int n) throws IOException {
+            return ZimbraTopDocs.create(luceneSearcher.search(query, filter, n));
         }
 
         @Override
-        public TopFieldDocs search(Query query, Filter filter, int n, Sort sort) throws IOException {
-            return luceneSearcher.search(query, filter, n, sort);
+        public ZimbraTopFieldDocs search(Query query, Filter filter, int n, Sort sort) throws IOException {
+            return ZimbraTopFieldDocs.create(luceneSearcher.search(query, filter, n, sort));
         }
     }
 

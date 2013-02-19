@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,10 @@
 
 package com.zimbra.cs.index;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Standard Lucene fields.
  *
@@ -25,6 +29,28 @@ package com.zimbra.cs.index;
  * @author schemers
  */
 public final class LuceneFields {
+    /* Map to find Compact key to associate with indexed/tokenized terms */
+    public static final Map<String, Character> FIELD2PREFIX = ImmutableMap.<String, Character>builder()
+        .put(LuceneFields.L_CONTENT, 'A')
+        .put(LuceneFields.L_CONTACT_DATA, 'B')
+        .put(LuceneFields.L_MIMETYPE, 'C')
+        .put(LuceneFields.L_ATTACHMENTS, 'D')
+        .put(LuceneFields.L_FILENAME, 'E')
+        .put(LuceneFields.L_OBJECTS, 'F')
+        .put(LuceneFields.L_H_FROM, 'G')
+        .put(LuceneFields.L_H_TO, 'H')
+        .put(LuceneFields.L_H_CC, 'I')
+        .put(LuceneFields.L_H_X_ENV_FROM, 'J')
+        .put(LuceneFields.L_H_X_ENV_TO, 'K')
+        .put(LuceneFields.L_H_MESSAGE_ID, 'L')
+        .put(LuceneFields.L_H_SUBJECT, 'M')
+        .put(LuceneFields.L_FIELD, 'N')
+        .put(LuceneFields.L_SORT_DATE, 'O')
+        .put(LuceneFields.L_PARTNAME, 'P')
+        .put(LuceneFields.L_MAILBOX_BLOB_ID, 'Q')
+        .build();
+
+    public static final String ITEM_ID_PREFIX = "x"; // term prefix for ItemID
 
     private LuceneFields() {
     }

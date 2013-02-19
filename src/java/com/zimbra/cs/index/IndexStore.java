@@ -17,13 +17,12 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.lucene.search.IndexSearcher;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.Zimbra;
 
@@ -52,7 +51,7 @@ public abstract class IndexStore {
     public abstract void warmup();
 
     /**
-     * Removes from cache.
+     * Removes any IndexSearcher used for this index from cache - if appropriate
      */
     public abstract void evict();
 
@@ -72,7 +71,7 @@ public abstract class IndexStore {
     public abstract void setPendingDelete(boolean pendingDelete);
 
     /**
-     * Runs a sanity check for the index data.
+     * Runs a sanity check for the index data.  Used by the "VerifyIndexRequest" SOAP Admin request
      */
     public abstract boolean verify(PrintStream out) throws IOException;
 
@@ -81,6 +80,21 @@ public abstract class IndexStore {
             setFactory(LC.zimbra_class_index_store_factory.value());
         }
         return factory;
+    }
+
+    public static void setFields(MailItem item, IndexDocument doc) {
+        doc.removeSortSubject();
+        doc.addSortSubject(item.getSortSubject());
+        doc.removeSortName();
+        doc.addSortName(item.getSortSender());
+        doc.removeMailboxBlobId();
+        doc.addMailboxBlobId(item.getId());
+        // If this doc is shared by multi threads, then the date might just be wrong,
+        // so remove and re-add the date here to make sure the right one gets written!
+        doc.removeSortDate();
+        doc.addSortDate(item.getDate());
+        doc.removeSortSize();
+        doc.addSortSize(item.getSize());
     }
 
     @VisibleForTesting
