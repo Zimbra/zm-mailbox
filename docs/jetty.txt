@@ -66,12 +66,13 @@ I. Conventional Debugging
    and VM arguments to
    "-DSTART=/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867
    -DSTOP.KEY=stop -Dzimbra.config=/opt/zimbra/conf/localconfig.xml
-   -Djava.library.path=/opt/zimbra/lib".  Then choose "Other" under
+   -Djava.library.path=/opt/zimbra/lib  -XX:PermSize=128m
+   -XX:MaxPermSize=350m". Then choose "Other" under
    working directory and set it to /opt/zimbra/jetty.
 
-4. Swtich to the Classpath tab and add /opt/zimbra/jetty/start.jar to
-   User Entries. Also add all the jar files of /opt/zimbra/jetty/lib/
-   and /opt/zimbra/jetty/lib/jsp/
+4. Swtich to the Classpath tab and add the following jar files to User Entries.
+   /opt/zimbra/jetty/start.jar
+   /opt/zimbra/jetty/lib/monitor/jetty-monitor*.jar
 
 5. Switch to the Source tab and add all the java projects in your
    workspace that you care about to debug.
