@@ -171,8 +171,12 @@ final class ImapSessionManager {
                     try {
                         ZimbraLog.imap.debug("Loading/unloading paged session due to queued notification overflow: %s (sid %s)",
                                 session.getPath(), session.getSessionId());
-                        session.reload();
-                        session.unload(true);
+                        if (session.reload() instanceof ImapFolder) {
+                            session.unload(true);
+                        } else {
+                            ZimbraLog.imap.debug("unable to reload session during paged overflow replay; probably evicted from cache");
+                            quietRemoveSession(session);
+                        }
                     } catch (ImapSessionClosedException ignore) {
                     } catch (Exception e) {
                         ZimbraLog.imap.warn("error deserializing overflowed session; clearing", e);
