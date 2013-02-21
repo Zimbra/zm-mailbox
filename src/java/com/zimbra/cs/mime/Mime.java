@@ -676,7 +676,7 @@ public class Mime {
                         continue;
                     }
                 }
-            } else if (ct.equals(MimeConstants.CT_MESSAGE_RFC822)) {
+            } else if (ct.equals(MimeConstants.CT_MESSAGE_RFC822) || ct.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
                 MimeMessage content = getMessageContent(mp);
                 if (content != null) {
                     if (mp instanceof MimeMessage) {
