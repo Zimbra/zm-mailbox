@@ -1562,16 +1562,16 @@ public final class ToXML {
                     e.addAttribute(MailConstants.A_APPT_FREEBUSY, invite.getFreeBusy());
                     e.addAttribute(MailConstants.A_APPT_TRANSPARENCY, invite.getTransparency());
                 }
+                // Organizer
+                if (invite.hasOrganizer()) {
+                    ZOrganizer org = invite.getOrganizer();
+                    org.toXml(e);
+                }
+                e.addAttribute(MailConstants.A_CAL_URL, invite.getUrl());
             }
 
             if (invite.isOrganizer())
-                e.addAttribute(MailConstants.A_CAL_ISORG, true);
-
-            // Organizer
-            if (invite.hasOrganizer()) {
-                ZOrganizer org = invite.getOrganizer();
-                org.toXml(e);
-            }
+                e.addAttribute(MailConstants.A_CAL_ISORG, true);            
 
             boolean isRecurring = false;
             e.addAttribute("x_uid", invite.getUid());
@@ -1597,7 +1597,7 @@ public final class ToXML {
 
             e.addAttribute(MailConstants.A_CAL_STATUS, invite.getStatus());
             e.addAttribute(MailConstants.A_CAL_CLASS, invite.getClassProp());
-            e.addAttribute(MailConstants.A_CAL_URL, invite.getUrl());
+            
 
             boolean allDay = invite.isAllDayEvent();
             boolean isException = invite.hasRecurId();
