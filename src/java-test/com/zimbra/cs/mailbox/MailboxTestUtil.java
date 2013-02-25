@@ -21,8 +21,9 @@ import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.io.FileUtils;
+
 import com.google.common.base.Strings;
-import com.google.common.io.Files;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -157,7 +158,7 @@ public final class MailboxTestUtil {
 
     private static void deleteDirContents(File dir, int recurCount) throws IOException {
         try {
-            Files.deleteDirectoryContents(dir);
+            FileUtils.deleteDirectory(dir);
         } catch (IOException ioe) {
             if (recurCount > 10) {
                 throw new IOException("Gave up after multiple IOExceptions", ioe);

@@ -17,11 +17,11 @@ package com.zimbra.cs.zimlet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.MapMaker;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -34,17 +34,17 @@ import com.zimbra.soap.account.type.Prop;
  *
  */
 public final class ZimletUserProperties {
-    private static final ConcurrentMap<String, ZimletUserProperties> CACHE =
-        new MapMaker().maximumSize(1024).expireAfterAccess(30, TimeUnit.MINUTES).makeMap();
+    private static final Cache<String, ZimletUserProperties> CACHE =
+        CacheBuilder.newBuilder().maximumSize(1024).expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     private final Set<Prop> properties = new HashSet<Prop>(); // guarded by ZimletUserProperties.this
 
     public static ZimletUserProperties getProperties(Account account) {
         String key = account.getId();
-        ZimletUserProperties prop = CACHE.get(key);
+        ZimletUserProperties prop = CACHE.getIfPresent(key);
         if (prop == null) {
             prop = new ZimletUserProperties(account);
-            CACHE.putIfAbsent(key, prop);
+            CACHE.put(key, prop);
         }
         return prop;
     }

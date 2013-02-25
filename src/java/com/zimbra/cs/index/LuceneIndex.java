@@ -46,14 +46,12 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.util.Version;
 
 import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.io.Closeables;
@@ -99,13 +97,7 @@ public final class LuceneIndex extends IndexStore {
                 Closeables.closeQuietly(notification.getValue());
             }
         })
-        .build(new CacheLoader<Integer, IndexSearcherImpl>() {
-            @Override
-            public IndexSearcherImpl load(Integer key) throws Exception {
-                return null; //To Do. Returning null during load in turns throws NullPointerException
-                             // should ideally be avoided by using google "Optional" collection.
-            }
-        });
+        .build();
 
     // Bug: 60631
     // cache lucene index of GAL sync account separately with no automatic eviction
@@ -383,15 +375,10 @@ public final class LuceneIndex extends IndexStore {
     @Override
     public synchronized ZimbraIndexSearcher openSearcher() throws IOException {
         IndexSearcherImpl searcher = null;
-        try {
-            if (mailbox.isGalSyncMailbox()) {
-                searcher = GAL_SEARCHER_CACHE.get(mailbox.getId());
-            } else {
-                searcher = SEARCHER_CACHE.get(mailbox.getId());
-            }
-        } catch (Exception e) {
-            if (!(e instanceof NullPointerException))
-                ZimbraLog.search.warn(e);
+        if (mailbox.isGalSyncMailbox()) {
+            searcher = GAL_SEARCHER_CACHE.get(mailbox.getId());
+        } else {
+            searcher = SEARCHER_CACHE.getIfPresent(mailbox.getId());
         }
         if (searcher != null) {
             ZimbraLog.search.debug("CacheHitLuceneSearcher %s", searcher);
@@ -811,15 +798,10 @@ public final class LuceneIndex extends IndexStore {
         public void close() throws IOException {
             writer.index.commitWriter();
             ZimbraIndexSearcher searcher = null;
-            try {
-                if (writer.getIndex().mailbox.isGalSyncMailbox()) {
-                    searcher = GAL_SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
-                } else {
-                    searcher = SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
-                }
-            } catch (Exception e) {
-                if (!(e instanceof NullPointerException))
-                    ZimbraLog.search.warn(e);
+            if (writer.getIndex().mailbox.isGalSyncMailbox()) {
+                searcher = GAL_SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
+            } else {
+                searcher = SEARCHER_CACHE.getIfPresent(writer.getIndex().mailbox.getId());
             }
             if (searcher != null) {
                 ZimbraLuceneIndexReader ndxReader = (ZimbraLuceneIndexReader)searcher.getIndexReader();
