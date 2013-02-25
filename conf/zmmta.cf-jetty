@@ -80,6 +80,9 @@ SECTION mta DEPENDS amavis
 	if VAR zimbraMtaNonSmtpdMilters
 		POSTCONF non_smtpd_milters VAR zimbraMtaNonSmtpdMilters
 	fi
+	if SERVICE !cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions
+	fi
 	LOCAL zimbra_server_hostname
 	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
 	POSTCONF myhostname		LOCAL zimbra_server_hostname
@@ -306,9 +309,6 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_module_quotas
 	if SERVICE cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
-	fi
-	if SERVICE !cbpolicyd
-		POSTCONF smtpd_end_of_data_restrictions
 	fi
   RESTART cbpolicyd mta
 
