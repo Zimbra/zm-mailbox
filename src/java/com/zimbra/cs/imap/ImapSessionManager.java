@@ -21,10 +21,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -67,6 +70,9 @@ final class ImapSessionManager {
     private final Cache inactiveSessionCache; // LRU'ed
 
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
+
+    private static final ExecutorService CLOSER = Executors.newSingleThreadExecutor(
+                    new ThreadFactoryBuilder().setNameFormat("ImapInvalidSessionCloser").setDaemon(true).build());
 
     private ImapSessionManager() {
         if (SERIALIZER_INTERVAL_MSEC > 0) {
@@ -196,11 +202,16 @@ final class ImapSessionManager {
             }
         }
 
-        private void quietRemoveSession(ImapSession session) {
+        private void quietRemoveSession(final ImapSession session) {
             // XXX: make sure this doesn't result in a loop
             try {
                 if (session.isInteractive()) {
-                    session.cleanup();
+                    CLOSER.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            session.cleanup();
+                        }
+                    });
                 }
                 session.detach();
             } catch (Exception e) {
