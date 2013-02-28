@@ -345,7 +345,7 @@ public final class LC {
     public static final KnownKey ldap_url = KnownKey.newKey("");
 
     @Supported
-    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/openldap/var/run/ldapi");
+    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/data/ldap/state/run/ldapi");
 
     @Supported
     public static final KnownKey ldap_master_url = KnownKey.newKey("");
