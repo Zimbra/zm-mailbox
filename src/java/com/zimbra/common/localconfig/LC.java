@@ -749,6 +749,7 @@ public final class LC {
     public static final KnownKey imap_throttle_ip_limit = KnownKey.newKey(250);
     public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(250);
     public static final KnownKey imap_throttle_command_limit = KnownKey.newKey(25);
+    public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
