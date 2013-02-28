@@ -746,6 +746,7 @@ public final class LC {
     public static final KnownKey imap_max_idle_time = KnownKey.newKey(60);
     public static final KnownKey imap_authenticated_max_idle_time = KnownKey.newKey(1800);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
+    public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
