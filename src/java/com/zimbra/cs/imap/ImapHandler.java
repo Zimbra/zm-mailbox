@@ -14,6 +14,36 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -67,33 +97,6 @@ import com.zimbra.cs.util.Config;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeMap;
-import java.util.regex.Pattern;
 
 abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
@@ -2083,7 +2086,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return asImapPath().compareToIgnoreCase(other.asImapPath());
         }
     }
-    
+
     private void checkSubscription(SubscribedImapPath path, Pattern pattern, Pattern childPattern, Map<SubscribedImapPath, Boolean> hits)
             throws ServiceException {
         // Some notes from the IMAP RFC relating to subscriptions:
@@ -3395,58 +3398,67 @@ abstract class ImapHandler extends ProtocolHandler {
                 parts = null;
             }
         }
-        for (ImapMessage i4msg : i4set) {
-            OutputStream os = mOutputStream;
-            ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
-            PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(os, baosDebug), false, "utf-8");
-            try {
-                result.print("* " + i4msg.sequence + " FETCH (");
+        ReentrantLock lock = null;
+        try {
+            for (ImapMessage i4msg : i4set) {
+                OutputStream os = mOutputStream;
+                ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
+                PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(os, baosDebug), false, "utf-8");
+                try {
+                    result.print("* " + i4msg.sequence + " FETCH (");
 
-                if (i4msg.isExpunged()) {
-                    fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
-                    continue;
-                }
+                    if (i4msg.isExpunged()) {
+                        fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
+                        continue;
+                    }
 
-                
-                
-                boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
-                writeMessage(fullMessage, parts, attributes, i4msg, i4folder, mbox, result, os, markMessage, modseqEnabled);
-            } catch (ImapPartSpecifier.BinaryDecodingException e) {
-                // don't write this response line if we're returning NO
-                os = baosDebug = null;
-                throw new ImapParseException(tag, "UNKNOWN-CTE", command + "failed: unknown content-type-encoding", false);
-            } catch (ServiceException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof IOException) {
-                    fetchException(cause);
-                } else {
+                    if (lock == null && LC.imap_throttle_fetch.booleanValue() &&
+                        (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0)) {
+                        lock = ImapCommandThrottle.lock(mCredentials.getAccountId());
+                    }
+
+                    boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
+                    writeMessage(fullMessage, parts, attributes, i4msg, i4folder, mbox, result, os, markMessage, modseqEnabled);
+                } catch (ImapPartSpecifier.BinaryDecodingException e) {
+                    // don't write this response line if we're returning NO
+                    os = baosDebug = null;
+                    throw new ImapParseException(tag, "UNKNOWN-CTE", command + "failed: unknown content-type-encoding", false);
+                } catch (ServiceException e) {
+                    Throwable cause = e.getCause();
+                    if (cause instanceof IOException) {
+                        fetchException(cause);
+                    } else {
+                        ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
+                        continue;
+                    }
+                } catch (MessagingException e) {
                     ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                     continue;
-                }
-            } catch (MessagingException e) {
-                ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
-                continue;
-            } catch (IOException ioe) {
-                fetchException(ioe);
-            } finally {
-                if (os != null) {
-                    result.write(')');
-                    os.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
-                    os.flush();
-                }
-                if (baosDebug != null) {
-                    ZimbraLog.imap.debug("  S: %s", baosDebug);
+                } catch (IOException ioe) {
+                    fetchException(ioe);
+                } finally {
+                    if (os != null) {
+                        result.write(')');
+                        os.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
+                        os.flush();
+                    }
+                    if (baosDebug != null) {
+                        ZimbraLog.imap.debug("  S: %s", baosDebug);
+                    }
                 }
             }
+        } finally {
+            if (lock != null) {
+                lock.unlock();
+            }
         }
-
         if (standalone) {
             sendNotifications(byUID, false);
             sendOK(tag, command + " completed");
         }
         return CONTINUE_PROCESSING;
     }
-    
+
     private void fetchException(Throwable cause) throws ImapIOException {
         if (ZimbraLog.imap.isDebugEnabled()) {
             ZimbraLog.imap.debug("IOException fetching IMAP message, closing connection",cause);
@@ -3522,7 +3534,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
             }
         }
-        
+
         // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
         //         change, they SHOULD be included as part of the FETCH responses."
         // FIXME: optimize by doing a single mark-read op on multiple messages
@@ -3544,7 +3556,7 @@ abstract class ImapHandler extends ProtocolHandler {
             result.print((empty ? "" : " ") + "MODSEQ (" + modseq + ')');  empty = false;
         }
     }
-    
+
     private void fetchStub(ImapMessage i4msg, ImapFolder i4folder, int attributes, List<ImapPartSpecifier> parts, List<ImapPartSpecifier> fullMessage, PrintStream result)
     throws ServiceException {
         // RFC 2180 4.1.3: "The server MAY allow the EXPUNGE of a multi-accessed mailbox, and
