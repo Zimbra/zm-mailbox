@@ -208,14 +208,14 @@ extends TestCase {
         data = getAttachmentData(contact, "attachment4");
         assertEquals(attachment4Text, new String(data));
     }
-    
+
     public void testMoveContact()
     throws Exception {
         String USER2_NAME = "user2";
         ZMailbox zmbx = TestUtil.getZMailbox(USER_NAME);
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
 
-        
+
         // Create a contact with an attachment.
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put("fullName", NAME_PREFIX + " testMoveContact");
@@ -229,7 +229,12 @@ extends TestCase {
         ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
         attachments.put("file1", info);
         ZContact contact = zmbx.createContact(folderId, null, attrs, attachments);
-        
+
+        //bug 80659 add an attribute after initial save so rev changes
+        attrs = new HashMap<String, String>();
+        attrs.put("phone", NAME_PREFIX + " testMoveContact");
+        zmbx.modifyContact(contact.getId(), false, attrs);
+
         Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER2_NAME));
         Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(acct2);
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -247,14 +252,15 @@ extends TestCase {
         Assert.assertEquals("file1.txt", att.getFilename());
         Assert.assertEquals("text/plain", att.getContentType());
         Assert.assertEquals("attachment 1", new String(att.getContent()));
+
         // move the contact back to user1
         remoteZmbx.moveContact(String.valueOf(ct.getId()), acct.getId() + ":" + Mailbox.ID_FOLDER_CONTACTS);
         // reset the access
         remoteMbox.revokeAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct.getId());
         mbox1.revokeAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct2.getId());
-        
+
         idStr = TestUtil.search(zmbx, "in:Contacts testMoveContact", ZSearchParams.TYPE_CONTACT).get(0);
-        
+
         ct = mbox1.getContactById(null, Integer.parseInt(idStr));
         // make sure contact has attachment
         list = ct.getAttachments();
@@ -263,7 +269,7 @@ extends TestCase {
         Assert.assertEquals("file1.txt", att.getFilename());
         Assert.assertEquals("text/plain", att.getContentType());
         Assert.assertEquals("attachment 1", new String(att.getContent()));
-    }    
+    }
 
     private byte[] getAttachmentData(ZContact contact, String attachmentName)
     throws Exception {
