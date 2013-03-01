@@ -12,6 +12,7 @@ SECTION amavis
 	fi
 	LOCAL amavis_dspam_enabled
 	LOCAL amavis_originating_bypass_sa
+	LOCAL amavis_enable_dkim_verification
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
