@@ -142,7 +142,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_client_restrictions			      LOCAL postfix_smtpd_client_restrictions
 	POSTCONF smtpd_data_restrictions			        LOCAL postfix_smtpd_data_restrictions
 	POSTCONF smtpd_helo_required			LOCAL postfix_smtpd_helo_required
-	POSTCONF smtpd_reject_unlisted_recipient	no
+	POSTCONF smtpd_reject_unlisted_recipient	LOCAL postfix_smtpd_reject_unlisted_recipient
 	POSTCONF smtpd_tls_cert_file			LOCAL postfix_smtpd_tls_cert_file
 	POSTCONF smtpd_tls_key_file			LOCAL postfix_smtpd_tls_key_file
 	POSTCONF smtpd_tls_loglevel			LOCAL postfix_smtpd_tls_loglevel
