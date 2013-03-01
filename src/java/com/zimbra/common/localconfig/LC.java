@@ -602,6 +602,7 @@ public final class LC {
     public static final KnownKey postfix_virtual_transport = KnownKey.newKey("error");
 
     public static final KnownKey amavis_originating_bypass_sa = KnownKey.newKey(false);
+    public static final KnownKey amavis_enable_dkim_verification = KnownKey.newKey(true);
 
     public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
 
