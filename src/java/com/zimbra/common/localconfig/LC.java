@@ -536,7 +536,6 @@ public final class LC {
     public static final KnownKey mysql_innodb_log_file_size = KnownKey.newKey(null);
     public static final KnownKey mysql_sort_buffer_size = KnownKey.newKey(null);
     public static final KnownKey mysql_read_buffer_size = KnownKey.newKey(null);
-    public static final KnownKey mysql_table_cache = KnownKey.newKey(null);
 
     @Supported
     public static final KnownKey mysql_backup_retention = KnownKey.newKey(0);
