@@ -507,4 +507,37 @@ public class DefangFilterTest {
 				.contains("<script>"));
 	}
 
+
+    @Test
+    public void testBug73037() throws Exception {
+
+        String html = "<html><head></head><body><a target=\"_blank\"" +
+        " href=\"smb://Aurora._smb._tcp.local/untitled/folder/03 DANDIYA MIX.mp3\"></a></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains(html));
+
+        html = "<html><head></head><body><a target=\"_blank\"" +
+            " href=\"smb://Aurora._smb._tcp.local/untitled/folder/03%20DANDIYA%20MIX.mp3\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+                true);
+        Assert.assertTrue(result.contains(html));
+
+        html = "<html><head></head><body><a target=\"_blank\"" +
+            " href=\"//Shared_srv/folder/file.txt\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+                true);
+        Assert.assertTrue(result.equals(html));
+
+        html = "<html><head></head><body><a target=\"_blank\"" +
+            " href=\"//Shared_srv/folder/file with spaces.txt\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+                true);
+        Assert.assertTrue(result.equals(html));
+    }
+
 }
