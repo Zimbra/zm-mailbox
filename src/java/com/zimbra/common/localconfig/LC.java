@@ -575,14 +575,14 @@ public final class LC {
     public static final KnownKey postfix_sendmail_path = KnownKey.newKey("${zimbra_home}/postfix/sbin/sendmail");
 
     public static final KnownKey postfix_smtp_cname_overrides_servername = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtp_helo_name = KnownKey.newKey(null);
+    public static final KnownKey postfix_smtp_helo_name = KnownKey.newKey("$myhostname");
     public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
     public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
     public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey("may");
     public static final KnownKey postfix_smtp_sasl_mechanism_filter = KnownKey.newKey(null);
     public static final KnownKey postfix_smtp_sasl_password_maps = KnownKey.newKey(null);
 
-    public static final KnownKey postfix_smtpd_banner = KnownKey.newKey(null);
+    public static final KnownKey postfix_smtpd_banner = KnownKey.newKey("$myhostname ESMTP $mail_name");
     public static final KnownKey postfix_smtpd_reject_unlisted_recipient = KnownKey.newKey("no");
     public static final KnownKey postfix_smtpd_sasl_authenticated_header = KnownKey.newKey("no");
     public static final KnownKey postfix_smtpd_sasl_security_options = KnownKey.newKey("noanonymous");
