@@ -325,12 +325,13 @@ public class BlobConsistencyChecker {
 
             BlobInfo blob = null;
             if (blobsById.containsKey(itemId)) {
-                for (BlobInfo tempBlob : blobsById.get(itemId)) {
+                Iterator<BlobInfo> iterator = blobsById.get(itemId).iterator();
+                while (iterator.hasNext()) {
+                    BlobInfo tempBlob = iterator.next();
                     if (tempBlob.modContent == modContent) {
                         blob = tempBlob;
                         revisions.put(itemId, tempBlob);
-                        blobsById.remove(itemId, tempBlob);
-                        break;
+                        iterator.remove();
                     }
                 }
             }
