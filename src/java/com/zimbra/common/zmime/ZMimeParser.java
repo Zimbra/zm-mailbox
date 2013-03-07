@@ -33,6 +33,7 @@ import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.sun.mail.util.ASCIIUtility;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 
@@ -96,7 +97,7 @@ class ZMimeParser {
     private enum ParserState {
         HEADER_LINESTART, HEADER, HEADER_CR,
         BODY_LINESTART, BODY, BODY_CR,
-        TERMINATED
+        TERMINATED, SKIP
     }
 
     private enum LineEnding { CR, LF, CRLF }
@@ -378,6 +379,8 @@ class ZMimeParser {
      *  we call it recursively.  <i>sigh</i> */
     boolean handleByte(byte b) {
         switch (state) {
+            case SKIP:
+                break;
             // after a CR character at the end of a header line, expecting an LF
             case HEADER_CR:
                 state = ParserState.HEADER_LINESTART;
@@ -594,9 +597,13 @@ class ZMimeParser {
             pcurrent.multi = null;
             state = ParserState.BODY_LINESTART;
         } else {
-            // new proper subpart of the multipart -- starting with its MIME headers
-            parts.add(pcurrent = new PartInfo(ZMimeBodyPart.newBodyPart(pcurrent.multi)));
-            state = ParserState.HEADER_LINESTART;
+            if (parts.size() > LC.mime_max_recursion.intValue()) {
+                state = ParserState.SKIP;
+            } else {
+                // new proper subpart of the multipart -- starting with its MIME headers
+                parts.add(pcurrent = new PartInfo(ZMimeBodyPart.newBodyPart(pcurrent.multi)));
+                state = ParserState.HEADER_LINESTART;
+            }
         }
 
         recalculateBoundaries();
