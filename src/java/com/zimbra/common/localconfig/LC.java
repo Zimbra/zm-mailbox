@@ -906,6 +906,7 @@ public final class LC {
     public static final KnownKey javamail_imap_enable_starttls = KnownKey.newKey(true);
     public static final KnownKey javamail_smtp_enable_starttls = KnownKey.newKey(true);
 
+    public static final KnownKey mime_max_recursion = KnownKey.newKey(20);
     public static final KnownKey mime_promote_empty_multipart = KnownKey.newKey(true);
     public static final KnownKey mime_handle_nonprintable_subject = KnownKey.newKey(true);
 

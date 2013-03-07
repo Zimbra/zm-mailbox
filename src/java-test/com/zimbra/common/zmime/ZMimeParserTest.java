@@ -14,8 +14,11 @@
  */
 package com.zimbra.common.zmime;
 
+import java.io.IOException;
 import java.util.Properties;
 
+import javax.mail.BodyPart;
+import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -24,6 +27,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.zmime.ZMimeUtility.ByteBuilder;
 
@@ -114,7 +118,111 @@ public class ZMimeParserTest {
         }
     }
 
-//    private static void checkFile(java.io.File file) throws Exception {
+    @Test
+    public void parse() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("Content-Type: text/plain\r\n");
+        bb.append("From: <foo@example.com\r\n");
+        bb.append("Subject: sample\r\n");
+        bb.append("Content-Type: multipart/alternative; boundary=").append(BOUNDARY1).append("\r\n");
+        bb.append("\r\n");
+        bb.append("--").append(BOUNDARY1).append("\r\n");
+        bb.append("Content-Type: text/plain\r\n");
+        bb.append("\r\n");
+        bb.append("foo!  bar!  loud noises\r\n\r\n");
+        bb.append("--").append(BOUNDARY1).append("--\r\n");
+
+        try {
+            MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+            Assert.assertFalse("content isn't multipart", mm.getContent() instanceof MimeMultipart);
+            Assert.assertEquals("text/plain", "text/plain", new ZContentType(mm.getContentType()).getBaseType());
+        } catch (ClassCastException e) {
+            Assert.fail("mishandled double Content-Type headers");
+        }
+    }
+
+    @Test
+    public void repetition() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        String boundary = BOUNDARY1;
+        bb.append("From: <foo@example.com\r\n");
+        bb.append("Subject: sample\r\n");
+        bb.append("Content-Type: multipart/mixed; boundary=").append(boundary).append("\r\n");
+        for (int i = 0; i < 100; i++) {
+            bb.append("--").append(boundary).append("\r\n");
+            bb.append("Content-Type: text/plain\r\n");
+            bb.append("\r\n");
+            bb.append("foo!  bar!  loud noises\r\n\r\n");
+        }
+        bb.append("--").append(boundary).append("--\r\n");
+        try {
+            MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+            Object content = mm.getContent();
+            Assert.assertTrue("content is multipart", content instanceof MimeMultipart);
+            MimeMultipart mp = (MimeMultipart) content;
+            Assert.assertEquals("count reduced??", 100, mp.getCount());
+        } catch (ClassCastException e) {
+            Assert.fail("mishandled double Content-Type headers");
+        }
+    }
+
+    private void addChildren(ByteBuilder bb, int depth) {
+        //recursively add children to create deep MIME tree
+        if (depth == 100) {
+            return;
+        }
+        String boundary = "-=_level" + depth;
+        bb.append("Content-Type: multipart/mixed; boundary=").append(boundary).append("\r\n");
+        bb.append("--").append(boundary).append("\r\n");
+        bb.append("Content-Type: text/plain\r\n");
+        bb.append("\r\n");
+        bb.append("foo!  bar!  loud noises\r\n\r\n");
+        bb.append("--").append(boundary).append("\r\n");
+        addChildren(bb, depth+1);
+        bb.append("--").append(boundary).append("--\r\n");
+    }
+
+    private void traverseChildren(ZMimeMultipart mp, int targetDepth) throws MessagingException, IOException {
+        //traverse MIME tree and make sure the expected bottom item has no children
+        if (targetDepth == 0) {
+            Assert.assertTrue("depth at 0", mp.getCount() == 0);
+            return;
+        }
+        BodyPart bp = mp.getBodyPart(1);
+        Assert.assertTrue("not multipart?", bp instanceof ZMimeBodyPart);
+        ZMimeBodyPart zbp = (ZMimeBodyPart) bp;
+        Object content = zbp.getContent();
+        Assert.assertTrue("not multipart?", content instanceof ZMimeMultipart);
+        ZMimeMultipart zmp = (ZMimeMultipart) content;
+        traverseChildren(zmp, targetDepth - 1);
+    }
+
+    @Test
+    public void recursion() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        String boundary = BOUNDARY1;
+        bb.append("From: <foo@example.com\r\n");
+        bb.append("Subject: sample\r\n");
+        bb.append("Content-Type: multipart/mixed; boundary=").append(boundary).append("\r\n");
+        bb.append("Content-Type: text/plain\r\n");
+        bb.append("\r\n");
+        bb.append("foo!  bar!  loud noises\r\n\r\n");
+        bb.append("--").append(boundary).append("\r\n");
+        addChildren(bb, 0);
+        bb.append("--").append(boundary).append("--\r\n");
+        try {
+            MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+            Object content = mm.getContent();
+            Assert.assertTrue("content is multipart", content instanceof ZMimeMultipart);
+            ZMimeMultipart zmp = (ZMimeMultipart) content;
+            Assert.assertEquals("top count", 1, zmp.getCount());
+            traverseChildren((ZMimeMultipart) zmp.getBodyPart(0).getContent(), LC.mime_max_recursion.intValue() - 1);
+        } catch (ClassCastException e) {
+            Assert.fail("mishandled double Content-Type headers");
+        }
+    }
+
+    //    private static void checkFile(java.io.File file) throws Exception {
 //        String name = file.getName();
 //        Properties props = new Properties();
 //
