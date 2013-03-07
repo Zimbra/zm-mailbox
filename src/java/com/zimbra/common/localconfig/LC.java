@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -189,7 +189,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lru_size = KnownKey.newKey(100);
-    
+
     @Supported
     public static final KnownKey zimbra_index_lru_threshold_size = KnownKey.newKey(80);
 
@@ -303,7 +303,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_session_limit_imap = KnownKey.newKey(15);
-    
+
     @Supported
     public static final KnownKey zimbra_session_limit_sync = KnownKey.newKey(5);
 
@@ -346,7 +346,7 @@ public final class LC {
     @Reloadable
     @Supported
     public static final KnownKey servlet_max_concurrent_requests_per_session = KnownKey.newKey(0);
-    
+
     @Reloadable
     @Supported
     public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
@@ -877,6 +877,8 @@ public final class LC {
     public static final KnownKey javamail_pop3_enable_starttls = KnownKey.newKey(true);
     public static final KnownKey javamail_imap_enable_starttls = KnownKey.newKey(true);
     public static final KnownKey javamail_smtp_enable_starttls = KnownKey.newKey(true);
+
+    public static final KnownKey mime_max_recursion = KnownKey.newKey(20);
 
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
