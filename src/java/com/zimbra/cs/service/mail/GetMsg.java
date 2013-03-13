@@ -20,9 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
@@ -80,7 +81,7 @@ public class GetMsg extends MailDocumentHandler {
         }
 
         boolean needGroupInfo = eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false);
-        
+
         Element response = zsc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (iid.hasSubpart()) {
             // calendar item
@@ -99,7 +100,7 @@ public class GetMsg extends MailDocumentHandler {
                             recurIdZ = rid.getDtZ();
                     }
                 }
-                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, recurIdZ, iid, 
+                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, recurIdZ, iid,
                         part, maxSize, wantHTML, neuter, headers, false, needGroupInfo);
             }
         } else {
@@ -107,8 +108,8 @@ public class GetMsg extends MailDocumentHandler {
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part, false);
             } else {
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, 
-                        wantHTML, neuter, headers, false, needGroupInfo);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize,
+                        wantHTML, neuter, headers, false, needGroupInfo, LC.mime_encode_missing_blob.booleanValue());
             }
         }
 
