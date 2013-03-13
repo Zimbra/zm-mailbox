@@ -234,6 +234,7 @@ public class L10nUtil {
         errPermissionDenied,
         errUnsupportedFormat,
         errResourceNotAllowedOnPort,
+        errMissingBlob,
 
         passwordViolation,
 
