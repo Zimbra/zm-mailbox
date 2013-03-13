@@ -58,6 +58,7 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentType;
@@ -71,6 +72,7 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
@@ -1240,7 +1242,32 @@ public final class ToXML {
                 m.addAttribute(MailConstants.A_PART, part);
             }
 
-            MimeMessage mm = msg.getMimeMessage();
+            MimeMessage mm = null;
+            try {
+                mm = msg.getMimeMessage();
+            } catch (MailServiceException e) {
+                if (LC.mime_encode_missing_blob.booleanValue() && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
+                    ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
+                    encodeEmail(m, msg.getSender(), EmailType.FROM);
+                    encodeEmail(m, msg.getSender(), EmailType.SENDER);
+                    if (msg.getRecipients() != null) {
+                        addEmails(m, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
+                    }
+                    m.addAttribute(MailConstants.A_SUBJECT, msg.getSubject());
+                    Element mimePart = m.addElement(MailConstants.E_MIMEPART);
+                    mimePart.addAttribute(MailConstants.A_PART, 1);
+                    mimePart.addAttribute(MailConstants.A_BODY, true);
+                    mimePart.addAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_TEXT_PLAIN);
+
+                    String errMsg = L10nUtil.getMessage(L10nUtil.MsgKey.errMissingBlob,
+                                    msg.getAccount().getLocale(), ifmt.formatItemId(msg));
+                    m.addAttribute(MailConstants.E_FRAG, errMsg, Element.Disposition.CONTENT);
+                    mimePart.addAttribute(MailConstants.E_CONTENT, errMsg, Element.Disposition.CONTENT);
+                    success = true; //not really success, but mark as such so the element is appended correctly
+                    return m;
+                }
+                throw e;
+            }
             if (!wholeMessage) {
                 MimePart mp = Mime.getMimePart(mm, part);
                 if (mp == null) {
