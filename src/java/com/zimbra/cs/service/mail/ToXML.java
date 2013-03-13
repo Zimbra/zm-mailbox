@@ -985,7 +985,8 @@ public final class ToXML {
             }
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
-                        params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo());
+                        params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo(),
+                        LC.mime_encode_missing_blob.booleanValue());
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }
@@ -1174,13 +1175,13 @@ public final class ToXML {
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo)
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, false);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, false, encodeMissingBlobs);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1227,7 +1228,7 @@ public final class ToXML {
     private static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean bestEffort)
+            boolean bestEffort, boolean encodeMissingBlobs)
     throws ServiceException {
         Element m = null;
         boolean success = false;
@@ -1246,7 +1247,7 @@ public final class ToXML {
             try {
                 mm = msg.getMimeMessage();
             } catch (MailServiceException e) {
-                if (LC.mime_encode_missing_blob.booleanValue() && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
+                if (encodeMissingBlobs && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
                     ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
                     encodeEmail(m, msg.getSender(), EmailType.FROM);
                     encodeEmail(m, msg.getSender(), EmailType.SENDER);

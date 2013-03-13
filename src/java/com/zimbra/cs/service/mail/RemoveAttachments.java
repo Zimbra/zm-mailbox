@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -101,7 +102,7 @@ public class RemoveAttachments extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.REMOVE_ATTACHMENTS_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but RemoveAttachments is called rarely)
-        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false);
+        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false, LC.mime_encode_missing_blob.booleanValue());
         return response;
     }
 

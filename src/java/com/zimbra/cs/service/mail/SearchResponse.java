@@ -16,6 +16,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.List;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -32,9 +33,9 @@ import com.zimbra.cs.index.NoteHit;
 import com.zimbra.cs.index.ProxiedHit;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
@@ -243,7 +244,7 @@ final class SearchResponse {
         if (inline) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
-                    params.getWantExpandGroupInfo());
+                    params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue());
         } else {
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(),
                     params.isQuick() ? PendingModifications.Change.CONTENT : ToXML.NOTIFY_FIELDS);
