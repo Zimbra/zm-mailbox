@@ -279,6 +279,22 @@
 		</New>
 	    </Arg>
         </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/Autodiscover/*</Set>
+		    <Set name="replacement">/service/autodiscover</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/AutoDiscover/*</Set>
+		    <Set name="replacement">/service/autodiscover</Set>
+		</New>
+	    </Arg>
+        </Call>
         <!-- 
           Allow only certauth URL on the SSL client cert port.
           If the URl does not match the regex, return http 403.

@@ -550,6 +550,8 @@
   <servlet-mapping>
     <servlet-name>AutoDiscoverServlet</servlet-name>
     <url-pattern>/autodiscover/*</url-pattern>
+    <url-pattern>/Autodiscover/*</url-pattern>
+    <url-pattern>/AutoDiscover/*</url-pattern>
   </servlet-mapping>
 
   <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect%%
