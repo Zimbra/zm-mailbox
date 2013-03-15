@@ -910,6 +910,7 @@ public final class LC {
     public static final KnownKey mime_promote_empty_multipart = KnownKey.newKey(true);
     public static final KnownKey mime_handle_nonprintable_subject = KnownKey.newKey(true);
     public static final KnownKey mime_encode_missing_blob = KnownKey.newKey(true);
+    public static final KnownKey mime_exclude_empty_content = KnownKey.newKey(true);
 
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
