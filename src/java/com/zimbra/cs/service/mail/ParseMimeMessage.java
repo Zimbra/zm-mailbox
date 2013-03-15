@@ -543,22 +543,23 @@ public final class ParseMimeMessage {
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
         byte[] raw = text.getBytes(Charsets.UTF_8);
-        ctxt.incrementSize("message body", raw.length);
+        if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue()) {
+            ctxt.incrementSize("message body", raw.length);
 
-        // if the user has specified an alternative charset, make sure it exists and can encode the content
-        String charset = CharsetUtil.checkCharset(text, ctxt.defaultCharset);
-        ctype.setCharset(charset).setParameter(MimeConstants.P_CHARSET, charset);
+            // if the user has specified an alternative charset, make sure it exists and can encode the content
+            String charset = CharsetUtil.checkCharset(text, ctxt.defaultCharset);
+            ctype.setCharset(charset).setParameter(MimeConstants.P_CHARSET, charset);
 
-        Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
-                new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
-        if (mmp != null) {
-            MimeBodyPart mbp = new ZMimeBodyPart();
-            mbp.setContent(content, ctype.toString());
-            mmp.addBodyPart(mbp);
-        } else {
-            mm.setContent(content, ctype.toString());
+            Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
+                    new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
+            if (mmp != null) {
+                MimeBodyPart mbp = new ZMimeBodyPart();
+                mbp.setContent(content, ctype.toString());
+                mmp.addBodyPart(mbp);
+            } else {
+                mm.setContent(content, ctype.toString());
+            }
         }
-
         if (alternatives != null) {
             for (int i = 0; i < alternatives.length; i++) {
                 ctxt.incrementSize("alternative body", alternatives[i].getSize());
