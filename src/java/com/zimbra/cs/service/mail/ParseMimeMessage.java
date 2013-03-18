@@ -543,7 +543,7 @@ public final class ParseMimeMessage {
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
         byte[] raw = text.getBytes(Charsets.UTF_8);
-        if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue()) {
+        if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue() || ctype.getPrimaryType().equals("text")) {
             ctxt.incrementSize("message body", raw.length);
 
             // if the user has specified an alternative charset, make sure it exists and can encode the content
