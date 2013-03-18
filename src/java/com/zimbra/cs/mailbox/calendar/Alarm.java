@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
@@ -28,12 +30,12 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.mail.type.AlarmInfo;
 import com.zimbra.soap.mail.type.AlarmTriggerInfo;
 import com.zimbra.soap.mail.type.CalendarAttach;
@@ -59,7 +61,8 @@ public class Alarm {
             }
             return null;
         }
-        
+
+        @Override
         public String toString() {
             return super.toString().replace('_', '-');
         }
@@ -80,7 +83,7 @@ public class Alarm {
 
     public static enum TriggerRelated {
         START, END;
-    
+
         public static TriggerRelated lookup(String str) {
             if (str != null) {
                 try {
@@ -93,10 +96,10 @@ public class Alarm {
     };
 
     // ACTION
-    private Action mAction;
+    private final Action mAction;
 
     // TRIGGER
-    private TriggerType mTriggerType;
+    private final TriggerType mTriggerType;
     private TriggerRelated mTriggerRelated;  // default is START
     private ParsedDuration mTriggerRelative;
     private ParsedDateTime mTriggerAbsolute;
@@ -106,33 +109,33 @@ public class Alarm {
     private int mRepeatCount;
 
     // DESCRIPTION
-    private String mDescription;
+    private final String mDescription;
 
     // SUMMARY (email subject when mAction=EMAIL)
-    private String mSummary;
+    private final String mSummary;
 
     // ATTACH
-    private Attach mAttach;
+    private final Attach mAttach;
 
     // ATTENDEEs
-    private List<ZAttendee> mAttendees;
+    private final List<ZAttendee> mAttendees;
 
     // x-props
-    private List<ZProperty> mXProps = new ArrayList<ZProperty>();
+    private final List<ZProperty> xProps;
 
+    public static final String XWRALARMUID = "X-WR-ALARMUID";
 
     public String getDescription() { return mDescription; }
     public int getRepeatCount() { return mRepeatCount; }
     public Action getAction() { return mAction; }
     public List<ZAttendee> getAttendees() { return mAttendees; }
-    
+
     public Alarm(Action action,
                   TriggerType triggerType, TriggerRelated related,
                   ParsedDuration triggerRelative, ParsedDateTime triggerAbsolute,
                   ParsedDuration repeatDuration, int repeatCount,
-                  String description, String summary,
-                  Attach attach,
-                  List<ZAttendee> attendees)
+                  String description, String summary, Attach attach,
+                  List<ZAttendee> attendees, List<ZProperty> xProperties)
     throws ServiceException {
         if (action == null)
             throw ServiceException.INVALID_REQUEST("Missing ACTION in VALARM", null);
@@ -156,6 +159,11 @@ public class Alarm {
         mSummary = summary;
         mAttach = attach;
         mAttendees = attendees;
+        if (xProperties == null) {
+            xProps = ImmutableList.of();
+        } else {
+            xProps = ImmutableList.copyOf(xProperties);
+        }
     }
 
     public Alarm newCopy() {
@@ -170,13 +178,14 @@ public class Alarm {
         Alarm copy = null;
         try {
             copy = new Alarm(mAction, mTriggerType, mTriggerRelated, mTriggerRelative, mTriggerAbsolute,
-                             mRepeatDuration, mRepeatCount, mDescription, mSummary, mAttach, attendees);
+                             mRepeatDuration, mRepeatCount, mDescription, mSummary, mAttach, attendees, xProps);
         } catch (ServiceException e) {
             // shouldn't happen
         }
         return copy;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("action=").append(mAction.toString());
@@ -213,22 +222,38 @@ public class Alarm {
             }
             sb.append("]");
         }
-        for (ZProperty xprop : mXProps) {
+        for (ZProperty xprop : xProps) {
             sb.append(", ").append(xprop.toString());
         }
         return sb.toString();
     }
 
+    /**
+     * Return a copy of the X properties, excluding X-WR-ALARMUID because for Outlook and ZWC, we usually convert
+     * AUDIO and PROCEDURE alarms to be DISPLAY alarms and iCal.app does not like X-WR-ALARMUID set for DISPLAY alarms.
+     * @return Immutable list of X properties excluding iCal.app special property X-WR-ALARMUID
+     */
+    private List<ZProperty> xpropsWithoutXWRAlarmUID() {
+        // Bug 80533 Return a copy rather than deleting an entry from mXProps. Avoids race conditions if
+        // some clients are iterating over the list during the removal.
+        List<ZProperty> xprops = xProps;
+        ZProperty prop = getXProperty(XWRALARMUID);
+        if (prop != null) {
+            xprops = Lists.newArrayList();
+            xprops.addAll(xProps);
+            xprops.remove(prop);
+        }
+        return ImmutableList.copyOf(xprops);
+    }
+
     public AlarmInfo toJaxb() {
         Action action;
+        List<ZProperty> useXprops = xProps;
         if  (   (   Action.AUDIO.equals(mAction) ||
                     Action.PROCEDURE.equals(mAction))
                 && DebugConfig.calendarConvertNonDisplayAlarm) {
             action = Action.DISPLAY;
-            // remove X-WR-ALARMUID set by iCal if there is any.
-            ZProperty prop = getXProperty("X-WR-ALARMUID");
-            if (prop != null)
-                removeXProp(prop);
+            useXprops = xpropsWithoutXWRAlarmUID();
         } else {
             action = mAction;
         }
@@ -265,19 +290,17 @@ public class Alarm {
             }
         }
         // x-prop
-        alarm.setXProps(ToXML.jaxbXProps(xpropsIterator()));
+        alarm.setXProps(ToXML.jaxbXProps(useXprops.iterator()));
         return alarm;
     }
 
     public Element toXml(Element parent) {
         Element alarm = parent.addElement(MailConstants.E_CAL_ALARM);
         Action action;
+        List<ZProperty> useXprops = xProps;
         if ((Action.AUDIO.equals(mAction) || Action.PROCEDURE.equals(mAction)) && DebugConfig.calendarConvertNonDisplayAlarm) {
             action = Action.DISPLAY;
-            // remove X-WR-ALARMUID set by iCal if there is any.
-            ZProperty prop = getXProperty("X-WR-ALARMUID");
-            if (prop != null)
-                removeXProp(prop);
+            useXprops = xpropsWithoutXWRAlarmUID();
         } else
             action = mAction;
         alarm.addAttribute(MailConstants.A_CAL_ALARM_ACTION, action.toString());
@@ -314,7 +337,7 @@ public class Alarm {
             }
         }
         // x-prop
-        ToXML.encodeXProps(alarm, xpropsIterator());
+        ToXML.encodeXProps(alarm, useXprops.iterator());
         return alarm;
     }
 
@@ -413,10 +436,8 @@ public class Alarm {
 
         Alarm alarm = new Alarm(
                 action, triggerType, triggerRelated, triggerRelative, triggerAbsolute,
-                repeatDuration, repeatCount, description, summary, attach, attendees);
-        List<ZProperty> xprops = CalendarUtils.parseXProps(alarmElem);
-        for (ZProperty prop : xprops)
-            alarm.addXProp(prop);
+                repeatDuration, repeatCount, description, summary, attach, attendees,
+                CalendarUtils.parseXProps(alarmElem));
         return alarm;
     }
 
@@ -477,7 +498,7 @@ public class Alarm {
         }
 
         // x-prop
-        for (ZProperty xprop : mXProps) {
+        for (ZProperty xprop : xProps) {
             comp.addProperty(xprop);
         }
 
@@ -514,7 +535,7 @@ public class Alarm {
                 if (name.startsWith("X-") || name.startsWith("x-")) {
                     xprops.add(prop);
                 }
-            	continue;
+                continue;
             }
             switch (tok) {
             case ACTION:
@@ -586,22 +607,14 @@ public class Alarm {
 
         Alarm alarm = new Alarm(
                 action, triggerType, triggerRelated, triggerRelative, triggerAbsolute,
-                repeatDuration, repeatCount, description, summary, attach, attendees);
-        for (ZProperty xprop : xprops) {
-            alarm.addXProp(xprop);
-        }
+                repeatDuration, repeatCount, description, summary, attach, attendees, xprops);
         return alarm;
     }
 
-    public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
-    public void addXProp(ZProperty prop) {
-        mXProps.add(prop);
-    }
-    public void removeXProp(ZProperty prop) {
-        mXProps.remove(prop);
-    }
-    public ZProperty getXProperty(String xpropName) {
-        for (ZProperty prop : mXProps) {
+    private Iterator<ZProperty> xpropsIterator() { return xProps.iterator(); }
+
+    private ZProperty getXProperty(String xpropName) {
+        for (ZProperty prop : xProps) {
             if (prop.getName().equalsIgnoreCase(xpropName))
                 return prop;
         }
@@ -610,17 +623,17 @@ public class Alarm {
 
     /**
      * Create an alarm object from a simple warning relative time.
-     * 
+     *
      * @param reminder number of minutes before start of meeting
      * @return the Alarm object
      */
     public static Alarm fromSimpleReminder(int minBeforeStart) throws ServiceException {
-    	return new Alarm(Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
-    			ParsedDuration.parse(true, 0, 0, 0, minBeforeStart, 0), null, null, 0, null, null, null, null);
+        return new Alarm(Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
+                ParsedDuration.parse(true, 0, 0, 0, minBeforeStart, 0), null, null, 0, null, null, null, null, null);
     }
-    
+
     public static Alarm fromSimpleTime(ParsedDateTime time) throws ServiceException {
-    	return new Alarm(Action.DISPLAY, TriggerType.ABSOLUTE, null, null, time, null, 0, null, null, null, null);
+        return new Alarm(Action.DISPLAY, TriggerType.ABSOLUTE, null, null, time, null, 0, null, null, null, null, null);
     }
 
     private static final String FN_ACTION = "ac";
@@ -732,7 +745,7 @@ public class Alarm {
             }
         }
 
-        if (mXProps.size() > 0)
+        if (xProps.size() > 0)
             Util.encodeXPropsAsMetadata(meta, xpropsIterator());
 
         return meta;
@@ -787,21 +800,14 @@ public class Alarm {
                 if (metaAttendee != null)
                     attendees.add(new ZAttendee(metaAttendee));
             } catch (ServiceException e) {
-                ZimbraLog.calendar.warn("Problem decoding attendee " + i + " in ALARM "); 
+                ZimbraLog.calendar.warn("Problem decoding attendee " + i + " in ALARM ");
             }
         }
 
         Alarm alarm = new Alarm(
                 action, tt, triggerRelated, triggerRelative, triggerAbsolute,
-                repeatDuration, repeatCount, description, summary, attach, attendees);
-
-        List<ZProperty> xprops = Util.decodeXPropsFromMetadata(meta);
-        if (xprops != null) {
-            for (ZProperty xprop : xprops) {
-                alarm.addXProp(xprop);
-            }
-        }
-
+                repeatDuration, repeatCount, description, summary, attach, attendees,
+                Util.decodeXPropsFromMetadata(meta));
         return alarm;
     }
 
@@ -823,12 +829,12 @@ public class Alarm {
         else
             return mTriggerRelative.addToTime(instStart);
     }
-    
+
     public ParsedDuration getTriggerRelative() {
-    	return mTriggerRelative;
+        return mTriggerRelative;
     }
-    
+
     public ParsedDateTime getTriggerAbsolute() {
-    	return mTriggerAbsolute;
+        return mTriggerAbsolute;
     }
 }

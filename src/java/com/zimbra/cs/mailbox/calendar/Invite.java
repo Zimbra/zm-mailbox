@@ -1292,9 +1292,9 @@ public class Invite {
 
     private ICalTok mMethod;
 
-    private List<Alarm> mAlarms = new ArrayList<Alarm>();
+    private final List<Alarm> mAlarms = new ArrayList<Alarm>();
 
-    private List<ZProperty> mXProps = new ArrayList<ZProperty>();
+    private final List<ZProperty> mXProps = new ArrayList<ZProperty>();
 
     public Invite(String method, TimeZoneMap tzMap, boolean isOrganizer) {
         setItemType(MailItem.Type.APPOINTMENT);
@@ -1589,7 +1589,7 @@ public class Invite {
         }
     }
 
-    private TimeZoneMap mTzMap;
+    private final TimeZoneMap mTzMap;
 
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
@@ -2639,7 +2639,7 @@ public class Invite {
             Alarm newAlarm = new Alarm(
                     Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
                     ParsedDuration.parse(true, 0, 0, hoursBefore, minutesBefore, 0),
-                    null, null, 0, null, summary, null, null);
+                    null, null, 0, null, summary, null, null, null);
             inv.addAlarm(newAlarm);
         }
     }
