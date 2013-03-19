@@ -376,7 +376,13 @@ public class SpamExtract {
             OutputStream os = null;
             try {
                 os = new BufferedOutputStream(new FileOutputStream(file));
-                msg.writeTo(os);
+                if (msg instanceof MimeMessage) {
+                    //bug 74435 clone into newMsg so our parser has a chance to handle headers which choke javamail
+                    ZMimeMessage newMsg = new ZMimeMessage((MimeMessage) msg);
+                    newMsg.writeTo(os);
+                } else {
+                    msg.writeTo(os);
+                }
             } finally {
                 os.close();
             }
