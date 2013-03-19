@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pburgu 20121116-1547 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7424,6 +7424,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1041)
     public static final String A_zimbraPrefSpellDictionary = "zimbraPrefSpellDictionary";
+
+    /**
+     * Regular Expression for words to ignore during spell check.
+     *
+     * @since ZCS 7.2.4
+     */
+    @ZAttr(id=1432)
+    public static final String A_zimbraPrefSpellIgnorePattern = "zimbraPrefSpellIgnorePattern";
 
     /**
      * List of words to ignore when checking spelling. The word list of an

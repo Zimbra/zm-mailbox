@@ -5761,4 +5761,9 @@ TODO: delete them permerntly from here
   <globalConfigValue>10000</globalConfigValue>
   <desc>The maximum thread idle time in milli seconds. Threads that are idle for longer than this period may be stopped.</desc>
 </attr>
+
+<attr id="1432" name="zimbraPrefSpellIgnorePattern" type="string" cardinality="single" optionalIn="account,cos," flags="accountInherited,domainAdminModifiable" since="7.2.4">
+  <desc>Regular Expression for words to ignore during spell check.</desc>
+</attr>
+
 </attrs>

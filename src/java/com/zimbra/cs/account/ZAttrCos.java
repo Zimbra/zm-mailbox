@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pburgu 20121116-1547 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -26211,6 +26211,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefSpellDictionary(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSpellDictionary, "");
+        return attrs;
+    }
+
+    /**
+     * Regular Expression for words to ignore during spell check.
+     *
+     * @return zimbraPrefSpellIgnorePattern, or null if unset
+     *
+     * @since ZCS 7.2.4
+     */
+    @ZAttr(id=1432)
+    public String getPrefSpellIgnorePattern() {
+        return getAttr(Provisioning.A_zimbraPrefSpellIgnorePattern, null);
+    }
+
+    /**
+     * Regular Expression for words to ignore during spell check.
+     *
+     * @param zimbraPrefSpellIgnorePattern new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.4
+     */
+    @ZAttr(id=1432)
+    public void setPrefSpellIgnorePattern(String zimbraPrefSpellIgnorePattern) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnorePattern, zimbraPrefSpellIgnorePattern);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regular Expression for words to ignore during spell check.
+     *
+     * @param zimbraPrefSpellIgnorePattern new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.4
+     */
+    @ZAttr(id=1432)
+    public Map<String,Object> setPrefSpellIgnorePattern(String zimbraPrefSpellIgnorePattern, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnorePattern, zimbraPrefSpellIgnorePattern);
+        return attrs;
+    }
+
+    /**
+     * Regular Expression for words to ignore during spell check.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.4
+     */
+    @ZAttr(id=1432)
+    public void unsetPrefSpellIgnorePattern() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnorePattern, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regular Expression for words to ignore during spell check.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.4
+     */
+    @ZAttr(id=1432)
+    public Map<String,Object> unsetPrefSpellIgnorePattern(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnorePattern, "");
         return attrs;
     }
 
