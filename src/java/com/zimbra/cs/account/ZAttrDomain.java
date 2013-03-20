@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 vmahajan 20130318-1258 */
+    /* build: 9.0.0_BETA1_1111 dywang 20130320-1328 */
 
     /**
      * RFC2256: descriptive information
@@ -2031,7 +2031,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @return zimbraAutoProvAuthMech, or empty array if unset
      *
@@ -2049,7 +2049,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @param zimbraAutoProvAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2070,7 +2070,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @param zimbraAutoProvAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2092,7 +2092,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @param zimbraAutoProvAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2113,7 +2113,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @param zimbraAutoProvAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2135,7 +2135,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2155,7 +2155,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
+     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

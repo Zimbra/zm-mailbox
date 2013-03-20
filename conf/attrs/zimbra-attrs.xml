@@ -7159,4 +7159,7 @@ TODO: delete them permanently from here
   <desc>Key to be used for JavaScript error tracking via third party service</desc>
 </attr>
 
+<attr id="1435" name="zimbraMtaFallbackRelayHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.0.4">
+  <desc>Fallback value for postconf relayhost.</desc>
+</attr>
 </attrs>
