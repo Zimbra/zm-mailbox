@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130227-1543 */
+    /* build: 9.0.0_BETA1_1111 dywang 20130320-1328 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7372,6 +7372,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=197)
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
+
+    /**
+     * Fallback value for postconf relayhost.
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1435)
+    public static final String A_zimbraMtaFallbackRelayHost = "zimbraMtaFallbackRelayHost";
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
