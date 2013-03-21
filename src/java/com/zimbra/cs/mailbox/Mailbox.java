@@ -3991,11 +3991,15 @@ public class Mailbox {
             // Make a single list containing default and exceptions.
             int scidLen = (defaultInv != null ? 1 : 0) + (exceptions != null ? exceptions.length : 0);
             List<SetCalendarItemData> scidList = new ArrayList<SetCalendarItemData>(scidLen);
-            if (defaultInv != null)
+            if (defaultInv != null) {
+                defaultInv.mInv.setLastFullSeqNo(defaultInv.mInv.getSeqNo());
                 scidList.add(defaultInv);
+            }
             if (exceptions != null) {
-                for (SetCalendarItemData scid : exceptions)
+                for (SetCalendarItemData scid : exceptions) {
+                    scid.mInv.setLastFullSeqNo(scid.mInv.getSeqNo());
                     scidList.add(scid);
+                }
             }
 
             CalendarItem calItem = null;

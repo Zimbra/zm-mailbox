@@ -117,6 +117,7 @@ public class Invite {
             long dtstamp,
             long lastModified,
             int seqno,
+            int lastFullSeqno,
             int mailboxId,
             int mailItemId,
             int componentNum,
@@ -155,6 +156,9 @@ public class Invite {
         mPartStat = partStat;
         mRsvp = rsvp;
         mSeqNo = seqno;
+        // bug 74117 : mLastSeqNo contains the sequence number for which invitation is sent to all the attendees.
+        // This will be used when accepting the replies.
+        mLastFullSeqNo = lastFullSeqno;
         setDtStamp(dtstamp);
         setLastModified(lastModified);
 
@@ -264,6 +268,7 @@ public class Invite {
             long dtStamp,
             long lastModified,
             int seqNo,
+            int lastFullSeqno,
             String partStat,
             boolean rsvp,
             boolean sentByMe)
@@ -297,6 +302,7 @@ public class Invite {
                 dtStamp,
                 lastModified,
                 seqNo,
+                lastFullSeqno,
                 mailboxId,
                 0, // mailItemId MUST BE SET
                 0, // component num
@@ -359,6 +365,7 @@ public class Invite {
     private static final String FN_RECURRENCE = "recurrence";
     private static final String FN_RECUR_ID        = "rid";
     private static final String FN_SEQ_NO          = "seq";
+    private static final String FN_LAST_FULL_SEQ_NO     = "lfseq";
     private static final String FN_STATUS          = "status";  // calendar: event/todo/journal status
     private static final String FN_START           = "st";
     private static final String FN_TRANSP          = "tr";
@@ -439,7 +446,8 @@ public class Invite {
         if (inv.getLastModified() != 0)
             meta.put(FN_LAST_MODIFIED, inv.getLastModified());
         meta.put(FN_SEQ_NO, inv.getSeqNo());
-        
+        meta.put(FN_LAST_FULL_SEQ_NO, inv.getLastFullSeqNo());
+
         if (inv.hasOrganizer()) {
             meta.put(FN_ORGANIZER, inv.getOrganizer().encodeMetadata());
         }
@@ -633,6 +641,7 @@ public class Invite {
         long dtstamp = meta.getLong(FN_DTSTAMP, 0);
         long lastModified = meta.getLong(FN_LAST_MODIFIED, 0);
         int seqno = (int) meta.getLong(FN_SEQ_NO, 0);
+        int lastFullSeqno = (int) meta.getLong(FN_LAST_FULL_SEQ_NO, seqno);
 
         ZOrganizer org = null;
         try {
@@ -723,7 +732,7 @@ public class Invite {
                 priority, pctComplete, completed, freebusy, transp, classProp,
                 dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
                 name, loc, flags, partStat, rsvp,
-                recurrenceId, dtstamp, lastModified, seqno,
+                recurrenceId, dtstamp, lastModified, seqno, lastFullSeqno,
                 mailboxId, mailItemId, componentNum, sentByMe, desc, descHtml, fragment,
                 comments, categories, contacts, geo, url);
         invite.mDescInMeta = descInMeta;  // a little hacky, but necessary
@@ -1030,7 +1039,9 @@ public class Invite {
     public long getCompleted() { return mCompleted; }
     public void setCompleted(long completed) { mCompleted = completed; }
     public int getSeqNo() { return mSeqNo; }
-    public void setSeqNo(int seqNo) { mSeqNo = seqNo; } 
+    public int getLastFullSeqNo() { return mLastFullSeqNo; }
+    public void setSeqNo(int seqNo) { mSeqNo = seqNo; }
+    public void setLastFullSeqNo(int seqNo) { mLastFullSeqNo = seqNo; }
     public ParsedDateTime getStartTime() { return mStart; }
     public void setDtStart(ParsedDateTime dtStart) { mStart = dtStart; }
     public ParsedDateTime getEndTime() { return mEnd; }
@@ -1252,6 +1263,7 @@ public class Invite {
         sb.append(", DTStamp: ").append(mDTStamp);
         sb.append(", lastMod: ").append(mLastModified);
         sb.append(", mSeqNo ").append(mSeqNo);
+        sb.append(", mLastFullSeqNo ").append(mLastFullSeqNo);
         if (isDraft())
             sb.append(", draft: ").append(true);
         if (isNeverSent())
@@ -1304,7 +1316,8 @@ public class Invite {
     protected long mDTStamp = 0;
     protected long mLastModified = 0;
     protected int mSeqNo = 0;
-    
+    protected int mLastFullSeqNo = 0;
+
     // Participation status for this calendar user.  Values are the
     // 2-character strings in ICalXmlStrMap.sPartStatMap, not the longer
     // iCalendar PARTSTAT values.
@@ -2549,7 +2562,7 @@ public class Invite {
                 mRecurrence,
                 mIsOrganizer, org, attendees,
                 mName, mLocation,
-                mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mLastModified, mSeqNo,
+                mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mLastModified, mSeqNo, mLastFullSeqNo,
                 0, // mMailboxId
                 0, // mMailItemId
                 0, // mComponentNum
