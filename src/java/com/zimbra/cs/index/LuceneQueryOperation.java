@@ -79,7 +79,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      * a DBOp in order to properly get our results.
      */
     private DBQueryOperation dbOp;
-    private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
+    private final List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
     private boolean hasSpamTrashSetting = false;
 
     private ZimbraTopDocs hits;
@@ -247,7 +247,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             fetchFirstResults(1000); // some arbitrarily large initial size to fetch
             if (getTotalHitCount() > 1000) { // also arbitrary, just to make very small searches run w/o extra DB check
                 //Bug: 68630
-                //Let's try to avoid the additional D/B lookup; 
+                //Let's try to avoid the additional D/B lookup;
                 //We can calculate the number of items contained by the folders to search by getting the total
                 //item counts from the cache. If total items < total lucene hits - its cheaper to do the D/B query first.
                 Set<Folder> targetFolders = dbOp.getTargetFolders();
@@ -257,7 +257,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                     if (itemCount < getTotalHitCount())
                         return true; // run DB-FIRST
                 }
-                
+
                 int dbHitCount = dbOp.getDbHitCount();
                 ZimbraLog.search.debug("EstimatedHits lucene=%d,db=%d", getTotalHitCount(), dbHitCount);
                 if (dbHitCount < getTotalHitCount()) {
@@ -269,12 +269,12 @@ public final class LuceneQueryOperation extends QueryOperation {
             return false;
         }
     }
-    
+
     private long getTotalItemCount(Set<Folder> folders) {
         long total = 0;
         for (Folder f : folders)
             total += f.getItemCount();
-        
+
         return total;
     }
 
@@ -583,6 +583,9 @@ public final class LuceneQueryOperation extends QueryOperation {
             }
             luceneQuery = top;
             queryInfo.addAll(other.getResultInfo());
+            if (other.hasSpamTrashSetting()) {
+                forceHasSpamTrashSetting();
+            }
             return this;
         }
         return null;
@@ -792,7 +795,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      * against the DB.
      */
     static final class LuceneResultsChunk {
-        private Multimap<Integer, Document> hits = LinkedHashMultimap.create();
+        private final Multimap<Integer, Document> hits = LinkedHashMultimap.create();
 
         Set<Integer> getIndexIds() {
             return hits.keySet();
