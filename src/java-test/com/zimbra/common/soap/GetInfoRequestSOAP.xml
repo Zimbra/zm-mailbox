@@ -1,4 +1,20 @@
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+<!--
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2012 VMware, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+-->
   <soap:Header>
     <context xmlns="urn:zimbra">
       <authToken>0_817b05823c48b547835c3ba5007f0b64c8eb44df_69643d33363a65306661666438392d313336302d313164392d383636312d3030306139356439386566323b6578703d31333a313334303430363237343430333b61646d696e3d313a313b747970653d363a7a696d6272613b</authToken>
