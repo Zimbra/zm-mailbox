@@ -12,6 +12,7 @@ grant {
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
   permission java.net.SocketPermission "*", "accept,resolve,listen,connect";
   permission java.util.PropertyPermission "*", "read,write";
+  permission javax.net.ssl.SSLPermission "*"; 
 
 //Jetty internals
   permission java.io.FilePermission "${jetty.home}/-", "read";
