@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -51,6 +51,7 @@ import org.apache.commons.httpclient.util.DateParseException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -148,14 +149,44 @@ public class FeedManager {
     public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, " +
                                              "application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
 
-    public static SubscriptionData<?> retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd)
-    throws ServiceException {
+    public static class RemoteDataInfo {
+        public final int statusCode;
+        public final int redirects;
+        public BufferedInputStream content;
+        public final String expectedCharset;
+        public final long lastModified;
+        private GetMethod getMethod = null;
+
+        public RemoteDataInfo(int statusCode, int redirects,
+                BufferedInputStream content, String expectedCharset, long lastModified) {
+            this.statusCode = statusCode;
+            this.redirects = redirects;
+            this.content = content;
+            this.expectedCharset = expectedCharset;
+            this.lastModified = lastModified;
+        }
+        public GetMethod getGetMethod() {
+            return getMethod;
+        }
+        public void setGetMethod(GetMethod getMethod) {
+            this.getMethod = getMethod;
+        }
+        public void cleanup() {
+            Closeables.closeQuietly(content);
+            content = null;
+            if (getMethod != null) {
+                getMethod.releaseConnection();
+                getMethod = null;
+            }
+        }
+    }
+
+    private static RemoteDataInfo retrieveRemoteData(String url, Folder.SyncData fsd)
+    throws ServiceException, HttpException, IOException {
         assert !Strings.isNullOrEmpty(url);
 
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
-
-        String originalURL = url;
 
         // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.
         // see comments in ZimbraHttpConnectionManager
@@ -168,9 +199,10 @@ public class FeedManager {
         GetMethod get = null;
         BufferedInputStream content = null;
         long lastModified = 0;
+        String expectedCharset = MimeConstants.P_CHARSET_UTF8;
+        int redirects = 0;
+        int statusCode = HttpServletResponse.SC_NOT_FOUND;
         try {
-            String expectedCharset = MimeConstants.P_CHARSET_UTF8;
-            int redirects = 0;
             do {
                 String lcurl = url.toLowerCase();
                 if (lcurl.startsWith("webcal:")) {
@@ -188,7 +220,7 @@ public class FeedManager {
                         String user = httpurl.getUser();
                         if (user.indexOf('%') != -1) {
                             try {
-                                user = URLDecoder.decode(httpurl.getUser());
+                                user = URLDecoder.decode(user, "UTF-8");
                             } catch (OutOfMemoryError e) {
                                 Zimbra.halt("out of memory", e);
                             } catch (Throwable t) { }
@@ -198,7 +230,6 @@ public class FeedManager {
                         client.getState().setCredentials(AuthScope.ANY, creds);
                     }
                 }
-
 
                 try {
                     get = new GetMethod(url);
@@ -224,7 +255,7 @@ public class FeedManager {
                     url = locationHeader.getValue();
                     get.releaseConnection();
                 } else {
-                    int statusCode = get.getStatusCode();
+                    statusCode = get.getStatusCode();
                     if (statusCode == HttpServletResponse.SC_OK) {
                         content = new BufferedInputStream(get.getResponseBodyAsStream());
                         expectedCharset = get.getResponseCharSet();
@@ -246,44 +277,79 @@ public class FeedManager {
                         }
                     } else if (statusCode == HttpServletResponse.SC_NOT_MODIFIED) {
                         ZimbraLog.misc.debug("Remote data at " + url + " not modified since last sync");
-                        return SubscriptionData.NOT_MODIFIED();
+                        return new RemoteDataInfo(statusCode, redirects, null, expectedCharset, lastModified);
                     } else {
                         throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
                     }
                     break;
                 }
             } while (++redirects <= MAX_REDIRECTS);
-
-            if (redirects > MAX_REDIRECTS) {
-                throw ServiceException.TOO_MANY_PROXIES(originalURL);
+        } catch (ServiceException ex) {
+            if (get != null) {
+                get.releaseConnection();
             }
+            throw ex;
+        } catch (HttpException ex) {
+            if (get != null) {
+                get.releaseConnection();
+            }
+            throw ex;
+        } catch (IOException ex) {
+            if (get != null) {
+                get.releaseConnection();
+            }
+            throw ex;
+        }
+        RemoteDataInfo rdi = new RemoteDataInfo(statusCode, redirects, content, expectedCharset, lastModified);
+        rdi.setGetMethod(get);
+        return rdi;
+    }
 
-            StringBuilder charset = new StringBuilder(expectedCharset);
-            switch (getLeadingChar(content, charset)) {
-                case -1:
-                    throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
-                case '<':
-                    return parseRssFeed(Element.parseXML(content), fsd, lastModified);
-                case 'B':  case 'b':
-                    List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(content, charset.toString());
-                    List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true, true, null);
-                    // handle missing UIDs on remote calendars by generating them as needed
-                    for (Invite inv : invites) {
-                        if (inv.getUid() == null) {
-                            inv.setUid(LdapUtil.generateUUID());
-                        }
+    @VisibleForTesting
+    protected static SubscriptionData<?> retrieveRemoteDatasource(Account acct, RemoteDataInfo rdi, Folder.SyncData fsd)
+    throws ServiceException, IOException {
+        StringBuilder charset = new StringBuilder(rdi.expectedCharset);
+        switch (getLeadingChar(rdi.content, charset)) {
+            case -1:
+                throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
+            case '<':
+                return parseRssFeed(Element.parseXML(rdi.content), fsd, rdi.lastModified);
+            case 'B':  case 'b':
+                List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(rdi.content, charset.toString());
+                List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true, true, null);
+                // handle missing UIDs on remote calendars by generating them as needed
+                for (Invite inv : invites) {
+                    if (inv.getUid() == null) {
+                        inv.setUid(LdapUtil.generateUUID());
                     }
-                    return new SubscriptionData<Invite>(invites, lastModified);
-                default:
-                    throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
+                }
+                return new SubscriptionData<Invite>(invites, rdi.lastModified);
+            default:
+                throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
+        }
+    }
+
+    public static SubscriptionData<?> retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd)
+    throws ServiceException {
+        assert !Strings.isNullOrEmpty(url);
+        RemoteDataInfo rdi = null;
+        try {
+            rdi = retrieveRemoteData(url, fsd);
+
+            if (rdi.statusCode == HttpServletResponse.SC_NOT_MODIFIED) {
+                return SubscriptionData.NOT_MODIFIED();
             }
+            if (rdi.redirects > MAX_REDIRECTS) {
+                throw ServiceException.TOO_MANY_PROXIES(url);
+            }
+            return retrieveRemoteDatasource(acct, rdi, fsd);
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException: " + e, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException: " + e, e);
         } finally {
-            if (get != null) {
-                get.releaseConnection();
+            if (rdi != null) {
+                rdi.cleanup();
             }
         }
     }
@@ -491,7 +557,20 @@ public class FeedManager {
                     throw ServiceException.PARSE_ERROR("unsupported atom entry content type: " + type, null);
                 }
 
-                ParsedMessage pm = generateMessage(title, content.getText(), href, html, addr, date, enclosures);
+                String text = content.getText();
+                if (Strings.isNullOrEmpty(text)) {
+                    Element div = content.getElement("div");
+                    if (div != null) {
+                        /*
+                         * Assume it is this variant:
+                         * http://tools.ietf.org/html/rfc4287#section-4.1.3
+                         *   atomInlineXHTMLContent = element atom:content { atomCommonAttributes,
+                         *           attribute type { "xhtml" }, xhtmlDiv }
+                         */
+                        text = div.getText();
+                    }
+                }
+                ParsedMessage pm = generateMessage(title, text, href, html, addr, date, enclosures);
                 sdata.recordItem(pm, guid, date.getTime());
             }
             sdata.recordFeedModifiedDate(lastModified);
@@ -509,8 +588,18 @@ public class FeedManager {
             InternetAddress addr, Date date, List<Enclosure> attach)
     throws ServiceException {
         String ctype = html ? "text/html; charset=\"utf-8\"" : "text/plain; charset=\"utf-8\"";
-        String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
+        StringBuilder content = new StringBuilder();
+        if (html) {
+            content.append(HTML_HEADER).append(text).append("<p>").append(href).append("</p>").append(HTML_FOOTER);
+        } else {
+            content.append(text).append("\r\n\r\n").append(href);
+        }
+        return generateMessage(title, content.toString(), ctype, addr, date, attach);
+    }
 
+    private static ParsedMessage generateMessage(String title, String content, String ctype,
+            InternetAddress addr, Date date, List<Enclosure> attach)
+    throws ServiceException {
         // cull out invalid enclosures
         if (attach != null) {
             for (Iterator<Enclosure> it = attach.iterator(); it.hasNext(); ) {
