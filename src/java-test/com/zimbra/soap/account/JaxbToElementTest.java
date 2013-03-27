@@ -96,8 +96,10 @@ public class JaxbToElementTest {
             String actual = el.prettyPrint();
             // TODO: At present the order varies a little and zimlets plus
             //       other things are missing - so just check the first part.
-            Assert.assertEquals(getInfoResponseXml.substring(0, 100),
-                    actual.substring(0, 100));
+            Assert.assertEquals(String.format(
+                    "First 8000 chars different from %s (Has that file been corrupted with Copyright change?)",
+                    "src/java-test/com/zimbra/soap/account/GetInfoResponse.xml"),
+                    getInfoResponseXml.substring(0, 8000), actual.substring(0, 8000));
         }
     }
 

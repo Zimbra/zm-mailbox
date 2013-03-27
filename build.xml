@@ -60,24 +60,30 @@
   </target>
 
   <target name="test" depends="test-compile" description="Run unit tests">
+    <property name="test.path" refid="class.path"/>
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
-      <classpath refid="class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <formatter type="xml"/>
-      <batchtest todir="${test.dir}/output">
-        <fileset dir="${test.src.dir}">
-          <include name="**/*Test.java"/>
-        </fileset>
-      </batchtest>
+    <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
+    <junit printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}">
+        <classpath refid="class.path"/>
+        <classpath path="${test.classes.dir}"/>
+        <assertions><enable/></assertions>
+        <formatter type="xml"/>
+        <batchtest todir="${test.dir}/output">
+            <fileset dir="${test.src.dir}">
+                <include name="**/*Test.java"/>
+                <exclude name="**/*ITest.java"/>
+                <exclude name="**/Abstract*Test.java"/>
+            </fileset>
+        </batchtest>
     </junit>
     <junitreport todir="${test.dir}/report">
-      <fileset dir="${test.dir}/output"/>
-      <report todir="${test.dir}/report"/>
+        <fileset dir="${test.dir}/output"/>
+        <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
+    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
 </project>
