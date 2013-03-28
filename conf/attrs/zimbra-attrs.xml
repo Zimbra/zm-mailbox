@@ -7162,4 +7162,12 @@ TODO: delete them permanently from here
 <attr id="1435" name="zimbraMtaFallbackRelayHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.0.4">
   <desc>Fallback value for postconf relayhost.</desc>
 </attr>
+
+<attr id="1436" name="zimbraWebAppsInstalled" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="9.0.0">
+  <globalConfigValue>service</globalConfigValue>
+  <globalConfigValue>zimbra</globalConfigValue>
+  <globalConfigValue>zimbraAdmin</globalConfigValue>
+  <globalConfigValue>zimlet</globalConfigValue>
+  <desc>webapps that are installed on this server</desc>
+</attr>
 </attrs>

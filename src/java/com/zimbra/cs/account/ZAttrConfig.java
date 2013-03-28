@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20130320-1328 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130327-1721 */
 
     /**
      * RFC2256: descriptive information
@@ -42295,6 +42295,140 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetVirusWarnRecipient(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVirusWarnRecipient, "");
+        return attrs;
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @return zimbraWebAppsInstalled, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public String[] getWebAppsInstalled() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraWebAppsInstalled); return value.length > 0 ? value : new String[] {"service","zimbra","zimbraAdmin","zimlet"};
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param zimbraWebAppsInstalled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public void setWebAppsInstalled(String[] zimbraWebAppsInstalled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebAppsInstalled, zimbraWebAppsInstalled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param zimbraWebAppsInstalled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public Map<String,Object> setWebAppsInstalled(String[] zimbraWebAppsInstalled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebAppsInstalled, zimbraWebAppsInstalled);
+        return attrs;
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param zimbraWebAppsInstalled new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public void addWebAppsInstalled(String zimbraWebAppsInstalled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebAppsInstalled, zimbraWebAppsInstalled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param zimbraWebAppsInstalled new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public Map<String,Object> addWebAppsInstalled(String zimbraWebAppsInstalled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebAppsInstalled, zimbraWebAppsInstalled);
+        return attrs;
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param zimbraWebAppsInstalled existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public void removeWebAppsInstalled(String zimbraWebAppsInstalled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebAppsInstalled, zimbraWebAppsInstalled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param zimbraWebAppsInstalled existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public Map<String,Object> removeWebAppsInstalled(String zimbraWebAppsInstalled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebAppsInstalled, zimbraWebAppsInstalled);
+        return attrs;
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public void unsetWebAppsInstalled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebAppsInstalled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public Map<String,Object> unsetWebAppsInstalled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebAppsInstalled, "");
         return attrs;
     }
 
