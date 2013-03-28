@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20130320-1328 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130327-1721 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -11571,6 +11571,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=208)
     public static final String A_zimbraVirusWarnRecipient = "zimbraVirusWarnRecipient";
+
+    /**
+     * webapps that are installed on this server
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1436)
+    public static final String A_zimbraWebAppsInstalled = "zimbraWebAppsInstalled";
 
     /**
      * link for admin users in web client
