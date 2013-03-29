@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130327-1721 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130329-1022 */
 
     /**
      * RFC2256: descriptive information
@@ -2031,7 +2031,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @return zimbraAutoProvAuthMech, or empty array if unset
      *
@@ -2049,7 +2049,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2070,7 +2070,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2092,7 +2092,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2113,7 +2113,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2135,7 +2135,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2155,7 +2155,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -7682,6 +7682,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFileUploadMaxSizePerFile(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFileUploadMaxSizePerFile, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to force clear zimbra auth cookies when SOAP session ends
+     * (i.e. force logout on browser tab close)
+     *
+     * @return zimbraForceClearCookies, or false if unset
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1437)
+    public boolean isForceClearCookies() {
+        return getBooleanAttr(Provisioning.A_zimbraForceClearCookies, false);
+    }
+
+    /**
+     * Whether to force clear zimbra auth cookies when SOAP session ends
+     * (i.e. force logout on browser tab close)
+     *
+     * @param zimbraForceClearCookies new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1437)
+    public void setForceClearCookies(boolean zimbraForceClearCookies) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForceClearCookies, zimbraForceClearCookies ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to force clear zimbra auth cookies when SOAP session ends
+     * (i.e. force logout on browser tab close)
+     *
+     * @param zimbraForceClearCookies new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1437)
+    public Map<String,Object> setForceClearCookies(boolean zimbraForceClearCookies, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForceClearCookies, zimbraForceClearCookies ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to force clear zimbra auth cookies when SOAP session ends
+     * (i.e. force logout on browser tab close)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1437)
+    public void unsetForceClearCookies() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForceClearCookies, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to force clear zimbra auth cookies when SOAP session ends
+     * (i.e. force logout on browser tab close)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1437)
+    public Map<String,Object> unsetForceClearCookies(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForceClearCookies, "");
         return attrs;
     }
 

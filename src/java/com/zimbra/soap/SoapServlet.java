@@ -33,6 +33,7 @@ import org.apache.commons.httpclient.ProtocolException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.MapMaker;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -67,6 +68,8 @@ public class SoapServlet extends ZimbraServlet {
     public static final String SERVLET_RESPONSE = "servlet.response";
     /** If this is a request sent to the admin port */
     public static final String IS_ADMIN_REQUEST = "zimbra.isadminreq";
+    /** Flag for requests that want to force invalidation of client cookies */
+    public static final String INVALIDATE_COOKIES = "zimbra.invalidateCookies";
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -295,6 +298,9 @@ public class SoapServlet extends ZimbraServlet {
         Element envelope = null;
         try {
             envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
+            if (context.containsKey(INVALIDATE_COOKIES)) {
+                ZAuthToken.clearCookies(resp);
+            }
         } catch (Throwable e) {
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);

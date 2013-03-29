@@ -7170,4 +7170,8 @@ TODO: delete them permanently from here
   <globalConfigValue>zimlet</globalConfigValue>
   <desc>webapps that are installed on this server</desc>
 </attr>
+
+<attr id="1437" name="zimbraForceClearCookies" type="boolean" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.4">
+  <desc>Whether to force clear zimbra auth cookies when SOAP session ends (i.e. force logout on browser tab close)</desc>
+</attr>
 </attrs>
