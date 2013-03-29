@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130327-1721 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130329-1022 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -88,8 +88,8 @@ public class ZAttrProvisioning {
 
     public static enum AutoProvAuthMech {
         KRB5("KRB5"),
-        SPNEGO("SPNEGO"),
         LDAP("LDAP"),
+        SPNEGO("SPNEGO"),
         PREAUTH("PREAUTH");
         private String mValue;
         private AutoProvAuthMech(String value) { mValue = value; }
@@ -101,8 +101,8 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isKRB5() { return this == KRB5;}
-        public boolean isSPNEGO() { return this == SPNEGO;}
         public boolean isLDAP() { return this == LDAP;}
+        public boolean isSPNEGO() { return this == SPNEGO;}
         public boolean isPREAUTH() { return this == PREAUTH;}
     }
 
@@ -323,8 +323,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum FeatureSocialFiltersEnabled {
-        Facebook("Facebook"),
         LinkedIn("LinkedIn"),
+        Facebook("Facebook"),
         SocialCast("SocialCast"),
         Twitter("Twitter");
         private String mValue;
@@ -336,8 +336,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isFacebook() { return this == Facebook;}
         public boolean isLinkedIn() { return this == LinkedIn;}
+        public boolean isFacebook() { return this == Facebook;}
         public boolean isSocialCast() { return this == SocialCast;}
         public boolean isTwitter() { return this == Twitter;}
     }
@@ -1035,8 +1035,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefPop3DeleteOption {
-        delete("delete"),
         trash("trash"),
+        delete("delete"),
         read("read"),
         keep("keep");
         private String mValue;
@@ -1048,8 +1048,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isDelete() { return this == delete;}
         public boolean isTrash() { return this == trash;}
+        public boolean isDelete() { return this == delete;}
         public boolean isRead() { return this == read;}
         public boolean isKeep() { return this == keep;}
     }
@@ -1289,8 +1289,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum TableMaintenanceOperation {
-        OPTIMIZE("OPTIMIZE"),
-        ANALYZE("ANALYZE");
+        ANALYZE("ANALYZE"),
+        OPTIMIZE("OPTIMIZE");
         private String mValue;
         private TableMaintenanceOperation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1300,8 +1300,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isOPTIMIZE() { return this == OPTIMIZE;}
         public boolean isANALYZE() { return this == ANALYZE;}
+        public boolean isOPTIMIZE() { return this == OPTIMIZE;}
     }
 
     /**
@@ -4723,6 +4723,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1159)
     public static final String A_zimbraFilterSleepInterval = "zimbraFilterSleepInterval";
+
+    /**
+     * Whether to force clear zimbra auth cookies when SOAP session ends
+     * (i.e. force logout on browser tab close)
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1437)
+    public static final String A_zimbraForceClearCookies = "zimbraForceClearCookies";
 
     /**
      * foreign name for mapping an external name to a zimbra domain on domain
