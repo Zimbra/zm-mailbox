@@ -7163,14 +7163,6 @@ TODO: delete them permanently from here
   <desc>Fallback value for postconf relayhost.</desc>
 </attr>
 
-<attr id="1436" name="zimbraWebAppsInstalled" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="9.0.0">
-  <globalConfigValue>service</globalConfigValue>
-  <globalConfigValue>zimbra</globalConfigValue>
-  <globalConfigValue>zimbraAdmin</globalConfigValue>
-  <globalConfigValue>zimlet</globalConfigValue>
-  <desc>webapps that are installed on this server</desc>
-</attr>
-
 <attr id="1437" name="zimbraForceClearCookies" type="boolean" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.4">
   <desc>Whether to force clear zimbra auth cookies when SOAP session ends (i.e. force logout on browser tab close)</desc>
 </attr>
