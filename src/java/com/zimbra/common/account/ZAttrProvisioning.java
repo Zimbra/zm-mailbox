@@ -11582,14 +11582,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVirusWarnRecipient = "zimbraVirusWarnRecipient";
 
     /**
-     * webapps that are installed on this server
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1436)
-    public static final String A_zimbraWebAppsInstalled = "zimbraWebAppsInstalled";
-
-    /**
      * link for admin users in web client
      *
      * @since ZCS 5.0.9
