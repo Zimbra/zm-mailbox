@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -76,6 +76,7 @@ import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.mail.UploadScanner;
+import com.zimbra.cs.servlet.ETagHeaderFilter;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -502,6 +503,7 @@ public final class NativeFormatter extends Formatter {
         resp.addDateHeader("Last-Modified", item.getDate());
         // set ETag header to item's mod_content value
         resp.addHeader("ETag", String.valueOf(item.getSavedSequence()));
+        resp.addHeader(ETagHeaderFilter.ZIMBRA_ETAG_HEADER, String.valueOf(item.getSavedSequence()));
     }
 
     private static final int READ_AHEAD_BUFFER_SIZE = 256;
