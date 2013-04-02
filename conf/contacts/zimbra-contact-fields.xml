@@ -2014,7 +2014,6 @@ type attribute:
         <column name="肩書き" field="namePrefix"/>
         <column name="名" field="firstName"/>
         <column name="ミドル" field="middleName"/>
-        <column name="ネーム" field="fullName"/>
         <column name="姓" field="lastName"/>
         <column name="敬称" field="nickname"/>
         <column name="会社名" field="company"/>
@@ -2061,8 +2060,7 @@ type attribute:
         <column name="インターネット空き時間情報"/>
         <column name="キーワード" field="keywords"/>
         <column name="その他住所私書箱" field="otherPOBox"/>
-        <column name="ディレクトリ"/>
-        <column name="サーバー"/>
+        <column name="ディレクトリサーバー"/>
         <column name="プライベート"/>
         <column name="マネージャー" field="managerName"/>
         <column name="メモ" field="notes"/>
@@ -2499,7 +2497,7 @@ type attribute:
         <column name="勤務先の国または地域" field="workCountry"/>
         <column name="ビジネス Web ページ" field="workURL"/>
         <column name="勤務先電話番号" field="workPhone"/>
-        <column name="勤務先ファックス" field="workFax"/>
+        <column name="勤務先ファックス " field="workFax"/>
         <column name="ポケットベル" field="pager"/>
         <column name="会社名" field="company"/>
         <column name="役職" field="jobTitle"/>
