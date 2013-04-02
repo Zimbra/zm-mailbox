@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -116,6 +116,16 @@ public class ScheduleOutbox extends Collection {
                 String val = prop.getValue();
                 if (val != null) {
                     organizer = val.trim();
+                    String addr = CalDavUtils.stripMailto(organizer);
+                    // Rewrite the alias to primary address
+                    Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
+                    if (acct != null) {
+                        String newAddr = acct.getName();
+                        if (!addr.equals(newAddr)) {
+                            organizer = "mailto:" + newAddr;
+                            prop.setValue(organizer);
+                        }
+                    }
                 }
             }
         }
@@ -124,12 +134,12 @@ public class ScheduleOutbox extends Collection {
         // Apple iCal is very inconsistent about the user's identity when the account has aliases.
         if (isVEventOrVTodo && originator != null && ctxt.getAuthAccount() != null) {
             AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
-            String originatorEmail = stripMailto(originator);
+            String originatorEmail = CalDavUtils.stripMailto(originator);
             if (acctMatcher.matches(originatorEmail)) {
                 boolean changed = false;
                 if (isOrganizerMethod) {
                     if (organizer != null) {
-                        String organizerEmail = stripMailto(organizer);
+                        String organizerEmail = CalDavUtils.stripMailto(organizer);
                         if (!organizerEmail.equalsIgnoreCase(originatorEmail) &&
                             acctMatcher.matches(organizerEmail)) {
                             originator = organizer;
@@ -138,7 +148,7 @@ public class ScheduleOutbox extends Collection {
                     }
                 } else {
                     for (String at : attendees) {
-                        String atEmail = stripMailto(at);
+                        String atEmail = CalDavUtils.stripMailto(at);
                         if (originatorEmail.equalsIgnoreCase(atEmail)) {
                             break;
                         } else if (acctMatcher.matches(atEmail)) {
@@ -276,7 +286,7 @@ public class ScheduleOutbox extends Collection {
         InternetAddress from, sender, to;
         Account target = null;
         try {
-            originator = stripMailto(originator);
+            originator = CalDavUtils.stripMailto(originator);
             sender = new JavaMailInternetAddress(originator);
             Provisioning prov = Provisioning.getInstance();
             if (ctxt.getPathInfo() != null) {
@@ -297,7 +307,7 @@ public class ScheduleOutbox extends Collection {
             if (sender.getAddress() != null && sender.getAddress().equalsIgnoreCase(from.getAddress())) {
                 sender = null;
             }
-            to = new JavaMailInternetAddress(stripMailto(rcpt));
+            to = new JavaMailInternetAddress(CalDavUtils.stripMailto(rcpt));
             recipients.add(to);
         } catch (AddressException e) {
             resp.addElement(DavElements.E_RECIPIENT).addElement(DavElements.E_HREF).setText(rcpt);
@@ -387,13 +397,5 @@ public class ScheduleOutbox extends Collection {
             }
         }
         return url;
-    }
-
-    private static String stripMailto(String address) {
-        if (address != null && address.toLowerCase().startsWith("mailto:")) {
-            return address.substring(7);
-        } else {
-            return address;
-        }
     }
 }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,11 +33,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.calendar.ZCalendar;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -52,12 +60,12 @@ import com.zimbra.cs.dav.service.method.Get;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -66,14 +74,6 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.calendar.ZCalendar;
-import com.zimbra.common.calendar.ZCalendar.ICalTok;
-import com.zimbra.common.calendar.ZCalendar.ZComponent;
-import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.mime.MimeConstants;
 
 /**
  * draft-dusseault-caldav-15 section 4.2
@@ -255,7 +255,7 @@ public class CalendarCollection extends Collection {
                 throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_OBJECT_RESOURCE, "different types of components in the same resource");
             else
                 itemType = type;
-            
+
             if (i.isRecurrence())
                 inviteList.addFirst(i);
             else
@@ -263,10 +263,10 @@ public class CalendarCollection extends Collection {
         }
         if (uid == null)
             throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_COMPONENT, "no event in the request");
-        
+
         if ((getDefaultView() == MailItem.Type.APPOINTMENT || getDefaultView() == MailItem.Type.TASK) && (itemType != getDefaultView()))
             throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_COMPONENT, "resource type not supported in this collection");
-        
+
         invites.clear();
         invites.addAll(inviteList);
         return uid;
@@ -375,30 +375,17 @@ public class CalendarCollection extends Collection {
                     if (org == null) {
                         org = new ZOrganizer(ctxt.getAuthAccount().getName(), null);
                         i.setOrganizer(org);
-                    }
-                    /*
-                     * this hack was to work around iCal setting ORGANIZER field
-                     * with principalURL.  iCal seemed to have fixed that bug.
-                     *
-                    String addr = i.getOrganizer().getAddress();
-                    String newAddr = getAddressFromPrincipalURL(addr);
-                    if (!addr.equals(newAddr)) {
-                        i.setOrganizer(new ZOrganizer(newAddr, null));
-                        ZProperty href = null;
-                        Iterator<ZProperty> xprops = i.xpropsIterator();
-                        while (xprops.hasNext()) {
-                            href = xprops.next();
-                            if (href.getName().equals(DavElements.ORGANIZER_HREF))
-                                break;
-                            href = null;
+                    } else {
+                        // iCal may use alias for organizer address. Rewrite that to primary address
+                        String addr = i.getOrganizer().getAddress();
+                        Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
+                        if (acct != null) {
+                            String newAddr = acct.getName();
+                            if (!addr.equals(newAddr)) {
+                                org.setAddress(newAddr);
+                            }
                         }
-                        if (href == null) {
-                            href = new ZProperty(DavElements.ORGANIZER_HREF);
-                            i.addXProp(href);
-                        }
-                        href.setValue(addr);
                     }
-                     */
                 }
                 // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
                 // CalDAV clients don't support attachments, and on edit we have to either
