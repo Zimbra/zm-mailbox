@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -972,7 +972,7 @@ public final class ToXML {
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, List<Message> msgs, SearchParams params) throws ServiceException {
         int fields = NOTIFY_FIELDS;
-        Element c = encodeConversationCommon(parent, ifmt, octxt, conv, msgs, fields);
+        Element c = encodeConversationSummary(parent, ifmt, octxt, conv, msgs, null, OutputParticipants.PUT_BOTH, fields, true);
         if (msgs.isEmpty()) {
             return c;
         }
@@ -1022,13 +1022,10 @@ public final class ToXML {
     private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
             throws ServiceException {
-        boolean addRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
-        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS) && needToOutput(fields, Change.SENDERS);
-
+        List<Message> msgs = null;
         Mailbox mbox = conv.getMailbox();
         // if the caller might not be able to see all the messages (due to rights or \Deleted),
         //   need to calculate some fields from the visible messages
-        List<Message> msgs = null;
         boolean isDelegatedNonAccessible = false;
         if (octxt != null && octxt.isDelegatedRequest(mbox)) {
             isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(),
@@ -1037,6 +1034,17 @@ public final class ToXML {
         if (isDelegatedNonAccessible || conv.isTagged(Flag.FlagInfo.DELETED)) {
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
         }
+        return encodeConversationSummary(parent, ifmt, octxt, conv, msgs, msgHit, output, fields, alwaysSerialize);
+    }
+
+    private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Conversation conv, List<Message> msgs, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
+            throws ServiceException {
+        boolean addRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS) && needToOutput(fields, Change.SENDERS);
+
+        Mailbox mbox = conv.getMailbox();
+
         boolean noneVisible = msgs != null && msgs.isEmpty();
         Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, octxt, conv, msgs, fields);
         if (noneVisible) {
