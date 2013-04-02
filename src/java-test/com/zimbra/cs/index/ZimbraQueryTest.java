@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,8 +31,8 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
@@ -81,28 +81,25 @@ public final class ZimbraQueryTest {
         params.setSortBy(SortBy.ATTACHMENT_ASC);
         try {
             new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
-            Assert.fail();
         } catch (ServiceException e) {
-            Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+            Assert.fail("Sorting by whether has attachments should be supported");
         }
 
         params.setSortBy(SortBy.FLAG_ASC);
         try {
             new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
-            Assert.fail();
         } catch (ServiceException e) {
-            Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+            Assert.fail("Sorting by flagged should be supported");
         }
 
         params.setSortBy(SortBy.PRIORITY_ASC);
         try {
             new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
-            Assert.fail();
         } catch (ServiceException e) {
-            Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+            Assert.fail("Sorting by priority should be supported");
         }
     }
-    
+
     @Test
     public void testSanitizedQuery() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -112,15 +109,15 @@ public final class ZimbraQueryTest {
         params.setQueryString("in:inbox content:test");
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertEquals("Q(IN:$FOLDER)Q(&&)Q(l.content:$TEXT)", query.toSanitizedtring());
-        
+
         params.setQueryString("in:inbox");
         query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertEquals("Q(IN:$FOLDER)", query.toSanitizedtring());
-        
+
         params.setQueryString("conv:\"-554\" (underid:1 AND NOT underid:3 AND NOT underid:4)");
         query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertEquals("Q(ITEMID,$TEXT)Q(&&)Q(Q(UNDER:ANY_FOLDER)Q(&&)-Q(UNDER:$FOLDER)Q(&&)-Q(UNDER:$FOLDER))", query.toSanitizedtring());
-        
+
         params.setQueryString("inid:15");
         query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertEquals("Q(IN:$FOLDER)", query.toSanitizedtring());
