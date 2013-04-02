@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -276,6 +276,8 @@ public abstract class AbstractIndexStoreTest {
         checkNextTermFieldType(terms, LuceneFields.L_MAILBOX_BLOB_ID);
         checkNextTermFieldType(terms, LuceneFields.L_MAILBOX_BLOB_ID);
         checkNextTerm(terms, new Term(LuceneFields.L_PARTNAME, "CONTACT"));
+        checkNextTerm(terms, new Term(LuceneFields.L_SORT_SIZE, "0"));
+        checkNextTerm(terms, new Term(LuceneFields.L_SORT_PRIORITY, "1"));
         checkNextTerm(terms, new Term(LuceneFields.L_H_TO, "@zimbra"));
         checkNextTerm(terms, new Term(LuceneFields.L_H_TO, "@zimbra.com"));
         checkNextTerm(terms, new Term(LuceneFields.L_H_TO, "test1"));

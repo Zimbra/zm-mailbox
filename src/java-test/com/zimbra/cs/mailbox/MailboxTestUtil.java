@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,15 +19,24 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import javax.activation.DataHandler;
+import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.FileUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -197,6 +206,55 @@ public final class MailboxTestUtil {
         mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
         mm.setHeader("Subject", subject);
         mm.setText("nothing to see here");
+        return new ParsedMessage(mm, false);
+    }
+
+    public static ParsedMessage generateHighPriorityMessage(String subject) throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        mm.setHeader("From", "Hi Bob <bob@example.com>");
+        mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
+        mm.setHeader("Subject", subject);
+        mm.addHeader("Importance", "high");
+        mm.setText("nothing to see here");
+        return new ParsedMessage(mm, false);
+    }
+
+    public static ParsedMessage generateLowPriorityMessage(String subject) throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        mm.setHeader("From", "Lo Bob <bob@example.com>");
+        mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
+        mm.setHeader("Subject", subject);
+        mm.addHeader("Importance", "low");
+        mm.setText("nothing to see here");
+        return new ParsedMessage(mm, false);
+    }
+
+    public static ParsedMessage generateMessageWithAttachment(String subject) throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        mm.setHeader("From", "Vera Oliphant <oli@example.com>");
+        mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
+        mm.setHeader("Subject", subject);
+        mm.setText("Good as gold");
+        MimeMultipart multi = new ZMimeMultipart("mixed");
+        ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT);
+        cdisp.setParameter("filename", "fun.txt");
+
+        ZMimeBodyPart bp = new ZMimeBodyPart();
+        // MimeBodyPart.setDataHandler() invalidates Content-Type and CTE if there is any, so make sure
+        // it gets called before setting Content-Type and CTE headers.
+        try {
+            bp.setDataHandler(new DataHandler(new ByteArrayDataSource("Feeling attached.", "text/plain")));
+        } catch (IOException e) {
+            throw new MessagingException("could not generate mime part content", e);
+        }
+        bp.addHeader("Content-Disposition", cdisp.toString());
+        bp.addHeader("Content-Type", "text/plain");
+        bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
+        multi.addBodyPart(bp);
+
+        mm.setContent(multi);
+        mm.saveChanges();
+
         return new ParsedMessage(mm, false);
     }
 

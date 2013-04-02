@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -56,11 +56,39 @@ public final class IndexDocument {
     }
 
     public void addSortSize(long value) {
-        document.add(new Field(LuceneFields.L_SORT_SIZE, String.valueOf(value), Field.Store.YES, Field.Index.NO));
+        document.add(new Field(LuceneFields.L_SORT_SIZE, String.valueOf(value), Field.Store.YES,
+                Field.Index.NOT_ANALYZED));
     }
 
     public void removeSortSize() {
         document.removeFields(LuceneFields.L_SORT_SIZE);
+    }
+
+    public void addSortAttachment(boolean value) {
+        document.add(new Field(LuceneFields.L_SORT_ATTACH, LuceneFields.valueForBooleanField(value),
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+    }
+
+    public void removeSortAttachment() {
+        document.removeFields(LuceneFields.L_SORT_ATTACH);
+    }
+
+    public void addSortFlag(boolean value) {
+        document.add(new Field(LuceneFields.L_SORT_FLAG, LuceneFields.valueForBooleanField(value),
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+    }
+
+    public void removeSortFlag() {
+        document.removeFields(LuceneFields.L_SORT_FLAG);
+    }
+
+    public void addSortPriority(int value) {
+        document.add(new Field(LuceneFields.L_SORT_PRIORITY, LuceneFields.valueForPriority(value),
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+    }
+
+    public void removeSortPriority() {
+        document.removeFields(LuceneFields.L_SORT_PRIORITY);
     }
 
     public void addFrom(RFC822AddressTokenStream stream) {

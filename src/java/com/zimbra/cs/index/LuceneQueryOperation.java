@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -79,7 +79,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      * a DBOp in order to properly get our results.
      */
     private DBQueryOperation dbOp;
-    private final List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
+    private final List<QueryInfo> queryInfo = Lists.newArrayList();
     private boolean hasSpamTrashSetting = false;
 
     private ZimbraTopDocs hits;
@@ -779,10 +779,16 @@ public final class LuceneQueryOperation extends QueryOperation {
             case SIZE:
                 return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
                         sortBy.getDirection() == SortBy.Direction.DESC));
-            case RCPT:
             case ATTACHMENT:
+                return new Sort(new SortField(LuceneFields.L_SORT_ATTACH, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
             case FLAG:
+                return new Sort(new SortField(LuceneFields.L_SORT_FLAG, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
             case PRIORITY:
+                return new Sort(new SortField(LuceneFields.L_SORT_PRIORITY, SortField.STRING,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
+            case RCPT:
                 assert false : sortBy; // should already be checked in the compile phase
             case DATE:
             default: // default to DATE_DESCENDING
