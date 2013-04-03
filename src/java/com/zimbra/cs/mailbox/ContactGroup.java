@@ -880,7 +880,7 @@ public class ContactGroup {
             }
         }
         
-        private void migrate(Contact contact) throws ServiceException {
+        public void migrate(Contact contact) throws ServiceException {
             if (!contact.isGroup()) {
                 return;
             }
