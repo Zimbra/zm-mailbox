@@ -29,6 +29,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -153,6 +154,8 @@ public class ImportContacts extends MailDocumentHandler  {
             String[] tags = TagUtil.decodeTags(ContactCSV.getTags(contact));
             Contact c = mbox.createContact(oc, new ParsedContact(contact), iidFolder.getId(), tags);
             createdIds.add(new ItemId(c));
+            ContactGroup.MigrateContactGroup mcg = new ContactGroup.MigrateContactGroup(mbox);
+            mcg.migrate(c);
         }
         return createdIds;
     }
