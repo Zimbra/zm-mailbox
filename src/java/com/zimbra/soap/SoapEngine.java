@@ -2,18 +2,30 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.soap;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -32,9 +44,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -50,16 +62,6 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
-import org.eclipse.jetty.continuation.ContinuationSupport;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 /**
  * The soap engine.
@@ -131,6 +133,24 @@ public class SoapEngine {
             HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
             ZimbraLog.soap.trace(!isResumed ? "C:\n%s" : "C: (resumed)\n%s", envelope.prettyPrint(true));
+            context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
+        }
+    }
+
+    private void logUnparsableRequest(Map<String, Object> context, byte[] soapMessage, String parseError) {
+        if (context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
+            return;
+        }
+        if (ZimbraLog.soap.isInfoEnabled()) {
+            HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
+            if (ZimbraLog.soap.isTraceEnabled()) {
+                ZimbraLog.soap.trace(!isResumed ? "C: (ParseError:%s)\n%s" : "C: (resumed) (ParseError:%s)\n%s",
+                        parseError, new String(soapMessage));
+            } else if (soapMessage.length < 2000 /* limit max length to avoid filling log file */) {
+                ZimbraLog.soap.info(!isResumed ? "C: (ParseError:%s)\n%s" : "C: (resumed) (ParseError:%s)\n%s",
+                        parseError, new String(soapMessage));
+            }
             context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
         }
     }
@@ -228,8 +248,10 @@ public class SoapEngine {
             }
         } catch (SoapParseException e) {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
+            logUnparsableRequest(context, soapMessage, e.getMessage());
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
         } catch (XmlParseException e) {
+            logUnparsableRequest(context, soapMessage, e.getMessage());
             SoapProtocol soapProto = chooseFaultProtocolFromBadXml(new ByteArrayInputStream(soapMessage));
             return soapFaultEnv(soapProto, "SOAP exception", e);
         }
