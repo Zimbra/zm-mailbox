@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -274,7 +274,13 @@ public class W3cDomUtil {
                 String prefix = attrNode.getPrefix();
                 qualifiedName = prefix == null ? nodeName : String.format("%s:%s", prefix, nodeName);
             }
-            if (!(Element.XMLElement.A_NAMESPACE.equals(qualifiedName) || qualifiedName.startsWith(XMLNS_COLON))) {
+            if (Element.XMLElement.A_NAMESPACE.equals(qualifiedName)) {
+                // Namespace should already have been added as part of dealing with element name
+            } else if (qualifiedName.startsWith(XMLNS_COLON)) {
+                if (qualifiedName.length() > XMLNS_COLON.length()) {
+                    elt.setNamespace(qualifiedName.substring(XMLNS_COLON.length()), attrNode.getNodeValue());
+                }
+            } else {
                 elt.addAttribute(qualifiedName, attrNode.getNodeValue());
             }
         }

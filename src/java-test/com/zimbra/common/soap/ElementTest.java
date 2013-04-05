@@ -1,17 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
+ *
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -25,16 +25,16 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.dom4j.DocumentException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.python.google.common.base.Joiner;
 import org.xml.sax.SAXException;
-
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-import org.dom4j.DocumentException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
@@ -163,15 +163,64 @@ public class ElementTest {
     }
 
     private static final String nsTestXml =
-            "<xml xmlns=\"urn:zimbra\" xmlns:admin=\"urn:zimbraAdmin\">\n<e attr=\"aVal\">text</e>\n<admin:b/>\n</xml>";
+            "<xml xmlns=\"urn:zimbra\" xmlns:admin=\"urn:zimbraAdmin\"><e attr=\"aVal\">text</e><admin:b/></xml>";
     @Test
     public void parseNamespaceTestXml() throws Exception {
         ByteArrayInputStream bais = new ByteArrayInputStream(nsTestXml.getBytes());
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         bais.reset();
         Element elem = Element.parseXML(bais);
+        // Legacy Element toString() value - correct BUT xmlns:admin namespace has migrated to where it is used.
+        //     <xml xmlns="urn:zimbra"><e attr="aVal">text</e><admin:b xmlns:admin="urn:zimbraAdmin"/></xml>
+        // New code doesn't do that migration but is still technically correct.
         logNewAndLegacyElements(elem, legacyElem);
-        Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
+        Assert.assertEquals("element toString value", nsTestXml.toString(), elem.toString());
+    }
+
+    private static final String nsUnusedTestXml =
+            "<xml xmlns=\"urn:zimbra\" xmlns:admin=\"urn:zimbraAdmin\"><e attr=\"aVal\">text</e></xml>";
+    @Test
+    public void parseUnusedNamespaceTestXml() throws Exception {
+        ByteArrayInputStream bais = new ByteArrayInputStream(nsUnusedTestXml.getBytes());
+        Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
+        bais.reset();
+        Element elem = Element.parseXML(bais);
+        // Legacy Element toString() value - admin namespace dropped which is technically OK.
+        //     <xml xmlns="urn:zimbra"><e attr="aVal">text</e></xml>
+        // New code doesn't drop the unused namespace but is still technically correct.
+        logNewAndLegacyElements(elem, legacyElem);
+        Assert.assertEquals("element toString value", nsUnusedTestXml.toString(), elem.toString());
+        elem = Element.parseXML(elem.toString());  // Testing that re-parse succeeds
+    }
+
+    private static final String[] getAcctReqXml = {
+                "<ns7:GetAccountRequest",
+                "   xmlns:ns7=\"urn:zimbraAdmin\"",
+                "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"",
+                "   xsi:type=\"ns7:getAccountRequest\"",
+                "   applyCos=\"false\">",
+                "  <ns7:account by=\"name\">user1@coco.local</ns7:account>",
+                "</ns7:GetAccountRequest>"} ;
+
+    private static final String parsedGetAcctReq = "<ns7:GetAccountRequest xsi:type=\"ns7:getAccountRequest\" " +
+        "applyCos=\"false\" xmlns:ns7=\"urn:zimbraAdmin\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+        "<ns7:account by=\"name\">user1@coco.local</ns7:account></ns7:GetAccountRequest>";
+    /**
+     * Bug 81490 xmlns:xsi namespace getting lost, resulting in parse problems if "Element" based XML is re-parsed.
+     */
+    @Test
+    public void nonZimbraNamespaceHandling() throws Exception {
+        String xmlString = Joiner.on("\n").join(getAcctReqXml);
+        ByteArrayInputStream bais = new ByteArrayInputStream(xmlString.getBytes());
+        Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
+        // Note: this is missing : xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance and is therefore corrupted.
+        //       <ns7:GetAccountRequest applyCos="false" xsi:type="ns7:getAccountRequest" xmlns:ns7="urn:zimbraAdmin">
+        //                <ns7:account by="name">user1@coco.local</ns7:account></ns7:GetAccountRequest>
+        logInfo("Parsed to legacy element\n%s", legacyElem.toString());
+        Element elem = Element.parseXML(xmlString);
+        logInfo("Parsed to element\n%s", elem.toString());
+        Assert.assertEquals("elem toString value", parsedGetAcctReq, elem.toString());
+        elem = Element.parseXML(elem.toString());  // Testing that re-parse succeeds
     }
 
     private static final String brokenXml = "<xml xmlns=\"urn:zimbra\">\n<a fred=\"woof\"></a>\n<b/>\n</xmlbroken>";
@@ -185,7 +234,7 @@ public class ElementTest {
             // Expecting XmlParseException with mesage something like :
             //     "parse error: Fatal Error: Problem on line 4 of document :
             //         The end-tag for element type \"xml\" must end with a '>' delimiter.",
-            Assert.assertTrue("XmlParseException should have been thrown", e instanceof XmlParseException); 
+            Assert.assertTrue("XmlParseException should have been thrown", e instanceof XmlParseException);
         }
     }
 
