@@ -335,8 +335,6 @@ public final class LC {
     @Supported
     public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
 
-    public static final KnownKey index_store = KnownKey.newKey("lucene");
-
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
 
@@ -347,7 +345,7 @@ public final class LC {
     public static final KnownKey ldap_url = KnownKey.newKey("");
 
     @Supported
-    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/openldap/var/run/ldapi");
+    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/data/ldap/state/run/ldapi");
 
     @Supported
     public static final KnownKey ldap_master_url = KnownKey.newKey("");
@@ -536,7 +534,6 @@ public final class LC {
     public static final KnownKey mysql_innodb_log_file_size = KnownKey.newKey(null);
     public static final KnownKey mysql_sort_buffer_size = KnownKey.newKey(null);
     public static final KnownKey mysql_read_buffer_size = KnownKey.newKey(null);
-    public static final KnownKey mysql_table_cache = KnownKey.newKey(null);
 
     @Supported
     public static final KnownKey mysql_backup_retention = KnownKey.newKey(0);
@@ -579,7 +576,7 @@ public final class LC {
     public static final KnownKey postfix_smtp_helo_name = KnownKey.newKey("$myhostname");
     public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
     public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
-    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey(null);
+    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey("may");
     public static final KnownKey postfix_smtp_sasl_mechanism_filter = KnownKey.newKey(null);
     public static final KnownKey postfix_smtp_sasl_password_maps = KnownKey.newKey(null);
 
@@ -595,6 +592,7 @@ public final class LC {
     public static final KnownKey postfix_smtpd_tls_cert_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.crt");
     public static final KnownKey postfix_smtpd_tls_key_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.key");
     public static final KnownKey postfix_smtpd_tls_loglevel = KnownKey.newKey(1);
+    public static final KnownKey postfix_smtpd_tls_security_level = KnownKey.newKey("may");
     public static final KnownKey postfix_transport_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-transport.cf");
     public static final KnownKey postfix_virtual_alias_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vad.cf");
     public static final KnownKey postfix_virtual_alias_expansion_limit = KnownKey.newKey(10000);
@@ -604,6 +602,7 @@ public final class LC {
     public static final KnownKey postfix_virtual_transport = KnownKey.newKey("error");
 
     public static final KnownKey amavis_originating_bypass_sa = KnownKey.newKey(false);
+    public static final KnownKey amavis_enable_dkim_verification = KnownKey.newKey(true);
 
     public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
 
@@ -806,6 +805,7 @@ public final class LC {
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
     public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
+    public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
     public static final KnownKey zimbra_class_application = KnownKey.newKey("com.zimbra.cs.util.ZimbraApplication");
     public static final KnownKey zimbra_class_rulerewriterfactory = KnownKey.newKey("com.zimbra.cs.filter.RuleRewriterFactory");
     public static final KnownKey zimbra_class_datasourcemanager = KnownKey.newKey("com.zimbra.cs.datasource.DataSourceManager");
