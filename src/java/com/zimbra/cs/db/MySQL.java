@@ -141,7 +141,7 @@ public class MySQL extends Db {
         MySQLConfig() {
             mDriverClassName = "com.mysql.jdbc.Driver";
             mPoolSize = 100;
-            mRootUrl = "jdbc:mysql://" + LC.mysql_bind_address.value() + ":" + LC.mysql_port.value() + "/";
+            mRootUrl = "jdbc:mysql://address=(protocol=tcp)(host=" + LC.mysql_bind_address.value() + ")(port=" + LC.mysql_port.value() + ")/";
             mConnectionUrl = mRootUrl + "zimbra";
             mLoggerUrl = null;
             mSupportsStatsCallback = true;
