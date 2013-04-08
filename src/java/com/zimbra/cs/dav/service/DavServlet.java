@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,6 +38,10 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -50,15 +54,28 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.KnownUserAgent;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DomUtil;
-import com.zimbra.cs.dav.DavContext.KnownUserAgent;
-import com.zimbra.cs.dav.service.method.*;
+import com.zimbra.cs.dav.service.method.Acl;
+import com.zimbra.cs.dav.service.method.Copy;
+import com.zimbra.cs.dav.service.method.Delete;
+import com.zimbra.cs.dav.service.method.Get;
+import com.zimbra.cs.dav.service.method.Head;
+import com.zimbra.cs.dav.service.method.Lock;
+import com.zimbra.cs.dav.service.method.MkCalendar;
+import com.zimbra.cs.dav.service.method.MkCol;
+import com.zimbra.cs.dav.service.method.Move;
+import com.zimbra.cs.dav.service.method.Options;
+import com.zimbra.cs.dav.service.method.Post;
+import com.zimbra.cs.dav.service.method.PropFind;
+import com.zimbra.cs.dav.service.method.PropPatch;
+import com.zimbra.cs.dav.service.method.Put;
+import com.zimbra.cs.dav.service.method.Report;
+import com.zimbra.cs.dav.service.method.Unlock;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -78,16 +95,14 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 @SuppressWarnings("serial")
 public class DavServlet extends ZimbraServlet {
 
 	public static final String DAV_PATH = "/dav";
-	
+
 	private static Map<String, DavMethod> sMethods;
-	
+
 	@Override
     public void init() throws ServletException {
 		super.init();
@@ -113,7 +128,7 @@ public class DavServlet extends ZimbraServlet {
 	protected void addMethod(DavMethod method) {
 		sMethods.put(method.getName(), method);
 	}
-	
+
 	public static void setAllowHeader(HttpServletResponse resp) {
 		Set<String> methods = sMethods.keySet();
 		StringBuilder buf = new StringBuilder();
@@ -124,9 +139,9 @@ public class DavServlet extends ZimbraServlet {
 		}
 		DavMethod.setResponseHeader(resp, DavProtocol.HEADER_ALLOW, buf.toString());
 	}
-	
+
 	enum RequestType { password, authtoken, both, none };
-	
+
     private RequestType getAllowedRequestType(HttpServletRequest req) {
     	if (!super.isRequestOnAllowedPort(req))
     		return RequestType.none;
@@ -147,7 +162,7 @@ public class DavServlet extends ZimbraServlet {
     	else
     		return RequestType.authtoken;
     }
-    
+
 	@Override
     public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		ZimbraLog.clearContext();
@@ -155,7 +170,7 @@ public class DavServlet extends ZimbraServlet {
 		ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
 
 		RequestType rtype = getAllowedRequestType(req);
-		
+
 		if (rtype == RequestType.none) {
 			resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return;
@@ -169,7 +184,7 @@ public class DavServlet extends ZimbraServlet {
             StringBuilder sb = new StringBuilder();
             while (en.hasMoreElements()) {
                 String n = (String) en.nextElement();
-                if (! (AuthUtil.HTTP_AUTH_HEADER.equalsIgnoreCase(n) || 
+                if (! (AuthUtil.HTTP_AUTH_HEADER.equalsIgnoreCase(n) ||
                         AuthUtil.WWW_AUTHENTICATE_HEADER.equalsIgnoreCase(n))) {
                     java.util.Enumeration<?> vals = req.getHeaders(n);
                     while (vals.hasMoreElements()) {
@@ -207,7 +222,7 @@ public class DavServlet extends ZimbraServlet {
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
-		
+
 		DavMethod method = sMethods.get(req.getMethod());
 		if (method == null) {
 			setAllowHeader(resp);
@@ -233,7 +248,7 @@ public class DavServlet extends ZimbraServlet {
             }
         	cache = checkCachedResponse(ctxt, authUser);
     		if (!ctxt.isResponseSent() && !isProxyRequest(ctxt, method)) {
-		
+
     			method.checkPrecondition(ctxt);
     			method.handle(ctxt);
     			method.checkPostcondition(ctxt);
@@ -245,9 +260,9 @@ public class DavServlet extends ZimbraServlet {
 					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
 				ZimbraLog.dav.info(ctxt.getUri()+" not found");
 			else if (e.getStatus() == HttpServletResponse.SC_MOVED_TEMPORARILY ||
-					 e.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY) 
+					 e.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY)
 				ZimbraLog.dav.info("sending redirect");
-			
+
 			try {
 				if (e.isStatusSet()) {
 					resp.setStatus(e.getStatus());
@@ -284,7 +299,7 @@ public class DavServlet extends ZimbraServlet {
 		    ctxt.cleanup();
 		}
 	}
-	
+
 	public static String getDavUrl(String user) throws DavException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
@@ -295,7 +310,7 @@ public class DavServlet extends ZimbraServlet {
 
     private boolean isCtagRequest(DavContext ctxt) throws DavException {
 	    String httpMethod = ctxt.getRequest().getMethod();
-	    if (PropFind.PROPFIND.equalsIgnoreCase(httpMethod)) {
+        if (PropFind.PROPFIND.equalsIgnoreCase(httpMethod) && ctxt.hasRequestMessage()) {
     	    Document doc = ctxt.getRequestMessage();
             Element top = doc.getRootElement();
             if (top == null || !top.getQName().equals(DavElements.E_PROPFIND))
@@ -312,7 +327,7 @@ public class DavServlet extends ZimbraServlet {
 	    }
         return false;
     }
-	
+
 	private static class CacheStates {
         boolean ctagCacheEnabled = MemcachedConnector.isConnected();
         boolean gzipAccepted = false;
@@ -322,10 +337,10 @@ public class DavServlet extends ZimbraServlet {
         Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
         CtagResponseCache ctagResponseCache = null;
 	}
-	
+
 	private CacheStates checkCachedResponse(DavContext ctxt, Account authUser) throws IOException, DavException, ServiceException {
 		CacheStates cache = new CacheStates();
-		
+
         // Are we running with cache enabled, and is this a cachable CalDAV ctag request?
 		if (cache.ctagCacheEnabled && isCtagRequest(ctxt)) {
 			cache.ctagResponseCache = CalendarCacheManager.getInstance().getCtagResponseCache();
@@ -490,7 +505,7 @@ public class DavServlet extends ZimbraServlet {
             }
 	    }
 	}
-	
+
 	private static String[] PROXY_REQUEST_HEADERS = {
 		DavProtocol.HEADER_DAV,
 		DavProtocol.HEADER_DEPTH,
@@ -500,14 +515,14 @@ public class DavServlet extends ZimbraServlet {
 		DavProtocol.HEADER_OVERWRITE,
         DavProtocol.HEADER_DESTINATION
 	};
-	
+
 	private static String[] PROXY_RESPONSE_HEADERS = {
 	    DavProtocol.HEADER_DAV,
 	    DavProtocol.HEADER_ALLOW,
 	    DavProtocol.HEADER_CONTENT_TYPE,
 	    DavProtocol.HEADER_ETAG
 	};
-	
+
 	private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		ItemId target = null;
@@ -533,25 +548,25 @@ public class DavServlet extends ZimbraServlet {
 			ZimbraLog.dav.debug("can't get path", e);
 			return false;
 		}
-		
+
 		// we don't proxy zero depth PROPFIND, and all PROPPATCH on mountpoints,
 		// because the mountpoint object contains WebDAV properties that are
 		// private to the user.
 		// we also don't proxy DELETE on a mountpoint.
-		if (extraPath == null 
+		if (extraPath == null
 			&& (m.getName().equals(PropFind.PROPFIND) && ctxt.getDepth() == DavContext.Depth.zero
 				|| m.getName().equals(PropPatch.PROPPATCH)
 				|| m.getName().equals(Delete.DELETE)))
 			return false;
-		
+
 		String prefix = ctxt.getPath();
 		if (extraPath != null)
 			prefix = prefix.substring(0, prefix.indexOf(extraPath));
 		prefix = HttpUtil.urlEscape(DAV_PATH + "/" + ctxt.getUser() + prefix);
-		
+
 		if (!prefix.endsWith("/"))
 			prefix += "/";
-		
+
 		// make sure the target account exists.
 		Account acct = prov.getAccountById(target.getAccountId());
 		if (acct == null)
@@ -585,7 +600,7 @@ public class DavServlet extends ZimbraServlet {
             	href.setText(newPrefix + "/" + v.substring(v.lastIndexOf('/')+1));
             }
         }
-        
+
         // build proxy request
 		String url = getProxyUrl(ctxt.getRequest(), server, DAV_PATH) + HttpUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
 		HttpState state = new HttpState();
