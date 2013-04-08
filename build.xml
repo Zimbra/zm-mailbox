@@ -886,6 +886,10 @@
               <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
               <arg line="-e ldap_read_timeout=0"/>
             </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e mysql_bind_address=localhost"/>
+            </java>
           </then>
         </if>
         <copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}"
