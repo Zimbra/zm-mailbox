@@ -7166,4 +7166,10 @@ TODO: delete them permanently from here
 <attr id="1437" name="zimbraForceClearCookies" type="boolean" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.4">
   <desc>Whether to force clear zimbra auth cookies when SOAP session ends (i.e. force logout on browser tab close)</desc>
 </attr>
+
+<attr id="1438" name="zimbraFeatureDistributionListFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,domainInfo,accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.4">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether to display the distribution list folder in address book</desc>
+</attr>
+
 </attrs>
