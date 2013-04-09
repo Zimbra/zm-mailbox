@@ -3204,7 +3204,7 @@ public class LdapProvisioning extends LdapProv {
 
     }
 
-    private List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain)
+    public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain)
     throws ServiceException {
         List<String> aliasDomainIds = new ArrayList<String>();
 
