@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130329-1022 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130409-1214 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4131,6 +4131,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1134)
     public static final String A_zimbraFeatureDistributionListExpandMembersEnabled = "zimbraFeatureDistributionListExpandMembersEnabled";
+
+    /**
+     * Whether to display the distribution list folder in address book
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1438)
+    public static final String A_zimbraFeatureDistributionListFolderEnabled = "zimbraFeatureDistributionListFolderEnabled";
 
     /**
      * whether export folder feature is enabled
