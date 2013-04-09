@@ -66,6 +66,7 @@ public enum LdapUsage {
     GAL_LEGACY_SEARCH,
     GAL_LEGACY_SYNC,
     GET_COS,
+    GET_DOMAIN,
     GET_ENTRY,
     GET_GLOBALCONFIG,
     GET_GLOBALGRANT,
