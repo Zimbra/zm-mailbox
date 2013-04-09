@@ -428,6 +428,16 @@ public final class LC {
     public static final KnownKey ldap_monitor_critical = KnownKey.newKey(90);
     public static final KnownKey ldap_monitor_growth = KnownKey.newKey(25);
 
+    public static final KnownKey postjournal_enabled = KnownKey.newKey("false");
+    public static final KnownKey postjournal_helo_name = KnownKey.newKey("localhost");
+    public static final KnownKey postjournal_reinject_host = KnownKey.newKey(null);
+    public static final KnownKey postjournal_archive_host = KnownKey.newKey(null);
+    public static final KnownKey postjournal_archive_rcpt_to = KnownKey.newKey("<>");
+    public static final KnownKey postjournal_archive_bounce_to = KnownKey.newKey("<>");
+    public static final KnownKey postjournal_strip_postfix_proxy = KnownKey.newKey(1);
+    public static final KnownKey postjournal_per_user_journaling = KnownKey.newKey(1);
+    public static final KnownKey postjournal_smtp_read_timeout = KnownKey.newKey(60);
+
     public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
 
     @Supported
