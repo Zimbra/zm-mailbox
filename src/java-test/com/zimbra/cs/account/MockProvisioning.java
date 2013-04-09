@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,6 +31,7 @@ import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
@@ -74,7 +75,11 @@ public final class MockProvisioning extends Provisioning {
         attrs.put(A_zimbraMailMode, MailMode.http.toString());
         attrs.put(A_zimbraSmtpPort, "7025");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
-
+        try {
+            config.setDefaultDomainName("testdomain.biz");
+        } catch (ServiceException e) {
+            ZimbraLog.test.warn("Could not set default domain name?", e);
+        }
         initializeMimeHandlers();
     }
 
