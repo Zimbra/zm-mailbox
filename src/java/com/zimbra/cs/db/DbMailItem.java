@@ -1773,7 +1773,7 @@ public class DbMailItem {
                             tombstones.add(type, Integer.parseInt(stone.substring(0, delimiter)), Strings.emptyToNull(stone.substring(delimiter + 1)));
                         }
                     } catch (NumberFormatException nfe) {
-                        ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + stone);
+                        ZimbraLog.mailbox.warn("unparseable TOMBSTONE entry: %s", stone);
                     }
                 }
             }
