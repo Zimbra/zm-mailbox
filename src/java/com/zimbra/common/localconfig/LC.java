@@ -631,7 +631,8 @@ public final class LC {
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
     public static final KnownKey cbpolicyd_bind_port = KnownKey.newKey(10031);
-    public static final KnownKey cbpolicyd_timeout = KnownKey.newKey(120);
+    public static final KnownKey cbpolicyd_timeout_idle = KnownKey.newKey(1020);
+    public static final KnownKey cbpolicyd_timeout_busy = KnownKey.newKey(120);
     public static final KnownKey cbpolicyd_bypass_timeout = KnownKey.newKey(30);
     public static final KnownKey cbpolicyd_bypass_mode = KnownKey.newKey("tempfail");
     public static final KnownKey cbpolicyd_module_accesscontrol = KnownKey.newKey(0);
