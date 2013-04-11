@@ -190,9 +190,6 @@
       <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
-      <fileset dir="${common.internal.jars.dir}">
-        <include name="**/*.jar"/>
-      </fileset>
       <fileset dir="${common.dir}/jars-test">
         <include name="**/*.jar"/>
       </fileset>
@@ -246,32 +243,38 @@
         </javadoc>
     </target>
 
-    <target name="javacc">
-        <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"
-          outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
-        <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"
-          outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
-    </target>
+  <target name="javacc">
+    <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"
+      outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
+    <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"
+      outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
+  </target>
 
     <target name="generate-buildinfo" depends="build-init">
-        <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
-        <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
-            package com.zimbra.cs.util;
+        <if>
+            <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
+            <then>
+                <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
+                <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
+                    package com.zimbra.cs.util;
 
-            class BuildInfoGenerated {
-                public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
-                public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
-                public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
-                public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
-                public static final String RELNUM = "${zimbra.buildinfo.relnum}";
-                public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
-                public static final String VERSION = "${zimbra.buildinfo.version}";
-                public static final String TYPE = "${zimbra.buildinfo.type}";
-                public static final String RELEASE = "${zimbra.buildinfo.release}";
-                public static final String DATE = "${DSTAMP}-${TSTAMP}";
-                public static final String HOST = "${zimbra.buildinfo.host}";
-            }
-        </echo>
+                    class BuildInfoGenerated {
+                        public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
+                        public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
+                        public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
+                        public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
+                        public static final String RELNUM = "${zimbra.buildinfo.relnum}";
+                        public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
+                        public static final String VERSION = "${zimbra.buildinfo.version}";
+                        public static final String TYPE = "${zimbra.buildinfo.type}";
+                        public static final String RELEASE = "${zimbra.buildinfo.release}";
+                        public static final String DATE = "${DSTAMP}-${TSTAMP}";
+                        public static final String HOST = "${zimbra.buildinfo.host}";
+                    }
+                </echo>
+          </then>
+        </if>
+
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
@@ -339,7 +342,7 @@
         </if>
     </target>
 
-    <target name="generate-getters" depends="compile,generate-buildinfo" description="generate methods for attributes in zimbra-attrs.xml">
+    <target name="generate-getters" depends="compile">
         <antcall target="generate-getter">
             <param name="getter.class" value="account"/>
             <param name="getter.output" value="ZAttrAccount.java"/>
@@ -1026,6 +1029,7 @@
         <include name="jaxen*.jar"/>
         <include name="jcommon*.jar"/>
         <include name="jfreechart*.jar"/>
+        <include name="junit*.jar"/>
         <include name="jzlib-1.0.7.jar"/>
         <include name="nekohtml-1.9.13.1z.jar"/>
         <include name="tnef*.jar"/>
@@ -1040,9 +1044,6 @@
         <include name="guava*.jar"/>
         <include name="log4j-*.jar"/>
         <include name="apache-log4j-extras-*.jar"/>      	
-      </fileset>
-      <fileset dir="${common.internal.jars.dir}">
-        <include name="junit*.jar"/>
       </fileset>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
