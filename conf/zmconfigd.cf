@@ -332,9 +332,14 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_bypass_timeout
 	LOCAL cbpolicyd_module_accesscontrol
 	LOCAL cbpolicyd_module_greylisting
+	LOCAL cbpolicyd_module_greylisting_training
+	LOCAL cbpolicyd_module_greylisting_defer_msg
+	LOCAL cbpolicyd_module_greylisting_blacklist_msg
 	LOCAL cbpolicyd_module_checkhelo
 	LOCAL cbpolicyd_module_checkspf
 	LOCAL cbpolicyd_module_quotas
+	LOCAL cbpolicyd_module_amavis
+	LOCAL cbpolicyd_module_accounting
 	if SERVICE cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions FILE zmconfigd/smtpd_end_of_data_restrictions.cf
 	fi
