@@ -636,9 +636,14 @@ public final class LC {
     public static final KnownKey cbpolicyd_bypass_mode = KnownKey.newKey("tempfail");
     public static final KnownKey cbpolicyd_module_accesscontrol = KnownKey.newKey(0);
     public static final KnownKey cbpolicyd_module_greylisting = KnownKey.newKey(0);
+    public static final KnownKey cbpolicyd_module_greylisting_training = KnownKey.newKey(0);
+    public static final KnownKey cbpolicyd_module_greylisting_defer_msg = KnownKey.newKey("Greylisting in effect, please come back later");
+    public static final KnownKey cbpolicyd_module_greylisting_blacklist_msg = KnownKey.newKey("Greylisting in effect, sending server blacklisted");
     public static final KnownKey cbpolicyd_module_checkhelo = KnownKey.newKey(0);
     public static final KnownKey cbpolicyd_module_checkspf = KnownKey.newKey(0);
     public static final KnownKey cbpolicyd_module_quotas = KnownKey.newKey(1);
+    public static final KnownKey cbpolicyd_module_amavis = KnownKey.newKey(0);
+    public static final KnownKey cbpolicyd_module_accounting = KnownKey.newKey(0);
 
     public static final KnownKey sqlite_shared_cache_enabled = KnownKey.newKey(false);
     public static final KnownKey sqlite_cache_size = KnownKey.newKey(500);
