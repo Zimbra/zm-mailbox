@@ -170,11 +170,8 @@ public class ElementTest {
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         bais.reset();
         Element elem = Element.parseXML(bais);
-        // Legacy Element toString() value - correct BUT xmlns:admin namespace has migrated to where it is used.
-        //     <xml xmlns="urn:zimbra"><e attr="aVal">text</e><admin:b xmlns:admin="urn:zimbraAdmin"/></xml>
-        // New code doesn't do that migration but is still technically correct.
         logNewAndLegacyElements(elem, legacyElem);
-        Assert.assertEquals("element toString value", nsTestXml.toString(), elem.toString());
+        Assert.assertEquals("element toString value", legacyElem.toString(), elem.toString());
     }
 
     private static final String nsUnusedTestXml =
@@ -185,11 +182,8 @@ public class ElementTest {
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         bais.reset();
         Element elem = Element.parseXML(bais);
-        // Legacy Element toString() value - admin namespace dropped which is technically OK.
-        //     <xml xmlns="urn:zimbra"><e attr="aVal">text</e></xml>
-        // New code doesn't drop the unused namespace but is still technically correct.
         logNewAndLegacyElements(elem, legacyElem);
-        Assert.assertEquals("element toString value", nsUnusedTestXml.toString(), elem.toString());
+        Assert.assertEquals("element toString value", legacyElem.toString(), elem.toString());
         elem = Element.parseXML(elem.toString());  // Testing that re-parse succeeds
     }
 
@@ -209,7 +203,7 @@ public class ElementTest {
      * Bug 81490 xmlns:xsi namespace getting lost, resulting in parse problems if "Element" based XML is re-parsed.
      */
     @Test
-    public void nonZimbraNamespaceHandling() throws Exception {
+    public void nonZimbraAttributeNamespaceHandling() throws Exception {
         String xmlString = Joiner.on("\n").join(getAcctReqXml);
         ByteArrayInputStream bais = new ByteArrayInputStream(xmlString.getBytes());
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
@@ -221,6 +215,36 @@ public class ElementTest {
         logInfo("Parsed to element\n%s", elem.toString());
         Assert.assertEquals("elem toString value", parsedGetAcctReq, elem.toString());
         elem = Element.parseXML(elem.toString());  // Testing that re-parse succeeds
+    }
+
+    // Test string that has namespace definition in the envelope that is only used in a descendant's name
+    // and another namespace definition in the envelope that is only used in an attribute name in a descendant
+    private static final String[] attrNSonTopLevelXml = {
+        "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"",
+        "               xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"",
+        "               xmlns:fun=\"urn:fun\">",
+        "    <soap:Body>",
+        "        <ns7:GetAccountRequest xmlns:ns7=\"urn:zimbraAdmin\"",
+        "                               xsi:type=\"ns7:getAccountRequest\" applyCos=\"false\">",
+        "            <ns7:account by=\"name\">acct.that.exists@my.dom.loc</ns7:account>",
+        "            <fun:invented/>",
+        "        </ns7:GetAccountRequest>",
+        "    </soap:Body>",
+        "</soap:Envelope>"} ;
+    /**
+     * Bug 81620 xmlns:xsi namespace defined on Envelope element but only used on attribute of GetAccountRequest.
+     *           xmlns:xsi namespace definition was getting lost when GetAccountRequest was detached
+     */
+    @Test
+    public void attribNamespaceLostIfDefinedHigher() throws Exception {
+        String xmlString = Joiner.on("\n").join(attrNSonTopLevelXml);
+        Element envelope = Element.parseXML(xmlString);
+        logInfo("Envelope Parsed to element\n%s", envelope.toString());
+        Element elem = envelope.getElement("Body").getElement("GetAccountRequest");
+        logInfo("GetAccountRequest Element\n%s", elem.toString());
+        elem.detach();
+        logInfo("GetAccountRequest Element detached\n%s", elem.toString());
+        Element.parseXML(envelope.toString());  // Testing that re-parse succeeds
     }
 
     private static final String brokenXml = "<xml xmlns=\"urn:zimbra\">\n<a fred=\"woof\"></a>\n<b/>\n</xmlbroken>";
@@ -278,6 +302,17 @@ public class ElementTest {
         Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
     }
 
+    private static String xhtmlString =
+            "<html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" " +
+                    "xmlns:xml=\"http://www.w3.org/XML/1998/namespace\">\n" +
+            "&lt;head xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+            "    &lt;title>Fun&lt;/title>\n" +
+            "&lt;/head>\n" +
+            "&lt;body xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+            "&lt;h1>Header 1&lt;/h1>\n" +
+            "Simple test\n" +
+            "&lt;/body>\n" +
+            "</html>";
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
      * when the input text is XHTML
@@ -290,7 +325,11 @@ public class ElementTest {
         bais.reset();
         Element elem = Element.parseXML(bais);
         logNewAndLegacyElements(elem, legacyElem);
-        Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
+        /* The file xhtml.html does not contain the namespace definition for "xml" in here.  The fix for
+         * bug 81620 introduces it.  If xhtml.html with this modification made is pasted into
+         * http://validator.w3.org/check it passes with 3 warnings, none of which relate to the added definition
+         */
+        Assert.assertEquals("toString value", xhtmlString, elem.toString());
 
         Assert.assertEquals("top node name", "html", elem.getName());
         Assert.assertEquals("Number of sub elements", 0, elem.listElements().size());

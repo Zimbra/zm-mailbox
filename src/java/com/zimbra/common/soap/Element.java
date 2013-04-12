@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -120,6 +120,13 @@ public abstract class Element implements Cloneable {
     public Element addUniqueElement(QName qname) throws ContainerException  { return addElement(qname); }
     public Element addUniqueElement(Element elt) throws ContainerException  { return addElement(elt); }
 
+    /**
+     * The approach to namespaces is to ALWAYS store them on elements that use them (for either the element's name
+     * or in one of its attributes names) but ignore them where they are not used.  This means that unused namespace
+     * definitions may be dropped - but that shouldn't matter.
+     * It also means that namespaces won't be dropped by mistake from detached elements because the namespace is only
+     * stored in a parent element where it was defined.
+     */
     protected Element setNamespace(String prefix, String uri) {
         if (prefix != null && uri != null && !uri.equals("")) {
             if (mNamespaces == null) {

@@ -43,6 +43,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.Log;
@@ -268,20 +269,24 @@ public class W3cDomUtil {
             Node attrNode = attrs.item(ndx);
             String nodeName = attrNode.getNodeName();
             String qualifiedName;
+            String prefix = attrNode.getPrefix();
             if (nodeName.contains(":")) {
                 qualifiedName = nodeName;
             } else {
-                String prefix = attrNode.getPrefix();
                 qualifiedName = prefix == null ? nodeName : String.format("%s:%s", prefix, nodeName);
             }
-            if (Element.XMLElement.A_NAMESPACE.equals(qualifiedName)) {
-                // Namespace should already have been added as part of dealing with element name
-            } else if (qualifiedName.startsWith(XMLNS_COLON)) {
-                if (qualifiedName.length() > XMLNS_COLON.length()) {
-                    elt.setNamespace(qualifiedName.substring(XMLNS_COLON.length()), attrNode.getNodeValue());
-                }
-            } else {
+            if (!(Element.XMLElement.A_NAMESPACE.equals(qualifiedName) || qualifiedName.startsWith(XMLNS_COLON))) {
                 elt.addAttribute(qualifiedName, attrNode.getNodeValue());
+                String nsURI = attrNode.getNamespaceURI();
+                if (!Strings.isNullOrEmpty(nsURI)) {
+                    /* The approach to namespaces is to ALWAYS store them on elements that use them (for either the
+                     * element's name or in one of its attributes names) but ignore them where they are not used.
+                     * This means that unused namespace definitions may be dropped - but that shouldn't matter.
+                     * It also means that namespaces won't be dropped by mistake from detached elements because the
+                     * namespace is only stored in a parent element where it was defined.
+                     */
+                    elt.setNamespace(prefix, nsURI);
+                }
             }
         }
     }
