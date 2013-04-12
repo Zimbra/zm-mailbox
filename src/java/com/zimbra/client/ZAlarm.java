@@ -42,7 +42,8 @@ public class ZAlarm {
         EMAIL("EMAIL"),
         X_YAHOO_CALENDAR_ACTION_IM("X-YAHOO-CALENDAR-ACTION-IM"),
         X_YAHOO_CALENDAR_ACTION_MOBILE("X-YAHOO-CALENDAR-ACTION-MOBILE"),
-        PROCEDURE("PROCEDURE");
+        PROCEDURE("PROCEDURE"),
+        NONE("NONE");
 
         private String mValue;
 
