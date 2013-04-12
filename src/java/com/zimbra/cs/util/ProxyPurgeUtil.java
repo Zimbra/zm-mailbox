@@ -29,10 +29,12 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.service.ServiceException;
 
-/** @author mansoor peerbhoy 
+/** @author Rajesh Gadipuuri
  */
 public class ProxyPurgeUtil
 {
@@ -213,7 +215,7 @@ public class ProxyPurgeUtil
                 routes.add("route:proto=imap;user=" + uid + "@" + domain);
                 routes.add("route:proto=pop3;user=" + uid + "@" + domain);
                 routes.add("alias:user=" + uid + ";ip=" + domain);
-                
+
                 Domain d = prov.get(DomainBy.name, domain);
                 String[] vips = d.getVirtualIPAddress();
                 for (String vip : vips) {
@@ -223,7 +225,25 @@ public class ProxyPurgeUtil
                     routes.add("route:proto=pop3;user=" + uid + "@" + vip);
                     routes.add("alias:user=" + uid + ";ip=" + vip);
                 }
-                
+
+                // get domain alias from the given the domain
+                // this logic works for for all cases of input account=addr@<alias domain> or addr or addr@<local domain>
+                if (prov instanceof LdapProvisioning) {
+                    List<String> aliasDomainIds = ((LdapProvisioning) prov).getEmptyAliasDomainIds(new ZimbraLdapContext(true), d);
+                    if (aliasDomainIds != null) {
+                        for (String aliasDomainId : aliasDomainIds) {
+                            String aliasDomain = prov.getDomainById(aliasDomainId).getDomainName();
+                            routes.add("route:proto=http;user=" + uid + "@" + aliasDomain);
+                            routes.add("route:proto=imap;user=" + uid + "@" + aliasDomain);
+                            routes.add("route:proto=pop3;user=" + uid + "@" + aliasDomain);
+                            routes.add("route:proto=httpssl;user=" + uid + "@" + aliasDomain);
+                            routes.add("route:proto=imapssl;user=" + uid + "@" + aliasDomain);
+                            routes.add("route:proto=pop3ssl;user=" + uid + "@" + aliasDomain);
+                            routes.add("alias:user=" + uid + ";ip=" + aliasDomain);
+                        }
+                    }
+                }
+
                 String[] aliases = account.getMailAlias();
                 // for each alias add routes for it's domain and all virtual IPs for that domain
                 // I think, all the http routes are stored by user id, or, uid or, uid@domain. 

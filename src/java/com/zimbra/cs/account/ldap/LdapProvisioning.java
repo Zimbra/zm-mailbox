@@ -2520,6 +2520,36 @@ public class LdapProvisioning extends Provisioning {
             PermissionCache.invalidateCache(renamedAcct);
     }
 
+    public List<String> getEmptyAliasDomainIds(ZimbraLdapContext zlc, Domain targetDomain)
+    throws ServiceException {
+        List<String> aliasDomainIds = new ArrayList<String>();
+        try {
+            NamingEnumeration<SearchResult> ne = zlc.searchDir(
+                    mDIT.domainBaseDN(), LdapFilter.domainAliases(targetDomain.getId()), sSubtreeSC);
+
+            while (ne.hasMore()) {
+                SearchResult sr = ne.next();
+                Attributes attrs = sr.getAttributes();
+                String aliasDomainId = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId);
+
+                if (aliasDomainId != null) {
+                    aliasDomainIds.add(aliasDomainId);
+                }
+            }
+            ne.close();
+        } catch (NameNotFoundException e) {
+            return Collections.emptyList();
+        } catch (InvalidNameException e) {
+            return Collections.emptyList();
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to get domain alias for " + targetDomain, e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+
+        return aliasDomainIds;
+    }
+
     @Override
     public void deleteDomain(String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
@@ -3010,7 +3040,7 @@ public class LdapProvisioning extends Provisioning {
                 zlc = new ZimbraLdapContext();
 
             SearchControls searchControls =
-                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
+                    new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
 
             NamingEnumeration<SearchResult> ne = zlc.searchDir(base, query, searchControls);
             if (ne.hasMore()) {

@@ -162,6 +162,10 @@ public class LdapFilter {
         return "(&(zimbraId=" + id + ")(objectclass=zimbraDomain))";
     }
     
+    public static String domainAliases(String id) {
+        return "(&(zimbraDomainAliasTargetId=" + id + ")(zimbraDomainType=alias)" + "(objectclass=zimbraDomain))";
+    }
+    
     public static String domainByName(String name) {
         return "(&(zimbraDomainName=" + name + ")(objectclass=zimbraDomain))";
     }
