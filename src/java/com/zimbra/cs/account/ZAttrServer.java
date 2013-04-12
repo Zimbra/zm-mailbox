@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130409-1214 */
+    /* build: 9.0.0_BETA1_1111 dywang 20130412-1335 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9657,13 +9657,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * at the end of the purge cycle until all qualifying messages are
      * purged.
      *
-     * @return zimbraMailPurgeBatchSize, or 10000 if unset
+     * @return zimbraMailPurgeBatchSize, or 1000 if unset
      *
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1096)
     public int getMailPurgeBatchSize() {
-        return getIntAttr(Provisioning.A_zimbraMailPurgeBatchSize, 10000);
+        return getIntAttr(Provisioning.A_zimbraMailPurgeBatchSize, 1000);
     }
 
     /**
@@ -14561,7 +14561,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @return zimbraMtaTlsSecurityLevel, or ZAttrProvisioning.MtaTlsSecurityLevel.may if unset and/or has invalid value
      *
@@ -14575,7 +14575,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @return zimbraMtaTlsSecurityLevel, or "may" if unset
      *
@@ -14589,7 +14589,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14606,7 +14606,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14624,7 +14624,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14641,7 +14641,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14659,7 +14659,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14675,7 +14675,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24132,7 +24132,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @return zimbraTableMaintenanceOperation, or ZAttrProvisioning.TableMaintenanceOperation.ANALYZE if unset and/or has invalid value
      */
@@ -24146,7 +24146,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @return zimbraTableMaintenanceOperation, or "ANALYZE" if unset
      */
@@ -24160,7 +24160,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24177,7 +24177,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24195,7 +24195,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24212,7 +24212,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24230,7 +24230,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -24246,7 +24246,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
