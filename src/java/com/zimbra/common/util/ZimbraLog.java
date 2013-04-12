@@ -416,6 +416,10 @@ public final class ZimbraLog {
      * the "zimbra.activity" logger. For ACTIVITY-related events
      */
     public static final Log activity = LogFactory.getLog("zimbra.activity");
+    /**
+     * the "zimbra.activity" logger. For ACTIVITY-related events
+     */
+    public static final Log ews = LogFactory.getLog("zimbra.ews");
 
 
     /**
