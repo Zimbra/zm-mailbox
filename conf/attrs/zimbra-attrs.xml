@@ -7172,4 +7172,7 @@ TODO: delete them permanently from here
   <desc>Whether to display the distribution list folder in address book</desc>
 </attr>
 
+<attr id="1439" name="zimbraMobileSyncKeyFormatConvertedFolders" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable"  since="8.0.4">
+  <desc>folders whose sync key are already converted, each device has a list of folders. e.g. ApplDN6GJSQJDFHW:0,2,10 meaning device ApplDN6GJSQJDFHW's folders, inbox and calendar folder sync key format are converted, use 0 for FolderSync</desc>
+</attr>
 </attrs>
