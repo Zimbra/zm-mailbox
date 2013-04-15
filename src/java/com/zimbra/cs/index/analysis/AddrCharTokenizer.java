@@ -34,12 +34,11 @@ public final class AddrCharTokenizer extends CharTokenizer {
 
     @Override
     protected boolean isTokenChar(int ch) {
+        if (Character.isWhitespace(ch)) {
+            return false;
+        }
         switch (ch) {
-            case ' ':
             case '\u3000': // fullwidth space
-            case '\t':
-            case '\r':
-            case '\n':
             case '<':
             case '>':
             case '\"':
