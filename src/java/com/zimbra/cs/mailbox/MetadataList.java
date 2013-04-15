@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -86,6 +86,11 @@ public class MetadataList {
         return this;
     }
 
+    public MetadataList add(int value) {
+        list.add(Integer.valueOf(value));
+        return this;
+    }
+
     public MetadataList add(long value) {
         list.add(Long.valueOf(value));
         return this;
@@ -129,6 +134,10 @@ public class MetadataList {
         return checkNull(index, obj).toString();
     }
 
+    public int getInt(int index) throws ServiceException {
+        return parseInt(index, get(index));
+    }
+
     public long getLong(int index) throws ServiceException {
         return parseLong(index, get(index));
     }
@@ -163,6 +172,16 @@ public class MetadataList {
         if (value == null)
             throw ServiceException.INVALID_REQUEST("null element in list: " + index, null);
         return value;
+    }
+
+    public static int parseInt(int index, String value)
+            throws ServiceException {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw ServiceException.INVALID_REQUEST("invalid value for index: "
+                    + index, e);
+        }
     }
 
     public static long parseLong(int index, String value) throws ServiceException {
