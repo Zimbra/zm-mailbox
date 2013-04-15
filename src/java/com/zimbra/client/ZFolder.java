@@ -212,6 +212,14 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         "#f66666", "#f8fa33", "#fe98d3", "#bebebe", "#fdbc55"
     };
 
+    /* This array is to get string property keys to be used from ZhMsg.properties. Note: colorNone is not used */
+    public static final String[] RGB_COLORS_MSG = {
+        // none,      blue,     cyan,      green,     purple
+        "colorNone",  "colorBlue", "colorCyan", "colorGreen", "colorPurple",
+        // red,     yellow,     pink,     gray      orange
+        "colorRed", "colorYellow", "colorPink", "colorGray", "colorOrange"
+    };
+
     public enum View {
         appointment, chat, contact, conversation, document, message, remote,
         search, task, unknown, voice, wiki;
