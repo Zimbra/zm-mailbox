@@ -2723,8 +2723,8 @@ public class ZMailbox implements ToZJSONObject {
         folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
         if (defaultView != null) folderEl.addAttribute(MailConstants.A_DEFAULT_VIEW, defaultView.name());
         if (color != null) {
-            if (color == ZFolder.Color.rgbColor) {
-                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            if (StringUtil.equal(color.getName(), Color.RGBCOLOR)) {
+                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColorValue());
             } else {
                 folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
             }
@@ -2757,8 +2757,8 @@ public class ZMailbox implements ToZJSONObject {
         folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
         folderEl.addAttribute(MailConstants.A_QUERY, query);
         if (color != null) {
-            if (color == ZFolder.Color.rgbColor) {
-                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            if (StringUtil.equal(color.getName(), Color.RGBCOLOR)) {
+                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColorValue());
             } else {
                 folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
             }
@@ -3318,8 +3318,8 @@ public class ZMailbox implements ToZJSONObject {
         linkEl.addAttribute(MailConstants.A_FOLDER, parentId);
         if (defaultView != null) linkEl.addAttribute(MailConstants.A_DEFAULT_VIEW, defaultView.name());
         if (color != null) {
-            if (color == ZFolder.Color.rgbColor) {
-                linkEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            if (StringUtil.equal(color.getName(), Color.RGBCOLOR)) {
+                linkEl.addAttribute(MailConstants.A_RGB, color.getRgbColorValue());
             } else {
                 linkEl.addAttribute(MailConstants.A_COLOR, color.getValue());
             }
