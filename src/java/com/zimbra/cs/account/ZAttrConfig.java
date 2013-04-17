@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20130415-1354 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130416-1701 */
 
     /**
      * RFC2256: descriptive information
@@ -9035,7 +9035,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @return zimbraFileUploadMaxSize, or 10485760 if unset
      */
@@ -9045,7 +9045,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @param zimbraFileUploadMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9058,7 +9058,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @param zimbraFileUploadMaxSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9072,7 +9072,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -9084,7 +9084,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32775,13 +32775,13 @@ public abstract class ZAttrConfig extends Entry {
      * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
      * default ciphers permitted by nginx will apply
      *
-     * @return zimbraReverseProxySSLCiphers, or "!SSLv2:!MD5:HIGH" if unset
+     * @return zimbraReverseProxySSLCiphers, or "RC4:HIGH:!aNULL:!MD5:!kEDH:!AD:!SSLv2" if unset
      *
      * @since ZCS 5.0.5
      */
     @ZAttr(id=640)
     public String getReverseProxySSLCiphers() {
-        return getAttr(Provisioning.A_zimbraReverseProxySSLCiphers, "!SSLv2:!MD5:HIGH");
+        return getAttr(Provisioning.A_zimbraReverseProxySSLCiphers, "RC4:HIGH:!aNULL:!MD5:!kEDH:!AD:!SSLv2");
     }
 
     /**
