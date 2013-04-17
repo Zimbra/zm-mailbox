@@ -379,27 +379,27 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("and (max-device-width: 480px)"));
 
         //Some more tests with different media attributes
-        String html = " @media (max-width: 480px) {.body{font-size: 0.938em;} }";
+        String html =  "<td style= \"@media only  @media (max-width: 480px) {.body{font-size: 0.938em;} }\"/> ";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-width: 480px)"));
 
-        html = " @media only screen and (-webkit-min-device-pixel-ratio: 2) {body {font-size: 0.938em;}  }";
+        html = "<td style= \" @media only screen and (-webkit-min-device-pixel-ratio: 2) {body {font-size: 0.938em;}  }\"/>";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("and (-webkit-min-device-pixel-ratio: 2)"));
 
-        html = "@media (min-width: 1200px) {.two{margin-top:8em;} }";
+        html = "<td style= \"@media (min-width: 1200px) {.two{margin-top:8em;} }\"/>";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(min-width: 1200px)"));
 
-        html = "@media (max-height: 600px) {.two{margin-top:4em;} }";
+        html = "<td style= \"@media (max-height: 600px) {.two{margin-top:4em;} }\"/>";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-height: 600px) {.two{margin-top:4em;} }"));
 
-        html = " @media (min-height: 1020px) { .two{margin-top:9em;} }";
+        html = "<td style= \" @media (min-height: 1020px) { .two{margin-top:9em;} }\">";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(min-height: 1020px) { .two{margin-top:9em;} }"));
@@ -554,6 +554,49 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
                 true);
         Assert.assertTrue(result.equals(html));
+    }
+    
+    @Test
+    public void testBug81641() throws Exception {
+
+        String html = "<td style=\"background: #e7e7e7; background-image:"
+            + "url(\'http://www.househuntnews.com/marketing/images/keller-header.jpg');"
+            + "height=\"97\" width=\"598\">";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("url('http://www.househuntnews.com/marketing/images/keller-header.jpg')"));
+        
+        html = "<td style= \"@media (max-width: 480px) {.body{font-size: 0.938em;} }\" />";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(max-width: 480px)"));
+        
+        html = "<td style= \"@media all and (max-width: 699px) and (min-width: 520px)\" />";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains(" (max-width: 699px) and (min-width: 520px)"));
+        
+        html ="<td style= \"@media (orientation:portrait)\" />";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(orientation:portrait)"));
+        
+        html = "<td style= \"@media (min-width: 700px), handheld and (orientation: landscape) { ... }\"/>";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(min-width: 700px), handheld and (orientation: landscape)"));
+        
+        html = "<td style= \"@media not screen and (color), print and (color)\"/>";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("not screen and (color), print and (color)"));
+        
+        html = "<td style=  \"@media (max-width 480px) {.body{font-size: 0.938em;} }\"/>";
+        htmlStream  = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("(max-width 480px)"));
+        
     }
 
 }
