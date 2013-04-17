@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20130415-1354 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130416-1701 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3755,7 +3755,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @return zimbraFileUploadMaxSize, or 10485760 if unset
      */
@@ -3765,7 +3765,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @param zimbraFileUploadMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3778,7 +3778,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @param zimbraFileUploadMaxSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3792,7 +3792,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -3804,7 +3804,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
