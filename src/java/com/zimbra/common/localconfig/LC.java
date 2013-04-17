@@ -1259,6 +1259,16 @@ public final class LC {
     public static final KnownKey octopus_public_static_folder = KnownKey.newKey("${zimbra_home}/jetty/static");
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
+    
+    //Defanger
+    public static final KnownKey defang_style_unwanted_func = 
+        KnownKey.newKey("[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
+    public static final KnownKey defang_valid_ext_url = 
+        KnownKey.newKey("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
+    public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:|^cid:");
+    public static final KnownKey defang_valid_img_file = KnownKey.newKey("\\.(jpg|jpeg|png|gif)((\\?)?)");
+
+    public static final KnownKey defang_valid_convertd_file = KnownKey.newKey("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
 
     static {
         // Automatically set the key name with the variable name.
