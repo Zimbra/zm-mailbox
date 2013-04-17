@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -68,6 +68,7 @@ public enum UpgradeTask {
     BUG_68891(BUG_68891.class),
     BUG_72007(BUG_72007.class),
     BUG_75450(BUG_75450.class),
+    BUG_75650(BUG_75650.class),
     BUG_76427(BUG_76427.class);
 
     private static final String NAME_PREFIX = "BUG_";
