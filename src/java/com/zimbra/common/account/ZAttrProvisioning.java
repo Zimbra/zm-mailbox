@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 dywang 20130415-1354 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130416-1701 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4678,7 +4678,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
