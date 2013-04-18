@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130416-1701 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130417-2233 */
 
     /**
      * RFC2256: descriptive information
@@ -33079,6 +33079,124 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxySendPop3Xoip(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxySendPop3Xoip, "");
+        return attrs;
+    }
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getReverseProxyUpstreamConnectTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxyUpstreamConnectTimeoutAsString()
+     *
+     * @return zimbraReverseProxyUpstreamConnectTimeout in millseconds, or 25000 (25s)  if unset
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public long getReverseProxyUpstreamConnectTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, 25000L);
+    }
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraReverseProxyUpstreamConnectTimeout, or "25s" if unset
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public String getReverseProxyUpstreamConnectTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, "25s");
+    }
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamConnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public void setReverseProxyUpstreamConnectTimeout(String zimbraReverseProxyUpstreamConnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, zimbraReverseProxyUpstreamConnectTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamConnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public Map<String,Object> setReverseProxyUpstreamConnectTimeout(String zimbraReverseProxyUpstreamConnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, zimbraReverseProxyUpstreamConnectTimeout);
+        return attrs;
+    }
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public void unsetReverseProxyUpstreamConnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public Map<String,Object> unsetReverseProxyUpstreamConnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, "");
         return attrs;
     }
 
