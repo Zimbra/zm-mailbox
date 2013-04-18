@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130416-1701 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130417-2233 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -10350,6 +10350,19 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1360)
     public static final String A_zimbraReverseProxySSLToUpstreamEnabled = "zimbraReverseProxySSLToUpstreamEnabled";
+
+    /**
+     * The connect timeout is the time interval after which NGINX will
+     * disconnect while establishing an upstream HTTP connection . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1440)
+    public static final String A_zimbraReverseProxyUpstreamConnectTimeout = "zimbraReverseProxyUpstreamConnectTimeout";
 
     /**
      * The read timeout for long polling support by proxy, e.g. ActiveSync
