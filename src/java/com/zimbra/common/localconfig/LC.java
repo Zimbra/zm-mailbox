@@ -514,6 +514,9 @@ public final class LC {
 
     public static final KnownKey calendar_resource_ldap_search_maxsize = KnownKey.newKey(1000);
 
+    @Supported
+    public static final KnownKey mail_url = KnownKey.newKey("https://localhost:2080");
+
     // This value is stored here for use by zmmycnf program. Changing this
     // setting does not immediately reflect in MySQL server. You will have to,
     // with abundant precaution, re-generate my.cnf and restart MySQL server for
