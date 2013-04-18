@@ -85,7 +85,8 @@ public class CsvFormatter extends Formatter {
             if (locale == null) {
                 locale = context.getLocale().toString();
             }
-            ContactCSV contactCSV = new ContactCSV();
+            //Passing the mailbox and operation context 
+            ContactCSV contactCSV = new ContactCSV(context.targetMailbox,context.opContext);
             contactCSV.toCSV(format, locale, sepChar, iterator, sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not generate CSV", e);
