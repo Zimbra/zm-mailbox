@@ -1151,6 +1151,17 @@ public final class LC {
 
     public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
 
+        
+    //Defanger
+    public static final KnownKey defang_style_unwanted_func = 
+        KnownKey.newKey("[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
+    public static final KnownKey defang_valid_ext_url = 
+        KnownKey.newKey("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
+    public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:|^cid:|\\.(jpg|jpeg|png|gif)$");
+
+
+
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
