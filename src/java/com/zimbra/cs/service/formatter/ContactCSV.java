@@ -15,16 +15,6 @@
 
 package com.zimbra.cs.service.formatter;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.ContactConstants;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.MailItem;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,6 +37,20 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
+
 public final class ContactCSV {
 
     private static Log LOG = ZimbraLog.misc;
@@ -65,6 +69,9 @@ public final class ContactCSV {
     private boolean detectFieldSeparator;
     private boolean knowFieldSeparator;
     private char fieldSeparator;
+    
+    private Mailbox mbox = null;
+    private OperationContext octxt = null;
 
     private static Set<String> knownFields;
     private static Set<CsvFormat> knownFormats;
@@ -90,11 +97,17 @@ public final class ContactCSV {
     private static final String ATTR_ORDER  = "order";
     private static final String ATTR_TYPE  = "type";
 
-    public ContactCSV() {
+    private ContactCSV() {
         this(DEFAULT_FIELD_SEPARATOR, true);
     }
+    
+    public ContactCSV(Mailbox mbox, OperationContext octxt) {
+    	this(DEFAULT_FIELD_SEPARATOR, true);
+    	this.mbox = mbox;
+    	this.octxt = octxt;
+    }
 
-    public ContactCSV(char defaultFieldSeparator, boolean detectFieldSeparator) {
+    private ContactCSV(char defaultFieldSeparator, boolean detectFieldSeparator) {
         this.fieldSeparator = defaultFieldSeparator;
         this.detectFieldSeparator = detectFieldSeparator;
         // If we are not doing auto-detect, defaultFieldSeparator MUST be the separator
@@ -1008,7 +1021,7 @@ public final class ContactCSV {
     }
 
     public void toCSV(String format, String locale, Character separator, Iterator<? extends MailItem> contacts,
-            StringBuilder sb) throws ParseException {
+            StringBuilder sb) throws ParseException, ServiceException {
         if (knownFormats == null) {
             return;
         }
@@ -1035,9 +1048,27 @@ public final class ContactCSV {
             while (contacts.hasNext()) {
                 Object obj = contacts.next();
                 if (obj instanceof Contact) {
-                    Contact c = (Contact) obj;
-                    allContacts.add(c.getFields());
-                    fields.addAll(c.getFields().keySet());
+                	Contact c = (Contact) obj;
+
+                	if (c.isContactGroup())
+                	{
+                		HashMap<String,String> nContacts = new HashMap<String,String>();
+                		//first add all the fields and values
+                		nContacts.putAll(c.getFields());
+                		//remove groupMemeber
+                		nContacts.remove(ContactConstants.A_groupMember);
+                		//then re-calculate the dlist as in 7.X
+                		ContactGroup cg = ContactGroup.init(c, false);
+						String strs = cg.migrateToDlist(mbox, octxt);
+						nContacts.put(ContactConstants.A_dlist, strs);
+			            allContacts.add(nContacts);
+			            fields.addAll(nContacts.keySet());
+                	}
+                	else
+                	{
+                		allContacts.add(c.getFields());
+                		fields.addAll(c.getFields().keySet());
+                	}
                 }
             }
             ArrayList<String> allFields = new ArrayList<String>();

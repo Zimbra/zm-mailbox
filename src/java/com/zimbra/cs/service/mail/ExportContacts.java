@@ -85,7 +85,7 @@ public final class ExportContacts extends MailDocumentHandler  {
             contacts = new ArrayList<Contact>();
 
         try {
-            ContactCSV contactCSV = new ContactCSV();
+            ContactCSV contactCSV = new ContactCSV(mbox,octxt);
             contactCSV.toCSV(format, locale, sepChar, contacts.iterator(), sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_EXPORT_CONTACTS(
