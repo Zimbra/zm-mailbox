@@ -7175,4 +7175,11 @@ TODO: delete them permanently from here
 <attr id="1439" name="zimbraMobileSyncKeyFormatConvertedFolders" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable"  since="8.0.4">
   <desc>folders whose sync key are already converted, each device has a list of folders. e.g. ApplDN6GJSQJDFHW:0,2,10 meaning device ApplDN6GJSQJDFHW's folders, inbox and calendar folder sync key format are converted, use 0 for FolderSync</desc>
 </attr>
+
+<attr id="1440" name="zimbraReverseProxyUpstreamConnectTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.4">
+  <globalConfigValue>25s</globalConfigValue>
+  <desc>
+     The connect timeout is the time interval after which NGINX will disconnect while establishing an upstream HTTP connection
+  </desc>
+</attr>
 </attrs>
