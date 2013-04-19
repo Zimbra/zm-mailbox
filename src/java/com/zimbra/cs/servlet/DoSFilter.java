@@ -23,6 +23,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletRequest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -32,6 +33,7 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
 
     @Override
     public void init(FilterConfig filterConfig) {
+        LogFactory.init();
         super.init(filterConfig);
         try {
             List<Server> servers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
@@ -55,6 +57,7 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
         // add loopback addresses
         addWhitelistAddress("127.0.0.1");
         addWhitelistAddress("::1");
+        ZimbraLog.misc.info("DoSFilter: Configured whitelist IPs = " + getWhitelist());
     }
 
     @Override
