@@ -397,7 +397,7 @@ public class TestLdapConnectivity {
      * 
      * A simple junixsocket demo client.
      * 
-     * @author Christian Kohlschütter
+     * @author Christian Kohlsch&#x00FC;tter
      * @see SimpleTestServer
      */
     public static class SimpleTestClient {
