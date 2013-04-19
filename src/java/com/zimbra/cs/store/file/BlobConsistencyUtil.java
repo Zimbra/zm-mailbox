@@ -34,6 +34,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
 import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
@@ -193,11 +194,15 @@ public class BlobConsistencyUtil {
         if (mailboxIds == null) {
             mailboxIds = getAllMailboxIds(prov);
         }
-        for (int mboxId : mailboxIds) {
-            System.out.println("Checking mailbox " + mboxId + ".");
-            checkMailbox(mboxId, prov);
+        try {
+        	DbPool.startup();
+        	for (int mboxId : mailboxIds) {
+        		System.out.println("Checking mailbox " + mboxId + ".");
+        		checkMailbox(mboxId, prov);
+        	}
+        }  finally{
+        	DbPool.shutdown();
         }
-
         if (unexpectedBlobWriter != null) {
             unexpectedBlobWriter.close();
         }
