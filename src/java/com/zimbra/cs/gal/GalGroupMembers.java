@@ -141,7 +141,7 @@ public class GalGroupMembers {
 
     }
 
-    private static class GalContactDLMembers extends DLMembers {
+    public static class GalContactDLMembers extends DLMembers {
         private GalContact mGalContact;
         private String[] mMembers;
         private Set<String> mMembersSet;

@@ -20,18 +20,19 @@ import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.Group.GroupOwner;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Group.GroupOwner;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembersResult;
+import com.zimbra.cs.gal.GalGroupMembers.GalContactDLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.LdapDLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.ProxiedDLMembers;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -295,11 +296,21 @@ public class GetDistributionListMembers extends GalDocumentHandler {
     
     protected Element processDLMembers(ZimbraSoapContext zsc, String dlName, Account account, 
             int limit, int offset, DLMembers dlMembers) throws ServiceException {
-          
+
         if (!GalSearchControl.canExpandGalGroup(dlName, dlMembers.getDLZimbraId(), account)) {
-            throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
+            if (dlMembers instanceof GalContactDLMembers) {
+                //bug 81052, if dlMembers is from Gal, it's possible that zimbraId is different from LDAP
+                Group dl = Provisioning.getInstance().getGroup(DistributionListBy.name, dlName);
+                ZimbraLog.misc.info("zimbraId for DL %s in Gal(%s) is different from LDAP(%s)",
+                        dlName, dlMembers.getDLZimbraId(), dl.getId());
+                if (!GalSearchControl.canExpandGalGroup(dlName, dl.getId(), account)) {
+                    throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
+                }
+            } else {
+                throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
+            }
         }
-        
+
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
         if (dlMembers != null) {
             int numMembers = dlMembers.getTotal();
