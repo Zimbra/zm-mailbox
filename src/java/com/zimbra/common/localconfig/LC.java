@@ -106,6 +106,9 @@ public final class LC {
     public static final KnownKey zimbra_mysql_password = KnownKey.newKey("zimbra").protect();
 
     @Supported
+    public static final KnownKey zimbra_mysql_shutdown_timeout = KnownKey.newKey(60);
+
+    @Supported
     public static final KnownKey zimbra_ldap_userdn = KnownKey.newKey("uid=zimbra,cn=admins,cn=zimbra");
 
     @Supported
