@@ -83,7 +83,8 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   * {username} is your local username and be sure to insert a [TAB] between {username} and "ALL".
 
 19. $ cd ~/p4/main/ZimbraServer
-20. $ ant reset-all
+20. Install the JDK 1.7 from Oracle if not already present on your system.
+21. $ ant reset-all
 
   * $ ant -p
   Buildfile: build.xml
@@ -107,7 +108,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    test                    Run unit tests
   Default target: jar
 
-21. open http://localhost:7070/zimbra
+22. open http://localhost:7070/zimbra
 
   Username: user1 / Password: test123
 
@@ -122,8 +123,16 @@ CONFIGURE JDK FOR ZIMBRA COMMAND LINE TOOLS
 Command-line tools like zmprov, zmmailbox, zmsoap, etc., depend on the JDK to be
 in /opt/zimbra/java.
 
+Find the location of your JDK 1.7 install. This varies on different Mac OS X versions. 
+For example on Mountain Lion (10.8.x) install the Oracle 1.7.0u21 JDK is placed in:  
+
+/Library/Java/JavaVirtualMachines/jdk1.7.0_21.jdk/Contents/Home
+
+The exact path will vary by release and may be changed by Oracle or Apple at any time
+
 1. $ cd /opt/zimbra
-2. $ sudo ln -s /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/ java
+2. $ sudo ln -s /Library/Java/JavaVirtualMachines/jdk1.7.0_21.jdk/Contents/Home/ java
+3. $ zmlocalconfig -e zimbra_java_home=/opt/zimbra/java
 
 For RHEL:
 
