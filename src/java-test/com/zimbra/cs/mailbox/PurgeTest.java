@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -56,6 +56,23 @@ public class PurgeTest {
         Provisioning prov = Provisioning.getInstance();
         prov.deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        Config config = Provisioning.getInstance().getConfig();
+        RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
+        RetentionPolicy rp = mgr.getSystemRetentionPolicy(config);
+        List<Policy> keep = rp.getKeepPolicy();
+        if (keep != null) {
+            for (Policy policy : keep) {
+                mgr.deleteSystemPolicy(config, policy.getId());
+            }
+        }
+
+        List<Policy> purge = rp.getPurgePolicy();
+        if (purge != null) {
+            for (Policy policy : purge) {
+                mgr.deleteSystemPolicy(config, policy.getId());
+            }
+        }
+
     }
 
     @Test
@@ -637,7 +654,7 @@ public class PurgeTest {
         assertEquals(2, rp.getKeepPolicy().size());
         assertEquals(1, rp.getPurgePolicy().size());
     }
-    
+
     /**
      * Tests {@link RetentionPolicyManager#getCompleteRetentionPolicy(Account, RetentionPolicy).  Confirms
      * that system policy elements are updated with the latest values in LDAP.
@@ -670,8 +687,8 @@ public class PurgeTest {
         RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
         Config config = Provisioning.getInstance().getConfig();
         Policy keep1 = mgr.createSystemKeepPolicy(config, "keep1", "300d");
-        
-        
+
+
         Map<String, Object> attrs = new HashMap<String, Object>();
         Cos cos = Provisioning.getInstance().createCos("testcos2", attrs);
         Policy keep2 = mgr.createSystemKeepPolicy(cos, "keep2", "600d");
@@ -699,23 +716,23 @@ public class PurgeTest {
         RetentionPolicy mboxRP2 = new RetentionPolicy(Arrays.asList(Policy.newSystemPolicy(keep1.getId())), null);
         completeRP = mgr.getCompleteRetentionPolicy(getAccount(), mboxRP2);
         assertTrue(completeRP.getKeepPolicy().isEmpty());
-        
+
         // remove cos retention policy
         mgr.deleteSystemPolicy(cos, keep2.getId());
-        
+
         // make sure account retention policy is empty
         completeRP = mgr.getCompleteRetentionPolicy(getAccount(), mboxRP1);
         assertTrue(completeRP.getKeepPolicy().isEmpty());
-        
+
         // make sure system policy is applicable now
         completeRP = mgr.getCompleteRetentionPolicy(getAccount(), mboxRP2);
         latest = completeRP.getKeepPolicy().get(0);
         assertTrue(keep1.equals(latest));
         assertEquals(keep1.getId(), latest.getId());
         assertEquals("keep1", latest.getName());
-        assertEquals("300d", latest.getLifetime()); 
+        assertEquals("300d", latest.getLifetime());
     }
-    
+
     @Test
     public void purgeWithSystemPolicy() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
