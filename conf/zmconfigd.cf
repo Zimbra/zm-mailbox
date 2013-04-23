@@ -17,6 +17,7 @@ SECTION amavis
 	LOCAL av_notify_user
 	LOCAL ldap_url
 	LOCAL ldap_amavis_password
+	LOCAL amavis_max_servers
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
@@ -36,6 +37,7 @@ SECTION antivirus DEPENDS amavis
 	VAR zimbraVirusDefinitionsUpdateFrequency
 	VAR zimbraVirusBlockEncryptedArchive
   	VAR zimbraMtaMaxMessageSize
+	LOCAL clamav_max_threads
 	RESTART antivirus mta
 
 SECTION antispam DEPENDS amavis
