@@ -30,7 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
 
-public class TimeZoneMap {
+public class TimeZoneMap implements Cloneable {
 
     static HashMap<ZRecur.ZWeekDay, Integer> sDayWeekDayMap;
     static {
@@ -293,5 +293,13 @@ public class TimeZoneMap {
             if (!tzids.contains(id))
                 iter.remove();
         }
+    }
+
+    @Override
+    public TimeZoneMap clone() {
+        TimeZoneMap retMap = new TimeZoneMap(mLocalTZ);
+        retMap.mTzMap.putAll(mTzMap);
+        retMap.mAliasMap.putAll(mAliasMap);
+        return retMap;
     }
 }

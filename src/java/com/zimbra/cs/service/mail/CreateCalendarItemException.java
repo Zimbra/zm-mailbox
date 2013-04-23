@@ -57,7 +57,8 @@ public class CreateCalendarItemException extends CalendarRequest {
             ParseMimeMessage.InviteParserResult toRet =
                 CalendarUtils.parseInviteForCreateException(
                         account, getItemType(), inviteElem,
-                        mDefaultInvite.getTimeZoneMap(), mUid, mDefaultInvite);
+                        (mDefaultInvite.getTimeZoneMap() != null ) ? mDefaultInvite.getTimeZoneMap().clone() : null,
+                        mUid, mDefaultInvite);
 
             // Send cancellations to any attendees who have been removed.
             List<ZAttendee> removedAttendees = CalendarUtils.getRemovedAttendees(

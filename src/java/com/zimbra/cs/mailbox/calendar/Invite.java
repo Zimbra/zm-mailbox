@@ -2553,7 +2553,7 @@ public class Invite {
         ZOrganizer org = mOrganizer != null ? new ZOrganizer(mOrganizer) : null;
         Invite inv = new Invite(
                 mItemType, mMethod != null ? mMethod.toString() : null,
-                mTzMap,
+                (mTzMap != null) ? mTzMap.clone() : null,
                 mCalItem, mUid,
                 mStatus, mPriority,
                 mPercentComplete, mCompleted,
