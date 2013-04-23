@@ -623,6 +623,9 @@ public final class LC {
 
     public static final KnownKey amavis_originating_bypass_sa = KnownKey.newKey(false);
     public static final KnownKey amavis_enable_dkim_verification = KnownKey.newKey(true);
+    public static final KnownKey amavis_max_servers = KnownKey.newKey(10);
+
+    public static final KnownKey clamav_max_threads = KnownKey.newKey(10);
 
     public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
 
