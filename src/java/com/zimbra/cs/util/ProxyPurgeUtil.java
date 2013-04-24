@@ -242,6 +242,11 @@ public class ProxyPurgeUtil
                     routes.add("route:proto=pop3ssl;user=" + uid + "@" + vip);
                     routes.add("alias:user=" + uid + ";ip=" + vip);
                 }
+                String[] vhostnames = d.getVirtualHostname();
+                for (String vhost : vhostnames) {
+                    // for each virtual host name add the alias to the list
+                    routes.add("alias:user=" + uid + ";vhost=" + vhost);
+                }
 
                 String[] aliases = account.getMailAlias();
                 List<String> uids = new ArrayList<String>();
@@ -283,7 +288,10 @@ public class ProxyPurgeUtil
                     if (alias.indexOf('@') != -1) {
                         alias = alias.substring(0, alias.indexOf('@'));
                     }
-
+                    for (String vhost : vhostnames) {
+                        // for each virtual host name add the alias to the alias user
+                        routes.add("alias:user=" + alias + ";vhost=" + vhost);
+                    }
                     for (String vip : vips) {
                         // for each virtual ip add the routes to the list. 
                         routes.add("route:proto=imap;user=" + alias + "@" + vip);
