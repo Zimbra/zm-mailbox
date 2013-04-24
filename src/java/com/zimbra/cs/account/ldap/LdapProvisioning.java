@@ -3183,7 +3183,7 @@ public class LdapProvisioning extends LdapProv {
 
             List<String> aliasDomainIds = null;
             if (domain.isLocal()) {
-                aliasDomainIds = getEmptyAliasDomainIds(zlc, domain);
+                aliasDomainIds = getEmptyAliasDomainIds(zlc, domain, true);
             }
 
             // delete the domain;
@@ -3204,7 +3204,7 @@ public class LdapProvisioning extends LdapProv {
 
     }
 
-    public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain)
+    public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain, boolean suboridinateCheck)
     throws ServiceException {
         List<String> aliasDomainIds = new ArrayList<String>();
 
@@ -3228,7 +3228,7 @@ public class LdapProvisioning extends LdapProv {
                 String acctBaseDn = mDIT.domainDNToAccountBaseDN(aliasDomainDn);
                 String dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(aliasDomainDn);
 
-                if (hasSubordinates(zlc, acctBaseDn) || hasSubordinates(zlc, dynGroupsBaseDn)) {
+                if (suboridinateCheck && (hasSubordinates(zlc, acctBaseDn) || hasSubordinates(zlc, dynGroupsBaseDn))) {
                     throw ServiceException.FAILURE("alias domain " + aliasDomainName +
                             " of doamin " + targetDomain.getName() + " is not empty", null);
                 }

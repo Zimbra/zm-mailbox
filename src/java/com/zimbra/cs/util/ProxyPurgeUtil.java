@@ -243,40 +243,47 @@ public class ProxyPurgeUtil
                     routes.add("alias:user=" + uid + ";ip=" + vip);
                 }
 
+                String[] aliases = account.getMailAlias();
+                List<String> uids = new ArrayList<String>();
+                uids.add(uid);
+                for (String alias : aliases) {
+                    if (alias.indexOf('@') != -1 && alias.substring(alias.indexOf('@') + 1).equals(domain)) {
+                        uids.add(alias.substring(0, alias.indexOf('@')));
+                    }
+                }
                 // get domain alias from the given the domain
-                // this logic works for for all cases of input account=addr@<alias domain> or addr or addr@<local domain>
+                // this logic works for for all cases account=addr@<alias domain> or alias-name@<alias domain>
                 if (prov instanceof LdapProvisioning) {
-                    List<String> aliasDomainIds = ((LdapProvisioning) prov).getEmptyAliasDomainIds(LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_DOMAIN), d);
+                    List<String> aliasDomainIds = ((LdapProvisioning) prov).getEmptyAliasDomainIds(LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_DOMAIN), d, false);
                     if (aliasDomainIds != null) {
                         for (String aliasDomainId : aliasDomainIds) {
                             String aliasDomain = prov.getDomainById(aliasDomainId).getDomainName();
-                            routes.add("route:proto=http;user=" + uid + "@" + aliasDomain);
-                            routes.add("route:proto=imap;user=" + uid + "@" + aliasDomain);
-                            routes.add("route:proto=pop3;user=" + uid + "@" + aliasDomain);
-                            routes.add("route:proto=httpssl;user=" + uid + "@" + aliasDomain);
-                            routes.add("route:proto=imapssl;user=" + uid + "@" + aliasDomain);
-                            routes.add("route:proto=pop3ssl;user=" + uid + "@" + aliasDomain);
-                            routes.add("alias:user=" + uid + ";ip=" + aliasDomain);
+                            for (String userName : uids) {
+                                routes.add("route:proto=http;user=" + userName + "@" + aliasDomain);
+                                routes.add("route:proto=imap;user=" + userName + "@" + aliasDomain);
+                                routes.add("route:proto=pop3;user=" + userName + "@" + aliasDomain);
+                                routes.add("route:proto=httpssl;user=" + userName + "@" + aliasDomain);
+                                routes.add("route:proto=imapssl;user=" + userName + "@" + aliasDomain);
+                                routes.add("route:proto=pop3ssl;user=" + userName + "@" + aliasDomain);
+                                routes.add("alias:user=" + userName + ";ip=" + aliasDomain);
+                            }
                         }
-                    }	
+                    }
                 }
 
-                String[] aliases = account.getMailAlias();
                 // for each alias add routes for it's domain and all virtual IPs for that domain
-                // I think, all the http routes are stored by user id, or, uid or, uid@domain. 
+                // I think, all the http routes are stored by user id, or, uid or, uid@domain.
                 // I haven't found any alias in the http/httpssl routes. Hence skipping it.
                 for (String alias : aliases) {
                     routes.add("route:proto=imap;user=" + alias);
                     routes.add("route:proto=pop3;user=" + alias);
                     routes.add("route:proto=imapssl;user=" + alias);
                     routes.add("route:proto=pop3ssl;user=" + alias);
-                    
-                    routes.add("route:proto=imap;user=" + alias + "@" + domain);
-                    routes.add("route:proto=pop3;user=" + alias + "@" + domain);
-                    routes.add("route:proto=imapssl;user=" + alias + "@" + domain);
-                    routes.add("route:proto=pop3ssl;user=" + alias + "@" + domain);
-                    routes.add("alias:user=" + alias + ";ip=" + domain);
-                    
+
+                    if (alias.indexOf('@') != -1) {
+                        alias = alias.substring(0, alias.indexOf('@'));
+                    }
+
                     for (String vip : vips) {
                         // for each virtual ip add the routes to the list. 
                         routes.add("route:proto=imap;user=" + alias + "@" + vip);
