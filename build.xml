@@ -84,6 +84,10 @@
         <include name="**/commons-lang-*.jar"/>
         <include name="**/commons-cli-*.jar"/>
     </fileset>
+    <!-- A hack that finds tools.jar on Mac OS X Mountain Lion/Java 7.  May not work elsewhere -->
+    <fileset dir="${java.home}/..">
+        <include name="**/tools.jar"/>
+    </fileset>
   </path>
 
   <path id="soapdocs.doclet.class.path">
