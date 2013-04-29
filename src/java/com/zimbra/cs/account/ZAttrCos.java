@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130417-2233 */
+    /* build: 9.0.0_BETA1_1111 smadiraju 20130429-1435 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2731,6 +2731,149 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetContactRankingTableSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactRankingTableSize, "");
+        return attrs;
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @return zimbraConverterHints, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public String[] getConverterHints() {
+        return getMultiAttr(Provisioning.A_zimbraConverterHints);
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param zimbraConverterHints new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public void setConverterHints(String[] zimbraConverterHints) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConverterHints, zimbraConverterHints);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param zimbraConverterHints new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public Map<String,Object> setConverterHints(String[] zimbraConverterHints, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConverterHints, zimbraConverterHints);
+        return attrs;
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param zimbraConverterHints new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public void addConverterHints(String zimbraConverterHints) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConverterHints, zimbraConverterHints);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param zimbraConverterHints new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public Map<String,Object> addConverterHints(String zimbraConverterHints, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConverterHints, zimbraConverterHints);
+        return attrs;
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param zimbraConverterHints existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public void removeConverterHints(String zimbraConverterHints) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConverterHints, zimbraConverterHints);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param zimbraConverterHints existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public Map<String,Object> removeConverterHints(String zimbraConverterHints, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConverterHints, zimbraConverterHints);
+        return attrs;
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public void unsetConverterHints() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConverterHints, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public Map<String,Object> unsetConverterHints(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConverterHints, "");
         return attrs;
     }
 
@@ -12053,6 +12196,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFileLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFileLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @return zimbraFilePreviewMaxSize, or 20971520 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public long getFilePreviewMaxSize() {
+        return getLongAttr(Provisioning.A_zimbraFilePreviewMaxSize, 20971520L);
+    }
+
+    /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @param zimbraFilePreviewMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public void setFilePreviewMaxSize(long zimbraFilePreviewMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePreviewMaxSize, Long.toString(zimbraFilePreviewMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @param zimbraFilePreviewMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public Map<String,Object> setFilePreviewMaxSize(long zimbraFilePreviewMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePreviewMaxSize, Long.toString(zimbraFilePreviewMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public void unsetFilePreviewMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePreviewMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public Map<String,Object> unsetFilePreviewMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePreviewMaxSize, "");
         return attrs;
     }
 
