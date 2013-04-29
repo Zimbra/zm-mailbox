@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130417-2233 */
+    /* build: 9.0.0_BETA1_1111 smadiraju 20130429-1435 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3003,6 +3003,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraConvertdURL = "zimbraConvertdURL";
 
     /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public static final String A_zimbraConverterHints = "zimbraConverterHints";
+
+    /**
      * Object classes to add when creating a zimbra cos object.
      *
      * @since ZCS 6.0.0_BETA1
@@ -4650,6 +4659,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1309)
     public static final String A_zimbraFileLifetime = "zimbraFileLifetime";
+
+    /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public static final String A_zimbraFilePreviewMaxSize = "zimbraFilePreviewMaxSize";
 
     /**
      * Maximum allowed lifetime of public file shares. A value of 0 indicates
