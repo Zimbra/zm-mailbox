@@ -73,8 +73,7 @@ public final class LC {
     public static final KnownKey zimbra_home = KnownKey.newKey("/opt/zimbra").protect();
     public static final KnownKey zimbra_java_path = KnownKey.newKey("java");
     @Supported
-    public static final KnownKey zimbra_java_home = KnownKey.newKey( System.getProperty("os.name").equalsIgnoreCase("Mac OS X") ?
-            "/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home" : "${zimbra_home}/${zimbra_java_path}");
+    public static final KnownKey zimbra_java_home = KnownKey.newKey("${zimbra_home}/${zimbra_java_path}");
 
     @Supported
     public static final KnownKey zimbra_log_directory = KnownKey.newKey("${zimbra_home}/log");
@@ -1265,11 +1264,11 @@ public final class LC {
     public static final KnownKey octopus_public_static_folder = KnownKey.newKey("${zimbra_home}/jetty/static");
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
-    
+
     //Defanger
-    public static final KnownKey defang_style_unwanted_func = 
+    public static final KnownKey defang_style_unwanted_func =
         KnownKey.newKey("[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
-    public static final KnownKey defang_valid_ext_url = 
+    public static final KnownKey defang_valid_ext_url =
         KnownKey.newKey("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
     public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:|^cid:");
     public static final KnownKey defang_valid_img_file = KnownKey.newKey("\\.(jpg|jpeg|png|gif)((\\?)?)");
