@@ -281,6 +281,14 @@
 	    </Arg>
         </Call>
         <Call name="addRule">
+            <Arg>
+                <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+                    <Set name="pattern">%%zimbraMailURL%%/service/spnego/*</Set>
+                    <Set name="replacement">/service/spnego</Set>
+                </New>
+            </Arg>
+        </Call>
+        <Call name="addRule">
 	    <Arg>
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">%%zimbraMailURL%%/home/*</Set>
