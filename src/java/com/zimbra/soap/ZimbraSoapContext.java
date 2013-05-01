@@ -14,6 +14,7 @@
  */
 package com.zimbra.soap;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,12 +32,17 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ShareInfoData;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -311,6 +317,7 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = account.getId();
+                validateDelegatedAccess(account, value);
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 if (mAuthToken == null) {
                     throw ServiceException.AUTH_REQUIRED();
@@ -325,6 +332,7 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = value;
+                validateDelegatedAccess(account, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
@@ -422,6 +430,109 @@ public final class ZimbraSoapContext {
         }
 
         mRequestIP = (String) context.get(SoapEngine.REQUEST_IP);
+    }
+
+    /**
+     * Validate delegation rights. Request for delegated access requires a grant on at least one object in the target account or admin login rights.
+     * @param targetAccount - Account which requested is targeted for
+     * @param requestedKey - The key sent in request which mapped to target account. Passed in so error only reports back what was requested (i.e. can't harvest accountId if you only know the email or vice-versa)
+     * @throws ServiceException
+     */
+    private void validateDelegatedAccess(Account targetAccount, String requestedKey) throws ServiceException {
+
+        if (!isDelegatedRequest()) {
+            return;
+        }
+
+        //if delegated one of the following MUST be true
+        //1. authed account is an admin AND has admin rights for the target
+        //2. authed account has been granted access (i.e. login) to the target account
+        //3. target account has shared at least one item with authed account or enclosing group/cos/domain
+
+        Account authAccount = null;
+        if (!GuestAccount.GUID_PUBLIC.equals(mAuthToken.getAccountId())) {
+            authAccount = mAuthToken.getAccount();
+            if (AuthToken.isAnyAdmin(mAuthToken) && AccessManager.getInstance().canAccessAccount(mAuthToken, targetAccount, true)) {
+                //case 1 - admin
+                return;
+            }
+
+            if (AccessManager.getInstance().canAccessAccount(mAuthToken, targetAccount, false)) {
+                //case 2 - access rights
+                return;
+            }
+        }
+
+        String externalEmail = null;
+        if (authAccount != null && authAccount.getBooleanAttr(Provisioning.A_zimbraIsExternalVirtualAccount, false)) {
+            externalEmail = authAccount.getAttr(Provisioning.A_zimbraExternalUserMailAddress, externalEmail);
+        }
+
+        Provisioning prov = Provisioning.getInstance();
+
+        //case 3 - shared items
+        boolean needRecheck = false;
+        do {
+            String[] sharedItems = targetAccount.getSharedItem();
+            for (String sharedItem : sharedItems) {
+                ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
+                switch (shareData.getGranteeTypeCode()) {
+                    case ACL.GRANTEE_USER:
+                        if (authAccount != null && authAccount.getId().equals(shareData.getGranteeId())) {
+                            return;
+                        }
+                        break;
+                    case ACL.GRANTEE_GUEST:
+                        if (shareData.getGranteeId().equals(externalEmail)) {
+                            return;
+                        }
+                        break;
+                    case ACL.GRANTEE_PUBLIC:
+                        return;
+                    case ACL.GRANTEE_GROUP:
+                        if (authAccount != null) {
+                            List<String> groupIds = prov.getGroupMembership(authAccount, false).groupIds();
+                            if (groupIds != null && groupIds.contains(shareData.getGranteeId())) {
+                                return;
+                            }
+                        }
+                        break;
+                    case ACL.GRANTEE_AUTHUSER:
+                        if (authAccount != null) {
+                            return;
+                        }
+                        break;
+                    case ACL.GRANTEE_DOMAIN:
+                        if (authAccount != null && authAccount.getDomainId() != null
+                                && authAccount.getDomainId().equals(shareData.getGranteeId())) {
+                            return;
+                        }
+                        break;
+                    case ACL.GRANTEE_COS:
+                        if (authAccount != null && authAccount.getCOSId() != null
+                                && authAccount.getCOSId().equals(shareData.getGranteeId())) {
+                            return;
+                        }
+                        break;
+                    case ACL.GRANTEE_KEY:
+                        if (authAccount instanceof GuestAccount && mAuthToken.getAccessKey() != null) {
+                            return;
+                        }
+                        break;
+                 }
+            }
+
+            if (needRecheck) {
+                break;
+            } else if (!Provisioning.onLocalServer(targetAccount)) {
+                //if target on different server we might not have up-to-date shared item list
+                //reload and check one more time to be sure
+                prov.reload(targetAccount);
+                needRecheck = true;
+            }
+        } while (needRecheck);
+
+        throw ServiceException.DEFEND_ACCOUNT_HARVEST(requestedKey);
     }
 
     /** Records in this context that we've traversed a mountpoint to get here.
