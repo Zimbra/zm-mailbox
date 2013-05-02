@@ -505,7 +505,7 @@
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="mina-*.jar"/>
-          <include name="ews.jar"/>
+          <include name="ews*.jar"/>
           <include name="cassandra-*.jar"/>
           <include name="hector-*.jar"/>
           <include name="perf4j-*.jar"/>
