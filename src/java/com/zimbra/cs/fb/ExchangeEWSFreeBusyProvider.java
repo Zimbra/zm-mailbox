@@ -18,6 +18,7 @@ package com.zimbra.cs.fb;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ import javax.xml.ws.Holder;
 
 import com.microsoft.schemas.exchange.services._2006.messages.CreateItemResponseType;
 import com.microsoft.schemas.exchange.services._2006.messages.CreateItemType;
+import com.microsoft.schemas.exchange.services._2006.messages.ExchangeService;
 import com.microsoft.schemas.exchange.services._2006.messages.ExchangeServicePortType;
 import com.microsoft.schemas.exchange.services._2006.messages.FindFolderResponseMessageType;
 import com.microsoft.schemas.exchange.services._2006.messages.FindFolderResponseType;
@@ -86,6 +88,7 @@ import com.microsoft.schemas.exchange.services._2006.types.ItemChangeType;
 import com.microsoft.schemas.exchange.services._2006.types.ItemQueryTraversalType;
 import com.microsoft.schemas.exchange.services._2006.types.ItemResponseShapeType;
 import com.microsoft.schemas.exchange.services._2006.types.ItemType;
+import com.microsoft.schemas.exchange.services._2006.types.MailboxCultureType;
 import com.microsoft.schemas.exchange.services._2006.types.MailboxData;
 import com.microsoft.schemas.exchange.services._2006.types.MapiPropertyTypeType;
 import com.microsoft.schemas.exchange.services._2006.types.MeetingAttendeeType;
@@ -107,6 +110,8 @@ import com.microsoft.schemas.exchange.services._2006.types.SerializableTimeZoneT
 import com.microsoft.schemas.exchange.services._2006.types.ServerVersionInfo;
 import com.microsoft.schemas.exchange.services._2006.types.SetItemFieldType;
 import com.microsoft.schemas.exchange.services._2006.types.TargetFolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.TimeZoneContextType;
+import com.microsoft.schemas.exchange.services._2006.types.TimeZoneDefinitionType;
 import com.microsoft.schemas.exchange.services._2006.types.UnindexedFieldURIType;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -114,7 +119,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
@@ -122,13 +126,12 @@ import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeUserResolver;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ServerInfo;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
-//import com.microsoft.schemas.exchange.services._2006.messages.ExchangeWebService;
 
 public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     public static final int FB_INTERVAL = 30;
 	public static final String TYPE_EWS = "ews";
     private ExchangeServicePortType service = null;
-//    private static ExchangeWebService factory = null;
+    private static ExchangeService factory = null;
 
     static {
         ZimbraLog.fb.debug("Setting MailcapCommandMap handlers back to default");
@@ -139,14 +142,14 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         CommandMap.setDefaultCommandMap(mc);
         ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
 
-//        URL wsdlUrl = ExchangeWebService.class.getResource("/Services.wsdl");
-//        factory = new ExchangeWebService(wsdlUrl,
-//                new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
-//                    "ExchangeWebService"));
+        URL wsdlUrl = ExchangeService.class.getResource("/Services.wsdl");
+        factory = new ExchangeService(wsdlUrl,
+                new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
+                    "ExchangeService"));
     }
 
     boolean initService(ServerInfo info) throws MalformedURLException {
-//        service = factory.getExchangeWebPort();
+        service = factory.getExchangeServicePort();
 
         ((BindingProvider)service).getRequestContext()
             .put(BindingProvider.USERNAME_PROPERTY, info.authUsername);
@@ -283,27 +286,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     @Override
     public boolean registerForMailboxChanges() {
-        if (sRESOLVERS.size() > 1)
-            return true;
-        Config config = null;
-        try {
-            config = Provisioning.getInstance().getConfig();
-        } catch (ServiceException se) {
-            ZimbraLog.fb.warn("cannot fetch config", se);
-            return false;
-        }
-        String url =
-            config.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
-        String user =
-            config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername,
-                null);
-        String pass =
-            config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword,
-                null);
-        String scheme =
-            config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme,
-                null);
-        return (url != null && user != null && pass != null && scheme != null);
+        return registerForMailboxChanges(null);
     }
 
     BaseFolderType bindFolder(
@@ -327,10 +310,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             new Holder<ServerVersionInfo>();
         Holder<GetFolderResponseType> gfresponseHolder =
             new Holder<GetFolderResponseType>();
-//        service.getFolder(getFolderRequest,
-//            serverVersion,
-//            gfresponseHolder,
-//            gfversionInfo);
+        MailboxCultureType mct = new MailboxCultureType();
+        mct.setValue("EN");
+        TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+        tzdt.setId("Greenwich Standard Time");
+        TimeZoneContextType tzct = new TimeZoneContextType();
+        tzct.setTimeZoneDefinition(tzdt);
+        service.getFolder(getFolderRequest,
+                mct, serverVersion,
+                tzct, gfresponseHolder,
+                gfversionInfo);
         FolderInfoResponseMessageType firmtResp =
             (FolderInfoResponseMessageType)gfresponseHolder.value.getResponseMessages()
                 .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
@@ -396,10 +385,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         Holder<ServerVersionInfo> gfversionInfo =
             new Holder<ServerVersionInfo>();
 
-//        service.findFolder(findFolderRequest,
-//            serverVersion,
-//            findFolderResponse,
-//            gfversionInfo);
+        MailboxCultureType mct = new MailboxCultureType();
+        mct.setValue("EN");
+        TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+        tzdt.setId("Greenwich Standard Time");
+        TimeZoneContextType tzct = new TimeZoneContextType();
+        tzct.setTimeZoneDefinition(tzdt);
+        service.findFolder(findFolderRequest,
+                mct, serverVersion,
+                tzct, findFolderResponse,
+                gfversionInfo);
         FindFolderResponseMessageType ffRespMessage =
             (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
                 .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
@@ -460,10 +455,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         Holder<ServerVersionInfo> gfversionInfo =
             new Holder<ServerVersionInfo>();
 
-//        service.findFolder(findFolderRequest,
-//            serverVersion,
-//            findFolderResponse,
-//            gfversionInfo);
+        MailboxCultureType mct = new MailboxCultureType();
+        mct.setValue("EN");
+        TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+        tzdt.setId("Greenwich Standard Time");
+        TimeZoneContextType tzct = new TimeZoneContextType();
+        tzct.setTimeZoneDefinition(tzdt);
+        service.findFolder(findFolderRequest,
+                mct, serverVersion,
+                tzct, findFolderResponse,
+                gfversionInfo);
         FindFolderResponseMessageType ffRespMessage =
             (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
                 .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
@@ -524,10 +525,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             new Holder<FindItemResponseType>();
         Holder<ServerVersionInfo> gfversionInfo =
             new Holder<ServerVersionInfo>();
-//        service.findItem(findItemRequest,
-//            serverVersion,
-//            fiResponse,
-//            gfversionInfo);
+        MailboxCultureType mct = new MailboxCultureType();
+        mct.setValue("EN");
+        TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+        tzdt.setId("Greenwich Standard Time");
+        TimeZoneContextType tzct = new TimeZoneContextType();
+        tzct.setTimeZoneDefinition(tzdt);
+        service.findItem(findItemRequest,
+                mct, serverVersion,
+                tzct, fiResponse,
+                gfversionInfo);
 
         FindItemResponseMessageType fiRespMessage =
             (FindItemResponseMessageType)fiResponse.value.getResponseMessages()
@@ -700,10 +707,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                                 new Holder<UpdateItemResponseType>();
                             Holder<ServerVersionInfo> gfversionInfo =
                                 new Holder<ServerVersionInfo>();
-//                            service.updateItem(updateItemRequest,
-//                                serverVersion,
-//                                updateItemResponse,
-//                                gfversionInfo);
+                            MailboxCultureType mct = new MailboxCultureType();
+                            mct.setValue("EN");
+                            TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+                            tzdt.setId("Greenwich Standard Time");
+                            TimeZoneContextType tzct = new TimeZoneContextType();
+                            tzct.setTimeZoneDefinition(tzdt);
+                            service.updateItem(updateItemRequest,
+                                mct, serverVersion,
+                                tzct, updateItemResponse,
+                                gfversionInfo);
                             ResponseMessageType updateItemResponseMessage =
                                 updateItemResponse.value.getResponseMessages()
                                     .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
@@ -767,10 +780,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                                 new Holder<CreateItemResponseType>();
                             Holder<ServerVersionInfo> gfversionInfo =
                                 new Holder<ServerVersionInfo>();
-//                            service.createItem(createItemRequest,
-//                                serverVersion,
-//                                createItemResponse,
-//                                gfversionInfo);
+                            MailboxCultureType mct = new MailboxCultureType();
+                            mct.setValue("EN");
+                            TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+                            tzdt.setId("Greenwich Standard Time");
+                            TimeZoneContextType tzct = new TimeZoneContextType();
+                            tzct.setTimeZoneDefinition(tzdt);
+                            service.createItem(createItemRequest,
+                                mct, serverVersion,
+                                tzct, createItemResponse,
+                                gfversionInfo);
                             ResponseMessageType createItemResponseMessage =
                                 createItemResponse.value.getResponseMessages()
                                     .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
@@ -867,10 +886,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             Holder<ServerVersionInfo> gfversionInfo =
                 new Holder<ServerVersionInfo>();
 
-//            service.getUserAvailability(availabilityRequest,
-//                serverVersion,
-//                availabilityResponse,
-//                gfversionInfo);
+            service.getUserAvailability(availabilityRequest,
+                availabilityResponse,
+                gfversionInfo);
             results = availabilityResponse.value.getFreeBusyResponseArray()
                     .getFreeBusyResponse();
 
@@ -976,7 +994,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         register(new ExchangeEWSFreeBusyProvider());
     }
 
-    private HashMap<String, ArrayList<Request>> mRequests;
+    private final HashMap<String, ArrayList<Request>> mRequests;
 
     @Override
     public List<FreeBusy> getResults() {
@@ -1112,6 +1130,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     @Override
     public boolean registerForMailboxChanges(String accountId) {
-        return registerForMailboxChanges();
+        if (sRESOLVERS.size() > 1)
+            return true;
+        String email = null;
+        try {
+            Account account = null;
+            if (accountId != null)
+                account = Provisioning.getInstance().getAccountById(accountId);
+            if (account != null)
+                email = account.getName();
+        } catch (ServiceException se) {
+            ZimbraLog.fb.warn("cannot fetch account", se);
+        }
+        return getServerInfo(email) != null;
     }
 }
