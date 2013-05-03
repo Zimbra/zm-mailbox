@@ -1,6 +1,6 @@
 open_source_license.txt
 
-VMware Zimbra Windows Components 8.0.3 GA
+VMware Zimbra Windows Components 8.0.4 Beta
 
 
 ===========================================================================
@@ -29,15 +29,11 @@ associated with each component.
 
 
 
-
 SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 
    >>> cldr-windowszones.xml-20120713
    >>> jsoncpp-0.6.0
    >>> zlib-1.2.6
-
-
-
 
 
 
@@ -155,8 +151,6 @@ The MIT license is compatible with both the GPL and commercial software, affordi
 
 
 
-
-
 ===========================================================================
 
 To the extent any open source components are licensed under the
@@ -177,4 +171,4 @@ years from the date you acquired this Software product. Alternatively,
 the Source Files may accompany the VMware product.
 
 
-[ZCSWINDOWS803GANV030513]
+[ZCSWINDOWS804BSS050113]
