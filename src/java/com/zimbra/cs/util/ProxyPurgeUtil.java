@@ -257,8 +257,8 @@ public class ProxyPurgeUtil
 
                 // for each alias add routes for it's domain and all virtual IPs for that domain
                 // I think, all the http routes are stored by user id, or, uid or, uid@domain.
-                // I haven't found any alias in the http routes. Hence skipping it.
                 for (String alias : aliases) {
+                    routes.add("route:proto=http;user=" + alias);
                     routes.add("route:proto=imap;user=" + alias);
                     routes.add("route:proto=pop3;user=" + alias);
                     if (alias.indexOf('@') != -1) {
@@ -270,6 +270,7 @@ public class ProxyPurgeUtil
                     }
                     for (String vip : vips) {
                         // for each virtual ip add the routes to the list.
+                        routes.add("route:proto=http;user=" + alias + "@" + vip);
                         routes.add("route:proto=imap;user=" + alias + "@" + vip);
                         routes.add("route:proto=pop3;user=" + alias + "@" + vip);
                         routes.add("alias:user=" + alias + ";ip=" + vip);
