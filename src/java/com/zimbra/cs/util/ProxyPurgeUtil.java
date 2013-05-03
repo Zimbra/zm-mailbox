@@ -277,11 +277,13 @@ public class ProxyPurgeUtil
                 }
 
                 // for each alias add routes for it's domain and all virtual IPs for that domain
-                // I think, all the http routes are stored by user id, or, uid or, uid@domain.
                 // I haven't found any alias in the http/httpssl routes. Hence skipping it.
+                // bug:79940 says Active Sync routes are stored as http/https - alias@domain.com
                 for (String alias : aliases) {
+                    routes.add("route:proto=http;user=" + alias);
                     routes.add("route:proto=imap;user=" + alias);
                     routes.add("route:proto=pop3;user=" + alias);
+                    routes.add("route:proto=httpssl;user=" + alias);
                     routes.add("route:proto=imapssl;user=" + alias);
                     routes.add("route:proto=pop3ssl;user=" + alias);
 
@@ -293,9 +295,11 @@ public class ProxyPurgeUtil
                         routes.add("alias:user=" + alias + ";vhost=" + vhost);
                     }
                     for (String vip : vips) {
-                        // for each virtual ip add the routes to the list. 
+                        // for each virtual ip add the routes to the list.
+                        routes.add("route:proto=http;user=" + alias + "@" + vip);
                         routes.add("route:proto=imap;user=" + alias + "@" + vip);
                         routes.add("route:proto=pop3;user=" + alias + "@" + vip);
+                        routes.add("route:proto=httpssl;user=" + alias + "@" + vip);
                         routes.add("route:proto=imapssl;user=" + alias + "@" + vip);
                         routes.add("route:proto=pop3ssl;user=" + alias + "@" + vip);
                         routes.add("alias:user=" + alias + ";ip=" + vip);
