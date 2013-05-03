@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -157,7 +158,7 @@ public abstract class Formatter {
     }
 
     public abstract void formatCallback(UserServletContext context)
-        throws UserServletException, ServiceException, IOException, ServletException;
+        throws UserServletException, ServiceException, IOException, ServletException, MessagingException;
 
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
         throws UserServletException, ServiceException, IOException, ServletException {
