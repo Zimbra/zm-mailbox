@@ -185,6 +185,22 @@
 	    </Arg>
         </Call>
         <Call name="addRule">
+            <Arg>
+                <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+                    <Set name="pattern">/ews/Exchange.asmx/*</Set>
+                    <Set name="replacement">/service/extension/zimbraews</Set>
+                </New>
+            </Arg>
+        </Call>
+        <Call name="addRule">
+            <Arg>
+                <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+                    <Set name="pattern">/EWS/Exchange.asmx/*</Set>
+                    <Set name="replacement">/service/extension/zimbraews</Set>
+                </New>
+            </Arg>
+        </Call>
+        <Call name="addRule">
 	    <Arg>
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/principals/*</Set>
