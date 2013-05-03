@@ -298,14 +298,10 @@ public class GetDistributionListMembers extends GalDocumentHandler {
             int limit, int offset, DLMembers dlMembers) throws ServiceException {
 
         if (!GalSearchControl.canExpandGalGroup(dlName, dlMembers.getDLZimbraId(), account)) {
-            if (dlMembers instanceof GalContactDLMembers) {
-                //bug 81052, if dlMembers is from Gal, it's possible that zimbraId is different from LDAP
-                Group dl = Provisioning.getInstance().getGroup(DistributionListBy.name, dlName);
-                ZimbraLog.misc.info("zimbraId for DL %s in Gal(%s) is different from LDAP(%s)",
-                        dlName, dlMembers.getDLZimbraId(), dl.getId());
-                if (!GalSearchControl.canExpandGalGroup(dlName, dl.getId(), account)) {
-                    throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
-                }
+            ZimbraLog.misc.warn("dlName: %s, dlMembers(%s) size %d, id %s", dlName, dlMembers.getClass(), dlMembers.getTotal(), dlMembers.getDLZimbraId());
+            Group dl = Provisioning.getInstance().getGroup(DistributionListBy.name, dlName);
+            if (dl == null) {
+                throw ServiceException.NOT_FOUND(dlName + " does not exist");
             } else {
                 throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
             }
