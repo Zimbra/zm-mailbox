@@ -475,7 +475,18 @@ public class Contact extends MailItem {
         first = first == null ? "" : first;
         String company = attrs.get(ContactConstants.A_company);
         company = company == null ? "" : company;
+        String middle = attrs.get(ContactConstants.A_middleName);
+        middle = middle == null ? "" : middle;
 
+        //remove middle name as format is not defined ContactConstants
+        if (!middle.isEmpty()) {
+            String lastFirstMiddle = last + ", " + first + " " + middle;
+            String firstMiddleLast = first + " " + middle + " " + last;
+            if (fileAs.equals(lastFirstMiddle) || fileAs.equals(firstMiddleLast)) {
+        	    fileAs = last + ", " + first;
+            }
+        }
+        
         //ContactConstants.A_LAST_C_FIRST = 1
         StringBuilder sb = new StringBuilder();
         sb.append(last);
