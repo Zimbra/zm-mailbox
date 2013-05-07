@@ -65,10 +65,11 @@ public class GetInfoResponseTest {
                 identities.get(0).toString());
         Collection<String> sigHtml = result.getPrefsMultimap().get("zimbraPrefMailSignatureHTML");
         Assert.assertNotNull(sigHtml);
-        // Full comparison failing on Jenkins system due to environmental charset issues
         String sig = sigHtml.iterator().next();
-        // Assert.assertEquals("\u003Cstrong\u003Ef—— utf8\u003C/strong\u003E signature test" , sig);
-        Assert.assertTrue("Signature", sig.endsWith("signature test"));
+        // Full comparison failing on Jenkins system due to environmental charset issues
+        // Re-enabled stricter test.  Assuming use of Unicode escapes \u00F3 (twice) gets around this issue:
+        //     Assert.assertTrue("Signature", sig.endsWith("signature test"));
+        Assert.assertEquals("\u003Cstrong\u003Ef\u00F3\u00F3 utf8\u003C/strong\u003E signature test" , sig);
         Assert.assertTrue("Number of license attributes", 2 <= result.getLicense().getAttrs().size());
     }
     
