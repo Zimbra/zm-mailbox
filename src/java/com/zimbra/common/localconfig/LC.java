@@ -1275,6 +1275,10 @@ public final class LC {
 
     public static final KnownKey defang_valid_convertd_file = KnownKey.newKey("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
 
+    //EWS web service
+    public static final KnownKey ews_service_wsdl_location =
+        KnownKey.newKey("/opt/zimbra/conf/");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
