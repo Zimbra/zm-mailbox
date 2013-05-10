@@ -7176,10 +7176,10 @@ TODO: delete them permanently from here
   <desc>folders whose sync key are already converted, each device has a list of folders. e.g. ApplDN6GJSQJDFHW:0,2,10 meaning device ApplDN6GJSQJDFHW's folders, inbox and calendar folder sync key format are converted, use 0 for FolderSync</desc>
 </attr>
 
-<attr id="1440" name="zimbraReverseProxyUpstreamConnectTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.4">
-  <globalConfigValue>25s</globalConfigValue>
+<attr id="1440" name="zimbraReverseProxyUpstreamConnectTimeout" type="integer" min="0" max="75" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.4">
+  <globalConfigValue>25</globalConfigValue>
   <desc>
-     The connect timeout is the time interval after which NGINX will disconnect while establishing an upstream HTTP connection
+     The connect timeout is the time interval after which NGINX will disconnect while establishing an upstream HTTP connection. Measured in seconds, should not be more than 75 seconds.
   </desc>
 </attr>
 

@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 vmahajan 20130510-1309 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130510-1145 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14561,7 +14561,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @return zimbraMtaTlsSecurityLevel, or ZAttrProvisioning.MtaTlsSecurityLevel.may if unset and/or has invalid value
      *
@@ -14575,7 +14575,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @return zimbraMtaTlsSecurityLevel, or "may" if unset
      *
@@ -14589,7 +14589,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14606,7 +14606,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14624,7 +14624,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14641,7 +14641,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14659,7 +14659,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14675,7 +14675,7 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [may, none]
+     * <p>Valid values: [none, may]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20866,49 +20866,22 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
-     * <p>Use getReverseProxyUpstreamConnectTimeoutAsString to access value as a string.
-     *
-     * @see #getReverseProxyUpstreamConnectTimeoutAsString()
-     *
-     * @return zimbraReverseProxyUpstreamConnectTimeout in millseconds, or 25000 (25s)  if unset
+     * @return zimbraReverseProxyUpstreamConnectTimeout, or 25 if unset
      *
      * @since ZCS 8.0.4
      */
     @ZAttr(id=1440)
-    public long getReverseProxyUpstreamConnectTimeout() {
-        return getTimeInterval(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, 25000L);
+    public int getReverseProxyUpstreamConnectTimeout() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, 25);
     }
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
-     *
-     * @return zimbraReverseProxyUpstreamConnectTimeout, or "25s" if unset
-     *
-     * @since ZCS 8.0.4
-     */
-    @ZAttr(id=1440)
-    public String getReverseProxyUpstreamConnectTimeoutAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, "25s");
-    }
-
-    /**
-     * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
      * @param zimbraReverseProxyUpstreamConnectTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20916,19 +20889,16 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.0.4
      */
     @ZAttr(id=1440)
-    public void setReverseProxyUpstreamConnectTimeout(String zimbraReverseProxyUpstreamConnectTimeout) throws com.zimbra.common.service.ServiceException {
+    public void setReverseProxyUpstreamConnectTimeout(int zimbraReverseProxyUpstreamConnectTimeout) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, zimbraReverseProxyUpstreamConnectTimeout);
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, Integer.toString(zimbraReverseProxyUpstreamConnectTimeout));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
      * @param zimbraReverseProxyUpstreamConnectTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20937,19 +20907,16 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.0.4
      */
     @ZAttr(id=1440)
-    public Map<String,Object> setReverseProxyUpstreamConnectTimeout(String zimbraReverseProxyUpstreamConnectTimeout, Map<String,Object> attrs) {
+    public Map<String,Object> setReverseProxyUpstreamConnectTimeout(int zimbraReverseProxyUpstreamConnectTimeout, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, zimbraReverseProxyUpstreamConnectTimeout);
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamConnectTimeout, Integer.toString(zimbraReverseProxyUpstreamConnectTimeout));
         return attrs;
     }
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20964,11 +20931,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24250,7 +24214,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @return zimbraTableMaintenanceOperation, or ZAttrProvisioning.TableMaintenanceOperation.ANALYZE if unset and/or has invalid value
      */
@@ -24264,7 +24228,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @return zimbraTableMaintenanceOperation, or "ANALYZE" if unset
      */
@@ -24278,7 +24242,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24295,7 +24259,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24313,7 +24277,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24330,7 +24294,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24348,7 +24312,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -24364,7 +24328,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [OPTIMIZE, ANALYZE]
+     * <p>Valid values: [ANALYZE, OPTIMIZE]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
