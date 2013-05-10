@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 vmahajan 20130510-1309 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130510-1145 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -88,8 +88,8 @@ public class ZAttrProvisioning {
 
     public static enum AutoProvAuthMech {
         KRB5("KRB5"),
-        LDAP("LDAP"),
         SPNEGO("SPNEGO"),
+        LDAP("LDAP"),
         PREAUTH("PREAUTH");
         private String mValue;
         private AutoProvAuthMech(String value) { mValue = value; }
@@ -101,8 +101,8 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isKRB5() { return this == KRB5;}
-        public boolean isLDAP() { return this == LDAP;}
         public boolean isSPNEGO() { return this == SPNEGO;}
+        public boolean isLDAP() { return this == LDAP;}
         public boolean isPREAUTH() { return this == PREAUTH;}
     }
 
@@ -323,8 +323,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum FeatureSocialFiltersEnabled {
-        LinkedIn("LinkedIn"),
         Facebook("Facebook"),
+        LinkedIn("LinkedIn"),
         SocialCast("SocialCast"),
         Twitter("Twitter");
         private String mValue;
@@ -336,8 +336,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isLinkedIn() { return this == LinkedIn;}
         public boolean isFacebook() { return this == Facebook;}
+        public boolean isLinkedIn() { return this == LinkedIn;}
         public boolean isSocialCast() { return this == SocialCast;}
         public boolean isTwitter() { return this == Twitter;}
     }
@@ -1035,8 +1035,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefPop3DeleteOption {
-        trash("trash"),
         delete("delete"),
+        trash("trash"),
         read("read"),
         keep("keep");
         private String mValue;
@@ -1048,8 +1048,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isTrash() { return this == trash;}
         public boolean isDelete() { return this == delete;}
+        public boolean isTrash() { return this == trash;}
         public boolean isRead() { return this == read;}
         public boolean isKeep() { return this == keep;}
     }
@@ -1289,8 +1289,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum TableMaintenanceOperation {
-        ANALYZE("ANALYZE"),
-        OPTIMIZE("OPTIMIZE");
+        OPTIMIZE("OPTIMIZE"),
+        ANALYZE("ANALYZE");
         private String mValue;
         private TableMaintenanceOperation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1300,8 +1300,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isANALYZE() { return this == ANALYZE;}
         public boolean isOPTIMIZE() { return this == OPTIMIZE;}
+        public boolean isANALYZE() { return this == ANALYZE;}
     }
 
     /**
@@ -10379,11 +10379,8 @@ public class ZAttrProvisioning {
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
      * @since ZCS 8.0.4
      */
