@@ -7182,6 +7182,7 @@ TODO: delete them permanently from here
      The connect timeout is the time interval after which NGINX will disconnect while establishing an upstream HTTP connection
   </desc>
 </attr>
+
 <attr id="1441" name="zimbraConverterHints" type="cstring" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited" since="9.0.0">
   <desc>Allows converter hints to be supplied on the COS level. Can be used to enable or disable some converters</desc>
 </attr>
@@ -7190,4 +7191,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>20971520</defaultCOSValue>
   <desc>Maximum size in bytes for file preview in web client</desc>
 </attr>
+
+<attr id="1443" name="zimbraPrefWebClientOfflineAccessEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>user preference to enable/disable access to his mailbox data in the web client when offline</desc>
+</attr>
+
 </attrs>
