@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130417-2233 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130510-1145 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -10328,11 +10328,8 @@ public class ZAttrProvisioning {
 
     /**
      * The connect timeout is the time interval after which NGINX will
-     * disconnect while establishing an upstream HTTP connection . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * disconnect while establishing an upstream HTTP connection. Measured in
+     * seconds, should not be more than 75 seconds.
      *
      * @since ZCS 8.0.4
      */
