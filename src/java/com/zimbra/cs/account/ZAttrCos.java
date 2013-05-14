@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130510-1145 */
+    /* build: 9.0.0_BETA1_1111 prashant 20130514-0053 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -10611,7 +10611,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @return zimbraFeatureSocialFiltersEnabled, or empty array if unset
      *
@@ -10625,7 +10625,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10642,7 +10642,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10660,7 +10660,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10677,7 +10677,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10695,7 +10695,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10711,7 +10711,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19671,7 +19671,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 9.0.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @return zimbraMobilePolicyDeviceEncryptionEnabled, or true if unset
@@ -19684,7 +19686,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 9.0.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @param zimbraMobilePolicyDeviceEncryptionEnabled new value
@@ -19700,7 +19704,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 9.0.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @param zimbraMobilePolicyDeviceEncryptionEnabled new value
@@ -19717,7 +19723,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 9.0.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19732,7 +19740,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 9.0.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -21307,6 +21317,83 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyRequireSignedSMIMEMessages(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEMessages, "");
+        return attrs;
+    }
+
+    /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @return zimbraMobilePolicyRequireStorageCardEncryption, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1444)
+    public boolean isMobilePolicyRequireStorageCardEncryption() {
+        return getBooleanAttr(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, true);
+    }
+
+    /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param zimbraMobilePolicyRequireStorageCardEncryption new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1444)
+    public void setMobilePolicyRequireStorageCardEncryption(boolean zimbraMobilePolicyRequireStorageCardEncryption) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, zimbraMobilePolicyRequireStorageCardEncryption ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param zimbraMobilePolicyRequireStorageCardEncryption new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1444)
+    public Map<String,Object> setMobilePolicyRequireStorageCardEncryption(boolean zimbraMobilePolicyRequireStorageCardEncryption, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, zimbraMobilePolicyRequireStorageCardEncryption ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1444)
+    public void unsetMobilePolicyRequireStorageCardEncryption() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1444)
+    public Map<String,Object> unsetMobilePolicyRequireStorageCardEncryption(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, "");
         return attrs;
     }
 
@@ -26515,7 +26602,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.advanced if unset and/or has invalid value
      */
@@ -26527,7 +26614,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @return zimbraPrefClientType, or "advanced" if unset
      */
@@ -26539,7 +26626,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26554,7 +26641,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26570,7 +26657,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26585,7 +26672,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26601,7 +26688,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -26615,7 +26702,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -26833,7 +26920,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.text if unset and/or has invalid value
      */
@@ -26845,7 +26932,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @return zimbraPrefComposeFormat, or "text" if unset
      */
@@ -26857,7 +26944,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26872,7 +26959,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26888,7 +26975,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26903,7 +26990,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26919,7 +27006,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -26933,7 +27020,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -27180,7 +27267,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @return zimbraPrefContactsInitialView, or ZAttrProvisioning.PrefContactsInitialView.list if unset and/or has invalid value
      */
@@ -27193,7 +27280,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @return zimbraPrefContactsInitialView, or "list" if unset
      */
@@ -27206,7 +27293,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27222,7 +27309,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27239,7 +27326,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27255,7 +27342,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27272,7 +27359,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -27287,7 +27374,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30034,7 +30121,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @return zimbraPrefIMIdleStatus, or ZAttrProvisioning.PrefIMIdleStatus.away if unset and/or has invalid value
      *
@@ -30048,7 +30135,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @return zimbraPrefIMIdleStatus, or "away" if unset
      *
@@ -30062,7 +30149,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30079,7 +30166,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30097,7 +30184,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30114,7 +30201,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30132,7 +30219,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -30148,7 +30235,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32472,7 +32559,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @return zimbraPrefMailSignatureStyle, or ZAttrProvisioning.PrefMailSignatureStyle.outlook if unset and/or has invalid value
      */
@@ -32485,7 +32572,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @return zimbraPrefMailSignatureStyle, or "outlook" if unset
      */
@@ -32498,7 +32585,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32514,7 +32601,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32531,7 +32618,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32547,7 +32634,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32564,7 +32651,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -32579,7 +32666,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -33429,7 +33516,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @return zimbraPrefPop3DeleteOption, or ZAttrProvisioning.PrefPop3DeleteOption.delete if unset and/or has invalid value
      *
@@ -33448,7 +33535,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @return zimbraPrefPop3DeleteOption, or "delete" if unset
      *
@@ -33467,7 +33554,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33489,7 +33576,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33512,7 +33599,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33534,7 +33621,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33557,7 +33644,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -33578,7 +33665,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
