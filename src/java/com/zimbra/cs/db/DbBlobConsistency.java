@@ -289,7 +289,7 @@ public class DbBlobConsistency {
         }
         PreparedStatement stmt = null;
 
-        if (!(Db.getInstance() instanceof MySQL)) {
+        if (!(Db.getInstance() instanceof MariaDB)) {
             throw ServiceException.INVALID_REQUEST("export is only supported for MySQL", null);
         }
         ZimbraLog.sqltrace.info("Exporting %d items in table %s to %s.", idRevs.size(), tableName, path);

@@ -83,7 +83,7 @@ public abstract class Db {
                 }
             }
             if (sDatabase == null)
-                sDatabase = new MySQL();
+                sDatabase = new MariaDB();
         }
         return sDatabase;
     }
