@@ -108,7 +108,7 @@
     <condition property="db-mysql">
       <not><isset property="db-sqlite"/></not>
     </condition>
-    <condition property="db.driver.jar" value="mysql-connector-java*.jar">
+    <condition property="db.driver.jar" value="mariadb-java-client-*.jar">
         <isset property="db-mysql"/>
     </condition>
     <condition property="db.driver.jar" value="sqlitejdbc*.jar">
@@ -447,7 +447,7 @@
           <include name="${ziputil.jar}"/>
           <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
-          <include name="mysql-connector-java*.jar"/>
+          <include name="mariadb-java-client-*.jar"/>
           <include name="javamail-1.4.5.jar"/>
           <include name="zimbra-native.jar"/>
           <include name="bcprov-jdk15-146.jar"/>
