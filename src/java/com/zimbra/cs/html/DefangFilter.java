@@ -82,11 +82,11 @@ public class DefangFilter extends DefaultFilter {
     protected static final Object NULL = new Object();
 
     // regexes inside of attr values to strip out
-    private static final Pattern AV_JS_ENTITY = Pattern.compile("&\\{[^}]*\\}");
-    private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern AV_JAVASCRIPT = Pattern.compile("javascript", Pattern.CASE_INSENSITIVE);
+    private static final Pattern AV_JS_ENTITY = Pattern.compile(LC.defang_av_js_entity.value());
+    private static final Pattern AV_SCRIPT_TAG = Pattern.compile(LC.defang_av_script_tag.value(), Pattern.CASE_INSENSITIVE);
+    private static final Pattern AV_JAVASCRIPT = Pattern.compile(LC.defang_av_javascript.value(), Pattern.CASE_INSENSITIVE);
 
-   
+
  // regex for URLs href. TODO: beef this up
     private static final Pattern VALID_EXT_URL = Pattern.compile(LC.defang_valid_ext_url.value(), Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_INT_IMG = Pattern.compile(LC.defang_valid_int_img.value());
@@ -417,7 +417,7 @@ public class DefangFilter extends DefaultFilter {
         }
     }
 
-    private static final Pattern COMMENT = Pattern.compile("/\\*.*\\*/");
+    private static final Pattern COMMENT = Pattern.compile(LC.defang_comment.value());
     // matches functions (like url(), expression(), etc), except rgb()
     private static final Pattern STYLE_UNWANTED_FUNC =
             Pattern.compile(LC.defang_style_unwanted_func.value(), Pattern.CASE_INSENSITIVE);

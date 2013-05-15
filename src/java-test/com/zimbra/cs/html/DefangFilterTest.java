@@ -1,19 +1,19 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
- * 
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 VMware, Inc.
- * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
- * ***** END LICENSE BLOCK *****
- */
+ /*
+  * ***** BEGIN LICENSE BLOCK *****
+  *
+  * Zimbra Collaboration Suite Server
+  * Copyright (C) 2011, 2012, 2013 VMware, Inc.
+  *
+  * The contents of this file are subject to the Zimbra Public License
+  * Version 1.3 ("License"); you may not use this file except in
+  * compliance with the License.  You may obtain a copy of the License at
+  * http://www.zimbra.com/license.
+  *
+  * Software distributed under the License is distributed on an "AS IS"
+  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+  *
+  * ***** END LICENSE BLOCK *****
+  */
 package com.zimbra.cs.html;
 
 import java.io.ByteArrayInputStream;
@@ -423,7 +423,7 @@ public class DefangFilterTest {
         // and make sure we have the the complete URL for
         Assert.assertTrue(result
           .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?" +
-          		"version=1&modificationDate=1335967057000"));
+                "version=1&modificationDate=1335967057000"));
 
         // case where base URL does not have a trailing '/'
         String html = "<html><head><base href=\"https://wiki.tomsawyer.com\"/>"
@@ -481,47 +481,47 @@ public class DefangFilterTest {
     }
 
 
-	@Test
-	public void testBug78902() throws Exception {
+    @Test
+    public void testBug78902() throws Exception {
 
-		String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
-		InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
-		String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
-				.defang(htmlStream, true);
-		Assert.assertTrue(result
-				.contains("<a target=\"_blank\" href=\"Neptune.gif\"></a>"));
+        String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("<a target=\"_blank\" href=\"Neptune.gif\"></a>"));
 
 
-		html = "<html><body>My pictures <a href=\"javascript:document.write('%3C%61%20%68%72%65%66%3D%22%6A%61%76%"
-			+ "61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%31%29%22%20%6F%6E%4D%6F%75%73%65%4F%76%65%72%3D%61%6C%65%"
-			+ "72%74%28%5C%22%70%30%77%6E%5C%22%29%3E%4D%6F%75%73%65%20%6F%76%65%72%20%68%65%72%65%3C%2F%61%3E')\">here</a></body></html>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
-		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
-				.defang(htmlStream, true);
-		Assert.assertTrue(result
-				.contains("JAVASCRIPT-BLOCKED"));
+        html = "<html><body>My pictures <a href=\"javascript:document.write('%3C%61%20%68%72%65%66%3D%22%6A%61%76%"
+            + "61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%31%29%22%20%6F%6E%4D%6F%75%73%65%4F%76%65%72%3D%61%6C%65%"
+            + "72%74%28%5C%22%70%30%77%6E%5C%22%29%3E%4D%6F%75%73%65%20%6F%76%65%72%20%68%65%72%65%3C%2F%61%3E')\">here</a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("JAVASCRIPT-BLOCKED"));
 
-		html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
-		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
-				.defang(htmlStream, true);
-		Assert.assertTrue(result
-				.contains("<a target=\"_blank\" href=\"Neptune.txt\"></a>"));
+        html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("<a target=\"_blank\" href=\"Neptune.txt\"></a>"));
 
-		html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
-		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
-				.defang(htmlStream, true);
-		Assert.assertTrue(result
-				.contains("<a target=\"_blank\" href=\"Neptune.pptx\"></a>"));
+        html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("<a target=\"_blank\" href=\"Neptune.pptx\"></a>"));
 
-		html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
-		result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
-				.defang(htmlStream, true);
-		Assert.assertTrue(!result
-				.contains("<script>"));
-	}
+        html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(!result
+                .contains("<script>"));
+    }
 
 
     @Test
@@ -555,7 +555,7 @@ public class DefangFilterTest {
                 true);
         Assert.assertTrue(result.equals(html));
     }
-    
+
     @Test
     public void testBug81641() throws Exception {
 
@@ -566,37 +566,132 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(!result.contains("url('http://www.househuntnews.com/marketing/images/keller-header.jpg')"));
-        
+
         html = "<td style= \"@media (max-width: 480px) {.body{font-size: 0.938em;} }\" />";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-width: 480px)"));
-        
+
         html = "<td style= \"@media all and (max-width: 699px) and (min-width: 520px)\" />";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains(" (max-width: 699px) and (min-width: 520px)"));
-        
+
         html ="<td style= \"@media (orientation:portrait)\" />";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(orientation:portrait)"));
-        
+
         html = "<td style= \"@media (min-width: 700px), handheld and (orientation: landscape) { ... }\"/>";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(min-width: 700px), handheld and (orientation: landscape)"));
-        
+
         html = "<td style= \"@media not screen and (color), print and (color)\"/>";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("not screen and (color), print and (color)"));
-        
+
         html = "<td style=  \"@media (max-width 480px) {.body{font-size: 0.938em;} }\"/>";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-width 480px)"));
-        
+
+    }
+    @Test
+    public void testBug82181() throws Exception {
+
+        String html = "<html><head><style> sf { display: block;}@media print {.xsfnoprint{ display : none ;}} "
+            + " /* Default css layout information   for SAP Smart Forms (XSF Output)   Last modified: 12.05.2003 */ "
+            + "@media screen {  body {    background-color : #EFEFEF ;  }}"
+            + "@media screen {  .page {    border-style : outset ;    border-width : 2pt ;    background-color : white ;  }}"
+            + "/*@media print {  .page {    overflow: hidden;  }}*/"
+            + "/* unification browser-dependent  settings */"
+            + "table {    border-spacing: 0pt;    empty-cells: show;}"
+            + "tr { vertical-align: top; }"
+            + "td { padding: 0pt; }"
+            + "input {    font: inherit;    padding: 0pt;    margin: 0pt;}"
+            + "img {    display: block;}"
+            + "img.icon {    display: inline;}"
+            + "/* End of default.css */"
+            + ".ZNOW-USER-REGISTER-STYLE  div#P1.par{    font-family : \"Times New Roman\" ;    font-size : 12pt ;    font-weight :20normal ;    line-height : 4.23mm ;    text-decoration : none ;    text-align : left ;    clear : both ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  div#P2.par{    font-family : \"Times New Roman\" ;   font-size : 12pt ;    font-weight : bold ;    line-height : 4.23mm ;    text-decoration : none ;    text-align : left ;    clear : both ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  a{    color : #000000 ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  span#C1.char{    font-family : \"Times New Roman\" ;    font-size : 12pt ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  span#C2.char{    font-family : \"Times New Roman\" ;    font-size : 12pt ;    font-weight : bold ;}"
+            + "#sf--PAGE1-001.page{    position : absolute ;    height : 210mm ;    width : 297mm ;    top : 0pt ;}"
+            + "@media screen {#MAIN.win{    overflow : auto ;}}"
+            + "@media print {#MAIN.win{    overflow : hidden ;}}"
+            + "#sf--PAGE1-001.page  #MAIN.win{    position : absolute ;    left : 1.15cm ;    top : 1.03cm ;    width : 21.90cm ;    height : 12.15cm ;}</style></head><html>";
+
+        String htmlWithMultiLineComment = "<head>\n"
+            + " <style> sf {\n"
+            + "    display: block;\n"
+            + "}\n"
+            + "   @media print {\n"
+            + ".xsfnoprint {\n"
+            + "          display: none;\n"
+            + "      }\n"
+            + "  }\n"
+            + "     \n"
+            + "/* Default css layout information   for SAP Smart Forms (XSF Output)   Last modified: 12.05.2003 \n"
+            + " adding  one more line */\n"
+            + " @media screen {\n"
+            + "    body {\n"
+            + "         background-color: #EFEFEF;\n"
+            + "      }\n"
+            + "  }\n"
+            + "  \n"
+            + "  @media screen {\n"
+            + "      .page {\n"
+            + "           border-style: outset;\n"
+            + "           border-width: 2pt;\n"
+            + "          background-color: white;\n"
+            + "       }\n"
+            + "   }\n"
+            + "   \n"
+            + "       /*@media print {  .page {    overflow: hidden;  }}*//* unification browser-dependent settings */\n"
+            + "  table {\n" + "      border-spacing: 0pt;\n" + "      empty-cells: show;\n"
+            + "    }\n" + "    \n" + "    tr {\n" + "        vertical-align: top;\n" + "     }\n"
+            + "     \n" + "    td {\n" + "       padding: 0pt;\n" + "    }\n" + "    \n"
+            + "   input {\n" + "        font: inherit;\n" + "       padding: 0pt;\n"
+            + "       margin: 0pt;\n" + "    }\n" + "    \n" + "   img {\n"
+            + "        display: block;\n" + "   }\n" + "    \n" + "   img.icon {\n"
+            + "        display: inline;\n" + "    }\n" + "    /* End of default.css */\n"
+            + "  .ZNOW-USER-REGISTER-STYLE  div#P1.par {\n"
+            + "        font-family: \"Times New Roman\";\n" + "       font-size: 12pt;\n"
+            + "        font-weight: normal;\n" + "        line-height: 4.23mm;\n"
+            + "        text-decoration: none;\n" + "        text-align: left;\n"
+            + "        clear: both;\n" + "    }\n" + "\n"
+            + "    .ZNOW-USER-REGISTER-STYLE  div#P2.par {\n"
+            + "       font-family: \"Times New Roman\";\n" + "       font-size: 12pt;\n"
+            + "        font-weight: bold;\n" + "        line-height: 4.23mm;\n"
+            + "        text-decoration: none;\n" + "        text-align: left;\n"
+            + "        clear: both;\n" + "    }\n" + "\n" + "    .ZNOW-USER-REGISTER-STYLE  a {\n"
+            + "       color: #000000;\n" + "    }\n" + "\n"
+            + "   .ZNOW-USER-REGISTER-STYLE  span#C1.char {\n"
+            + "        font-family: \"Times New Roman\";\n" + "        font-size: 12pt;\n"
+            + "    }\n" + "\n" + "    .ZNOW-USER-REGISTER-STYLE  span#C2.char {\n"
+            + "       font-family: \"Times New Roman\";\n" + "       font-size: 12pt;\n"
+            + "       font-weight: bold;\n" + "    }\n" + "\n" + "    #sf--PAGE1-001.page {\n"
+            + "        position: absolute;\n" + "        height: 210mm;\n"
+            + "        width: 297mm;\n" + "       top: 0pt;\n" + "    }\n" + "\n"
+            + "   @media screen {\n" + "       #MAIN.win {\n" + "            overflow: auto;\n"
+            + "       }\n" + "    }\n" + "\n" + "    @media print {\n" + "        #MAIN.win {\n"
+            + "            overflow: hidden;\n" + "        }\n" + "   }\n" + "\n"
+            + "    #sf--PAGE1-001.page #MAIN.win {\n" + "        position: absolute;\n"
+            + "        left: 1.15cm;\n" + "        top: 1.03cm;\n" + "        width: 21.90cm;\n"
+            + "        height: 12.15cm;\n" + "    }</style>\n" + "</head>\n";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("background-color : #EFEFEF"));
+
+        htmlStream = new ByteArrayInputStream(htmlWithMultiLineComment.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("background-color: #EFEFEF"));
+        Assert.assertTrue(!result.contains("Default css layout information   for SAP Smart Forms"));
+
     }
 
 }
