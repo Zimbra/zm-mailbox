@@ -172,7 +172,7 @@ public class DefangFilterTest {
         Assert.assertTrue(!result.contains("dfsrc=\"image001.gif\""));
         Assert.assertTrue(result.contains("src=\"image001.gif\""));
     }
-    
+
     /**
      * Tests to make sure we can handle inline image data embeded with a data: protocol
      * without tying up the system
@@ -401,9 +401,9 @@ public class DefangFilterTest {
 
     }
 
-   
-    
-    @Test
+
+
+	@Test
     public void testBug81641() throws Exception {
 
         String html = "<td style=\"background: #e7e7e7; background-image:"
@@ -444,6 +444,102 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-width 480px)"));
         
+    }
+	
+    @Test
+    public void testBug82181() throws Exception {
+
+        String html = "<html><head><style> sf { display: block;}@media print {.xsfnoprint{ display : none ;}} "
+            + " /* Default css layout information   for SAP Smart Forms (XSF Output)   Last modified: 12.05.2003 */ "
+            + "@media screen {  body {    background-color : #EFEFEF ;  }}"
+            + "@media screen {  .page {    border-style : outset ;    border-width : 2pt ;    background-color : white ;  }}"
+            + "/*@media print {  .page {    overflow: hidden;  }}*/"
+            + "/* unification browser-dependent  settings */"
+            + "table {    border-spacing: 0pt;    empty-cells: show;}"
+            + "tr { vertical-align: top; }"
+            + "td { padding: 0pt; }"
+            + "input {    font: inherit;    padding: 0pt;    margin: 0pt;}"
+            + "img {    display: block;}"
+            + "img.icon {    display: inline;}"
+            + "/* End of default.css */"
+            + ".ZNOW-USER-REGISTER-STYLE  div#P1.par{    font-family : \"Times New Roman\" ;    font-size : 12pt ;    font-weight :20normal ;    line-height : 4.23mm ;    text-decoration : none ;    text-align : left ;    clear : both ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  div#P2.par{    font-family : \"Times New Roman\" ;   font-size : 12pt ;    font-weight : bold ;    line-height : 4.23mm ;    text-decoration : none ;    text-align : left ;    clear : both ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  a{    color : #000000 ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  span#C1.char{    font-family : \"Times New Roman\" ;    font-size : 12pt ;}"
+            + ".ZNOW-USER-REGISTER-STYLE  span#C2.char{    font-family : \"Times New Roman\" ;    font-size : 12pt ;    font-weight : bold ;}"
+            + "#sf--PAGE1-001.page{    position : absolute ;    height : 210mm ;    width : 297mm ;    top : 0pt ;}"
+            + "@media screen {#MAIN.win{    overflow : auto ;}}"
+            + "@media print {#MAIN.win{    overflow : hidden ;}}"
+            + "#sf--PAGE1-001.page  #MAIN.win{    position : absolute ;    left : 1.15cm ;    top : 1.03cm ;    width : 21.90cm ;    height : 12.15cm ;}</style></head><html>";
+
+        String htmlWithMultiLineComment = "<head>\n"
+            + " <style> sf {\n"
+            + "    display: block;\n"
+            + "}\n"
+            + "   @media print {\n"
+            + ".xsfnoprint {\n"
+            + "          display: none;\n"
+            + "      }\n"
+            + "  }\n"
+            + "     \n"
+            + "/* Default css layout information   for SAP Smart Forms (XSF Output)   Last modified: 12.05.2003 \n"
+            + " adding  one more line */\n"
+            + " @media screen {\n"
+            + "    body {\n"
+            + "         background-color: #EFEFEF;\n"
+            + "      }\n"
+            + "  }\n"
+            + "  \n"
+            + "  @media screen {\n"
+            + "      .page {\n"
+            + "           border-style: outset;\n"
+            + "           border-width: 2pt;\n"
+            + "          background-color: white;\n"
+            + "       }\n"
+            + "   }\n"
+            + "   \n"
+            + "       /*@media print {  .page {    overflow: hidden;  }}*//* unification browser-dependent settings */\n"
+            + "  table {\n" + "      border-spacing: 0pt;\n" + "      empty-cells: show;\n"
+            + "    }\n" + "    \n" + "    tr {\n" + "        vertical-align: top;\n" + "     }\n"
+            + "     \n" + "    td {\n" + "       padding: 0pt;\n" + "    }\n" + "    \n"
+            + "   input {\n" + "        font: inherit;\n" + "       padding: 0pt;\n"
+            + "       margin: 0pt;\n" + "    }\n" + "    \n" + "   img {\n"
+            + "        display: block;\n" + "   }\n" + "    \n" + "   img.icon {\n"
+            + "        display: inline;\n" + "    }\n" + "    /* End of default.css */\n"
+            + "  .ZNOW-USER-REGISTER-STYLE  div#P1.par {\n"
+            + "        font-family: \"Times New Roman\";\n" + "       font-size: 12pt;\n"
+            + "        font-weight: normal;\n" + "        line-height: 4.23mm;\n"
+            + "        text-decoration: none;\n" + "        text-align: left;\n"
+            + "        clear: both;\n" + "    }\n" + "\n"
+            + "    .ZNOW-USER-REGISTER-STYLE  div#P2.par {\n"
+            + "       font-family: \"Times New Roman\";\n" + "       font-size: 12pt;\n"
+            + "        font-weight: bold;\n" + "        line-height: 4.23mm;\n"
+            + "        text-decoration: none;\n" + "        text-align: left;\n"
+            + "        clear: both;\n" + "    }\n" + "\n" + "    .ZNOW-USER-REGISTER-STYLE  a {\n"
+            + "       color: #000000;\n" + "    }\n" + "\n"
+            + "   .ZNOW-USER-REGISTER-STYLE  span#C1.char {\n"
+            + "        font-family: \"Times New Roman\";\n" + "        font-size: 12pt;\n"
+            + "    }\n" + "\n" + "    .ZNOW-USER-REGISTER-STYLE  span#C2.char {\n"
+            + "       font-family: \"Times New Roman\";\n" + "       font-size: 12pt;\n"
+            + "       font-weight: bold;\n" + "    }\n" + "\n" + "    #sf--PAGE1-001.page {\n"
+            + "        position: absolute;\n" + "        height: 210mm;\n"
+            + "        width: 297mm;\n" + "       top: 0pt;\n" + "    }\n" + "\n"
+            + "   @media screen {\n" + "       #MAIN.win {\n" + "            overflow: auto;\n"
+            + "       }\n" + "    }\n" + "\n" + "    @media print {\n" + "        #MAIN.win {\n"
+            + "            overflow: hidden;\n" + "        }\n" + "   }\n" + "\n"
+            + "    #sf--PAGE1-001.page #MAIN.win {\n" + "        position: absolute;\n"
+            + "        left: 1.15cm;\n" + "        top: 1.03cm;\n" + "        width: 21.90cm;\n"
+            + "        height: 12.15cm;\n" + "    }</style>\n" + "</head>\n";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("background-color : #EFEFEF"));
+
+        htmlStream = new ByteArrayInputStream(htmlWithMultiLineComment.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("background-color: #EFEFEF"));
+        Assert.assertTrue(!result.contains("Default css layout information   for SAP Smart Forms"));
+
     }
 
     			
