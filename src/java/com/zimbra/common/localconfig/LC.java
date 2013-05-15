@@ -1258,6 +1258,10 @@ public final class LC {
     public static final KnownKey defang_valid_img_file = KnownKey.newKey("\\.(jpg|jpeg|png|gif)((\\?)?)");
 
     public static final KnownKey defang_valid_convertd_file = KnownKey.newKey("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
+    public static final KnownKey defang_comment = KnownKey.newKey("/\\*.*?\\*/");
+    public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
+    public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
+    public static final KnownKey defang_av_javascript = KnownKey.newKey("javascript");
 
     static {
         // Automatically set the key name with the variable name.
