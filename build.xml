@@ -400,7 +400,7 @@
     </target>
 
     <target name="mysql-versions-init" if="db-mysql">
-        <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
+        <java classname="com.zimbra.cs.db.MariaDB" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
         </java>
     </target>
@@ -1323,11 +1323,11 @@
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql" print="false"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
 
