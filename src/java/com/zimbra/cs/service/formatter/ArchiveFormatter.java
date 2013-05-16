@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,13 +45,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.collect.Sets;
-import org.eclipse.jetty.io.EndPoint;
-import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
-import org.eclipse.jetty.server.AbstractHttpConnection;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
@@ -97,7 +93,6 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -390,13 +385,14 @@ public abstract class ArchiveFormatter extends Formatter {
      * @throws IOException
      */
     private void disableJettyTimeout() throws IOException {
-        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
-            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
-            if (endPoint instanceof SelectChannelEndPoint) {
-                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                scEndPoint.setMaxIdleTime(0);
-            }
-        }
+        //TODO: reimplement with Jetty 9
+//        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
+//            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
+//            if (endPoint instanceof SelectChannelEndPoint) {
+//                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+//                scEndPoint.setMaxIdleTime(0);
+//            }
+//        }
     }
 
     private ArchiveOutputStream saveItem(UserServletContext context, MailItem mi,

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.util.http;
 
-import org.eclipse.jetty.http.HttpException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -90,31 +89,31 @@ public class ContentRangeTest
         Assert.assertNull(range);
     }
 
-    @Test(expected=HttpException.class)
+    @Test(expected=RangeException.class)
     public void parseReversedRange() throws Exception
     {
         ContentRange.parse("bytes 200-100/777");
     }
 
-    @Test(expected=HttpException.class)
+    @Test(expected=RangeException.class)
     public void parseRangeTooBig() throws Exception
     {
         ContentRange.parse("bytes 0-100/50");
     }
 
-    @Test(expected=HttpException.class)
+    @Test(expected=RangeException.class)
     public void parseNegativeInstanceLength() throws Exception
     {
         ContentRange.parse("bytes 0-100/-1000");
     }
 
-    @Test(expected=HttpException.class)
+    @Test(expected=RangeException.class)
     public void parseNegativeEnd() throws Exception
     {
         ContentRange.parse("bytes 0--100/1000");
     }
 
-    @Test(expected=HttpException.class)
+    @Test(expected=RangeException.class)
     public void parseGarbage() throws Exception
     {
         ContentRange.parse("garbage");

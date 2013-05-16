@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,14 +28,9 @@ import java.util.Set;
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.io.EndPoint;
-import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
-import org.eclipse.jetty.server.AbstractHttpConnection;
-
 import com.google.common.base.Charsets;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -85,7 +80,7 @@ public class CsvFormatter extends Formatter {
             if (locale == null) {
                 locale = context.getLocale().toString();
             }
-            //Passing the mailbox and operation context 
+            //Passing the mailbox and operation context
             ContactCSV contactCSV = new ContactCSV(context.targetMailbox,context.opContext);
             contactCSV.toCSV(format, locale, sepChar, iterator, sb);
         } catch (ContactCSV.ParseException e) {
@@ -113,7 +108,7 @@ public class CsvFormatter extends Formatter {
     public boolean supportsSave() {
         return true;
     }
-    
+
     private static final int READ_AHEAD_BUFFER_SIZE = 8192;
 
     @Override
@@ -182,12 +177,13 @@ public class CsvFormatter extends Formatter {
      * @throws IOException
      */
     private void disableJettyTimeout() throws IOException {
-        if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
-            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
-            if (endPoint instanceof SelectChannelEndPoint) {
-                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                scEndPoint.setMaxIdleTime(0);
-            }
-        }
+        //TODO: reimplement with Jetty 9
+//        if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
+//            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
+//            if (endPoint instanceof SelectChannelEndPoint) {
+//                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+//                scEndPoint.setMaxIdleTime(0);
+//            }
+//        }
     }
 }

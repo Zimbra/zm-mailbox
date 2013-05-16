@@ -17,6 +17,7 @@ package com.zimbra.cs.service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
@@ -221,6 +222,30 @@ public class MockHttpServletResponse implements HttpServletResponse {
     public void setStatus(int arg0, String arg1) {
         // TODO Auto-generated method stub
         
+    }
+
+    @Override
+    public String getHeader(String arg0) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Collection<String> getHeaderNames() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Collection<String> getHeaders(String arg0) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public int getStatus() {
+        // TODO Auto-generated method stub
+        return 0;
     }
 
 }

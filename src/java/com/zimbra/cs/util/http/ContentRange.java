@@ -1,25 +1,23 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
+ *
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.util.http;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.eclipse.jetty.http.HttpException;
 
 /**
  * Represents Content-Range. Helps with parsing and manipulating Content-Range headers.
@@ -43,9 +41,9 @@ public class ContentRange
      *
      * @param start Start of the range. Must be >= 0.
      * @param end End of the range (inclusive). Must be >= start.
-     * @throws HttpException Invalid range
+     * @throws RangeException Invalid range
      */
-    public ContentRange(long start, long end) throws HttpException
+    public ContentRange(long start, long end) throws RangeException
     {
         setStartAndEnd(start, end);
     }
@@ -56,9 +54,9 @@ public class ContentRange
      * @param start Start of the range. Must be >= 0.
      * @param end End of the range (inclusive). Must be >= start.
      * @param instanceLength Instance length. Must be => 0.
-     * @throws HttpException Invalid range
+     * @throws RangeException Invalid range
      */
-    public ContentRange(long start, long end, long instanceLength) throws HttpException
+    public ContentRange(long start, long end, long instanceLength) throws RangeException
     {
         setStartAndEnd(start, end);
         setInstanceLength(instanceLength);
@@ -68,9 +66,9 @@ public class ContentRange
      * Constructs Content-Range with instance length only.
      *
      * @param instanceLength Instance length. Must be => 0.
-     * @throws HttpException Invalid range
+     * @throws RangeException Invalid range
      */
-    public ContentRange(long instanceLength) throws HttpException
+    public ContentRange(long instanceLength) throws RangeException
     {
         setInstanceLength(instanceLength);
     }
@@ -80,7 +78,7 @@ public class ContentRange
      * set.
      *
      * @param instanceLength Instance length. Must be => 0.
-     * @throws HttpException Invalid range
+     * @throws RangeException Invalid range
      */
     public ContentRange()
     {
@@ -166,9 +164,9 @@ public class ContentRange
      *
      * @return ContentRange instance or null if Content-Range header is missing in the request
      *
-     * @throws HttpException If invalid values were found
+     * @throws RangeException If invalid values were found
      */
-    public static ContentRange parse(HttpServletRequest req) throws HttpException
+    public static ContentRange parse(HttpServletRequest req) throws RangeException
     {
         return parse(req.getHeader("Content-Range"));
     }
@@ -180,9 +178,9 @@ public class ContentRange
      *
      * @param header String with the header value
      * @return ContentRange instance or null if header parameter was null
-     * @throws HttpException If invalid values were found
+     * @throws RangeException If invalid values were found
      */
-    public static ContentRange parse(String header) throws HttpException
+    public static ContentRange parse(String header) throws RangeException
     {
         if (header == null) {
             return null;
@@ -191,7 +189,7 @@ public class ContentRange
         header = header.trim();
 
         if (!header.startsWith("bytes")) {
-            throw new HttpException(HttpServletResponse.SC_BAD_REQUEST);
+            throw new RangeException(HttpServletResponse.SC_BAD_REQUEST);
         }
 
         header = header.substring(6).trim();
@@ -199,7 +197,7 @@ public class ContentRange
         final int slashPos = header.indexOf('/');
 
         if (slashPos == -1) {
-            throw new HttpException(HttpServletResponse.SC_BAD_REQUEST);
+            throw new RangeException(HttpServletResponse.SC_BAD_REQUEST);
         }
 
         ContentRange range = new ContentRange();
@@ -209,7 +207,7 @@ public class ContentRange
 
             if (dashPos == -1) {
                 if (header.charAt(0) != '*') {
-                    throw new HttpException(HttpServletResponse.SC_BAD_REQUEST);
+                    throw new RangeException(HttpServletResponse.SC_BAD_REQUEST);
                 }
             } else {
                 long start = Long.parseLong(header.substring(0, dashPos).trim());
@@ -225,27 +223,27 @@ public class ContentRange
             }
 
         } catch (NumberFormatException e) {
-            throw new HttpException(HttpServletResponse.SC_BAD_REQUEST);
+            throw new RangeException(HttpServletResponse.SC_BAD_REQUEST);
         }
 
         return range;
     }
 
-    private void setInstanceLength(long value) throws HttpException
+    private void setInstanceLength(long value) throws RangeException
     {
         if (value < 0 || (startEndSet && end >= value)) {
-            throw new HttpException(HttpServletResponse.SC_BAD_REQUEST);
+            throw new RangeException(HttpServletResponse.SC_BAD_REQUEST);
         }
 
         instanceLength = value;
         lengthSet = true;
     }
 
-    private void setStartAndEnd(long start, long end) throws HttpException
+    private void setStartAndEnd(long start, long end) throws RangeException
     {
         // make sure the values make sense
         if (start < 0 || end < start)
-            throw new HttpException(HttpServletResponse.SC_BAD_REQUEST);
+            throw new RangeException(HttpServletResponse.SC_BAD_REQUEST);
 
         this.start = start;
         this.end = end;
@@ -256,6 +254,7 @@ public class ContentRange
      * Returns Content-Range as header's value
      * (i.e. starting from bytes, etc).
      */
+    @Override
     public String toString()
     {
         String result = "bytes ";
