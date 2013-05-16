@@ -22907,7 +22907,7 @@ All rights reserved.
 
 >>> openldap-2.4.35
 
-he OpenLDAP Public License
+The OpenLDAP Public License
 Version 2.8, 17 August 2003
 
 Redistribution and use of this software and associated documentation
@@ -40850,7 +40850,7 @@ of the United Nations Convention on Contracts for the International Sale
 of Goods is expressly excluded. Any use of the Original Work outside
 the scope of this License or after its termination shall be subject
 to the requirements and penalties of the U.S. Copyright Act, 17 U.S.C.
-§ 101 et seq., the equivalent laws of other countries, and international
+101 et seq., the equivalent laws of other countries, and international
 treaty. This section shall survive the termination of this License.
 
 12) Attorneys Fees.
@@ -40887,6 +40887,8 @@ This license is Copyright (C) 2003-2004 Lawrence E. Rosen. All rights
 reserved. Permission is hereby granted to copy and distribute this
 license without modification. This license may not be modified without
 the express written permission of its copyright owner.
+
+
 
 
 --------------- SECTION 16: Artistic License, V1.0  -----------
