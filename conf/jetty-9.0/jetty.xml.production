@@ -22,7 +22,7 @@
         <Set name="maxThreads">%%zimbraHttpNumThreads%%</Set>
         <Set name="idleTimeout">%%zimbraHttpThreadPoolMaxIdleTimeMillis%%</Set>
       </New>
-    </Set>
+    </Arg>
 
     <Call class="com.zimbra.common.jetty.JettyMonitor" name="setThreadPool">
       <Arg><Ref id="pool"/></Arg>
@@ -77,7 +77,7 @@
 					</Array>
 				</Arg>
 				<Set name="host">%%zimbraMailBindAddress%%</Set>
-				<Set name="port">"%%zimbraMailPort%%</Set>
+				<Set name="port">%%zimbraMailPort%%</Set>
 				<Set name="idleTimeout">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
 			</New>
 		</Arg>
@@ -103,7 +103,7 @@
 					</Array>
 				</Arg>
 				<Set name="host">localhost</Set>
-				<Set name="port">"%%zimbraMailPort%%</Set>
+				<Set name="port">%%zimbraMailPort%%</Set>
 				<Set name="idleTimeout">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
 			</New>
 		</Arg>
@@ -151,7 +151,7 @@
 					</Array>
 				</Arg>
 				<Set name="host">%%zimbraMailSSLBindAddress%%</Set>
-				<Set name="port">>%%zimbraMailSSLPort%%</Set>
+				<Set name="port">%%zimbraMailSSLPort%%</Set>
 				<Set name="idleTimeout">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
 			</New>
 		</Arg>
@@ -198,7 +198,7 @@
 					</Array>
 				</Arg>
 				<Set name="host">%%zimbraMailSSLClientCertBindAddress%%</Set>
-				<Set name="port">>%%zimbraMailSSLClientCertPort%%</Set>
+				<Set name="port">%%zimbraMailSSLClientCertPort%%</Set>
 				<Set name="idleTimeout">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
 			</New>
 		</Arg>
@@ -749,8 +749,6 @@
     <!-- extra options                                               -->
     <!-- =========================================================== -->
     <Set name="stopAtShutdown">true</Set>
-    <Set name="sendServerVersion">false</Set>
-    <Set name="sendDateHeader">true</Set>
 
     <!-- =========================================================== -->
     <!-- start connectors                                            -->
