@@ -5,7 +5,7 @@
 <!-- other configuration files.  e.g.                                -->
 <!--    java -jar start.jar etc/jetty-setuid.xml etc/jetty.xml       -->
 <!-- =============================================================== -->
-<Configure id="Server" class="org.mortbay.setuid.SetUIDServer">
+<Configure id="Server" class="org.eclipse.jetty.setuid.SetUIDServer">
   <Call class="com.zimbra.common.handlers.PrivilegedHandler" name="openPorts">
     <Arg>
       <Map>
@@ -100,7 +100,7 @@
 
   <Call name="setRLimitNoFiles">
     <Arg>
-        <New class="org.mortbay.setuid.RLimit">
+        <New class="org.eclipse.jetty.setuid.RLimit">
           <Set name="soft">65536</Set>
           <Set name="hard">65536</Set>
         </New>
