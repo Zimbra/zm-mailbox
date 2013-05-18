@@ -5,7 +5,8 @@
 <!-- other configuration files.  e.g.                                -->
 <!--    java -jar start.jar etc/jetty-setuid.xml etc/jetty.xml       -->
 <!-- =============================================================== -->
-<Configure id="Server" class="org.eclipse.jetty.setuid.SetUIDServer">
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+
   <Call class="com.zimbra.common.handlers.PrivilegedHandler" name="openPorts">
     <Arg>
       <Map>
@@ -93,18 +94,24 @@
     </Arg>
   </Call>
 
-  <Set name="startServerAsPrivileged">false</Set>
-  <Set name="umask">23</Set>decimal, equivalent to octal 027
-  <Set name="uid"><Property name="zimbra_uid"/></Set>
-  <Set name="gid"><Property name="zimbra_gid"/></Set>
-
-  <Call name="setRLimitNoFiles">
+  <Call name="addLifeCycleListener">
     <Arg>
-        <New class="org.eclipse.jetty.setuid.RLimit">
-          <Set name="soft">65536</Set>
-          <Set name="hard">65536</Set>
-        </New>
+      <New class="org.eclipse.jetty.setuid.SetUIDListener">
+        <Set name="startServerAsPrivileged"><Property name="jetty.startServerAsPrivileged" default="false"/></Set>
+        <Set name="umask">23</Set>
+        <Set name="username">zimbra</Set>
+        <Set name="groupname">zimbra</Set>
+
+        <Set name="RLimitNoFiles">
+          <Arg>
+            <New class="org.mortbay.setuid.RLimit">
+              <Set name="soft">65536</Set>
+              <Set name="hard">65536</Set>
+            </New>
+          </Arg>
+        </Set>
+
+      </New>
     </Arg>
   </Call>
 </Configure>
-
