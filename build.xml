@@ -382,7 +382,50 @@
         </antcall>
     	<antcall target="generate-provisioning"/>
     </target>
+	
+	<target name="p4-open">
+		<exec executable="/usr/local/bin/p4">
+	      <arg value="open"/>
+	      <arg value="${open.file}"/>
+		</exec>
+	</target>
 
+	<target name="p4-open-prov">
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrAccount.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrCalendarResource.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrCos.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrDomain.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrServer.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrUCService.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrConfig.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrDistributionList.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrDynamicGroup.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrShareLocator.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${common.src.java.dir}/com/zimbra/common/account/ZAttrProvisioning.java"/>
+		</antcall>
+	</target>
+	
     <target name="generate-getter">
        <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
               failonerror="true">
