@@ -20,6 +20,10 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import org.eclipse.jetty.io.EndPoint;
+import org.eclipse.jetty.io.SelectChannelEndPoint;
+import org.eclipse.jetty.server.HttpConnection;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -163,16 +167,11 @@ public class SyncGal extends GalDocumentHandler {
      */
     private void disableJettyTimeout() {
         if (LC.zimbra_gal_sync_disable_timeout.booleanValue()) {
-            //TODO: reimplement with Jetty 9
-//            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
-//            if (endPoint instanceof SelectChannelEndPoint) {
-//                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-//                try {
-//                    scEndPoint.setMaxIdleTime(0);
-//                } catch (IOException e) {
-//                    // ignore
-//                }
-//            }
+            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                scEndPoint.setIdleTimeout(0);
+            }
         }
     }
 }

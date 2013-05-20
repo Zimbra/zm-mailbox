@@ -45,6 +45,10 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.io.EndPoint;
+import org.eclipse.jetty.io.SelectChannelEndPoint;
+import org.eclipse.jetty.server.HttpConnection;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
@@ -384,15 +388,14 @@ public abstract class ArchiveFormatter extends Formatter {
      * in this case.
      * @throws IOException
      */
-    private void disableJettyTimeout() throws IOException {
-        //TODO: reimplement with Jetty 9
-//        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
-//            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
-//            if (endPoint instanceof SelectChannelEndPoint) {
-//                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-//                scEndPoint.setMaxIdleTime(0);
-//            }
-//        }
+    private void disableJettyTimeout() {
+        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
+            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                scEndPoint.setIdleTimeout(0);
+            }
+        }
     }
 
     private ArchiveOutputStream saveItem(UserServletContext context, MailItem mi,

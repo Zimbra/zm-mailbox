@@ -28,9 +28,14 @@ import java.util.Set;
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.io.EndPoint;
+import org.eclipse.jetty.io.SelectChannelEndPoint;
+import org.eclipse.jetty.server.HttpConnection;
+
 import com.google.common.base.Charsets;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -176,14 +181,13 @@ public class CsvFormatter extends Formatter {
      * in this case.
      * @throws IOException
      */
-    private void disableJettyTimeout() throws IOException {
-        //TODO: reimplement with Jetty 9
-//        if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
-//            EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
-//            if (endPoint instanceof SelectChannelEndPoint) {
-//                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-//                scEndPoint.setMaxIdleTime(0);
-//            }
-//        }
+    private void disableJettyTimeout() {
+        if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
+            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                scEndPoint.setIdleTimeout(0);
+            }
+        }
     }
 }
