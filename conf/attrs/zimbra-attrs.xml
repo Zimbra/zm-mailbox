@@ -7205,4 +7205,8 @@ TODO: delete them permanently from here
     ignored if zimbraFeatureMobilePolicyEnabled=FALSE
   </desc>
 </attr>
+
+<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.4">
+  <desc>weclient URL to directly connect when making service to JS calls from mail server in split mode</desc>
+</attr>
 </attrs>

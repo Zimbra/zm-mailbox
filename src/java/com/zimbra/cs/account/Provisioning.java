@@ -79,8 +79,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static final String SERVICE_MAILBOX   = "mailbox";
     public static final String SERVICE_MEMCACHED = "memcached";
-    public static final String SERVICE_WEBCLIENT = "webclient";
-    public static final String SERVICE_ADMINCLIENT = "adminclient";
 
     /**
      * generate appts that try to be compatible with exchange
@@ -1000,6 +998,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public static final int SO_NO_ACCOUNT_DEFAULTS = 0x200;            // do not set defaults and secondary defaults in makeAccount
     public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
+    public static final String SERVICE_WEBCLIENT = "zimbra";
+    public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
 
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 

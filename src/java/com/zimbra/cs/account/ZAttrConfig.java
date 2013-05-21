@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130514-0053 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130516-2148 */
 
     /**
      * RFC2256: descriptive information
@@ -43484,6 +43484,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetWebClientMaxInputBufferLength(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraWebClientMaxInputBufferLength, "");
+        return attrs;
+    }
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @return zimbraWebClientURL, or null if unset
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1445)
+    public String getWebClientURL() {
+        return getAttr(Provisioning.A_zimbraWebClientURL, null);
+    }
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @param zimbraWebClientURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1445)
+    public void setWebClientURL(String zimbraWebClientURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientURL, zimbraWebClientURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @param zimbraWebClientURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1445)
+    public Map<String,Object> setWebClientURL(String zimbraWebClientURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientURL, zimbraWebClientURL);
+        return attrs;
+    }
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1445)
+    public void unsetWebClientURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1445)
+    public Map<String,Object> unsetWebClientURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientURL, "");
         return attrs;
     }
 
