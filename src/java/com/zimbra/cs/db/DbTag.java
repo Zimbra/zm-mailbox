@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,13 +42,13 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.MailItem.PendingDelete;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public final class DbTag {
@@ -665,7 +665,7 @@ public final class DbTag {
                 String mailboxesMatchAnd = DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ti.mailbox_id AND ";
                 stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox, "mi") +
                         " INNER JOIN " + getTaggedItemTableName(mbox, "ti") + " ON " + mailboxesMatchAnd + "mi.id = ti.item_id" +
-                        " SET mi.tag_names = CASE mi.tag_names WHEN ? THEN NULL ELSE REPLACE(mi.tag_names, ?, '\\0') END, mod_metadata = ?, change_date = ?" +
+                        " SET mi.tag_names = CASE mi.tag_names WHEN ? THEN NULL ELSE REPLACE(mi.tag_names, ?, '" + Db.getEscapeSequence() + "0') END, mod_metadata = ?, change_date = ?" +
                         " WHERE " + inThisMailboxAnd("ti") + "ti.tag_id = ?");
                 stmt.setString(pos++, delimited);
                 stmt.setString(pos++, delimited);
@@ -675,7 +675,7 @@ public final class DbTag {
                 stmt.setInt(pos++, tag.getId());
             } else {
                 stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
-                        " SET tag_names = CASE tag_names WHEN ? THEN NULL ELSE REPLACE(tag_names, ?, '\\0') END, mod_metadata = ?, change_date = ?" +
+                        " SET tag_names = CASE tag_names WHEN ? THEN NULL ELSE REPLACE(tag_names, ?, '" + Db.getEscapeSequence() + "0') END, mod_metadata = ?, change_date = ?" +
                         " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id IN" +
                         " (SELECT ti.item_id FROM " + getTaggedItemTableName(mbox, "ti") + " WHERE " + inThisMailboxAnd("ti") + "ti.tag_id = ?)");
                 stmt.setString(pos++, delimited);
@@ -760,7 +760,7 @@ public final class DbTag {
         try {
             stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
                     " SET tag_names = " +
-                        "(SELECT (CONCAT('\\0', GROUP_CONCAT(t.name SEPARATOR '\\0'), '\\0')" +
+                        "(SELECT (CONCAT('" + Db.getEscapeSequence() + "0', GROUP_CONCAT(t.name SEPARATOR '" + Db.getEscapeSequence() + "0'), '" + Db.getEscapeSequence() + "0')" +
                         " FROM tag t INNER JOIN tagged_item ti ON t.mailbox_id = ti.mailbox_id AND t.id = ti.tag_id" +
                         " WHERE ti.item_id = mi.id AND ti.tag_id > 0)" +
                     (DebugConfig.disableMailboxGroups ? "" : " WHERE mi.mailbox_id = ?"));

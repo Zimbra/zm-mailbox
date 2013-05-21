@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,22 +21,18 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.primitives.Ints;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.redolog.op.DeleteItem;
-import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
+import com.zimbra.cs.store.file.FileBlobStore;
 
 public class DbBlobConsistency {
 
@@ -289,7 +285,7 @@ public class DbBlobConsistency {
         }
         PreparedStatement stmt = null;
 
-        if (!(Db.getInstance() instanceof MariaDB)) {
+        if (!(Db.getInstance() instanceof MySQL)) {
             throw ServiceException.INVALID_REQUEST("export is only supported for MySQL", null);
         }
         ZimbraLog.sqltrace.info("Exporting %d items in table %s to %s.", idRevs.size(), tableName, path);

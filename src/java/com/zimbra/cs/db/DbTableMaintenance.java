@@ -25,7 +25,7 @@ public class DbTableMaintenance {
     
     public static int runMaintenance()
     throws ServiceException {
-        if (!(Db.getInstance() instanceof MariaDB)) {
+        if (!(Db.getInstance() instanceof MySQL)) {
             ZimbraLog.mailbox.warn("Table maintenance only supported for MySQL.");
             return 0;
         }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,6 +21,9 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -33,9 +36,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -110,6 +110,27 @@ public class TestTags extends TestCase {
 
         numPrepares = ZimbraPerf.getPrepareCount() - numPrepares;
         ZimbraLog.test.debug("testManyTags generated %d SQL statements.", numPrepares);
+    }
+
+    public void testRemoveTag() throws Exception {
+        // Create tags
+        mTags = new Tag[4];
+        for (int i = 0; i < mTags.length; i++) {
+            mTags[i] = mMbox.createTag(null, TAG_PREFIX + (i + 1), (byte)0);
+        }
+        refresh();
+
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[0].getName(), true, null);
+        // tag:TestTags1 -> (M1)
+        Set<Integer> ids = search("tag:" + mTags[0].getName(), MailItem.Type.MESSAGE);
+        assertEquals("1: result size", 1, ids.size());
+        assertTrue("1: no message 1", ids.contains(new Integer(mMessage2.getId())));
+
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[0].getName(), false, null);
+
+        // tag:TestTags1 -> none
+        ids = search("tag:" + mTags[0].getName(), MailItem.Type.MESSAGE);
+        assertEquals("0: result size", 0, ids.size());
     }
 
     public void testTagSearch()
@@ -258,7 +279,7 @@ public class TestTags extends TestCase {
             search("tag:\\Unseen", MailItem.Type.MESSAGE);
             unseenSearchSucceeded = true;
         } catch (ServiceException e) {
-            assertEquals("Unexpected exception type", MailServiceException.NO_SUCH_TAG, e.getCode());
+            assertEquals("Unexpected exception type", MailServiceException.INVALID_NAME, e.getCode());
         }
         assertFalse("tag:\\Unseen search should not have succeeded", unseenSearchSucceeded);
 

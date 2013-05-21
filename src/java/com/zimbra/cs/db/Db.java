@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -72,6 +72,8 @@ public abstract class Db {
 
     private static Db sDatabase;
 
+    private static String ESCAPE_SEQUENCE = "\\";
+
     public synchronized static Db getInstance() {
         if (sDatabase == null) {
             String className = LC.zimbra_class_database.value();
@@ -84,6 +86,7 @@ public abstract class Db {
             }
             if (sDatabase == null)
                 sDatabase = new MariaDB();
+            ESCAPE_SEQUENCE = sDatabase.escapeSequence();
         }
         return sDatabase;
     }
@@ -144,7 +147,7 @@ public abstract class Db {
     void preOpen(Integer mboxId) {
         //default do nothing
     }
-    
+
     /**
      * Called when connection attempt is aborted, so shared resources can be released
      */
@@ -306,36 +309,44 @@ public abstract class Db {
      * Concatenates two or more fields.
      */
     public abstract String concat(String... fieldsToConcat);
-    
+
     /**
      * Generates the sign value of the field.
      */
     public abstract String sign(String field);
-    
+
     /**
      * Pads to the left end of the field.
      */
     public abstract String lpad(String field, int padSize, String padString);
-    
+
     /** Returns a {@code LIMIT} clause that is appended to a {@code SELECT}
      *  statement to limit the number of rows in the result set.  If the
      *  database does not support this feature, returns an empty string.
-     * 
+     *
      * @param limit number of rows to return */
     public String limit(int limit) {
         return limit(0, limit);
     }
-    
+
     /**
      * Returns a {@code LIMIT} clause that is appended to a {@code SELECT} statement
      * to limit the number of rows in the result set.  If the database does not support
      * this feature, returns an empty string.
-     * 
+     *
      * @param offset number of rows at the beginning of the result set that will be skipped
      * @param limit number of rows to return
      * @return
      */
     public String limit(int offset, int limit) {
         return "";
+    }
+
+    protected String escapeSequence() {
+        return "\\";
+    }
+
+    public static String getEscapeSequence() {
+        return ESCAPE_SEQUENCE;
     }
 }

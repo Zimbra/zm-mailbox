@@ -36,11 +36,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 
-public class MariaDB extends Db {
+public class MySQL extends Db {
 
     private Map<Db.Error, Integer> mErrorCodes;
 
-    MariaDB() {
+    MySQL() {
         mErrorCodes = new HashMap<Db.Error, Integer>(6);
         //see SQLExceptionMapper or MysqlErrorNumbers from MySQL Connector-J for listing of error codes
         mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        1213); //MysqlErrorNumbers.ER_LOCK_DEADLOCK
@@ -102,7 +102,7 @@ public class MariaDB extends Db {
 
     @Override
     DbPool.PoolConfig getPoolConfig() {
-        return new MariaDBConfig();
+        return new MySQLConfig();
     }
 
     @Override
@@ -137,15 +137,15 @@ public class MariaDB extends Db {
         }
     }
 
-    static final class MariaDBConfig extends DbPool.PoolConfig {
-        MariaDBConfig() {
-            mDriverClassName = "org.mariadb.jdbc.Driver";
+    protected class MySQLConfig extends DbPool.PoolConfig {
+        MySQLConfig() {
+            mDriverClassName = getDriverClassName();
             mPoolSize = 100;
-            mRootUrl = "jdbc:mysql://" + LC.mysql_bind_address.value() + ":" + LC.mysql_port.value() + "/";
+            mRootUrl = getRootUrl();
             mConnectionUrl = mRootUrl + "zimbra";
             mLoggerUrl = null;
             mSupportsStatsCallback = true;
-            mDatabaseProperties = getMariaDBProperties();
+            mDatabaseProperties = getDBProperties();
 
             // override pool size if specified in prefs
             String maxActive = (String) mDatabaseProperties.get("maxActive");
@@ -159,7 +159,15 @@ public class MariaDB extends Db {
             ZimbraLog.misc.debug("Setting connection pool size to " + mPoolSize);
         }
 
-        private static Properties getMariaDBProperties() {
+        protected String getDriverClassName() {
+            return "com.mysql.jdbc.Driver";
+        }
+
+        protected String getRootUrl() {
+            return "jdbc:mysql://address=(protocol=tcp)(host=" + LC.mysql_bind_address.value() + ")(port=" + LC.mysql_port.value() + ")/";
+        }
+
+        protected Properties getDBProperties() {
             Properties props = new Properties();
 
             props.put("cacheResultSetMetadata", "true");
