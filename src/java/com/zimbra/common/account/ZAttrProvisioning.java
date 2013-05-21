@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130514-0053 */
+    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130516-2148 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -11732,6 +11732,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1047)
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @since ZCS 8.0.4
+     */
+    @ZAttr(id=1445)
+    public static final String A_zimbraWebClientURL = "zimbraWebClientURL";
 
     /**
      * XMPP Category of the component
