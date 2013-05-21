@@ -233,7 +233,7 @@ public class TestSoapHarvest extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox("admin");
 
         String authToken = mbox.getAuthToken().getValue();
-        String response = sendReq(AUTH_USER_NAME, authToken, 500, false);
+        String response = sendReq("admin", authToken, 200, false);
 
         String userId = TARGET_USER_NAME;
         mbox = TestUtil.getZMailbox(userId);
@@ -273,7 +273,7 @@ public class TestSoapHarvest extends TestCase {
         ZMailbox mbox = TestUtil.getZMailboxAsAdmin("admin");
 
         String authToken = mbox.getAuthToken().getValue();
-        String response = sendReq(AUTH_USER_NAME, authToken, 200, false);
+        String response = sendReq("admin", authToken, 200, false);
         //make sure auth token works for normal request
 
         String userId = TARGET_USER_NAME;
