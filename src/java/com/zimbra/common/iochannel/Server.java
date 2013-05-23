@@ -181,6 +181,7 @@ public class Server implements Runnable {
                                         break;
                                     }
                                     long packetLen = headerLen + bodyLen + 20;
+                                    log.debug("server:pos=%d packetLen=%d", pos, packetLen);
                                     if (pos >= packetLen) {
                                         buffer.position((int)packetLen);
                                         ByteBuffer newBuffer = buffer.slice();
