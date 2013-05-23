@@ -264,4 +264,9 @@ CREATE TABLE locks (
     PRIMARY KEY (mailbox_id)
 ) ENGINE = NDBCLUSTER;
 
+CREATE TABLE current_sessions (
+	id				INTEGER UNSIGNED NOT NULL,
+	server_id		VARCHAR(127) NOT NULL,
+	PRIMARY KEY (id, server_id)
+) ENGINE = NDBCLUSTER; 
 

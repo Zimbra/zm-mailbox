@@ -37,6 +37,8 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.iochannel.MessageChannel;
@@ -245,7 +247,9 @@ public final class Zimbra {
         app.initialize(sIsMailboxd);
         if (sIsMailboxd) {
             SessionCache.startup();
-
+            
+            dbSessionCleanup();
+            
             Server server = Provisioning.getInstance().getLocalServer();
 
             if (!redoLog.isSlave()) {
@@ -342,6 +346,8 @@ public final class Zimbra {
             if (!redoLog.isSlave()) {
                 ServerManager.getInstance().stopServers();
             }
+            
+            dbSessionCleanup();
 
             SessionCache.shutdown();
         }
@@ -409,6 +415,22 @@ public final class Zimbra {
             ZimbraLog.system.fatal(message, t);
         } finally {
             Runtime.getRuntime().halt(1);
+        }
+    }
+    
+    private static void dbSessionCleanup() throws ServiceException {
+        //DbSessions Cleanup
+        DbConnection conn = null;
+        try {
+        	if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+        		conn = DbPool.getConnection();
+        		DbSession.deleteSessions(conn,
+        				Provisioning.getInstance().getLocalServer().getId());
+        		conn.commit();
+        	}
+        } finally {
+        	if (conn != null)
+        		conn.closeQuietly();
         }
     }
 }

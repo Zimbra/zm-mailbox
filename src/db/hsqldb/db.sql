@@ -201,3 +201,12 @@ CREATE TABLE locks (
    mailbox_id  INTEGER NOT NULL,
    PRIMARY KEY (mailbox_id)
 );
+
+
+CREATE TABLE current_sessions (
+	id				INTEGER NOT NULL,
+	server_id		VARCHAR(127) NOT NULL,
+	PRIMARY KEY (id, server_id)
+); 
+
+

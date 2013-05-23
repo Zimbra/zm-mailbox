@@ -95,6 +95,7 @@ import com.zimbra.cs.db.DbMailItem.SearchOpts;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.fb.FreeBusy;
@@ -959,9 +960,31 @@ public class Mailbox {
             if (!mListeners.contains(session)) {
                 mListeners.add(session);
             }
+            
+            if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn())
+            {
+            	if (mListeners.size() == 1)
+            	{
+                    //insert session into DB
+                    DbConnection conn = DbPool.getConnection();
+                    try {
+            			DbSession.create(conn, session.getMailbox().getId(), Provisioning.getInstance().getLocalServer().getId());
+            			conn.commit();
+            		} catch (ServiceException e) {
+            			// TODO Auto-generated catch block
+            			ZimbraLog.session.info("exception while inserting session into DB", e);
+            		} finally {
+            			if (conn != null)
+            				conn.closeQuietly();
+            		}
+                    //
+            	}
+            }
         } finally {
             lock.release();
         }
+        
+
         ZimbraLog.mailbox.debug("adding listener: %s", session);
     }
 
@@ -970,7 +993,33 @@ public class Mailbox {
      *
      * @param session  The listener to deregister for notifications. */
     public void removeListener(Session session) {
+    	lock.lock();
         mListeners.remove(session);
+        
+        try {
+        	if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn())
+        	{
+        		if (mListeners.size() == 0)
+        		{
+        			//DbSessions Cleanup
+        			DbConnection conn = null;
+        			try {
+        				conn = DbPool.getConnection();
+        				DbSession.delete(conn, getId());
+        				conn.commit();
+        			} catch (ServiceException e) {
+        				ZimbraLog.mailbox.error("Deleting database session: " , e);
+        			} finally {
+        				if (conn != null)
+        					conn.closeQuietly();
+        			}
+        		}
+        	}
+        } catch (ServiceException e) {
+        	ZimbraLog.mailbox.error("Deleting database session: " , e);
+        } finally {
+        	lock.release();
+        }
 
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("clearing listener: " + session);
@@ -8920,10 +8969,13 @@ public class Mailbox {
             }
             
             // send to the message channel
+            DbConnection conn = null;
             try {
                 if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
-                    List<Server> serverList = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
-                    for (Server server : serverList) {
+                	conn = DbPool.getConnection();
+                	List<String> serverids = DbSession.get(conn, getId());
+                    for (String serverid : serverids) {
+                    	Server server = Provisioning.getInstance().getServerById(serverid);
                         if (server.isLocalServer()) {
                             continue;
                         }
@@ -8939,11 +8991,14 @@ public class Mailbox {
             } catch (IOException e) {
                 ZimbraLog.session.warn("unable to create MailboxNotification", e);
                 return;
-            }
+            } finally {
+            	if (conn != null)
+            		conn.closeQuietly();
+			}
             MailboxListener.notifyListeners(notification);
         }
     }
-
+    
     private List<Object> rollbackCache(MailboxChange change) {
         if (change == null) {
             return null;
