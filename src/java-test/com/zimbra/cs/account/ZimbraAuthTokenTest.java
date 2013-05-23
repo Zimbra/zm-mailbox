@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link ZimbraAuthToken}.
@@ -30,10 +31,9 @@ import com.zimbra.common.account.Key.AccountBy;
 public class ZimbraAuthTokenTest {
 
     @BeforeClass
-    public static void init() throws ServiceException {
-        MockProvisioning prov = new MockProvisioning();
-        prov.createAccount("user1@example.zimbra.com", "secret", new HashMap<String, Object>());
-        Provisioning.setInstance(prov);
+    public static void init() throws Exception {
+        MailboxTestUtil.initProvisioning();
+        Provisioning.getInstance().createAccount("user1@example.zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Test

@@ -8782,8 +8782,12 @@ public class Mailbox {
                         if ((change.why & Change.UNREAD | Change.SIZE) != 0) {
                             ((Tag) change.what).saveTagCounts();
                         }
-                    } else if ((change.what instanceof MailItem) && !(change.what instanceof VirtualConversation)){
-                        cache((MailItem) change.what);
+                    } else if ((change.what instanceof MailItem)){
+                        if (change.what instanceof Conversation) {
+                            uncache((MailItem) change.what);
+                        } else {
+                            cache((MailItem) change.what);
+                        }
                     }
                 }
             }

@@ -112,6 +112,7 @@ public class ItemActionTest {
 
         // trash one message in conversation
         ItemActionHelper.MOVE(null, mbox, SoapProtocol.Soap12, Collections.singletonList(draft.getId()), MailItem.Type.MESSAGE, tcon, iid);
+        draft = mbox.getMessageById(null, draft.getId());
         Assert.assertEquals(draft.getFolderId(), Mailbox.ID_FOLDER_TRASH);
 
         ItemActionHelper.HARD_DELETE(null, mbox, SoapProtocol.Soap12, Collections.singletonList(draft.getConversationId()), MailItem.Type.CONVERSATION, tcon);
@@ -150,6 +151,9 @@ public class ItemActionTest {
 
         // trash the conversation
         ItemActionHelper.MOVE(null, mbox, SoapProtocol.Soap12, Arrays.asList(parent.getId(), draft.getId(), draft2.getId()), MailItem.Type.MESSAGE, tcon, iid);
+        parent = mbox.getMessageById(null, parent.getId());
+        draft = mbox.getMessageById(null, draft.getId());
+        draft2 = mbox.getMessageById(null, draft2.getId());
         Assert.assertEquals(parent.getFolderId(), Mailbox.ID_FOLDER_TRASH);
         Assert.assertEquals(draft.getFolderId(), Mailbox.ID_FOLDER_TRASH);
         Assert.assertEquals(draft2.getFolderId(), Mailbox.ID_FOLDER_TRASH);
