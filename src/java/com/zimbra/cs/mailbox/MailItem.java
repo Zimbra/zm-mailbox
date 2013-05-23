@@ -2207,8 +2207,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         markItemModified(Change.UNREAD);
         int delta = unread ? 1 : -1;
-        metadataChanged();
         updateUnread(delta, isTagged(Flag.FlagInfo.DELETED) ? delta : 0);
+        metadataChanged();
         DbMailItem.alterUnread(getMailbox(), ImmutableList.of(getId()), unread);
     }
 
@@ -2655,8 +2655,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (parent != null && parent.getId() > 0) {
             markItemModified(Change.PARENT);
             parent.markItemModified(Change.CHILDREN);
-            metadataChanged();
             mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
+            metadataChanged();
         }
 
         if (!shareIndex) {
@@ -2902,9 +2902,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return;
         }
         markItemModified(Change.FOLDER);
-        metadataChanged();
         mData.folderId = newFolder.getId();
         mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
+        metadataChanged();
     }
 
     void addChild(MailItem child) throws ServiceException {
@@ -3428,9 +3428,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             ZimbraLog.mailop.debug("saving metadata for " + getMailopContext(this));
         }
         DbMailItem.saveMetadata(this, metadata);
-        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
-            mMailbox.uncache(this);
-        }
     }
 
     protected void saveName() throws ServiceException {
@@ -3439,9 +3436,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     protected void saveName(int folderId) throws ServiceException {
         DbMailItem.saveName(this, folderId, encodeMetadata());
-        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
-            mMailbox.uncache(this);
-        }
     }
 
     protected void saveData(DbMailItem data) throws ServiceException {
@@ -3455,9 +3449,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             ZimbraLog.mailop.debug("saving data for %s", getMailopContext(this));
         }
         data.update(this, metadata);
-        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
-            mMailbox.uncache(this);
-        }
     }
 
     void markMetadataChanged() throws ServiceException {
@@ -3758,6 +3749,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void metadataChanged(boolean updateFolderMODSEQ) throws ServiceException {
         ++mMetaVersion;
         mData.metadataChanged(mMailbox, updateFolderMODSEQ);
+        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            mMailbox.cache(this);
+        }
     }
 
     void metadataChanged() throws ServiceException {
@@ -3767,6 +3761,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void contentChanged() throws ServiceException {
         ++mMetaVersion;
         mData.contentChanged(mMailbox);
+        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            mMailbox.cache(this);
+        }
     }
 
     /**
