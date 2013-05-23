@@ -65,6 +65,7 @@ import com.zimbra.znative.Util;
 public final class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
+    private static String alwaysOnClusterId = null;
 
     /** Sets system properties before the server fully starts up.  Note that
      *  there's a potential race condition if {@link FirstServlet} or another
@@ -153,6 +154,10 @@ public final class Zimbra {
             FirstServlet.waitForInitialization();
         }
 
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        alwaysOnClusterId = server.getAlwaysOnClusterId();
+
         setSystemProperties();
 
         logVersionAndSysInfo();
@@ -182,7 +187,6 @@ public final class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
-        Provisioning prov = Provisioning.getInstance();
         if (prov instanceof LdapProv) {
             ((LdapProv) prov).waitForLdapServer();
             if (forMailboxd) {
@@ -190,7 +194,7 @@ public final class Zimbra {
             }
         }
 
-        if( Provisioning.getInstance().getLocalServer().isMailSSLClientCertOCSPEnabled()) {
+        if(server.isMailSSLClientCertOCSPEnabled()) {
             // Activate OCSP
             Security.setProperty("ocsp.enable", "true");
             // Activate CRLDP
@@ -247,10 +251,8 @@ public final class Zimbra {
         app.initialize(sIsMailboxd);
         if (sIsMailboxd) {
             SessionCache.startup();
-            
+
             dbSessionCleanup();
-            
-            Server server = Provisioning.getInstance().getLocalServer();
 
             if (!redoLog.isSlave()) {
                 boolean useDirectBuffers = server.isMailUseDirectBuffers();
@@ -346,7 +348,7 @@ public final class Zimbra {
             if (!redoLog.isSlave()) {
                 ServerManager.getInstance().stopServers();
             }
-            
+
             dbSessionCleanup();
 
             SessionCache.shutdown();
@@ -417,12 +419,20 @@ public final class Zimbra {
             Runtime.getRuntime().halt(1);
         }
     }
-    
+
+    public static String getAlwaysOnClusterId() {
+        return alwaysOnClusterId;
+    }
+
+    public static boolean isAlwaysOn() {
+        return alwaysOnClusterId != null;
+    }
+
     private static void dbSessionCleanup() throws ServiceException {
         //DbSessions Cleanup
         DbConnection conn = null;
         try {
-        	if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+        	if (isAlwaysOn()) {
         		conn = DbPool.getConnection();
         		DbSession.deleteSessions(conn,
         				Provisioning.getInstance().getLocalServer().getId());

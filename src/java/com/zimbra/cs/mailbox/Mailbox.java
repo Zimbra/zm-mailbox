@@ -530,11 +530,7 @@ public class Mailbox {
             mapById = new LinkedHashMap<Integer, MailItem>(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
             uuid2id = new HashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
             this.mbox = mbox;
-            try {
-                this.isAlwaysOn = Provisioning.getInstance().getLocalServer().isIsAlwaysOn();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.error("error while initializing item cache", e);
-            }
+            this.isAlwaysOn = Zimbra.isAlwaysOn();
         }
 
         public void put(MailItem item) {
@@ -961,7 +957,7 @@ public class Mailbox {
                 mListeners.add(session);
             }
 
-            if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn())
+            if (Zimbra.isAlwaysOn())
             {
             	if (mListeners.size() == 1)
             	{
@@ -997,7 +993,7 @@ public class Mailbox {
         mListeners.remove(session);
 
         try {
-        	if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn())
+        	if (Zimbra.isAlwaysOn())
         	{
         		if (mListeners.size() == 0)
         		{
@@ -1015,8 +1011,6 @@ public class Mailbox {
         			}
         		}
         	}
-        } catch (ServiceException e) {
-        	ZimbraLog.mailbox.error("Deleting database session: " , e);
         } finally {
         	lock.release();
         }
@@ -1620,7 +1614,7 @@ public class Mailbox {
         if (conn != null) {
             setOperationConnection(conn);
         }
-        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+        if (Zimbra.isAlwaysOn()) {
             // refresh mailbox stats
             mData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
         }
@@ -1761,7 +1755,7 @@ public class Mailbox {
             mItemCache.clear();
         }
         try {
-            if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            if (Zimbra.isAlwaysOn()) {
                 DbMailbox.incrementItemcacheCheckpoint(this);
             }
         } catch (ServiceException e) {
@@ -2020,7 +2014,7 @@ public class Mailbox {
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
-        if (!Provisioning.getInstance().getLocalServer().isIsAlwaysOn() || lock.getHoldCount() > 1) {
+        if (!Zimbra.isAlwaysOn() || lock.getHoldCount() > 1) {
             if (mFolderCache != null && mTagCache != null && !initial) {
                 return;
             }
@@ -8982,7 +8976,7 @@ public class Mailbox {
             // send to the message channel
             DbConnection conn = null;
             try {
-                if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+                if (Zimbra.isAlwaysOn()) {
                 	conn = DbPool.getConnection();
                 	List<String> serverids = DbSession.get(conn, getId());
                     for (String serverid : serverids) {

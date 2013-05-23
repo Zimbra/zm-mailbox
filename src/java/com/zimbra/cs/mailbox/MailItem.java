@@ -64,6 +64,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.Volume;
 
 /**
@@ -3750,7 +3751,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void metadataChanged(boolean updateFolderMODSEQ) throws ServiceException {
         ++mMetaVersion;
         mData.metadataChanged(mMailbox, updateFolderMODSEQ);
-        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+        if (Zimbra.isAlwaysOn()) {
             mMailbox.cache(this);
         }
     }
@@ -3762,7 +3763,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void contentChanged() throws ServiceException {
         ++mMetaVersion;
         mData.contentChanged(mMailbox);
-        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+        if (Zimbra.isAlwaysOn()) {
             mMailbox.cache(this);
         }
     }

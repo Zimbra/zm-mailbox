@@ -20,10 +20,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * {@link MailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
@@ -46,7 +46,7 @@ public final class MailboxLock {
 
     private void acquireDbLock() throws ServiceException {
         try {
-            if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            if (Zimbra.isAlwaysOn()) {
                 conn = DbPool.getConnection();
                 DbMailbox.acquireLock(conn, mId);
             }

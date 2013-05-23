@@ -93,7 +93,7 @@ public class MessageChannel {
         String peerHostname;
         PeerServer peer;
         try {
-            if (server == null ||
+            if (server == null || client == null ||
                     (peerHostname = server.getServiceHostname()) == null ||
                     (peer = client.getPeer(peerHostname)) == null) {
                 log.error("no client available for server %s", server.getServiceHostname());

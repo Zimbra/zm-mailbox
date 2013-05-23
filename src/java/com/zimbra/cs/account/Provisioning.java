@@ -48,6 +48,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -223,7 +224,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static final int MAX_ZIMBRA_ID_LEN = 127;
 
-    private List<ProvisioningValidator> validators = new ArrayList<ProvisioningValidator>();
+    private final List<ProvisioningValidator> validators = new ArrayList<ProvisioningValidator>();
 
     private static volatile Provisioning singleton;
 
@@ -619,9 +620,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * directly or indirectly a member of
      */
     public static class MemberOf {
-        private String mId;            // zimbraId of this group
-        private boolean mIsAdminGroup; // if this group is an admin group (zimbraIsAdminGroup == TRUE)
-        private boolean mIsDynamicGroup; // if this group is a dynamic group
+        private final String mId;            // zimbraId of this group
+        private final boolean mIsAdminGroup; // if this group is an admin group (zimbraIsAdminGroup == TRUE)
+        private final boolean mIsDynamicGroup; // if this group is a dynamic group
 
         public MemberOf(String id, boolean isAdminGroup, boolean isDynamicGroup) {
             mId = id;
@@ -1249,7 +1250,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static boolean onLocalServer(Account account) throws ServiceException {
         String target    = account.getAttr(Provisioning.A_zimbraMailHost);
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        return (target != null && target.equalsIgnoreCase(localhost));
+        boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
+        return (isLocal || isAlwaysOn(account));
+    }
+
+    private static boolean isAlwaysOn(Account account) throws ServiceException {
+        String localServerClusterId = Zimbra.getAlwaysOnClusterId();
+        Server server = Provisioning.getInstance().getServer(account);
+        if (server == null) {
+            return false;
+        }
+        String accountHostingServerClusterId = server.getAlwaysOnClusterId();
+        return localServerClusterId != null && accountHostingServerClusterId != null &&
+                localServerClusterId.equals(accountHostingServerClusterId);
     }
 
     public static boolean onLocalServer(Group group) throws ServiceException {
@@ -1662,7 +1675,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
          private String mToken;
          private boolean mHadMore; // for auto-complete only
-         private List<GalContact> mMatches;
+         private final List<GalContact> mMatches;
 
         /*
          * for auto-complete and search only
@@ -1727,7 +1740,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static class VisitorSearchGalResult extends SearchGalResult {
-        private GalContact.Visitor mVisitor;
+        private final GalContact.Visitor mVisitor;
         private int mNumMatches; // keep track of num matches
 
         private VisitorSearchGalResult(GalContact.Visitor visitor) {
@@ -2041,16 +2054,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 mCount = count;
             }
 
-            private String mCosId;
-            private String mCosName;
-            private long mCount;
+            private final String mCosId;
+            private final String mCosName;
+            private final long mCount;
 
             public String getCosId()   { return mCosId;}
             public String getCosName() { return mCosName; }
             public long getCount()        { return mCount; }
         }
 
-        private List<CountAccountByCos> mCountAccountByCos = new ArrayList<CountAccountByCos>();
+        private final List<CountAccountByCos> mCountAccountByCos = new ArrayList<CountAccountByCos>();
 
         public void addCountAccountByCosResult(String cosId, String cosName, long count) {
             CountAccountByCos r = new CountAccountByCos(cosId, cosName, count);
@@ -2185,7 +2198,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static class GalResult extends Result {
-        private List<GalContact> mResult;
+        private final List<GalContact> mResult;
         public GalResult(String status, String message, List<GalContact> result) {
             super(status, message, null);
             mResult = result;
