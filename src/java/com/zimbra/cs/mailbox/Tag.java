@@ -101,7 +101,11 @@ public class Tag extends MailItem {
     private RetentionPolicy retentionPolicy;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-        super(mbox, ud);
+        this(mbox, ud, false);
+    }
+    
+    Tag(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
+        super(mbox, ud, skipCache);
         if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
         }

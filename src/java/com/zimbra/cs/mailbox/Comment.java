@@ -25,7 +25,11 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 public class Comment extends MailItem {
 
     Comment(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    Comment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
     }
 
     public static Comment create(Mailbox mbox, MailItem parent, int id, String uuid, String text, String creatorId, CustomMetadata custom) throws ServiceException {

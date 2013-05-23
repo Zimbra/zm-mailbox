@@ -248,7 +248,11 @@ public class Contact extends MailItem {
     }
 
     public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    public Contact(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
         if (mData.type != Type.CONTACT.toByte()) {
             throw new IllegalArgumentException();
         }

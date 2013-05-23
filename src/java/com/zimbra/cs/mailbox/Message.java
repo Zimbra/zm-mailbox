@@ -189,12 +189,15 @@ public class Message extends MailItem {
     private ArrayList<CalendarItemInfo> calendarItemInfos;
     private String calendarIntendedFor;
 
-
+    Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
+        this(mbox, ud, false);
+    }
+    
     /**
      * this one will call back into decodeMetadata() to do our initialization.
      */
-    Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-        super(mbox, ud);
+    Message(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
+        super(mbox, ud, skipCache);
         if (mData.type != Type.MESSAGE.toByte()  && mData.type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }

@@ -66,7 +66,11 @@ public class Note extends MailItem {
 
 
     public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    public Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
         if (mData.type != Type.NOTE.toByte()) {
             throw new IllegalArgumentException();
         }

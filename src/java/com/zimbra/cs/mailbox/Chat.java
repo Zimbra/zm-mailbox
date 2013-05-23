@@ -20,6 +20,10 @@ import com.zimbra.cs.store.StagedBlob;
 
 public class Chat extends Message {
 
+    Chat(Mailbox mbox, UnderlyingData ud) throws ServiceException {
+        this(mbox, ud, false);
+    }
+    
     /**
      * this one will call back into decodeMetadata() to do our initialization
      *
@@ -27,8 +31,8 @@ public class Chat extends Message {
      * @param ud
      * @throws ServiceException
      */
-    Chat(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-        super(mbox, ud);
+    Chat(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
+        super(mbox, ud, skipCache);
         if (mData.type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }

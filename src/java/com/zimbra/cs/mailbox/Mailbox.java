@@ -287,6 +287,7 @@ public class Mailbox {
         public boolean trackImap;
         public Set<String> configKeys;
         public MailboxVersion version;
+        public int itemcacheCheckpoint;
 
         @Override
         protected MailboxData clone() {
@@ -308,6 +309,7 @@ public class Mailbox {
                 mbd.configKeys = new HashSet<String>(configKeys);
             }
             mbd.version = version;
+            mbd.itemcacheCheckpoint = itemcacheCheckpoint;
             return mbd;
         }
     }
@@ -516,29 +518,65 @@ public class Mailbox {
     private static class ItemCache {
         private final Map<Integer /* id */, MailItem> mapById;
         private final Map<String /* uuid */, Integer /* id */> uuid2id;
+        private Mailbox mbox;
+        private boolean isAlwaysOn = false;
 
-        public ItemCache() {
+        public ItemCache(Mailbox mbox) {
             mapById = new LinkedHashMap<Integer, MailItem>(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
             uuid2id = new HashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
+            this.mbox = mbox;
+            try {
+                this.isAlwaysOn = Provisioning.getInstance().getLocalServer().isIsAlwaysOn();
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error("error while initializing item cache", e);
+            }
         }
 
         public void put(MailItem item) {
-            int id = item.getId();
-            mapById.put(id, item);
-            String uuid = item.getUuid();
-            if (uuid != null) {
-                uuid2id.put(uuid,  id);
+            if (isAlwaysOn) {
+                try {
+                    MemcachedItemCache.getInstance().put(mbox, item);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("error while writing item to cache", e);
+                }
+            } else {
+                int id = item.getId();
+                mapById.put(id, item);
+                String uuid = item.getUuid();
+                if (uuid != null) {
+                    uuid2id.put(uuid,  id);
+                }
             }
         }
 
         public MailItem get(int id) {
-            return mapById.get(id);
+            if (isAlwaysOn) {
+                MailItem item = null;
+                try {
+                    item = MemcachedItemCache.getInstance().get(mbox, id);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
+                }
+                return item;
+            } else {
+                return mapById.get(id);
+            }
         }
 
         public MailItem get(String uuid) {
-            // Always fetch item from mapById map to preserve LRU's access time ordering.
-            Integer id = uuid2id.get(uuid);
-            return id != null ? mapById.get(id) : null;
+            if (isAlwaysOn) {
+                MailItem item = null;
+                try {
+                    item = MemcachedItemCache.getInstance().get(mbox, uuid);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
+                }
+                return item;
+            } else {
+                // Always fetch item from mapById map to preserve LRU's access time ordering.
+                Integer id = uuid2id.get(uuid);
+                return id != null ? mapById.get(id) : null;
+            }
         }
 
         public MailItem remove(MailItem item) {
@@ -546,26 +584,54 @@ public class Mailbox {
         }
 
         public MailItem remove(int id) {
-            MailItem removed = mapById.remove(id);
-            if (removed != null) {
-                String uuid = removed.getUuid();
-                if (uuid != null) {
-                    uuid2id.remove(uuid);
+            if (isAlwaysOn) {
+                MailItem removed = null;
+                try {
+                    removed = MemcachedItemCache.getInstance().remove(mbox, id);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("error while removing item from cache", e);
                 }
+                return removed;
+            } else {
+                MailItem removed = mapById.remove(id);
+                if (removed != null) {
+                    String uuid = removed.getUuid();
+                    if (uuid != null) {
+                        uuid2id.remove(uuid);
+                    }
+                }
+                return removed;
             }
-            return removed;
         }
 
         public boolean contains(MailItem item) {
-            return mapById.containsKey(item.getId());
+            if (isAlwaysOn) {
+                try {
+                    return MemcachedItemCache.getInstance().get(mbox, item.getId()) != null;
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("error while checking item cache", e);
+                    return false;
+                }
+            } else {
+                return mapById.containsKey(item.getId());
+            }
         }
 
         public Collection<MailItem> values() {
-            return mapById.values();
+            if (isAlwaysOn) {
+                // return empty list
+                return Collections.emptyList();
+            } else {
+                return mapById.values();
+            }
         }
 
         public int size() {
-            return mapById.size();
+            if (isAlwaysOn) {
+                return 0;
+            } else {
+                return mapById.size();
+            }
         }
 
         public void clear() {
@@ -619,6 +685,10 @@ public class Mailbox {
 
     boolean isOpen() {
         return open;
+    }
+
+    private Mailbox getMailbox() {
+        return this;
     }
 
     /**
@@ -962,6 +1032,10 @@ public class Mailbox {
      *  Note that this time is not persisted across server restart. */
     public long getLastChangeDate() {
         return mData.lastChangeDate;
+    }
+    
+    public int getItemcacheCheckpoint() {
+        return mData.itemcacheCheckpoint;
     }
 
     /** Returns the change sequence number for the most recent
@@ -1509,7 +1583,7 @@ public class Mailbox {
         // keep a hard reference to the item cache to avoid having it GCed during the op
         ItemCache cache = mItemCache.get();
         if (cache == null) {
-            cache = new ItemCache();
+            cache = new ItemCache(this);
             mItemCache = new SoftReference<ItemCache>(cache);
             ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
         }
@@ -1622,6 +1696,13 @@ public class Mailbox {
         } else {
             mItemCache.clear();
         }
+        try {
+            if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+                DbMailbox.incrementItemcacheCheckpoint(this);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("error while clearing item cache", e);
+        }
     }
 
     void cache(MailItem item) throws ServiceException {
@@ -1667,8 +1748,8 @@ public class Mailbox {
         uncacheChildren(item);
     }
 
-    /** Removes an item from the <code>Mailbox</code>'s item cache.  If the
-     *  item has any children, they are also uncached.  <i>Note: This function
+    /** Removes an item from the <code>Mailbox</code>'s item cache. 
+     *  <i>Note: This function
      *  cannot be used to uncache {@link Tag}s and {@link Folder}s.  You must
      *  call {@link #uncache(MailItem)} to remove those items from their
      *  respective caches.</i>
@@ -1680,7 +1761,6 @@ public class Mailbox {
             ZimbraLog.cache.debug("uncached item " + itemId + " in mailbox " + getId());
         if (item != null) {
             MessageCache.purge(item);
-            uncacheChildren(item);
         } else {
             MessageCache.purge(this, itemId);
         }
@@ -2683,25 +2763,28 @@ public class Mailbox {
             throw MailItem.noSuchItem(miss.intValue(), type);
 
         // cache miss, so fetch from the database
-        MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
-
+        List<MailItem> itemsFromDb = MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
+        HashMap<Integer, MailItem> tempCache = new HashMap<Integer, MailItem>();
+        for (MailItem item : itemsFromDb) {
+            tempCache.put(item.getId(), item);
+        }
         uncached.clear();
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
                 if (ids[i] <= -FIRST_USER_ID) {
                     // special-case virtual conversations
-                    MailItem item = getCachedItem(-ids[i]);
+                    MailItem item = tempCache.get(-ids[i]);
                     if (!(item instanceof Message)) {
                         throw MailItem.noSuchItem(ids[i], type);
                     } else if (item.getParentId() == ids[i]) {
                         items[i] = new VirtualConversation(this, (Message) item);
                     } else {
-                        items[i] = getCachedItem(item.getParentId());
+                        items[i] = tempCache.get(item.getParentId());
                         if (items[i] == null)
                             uncached.add(item.getParentId());
                     }
                 } else {
-                    if ((items[i] = getCachedItem(ids[i])) == null)
+                    if ((items[i] = tempCache.get(ids[i])) == null)
                         throw MailItem.noSuchItem(ids[i], type);
                 }
             }
@@ -2709,13 +2792,17 @@ public class Mailbox {
 
         // special case asking for VirtualConversation but having it be a real Conversation
         if (!uncached.isEmpty()) {
-            MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
+            itemsFromDb = MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
+            tempCache = new HashMap<Integer, MailItem>();
+            for (MailItem item : itemsFromDb) {
+                tempCache.put(item.getId(), item);
+            }
             for (int i = 0; i < ids.length; i++) {
                 if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                    MailItem item = getCachedItem(-ids[i]);
+                    MailItem item = tempCache.get(-ids[i]);
                     if (!(item instanceof Message) || item.getParentId() == ids[i])
                         throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
-                    items[i] = getCachedItem(item.getParentId());
+                    items[i] = tempCache.get(item.getParentId());
                     if (items[i] == null)
                         throw MailItem.noSuchItem(ids[i], type);
                 }

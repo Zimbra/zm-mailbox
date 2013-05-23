@@ -63,7 +63,11 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 public class Appointment extends CalendarItem {
 
     public Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    public Appointment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
         if (mData.type != Type.APPOINTMENT.toByte()) {
             throw new IllegalArgumentException();
         }

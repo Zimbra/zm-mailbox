@@ -46,7 +46,11 @@ public class Document extends MailItem {
     protected boolean descEnabled;
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    public Document(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
     }
 
     public String getContentType() {

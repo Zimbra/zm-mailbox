@@ -34,7 +34,11 @@ public class Mountpoint extends Folder {
     private boolean mReminderEnabled;
 
     Mountpoint(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-        super(mbox, ud);
+        this(mbox, ud, false);
+    }
+    
+    Mountpoint(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
+        super(mbox, ud, skipCache);
     }
 
     /** Returns the <code>zimbraId</code> of the remote shared item's

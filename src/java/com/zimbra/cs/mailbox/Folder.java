@@ -192,7 +192,11 @@ public class Folder extends MailItem {
     private boolean   activeSyncDisabled;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-        super(mbox, ud);
+        this(mbox, ud, false);
+    }
+    
+    Folder(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
+        super(mbox, ud, skipCache);
 
         switch (getType()) {
             case FOLDER:

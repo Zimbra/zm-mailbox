@@ -721,6 +721,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected ACL                rights;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        this(mbox, data, false);
+    }
+
+    MailItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         if (data == null) {
             throw new IllegalArgumentException();
         }
@@ -731,7 +735,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         checkItemCreationAllowed(); // this check may rely on decoded metadata
         mData.metadata = null;
 
-        if ((data.getFlags() & Flag.BITMASK_UNCACHED) == 0) {
+        if (!skipCache && ((data.getFlags() & Flag.BITMASK_UNCACHED) == 0)) {
             mbox.cache(this); // store the item in the mailbox's cache
         }
     }
@@ -1600,27 +1604,31 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *
      * @param mbox  The {@link Mailbox} the item is created in.
      * @param data  The contents of a <tt>MAIL_ITEM</tt> database row. */
-    public static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    public static MailItem constructItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         if (data == null) {
             throw noSuchItem(-1, Type.UNKNOWN);
         }
         switch (Type.of(data.type)) {
-            case FOLDER:       return new Folder(mbox, data);
-            case SEARCHFOLDER: return new SearchFolder(mbox, data);
-            case TAG:          return new Tag(mbox, data);
-            case CONVERSATION: return new Conversation(mbox,data);
-            case MESSAGE:      return new Message(mbox, data);
-            case CONTACT:      return new Contact(mbox,data);
-            case DOCUMENT:     return new Document(mbox, data);
-            case NOTE:         return new Note(mbox, data);
-            case APPOINTMENT:  return new Appointment(mbox, data);
-            case TASK:         return new Task(mbox, data);
-            case MOUNTPOINT:   return new Mountpoint(mbox, data);
-            case WIKI:         return new WikiItem(mbox, data);
-            case CHAT:         return new Chat(mbox, data);
-            case COMMENT:      return new Comment(mbox, data);
+            case FOLDER:       return new Folder(mbox, data, skipCache);
+            case SEARCHFOLDER: return new SearchFolder(mbox, data, skipCache);
+            case TAG:          return new Tag(mbox, data, skipCache);
+            case CONVERSATION: return new Conversation(mbox,data, skipCache);
+            case MESSAGE:      return new Message(mbox, data, skipCache);
+            case CONTACT:      return new Contact(mbox,data, skipCache);
+            case DOCUMENT:     return new Document(mbox, data, skipCache);
+            case NOTE:         return new Note(mbox, data, skipCache);
+            case APPOINTMENT:  return new Appointment(mbox, data, skipCache);
+            case TASK:         return new Task(mbox, data, skipCache);
+            case MOUNTPOINT:   return new Mountpoint(mbox, data, skipCache);
+            case WIKI:         return new WikiItem(mbox, data, skipCache);
+            case CHAT:         return new Chat(mbox, data, skipCache);
+            case COMMENT:      return new Comment(mbox, data, skipCache);
             default:           return null;
         }
+    }
+    
+    public static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        return constructItem(mbox, data, false);
     }
 
     /** Returns {@link MailServiceException.NoSuchItemException} tailored
@@ -3298,9 +3306,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
-        // uncache cascades to uncache children
         if (purgeItem) {
             mMailbox.uncache(this);
+            for (int itemId : info.itemIds.getAllIds()) {
+                mMailbox.uncacheItem(itemId);
+            }
         }
     }
 
@@ -3418,6 +3428,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             ZimbraLog.mailop.debug("saving metadata for " + getMailopContext(this));
         }
         DbMailItem.saveMetadata(this, metadata);
+        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            mMailbox.uncache(this);
+        }
     }
 
     protected void saveName() throws ServiceException {
@@ -3426,6 +3439,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     protected void saveName(int folderId) throws ServiceException {
         DbMailItem.saveName(this, folderId, encodeMetadata());
+        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            mMailbox.uncache(this);
+        }
     }
 
     protected void saveData(DbMailItem data) throws ServiceException {
@@ -3439,6 +3455,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             ZimbraLog.mailop.debug("saving data for %s", getMailopContext(this));
         }
         data.update(this, metadata);
+        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            mMailbox.uncache(this);
+        }
     }
 
     void markMetadataChanged() throws ServiceException {

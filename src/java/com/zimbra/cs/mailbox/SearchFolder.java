@@ -38,7 +38,11 @@ public final class SearchFolder extends Folder {
     private String mSort;
 
     public SearchFolder(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    public SearchFolder(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
         if (mData.type != Type.SEARCHFOLDER.toByte()) {
             throw new IllegalArgumentException();
         }

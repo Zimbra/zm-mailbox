@@ -25,7 +25,11 @@ import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
 
 public class Task extends CalendarItem {
     public Task(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    public Task(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
         if (mData.type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }

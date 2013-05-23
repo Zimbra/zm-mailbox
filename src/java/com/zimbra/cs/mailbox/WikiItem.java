@@ -23,7 +23,11 @@ import com.zimbra.cs.mime.ParsedDocument;
 public final class WikiItem extends Document {
 
     WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+    
+    WikiItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
     }
 
     public String getWikiWord() {
