@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130516-2148 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130523-1614 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1921,6 +1921,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1052)
     public static final String A_zimbraAllowNonLDHCharsInDomain = "zimbraAllowNonLDHCharsInDomain";
+
+    /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public static final String A_zimbraAlwaysOnClusterId = "zimbraAlwaysOnClusterId";
 
     /**
      * When a virus is detected quarantine message to this account
@@ -11737,7 +11746,7 @@ public class ZAttrProvisioning {
      * weclient URL to directly connect when making service to JS calls from
      * mail server in split mode
      *
-     * @since ZCS 8.0.4
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=1445)
     public static final String A_zimbraWebClientURL = "zimbraWebClientURL";
