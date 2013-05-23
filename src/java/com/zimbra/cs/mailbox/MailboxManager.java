@@ -798,7 +798,18 @@ public class MailboxManager {
                 mailboxKey = mailboxIds.get(account.getId().toLowerCase());
                 if (mailboxKey != null)
                     continue;
-
+                // check if the mailbox is created by other server after this server's startup
+                DbConnection conn = null;
+                try {
+                    conn = DbPool.getConnection();
+                    mailboxKey = DbMailbox.getMailboxId(conn, account.getId());
+                    if (mailboxKey != null && mailboxKey > 0) {
+                        cacheAccount(account.getId(), mailboxKey);
+                        continue;
+                    }
+                } finally {
+                    DbPool.quietClose(conn);
+                }
                 // didn't have the mailbox in the database; need to create one now
                 mbox = createMailboxInternal(octxt, account, isGalSyncAccount);
             }
