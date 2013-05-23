@@ -113,11 +113,11 @@ public final class MailboxLock {
 
     public void release() {
         if (isLocked()) {
-            lock.unlock();
-            if (lock.getHoldCount() == 0 && conn != null) {
+            if (lock.getHoldCount() == 1 && conn != null) {
                 DbPool.quietRollback(conn);
                 DbPool.quietClose(conn);
             }
+            lock.unlock();
         }
     }
 
