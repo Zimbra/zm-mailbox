@@ -2020,7 +2020,7 @@ public class Mailbox {
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
-        if (!Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+        if (!Provisioning.getInstance().getLocalServer().isIsAlwaysOn() || lock.getHoldCount() > 1) {
             if (mFolderCache != null && mTagCache != null && !initial) {
                 return;
             }

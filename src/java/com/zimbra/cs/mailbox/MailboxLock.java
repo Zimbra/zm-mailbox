@@ -37,13 +37,13 @@ import com.zimbra.cs.db.DbPool.DbConnection;
  */
 public final class MailboxLock {
     private final Lock lock = new Lock();
-    private int mId;
+    private final int mId;
     private DbConnection conn = null;
 
     public MailboxLock(int mId) {
         this.mId = mId;
     }
-    
+
     private void acquireDbLock() throws ServiceException {
         try {
             if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
@@ -112,6 +112,10 @@ public final class MailboxLock {
 
     public boolean isLocked() {
         return lock.isHeldByCurrentThread();
+    }
+
+    public int getHoldCount() {
+        return lock.getHoldCount();
     }
 
     public void release() {
