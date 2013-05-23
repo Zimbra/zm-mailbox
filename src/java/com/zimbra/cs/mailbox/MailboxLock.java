@@ -46,8 +46,10 @@ public final class MailboxLock {
     
     private void acquireDbLock() throws ServiceException {
         try {
-            conn = DbPool.getConnection();
-            DbMailbox.acquireLock(conn, mId);
+            if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+                conn = DbPool.getConnection();
+                DbMailbox.acquireLock(conn, mId);
+            }
         } catch (ServiceException se) {
             ZimbraLog.mailbox.error("error while acquiring db lock", se);
             if (conn != null) {
@@ -66,7 +68,7 @@ public final class MailboxLock {
     public void lock() {
         if (lock.tryLock()) { // This succeeds in most cases.
             try {
-                if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn() && lock.getHoldCount() == 1) {
+                if (lock.getHoldCount() == 1) {
                     acquireDbLock();
                 }
             } catch (ServiceException e) {
