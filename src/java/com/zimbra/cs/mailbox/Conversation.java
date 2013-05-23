@@ -209,6 +209,12 @@ public class Conversation extends MailItem {
         return msgs;
     }
 
+    @Override 
+    protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
+        super.updateUnread(delta, deletedDelta);
+        mMailbox.cache(this);
+    }
+
     @Override
     boolean canAccess(short rightsNeeded) {
         return true;
