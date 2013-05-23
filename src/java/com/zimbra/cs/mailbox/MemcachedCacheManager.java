@@ -38,7 +38,6 @@ public class MemcachedCacheManager extends MailboxListener {
         CalendarCacheManager.getInstance().notifyCommittedChanges(mods, changeId);
         if (MemcachedConnector.isConnected()) {
             EffectiveACLCache.getInstance().notifyCommittedChanges(mods, changeId);
-            FoldersTagsCache.getInstance().notifyCommittedChanges(mods, changeId);
         }
     }
 }

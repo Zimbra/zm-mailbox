@@ -1796,6 +1796,26 @@ public class Mailbox {
         }
     }
 
+    private void clearFolderCache() {
+        mFolderCache = null;
+        // Remove from memcached cache
+        try {
+            FoldersTagsCache.getInstance().purgeMailbox(this);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
+        }
+    }
+
+    private void clearTagCache() {
+        mTagCache = null;
+        // Remove from memcached cache
+        try {
+            FoldersTagsCache.getInstance().purgeMailbox(this);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
+        }
+    }
+    
     /** Removes all items of a specified type from the <tt>Mailbox</tt>'s
      *  caches.  There may be some collateral damage: purging non-tag,
      *  non-folder types will drop the entire item cache.
@@ -1809,18 +1829,18 @@ public class Mailbox {
                 case FOLDER:
                 case MOUNTPOINT:
                 case SEARCHFOLDER:
-                    mFolderCache = null;
+                    clearFolderCache();
                     break;
                 case FLAG:
                 case TAG:
-                    mTagCache = null;
+                    clearTagCache();
                     break;
                 default:
                     clearItemCache();
                     break;
                 case UNKNOWN:
-                    mFolderCache = null;
-                    mTagCache = null;
+                    clearFolderCache();
+                    clearTagCache();
                     clearItemCache();
                     break;
             }
@@ -2060,8 +2080,8 @@ public class Mailbox {
             beginTransaction("recalculateFolderAndTagCounts", null);
 
             // force the recalculation of all folder/tag/mailbox counts and sizes
-            mTagCache = null;
-            mFolderCache = null;
+            clearFolderCache();
+            clearTagCache();
             mData.contacts = -1;
             loadFoldersAndTags();
 
@@ -8728,25 +8748,53 @@ public class Mailbox {
             DbMailbox.updateMailboxStats(this);
         }
 
+        boolean foldersTagsDirty = false;
         if (currentChange.dirty != null && currentChange.dirty.hasNotifications()) {
             if (currentChange.dirty.created != null) {
                 for (MailItem item : currentChange.dirty.created.values()) {
-                    if (item instanceof Folder && item.getSize() != 0) {
-                        ((Folder) item).saveFolderCounts(false);
-                    } else if (item instanceof Tag && item.isUnread()) {
-                        ((Tag) item).saveTagCounts();
+                    if (item instanceof Folder ) {
+                        foldersTagsDirty = true;
+                        if (item.getSize() != 0) {
+                            ((Folder) item).saveFolderCounts(false);
+                        }
+                    } else if (item instanceof Tag) {
+                        foldersTagsDirty = true;
+                        if (item.isUnread()) {
+                            ((Tag) item).saveTagCounts();
+                        }
                     }
                 }
             }
 
             if (currentChange.dirty.modified != null) {
                 for (Change change : currentChange.dirty.modified.values()) {
-                    if ((change.why & (Change.UNREAD | Change.SIZE)) != 0 && change.what instanceof Folder) {
-                        ((Folder) change.what).saveFolderCounts(false);
-                    } else if ((change.why & Change.UNREAD | Change.SIZE) != 0 && change.what instanceof Tag) {
-                        ((Tag) change.what).saveTagCounts();
+                    if (change.what instanceof Folder) {
+                        foldersTagsDirty = true;
+                        if ((change.why & (Change.UNREAD | Change.SIZE)) != 0) {
+                            ((Folder) change.what).saveFolderCounts(false);
+                        }
+                    } else if (change.what instanceof Tag) {
+                        foldersTagsDirty = true;
+                        if ((change.why & Change.UNREAD | Change.SIZE) != 0) {
+                            ((Tag) change.what).saveTagCounts();
+                        }
+                    } else if ((change.what instanceof MailItem) && !(change.what instanceof VirtualConversation)){
+                        cache((MailItem) change.what);
                     }
                 }
+            }
+
+            if (currentChange.dirty.deleted != null) {
+                for (Change change : currentChange.dirty.deleted.values()) {
+                    if (change.what instanceof Folder || change.what instanceof Tag) {
+                        foldersTagsDirty = true;
+                        break;
+                    }
+                }
+            }
+
+            if (foldersTagsDirty) {
+                cacheFoldersTagsToMemcached();
             }
         }
 

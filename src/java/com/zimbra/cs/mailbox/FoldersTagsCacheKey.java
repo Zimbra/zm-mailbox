@@ -21,8 +21,8 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 public class FoldersTagsCacheKey implements MemcachedKey {
     private String mKeyStr;
 
-    public FoldersTagsCacheKey(String accountId, int changeToken) {
-        mKeyStr = accountId + ":" + changeToken;
+    public FoldersTagsCacheKey(String accountId) {
+        mKeyStr = accountId;
     }
 
     public boolean equals(Object other) {

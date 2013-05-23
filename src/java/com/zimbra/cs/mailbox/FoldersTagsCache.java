@@ -15,44 +15,26 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimerTask;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.session.PendingModifications.ModificationKey;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * Memcached-based cache of folders and tags of mailboxes.  Loading folders/tags from database is expensive,
  * so we cache them in memcached.  The cached data must be kept up to date as changes occur to a folder or
  * a tag.  Folder changes occur very frequently because creating/deleting an item in a folder updates the
- * folder state.  The cache changes are queued up and pushed to memcached periodically.  This reduces the
- * number of memcached puts because rapid changes to the same mailbox are aggregated to a single cache
- * update.  Thus the cache won't always have the up to date data.  This is okay because stale data is
- * ignored during mailbox load and correct data is retrieved from the database.  We're able to reduce the
- * database calls for folder/tag loading, while limiting the number of memcached writes.
+ * folder state.
  */
 public class FoldersTagsCache {
-
-    private static final long SWEEP_INTERVAL_MSEC = 10 * Constants.MILLIS_PER_SECOND;
-
     private static FoldersTagsCache sTheInstance = new FoldersTagsCache();
 
     private MemcachedMap<FoldersTagsCacheKey, FoldersTags> mMemcachedLookup;
-    Map<Integer, Mailbox> mDirtyMailboxes;
 
     public static FoldersTagsCache getInstance() { return sTheInstance; }
 
@@ -60,10 +42,6 @@ public class FoldersTagsCache {
         ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
         FoldersTagsSerializer serializer = new FoldersTagsSerializer();
         mMemcachedLookup = new MemcachedMap<FoldersTagsCacheKey, FoldersTags>(memcachedClient, serializer, false);
-        mDirtyMailboxes = new HashMap<Integer, Mailbox>(100);
-        if (!DebugConfig.disableFoldersTagsCache) {
-            Zimbra.sTimer.schedule(new DirtyMailboxesTask(), SWEEP_INTERVAL_MSEC, SWEEP_INTERVAL_MSEC);
-        }
     }
 
     static class FoldersTags {
@@ -148,7 +126,7 @@ public class FoldersTagsCache {
     }
 
     public FoldersTags get(Mailbox mbox) throws ServiceException {
-        FoldersTagsCacheKey key = new FoldersTagsCacheKey(mbox.getAccountId(), mbox.getLastChangeID());
+        FoldersTagsCacheKey key = new FoldersTagsCacheKey(mbox.getAccountId());
         return mMemcachedLookup.get(key);
     }
 
@@ -156,101 +134,15 @@ public class FoldersTagsCache {
         if (DebugConfig.disableFoldersTagsCache)
             return;
 
-        FoldersTagsCacheKey key = new FoldersTagsCacheKey(mbox.getAccountId(), mbox.getLastChangeID());
+        FoldersTagsCacheKey key = new FoldersTagsCacheKey(mbox.getAccountId());
         mMemcachedLookup.put(key, foldersTags);
     }
 
-    public void purgeMailbox(Mailbox mbox) {
-        // nothing to do
-    }
-
-    private static Set<MailItem.Type> FOLDER_AND_TAG_TYPES = EnumSet.of(MailItem.Type.TAG, MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
-
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    public void purgeMailbox(Mailbox mbox) throws ServiceException {
         if (DebugConfig.disableFoldersTagsCache)
             return;
 
-        Map<String /* account id */, Mailbox> mboxesToUpdate = new HashMap<String, Mailbox>();
-        if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
-                if (item instanceof Folder || item instanceof Tag) {
-                    Mailbox mbox = item.getMailbox();
-                    mboxesToUpdate.put(mbox.getAccountId(), mbox);
-                }
-            }
-        }
-        if (mods.modified != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
-                Change change = entry.getValue();
-                Object whatChanged = change.what;
-                if (whatChanged instanceof Folder || whatChanged instanceof Tag) {
-                    MailItem mi = (MailItem) whatChanged;
-                    Mailbox mbox = mi.getMailbox();
-                    mboxesToUpdate.put(mbox.getAccountId(), mbox);
-                }
-            }
-        }
-        if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
-                //noinspection RedundantCast
-                if (FOLDER_AND_TAG_TYPES.contains((MailItem.Type) entry.getValue().what)) {
-                    String acctId = entry.getKey().getAccountId();
-                    if (acctId == null)
-                        continue;  // just to be safe
-                    if (!mboxesToUpdate.containsKey(acctId)) {
-                        mboxesToUpdate.put(acctId, null);  // Look up Mailbox later.
-                    }
-                }
-            }
-        }
-        try {
-            for (Map.Entry<String, Mailbox> entry : mboxesToUpdate.entrySet()) {
-                String acctId = entry.getKey();
-                Mailbox mbox = entry.getValue();
-                if (mbox == null) {
-                    mbox = MailboxManager.getInstance().getMailboxByAccountId(acctId, false);
-                }
-                if (mbox != null) {
-                    // Don't update memcached yet.  Just queue it so we can aggregate memcached puts for
-                    // the same mailbox.
-                    synchronized (mDirtyMailboxes) {
-                        mDirtyMailboxes.put(mbox.getId(), mbox);
-                    }
-                }
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.calendar.warn("Unable to notify folders/tags cache", e);
-        }
-    }
-
-    // periodic task that updates memcached for modified mailboxes
-    private final class DirtyMailboxesTask extends TimerTask {
-        DirtyMailboxesTask() { }
-
-        @Override
-        public void run() {
-            try {
-                List<Mailbox> dirty;
-                synchronized (mDirtyMailboxes) {
-                    dirty = new ArrayList<Mailbox>(mDirtyMailboxes.values());
-                    mDirtyMailboxes.clear();
-                }
-                ZimbraLog.mailbox.debug("Saving folders/tags to memcached for " + dirty.size() + " mailboxes");
-                for (Mailbox mbox : dirty) {
-                    try {
-                        mbox.cacheFoldersTagsToMemcached();
-                    } catch (Throwable e) {
-                        if (e instanceof OutOfMemoryError)
-                            Zimbra.halt("Caught out of memory error", e);
-                        ZimbraLog.mailbox.warn("Caught exception in FolersTagsCache timer", e);
-                    }
-                }
-            } catch (Throwable e) { //don't let exceptions kill the timer
-                if (e instanceof OutOfMemoryError)
-                    Zimbra.halt("Caught out of memory error", e);
-                ZimbraLog.mailbox.warn("Caught exception in FolersTagsCache timer", e);
-            }
-        }
+        FoldersTagsCacheKey key = new FoldersTagsCacheKey(mbox.getAccountId());
+        mMemcachedLookup.remove(key);
     }
 }
