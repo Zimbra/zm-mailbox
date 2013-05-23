@@ -576,7 +576,7 @@ public class Mailbox {
 
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
-    public final MailboxLock lock = new MailboxLock();
+    public final MailboxLock lock;
 
     // TODO: figure out correct caching strategy
     private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = LC.zimbra_mailbox_active_cache.intValue();
@@ -606,6 +606,7 @@ public class Mailbox {
         index = new MailboxIndex(this);
         // version init done in open()
         // index init done in open()
+        lock = new MailboxLock(mId);
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {

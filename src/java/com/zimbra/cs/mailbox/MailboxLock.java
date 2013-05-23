@@ -18,7 +18,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbMailbox;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 
 /**
  * {@link MailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
@@ -32,6 +36,26 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public final class MailboxLock {
     private final Lock lock = new Lock();
+    private int mId;
+    private DbConnection conn = null;
+
+    public MailboxLock(int mId) {
+        this.mId = mId;
+    }
+    
+    private void acquireDbLock() throws ServiceException {
+        try {
+            conn = DbPool.getConnection();
+            DbMailbox.acquireLock(conn, mId);
+        } catch (ServiceException se) {
+            ZimbraLog.mailbox.error("error while acquiring db lock", se);
+            if (conn != null) {
+                DbPool.quietRollback(conn);
+                DbPool.quietClose(conn);
+            }
+            throw se;
+        }
+    }
 
     /**
      * Acquires the lock.
@@ -40,6 +64,16 @@ public final class MailboxLock {
      */
     public void lock() {
         if (lock.tryLock()) { // This succeeds in most cases.
+            try {
+                if (lock.getHoldCount() == 1) {
+                    acquireDbLock();
+                }
+            } catch (ServiceException e) {
+                lock.unlock();
+                LockFailedException lfe = new LockFailedException("lockdb");
+                lfe.logStackTrace();
+                throw lfe;
+            }
             return;
         }
         int queueLength = lock.getQueueLength();
@@ -52,6 +86,16 @@ public final class MailboxLock {
         try {
             // Wait for the lock up to the timeout.
             if (lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS)) {
+                try {
+                    if (lock.getHoldCount() == 1) {
+                        acquireDbLock();
+                    }
+                } catch (ServiceException e) {
+                    lock.unlock();
+                    LockFailedException lfe = new LockFailedException("lockdb");
+                    lfe.logStackTrace();
+                    throw lfe;
+                }
                 return;
             }
 
@@ -70,6 +114,10 @@ public final class MailboxLock {
     public void release() {
         if (isLocked()) {
             lock.unlock();
+            if (lock.getHoldCount() == 0 && conn != null) {
+                DbPool.quietRollback(conn);
+                DbPool.quietClose(conn);
+            }
         }
     }
 

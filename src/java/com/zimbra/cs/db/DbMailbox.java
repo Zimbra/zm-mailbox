@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
@@ -1221,6 +1222,40 @@ public final class DbMailbox {
         }
 
         return groups;
+    }
+    
+    public static void acquireLock(DbConnection conn, int mId) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT mailbox_id FROM locks WHERE mailbox_id = ? FOR UPDATE");
+            stmt.setInt(1, mId);
+            rs = stmt.executeQuery();
+            if (!rs.next()) {
+                stmt.close();
+                try {
+                    // insert the id
+                    stmt = conn.prepareStatement("INSERT INTO locks VALUES (?)");
+                    stmt.setInt(1, mId);
+                    stmt.executeUpdate();
+                    conn.commit();
+                    stmt.close();
+                } catch (SQLException e) {
+                    // ignore if already exist. Another client may have just inserted.
+                    if (!Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                        throw e;
+                    }
+                }
+                stmt = conn.prepareStatement("SELECT mailbox_id FROM locks WHERE mailbox_id = ? FOR UPDATE");
+                stmt.setInt(1, mId);
+                stmt.executeQuery();
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("locking the mailbox " + mId, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
     }
 
 }
