@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,6 +31,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
 import com.google.common.base.Joiner;
+import com.mysql.jdbc.MysqlErrorNumbers;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -42,14 +43,13 @@ public class MySQL extends Db {
 
     MySQL() {
         mErrorCodes = new HashMap<Db.Error, Integer>(6);
-        //see SQLExceptionMapper or MysqlErrorNumbers from MySQL Connector-J for listing of error codes
-        mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        1213); //MysqlErrorNumbers.ER_LOCK_DEADLOCK
-        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            1062); //MysqlErrorNumbers.ER_DUP_ENTRY
-        mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    1216); //MysqlErrorNumbers.ER_NO_REFERENCED_ROW
-        mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, 1451); //
-        mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         1146); //MysqlErrorNumbers.ER_NO_SUCH_TABLE
-        mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146); //MysqlErrorNumbers.ER_NO_SUCH_TABLE
-        mErrorCodes.put(Db.Error.TABLE_FULL,               1114); //MysqlErrorNumbers.ER_RECORD_FILE_FULL
+        mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        MysqlErrorNumbers.ER_LOCK_DEADLOCK);
+        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            MysqlErrorNumbers.ER_DUP_ENTRY);
+        mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    MysqlErrorNumbers.ER_NO_REFERENCED_ROW);
+        mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, 1451);
+        mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         MysqlErrorNumbers.ER_NO_SUCH_TABLE);
+        mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            MysqlErrorNumbers.ER_NO_SUCH_TABLE);
+        mErrorCodes.put(Db.Error.TABLE_FULL,               MysqlErrorNumbers.ER_RECORD_FILE_FULL);
     }
 
     @Override
@@ -137,15 +137,15 @@ public class MySQL extends Db {
         }
     }
 
-    protected class MySQLConfig extends DbPool.PoolConfig {
+    static final class MySQLConfig extends DbPool.PoolConfig {
         MySQLConfig() {
-            mDriverClassName = getDriverClassName();
+            mDriverClassName = "com.mysql.jdbc.Driver";
             mPoolSize = 100;
-            mRootUrl = getRootUrl();
+            mRootUrl = "jdbc:mysql://address=(protocol=tcp)(host=" + LC.mysql_bind_address.value() + ")(port=" + LC.mysql_port.value() + ")/";
             mConnectionUrl = mRootUrl + "zimbra";
             mLoggerUrl = null;
             mSupportsStatsCallback = true;
-            mDatabaseProperties = getDBProperties();
+            mDatabaseProperties = getMySQLProperties();
 
             // override pool size if specified in prefs
             String maxActive = (String) mDatabaseProperties.get("maxActive");
@@ -159,15 +159,7 @@ public class MySQL extends Db {
             ZimbraLog.misc.debug("Setting connection pool size to " + mPoolSize);
         }
 
-        protected String getDriverClassName() {
-            return "com.mysql.jdbc.Driver";
-        }
-
-        protected String getRootUrl() {
-            return "jdbc:mysql://address=(protocol=tcp)(host=" + LC.mysql_bind_address.value() + ")(port=" + LC.mysql_port.value() + ")/";
-        }
-
-        protected Properties getDBProperties() {
+        private static Properties getMySQLProperties() {
             Properties props = new Properties();
 
             props.put("cacheResultSetMetadata", "true");
