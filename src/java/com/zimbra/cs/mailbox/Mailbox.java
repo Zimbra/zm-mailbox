@@ -585,7 +585,7 @@ public class Mailbox {
     private static final int MAX_MSGID_CACHE = 10;
 
     private final int           mId;
-    private final MailboxData   mData;
+    private MailboxData   mData;
     private final MailboxChange currentChange = new MailboxChange();
     private final List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
@@ -1482,7 +1482,8 @@ public class Mailbox {
         if (conn != null) {
             setOperationConnection(conn);
         }
-
+        // refresh mailbox stats
+        mData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
         boolean needRedo = needRedo(octxt, recorder);
         // have a single, consistent timestamp for anything affected by this operation
         currentChange.setTimestamp(time);
