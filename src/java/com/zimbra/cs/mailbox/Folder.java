@@ -194,7 +194,7 @@ public class Folder extends MailItem {
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     Folder(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
 
@@ -554,6 +554,10 @@ public class Folder extends MailItem {
             }
         }
         return list;
+    }
+
+    public void setParent(Folder folder) {
+        parent = folder;
     }
 
     /** Updates the number of items in the folder and their total size.  Only

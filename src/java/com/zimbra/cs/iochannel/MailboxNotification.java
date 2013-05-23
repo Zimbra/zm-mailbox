@@ -18,39 +18,33 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 
-import org.apache.commons.codec.binary.Base64;
-
-import sun.misc.BASE64Encoder;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.session.SoapSession.RemoteNotifications;
 
 public class MailboxNotification extends Message {
 
     public static final String AppId = "mbn";
 
-    public static MailboxNotification create(String accountId, byte[] data) throws MessageChannelException {
-        return new MailboxNotification(accountId, data);
+    public static MailboxNotification create(String accountId, int changeId, byte[] data) throws MessageChannelException {
+        return new MailboxNotification(accountId, changeId, data);
     }
 
     @Override
     protected int size() {
         // 4 byte int padding for length of each strings.
-        return 2 * (accountId.length() + payload.length) + 8;
+        return accountId.length() + 4 + payload.length + 8;
     }
 
 
     @Override
     protected void serialize(ByteBuffer buffer) throws IOException {
         writeString(buffer, accountId);
-        //writeBytes(buffer, payload);
-        String base64Str = Base64.encodeBase64String(payload);
-        writeString(buffer, base64Str);
+        buffer.putInt(changeId);
+        writeBytes(buffer, payload);
+        //String base64Str = Base64.encodeBase64String(payload);
+        //writeString(buffer, base64Str);
     }
 
     @Override
@@ -72,22 +66,25 @@ public class MailboxNotification extends Message {
         return payload;
     }
 
+    public int getChangeId() {
+        return changeId;
+    }
+
     MailboxNotification() {
     }
 
     public MailboxNotification(ByteBuffer buffer) throws IOException {
         super();
         accountId = readString(buffer);
-        //payload = readBytes(buffer);
-        String payloadStr = readString(buffer);
-        payload = Base64.decodeBase64(payloadStr);
+        changeId = buffer.getInt();
+        payload = readBytes(buffer);
+        //String payloadStr = readString(buffer);
+        //payload = Base64.decodeBase64(payloadStr);
     }
 
     protected void writeBytes(ByteBuffer buffer, byte[] data) throws IOException {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(data.length);
-        byteBuffer.put(data);
-        buffer.putInt(byteBuffer.limit());
-        buffer.put(byteBuffer);
+        buffer.putInt(data.length);
+        buffer.put(data);
     }
 
     protected byte[] readBytes(ByteBuffer buffer) throws IOException {
@@ -95,12 +92,15 @@ public class MailboxNotification extends Message {
         ByteBuffer sub = buffer.slice();
         sub.limit(len);
         buffer.position(buffer.position() + len);
-        return sub.array();
+        byte[] data = new byte[len];
+        sub.get(data);
+        return data;
     }
-    
-    private MailboxNotification(String aid, byte[] ntfn) {
+
+    private MailboxNotification(String aid, int cid, byte[] ntfn) {
         super();
         accountId = aid;
+        changeId = cid;
         payload = ntfn;
     }
 
@@ -113,13 +113,12 @@ public class MailboxNotification extends Message {
                     return;
                 }
                 MailboxNotification message = (MailboxNotification)m;
-                log.debug("Message :" + message.getPayload());
-                Collection<Session> sessions = SessionCache.getSoapSessions(m.getRecipientAccountId());
-                if (sessions == null) {
+                Collection<Session> sessions = SessionCache.getAllSessions(m.getRecipientAccountId());
+                if (sessions == null || sessions.isEmpty()) {
                     log.warn("no active sessions for account %s", m.getRecipientAccountId());
                     return;
                 }
-                    
+
                 PendingModifications pms = null;
                 for (Session session : sessions) {
                     log.debug("notifying session %s", session.toString());
@@ -137,8 +136,7 @@ public class MailboxNotification extends Message {
                             return;
                         }
                     }
-                    // TODO fix the changeId
-                    session.notifyPendingChanges(pms, session.getMailbox().getLastChangeID(), null);
+                    session.notifyPendingChanges(pms, message.getChangeId(), null);
                 }
             }
         };
@@ -149,10 +147,12 @@ public class MailboxNotification extends Message {
         StringBuilder buf = new StringBuilder();
         buf.append(AppId).append(":");
         buf.append(accountId).append(":");
+        buf.append(changeId).append(":");
         buf.append(payload);
         return buf.toString();
     }
 
     private String accountId;
+    private int changeId;
     private byte[] payload;
 }

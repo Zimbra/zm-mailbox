@@ -523,7 +523,7 @@ public class Mailbox {
     private static class ItemCache {
         private final Map<Integer /* id */, MailItem> mapById;
         private final Map<String /* uuid */, Integer /* id */> uuid2id;
-        private Mailbox mbox;
+        private final Mailbox mbox;
         private boolean isAlwaysOn = false;
 
         public ItemCache(Mailbox mbox) {
@@ -1086,7 +1086,7 @@ public class Mailbox {
     public long getLastChangeDate() {
         return mData.lastChangeDate;
     }
-    
+
     public int getItemcacheCheckpoint() {
         return mData.itemcacheCheckpoint;
     }
@@ -1379,6 +1379,17 @@ public class Mailbox {
             if (getRecentMessageCount() != 0) {
                 currentChange.recent = 0;
             }
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void refreshMailbox(OperationContext octxt) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("refreshMailboxStats", octxt);
+            // begin transaction would refresh the mailbox.
             success = true;
         } finally {
             endTransaction(success);
@@ -1801,7 +1812,7 @@ public class Mailbox {
         uncacheChildren(item);
     }
 
-    /** Removes an item from the <code>Mailbox</code>'s item cache. 
+    /** Removes an item from the <code>Mailbox</code>'s item cache.
      *  <i>Note: This function
      *  cannot be used to uncache {@link Tag}s and {@link Folder}s.  You must
      *  call {@link #uncache(MailItem)} to remove those items from their
@@ -1868,7 +1879,7 @@ public class Mailbox {
             ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
         }
     }
-    
+
     /** Removes all items of a specified type from the <tt>Mailbox</tt>'s
      *  caches.  There may be some collateral damage: purging non-tag,
      *  non-folder types will drop the entire item cache.
@@ -8967,7 +8978,7 @@ public class Mailbox {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
             }
-            
+
             // send to the message channel
             DbConnection conn = null;
             try {
@@ -8979,7 +8990,7 @@ public class Mailbox {
                         if (server.isLocalServer()) {
                             continue;
                         }
-                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), dirty.getSerializedBytes());
+                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), mData.lastChangeId, dirty.getSerializedBytes());
                         MessageChannel.getInstance().sendMessage(server, ntfn);
                     }
                 }

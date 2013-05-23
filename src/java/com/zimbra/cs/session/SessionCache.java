@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -91,6 +92,19 @@ public final class SessionCache {
         if (sShutdown)
             return null;
         return getSessionMap(Session.Type.SOAP).get(accountId);
+    }
+
+    public static Collection<Session> getAllSessions(String accountId) {
+        if (sShutdown)
+            return null;
+        Collection<Session> ret = new ArrayList<Session>();
+        for (Session.Type type : Session.Type.values()) {
+            Collection<Session> sessions = getSessionMap(type).get(accountId);
+            if (sessions != null) {
+                ret.addAll(sessions);
+            }
+        }
+        return ret;
     }
 
     /** Immediately removes the {@link Session} from the session cache and
@@ -274,6 +288,7 @@ public final class SessionCache {
         StatsCallback()  { }
 
         /* @see com.zimbra.common.stats.RealtimeStatsCallback#getStatData() */
+        @Override
         public Map<String, Object> getStatData() {
             Map<String, Object> data = new HashMap<String, Object>();
             SessionMap soapMap = getSessionMap(Session.Type.SOAP);
