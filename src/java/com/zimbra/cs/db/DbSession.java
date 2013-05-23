@@ -61,12 +61,14 @@ public final class DbSession {
      * @return true if it existed and was deleted
      * @throws SQLException
      */
-    public static boolean delete(DbConnection conn, int id) throws ServiceException {
+    public static boolean delete(DbConnection conn, int id, String serverId) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("DELETE FROM current_sessions WHERE id=?");
-            stmt.setInt(1, id);
-            int num = stmt.executeUpdate();
+            stmt = conn.prepareStatement("DELETE FROM current_sessions WHERE id=? AND server_id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, id);
+            stmt.setString(pos++, serverId);
+            stmt.executeUpdate();
             return true;
         } catch (SQLException e) {
         	throw ServiceException.FAILURE("deleting session entry: " + id, e);
@@ -86,7 +88,7 @@ public final class DbSession {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM current_sessions");
-            int num = stmt.executeUpdate();
+            stmt.executeUpdate();
             return true;
         } catch (SQLException e) {
         	throw ServiceException.FAILURE("deleting session entries: " , e);
@@ -94,7 +96,7 @@ public final class DbSession {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     /**
      * Get the specified session entry.
      */
@@ -108,7 +110,7 @@ public final class DbSession {
             rs = stmt.executeQuery();
             while (rs.next()) {
                 list.add(rs.getString(CN_SERVER_ID));
-            } 
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting mailbox entry: " + id, e);
         } finally {
@@ -118,16 +120,16 @@ public final class DbSession {
         return list;
     }
 
-	public static void deleteSessions(DbConnection conn, String server_id) throws ServiceException {
+	public static void deleteSessions(DbConnection conn, String serverId) throws ServiceException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM current_sessions where server_id = ?");
-            stmt.setString(1, server_id);
+            stmt.setString(1, serverId);
             stmt.executeUpdate();
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("deleting session entries for server_id: " + server_id , e);
+        	throw ServiceException.FAILURE("deleting session entries for server_id: " + serverId , e);
         } finally {
             DbPool.closeStatement(stmt);
-        }		
+        }
 	}
 }

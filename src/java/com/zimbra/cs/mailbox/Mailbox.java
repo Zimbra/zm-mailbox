@@ -960,7 +960,7 @@ public class Mailbox {
             if (!mListeners.contains(session)) {
                 mListeners.add(session);
             }
-            
+
             if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn())
             {
             	if (mListeners.size() == 1)
@@ -983,7 +983,7 @@ public class Mailbox {
         } finally {
             lock.release();
         }
-        
+
 
         ZimbraLog.mailbox.debug("adding listener: %s", session);
     }
@@ -995,7 +995,7 @@ public class Mailbox {
     public void removeListener(Session session) {
     	lock.lock();
         mListeners.remove(session);
-        
+
         try {
         	if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn())
         	{
@@ -1005,7 +1005,7 @@ public class Mailbox {
         			DbConnection conn = null;
         			try {
         				conn = DbPool.getConnection();
-        				DbSession.delete(conn, getId());
+        				DbSession.delete(conn, getId(), Provisioning.getInstance().getLocalServer().getId());
         				conn.commit();
         			} catch (ServiceException e) {
         				ZimbraLog.mailbox.error("Deleting database session: " , e);
@@ -9009,7 +9009,7 @@ public class Mailbox {
             MailboxListener.notifyListeners(notification);
         }
     }
-    
+
     private List<Object> rollbackCache(MailboxChange change) {
         if (change == null) {
             return null;

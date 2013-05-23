@@ -1623,10 +1623,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case WIKI:         return new WikiItem(mbox, data, skipCache);
             case CHAT:         return new Chat(mbox, data, skipCache);
             case COMMENT:      return new Comment(mbox, data, skipCache);
+            case VIRTUAL_CONVERSATION: return new VirtualConversation(mbox,data, skipCache);
             default:           return null;
         }
     }
-    
+
     public static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         return constructItem(mbox, data, false);
     }

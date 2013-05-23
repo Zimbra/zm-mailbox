@@ -33,7 +33,11 @@ public class VirtualConversation extends Conversation {
     }
 
     VirtualConversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        super(mbox, data);
+        this(mbox, data, false);
+    }
+
+    VirtualConversation(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+        super(mbox, data, skipCache);
         if (mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }
