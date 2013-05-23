@@ -1482,8 +1482,10 @@ public class Mailbox {
         if (conn != null) {
             setOperationConnection(conn);
         }
-        // refresh mailbox stats
-        mData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+        if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            // refresh mailbox stats
+            mData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+        }
         boolean needRedo = needRedo(octxt, recorder);
         // have a single, consistent timestamp for anything affected by this operation
         currentChange.setTimestamp(time);
@@ -1854,9 +1856,11 @@ public class Mailbox {
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
-
-        if (mFolderCache != null && mTagCache != null && !initial)
-            return;
+        if (!Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+            if (mFolderCache != null && mTagCache != null && !initial) {
+                return;
+            }
+        }
         ZimbraLog.cache.info("initializing folder and tag caches for mailbox %d", getId());
 
         try {

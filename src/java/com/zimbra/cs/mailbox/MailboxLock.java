@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -65,7 +66,7 @@ public final class MailboxLock {
     public void lock() {
         if (lock.tryLock()) { // This succeeds in most cases.
             try {
-                if (lock.getHoldCount() == 1) {
+                if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn() && lock.getHoldCount() == 1) {
                     acquireDbLock();
                 }
             } catch (ServiceException e) {
