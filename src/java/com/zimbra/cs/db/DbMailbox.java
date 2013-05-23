@@ -294,7 +294,11 @@ public final class DbMailbox {
             data.version = MailboxVersion.getCurrent();
             return data;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing new mailbox row for account " + accountId, e);
+        	if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                throw MailServiceException.ALREADY_EXISTS(accountId, e);
+        	} else {
+               throw ServiceException.FAILURE("writing new mailbox row for account " + accountId, e);
+        	}
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -698,6 +702,31 @@ public final class DbMailbox {
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching mailboxes", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
+    public static int getMailboxId(DbConnection conn, String accountId) throws ServiceException {
+        
+        if (DebugConfig.externalMailboxDirectory) {
+            return -1;
+        }
+        
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE account_id = ?");
+            int pos = 1;
+            stmt.setString(pos++, accountId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return -1;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching mailboxId", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

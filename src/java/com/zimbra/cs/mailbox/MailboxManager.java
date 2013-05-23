@@ -823,17 +823,35 @@ public class MailboxManager {
             int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
             // create the mailbox row and the mailbox database
-            MailboxData data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
-            ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
-
+            MailboxData data;
+            boolean created = false;
+            try {
+                data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
+                ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
+                created = true;
+            } catch (ServiceException se) {
+                if (MailServiceException.ALREADY_EXISTS.equals(se.getCode())) {
+                    // mailbox for the account may be created by other server, re-fetch now.
+                    id = DbMailbox.getMailboxId(conn, account.getId());
+                    if (id > 0) {
+                        data = DbMailbox.getMailboxStats(conn, id);
+                    } else {
+                        throw ServiceException.FAILURE("could not create mailbox", se);
+                    }
+                } else {
+                    throw se;
+                }
+            }
             mbox = account.isIsExternalVirtualAccount() ?
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
             mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
 
-            // create the default folders
-            mbox.initialize();
+            if (created) {
+                // create the default folders
+                mbox.initialize();
+            }
 
             // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
             cacheAccount(data.accountId, data.id);
