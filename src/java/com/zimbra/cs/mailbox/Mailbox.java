@@ -2793,13 +2793,12 @@ public class Mailbox {
         // special case asking for VirtualConversation but having it be a real Conversation
         if (!uncached.isEmpty()) {
             itemsFromDb = MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
-            tempCache = new HashMap<Integer, MailItem>();
             for (MailItem item : itemsFromDb) {
                 tempCache.put(item.getId(), item);
             }
             for (int i = 0; i < ids.length; i++) {
                 if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                    MailItem item = tempCache.get(-ids[i]);
+                    MailItem item = tempCache.get(ids[i]);
                     if (!(item instanceof Message) || item.getParentId() == ids[i])
                         throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
                     items[i] = tempCache.get(item.getParentId());
