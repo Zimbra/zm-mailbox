@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130516-2148 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130523-1614 */
 
     /**
      * RFC2256: descriptive information
@@ -1689,6 +1689,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAllowNonLDHCharsInDomain(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, "");
+        return attrs;
+    }
+
+    /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @return zimbraAlwaysOnClusterId, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public String getAlwaysOnClusterId() {
+        return getAttr(Provisioning.A_zimbraAlwaysOnClusterId, null);
+    }
+
+    /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @param zimbraAlwaysOnClusterId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public void setAlwaysOnClusterId(String zimbraAlwaysOnClusterId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAlwaysOnClusterId, zimbraAlwaysOnClusterId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @param zimbraAlwaysOnClusterId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public Map<String,Object> setAlwaysOnClusterId(String zimbraAlwaysOnClusterId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAlwaysOnClusterId, zimbraAlwaysOnClusterId);
+        return attrs;
+    }
+
+    /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public void unsetAlwaysOnClusterId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAlwaysOnClusterId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public Map<String,Object> unsetAlwaysOnClusterId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAlwaysOnClusterId, "");
         return attrs;
     }
 
@@ -43493,7 +43570,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraWebClientURL, or null if unset
      *
-     * @since ZCS 8.0.4
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=1445)
     public String getWebClientURL() {
@@ -43507,7 +43584,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraWebClientURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.4
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=1445)
     public void setWebClientURL(String zimbraWebClientURL) throws com.zimbra.common.service.ServiceException {
@@ -43524,7 +43601,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.4
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=1445)
     public Map<String,Object> setWebClientURL(String zimbraWebClientURL, Map<String,Object> attrs) {
@@ -43539,7 +43616,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.4
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=1445)
     public void unsetWebClientURL() throws com.zimbra.common.service.ServiceException {
@@ -43555,7 +43632,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.4
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=1445)
     public Map<String,Object> unsetWebClientURL(Map<String,Object> attrs) {

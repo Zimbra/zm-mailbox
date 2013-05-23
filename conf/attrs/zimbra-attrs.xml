@@ -7206,7 +7206,12 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.4">
+<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0.0">
   <desc>weclient URL to directly connect when making service to JS calls from mail server in split mode</desc>
 </attr>
+
+<attr id="1446" name="zimbraAlwaysOnClusterId" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="9.0.0">
+  <desc>AlwaysOn cluster-id to which this server belongs to. If empty, it's not part of AlwaysOn and is a stand-alone server.</desc>
+</attr>
+
 </attrs>
