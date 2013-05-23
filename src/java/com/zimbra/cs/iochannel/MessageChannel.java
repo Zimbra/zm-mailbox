@@ -83,17 +83,23 @@ public class MessageChannel {
                 return;
             }
             com.zimbra.cs.account.Server targetServer = targetAccount.getServer();
-            String peerHostname;
-            PeerServer peer;
-            if (targetServer == null ||
-                    (peerHostname = targetServer.getServiceHostname()) == null ||
+            sendMessage(targetServer, message);
+        } catch (ServiceException e) {
+            log.error("can't find server for account %s", accountId, e);
+        }
+    }
+
+    public void sendMessage(com.zimbra.cs.account.Server server, Message message) {
+        String peerHostname;
+        PeerServer peer;
+        try {
+            if (server == null ||
+                    (peerHostname = server.getServiceHostname()) == null ||
                     (peer = client.getPeer(peerHostname)) == null) {
-                log.error("can't find server for account %s", accountId);
+                log.error("no client available for server %s", server.getServiceHostname());
                 return;
             }
             peer.sendMessage(message.serialize());
-        } catch (ServiceException e) {
-            log.error("can't send notification", e);
         } catch (IOChannelException e) {
             log.warn("MessageChannel: " + e.getMessage());
         } catch (IOException e) {

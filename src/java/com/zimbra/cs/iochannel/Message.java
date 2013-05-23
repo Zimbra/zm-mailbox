@@ -80,6 +80,7 @@ public abstract class Message {
 
     static {
         registerMessage(new CrossServerNotification());
+        registerMessage(new MailboxNotification());
     }
 
     public static void registerMessage(Message m) {

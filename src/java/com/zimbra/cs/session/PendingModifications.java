@@ -18,18 +18,28 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
 public final class PendingModifications {
@@ -346,5 +356,164 @@ public final class PendingModifications {
         deleted = null;
         modified = null;
         changedTypes.clear();
+    }
+    
+    public static final class ModificationKeyMeta implements Serializable {
+
+        String accountId;
+        Integer itemId;
+        
+        public ModificationKeyMeta(String accountId, int itemId) {
+            this.accountId = accountId;
+            this.itemId = itemId;
+        }
+
+    }
+
+    public static final class ChangeMeta implements Serializable {
+
+        public String metaWhat;
+        public int    metaWhy;
+        public String metaPreModifyObj;
+        
+        public ChangeMeta(String thing, int reason, String preModifyObj) {
+            metaWhat = thing; // MailItem.Type for deletions
+            metaWhy = reason; // not applicable for deletions
+            metaPreModifyObj = preModifyObj;
+        }
+
+    }
+    
+    public byte[] getSerializedBytes() throws IOException {
+        // assemble temporary created, modified, deleted with Metadata
+        LinkedHashMap<ModificationKeyMeta, String> metaCreated = null;
+        Map<ModificationKeyMeta, ChangeMeta> metaModified = null;
+        Map<ModificationKeyMeta, ChangeMeta> metaDeleted = null;
+        
+        if (created != null) {
+            metaCreated = new LinkedHashMap<ModificationKeyMeta, String>();
+            Iterator<Entry<ModificationKey, MailItem>> iter = created.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<ModificationKey, MailItem> entry = iter.next();
+                ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
+                MailItem item = entry.getValue();
+                Metadata meta = item.serializeUnderlyingData();
+                metaCreated.put(keyMeta, meta.toString());
+            }
+        }
+        
+        if (modified != null) {
+            metaModified = new HashMap<ModificationKeyMeta, ChangeMeta>();
+            Iterator<Entry<ModificationKey, Change>> iter = modified.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<ModificationKey, Change> entry = iter.next();
+                Change change = entry.getValue();
+                // TODO fix mailbox change
+                if (!(change.what instanceof MailItem)) {
+                    continue;
+                }
+                ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
+                ChangeMeta changeMeta = new ChangeMeta(((MailItem) change.what).serializeUnderlyingData().toString(),
+                                                         change.why,
+                                                         ((MailItem) change.preModifyObj).serializeUnderlyingData().toString());
+                metaModified.put(keyMeta, changeMeta);
+            }
+        }
+        
+        if (deleted != null) {
+            metaDeleted = new HashMap<ModificationKeyMeta, ChangeMeta>();
+            Iterator<Entry<ModificationKey, Change>> iter = deleted.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<ModificationKey, Change> entry = iter.next();
+                Change change = entry.getValue();
+                if (!(change.what instanceof MailItem)) {
+                    continue;
+                }
+                ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
+                ChangeMeta changeMeta = new ChangeMeta(((MailItem) change.what).serializeUnderlyingData().toString(),
+                                                         change.why,
+                                                         ((MailItem) change.preModifyObj).serializeUnderlyingData().toString());
+                metaDeleted.put(keyMeta, changeMeta);
+            }
+        }
+        
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(changedTypes);
+        oos.writeObject(metaCreated);
+        oos.writeObject(metaModified);
+        oos.writeObject(metaDeleted);
+        oos.flush();
+        oos.close();
+        return bos.toByteArray();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static PendingModifications deserialize(Mailbox mbox, byte[] data) throws IOException, ClassNotFoundException, ServiceException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        PendingModifications pms = new PendingModifications();
+        pms.changedTypes = (Set<Type>) ois.readObject();
+        
+        LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois.readObject();
+        if (metaCreated != null) {
+            pms.created = new LinkedHashMap<ModificationKey, MailItem>();
+            Iterator<Entry<ModificationKeyMeta, String>> iter = metaCreated.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<ModificationKeyMeta, String> entry = iter.next();
+                Metadata meta = new Metadata(entry.getValue());
+                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
+                ud.deserialize(meta);
+                MailItem item = MailItem.constructItem(mbox, ud, true);
+                ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
+                pms.created.put(key, item);
+            }
+        }
+        
+        Map<ModificationKeyMeta, ChangeMeta> metaModified =  (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
+        if (metaModified != null) {
+            pms.modified = new LinkedHashMap<ModificationKey, Change>();
+            Iterator<Entry<ModificationKeyMeta, ChangeMeta>> iter = metaModified.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<ModificationKeyMeta, ChangeMeta> entry = iter.next();
+                ChangeMeta changeMeta = entry.getValue();
+                Metadata meta = new Metadata(changeMeta.metaWhat);
+                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
+                ud.deserialize(meta);
+                MailItem what = MailItem.constructItem(mbox, ud, true);
+                int why = changeMeta.metaWhy;
+                meta = new Metadata(changeMeta.metaPreModifyObj);
+                ud = new MailItem.UnderlyingData();
+                ud.deserialize(meta);
+                MailItem preModifyObj = MailItem.constructItem(mbox, ud, true);
+                Change change = new Change(what, why, preModifyObj);
+                ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
+                pms.modified.put(key, change);
+            }
+        }
+        
+        Map<ModificationKeyMeta, ChangeMeta> metaDeleted =  (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
+        if (metaDeleted != null) {
+            pms.deleted = new LinkedHashMap<ModificationKey, Change>();
+            Iterator<Entry<ModificationKeyMeta, ChangeMeta>> iter = metaDeleted.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<ModificationKeyMeta, ChangeMeta> entry = iter.next();
+                ChangeMeta changeMeta = entry.getValue();
+                Metadata meta = new Metadata(changeMeta.metaWhat);
+                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
+                ud.deserialize(meta);
+                MailItem what = MailItem.constructItem(mbox, ud, true);
+                int why = changeMeta.metaWhy;
+                meta = new Metadata(changeMeta.metaPreModifyObj);
+                ud = new MailItem.UnderlyingData();
+                ud.deserialize(meta);
+                MailItem preModifyObj = MailItem.constructItem(mbox, ud, true);
+                Change change = new Change(what, why, preModifyObj);
+                ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
+                pms.deleted.put(key, change);
+            }
+        }
+        
+        return pms;
     }
 }

@@ -86,6 +86,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
@@ -107,6 +108,9 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.iochannel.MailboxNotification;
+import com.zimbra.cs.iochannel.MessageChannel;
+import com.zimbra.cs.iochannel.MessageChannelException;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
@@ -8910,7 +8914,28 @@ public class Mailbox {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
             }
-
+            
+            // send to the message channel
+            try {
+                if (Provisioning.getInstance().getLocalServer().isIsAlwaysOn()) {
+                    List<Server> serverList = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
+                    for (Server server : serverList) {
+                        if (server.isLocalServer()) {
+                            continue;
+                        }
+                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), dirty.getSerializedBytes());
+                        MessageChannel.getInstance().sendMessage(server, ntfn);
+                    }
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.session.warn("unable to get target server", e);
+            } catch (MessageChannelException e) {
+                ZimbraLog.session.warn("unable to create MailboxNotification", e);
+                return;
+            } catch (IOException e) {
+                ZimbraLog.session.warn("unable to create MailboxNotification", e);
+                return;
+            }
             MailboxListener.notifyListeners(notification);
         }
     }

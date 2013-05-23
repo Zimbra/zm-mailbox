@@ -424,7 +424,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return meta;
         }
 
-        void deserialize(Metadata meta) throws ServiceException {
+        public void deserialize(Metadata meta) throws ServiceException {
             this.id = (int) meta.getLong(FN_ID, 0);
             this.type = (byte) meta.getLong(FN_TYPE, 0);
             this.parentId = (int) meta.getLong(FN_PARENT_ID, -1);
@@ -3495,7 +3495,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return comments.subList(offset, last);
     }
 
-    Metadata serializeUnderlyingData() {
+    public Metadata serializeUnderlyingData() {
         Metadata meta = mData.serialize();
         // metadata
         Metadata metaMeta = new Metadata();
