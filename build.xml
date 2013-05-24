@@ -582,6 +582,17 @@
           <include name="policy-*.jar"/>
           <include name="stax-ex-*.jar"/>
           <include name="streambuffer-*.jar"/>
+          <include name="cxf-*.jar"/>
+          <include name="httpasyncclient-*.jar"/>
+          <include name="httpclient-*.jar"/>
+          <include name="httpcore-*.jar"/>
+	      <include name="neethi-*.jar"/>
+          <include name="objenesis-*.jar"/>
+	      <include name="spring-*.jar"/>
+          <include name="woodstox-core-asl-*.jar"/>
+	      <include name="wsdl4j-*.jar"/>
+	      <include name="xmlschema-core-*.jar"/>
+          <include name="stax2-api-*.jar"/>
         </lib>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -1071,8 +1082,8 @@
         <include name="commons-logging.jar"/>
         <include name="commons-collections*.jar"/>
         <include name="icu4j-*.jar"/>
-	<include name="commons-pool*.jar"/>
-	<include name="concurrentlinkedhashmap-lru*.jar"/>
+		<include name="commons-pool*.jar"/>
+		<include name="concurrentlinkedhashmap-lru*.jar"/>
         <include name="yuicompressor*jar"/>
         <include name="dom4j*.jar"/>
         <include name="ganymed-ssh2*.jar"/>
@@ -1092,7 +1103,7 @@
         <include name="testng*.jar"/>
         <include name="guava*.jar"/>
         <include name="log4j-*.jar"/>
-        <include name="apache-log4j-extras-*.jar"/>      	
+        <include name="apache-log4j-extras-*.jar"/>
       </fileset>
       <fileset dir="${common.internal.jars.dir}">
         <include name="junit*.jar"/>
