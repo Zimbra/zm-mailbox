@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130524-0946 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130524-1426 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -11951,6 +11951,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     ///// END-AUTO-GEN-REPLACE
 }
