@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130524-0946 */
 
 
     /*
@@ -557,6 +557,11 @@ public class RightConsts {
     public static final String RT_adminConsoleSoftwareUpdatesRights = "adminConsoleSoftwareUpdatesRights";
 
     /**
+     * Admin Console Sub Domain Rights
+     */
+    public static final String RT_adminConsoleSubDomainRights = "adminConsoleSubDomainRights";
+
+    /**
      * Rights for viewing Voice/Chat services through Admin Console
      */
     public static final String RT_adminConsoleUCServiceRights = "adminConsoleUCServiceRights";
@@ -723,6 +728,11 @@ public class RightConsts {
     public static final String RT_createAlias = "createAlias";
 
     /**
+     * create alwaysOnCluster
+     */
+    public static final String RT_createAlwaysOnCluster = "createAlwaysOnCluster";
+
+    /**
      * create calendar resource in the domain
      */
     public static final String RT_createCalendarResource = "createCalendarResource";
@@ -751,11 +761,6 @@ public class RightConsts {
      * create server
      */
     public static final String RT_createServer = "createServer";
-
-    /**
-     * create alwaysOnCluster
-     */
-    public static final String RT_createAlwaysOnCluster = "createAlwaysOnCluster";
 
     /**
      * create sub domain
@@ -803,6 +808,11 @@ public class RightConsts {
     public static final String RT_deleteAlias = "deleteAlias";
 
     /**
+     * delete alwaysOnCluster
+     */
+    public static final String RT_deleteAlwaysOnCluster = "deleteAlwaysOnCluster";
+
+    /**
      * delete calendar resource
      */
     public static final String RT_deleteCalendarResource = "deleteCalendarResource";
@@ -831,11 +841,6 @@ public class RightConsts {
      * delete server
      */
     public static final String RT_deleteServer = "deleteServer";
-
-    /**
-     * delete alwaysOnCluster
-     */
-    public static final String RT_deleteAlwaysOnCluster = "deleteAlwaysOnCluster";
 
     /**
      * delete UC service
@@ -1039,6 +1044,11 @@ public class RightConsts {
     public static final String RT_getAllFreeBusyProviders = "getAllFreeBusyProviders";
 
     /**
+     * get all alwaysOnCluster attributes
+     */
+    public static final String RT_getAlwaysOnCluster = "getAlwaysOnCluster";
+
+    /**
      * get CSR from the target server
      */
     public static final String RT_getCSR = "getCSR";
@@ -1124,11 +1134,6 @@ public class RightConsts {
     public static final String RT_getServer = "getServer";
 
     /**
-     * get all alwaysOnCluster attributes
-     */
-    public static final String RT_getAlwaysOnCluster = "getAlwaysOnCluster";
-
-    /**
      * get stats of server
      */
     public static final String RT_getServerStats = "getServerStats";
@@ -1179,6 +1184,11 @@ public class RightConsts {
     public static final String RT_listAlias = "listAlias";
 
     /**
+     * see alwaysOnCluster in GetAllAlwaysOnClusters
+     */
+    public static final String RT_listAlwaysOnCluster = "listAlwaysOnCluster";
+
+    /**
      * see calendar resource in
      * GetAllCalendarResources/SearchDirectoryResponse
      */
@@ -1208,11 +1218,6 @@ public class RightConsts {
      * see server in GetAllServers/SearchDirectoryResponse
      */
     public static final String RT_listServer = "listServer";
-
-    /**
-     * see alwaysOnCluster in GetAllAlwaysOnClusters
-     */
-    public static final String RT_listAlwaysOnCluster = "listAlwaysOnCluster";
 
     /**
      * see UC service in GetAllUCServices/SearchDirectoryResponse
@@ -1275,6 +1280,11 @@ public class RightConsts {
     public static final String RT_modifyAccount = "modifyAccount";
 
     /**
+     * set all alwaysOnCluster attributes
+     */
+    public static final String RT_modifyAlwaysOnCluster = "modifyAlwaysOnCluster";
+
+    /**
      * modify all calendar resource attributes
      */
     public static final String RT_modifyCalendarResource = "modifyCalendarResource";
@@ -1308,11 +1318,6 @@ public class RightConsts {
      * set all server attributes
      */
     public static final String RT_modifyServer = "modifyServer";
-
-    /**
-     * set all alwaysOnCluster attributes
-     */
-    public static final String RT_modifyAlwaysOnCluster = "modifyAlwaysOnCluster";
 
     /**
      * set all UC service attributes

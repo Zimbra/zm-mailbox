@@ -30,7 +30,7 @@ public class AdminRights {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130524-0946 */
 
 
     public static AdminRight R_accessGAL;
@@ -124,6 +124,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleServerStatusRights;
     public static AdminRight R_adminConsoleServerVolumesTabRights;
     public static AdminRight R_adminConsoleSoftwareUpdatesRights;
+    public static AdminRight R_adminConsoleSubDomainRights;
     public static AdminRight R_adminConsoleUCServiceRights;
     public static AdminRight R_adminConsoleZimletACLTabRights;
     public static AdminRight R_adminConsoleZimletRights;
@@ -157,13 +158,13 @@ public class AdminRights {
     public static AdminRight R_countAccount;
     public static AdminRight R_createAccount;
     public static AdminRight R_createAlias;
+    public static AdminRight R_createAlwaysOnCluster;
     public static AdminRight R_createCalendarResource;
     public static AdminRight R_createCos;
     public static AdminRight R_createDistributionList;
     public static AdminRight R_createGroup;
     public static AdminRight R_createMigrationTask;
     public static AdminRight R_createServer;
-    public static AdminRight R_createAlwaysOnCluster;
     public static AdminRight R_createSubDomain;
     public static AdminRight R_createTopDomain;
     public static AdminRight R_createUCService;
@@ -173,13 +174,13 @@ public class AdminRights {
     public static AdminRight R_crossMailboxSearchRights;
     public static AdminRight R_deleteAccount;
     public static AdminRight R_deleteAlias;
+    public static AdminRight R_deleteAlwaysOnCluster;
     public static AdminRight R_deleteCalendarResource;
     public static AdminRight R_deleteCos;
     public static AdminRight R_deleteDistributionList;
     public static AdminRight R_deleteDomain;
     public static AdminRight R_deleteGroup;
     public static AdminRight R_deleteServer;
-    public static AdminRight R_deleteAlwaysOnCluster;
     public static AdminRight R_deleteUCService;
     public static AdminRight R_deleteXMPPComponent;
     public static AdminRight R_deleteZimlet;
@@ -220,6 +221,7 @@ public class AdminRights {
     public static AdminRight R_getAccountInfo;
     public static AdminRight R_getAccountMembership;
     public static AdminRight R_getAllFreeBusyProviders;
+    public static AdminRight R_getAlwaysOnCluster;
     public static AdminRight R_getCSR;
     public static AdminRight R_getCalendarResource;
     public static AdminRight R_getCalendarResourceInfo;
@@ -237,7 +239,6 @@ public class AdminRights {
     public static AdminRight R_getMailboxInfo;
     public static AdminRight R_getMailboxStats;
     public static AdminRight R_getServer;
-    public static AdminRight R_getAlwaysOnCluster;
     public static AdminRight R_getServerStats;
     public static AdminRight R_getServiceStatus;
     public static AdminRight R_getSessions;
@@ -248,13 +249,13 @@ public class AdminRights {
     public static AdminRight R_installZCSLicense;
     public static AdminRight R_listAccount;
     public static AdminRight R_listAlias;
+    public static AdminRight R_listAlwaysOnCluster;
     public static AdminRight R_listCalendarResource;
     public static AdminRight R_listCos;
     public static AdminRight R_listDistributionList;
     public static AdminRight R_listDomain;
     public static AdminRight R_listGroup;
     public static AdminRight R_listServer;
-    public static AdminRight R_listAlwaysOnCluster;
     public static AdminRight R_listUCService;
     public static AdminRight R_listXMPPComponent;
     public static AdminRight R_listZimlet;
@@ -267,6 +268,7 @@ public class AdminRights {
     public static AdminRight R_migrationAdminCosRights;
     public static AdminRight R_migrationAdminDomainRights;
     public static AdminRight R_modifyAccount;
+    public static AdminRight R_modifyAlwaysOnCluster;
     public static AdminRight R_modifyCalendarResource;
     public static AdminRight R_modifyCos;
     public static AdminRight R_modifyDistributionList;
@@ -274,7 +276,6 @@ public class AdminRights {
     public static AdminRight R_modifyGlobalConfig;
     public static AdminRight R_modifyGroup;
     public static AdminRight R_modifyServer;
-    public static AdminRight R_modifyAlwaysOnCluster;
     public static AdminRight R_modifyUCService;
     public static AdminRight R_modifyXMPPComponent;
     public static AdminRight R_modifyZimlet;
@@ -554,6 +555,7 @@ public class AdminRights {
         R_adminConsoleServerStatusRights       = rm.getAdminRight(Right.RT_adminConsoleServerStatusRights);
         R_adminConsoleServerVolumesTabRights   = rm.getAdminRight(Right.RT_adminConsoleServerVolumesTabRights);
         R_adminConsoleSoftwareUpdatesRights    = rm.getAdminRight(Right.RT_adminConsoleSoftwareUpdatesRights);
+        R_adminConsoleSubDomainRights          = rm.getAdminRight(Right.RT_adminConsoleSubDomainRights);
         R_adminConsoleUCServiceRights          = rm.getAdminRight(Right.RT_adminConsoleUCServiceRights);
         R_adminConsoleZimletACLTabRights       = rm.getAdminRight(Right.RT_adminConsoleZimletACLTabRights);
         R_adminConsoleZimletRights             = rm.getAdminRight(Right.RT_adminConsoleZimletRights);
@@ -587,13 +589,13 @@ public class AdminRights {
         R_countAccount                         = rm.getAdminRight(Right.RT_countAccount);
         R_createAccount                        = rm.getAdminRight(Right.RT_createAccount);
         R_createAlias                          = rm.getAdminRight(Right.RT_createAlias);
+        R_createAlwaysOnCluster                = rm.getAdminRight(Right.RT_createAlwaysOnCluster);
         R_createCalendarResource               = rm.getAdminRight(Right.RT_createCalendarResource);
         R_createCos                            = rm.getAdminRight(Right.RT_createCos);
         R_createDistributionList               = rm.getAdminRight(Right.RT_createDistributionList);
         R_createGroup                          = rm.getAdminRight(Right.RT_createGroup);
         R_createMigrationTask                  = rm.getAdminRight(Right.RT_createMigrationTask);
         R_createServer                         = rm.getAdminRight(Right.RT_createServer);
-        R_createAlwaysOnCluster                = rm.getAdminRight(Right.RT_createAlwaysOnCluster);
         R_createSubDomain                      = rm.getAdminRight(Right.RT_createSubDomain);
         R_createTopDomain                      = rm.getAdminRight(Right.RT_createTopDomain);
         R_createUCService                      = rm.getAdminRight(Right.RT_createUCService);
@@ -603,13 +605,13 @@ public class AdminRights {
         R_crossMailboxSearchRights             = rm.getAdminRight(Right.RT_crossMailboxSearchRights);
         R_deleteAccount                        = rm.getAdminRight(Right.RT_deleteAccount);
         R_deleteAlias                          = rm.getAdminRight(Right.RT_deleteAlias);
+        R_deleteAlwaysOnCluster                = rm.getAdminRight(Right.RT_deleteAlwaysOnCluster);
         R_deleteCalendarResource               = rm.getAdminRight(Right.RT_deleteCalendarResource);
         R_deleteCos                            = rm.getAdminRight(Right.RT_deleteCos);
         R_deleteDistributionList               = rm.getAdminRight(Right.RT_deleteDistributionList);
         R_deleteDomain                         = rm.getAdminRight(Right.RT_deleteDomain);
         R_deleteGroup                          = rm.getAdminRight(Right.RT_deleteGroup);
         R_deleteServer                         = rm.getAdminRight(Right.RT_deleteServer);
-        R_deleteAlwaysOnCluster                = rm.getAdminRight(Right.RT_deleteAlwaysOnCluster);
         R_deleteUCService                      = rm.getAdminRight(Right.RT_deleteUCService);
         R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
@@ -650,6 +652,7 @@ public class AdminRights {
         R_getAccountInfo                       = rm.getAdminRight(Right.RT_getAccountInfo);
         R_getAccountMembership                 = rm.getAdminRight(Right.RT_getAccountMembership);
         R_getAllFreeBusyProviders              = rm.getAdminRight(Right.RT_getAllFreeBusyProviders);
+        R_getAlwaysOnCluster                   = rm.getAdminRight(Right.RT_getAlwaysOnCluster);
         R_getCSR                               = rm.getAdminRight(Right.RT_getCSR);
         R_getCalendarResource                  = rm.getAdminRight(Right.RT_getCalendarResource);
         R_getCalendarResourceInfo              = rm.getAdminRight(Right.RT_getCalendarResourceInfo);
@@ -667,7 +670,6 @@ public class AdminRights {
         R_getMailboxInfo                       = rm.getAdminRight(Right.RT_getMailboxInfo);
         R_getMailboxStats                      = rm.getAdminRight(Right.RT_getMailboxStats);
         R_getServer                            = rm.getAdminRight(Right.RT_getServer);
-        R_getAlwaysOnCluster                   = rm.getAdminRight(Right.RT_getAlwaysOnCluster);
         R_getServerStats                       = rm.getAdminRight(Right.RT_getServerStats);
         R_getServiceStatus                     = rm.getAdminRight(Right.RT_getServiceStatus);
         R_getSessions                          = rm.getAdminRight(Right.RT_getSessions);
@@ -678,13 +680,13 @@ public class AdminRights {
         R_installZCSLicense                    = rm.getAdminRight(Right.RT_installZCSLicense);
         R_listAccount                          = rm.getAdminRight(Right.RT_listAccount);
         R_listAlias                            = rm.getAdminRight(Right.RT_listAlias);
+        R_listAlwaysOnCluster                  = rm.getAdminRight(Right.RT_listAlwaysOnCluster);
         R_listCalendarResource                 = rm.getAdminRight(Right.RT_listCalendarResource);
         R_listCos                              = rm.getAdminRight(Right.RT_listCos);
         R_listDistributionList                 = rm.getAdminRight(Right.RT_listDistributionList);
         R_listDomain                           = rm.getAdminRight(Right.RT_listDomain);
         R_listGroup                            = rm.getAdminRight(Right.RT_listGroup);
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
-        R_listAlwaysOnCluster                  = rm.getAdminRight(Right.RT_listAlwaysOnCluster);
         R_listUCService                        = rm.getAdminRight(Right.RT_listUCService);
         R_listXMPPComponent                    = rm.getAdminRight(Right.RT_listXMPPComponent);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
@@ -697,6 +699,7 @@ public class AdminRights {
         R_migrationAdminCosRights              = rm.getAdminRight(Right.RT_migrationAdminCosRights);
         R_migrationAdminDomainRights           = rm.getAdminRight(Right.RT_migrationAdminDomainRights);
         R_modifyAccount                        = rm.getAdminRight(Right.RT_modifyAccount);
+        R_modifyAlwaysOnCluster                = rm.getAdminRight(Right.RT_modifyAlwaysOnCluster);
         R_modifyCalendarResource               = rm.getAdminRight(Right.RT_modifyCalendarResource);
         R_modifyCos                            = rm.getAdminRight(Right.RT_modifyCos);
         R_modifyDistributionList               = rm.getAdminRight(Right.RT_modifyDistributionList);
@@ -704,7 +707,6 @@ public class AdminRights {
         R_modifyGlobalConfig                   = rm.getAdminRight(Right.RT_modifyGlobalConfig);
         R_modifyGroup                          = rm.getAdminRight(Right.RT_modifyGroup);
         R_modifyServer                         = rm.getAdminRight(Right.RT_modifyServer);
-        R_modifyAlwaysOnCluster                = rm.getAdminRight(Right.RT_modifyAlwaysOnCluster);
         R_modifyUCService                      = rm.getAdminRight(Right.RT_modifyUCService);
         R_modifyXMPPComponent                  = rm.getAdminRight(Right.RT_modifyXMPPComponent);
         R_modifyZimlet                         = rm.getAdminRight(Right.RT_modifyZimlet);

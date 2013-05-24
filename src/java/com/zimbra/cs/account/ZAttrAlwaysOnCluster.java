@@ -36,7 +36,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130423-1701 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130524-0946 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -474,7 +474,6 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
