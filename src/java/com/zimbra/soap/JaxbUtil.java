@@ -45,9 +45,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.json.JacksonUtil;
@@ -486,6 +486,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CopyCosResponse.class,
             com.zimbra.soap.admin.message.CountAccountRequest.class,
             com.zimbra.soap.admin.message.CountAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.CreateAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.CountObjectsRequest.class,
             com.zimbra.soap.admin.message.CountObjectsResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
@@ -526,6 +528,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.DelegateAuthResponse.class,
             com.zimbra.soap.admin.message.DeleteAccountRequest.class,
             com.zimbra.soap.admin.message.DeleteAccountResponse.class,
+            com.zimbra.soap.admin.message.DeleteAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.DeleteAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.DeleteCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.DeleteCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.DeleteCosRequest.class,
@@ -602,6 +606,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllAccountsResponse.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsResponse.class,
+            com.zimbra.soap.admin.message.GetAllAlwaysOnClustersRequest.class,
+            com.zimbra.soap.admin.message.GetAllAlwaysOnClustersResponse.class,
             com.zimbra.soap.admin.message.GetAllCalendarResourcesRequest.class,
             com.zimbra.soap.admin.message.GetAllCalendarResourcesResponse.class,
             com.zimbra.soap.admin.message.GetAllConfigRequest.class,
@@ -640,6 +646,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetApplianceHSMFSResponse.class,
             com.zimbra.soap.admin.message.GetAttributeInfoRequest.class,
             com.zimbra.soap.admin.message.GetAttributeInfoResponse.class,
+            com.zimbra.soap.admin.message.GetAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.GetAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.GetCSRRequest.class,
             com.zimbra.soap.admin.message.GetCSRResponse.class,
             com.zimbra.soap.admin.message.GetCalendarResourceRequest.class,
@@ -764,6 +772,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ModifyAccountResponse.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesRequest.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesResponse.class,
+            com.zimbra.soap.admin.message.ModifyAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.ModifyAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.ModifyCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.ModifyCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.ModifyConfigRequest.class,
