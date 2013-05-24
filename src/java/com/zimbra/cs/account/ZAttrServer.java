@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130524-0946 */
+    /* build: 9.0.0_BETA1_1111 pburgu 20130524-1426 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -24861,6 +24861,149 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetXMPPEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraXMPPEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @return zimbraZookeeperClientServerList, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public String[] getZookeeperClientServerList() {
+        return getMultiAttr(Provisioning.A_zimbraZookeeperClientServerList);
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param zimbraZookeeperClientServerList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public void setZookeeperClientServerList(String[] zimbraZookeeperClientServerList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZookeeperClientServerList, zimbraZookeeperClientServerList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param zimbraZookeeperClientServerList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public Map<String,Object> setZookeeperClientServerList(String[] zimbraZookeeperClientServerList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZookeeperClientServerList, zimbraZookeeperClientServerList);
+        return attrs;
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param zimbraZookeeperClientServerList new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public void addZookeeperClientServerList(String zimbraZookeeperClientServerList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZookeeperClientServerList, zimbraZookeeperClientServerList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param zimbraZookeeperClientServerList new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public Map<String,Object> addZookeeperClientServerList(String zimbraZookeeperClientServerList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZookeeperClientServerList, zimbraZookeeperClientServerList);
+        return attrs;
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param zimbraZookeeperClientServerList existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public void removeZookeeperClientServerList(String zimbraZookeeperClientServerList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZookeeperClientServerList, zimbraZookeeperClientServerList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param zimbraZookeeperClientServerList existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public Map<String,Object> removeZookeeperClientServerList(String zimbraZookeeperClientServerList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZookeeperClientServerList, zimbraZookeeperClientServerList);
+        return attrs;
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public void unsetZookeeperClientServerList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZookeeperClientServerList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public Map<String,Object> unsetZookeeperClientServerList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZookeeperClientServerList, "");
         return attrs;
     }
 

@@ -964,6 +964,31 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(Provisioning.A_zimbraServiceEnabled, service)));
     }
 
+    @Override
+    public ZLdapFilter serverByAlwaysOnCluster(String clusterId) {
+        return new UBIDLdapFilter(
+                FilterId.SERVER_BY_ALWAYSONCLUSTER,
+                Filter.createANDFilter(
+                        FILTER_ALL_SERVERS,
+                        Filter.createEqualityFilter(Provisioning.A_zimbraAlwaysOnClusterId, clusterId)));
+    }
+
+    @Override
+    public ZLdapFilter serverByServiceAndAlwaysOnCluster(String service, String clusterId) {
+        if (clusterId == null) {
+            return serverByService(service);
+        } else if (service == null) {
+            return serverByAlwaysOnCluster(clusterId);
+        } else {
+            return new UBIDLdapFilter(
+                FilterId.SERVERY_BY_SERVICE_AND_ALWAYSONCLUSTER,
+                Filter.createANDFilter(
+                        FILTER_ALL_SERVERS,
+                        Filter.createEqualityFilter(Provisioning.A_zimbraServiceEnabled, service),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraAlwaysOnClusterId, clusterId)));
+        }
+    }
+
     /*
      * alwaysOnCluster
      */
@@ -1170,5 +1195,4 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.DN_SUBTREE_MATCH,
                 Filter.createORFilter(filters));
     }
-
 }

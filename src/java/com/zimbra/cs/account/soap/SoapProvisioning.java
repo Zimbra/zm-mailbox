@@ -2794,4 +2794,16 @@ public class SoapProvisioning extends Provisioning {
                 d.toString());
     }
 
+    @Override
+    public List<Server> getAllServers(String service, String clusterId)
+            throws ServiceException {
+        List<Server> result = new ArrayList<Server>();
+        GetAllServersResponse resp =
+                invokeJaxb(new GetAllServersRequest(service, true, clusterId));
+        for (ServerInfo serverInfo : resp.getServerList()) {
+            result.add(new SoapServer(serverInfo, this));
+        }
+        return result;
+    }
+
 }

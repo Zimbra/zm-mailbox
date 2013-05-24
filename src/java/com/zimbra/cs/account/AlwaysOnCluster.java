@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 
 public class AlwaysOnCluster extends ZAttrAlwaysOnCluster {
@@ -27,6 +28,11 @@ public class AlwaysOnCluster extends ZAttrAlwaysOnCluster {
 
     public AlwaysOnCluster(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
+        try {
+            getDefaults(AttributeFlag.serverPreferAlwaysOn, serverOverrides);
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("error while calculating server overrides", se);
+        }
     }
 
     @Override
@@ -40,7 +46,7 @@ public class AlwaysOnCluster extends ZAttrAlwaysOnCluster {
         try {
             getDefaults(AttributeFlag.serverPreferAlwaysOn, serverOverrides);
         } catch (ServiceException e) {
-            // TODO log?
+            ZimbraLog.account.warn("error while calculating server overrides", e);
         }
     }
 

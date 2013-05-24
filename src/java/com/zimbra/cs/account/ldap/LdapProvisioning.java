@@ -3651,7 +3651,7 @@ public class LdapProvisioning extends LdapProv {
         return s;
     }
 
-    private AlwaysOnCluster getAlwaysOnCLusterByQuery(ZLdapFilter filter, ZLdapContext initZlc)
+    private AlwaysOnCluster getAlwaysOnClusterByQuery(ZLdapFilter filter, ZLdapContext initZlc)
     throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.alwaysOnClusterBaseDN(), filter, initZlc, false);
@@ -3675,7 +3675,7 @@ public class LdapProvisioning extends LdapProv {
         if (!nocache)
             c = alwaysOnClusterCache.getById(zimbraId);
         if (c == null) {
-            c = getAlwaysOnCLusterByQuery(filterFactory.alwaysOnClusterById(zimbraId), zlc);
+            c = getAlwaysOnClusterByQuery(filterFactory.alwaysOnClusterById(zimbraId), zlc);
             alwaysOnClusterCache.put(c);
         }
         return c;
@@ -3786,7 +3786,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public List<Server> getAllServers() throws ServiceException {
-        return getAllServers(null);
+        return getAllServers((String)null);
     }
 
     @Override
@@ -3818,6 +3818,32 @@ public class LdapProvisioning extends LdapProv {
 
         if (result.size() > 0)
             serverCache.put(result, true);
+        Collections.sort(result);
+        return result;
+    }
+
+    @Override
+    public List<Server> getAllServers(String service, String clusterId) throws ServiceException {
+        List<Server> result = new ArrayList<Server>();
+
+        ZLdapFilter filter = filterFactory.serverByServiceAndAlwaysOnCluster(service, clusterId);
+
+        try {
+            Map<String, Object> serverDefaults = getConfig().getServerDefaults();
+
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.serverBaseDN(),
+                    filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                LdapServer s = new LdapServer(sr.getDN(), sr.getAttributes(),
+                        serverDefaults, this);
+                result.add(s);
+            }
+            ne.close();
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to list all servers by cluster id", e);
+        }
+
         Collections.sort(result);
         return result;
     }

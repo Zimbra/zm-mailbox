@@ -1303,6 +1303,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List<Server> getAllServers(String service)  throws ServiceException;
 
+    public abstract List<Server> getAllServers(String service, String clusterId) throws ServiceException;
+
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
     /*

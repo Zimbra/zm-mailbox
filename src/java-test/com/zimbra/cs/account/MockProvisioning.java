@@ -789,4 +789,10 @@ public final class MockProvisioning extends Provisioning {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public List<Server> getAllServers(String service, String clusterId)
+            throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
 }

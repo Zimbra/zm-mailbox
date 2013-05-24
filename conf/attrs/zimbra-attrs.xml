@@ -7216,4 +7216,8 @@ TODO: delete them permanently from here
   <desc>AlwaysOn cluster-id to which this server belongs to. If empty, it's not part of AlwaysOn and is a stand-alone server.</desc>
 </attr>
 
+<attr id="1447" name="zimbraZookeeperClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
+  <desc>list of host:port for zookeeper servers; set to empty value to disable the use of zookeeper</desc>
+</attr>
+
 </attrs>

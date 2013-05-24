@@ -55,6 +55,9 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.zookeeper.Service;
+import com.zimbra.cs.zookeeper.ServiceDiscovery;
+import com.zimbra.cs.zookeeper.ServiceMetadata;
 import com.zimbra.znative.Util;
 
 /**
@@ -66,6 +69,7 @@ public final class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
     private static String alwaysOnClusterId = null;
+    private static Service service = null;
 
     /** Sets system properties before the server fully starts up.  Note that
      *  there's a potential race condition if {@link FirstServlet} or another
@@ -315,7 +319,31 @@ public final class Zimbra {
 
         ExtensionUtil.postInitAll();
 
+        // Register the service with ZooKeeper
+        if (sIsMailboxd) { // && isAlwaysOn()) {
+            try {
+                registerService();
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Unable to register the service with Zookeeper.", e);
+            }
+        }
+
         sInited = true;
+    }
+
+    private static void registerService() throws Exception {
+        String serviceName = "mailbox";
+        ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
+        if (serviceDiscovery == null) {
+            return;
+        }
+        serviceDiscovery.start();
+        String serviceId = Provisioning.getInstance().getLocalServer().getId();
+        ServiceMetadata metadata = new ServiceMetadata();
+        metadata.setServer(serviceId);
+        metadata.setServiceName(serviceName);
+        service = new Service(serviceId, metadata, serviceDiscovery);
+        service.start();
     }
 
     public static synchronized void shutdown() throws ServiceException {
@@ -325,6 +353,13 @@ public final class Zimbra {
         sInited = false;
 
         if (sIsMailboxd) {
+            if (service != null) {
+                service.stop();
+            }
+            ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
+            if (serviceDiscovery != null) {
+                serviceDiscovery.stop();
+            }
             PurgeThread.shutdown();
             AutoProvisionThread.shutdown();
         }

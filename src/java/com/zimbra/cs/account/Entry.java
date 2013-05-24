@@ -212,6 +212,14 @@ public abstract class Entry implements ToZJSONObject {
 
         Object v;
 
+        if (overrideDefaults != null) {
+            v = overrideDefaults.get(name);
+            if (v != null) return v;
+
+            v = getValueByRealAttrName(name, overrideDefaults);
+            if (v != null) return v;
+        }
+
         // check defaults
         if (mDefaults != null) {
             v = mDefaults.get(name);
@@ -229,14 +237,6 @@ public abstract class Entry implements ToZJSONObject {
             v = getValueByRealAttrName(name, mSecondaryDefaults);
             if (v != null) return v;
 
-        }
-
-        if (overrideDefaults != null) {
-            v = overrideDefaults.get(name);
-            if (v != null) return v;
-
-            v = getValueByRealAttrName(name, overrideDefaults);
-            if (v != null) return v;
         }
         return null;
     }
