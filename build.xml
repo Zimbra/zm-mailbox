@@ -558,6 +558,9 @@
           <include name="ews*.jar"/>
           <include name="cassandra-*.jar"/>
           <include name="hector-*.jar"/>
+          <include name="helix-core*.jar"/>
+          <include name="zkclient-*.jar"/>
+          <include name="zookeeper-*.jar"/>
           <include name="perf4j-*.jar"/>
           <include name="libthrift-*.jar"/>
           <include name="high-scale-lib-*.jar"/>
