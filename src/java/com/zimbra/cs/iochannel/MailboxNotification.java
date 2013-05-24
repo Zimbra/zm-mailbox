@@ -14,9 +14,13 @@
  */
 package com.zimbra.cs.iochannel;
 
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
+import static java.util.concurrent.Executors.newCachedThreadPool;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
@@ -26,6 +30,8 @@ import com.zimbra.cs.session.SessionCache;
 public class MailboxNotification extends Message {
 
     public static final String AppId = "mbn";
+
+    private static final ExecutorService executor = newCachedThreadPool(newDaemonThreadFactory("MailboxNotification"));
 
     public static MailboxNotification create(String accountId, int changeId, byte[] data) throws MessageChannelException {
         return new MailboxNotification(accountId, changeId, data);
@@ -104,18 +110,13 @@ public class MailboxNotification extends Message {
         payload = ntfn;
     }
 
-    @Override
-    public MessageHandler getHandler() {
-        return new MessageHandler() {
+    private void handleMailboxNotification(final MailboxNotification message) {
+        executor.submit(new Runnable() {
             @Override
-            public void handle(Message m, String clientId) {
-                if (!(m instanceof MailboxNotification)) {
-                    return;
-                }
-                MailboxNotification message = (MailboxNotification)m;
-                Collection<Session> sessions = SessionCache.getAllSessions(m.getRecipientAccountId());
+            public void run() {
+                Collection<Session> sessions = SessionCache.getAllSessions(message.getRecipientAccountId());
                 if (sessions == null || sessions.isEmpty()) {
-                    log.warn("no active sessions for account %s", m.getRecipientAccountId());
+                    log.warn("no active sessions for account %s", message.getRecipientAccountId());
                     return;
                 }
 
@@ -138,6 +139,19 @@ public class MailboxNotification extends Message {
                     }
                     session.notifyPendingChanges(pms, message.getChangeId(), null);
                 }
+            }
+        });
+    }
+
+    @Override
+    public MessageHandler getHandler() {
+        return new MessageHandler() {
+            @Override
+            public void handle(Message m, String clientId) {
+                if (!(m instanceof MailboxNotification)) {
+                    return;
+                }
+                handleMailboxNotification((MailboxNotification) m);
             }
         };
     }
