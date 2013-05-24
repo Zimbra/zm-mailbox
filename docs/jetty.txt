@@ -61,9 +61,9 @@ I. Conventional Debugging
 3. Switch to the Arguments tab and set
 
    Program arguments to 
-   --ini OPTIONS=Server,jsp,jmx,resources,websocket,ext,jta,plus,rewrite etc/jetty.xml
+   --ini OPTIONS=Server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor etc/jetty.xml
    
-   and VM arguments to
+   and VM arguments to (without quotes)
    "-DSTART=/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867
    -DSTOP.KEY=stop -Dzimbra.config=/opt/zimbra/conf/localconfig.xml
    -Djava.library.path=/opt/zimbra/lib  -XX:PermSize=128m
