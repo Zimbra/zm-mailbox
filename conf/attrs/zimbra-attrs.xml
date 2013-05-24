@@ -119,7 +119,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               mailRecipient, account, alias, distributionList, cos,
               globalConfig, domain, securityGroup, server, mimeEntry,
               objectEntry, zimletEntry, calendarResource;
-              attribute
+              attribute, alwaysOnCluster
 
   flags:
     accountInfo............returned as part of the GetInfo call
@@ -136,6 +136,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 	                           - has idn flag
                            server will convert the values to unicode in utf8
                            encoding in SOAP responses.
+    serverPreferAlwaysOn...if zimbraAlwaysOnClusterId is configured override the server
+                           attributes from the alwaysOnCluster
 
   requiresRestart: server(s) need be to restarted after changing this attribute.
                    values are comma-separated if more than one servers need to be restarted.
@@ -189,11 +191,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>From Microsoft Schema</desc>
 </attr>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,ucService,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget,shareLocator,groupStaticUnit" flags="domainAdminModifiable,accountInfo">
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,alwaysOnCluster,ucService,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget,shareLocator,groupStaticUnit" flags="domainAdminModifiable,accountInfo">
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry" flags="domainAdminModifiable">
+<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,alwaysOnCluster,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry" flags="domainAdminModifiable">
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
@@ -338,7 +340,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,alwaysOnCluster,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -3464,7 +3466,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Yahoo ID</desc>
 </attr>
 
-<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,ucService,zimletEntry,xmppComponent,aclTarget,group" since="5.0.7">
+<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,distributionList,cos,domain,globalConfig,server,alwaysOnCluster,ucService,zimletEntry,xmppComponent,aclTarget,group" since="5.0.7">
   <desc>Zimbra access control list</desc>
 </attr>
 
@@ -4120,7 +4122,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,ucService,signature,calendarResource,xmppComponent,zimletEntry,group,groupDynamicUnit,groupStaticUnit" since="6.0.0_BETA1">
+<attr id="790" name="zimbraCreateTimestamp" type="gentime" cardinality="single" immutable="1" optionalIn="account,alias,distributionList,cos,dataSource,domain,identity,globalConfig,server,alwaysOnCluster,ucService,signature,calendarResource,xmppComponent,zimletEntry,group,groupDynamicUnit,groupStaticUnit" since="6.0.0_BETA1">
   <desc>time object was created</desc>
 </attr>
 
@@ -4592,7 +4594,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="1014" name="zimbraMemcachedClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+<attr id="1014" name="zimbraMemcachedClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="5.0.17">
   <desc>list of host:port for memcached servers; set to empty value to disable the use of memcached</desc>
 </attr>
 

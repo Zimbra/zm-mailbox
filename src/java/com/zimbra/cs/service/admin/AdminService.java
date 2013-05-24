@@ -81,6 +81,12 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.MODIFY_SERVER_REQUEST, new ModifyServer());
         dispatcher.registerHandler(AdminConstants.DELETE_SERVER_REQUEST, new DeleteServer());
 
+        dispatcher.registerHandler(AdminConstants.CREATE_ALWAYSONCLUSTER_REQUEST, new CreateAlwaysOnCluster());
+        dispatcher.registerHandler(AdminConstants.GET_ALWAYSONCLUSTER_REQUEST, new GetAlwaysOnCluster());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_ALWAYSONCLUSTERS_REQUEST, new GetAllAlwaysOnClusters());
+        dispatcher.registerHandler(AdminConstants.MODIFY_ALWAYSONCLUSTER_REQUEST, new ModifyAlwaysOnCluster());
+        dispatcher.registerHandler(AdminConstants.DELETE_ALWAYSONCLUSTER_REQUEST, new DeleteAlwaysOnCluster());
+
         dispatcher.registerHandler(AdminConstants.CREATE_UC_SERVICE_REQUEST, new CreateUCService());
         dispatcher.registerHandler(AdminConstants.GET_UC_SERVICE_REQUEST, new GetUCService());
         dispatcher.registerHandler(AdminConstants.GET_ALL_UC_SERVICES_REQUEST, new GetAllUCServices());

@@ -380,6 +380,10 @@
             <param name="getter.class" value="shareLocator"/>
             <param name="getter.output" value="ZAttrShareLocator.java"/>
         </antcall>
+        <antcall target="generate-getter">
+            <param name="getter.class" value="alwaysOnCluster"/>
+            <param name="getter.output" value="ZAttrAlwaysOnCluster.java"/>
+        </antcall>
     	<antcall target="generate-provisioning"/>
     </target>
 	
@@ -420,6 +424,9 @@
 		</antcall>
 		<antcall target="p4-open">
 		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrShareLocator.java"/>
+		</antcall>
+		<antcall target="p4-open">
+		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrAlwaysOnCluster.java"/>
 		</antcall>
 		<antcall target="p4-open">
 		  <param name="open.file" value="${common.src.java.dir}/com/zimbra/common/account/ZAttrProvisioning.java"/>

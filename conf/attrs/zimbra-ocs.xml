@@ -285,5 +285,12 @@
   </comment>
 </objectclass>
 
+<objectclass id="32" name="zimbraAlwaysOnCluster" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>AlwaysOn Cluster</desc>
+  <comment>
+    zimbraAlwaysOnCluster is used to represent a alwaysOn cluster.
+  </comment>
+</objectclass>
 
 </objectclasses>

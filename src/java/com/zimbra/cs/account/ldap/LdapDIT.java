@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.AlwaysOnCluster;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
@@ -94,6 +95,7 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_GLOBAL_DYNAMICGROUP = "cn=groups";
     protected final String DEFAULT_BASE_RDN_MIME           = "cn=mime";
     protected final String DEFAULT_BASE_RDN_SERVER         = "cn=servers";
+    protected final String DEFAULT_BASE_RDN_ALWAYSONCLUSTER= "cn=alwaysOnClusters";
     protected final String DEFAULT_BASE_RDN_UCSERVICE      = "cn=ucservices";
     protected final String DEFAULT_BASE_RDN_SHARE_LOCATOR  = "cn=sharelocators";
     protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT  = "cn=xmppcomponents";
@@ -107,6 +109,7 @@ public class LdapDIT {
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT      = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME             = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_SERVER           = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_ALWAYSONCLUSTER  = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_UCSERVICE        = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_SHARE_LOCATOR    = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT    = "cn";
@@ -129,6 +132,7 @@ public class LdapDIT {
     protected String BASE_DN_GLOBAL_DYNAMICGROUP;
     protected String BASE_DN_MIME;
     protected String BASE_DN_SERVER;
+    protected String BASE_DN_ALWAYSONCLUSTER;
     protected String BASE_DN_UCSERVICE;
     protected String BASE_DN_SHARE_LOCATOR;
     protected String BASE_DN_XMPPCOMPONENT;
@@ -141,6 +145,7 @@ public class LdapDIT {
     protected String NAMING_RDN_ATTR_DYNAMICGROUP;
     protected String NAMING_RDN_ATTR_MIME;
     protected String NAMING_RDN_ATTR_SERVER;
+    protected String NAMING_RDN_ATTR_ALWAYSONCLUSTER;
     protected String NAMING_RDN_ATTR_UCSERVICE;
     protected String NAMING_RDN_ATTR_SHARE_LOCATOR;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
@@ -171,6 +176,7 @@ public class LdapDIT {
         NAMING_RDN_ATTR_GLOBALGRANT   = DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
         NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
+        NAMING_RDN_ATTR_ALWAYSONCLUSTER= DEFAULT_NAMING_RDN_ATTR_ALWAYSONCLUSTER;
         NAMING_RDN_ATTR_UCSERVICE      = DEFAULT_NAMING_RDN_ATTR_UCSERVICE;
         NAMING_RDN_ATTR_SHARE_LOCATOR = DEFAULT_NAMING_RDN_ATTR_SHARE_LOCATOR;
         NAMING_RDN_ATTR_XMPPCOMPONENT = DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT;
@@ -185,6 +191,7 @@ public class LdapDIT {
         BASE_DN_GLOBAL_DYNAMICGROUP = DEFAULT_BASE_RDN_GLOBAL_DYNAMICGROUP           + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG;
         BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_ALWAYSONCLUSTER = DEFAULT_BASE_RDN_ALWAYSONCLUSTER + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_UCSERVICE     = DEFAULT_BASE_RDN_UCSERVICE      + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_SHARE_LOCATOR = DEFAULT_BASE_RDN_SHARE_LOCATOR + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_XMPPCOMPONENT= DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH;
@@ -207,6 +214,7 @@ public class LdapDIT {
             NAMING_RDN_ATTR_GLOBALGRANT == null ||
             NAMING_RDN_ATTR_MIME == null ||
             NAMING_RDN_ATTR_SERVER == null ||
+            NAMING_RDN_ATTR_ALWAYSONCLUSTER == null ||
             NAMING_RDN_ATTR_UCSERVICE == null ||
             NAMING_RDN_ATTR_SHARE_LOCATOR == null ||
             NAMING_RDN_ATTR_ZIMLET == null ||
@@ -216,6 +224,7 @@ public class LdapDIT {
             BASE_DN_GLOBAL_DYNAMICGROUP == null ||
             BASE_DN_MIME == null ||
             BASE_DN_SERVER == null ||
+            BASE_DN_ALWAYSONCLUSTER == null ||
             BASE_DN_UCSERVICE == null ||
             BASE_DN_XMPPCOMPONENT == null ||
             BASE_DN_ZIMLET == null ||
@@ -575,6 +584,19 @@ public class LdapDIT {
 
     /*
      * ==========
+     *   alwaysOnCluster
+     * ==========
+     */
+    public String alwaysOnClusterBaseDN() {
+        return BASE_DN_ALWAYSONCLUSTER;
+    }
+
+    public String alwaysOnClusterNameToDN(String name) {
+        return NAMING_RDN_ATTR_ALWAYSONCLUSTER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ALWAYSONCLUSTER;
+    }
+
+    /*
+     * ==========
      *   UC service
      * ==========
      */
@@ -711,6 +733,8 @@ public class LdapDIT {
             return NAMING_RDN_ATTR_DYNAMICGROUP;
         else if (entry instanceof Server)
             return NAMING_RDN_ATTR_SERVER;
+        else if (entry instanceof AlwaysOnCluster)
+            return NAMING_RDN_ATTR_ALWAYSONCLUSTER;
         else if (entry instanceof Server)    // FIXME!!!
             return NAMING_RDN_ATTR_UCSERVICE;
         else if (entry instanceof Zimlet)

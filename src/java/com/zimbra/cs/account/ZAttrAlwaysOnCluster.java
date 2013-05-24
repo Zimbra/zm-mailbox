@@ -1,23 +1,18 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013 VMware, Inc.
- * 
+ * Copyright (C) 2013 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Sep 23, 2004
- *
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.account;
 
 import java.util.Date;
@@ -28,14 +23,15 @@ import com.zimbra.common.account.ZAttr;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 
+
 /**
  * AUTO-GENERATED. DO NOT EDIT.
  *
  */
-public abstract class ZAttrUCService extends NamedEntry {
+public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
-    public ZAttrUCService(String name, String id, Map<String,Object> attrs, Provisioning prov) {
-        super(name, id, attrs, null, prov);
+    public ZAttrAlwaysOnCluster(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
+        super(name, id, attrs, defaults, prov);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE
@@ -478,6 +474,7 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @return zimbraId, or null if unset
      */
+    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
@@ -536,437 +533,147 @@ public abstract class ZAttrUCService extends NamedEntry {
     }
 
     /**
-     * call control service URL for the UC service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
-     * @return zimbraUCCallControlURL, or null if unset
+     * @return zimbraMemcachedClientServerList, or empty array if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1405)
-    public String getUCCallControlURL() {
-        return getAttr(Provisioning.A_zimbraUCCallControlURL, null);
+    @ZAttr(id=1014)
+    public String[] getMemcachedClientServerList() {
+        return getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
     }
 
     /**
-     * call control service URL for the UC service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
-     * @param zimbraUCCallControlURL new value
+     * @param zimbraMemcachedClientServerList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1405)
-    public void setUCCallControlURL(String zimbraUCCallControlURL) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1014)
+    public void setMemcachedClientServerList(String[] zimbraMemcachedClientServerList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallControlURL, zimbraUCCallControlURL);
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * call control service URL for the UC service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
-     * @param zimbraUCCallControlURL new value
+     * @param zimbraMemcachedClientServerList new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1405)
-    public Map<String,Object> setUCCallControlURL(String zimbraUCCallControlURL, Map<String,Object> attrs) {
+    @ZAttr(id=1014)
+    public Map<String,Object> setMemcachedClientServerList(String[] zimbraMemcachedClientServerList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallControlURL, zimbraUCCallControlURL);
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
         return attrs;
     }
 
     /**
-     * call control service URL for the UC service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
+     * @param zimbraMemcachedClientServerList new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1405)
-    public void unsetUCCallControlURL() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1014)
+    public void addMemcachedClientServerList(String zimbraMemcachedClientServerList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallControlURL, "");
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * call control service URL for the UC service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
+     * @param zimbraMemcachedClientServerList new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1405)
-    public Map<String,Object> unsetUCCallControlURL(Map<String,Object> attrs) {
+    @ZAttr(id=1014)
+    public Map<String,Object> addMemcachedClientServerList(String zimbraMemcachedClientServerList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCCallControlURL, "");
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
         return attrs;
     }
 
     /**
-     * presence session id for Cisco presence service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
-     * @return zimbraUCPresenceSessionId, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1407)
-    public String getUCPresenceSessionId() {
-        return getAttr(Provisioning.A_zimbraUCPresenceSessionId, null);
-    }
-
-    /**
-     * presence session id for Cisco presence service
-     *
-     * @param zimbraUCPresenceSessionId new value
+     * @param zimbraMemcachedClientServerList existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1407)
-    public void setUCPresenceSessionId(String zimbraUCPresenceSessionId) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1014)
+    public void removeMemcachedClientServerList(String zimbraMemcachedClientServerList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, zimbraUCPresenceSessionId);
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * presence session id for Cisco presence service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
-     * @param zimbraUCPresenceSessionId new value
+     * @param zimbraMemcachedClientServerList existing value to remove
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1407)
-    public Map<String,Object> setUCPresenceSessionId(String zimbraUCPresenceSessionId, Map<String,Object> attrs) {
+    @ZAttr(id=1014)
+    public Map<String,Object> removeMemcachedClientServerList(String zimbraMemcachedClientServerList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, zimbraUCPresenceSessionId);
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
         return attrs;
     }
 
     /**
-     * presence session id for Cisco presence service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1407)
-    public void unsetUCPresenceSessionId() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1014)
+    public void unsetMemcachedClientServerList() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, "");
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * presence session id for Cisco presence service
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 5.0.17
      */
-    @ZAttr(id=1407)
-    public Map<String,Object> unsetUCPresenceSessionId(Map<String,Object> attrs) {
+    @ZAttr(id=1014)
+    public Map<String,Object> unsetMemcachedClientServerList(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceSessionId, "");
-        return attrs;
-    }
-
-    /**
-     * presence service URL for the UC service
-     *
-     * @return zimbraUCPresenceURL, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1406)
-    public String getUCPresenceURL() {
-        return getAttr(Provisioning.A_zimbraUCPresenceURL, null);
-    }
-
-    /**
-     * presence service URL for the UC service
-     *
-     * @param zimbraUCPresenceURL new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1406)
-    public void setUCPresenceURL(String zimbraUCPresenceURL) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceURL, zimbraUCPresenceURL);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * presence service URL for the UC service
-     *
-     * @param zimbraUCPresenceURL new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1406)
-    public Map<String,Object> setUCPresenceURL(String zimbraUCPresenceURL, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceURL, zimbraUCPresenceURL);
-        return attrs;
-    }
-
-    /**
-     * presence service URL for the UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1406)
-    public void unsetUCPresenceURL() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceURL, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * presence service URL for the UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1406)
-    public Map<String,Object> unsetUCPresenceURL(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCPresenceURL, "");
-        return attrs;
-    }
-
-    /**
-     * provider for the UC service
-     *
-     * @return zimbraUCProvider, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1402)
-    public String getUCProvider() {
-        return getAttr(Provisioning.A_zimbraUCProvider, null);
-    }
-
-    /**
-     * provider for the UC service
-     *
-     * @param zimbraUCProvider new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1402)
-    public void setUCProvider(String zimbraUCProvider) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCProvider, zimbraUCProvider);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * provider for the UC service
-     *
-     * @param zimbraUCProvider new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1402)
-    public Map<String,Object> setUCProvider(String zimbraUCProvider, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCProvider, zimbraUCProvider);
-        return attrs;
-    }
-
-    /**
-     * provider for the UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1402)
-    public void unsetUCProvider() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCProvider, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * provider for the UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1402)
-    public Map<String,Object> unsetUCProvider(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCProvider, "");
-        return attrs;
-    }
-
-    /**
-     * user info service URL for the UC service
-     *
-     * @return zimbraUCUserURL, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public String getUCUserURL() {
-        return getAttr(Provisioning.A_zimbraUCUserURL, null);
-    }
-
-    /**
-     * user info service URL for the UC service
-     *
-     * @param zimbraUCUserURL new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public void setUCUserURL(String zimbraUCUserURL) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCUserURL, zimbraUCUserURL);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * user info service URL for the UC service
-     *
-     * @param zimbraUCUserURL new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public Map<String,Object> setUCUserURL(String zimbraUCUserURL, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCUserURL, zimbraUCUserURL);
-        return attrs;
-    }
-
-    /**
-     * user info service URL for the UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public void unsetUCUserURL() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCUserURL, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * user info service URL for the UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1403)
-    public Map<String,Object> unsetUCUserURL(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCUserURL, "");
-        return attrs;
-    }
-
-    /**
-     * voicemail service URL for the UC service
-     *
-     * @return zimbraUCVoicemailURL, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public String getUCVoicemailURL() {
-        return getAttr(Provisioning.A_zimbraUCVoicemailURL, null);
-    }
-
-    /**
-     * voicemail service URL for the UC service
-     *
-     * @param zimbraUCVoicemailURL new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public void setUCVoicemailURL(String zimbraUCVoicemailURL) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVoicemailURL, zimbraUCVoicemailURL);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * voicemail service URL for the UC service
-     *
-     * @param zimbraUCVoicemailURL new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public Map<String,Object> setUCVoicemailURL(String zimbraUCVoicemailURL, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVoicemailURL, zimbraUCVoicemailURL);
-        return attrs;
-    }
-
-    /**
-     * voicemail service URL for the UC service
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public void unsetUCVoicemailURL() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVoicemailURL, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * voicemail service URL for the UC service
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1404)
-    public Map<String,Object> unsetUCVoicemailURL(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUCVoicemailURL, "");
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, "");
         return attrs;
     }
 
     ///// END-AUTO-GEN-REPLACE
-
 }

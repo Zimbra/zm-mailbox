@@ -457,6 +457,26 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
+     * @return the AlwaysOnCluster object for this server, or null if server has no AlwaysOnCluster
+     *
+     * @throws ServiceException
+     */
+    public AlwaysOnCluster getAlwaysOnCluster(Server server) throws ServiceException {
+        // CACHE. If we get reloaded from LDAP, cached data is cleared
+        AlwaysOnCluster aoc = (AlwaysOnCluster) server.getCachedData(EntryCacheDataKey.SERVER_ALWAYSONCLUSTER);
+        if (aoc == null) {
+            String id = server.getAlwaysOnClusterId();
+            if (id != null) {
+                aoc = get(Key.AlwaysOnClusterBy.id, id);
+            }
+            if (aoc != null) {
+                server.setCachedData(EntryCacheDataKey.SERVER_ALWAYSONCLUSTER, aoc);
+            }
+        }
+        return aoc;
+    }
+
+    /**
      * returns addr@<local domain> for addr@<alias domain>, null if given address is a local domain address
      * @param emailAddress original addr
      * @return addr@<local domain> or null
@@ -1284,6 +1304,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<Server> getAllServers(String service)  throws ServiceException;
 
     public abstract void deleteServer(String zimbraId) throws ServiceException;
+
+    /*
+     * AlwaysOnCluster
+     */
+    public abstract AlwaysOnCluster createAlwaysOnCluster(String name, Map<String, Object> attrs) throws ServiceException;
+    public abstract AlwaysOnCluster get(Key.AlwaysOnClusterBy keyname, String key) throws ServiceException;
+    public abstract void deleteAlwaysOnCluster(String zimbraId) throws ServiceException;
+    public abstract List<AlwaysOnCluster> getAllAlwaysOnClusters()  throws ServiceException;
 
     /*
      * UC service

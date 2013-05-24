@@ -67,8 +67,8 @@ import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
@@ -97,12 +97,12 @@ import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Help;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.accesscontrol.RightClass;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -292,6 +292,7 @@ public class ProvUtil implements HttpDebugListener {
         RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"),
         SERVER("help on server-related commands"),
+        ALWAYSONCLUSTER("help on alwaysOnCluster-related commands"),
         UCSERVICE("help on ucservice-related commands"),
         SHARE("help on share related commands");
 
@@ -479,6 +480,7 @@ public class ProvUtil implements HttpDebugListener {
         COUNT_OBJECTS("countObjects", "cto", "{" + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
+        CREATE_ALWAYSONCLUSTER("createAlwaysOnCluster", "caoc", "{name} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3, 3),
         CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
@@ -493,6 +495,7 @@ public class ProvUtil implements HttpDebugListener {
         CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {classname} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 6, Integer.MAX_VALUE),
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
+        DELETE_ALWAYSONCLUSTER("deleteAlwaysOnCluster", "daoc", "{name|id}", Category.ALWAYSONCLUSTER, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
         DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}", Category.ACCOUNT, 2, 2),
@@ -509,6 +512,7 @@ public class ProvUtil implements HttpDebugListener {
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name|id|foreignPrincipal} {by} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
+        GET_ALWAYSONCLUSTER("getAlwaysOnCluster", "gaoc", "{name|id} [attr1 [attr2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -517,6 +521,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "[-s/--server hostname] {name@domain|id}", Category.LOG, 1, 3),
         GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[-s/--server hostname]", Category.LOG, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
+        GET_ALL_ALWAYSONCLUSTERS("getAllAlwaysOnClusters", "gaaoc", "[-v]", Category.ALWAYSONCLUSTER, 0, 3),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
@@ -558,6 +563,7 @@ public class ProvUtil implements HttpDebugListener {
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         LDAP(".ldap", ".l"),
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
+        MODIFY_ALWAYSONCLUSTER("modifyAlwaysOnCluster", "maoc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 3, Integer.MAX_VALUE),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
         MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
@@ -828,6 +834,9 @@ public class ProvUtil implements HttpDebugListener {
             case CREATE_ALIAS_DOMAIN:
                 console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3, true)).getId());
                 break;
+            case CREATE_ALWAYSONCLUSTER:
+                console.println(prov.createAlwaysOnCluster(args[1], getMapAndCheck(args, 2, true)).getId());
+                break;
             case CREATE_COS:
                 console.println(prov.createCos(args[1], getMapAndCheck(args, 2, true)).getId());
                 break;
@@ -873,6 +882,9 @@ public class ProvUtil implements HttpDebugListener {
             case GET_ACCOUNT_MEMBERSHIP:
                 doGetAccountMembership(args);
                 break;
+            case GET_ALWAYSONCLUSTER:
+                doGetAlwaysOnCluster(args);
+                break;
             case GET_IDENTITIES:
                 doGetAccountIdentities(args);
                 break;
@@ -903,6 +915,9 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case GET_ALL_ADMIN_ACCOUNTS:
                 doGetAllAdminAccounts(args);
+                break;
+            case GET_ALL_ALWAYSONCLUSTERS:
+                doGetAllAlwaysOnClusters(args);
                 break;
             case GET_ALL_CONFIG:
                 dumpAttrs(prov.getConfig().getAttrs(), getArgNameSet(args, 1));
@@ -991,6 +1006,9 @@ public class ProvUtil implements HttpDebugListener {
             case MODIFY_ACCOUNT:
                 prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args,2, false), true);
                 break;
+            case MODIFY_ALWAYSONCLUSTER:
+                prov.modifyAttrs(lookupAlwaysOnCluster(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
             case MODIFY_DATA_SOURCE:
                 account = lookupAccount(args[1]);
                 prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args,3, false));
@@ -1026,6 +1044,9 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case DELETE_ACCOUNT:
                 doDeleteAccount(args);
+                break;
+            case DELETE_ALWAYSONCLUSTER:
+                prov.deleteAlwaysOnCluster(lookupAlwaysOnCluster(args[1]).getId());
                 break;
             case DELETE_COS:
                 prov.deleteCos(lookupCos(args[1]).getId());
@@ -2521,6 +2542,34 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
+    private void doGetAllAlwaysOnClusters(String[] args) throws ServiceException {
+        boolean verbose = false;
+
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v")) {
+                verbose = true;
+            }
+            i++;
+        }
+
+        List<AlwaysOnCluster> clusters;
+        if (prov instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning) prov;
+            clusters = soapProv.getAllAlwaysOnClusters();
+        } else {
+            clusters = prov.getAllAlwaysOnClusters();
+        }
+        for (AlwaysOnCluster cluster : clusters) {
+            if (verbose) {
+                dumpAlwaysOnCluster(cluster, null);
+            } else {
+                console.println(cluster.getName());
+            }
+        }
+    }
+
     private void doGetAllUCServices(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
@@ -2537,6 +2586,13 @@ public class ProvUtil implements HttpDebugListener {
     private void dumpServer(Server server, boolean expandConfig, Set<String> attrNames) throws ServiceException {
         console.println("# name "+server.getName());
         Map<String, Object> attrs = server.getAttrs(expandConfig);
+        dumpAttrs(attrs, attrNames);
+        console.println();
+    }
+
+    private void dumpAlwaysOnCluster(AlwaysOnCluster cluster, Set<String> attrNames) throws ServiceException {
+        console.println("# name "+cluster.getName());
+        Map<String, Object> attrs = cluster.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
     }
@@ -2968,6 +3024,21 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
+    private AlwaysOnCluster lookupAlwaysOnCluster(String key) throws ServiceException {
+        AlwaysOnCluster cluster;
+        if (prov instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning) prov;
+            cluster = soapProv.get(guessAlwaysOnClusterBy(key), key);
+        } else {
+            cluster = prov.get(guessAlwaysOnClusterBy(key), key);
+        }
+        if (cluster == null) {
+            throw AccountServiceException.NO_SUCH_ALWAYSONCLUSTER(key);
+        } else {
+            return cluster;
+        }
+    }
+
     private UCService lookupUCService(String key) throws ServiceException {
         UCService ucService = prov.get(guessUCServiceBy(key), key);
         if (ucService == null) {
@@ -3059,6 +3130,13 @@ public class ProvUtil implements HttpDebugListener {
             return Key.ServerBy.id;
         }
         return Key.ServerBy.name;
+    }
+
+    public static Key.AlwaysOnClusterBy guessAlwaysOnClusterBy(String value) {
+        if (Provisioning.isUUID(value)) {
+            return Key.AlwaysOnClusterBy.id;
+        }
+        return Key.AlwaysOnClusterBy.name;
     }
 
     public static Key.UCServiceBy guessUCServiceBy(String value) {
@@ -4277,6 +4355,10 @@ public class ProvUtil implements HttpDebugListener {
             return;
         }
         dumpServer(lookupServer(args[i], applyDefault), applyDefault, getArgNameSet(args, i+1));
+    }
+
+    private void doGetAlwaysOnCluster(String[] args) throws ServiceException {
+        dumpAlwaysOnCluster(lookupAlwaysOnCluster(args[1]), getArgNameSet(args, 2));
     }
 
     private void doPurgeAccountCalendarCache(String[] args) throws ServiceException {

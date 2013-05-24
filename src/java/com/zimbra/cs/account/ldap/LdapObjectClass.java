@@ -16,7 +16,6 @@ package com.zimbra.cs.account.ldap;
 
 // use LinkedHashSet to preserve the order and uniqueness of entries,
 // not that order/uniqueness matters to LDAP server, just cleaner this way
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -146,6 +145,13 @@ public class LdapObjectClass {
         ocs.add(AttributeClass.OC_zimbraServer);
 
         addExtraObjectClasses(ocs, prov, Provisioning.A_zimbraServerExtraObjectClass);
+        return ocs;
+    }
+
+    public static Set<String> getAlwaysOnClusterObjectClasses(Provisioning prov)
+    throws ServiceException {
+        Set<String> ocs = new LinkedHashSet<String>();
+        ocs.add(AttributeClass.OC_zimbraAlwaysOnCluster);
         return ocs;
     }
 

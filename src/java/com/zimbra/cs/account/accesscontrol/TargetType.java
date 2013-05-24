@@ -22,9 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
@@ -39,14 +40,12 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.UCService;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.account.ldap.LdapDIT;
-import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.soap.type.TargetBy;
 
 /**
@@ -60,6 +59,7 @@ public enum TargetType {
     group(true,         true,    AttributeClass.group,            com.zimbra.soap.type.TargetType.group,         "DynamicGroup"),     // dynamic group
     domain(true,        false,   AttributeClass.domain,           com.zimbra.soap.type.TargetType.domain,        "Domain"),
     server(true,        false,   AttributeClass.server,           com.zimbra.soap.type.TargetType.server,        "Server"),
+    alwaysoncluster(true, false, AttributeClass.alwaysOnCluster, com.zimbra.soap.type.TargetType.alwaysoncluster,"AlwaysOnCluster"),
     ucservice(true,     false,   AttributeClass.ucService,        com.zimbra.soap.type.TargetType.ucservice,     "UCService"),
     xmppcomponent(true, false,   AttributeClass.xmppComponent,    com.zimbra.soap.type.TargetType.xmppcomponent, "XMPPComponent"),
     zimlet(true,        false,   AttributeClass.zimletEntry,      com.zimbra.soap.type.TargetType.zimlet,        "Zimlet"),
@@ -147,6 +147,9 @@ public enum TargetType {
         TargetType.server.setInheritedByTargetTypes(
                 new TargetType[]{server});
 
+        TargetType.alwaysoncluster.setInheritedByTargetTypes(
+                new TargetType[]{alwaysoncluster});
+
         TargetType.ucservice.setInheritedByTargetTypes(
                 new TargetType[]{ucservice});
 
@@ -167,6 +170,7 @@ public enum TargetType {
                                  group,
                                  domain,
                                  server,
+                                 alwaysoncluster,
                                  ucservice,
                                  xmppcomponent,
                                  zimlet,

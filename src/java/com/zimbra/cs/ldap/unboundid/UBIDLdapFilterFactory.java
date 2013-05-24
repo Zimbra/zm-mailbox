@@ -61,6 +61,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS;
     private static Filter FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS;
     private static Filter FILTER_ALL_SERVERS;
+    private static Filter FILTER_ALL_ALWAYSONCLUSTERS;
     private static Filter FILTER_ALL_UC_SERVICES;
     private static Filter FILTER_ALL_SHARE_LOCATORS;
     private static Filter FILTER_ALL_SIGNATURES;
@@ -151,6 +152,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_SERVERS =
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraServer);
+
+        FILTER_ALL_ALWAYSONCLUSTERS =
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAlwaysOnCluster);
 
         FILTER_ALL_UC_SERVICES =
             Filter.createEqualityFilter(
@@ -957,6 +962,25 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         FILTER_ALL_SERVERS,
                         Filter.createEqualityFilter(Provisioning.A_zimbraServiceEnabled, service)));
+    }
+
+    /*
+     * alwaysOnCluster
+     */
+    @Override
+    public ZLdapFilter allAlwaysOnClusters() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ALWAYSONCLUSTERS,
+                FILTER_ALL_ALWAYSONCLUSTERS);
+    }
+
+    @Override
+    public ZLdapFilter alwaysOnClusterById(String id) {
+        return new UBIDLdapFilter(
+                FilterId.ALWAYSONCLUSTER_BY_ID,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
+                        FILTER_ALL_ALWAYSONCLUSTERS));
     }
 
     /*
