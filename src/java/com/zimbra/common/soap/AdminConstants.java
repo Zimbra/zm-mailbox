@@ -116,6 +116,18 @@ public final class AdminConstants {
     public static final String E_GET_ALL_SERVERS_REQUEST = "GetAllServersRequest";
     public static final String E_GET_ALL_SERVERS_RESPONSE = "GetAllServersResponse";
 
+    public static final String E_CREATE_ALWAYSONCLUSTER_REQUEST = "CreateAlwaysOnClusterRequest";
+    public static final String E_CREATE_ALWAYSONCLUSTER_RESPONSE = "CreateAlwaysOnClusterResponse";
+    public static final String E_GET_ALWAYSONCLUSTER_REQUEST = "GetAlwaysOnClusterRequest";
+    public static final String E_GET_ALWAYSONCLUSTER_RESPONSE = "GetAlwaysOnClusterResponse";
+
+    public static final String E_MODIFY_ALWAYSONCLUSTER_REQUEST = "ModifyAlwaysOnClusterRequest";
+    public static final String E_MODIFY_ALWAYSONCLUSTER_RESPONSE = "ModifyAlwaysOnClusterResponse";
+    public static final String E_DELETE_ALWAYSONCLUSTER_REQUEST = "DeleteAlwaysOnClusterRequest";
+    public static final String E_DELETE_ALWAYSONCLUSTER_RESPONSE = "DeleteAlwaysOnClusterResponse";
+    public static final String E_GET_ALL_ALWAYSONCLUSTERS_REQUEST = "GetAllAlwaysOnClustersRequest";
+    public static final String E_GET_ALL_ALWAYSONCLUSTERS_RESPONSE = "GetAllAlwaysOnClustersResponse";
+
     public static final String E_CREATE_UC_SERVICE_REQUEST = "CreateUCServiceRequest";
     public static final String E_CREATE_UC_SERVICE_RESPONSE = "CreateUCServiceResponse";
     public static final String E_DELETE_UC_SERVICE_REQUEST = "DeleteUCServiceRequest";
@@ -587,6 +599,18 @@ public final class AdminConstants {
     public static final QName GET_ALL_SERVERS_REQUEST = QName.get(E_GET_ALL_SERVERS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_SERVERS_RESPONSE = QName.get(E_GET_ALL_SERVERS_RESPONSE, NAMESPACE);
 
+    public static final QName CREATE_ALWAYSONCLUSTER_REQUEST = QName.get(E_CREATE_ALWAYSONCLUSTER_REQUEST, NAMESPACE);
+    public static final QName CREATE_ALWAYSONCLUSTER_RESPONSE = QName.get(E_CREATE_ALWAYSONCLUSTER_RESPONSE, NAMESPACE);
+    public static final QName GET_ALWAYSONCLUSTER_REQUEST = QName.get(E_GET_ALWAYSONCLUSTER_REQUEST, NAMESPACE);
+    public static final QName GET_ALWAYSONCLUSTER_RESPONSE = QName.get(E_GET_ALWAYSONCLUSTER_RESPONSE, NAMESPACE);
+
+    public static final QName MODIFY_ALWAYSONCLUSTER_REQUEST = QName.get(E_MODIFY_ALWAYSONCLUSTER_REQUEST, NAMESPACE);
+    public static final QName MODIFY_ALWAYSONCLUSTER_RESPONSE = QName.get(E_MODIFY_ALWAYSONCLUSTER_RESPONSE, NAMESPACE);
+    public static final QName DELETE_ALWAYSONCLUSTER_REQUEST = QName.get(E_DELETE_ALWAYSONCLUSTER_REQUEST, NAMESPACE);
+    public static final QName DELETE_ALWAYSONCLUSTER_RESPONSE = QName.get(E_DELETE_ALWAYSONCLUSTER_RESPONSE, NAMESPACE);
+    public static final QName GET_ALL_ALWAYSONCLUSTERS_REQUEST = QName.get(E_GET_ALL_ALWAYSONCLUSTERS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_ALWAYSONCLUSTERS_RESPONSE = QName.get(E_GET_ALL_ALWAYSONCLUSTERS_RESPONSE, NAMESPACE);
+
     public static final QName CREATE_UC_SERVICE_REQUEST = QName.get(E_CREATE_UC_SERVICE_REQUEST, NAMESPACE);
     public static final QName CREATE_UC_SERVICE_RESPONSE = QName.get(E_CREATE_UC_SERVICE_RESPONSE, NAMESPACE);
     public static final QName DELETE_UC_SERVICE_REQUEST = QName.get(E_DELETE_UC_SERVICE_REQUEST, NAMESPACE);
@@ -1011,6 +1035,7 @@ public final class AdminConstants {
     public static final String E_QUEUE = "queue";
     public static final String E_ACTION = "action";
     public static final String E_SERVER = "server";
+    public static final String E_ALWAYSONCLUSTER = "alwaysOnCluster";
     public static final String E_UC_SERVICE = "ucservice";
     public static final String E_XMPP_COMPONENT = "xmppcomponent";
     public static final String E_STATUS = "status";
