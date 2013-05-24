@@ -112,6 +112,7 @@
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
+    <a n="zimbraFeatureDistributionListFolderEnabled"/>
     <a n="zimbraFeatureMAPIConnectorEnabled"/>
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraFeatureMailForwardingInFiltersEnabled"/>
@@ -121,6 +122,7 @@
     <a n="zimbraFeatureVoiceUpsellURL"/>
     <a n="zimbraFilterBatchSize"/>
     <a n="zimbraFilterSleepInterval"/>
+    <a n="zimbraForceClearCookies"/>
     <a n="zimbraForeignPrincipal"/>
     <a n="zimbraFreebusyLocalMailboxNotActive"/>
     <a n="zimbraGalSyncAccountBasedAutoCompleteEnabled"/>
@@ -155,6 +157,7 @@
     <a n="zimbraMobileItemsToTrackPerFolderMaxSize"/>
     <a n="zimbraMobileMetadataMaxSizeEnabled"/>
     <a n="zimbraMobileNotificationEnabled"/>
+    <a n="zimbraMobileSyncKeyFormatConvertedFolders"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
@@ -353,6 +356,7 @@
     <a n="zimbraPrefSortOrder"/>
     <a n="zimbraPrefSpellDictionary"/>
     <a n="zimbraPrefSpellIgnoreAllCaps"/>
+    <a n="zimbraPrefSpellIgnorePattern"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
     <a n="zimbraPrefTagTreeOpen"/>
@@ -453,6 +457,8 @@
     <a n="zimbraExternalShareDomainWhitelistEnabled"/>
     <a n="zimbraExternalShareWhitelistDomain"/>
     <a n="zimbraExternalSharingEnabled"/>
+    <a n="zimbraFeatureDistributionListFolderEnabled"/>
+    <a n="zimbraForceClearCookies"/>
     <a n="zimbraFreebusyExchangeServerType"/>
     <a n="zimbraGalAlwaysIncludeLocalCalendarResources"/>
     <a n="zimbraGalSyncMaxConcurrentClients"/>
