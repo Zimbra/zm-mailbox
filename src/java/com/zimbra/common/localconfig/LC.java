@@ -766,6 +766,8 @@ public final class LC {
     public static final KnownKey nio_imap_enabled = KnownKey.newKey(true);
     public static final KnownKey nio_pop3_enabled = KnownKey.newKey(true);
 
+    public static final KnownKey nio_max_write_queue_size = KnownKey.newKey(10000);
+
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
 
     @Supported
