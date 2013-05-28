@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,14 +15,15 @@
 
 package com.zimbra.cs.server;
 
+import java.net.ServerSocket;
+import java.nio.channels.ServerSocketChannel;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.account.Provisioning;
-
-import java.net.ServerSocket;
-import java.nio.channels.ServerSocketChannel;
 
 public abstract class ServerConfig {
     private String protocol;
@@ -35,6 +36,7 @@ public abstract class ServerConfig {
     private static final int DEFAULT_WRITE_CHUNK_SIZE = 8192;
     private static final int DEFAULT_WRITE_TIMEOUT = 10;
     private static final int DEFAULT_THREAD_KEEP_ALIVE_TIME = 60 * 2;
+    private static final int DEFAULT_MAX_WRITE_QUEUE_SIZE = LC.nio_max_write_queue_size.intValue();
 
     public ServerConfig(String protocol, boolean ssl) {
         this.protocol = protocol;
@@ -146,6 +148,15 @@ public abstract class ServerConfig {
     public int getThreadKeepAliveTime() {
         return DEFAULT_THREAD_KEEP_ALIVE_TIME;
     }
+
+    public int getNioMaxWriteQueueDelay() {
+        return getWriteTimeout() * (int) Constants.MILLIS_PER_SECOND;
+    }
+
+    public int getNioMaxWriteQueueSize() {
+        return DEFAULT_MAX_WRITE_QUEUE_SIZE;
+    }
+
 
     public ServerSocket getServerSocket() throws ServiceException {
         return isSslEnabled() ?

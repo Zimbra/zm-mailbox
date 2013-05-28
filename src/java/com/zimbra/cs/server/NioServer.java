@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,6 +38,7 @@ import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.service.IoProcessor;
 import org.apache.mina.core.service.SimpleIoProcessorPool;
+import org.apache.mina.core.session.IoEventType;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -195,7 +196,10 @@ public abstract class NioServer implements Server {
         acceptor = new ZimbraSocketAcceptor(config.getServerSocketChannel(), IO_PROCESSOR_POOL);
         executorFilter = new ExecutorFilter(1, config.getMaxThreads(),
                 config.getThreadKeepAliveTime(), TimeUnit.SECONDS,
-                new ThreadFactoryBuilder().setNameFormat(getName() + "-%d").build());
+                new ThreadFactoryBuilder().setNameFormat(getName() + "-%d").build(), IoEventType.EXCEPTION_CAUGHT,
+                IoEventType.MESSAGE_RECEIVED, IoEventType.SESSION_CLOSED,
+                IoEventType.SESSION_IDLE, IoEventType.SESSION_OPENED);
+
     }
 
     /**

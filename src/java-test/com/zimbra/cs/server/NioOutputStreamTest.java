@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,7 +34,7 @@ public final class NioOutputStreamTest {
         DummySession session = new DummySession();
         TestIoHandler handler = new TestIoHandler();
         session.setHandler(handler);
-        NioOutputStream out = new NioOutputStream(session, 10);
+        NioOutputStream out = new NioOutputStream(session, 10, Integer.MAX_VALUE, Integer.MAX_VALUE);
         out.write('1');
         out.write('2');
         out.write('3');
@@ -56,7 +56,7 @@ public final class NioOutputStreamTest {
         DummySession session = new DummySession();
         TestIoHandler handler = new TestIoHandler();
         session.setHandler(handler);
-        NioOutputStream out = new NioOutputStream(session, 10);
+        NioOutputStream out = new NioOutputStream(session, 10, Integer.MAX_VALUE, Integer.MAX_VALUE);
         byte[] b = new byte[] {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1'};
         out.write(b, 0, 10);
         out.write(new byte[] {' '}, 0, 1);
@@ -71,7 +71,7 @@ public final class NioOutputStreamTest {
         DummySession session = new DummySession();
         TestIoHandler handler = new TestIoHandler();
         session.setHandler(handler);
-        NioOutputStream out = new NioOutputStream(session, 10);
+        NioOutputStream out = new NioOutputStream(session, 10, Integer.MAX_VALUE, Integer.MAX_VALUE);
         out.write("1234567890");
         out.write(" ");
         out.write("12345678901");
