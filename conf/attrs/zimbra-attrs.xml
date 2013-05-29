@@ -959,7 +959,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
-<attr id="154" name="zimbraMailPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox,mta,nginxproxy">
+<attr id="154" name="zimbraMailPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="MailPort" requiresRestart="mailbox,mta,nginxproxy">
   <globalConfigValue>80</globalConfigValue>
   <desc>HTTP port for end-user UI</desc>
 </attr>

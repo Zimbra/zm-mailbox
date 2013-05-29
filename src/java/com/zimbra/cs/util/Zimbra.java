@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,10 +21,13 @@ import java.security.Security;
 import java.util.Timer;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.dom4j.DocumentException;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.lmtp.SmtpToLmtp;
+import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -310,6 +313,22 @@ public final class Zimbra {
                     ZimbraLog.misc.warn("can't start notification channels", e);
                 }
             }
+
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            String provPort = localServer.getAttr(Provisioning.A_zimbraMailPort);
+            String lcPort = LC.zimbra_mail_service_port.value();
+            if (!lcPort.equals(provPort)) {
+                LocalConfig lc;
+                try {
+                    lc = new LocalConfig(null);
+                    lc.set(LC.zimbra_mail_service_port.key(), provPort);
+                    lc.save();
+                    LC.reload();
+                } catch (DocumentException | ConfigException | IOException e) {
+                    ZimbraLog.misc.warn("Cannot set LC zimbra_mail_service_port", e);
+                }
+            }
+
 
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName())) {
