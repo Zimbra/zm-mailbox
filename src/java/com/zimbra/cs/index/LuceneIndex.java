@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
@@ -40,7 +41,6 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -397,7 +397,7 @@ public final class LuceneIndex extends IndexStore {
                 // create an empty index
                 IndexWriter writer = new IndexWriter(luceneDirectory,
                         getWriterConfig().setOpenMode(IndexWriterConfig.OpenMode.CREATE));
-                writer.close();
+                Closeables.closeQuietly(writer);
                 searcher = new IndexSearcherImpl(openIndexReader(false));
             } else {
                 throw e;
@@ -967,7 +967,7 @@ public final class LuceneIndex extends IndexStore {
             if (count.decrementAndGet() == 0) {
                 ZimbraLog.search.debug("Close IndexSearcher");
                 try {
-                    luceneSearcher.close();
+                    Closeables.closeQuietly(luceneSearcher);
                 } finally {
                     Closeables.closeQuietly(getIndexReader());
                     READER_THROTTLE.release();
@@ -1000,13 +1000,15 @@ public final class LuceneIndex extends IndexStore {
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, Filter filter, int n) throws IOException {
-            return ZimbraTopDocs.create(luceneSearcher.search(query, filter, n));
+        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n) throws IOException {
+            TermsFilter luceneFilter = (filter == null) ? null : new TermsFilter(filter.getTerms());
+            return ZimbraTopDocs.create(luceneSearcher.search(query, luceneFilter, n));
         }
 
         @Override
-        public ZimbraTopFieldDocs search(Query query, Filter filter, int n, Sort sort) throws IOException {
-            return ZimbraTopFieldDocs.create(luceneSearcher.search(query, filter, n, sort));
+        public ZimbraTopFieldDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort) throws IOException {
+            TermsFilter luceneFilter = (filter == null) ? null : new TermsFilter(filter.getTerms());
+            return ZimbraTopFieldDocs.create(luceneSearcher.search(query, luceneFilter, n, sort));
         }
     }
 
@@ -1020,7 +1022,7 @@ public final class LuceneIndex extends IndexStore {
 
         @Override
         public void close() throws IOException {
-            getLuceneReader().close();
+            Closeables.closeQuietly(getLuceneReader());
         }
 
         @Override
@@ -1033,9 +1035,62 @@ public final class LuceneIndex extends IndexStore {
             return getLuceneReader().numDeletedDocs();
         }
 
+        /**
+         * Returns an enumeration of the String representations for values of terms with {@code field}
+         * positioned to start at the first term with a value greater than {@code firstTermValue}.
+         * The enumeration is ordered by String.compareTo().
+         */
         @Override
-        public TermEnum terms(Term t) throws IOException {
-            return getLuceneReader().terms(t);
+        public TermFieldEnumeration getTermsForField(String field, String firstTermValue) throws IOException {
+            return new LuceneTermValueEnumeration(field, firstTermValue);
+        }
+
+        private final class LuceneTermValueEnumeration implements TermFieldEnumeration {
+            private TermEnum termEnumeration;
+            private final String field;
+
+            private LuceneTermValueEnumeration(String field, String firstTermValue) throws IOException {
+                termEnumeration = getLuceneReader().terms(new Term(field, firstTermValue));
+                this.field = field;
+            }
+
+            @Override
+            public boolean hasMoreElements() {
+                if (termEnumeration == null) {
+                    return false;
+                }
+                Term term = termEnumeration.term();
+                return ((term != null) && field.equals(term.field()));
+            }
+
+            @Override
+            public BrowseTerm nextElement() {
+                if (termEnumeration == null) {
+                    throw new NoSuchElementException("No more values");
+                }
+                Term term = termEnumeration.term();
+                if ((term != null) && field.equals(term.field())) {
+                    BrowseTerm nextVal = new BrowseTerm(term.text(), termEnumeration.docFreq());
+                    try {
+                        termEnumeration.next();
+                    } catch (IOException e) {
+                        Closeables.closeQuietly(termEnumeration);
+                        termEnumeration = null;
+                    }
+                    return nextVal;
+                } else {
+                    Closeables.closeQuietly(termEnumeration);
+                    throw new NoSuchElementException("No more values");
+                }
+            }
+
+            @Override
+            public void close() throws IOException {
+                if (termEnumeration != null) {
+                    Closeables.closeQuietly(termEnumeration);
+                }
+                termEnumeration = null;
+            }
         }
 
         public IndexReader getLuceneReader() {

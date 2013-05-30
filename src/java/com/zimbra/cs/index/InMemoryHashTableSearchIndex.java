@@ -18,10 +18,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -29,8 +30,6 @@ import java.util.UUID;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -322,78 +321,71 @@ public final class InMemoryHashTableSearchIndex extends IndexStore {
         }
 
         /**
-         * Returns an enumeration of all the terms in the index. The enumeration is ordered by Term.compareTo().
-         * Each term is greater than all that precede it in the enumeration. Note that after calling terms(),
-         * TermEnum.next() must be called on the resulting enumeration before calling other methods such as
-         * TermEnum.term().
-         *
-         * A Term represents a word from text. This is the unit of search. It is composed of two elements:
-         * the text of the word, as a string, and the name of the field that the text occurred in, an interned string.
-         * Note that terms may represent more than words from text fields, but also things like dates, email
-         * addresses, urls, etc.
+         * Returns an enumeration of the String representations for values of terms with {@code field} 
+         * positioned to start at the first term with a value greater than {@code firstTermValue}.
+         * The enumeration is ordered by String.compareTo().
          */
         @Override
-        public TermEnum terms(Term term) throws IOException {
-            return new TermEnumImpl(term);
+        public TermFieldEnumeration getTermsForField(String field, String firstTermValue) throws IOException {
+            return new InMemoryHashTermValueEnumeration(field, firstTermValue);
         }
-    }
 
-    /**
-     * class for enumerating terms.
-     * Term enumerations are always ordered by Term.compareTo(). Each term in the enumeration is greater than all that
-     * precede it.
-     */
-    private final class TermEnumImpl extends TermEnum {
-        private final Queue<Term> terms = new LinkedList<Term>();
-
-        private TermEnumImpl(Term term) {
-            String fieldName = term.field();
-            Character prefix = LuceneFields.FIELD2PREFIX.get(fieldName);
-            if (prefix == null) {
-                return;
-            }
-            List<Term> allTerms = Lists.newArrayList();
-            for (String searchTerm : searchTermStore.keySet()) {
-                String searchTermText = searchTerm.substring(1);
-                Character testPrefix = searchTerm.charAt(0);
-                String testFieldName = null;
-                for (Entry<String, Character> entry : LuceneFields.FIELD2PREFIX.entrySet()) {
-                    if (entry.getValue().equals(testPrefix)) {
-                        testFieldName = entry.getKey();
-                        break;
+        private final class InMemoryHashTermValueEnumeration implements TermFieldEnumeration {
+            private final Queue<BrowseTerm> termValues = Lists.newLinkedList();
+            private InMemoryHashTermValueEnumeration(String field, String firstTermValue) {
+                Character prefix = LuceneFields.FIELD2PREFIX.get(field);
+                if (prefix == null) {
+                    return;
+                }
+                List<BrowseTerm> allValues = Lists.newArrayList();
+                for (String searchTerm : searchTermStore.keySet()) {
+                    String searchTermText = searchTerm.substring(1);
+                    Character testPrefix = searchTerm.charAt(0);
+                    String testFieldName = null;
+                    for (Entry<String, Character> entry : LuceneFields.FIELD2PREFIX.entrySet()) {
+                        if (entry.getValue().equals(testPrefix)) {
+                            testFieldName = entry.getKey();
+                            break;
+                        }
+                    }
+                    if (!field.equals(testFieldName)) {
+                        continue;
+                    }
+                    if (firstTermValue.compareTo(searchTermText) <= 0) {
+                        allValues.add(new BrowseTerm(searchTermText, 1));
                     }
                 }
-                if (testFieldName == null) {
-                    continue;
-                }
-                Term testTerm = new Term(testFieldName, searchTermText);
-                if (term.compareTo(testTerm) <= 0) {
-                    allTerms.add(testTerm);
-                }
+                Collections.sort(allValues, new Comparator<BrowseTerm>() {
+                    @Override
+                    public int compare(BrowseTerm o1, BrowseTerm o2) {
+                        int retVal = o1.getText().compareTo(o2.getText());
+                        if (retVal == 0) {
+                            retVal = o2.getFreq() - o1.getFreq();
+                        }
+                        return retVal;
+                    }
+                });
+    
+                termValues.addAll(allValues);
             }
-            Collections.sort(allTerms);
-            terms.addAll(allTerms);
-        }
-
-        @Override
-        public boolean next() {
-            terms.poll();
-            return !terms.isEmpty();
-        }
-
-        @Override
-        public Term term() {
-            return terms.peek();
-        }
-
-        @Override
-        public int docFreq() {
-            return 0;
-        }
-
-        @Override
-        public void close() {
-            terms.clear();
+    
+            @Override
+            public boolean hasMoreElements() {
+                return (termValues.peek() != null);
+            }
+    
+            @Override
+            public BrowseTerm nextElement() {
+                BrowseTerm nextVal = termValues.poll();
+                if (nextVal == null) {
+                    throw new NoSuchElementException("No more values");
+                }
+                return nextVal;
+            }
+    
+            @Override
+            public void close() throws IOException {
+            }
         }
     }
 
@@ -469,7 +461,7 @@ public final class InMemoryHashTableSearchIndex extends IndexStore {
          * Finds the top n hits for query, applying filter if non-null.
          */
         @Override
-        public ZimbraTopDocs search(Query query, Filter filter, int n) throws IOException {
+        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n) throws IOException {
             List<ZimbraScoreDoc>scoreDocs = Lists.newArrayList();
             Map<UUID,Integer> uuidInfo = Maps.newHashMap();
             if (filter != null) {
@@ -516,7 +508,7 @@ public final class InMemoryHashTableSearchIndex extends IndexStore {
                 }
             } else {
             // TODO support other types of query
-                ZimbraLog.index.info("InMemoryHashTableSearchIndex does not support search queries of type %",
+                ZimbraLog.index.info("InMemoryHashTableSearchIndex does not support search queries of type %s",
                         query.getClass().getName());
             }
             for (UUID uuid: uuidInfo.keySet()) {
@@ -530,7 +522,7 @@ public final class InMemoryHashTableSearchIndex extends IndexStore {
          * and sorting the hits by the criteria in sort.
          */
         @Override
-        public ZimbraTopFieldDocs search(Query query, Filter filter, int n, Sort sort) throws IOException {
+        public ZimbraTopFieldDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort) throws IOException {
             // TODO unimplemented at present
             if (filter != null) {
                 ZimbraLog.index.warn("InMemoryHashTableSearchIndex search does not support filters - filter ignored");

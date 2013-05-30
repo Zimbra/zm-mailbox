@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 VMware, Inc.
+ * Copyright (C) 2009, 2010, 2013 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,10 +33,9 @@ package com.zimbra.cs.index;
  */
 
 import java.io.IOException;
-import java.util.BitSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -45,103 +44,69 @@ import org.apache.lucene.search.DocIdSet;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.util.OpenBitSet;
 
+import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
+
 /**
- * Constructs a filter for docs matching any of the terms added to this class. 
- * Unlike a RangeFilter this can be used for filtering on multiple terms that are not necessarily in 
- * a sequence. An example might be a collection of primary keys from a database query result or perhaps 
- * a choice of "category" labels picked by the end user. As a filter, this is much faster than the 
+ * Constructs a filter for docs matching any of the terms added to this class.
+ * Unlike a RangeFilter this can be used for filtering on multiple terms that are not necessarily in
+ * a sequence. An example might be a collection of primary keys from a database query result or perhaps
+ * a choice of "category" labels picked by the end user. As a filter, this is much faster than the
  * equivalent query (a BooleanQuery with many "should" TermQueries)
  *
  */
 public class TermsFilter extends Filter
 {
-    Set terms=new TreeSet();
-    
+    private static final long serialVersionUID = 3705108370140268162L;
+    private final Set<Term> terms=Sets.newTreeSet();
+
     /**
-     * Adds a term to the list of acceptable terms   
-     * @param term
+     * @param terms is the list of acceptable terms
      */
-    public void addTerm(Term term)
-    {
-        terms.add(term);
-    }
-    
-    
-
-    /* (non-Javadoc)
-     * @see org.apache.lucene.search.Filter#bits(org.apache.lucene.index.IndexReader)
-     */
-    public BitSet bits(IndexReader reader) throws IOException
-    {
-        BitSet result=new BitSet(reader.maxDoc());
-        TermDocs td = reader.termDocs();
-        try
-        {
-            for (Iterator iter = terms.iterator(); iter.hasNext();)
-            {
-                Term term = (Term) iter.next();
-                td.seek(term);
-                while (td.next())
-                {
-                    result.set(td.doc());
-                }
-            }
-        }
-        finally
-        {
-            td.close();
-        }
-        return result;
+    public TermsFilter (Collection<Term> terms) {
+        this.terms.addAll(terms);
     }
 
-
-
-/* (non-Javadoc)
-   * @see org.apache.lucene.search.Filter#getDocIdSet(org.apache.lucene.index.IndexReader)
+    /** (non-Javadoc)
+     * @see org.apache.lucene.search.Filter#getDocIdSet(org.apache.lucene.index.IndexReader)
      */
-  public DocIdSet getDocIdSet(IndexReader reader) throws IOException
-    {
+    @Override
+    public DocIdSet getDocIdSet(IndexReader reader) throws IOException {
     OpenBitSet result=new OpenBitSet(reader.maxDoc());
         TermDocs td = reader.termDocs();
-        try
-        {
-            for (Iterator iter = terms.iterator(); iter.hasNext();)
-            {
-                Term term = (Term) iter.next();
+        try {
+            for (Iterator<Term> iter = terms.iterator(); iter.hasNext();) {
+                Term term = iter.next();
                 td.seek(term);
-                while (td.next())
-                {
+                while (td.next()) {
                     result.set(td.doc());
                 }
             }
-        }
-        finally
-        {
-            td.close();
+        } finally {
+            Closeables.closeQuietly(td);
         }
         return result;
     }
-    
-    public boolean equals(Object obj)
-    {
-        if(this == obj)
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
             return true;
-        if((obj == null) || (obj.getClass() != this.getClass()))
-                return false;
+        }
+        if((obj == null) || (obj.getClass() != this.getClass())) {
+            return false;
+        }
         TermsFilter test = (TermsFilter)obj;
-        return (terms == test.terms ||
-                     (terms != null && terms.equals(test.terms)));
+        return (terms == test.terms || (terms != null && terms.equals(test.terms)));
     }
 
-    public int hashCode()
-    {
+    @Override
+    public int hashCode() {
         int hash=9;
-        for (Iterator iter = terms.iterator(); iter.hasNext();)
-        {
-            Term term = (Term) iter.next();
-            hash = 31 * hash + term.hashCode();         
+        for (Iterator<Term> iter = terms.iterator(); iter.hasNext();) {
+            Term term = iter.next();
+            hash = 31 * hash + term.hashCode();
         }
         return hash;
     }
-    
 }

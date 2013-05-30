@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -42,6 +41,7 @@ import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -390,13 +390,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                 hits = null;
                 return;
             }
-            TermsFilter filter = null;
-            if (filterTerms != null) {
-                filter = new TermsFilter();
-                for (Term t : filterTerms) {
-                    filter.addTerm(t);
-                }
-            }
+            ZimbraTermsFilter filter = (filterTerms != null) ? new ZimbraTermsFilter(filterTerms) : null;
             long start = System.currentTimeMillis();
             if (sort == null) {
                 hits = searcher.search(luceneQuery, filter, topDocsLen);
@@ -428,20 +422,23 @@ public final class LuceneQueryOperation extends QueryOperation {
                     mquery.add(terms);
                     continue;
                 }
-                TermEnum itr = searcher.getIndexReader().terms(base);
                 List<Term> expanded = Lists.newArrayList();
-                do {
-                    Term term = itr.term();
-                    if (term != null && base.field().equals(term.field()) && term.text().startsWith(base.text())) {
-                        if (expanded.size() >= max) { // too many terms expanded
+                TermFieldEnumeration itr = searcher.getIndexReader().getTermsForField(base.field(), base.text());
+                try {
+                    while (itr.hasMoreElements()) {
+                        BrowseTerm term = itr.nextElement();
+                        if (term != null && term.getText().startsWith(base.text())) {
+                            if (expanded.size() >= max) { // too many terms expanded
+                                break;
+                            }
+                            expanded.add(new Term(base.field(), term.getText()));
+                        } else {
                             break;
                         }
-                        expanded.add(term);
-                    } else {
-                        break;
                     }
-                } while (itr.next());
-                itr.close();
+                } finally {
+                    Closeables.closeQuietly(itr);
+                }
                 if (expanded.isEmpty()) {
                     return null;
                 } else {

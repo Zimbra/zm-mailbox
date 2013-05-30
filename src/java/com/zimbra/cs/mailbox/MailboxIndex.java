@@ -33,10 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.IndexSearcher;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -67,6 +63,7 @@ import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -263,14 +260,18 @@ public final class MailboxIndex {
         try {
             for (InternetAddress addr : addrs) {
                 if (!Strings.isNullOrEmpty(addr.getAddress())) {
-                    Term term = new Term(LuceneFields.L_H_TO, addr.getAddress().toLowerCase());
-                    TermEnum terms = searcher.getIndexReader().terms(term);
+                    String lcAddr = addr.getAddress().toLowerCase();
+                    TermFieldEnumeration values = null;
                     try {
-                        if (term.equals(terms.term())) {
-                            return true;
+                        values = searcher.getIndexReader().getTermsForField(LuceneFields.L_H_TO, lcAddr);
+                        if (values.hasMoreElements()) {
+                            BrowseTerm term = values.nextElement();
+                            if (term != null && lcAddr.equals(term.getText())) {
+                                return true;
+                            }
                         }
                     } finally {
-                        Closeables.closeQuietly(terms);
+                        Closeables.closeQuietly(values);
                     }
                 }
             }
@@ -1067,22 +1068,24 @@ public final class MailboxIndex {
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         ZimbraIndexSearcher searcher = indexStore.openSearcher();
+        TermFieldEnumeration values = null;
         try {
-            TermEnum terms = searcher.getIndexReader().terms(new Term(field, ""));
-            do {
-                Term term = terms.term();
-                if (term == null || !term.field().equals(field)) {
+            values = searcher.getIndexReader().getTermsForField(field, "");
+            while (values.hasMoreElements()) {
+                BrowseTerm term = values.nextElement();
+                if (term == null) {
                     break;
                 }
-                String text = term.text();
+                String text = term.getText();
                 // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
                 if (text.startsWith("@") && text.contains(".")) {
                     if (pattern == null || pattern.matcher(text).matches()) {
-                        result.add(new BrowseTerm(text.substring(1), terms.docFreq()));
+                        result.add(new BrowseTerm(text.substring(1), term.getFreq()));
                     }
                 }
-            } while (terms.next());
+            }
         } finally {
+            Closeables.closeQuietly(values);
             Closeables.closeQuietly(searcher);
         }
         return result;
@@ -1098,19 +1101,17 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         ZimbraIndexSearcher searcher = indexStore.openSearcher();
+        TermFieldEnumeration values = null;
         try {
-            TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_ATTACHMENTS, ""));
-            do {
-                Term term = terms.term();
-                if (term == null || !term.field().equals(LuceneFields.L_ATTACHMENTS)) {
-                    break;
+            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS, "");
+            while (values.hasMoreElements()) {
+                BrowseTerm term = values.nextElement();
+                if (pattern == null || pattern.matcher(term.getText()).matches()) {
+                    result.add(term);
                 }
-                String text = term.text();
-                if (pattern == null || pattern.matcher(text).matches()) {
-                    result.add(new BrowseTerm(text, terms.docFreq()));
-                }
-            } while (terms.next());
+            }
         } finally {
+            Closeables.closeQuietly(values);
             Closeables.closeQuietly(searcher);
         }
         return result;
@@ -1126,19 +1127,20 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         ZimbraIndexSearcher searcher = indexStore.openSearcher();
+        TermFieldEnumeration values = null;
         try {
-            TermEnum terms = searcher.getIndexReader().terms(new Term(LuceneFields.L_OBJECTS, ""));
-            do {
-                Term term = terms.term();
-                if (term == null || !term.field().equals(LuceneFields.L_OBJECTS)) {
+            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS, "");
+            while (values.hasMoreElements()) {
+                BrowseTerm term = values.nextElement();
+                if (term == null) {
                     break;
                 }
-                String text = term.text();
-                if (pattern == null || pattern.matcher(text).matches()) {
-                    result.add(new BrowseTerm(text, terms.docFreq()));
+                if (pattern == null || pattern.matcher(term.getText()).matches()) {
+                    result.add(term);
                 }
-            } while (terms.next());
+            }
         } finally {
+            Closeables.closeQuietly(values);
             Closeables.closeQuietly(searcher);
         }
         return result;

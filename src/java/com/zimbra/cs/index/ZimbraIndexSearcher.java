@@ -19,7 +19,6 @@ import java.io.IOException;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 
@@ -52,13 +51,12 @@ public interface ZimbraIndexSearcher extends Closeable {
     /**
      * Finds the top n hits for query, applying filter if non-null.
      */
-    public ZimbraTopDocs search(Query query, Filter filter, int n) throws IOException;
+    public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n) throws IOException;
 
     /**
      * Search implementation with arbitrary sorting. Finds the top n hits for query, applying filter if non-null,
      * and sorting the hits by the criteria in sort. NOTE: this does not compute scores by default; use
      * setDefaultFieldSortScoring(boolean, boolean) to enable scoring.
      */
-    public ZimbraTopFieldDocs search(Query query, Filter filter, int n, Sort sort) throws IOException;
-
+    public ZimbraTopFieldDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort) throws IOException;
 }
