@@ -265,7 +265,7 @@ public final class LC {
     public static final KnownKey zimbra_index_lucene_max_terms_per_query = KnownKey.newKey(50000);
 
     @Supported
-    public static final KnownKey zimbra_index_elasticsearch_url_pattern = KnownKey.newKey("http://localhost:9200/%s/");
+    public static final KnownKey zimbra_index_elasticsearch_url_base = KnownKey.newKey("http://localhost:9200/");
 
     @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);

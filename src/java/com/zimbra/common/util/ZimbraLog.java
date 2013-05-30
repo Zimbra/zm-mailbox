@@ -135,9 +135,14 @@ public final class ZimbraLog {
     public static final Log searchstat = LogFactory.getLog("zimbra.searchstat");
 
     /**
-     * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
+     * The "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
      */
     public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
+
+    /**
+     * The "zimbra.elasticsearch" logger.  For logging interactions with Elasticsearch
+     */
+    public static final Log elasticsearch = LogFactory.getLog("zimbra.elasticsearch");
 
     /**
      * the "zimbra.redolog" logger. For redolog-releated events.
