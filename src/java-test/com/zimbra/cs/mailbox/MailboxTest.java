@@ -64,6 +64,8 @@ public final class MailboxTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        MailboxTestUtil.cleanupIndexStore(
+                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
     }
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -86,11 +88,11 @@ public final class MailboxTest {
         mbox.index.indexDeferredItems();
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
-        Assert.assertEquals(4, terms.size());
         Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
         Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
         Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
         Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
+        Assert.assertEquals("Number of expected terms", 4, terms.size());
         Assert.assertEquals(8, terms.get(0).getFreq());
         Assert.assertEquals(6, terms.get(1).getFreq());
         Assert.assertEquals(4, terms.get(2).getFreq());

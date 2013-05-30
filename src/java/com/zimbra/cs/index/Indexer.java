@@ -55,7 +55,7 @@ public interface Indexer extends Closeable {
     /**
      * Modeled on {@link org.apache.lucene.index.IndexReader} {@code maxDoc()} whose description is: <br />
      * Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer),
-     * not counting deletions.
+     * not counting deletions.  Note that this is a cached value.
      * <p>Used from SOAP GetIndexStatsRequest</p>
      * @return total number of documents in this index excluding deletions
      */

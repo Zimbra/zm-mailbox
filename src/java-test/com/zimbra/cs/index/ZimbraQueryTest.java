@@ -227,9 +227,9 @@ public final class ZimbraQueryTest {
 
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         ZimbraQueryResults result = query.execute();
-        Assert.assertTrue(result.hasNext());
-        Assert.assertEquals(contact.getId(), result.getNext().getItemId());
-        Assert.assertFalse(result.hasNext());
+        Assert.assertTrue("Expected at least 1 result", result.hasNext());
+        Assert.assertEquals("Result item ID not as expected", contact.getId(), result.getNext().getItemId());
+        Assert.assertFalse("More hits than expected", result.hasNext());
         Closeables.closeQuietly(result);
     }
 

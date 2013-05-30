@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -33,7 +34,9 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
@@ -51,7 +54,6 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.WildcardQuery;
-import org.apache.lucene.util.AttributeImpl;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +68,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraIndexDocumentID;
 import com.zimbra.cs.index.ZimbraIndexReader;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
@@ -84,7 +87,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  * https://github.com/sonian/elasticsearch-jetty is a way to add SSL to the comms
  * Elasticsearch uses http.  If better network security is desired, most suggestions point towards hiding behind an
  * SSL proxy.  I think nginx can help with this - see http://wiki.nginx.org/HttpCoreModule#listen
- * 
+ *
  * Elasticsearch URL:
  * http://localhost:9200/INDEX-NAME/INDEX-TYPE/INDEX-ID'
  */
@@ -99,7 +102,7 @@ public final class ElasticSearchIndex extends IndexStore {
     private ElasticSearchIndex(Mailbox mbox) {
         this.mailbox = mbox;
         this.key = mailbox.getAccountId();
-        this.indexUrl = String.format(LC.zimbra_index_elasticsearch_url_pattern.value(), key);
+        this.indexUrl = String.format("%s%s/", LC.zimbra_index_elasticsearch_url_base.value(), key);
     }
 
     private void initializeIndex() {
@@ -110,16 +113,12 @@ public final class ElasticSearchIndex extends IndexStore {
             try {
                 ElasticSearchConnector connector = new ElasticSearchConnector();
                 JSONObject mappingInfo = createMappingInfo();
-                String url = String.format("%s?pretty", indexUrl);
-                PutMethod putMethod = new PutMethod(url);
+                PutMethod putMethod = new PutMethod(ElasticSearchConnector.actualUrl(indexUrl));
                 putMethod.setRequestEntity(new StringRequestEntity(mappingInfo.toString(),
                         MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                 int statusCode = connector.executeMethod(putMethod);
                 if (statusCode == HttpStatus.SC_OK) {
                     haveMappingInfo = true;
-                    // url = String.format("%s%s/_mapping", indexUrl, indexType);
-                    // GetMethod method = new GetMethod(url);
-                    // statusCode = connector.executeMethod(method);
                     refreshIndexIfNecessary(); // Sometimes searches don't seem to honor mapping info.  Try to force it
                 } else {
                     ZimbraLog.index.error("Problem Setting mapping information for index with key=%s httpstatus=%d",
@@ -141,7 +140,7 @@ public final class ElasticSearchIndex extends IndexStore {
      */
     private boolean refreshIndexIfNecessary() {
         String url = String.format("%s_refresh", indexUrl);
-        GetMethod method = new GetMethod(url);
+        GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -160,13 +159,47 @@ public final class ElasticSearchIndex extends IndexStore {
         return false;
     }
 
-
     private JSONObject createMappingInfo() throws JSONException {
         JSONObject topLevel = new JSONObject();
+        JSONObject settings = new JSONObject();
         JSONObject mappings = new JSONObject();
         JSONObject zimbra = new JSONObject();
         JSONObject properties = new JSONObject();
         JSONObject source = new JSONObject();
+        topLevel.put("settings", settings);
+        JSONObject index = new JSONObject();
+        settings.put("index", index);
+        JSONObject analysis = new JSONObject();
+        index.put("analysis", analysis);
+        JSONObject analyzer = new JSONObject();
+        analysis.put("analyzer", analyzer);
+        JSONObject zimbraContent = new JSONObject();
+        analyzer.put("zimbrastandard", zimbraContent);
+        // We rely on ZimbraAnalyzer to pre-tokenize the input and then supply the tokens to Elasticsearch
+        // with a " " between each token.  Implicit assumption is that " " is a valid token separator.
+        zimbraContent.put("tokenizer", "whitespace");
+
+        // Analog to NumberTokenizer used with reference to LuceneFields.L_SORT_SIZE for Lucene BUT
+        // Not needed here because we don't analyze that field.
+        // JSONObject positivenumber = new JSONObject();
+        // analyzer.put("positivenumber", positivenumber);
+        // positivenumber.put("type", "pattern");
+        // positivenumber.put("pattern", "[^\\d]+");
+
+        // Thought of using the "uax_url_email" tokenizer but that behaves differently.
+        JSONObject emailaddress = new JSONObject();
+        analyzer.put("emailaddress", emailaddress);
+        emailaddress.put("type", "pattern");
+        emailaddress.put("pattern", "(\\s+)|([<>,\\\'\\\"]+)|(\\)+)|(\\(+)|(\\]+)|(\\[+)");
+
+        JSONObject contactdata = new JSONObject();
+        analyzer.put("contactdata", contactdata);
+        contactdata.put("type", "pattern");
+        contactdata.put("pattern", "(\\s+)|([<>,\\\'\\\"]+)|(\\)+)|(\\(+)|(\\]+)|(\\[+)");
+        JSONArray stopwords = new JSONArray();
+        stopwords.put(".");
+        contactdata.put("stopwords", stopwords);
+
         topLevel.put("mappings", mappings);
         mappings.put(indexType, zimbra);
         zimbra.put("_source", source);
@@ -174,27 +207,48 @@ public final class ElasticSearchIndex extends IndexStore {
         source.put("_all", false); // save space
         zimbra.put("properties", properties);
 
-        properties.put(LuceneFields.L_MIMETYPE, new StringFieldProperty(false).analyzed().asJSON());
+        // See ZimbraAnalyzer.tokenStream(String field, Reader reader, Analyzer analyzer)
+        // Only ever used via MimeTypeTokenStream
+        properties.put(LuceneFields.L_MIMETYPE,
+                new StringFieldProperty(false).analyzed().analyzer("whitespace").asJSON());
         properties.put(LuceneFields.L_PARTNAME, new StringFieldProperty(true).notAnalyzed().asJSON());
-        properties.put(LuceneFields.L_FILENAME, new StringFieldProperty(true).analyzed().asJSON());
-        properties.put(LuceneFields.L_SORT_SIZE, new FieldProperty("long", true).AnalyzedNo().asJSON());
-        properties.put(LuceneFields.L_H_FROM, new StringFieldProperty(false).analyzed().asJSON());
-        properties.put(LuceneFields.L_H_TO, new StringFieldProperty(false).analyzed().asJSON());
-        properties.put(LuceneFields.L_H_CC, new StringFieldProperty(false).analyzed().asJSON());
-        properties.put(LuceneFields.L_H_X_ENV_FROM, new StringFieldProperty(false).analyzed().asJSON());
-        properties.put(LuceneFields.L_H_X_ENV_TO, new StringFieldProperty(false).analyzed().asJSON());
+        // Should have been tokenized by FilenameTokenizer already
+        properties.put(LuceneFields.L_FILENAME,
+                new StringFieldProperty(true).analyzed().analyzer("whitespace").asJSON());
+        properties.put(LuceneFields.L_SORT_SIZE, new FieldProperty("long", true).notAnalyzed().asJSON());
+        properties.put(LuceneFields.L_SORT_ATTACH, new StringFieldProperty(true).notAnalyzed().asJSON());
+        properties.put(LuceneFields.L_SORT_FLAG, new StringFieldProperty(true).notAnalyzed().asJSON());
+        properties.put(LuceneFields.L_SORT_PRIORITY, new StringFieldProperty(true).notAnalyzed().asJSON());
+        properties.put(LuceneFields.L_H_FROM,
+                new StringFieldProperty(false).analyzed().analyzer("emailaddress").asJSON());
+        properties.put(LuceneFields.L_H_TO,
+                new StringFieldProperty(false).analyzed().analyzer("emailaddress").asJSON());
+        properties.put(LuceneFields.L_H_CC,
+                new StringFieldProperty(false).analyzed().analyzer("emailaddress").asJSON());
+        properties.put(LuceneFields.L_H_X_ENV_FROM,
+                new StringFieldProperty(false).analyzed().analyzer("emailaddress").asJSON());
+        properties.put(LuceneFields.L_H_X_ENV_TO,
+                new StringFieldProperty(false).analyzed().analyzer("emailaddress").asJSON());
+        // For Lucene ZimbraAnalyzer "private TokenStream tokenStream(String field, Reader reader, Analyzer analyzer)"
+        // uses KeywordTokenizer for this.  However, it is not stored and not analyzed when added
         properties.put(LuceneFields.L_H_MESSAGE_ID, new StringFieldProperty(false).notAnalyzed().asJSON());
-        properties.put(LuceneFields.L_FIELD, new StringFieldProperty(false).analyzed().asJSON());
+        properties.put(LuceneFields.L_FIELD,
+                new StringFieldProperty(false).analyzed().analyzer("zimbrastandard").asJSON());
         properties.put(LuceneFields.L_SORT_NAME, new StringFieldProperty(false).notAnalyzed().asJSON());
-        properties.put(LuceneFields.L_H_SUBJECT, new StringFieldProperty(false).analyzed().asJSON());
+        properties.put(LuceneFields.L_H_SUBJECT,
+                new StringFieldProperty(false).analyzed().analyzer("zimbrastandard").asJSON());
         properties.put(LuceneFields.L_SORT_SUBJECT, new StringFieldProperty(false).notAnalyzed().asJSON());
-        properties.put(LuceneFields.L_CONTENT, new StringFieldProperty(false).analyzed().asJSON());
-        properties.put(LuceneFields.L_ATTACHMENTS, new StringFieldProperty(false).analyzed().asJSON());
+        properties.put(LuceneFields.L_CONTENT,
+                new StringFieldProperty(false).analyzed().analyzer("zimbrastandard").asJSON());
+        // Only ever used via MimeTypeTokenStream
+        properties.put(LuceneFields.L_ATTACHMENTS,
+                new StringFieldProperty(false).analyzed().analyzer("whitespace").asJSON());
         properties.put(LuceneFields.L_MAILBOX_BLOB_ID, new FieldProperty("integer", true).notAnalyzed().asJSON());
         properties.put(LuceneFields.L_SORT_DATE, new DateFieldProperty(true).notAnalyzed().asJSON());
         properties.put(LuceneFields.L_CONTACT_DATA,
-                new StringFieldProperty(false).analyzed().analyzer("whitespace").asJSON()); // TODO - this analyzer probably isn't the best - chosen for now because it allows "@ in tokens"
-        properties.put(LuceneFields.L_OBJECTS, new StringFieldProperty(false).analyzed().asJSON());
+                new StringFieldProperty(false).analyzed().analyzer("contactdata").asJSON());
+        properties.put(LuceneFields.L_OBJECTS,
+                new StringFieldProperty(false).analyzed().analyzer("zimbrastandard").asJSON());
         properties.put(LuceneFields.L_VERSION, new StringFieldProperty(true).notAnalyzed().asJSON());
         return topLevel;
     }
@@ -218,9 +272,6 @@ public final class ElasticSearchIndex extends IndexStore {
         }
         public FieldProperty notAnalyzed() throws JSONException {
             return index(NOT_ANALYZED);
-        }
-        public FieldProperty AnalyzedNo() throws JSONException {
-            return index(NO);
         }
         public FieldProperty index(String indexType) throws JSONException {
             put("index", indexType);
@@ -271,7 +322,7 @@ public final class ElasticSearchIndex extends IndexStore {
 
     @Override
     public void deleteIndex() {
-        HttpMethod method = new DeleteMethod(indexUrl);
+        HttpMethod method = new DeleteMethod(ElasticSearchConnector.actualUrl(indexUrl));
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -318,11 +369,11 @@ public final class ElasticSearchIndex extends IndexStore {
     public boolean verify(PrintStream out) {
         return true;
     }
-    
+
     public int getDocCount() {
         refreshIndexIfNecessary();
         String url = String.format("%s%s/docs/", indexUrl, "_stats");
-        GetMethod method = new GetMethod(url);
+        GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -355,6 +406,36 @@ public final class ElasticSearchIndex extends IndexStore {
         @Override
         public void destroy() {
         }
+
+        public List<String> getIndexes() {
+            List<String> indexNames = Lists.newArrayList();
+            String url = String.format("%s%s", LC.zimbra_index_elasticsearch_url_base.value(), "_status");
+            GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+            try {
+                ElasticSearchConnector connector = new ElasticSearchConnector();
+                int statusCode = connector.executeMethod(method);
+                if (statusCode != HttpStatus.SC_OK) {
+                    ZimbraLog.index.error("Problem getting list of Elastic Search indexes httpstatus=%d", statusCode);
+                }
+                JSONObject indices =  connector.getObjectAtJsonPath(new String[] {"indices"});
+                if (indices != null) {
+                    JSONArray names = indices.names();
+                    if (names != null) {
+                        for (int index = 0; index < names.length(); index++) {
+                            String name = names.optString(index);
+                            if (name != null) {
+                                indexNames.add(name);
+                            }
+                        }
+                    }
+                }
+            } catch (HttpException e) {
+                ZimbraLog.index.error("Problem getting list of Elastic Search indexes", e);
+            } catch (IOException e) {
+                ZimbraLog.index.error("Problem getting list of Elastic Search indexes", e);
+            }
+            return indexNames;
+        }
     }
 
     private final class ElasticSearchIndexer implements Indexer {
@@ -380,39 +461,76 @@ public final class ElasticSearchIndex extends IndexStore {
             return getDocCount();
         }
 
+        private String streamToString(TokenStream tokenStream) throws IOException {
+            tokenStream.reset();
+            List<String> toks = Lists.newArrayList();
+            CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+            while (tokenStream.incrementToken()) {
+                toks.add(charTermAttribute.toString());
+            }
+            tokenStream.end();
+            tokenStream.close();
+            return Joiner.on(" ").join(toks);
+        }
+
+        /**
+         * For Lucene, we either provide a token stream (i.e. Everything already analyzed)
+         * @param fieldName
+         * @return
+         */
+        private boolean useZimbraAnalyzer(String fieldName) {
+            LuceneFields.IndexField field = LuceneFields.IndexField.fromFieldName(fieldName);
+            if ( (field.getIndexSetting().equals(Field.Index.NOT_ANALYZED)) ||
+                 (field.getIndexSetting().equals(Field.Index.NOT_ANALYZED_NO_NORMS)) ||
+                 (field.getIndexSetting().equals(Field.Index.NO))) {
+                return false;
+            }
+            return true;
+        }
+
+        private String readerToTokenString(String fieldName, Reader original) throws IOException {
+            if (useZimbraAnalyzer(fieldName)) {
+                Analyzer analyzer = ZimbraAnalyzer.getInstance();
+                String tokens = streamToString(analyzer.tokenStream(fieldName, original));
+                return tokens;
+            } else {
+                BufferedReader bufferedReader = new BufferedReader(original);
+                String line = null;
+                StringBuilder sb = new StringBuilder();
+                String ls = System.getProperty("line.separator");
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                    sb.append(ls);
+                }
+                return sb.toString();
+            }
+        }
+
+        private String stringToTokenString(String fieldName, String original) throws IOException {
+            if (useZimbraAnalyzer(fieldName)) {
+                Analyzer analyzer = ZimbraAnalyzer.getInstance();
+                String tokens = streamToString(analyzer.tokenStream(fieldName, new StringReader(original)));
+                return tokens;
+            } else {
+                return original;
+            }
+        }
+
         private void addFieldToDocument(JSONObject jsonObj, Fieldable field) throws IOException {
             try {
                 if (field.isTokenized()) {
                     TokenStream stream = field.tokenStreamValue();
                     if (stream != null) {
-                        stream.reset();
-                        List<String> toks = Lists.newArrayList();
-                        while (stream.incrementToken()) {
-                            Iterator<AttributeImpl> iter = stream.getAttributeImplsIterator();
-                            while (iter.hasNext()) {
-                                AttributeImpl ai = iter.next();
-                                toks.add(ai.reflectAsString(false));
-                            }
-                        }
-                        stream.end();
-                        stream.close();
-                        jsonObj.put(field.name(), Joiner.on(" ").join(toks));
+                        String tokens = streamToString(stream);
+                        jsonObj.put(field.name(), tokens);
                     } else {
                         Reader reader = field.readerValue();
                         if (reader != null) {
-                            BufferedReader bufferedReader = new BufferedReader(reader);
-                            String line = null;
-                            StringBuilder sb = new StringBuilder();
-                            String ls = System.getProperty("line.separator");
-                            while ((line = bufferedReader.readLine()) != null) {
-                                sb.append(line);
-                                sb.append(ls);
-                            }
-                            jsonObj.put(field.name(), sb.toString());
+                            jsonObj.put(field.name(), readerToTokenString(field.name(), reader));
                         } else {
                             String val = field.stringValue();
                             if (val != null) {
-                                jsonObj.put(field.name(), val);
+                                jsonObj.put(field.name(), stringToTokenString(field.name(), val));
                             } else {
                                 ZimbraLog.index.debug("addFieldToDocument IGNORING tokenized field=%s", field.name());
                             }
@@ -421,7 +539,7 @@ public final class ElasticSearchIndex extends IndexStore {
                 } else {
                     String val = field.stringValue();
                     if (val != null) {
-                        jsonObj.put(field.name(), val);
+                        jsonObj.put(field.name(), stringToTokenString(field.name(), val));
                     } else {
                         ZimbraLog.index.debug("addFieldToDocument IGNORING field=%s", field.name());
                     }
@@ -462,7 +580,7 @@ public final class ElasticSearchIndex extends IndexStore {
             for (IndexDocument doc : docs) {
                 // Note: using automatic ID generation
                 String url = String.format("%s%s/", indexUrl, indexType);
-                PostMethod method = new PostMethod(url);
+                PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
                 JSONObject jsonObj = new JSONObject();
                 // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
                 synchronized (doc) {
@@ -497,7 +615,7 @@ public final class ElasticSearchIndex extends IndexStore {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/_query", indexUrl, indexType);
             for (Integer id : ids) {
-                DeleteMethod method = new DeleteMethod(url);
+                DeleteMethod method = new DeleteMethod(ElasticSearchConnector.actualUrl(url));
                 NameValuePair[] querys = new NameValuePair[1];
                 String query = String.format("%s:%s", LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
                 querys[0] = new NameValuePair("q", query);
@@ -541,7 +659,7 @@ public final class ElasticSearchIndex extends IndexStore {
         public int numDeletedDocs() {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/docs/", indexUrl, "_stats");
-            GetMethod method = new GetMethod(url);
+            GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
             try {
                 ElasticSearchConnector connector = new ElasticSearchConnector();
                 int statusCode = connector.executeMethod(method);
@@ -558,7 +676,7 @@ public final class ElasticSearchIndex extends IndexStore {
         }
 
         /**
-         * Returns an enumeration of the String representations for values of terms with {@code field} 
+         * Returns an enumeration of the String representations for values of terms with {@code field}
          * positioned to start at the first term with a value greater than {@code firstTermValue}.
          * The enumeration is ordered by String.compareTo().
          */
@@ -578,7 +696,7 @@ public final class ElasticSearchIndex extends IndexStore {
                 List<BrowseTerm> allValues = Lists.newArrayList();
                 refreshIndexIfNecessary();
                 String url = String.format("%s_termlist/%s", indexUrl, field);
-                GetMethod method = new GetMethod(url);
+                GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
                 try {
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -615,7 +733,7 @@ public final class ElasticSearchIndex extends IndexStore {
             public boolean hasMoreElements() {
                 return (termValues.peek() != null);
             }
-    
+
             @Override
             public BrowseTerm nextElement() {
                 BrowseTerm nextVal = termValues.poll();
@@ -624,7 +742,7 @@ public final class ElasticSearchIndex extends IndexStore {
                 }
                 return nextVal;
             }
-    
+
             @Override
             public void close() throws IOException {
             }
@@ -664,10 +782,11 @@ public final class ElasticSearchIndex extends IndexStore {
             if (docID instanceof ZimbraElasticDocumentID) {
                 ZimbraElasticDocumentID eDocID = (ZimbraElasticDocumentID) docID;
                 String storedFields[] = { LuceneFields.L_PARTNAME, LuceneFields.L_FILENAME, LuceneFields.L_SORT_SIZE,
+                        LuceneFields.L_SORT_ATTACH, LuceneFields.L_SORT_FLAG, LuceneFields.L_SORT_PRIORITY,
                         LuceneFields.L_MAILBOX_BLOB_ID, LuceneFields.L_SORT_DATE, LuceneFields.L_VERSION };
                 String url = String.format("%s%s/%s?fields=%s", indexUrl, indexType, eDocID.getDocID(),
                         Joiner.on(',').join(storedFields));
-                GetMethod method = new GetMethod(url);
+                GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
                 try {
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -682,7 +801,7 @@ public final class ElasticSearchIndex extends IndexStore {
                         }
                         Iterator iter = body.keys();
                         while (iter.hasNext()) {
-                            String key = (String)iter.next(); 
+                            String key = (String)iter.next();
                             document.add(new Field(key, body.getString(key), Field.Store.YES, Field.Index.NO));
                         }
                         return document;
@@ -699,7 +818,7 @@ public final class ElasticSearchIndex extends IndexStore {
 
         /**
          * Sometimes used to decide whether we think a query is best evaluated DB-FIRST or INDEX-FIRST.
-         * @return the number of documents containing the term {@code term}. 
+         * @return the number of documents containing the term {@code term}.
          */
         @Override
         public int docFreq(Term term) throws IOException {
@@ -708,8 +827,8 @@ public final class ElasticSearchIndex extends IndexStore {
                 JSONObject termObj = new JSONObject();
                 termObj.put(term.field(), term.text());
                 jsonobj.put("term", termObj);
-                String url = String.format("%s%s/_count?pretty", indexUrl, indexType);
-                PostMethod method = new PostMethod(url);
+                String url = String.format("%s%s/_count", indexUrl, indexType);
+                PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
                 try {
                     method.setRequestEntity(new StringRequestEntity(jsonobj.toString(),
                                 MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
@@ -761,12 +880,12 @@ public final class ElasticSearchIndex extends IndexStore {
             }
             if (requestJson != null) {
                 // Can also specify timeout, from and search_type
-                String url = String.format("%s%s/_search?size=%d&pretty", indexUrl, indexType, n);
+                String url = String.format("%s%s/_search?size=%d", indexUrl, indexType, n);
                 try {
                     refreshIndexIfNecessary();
                     // Both HTTP GET and HTTP POST can be used to execute search with body.
                     // Since not all clients support GET with body, POST is allowed as well.
-                    PostMethod method = new PostMethod(url);
+                    PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
                     method.setRequestEntity(new StringRequestEntity(requestJson.toString(),
                                 MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                     ElasticSearchConnector connector = new ElasticSearchConnector();
@@ -822,12 +941,12 @@ public final class ElasticSearchIndex extends IndexStore {
             }
             if (requestJson != null) {
                 // Can also specify timeout, from and search_type
-                String url = String.format("%s%s/_search?size=%d&pretty", indexUrl, indexType, n);
+                String url = String.format("%s%s/_search?size=%d", indexUrl, indexType, n);
                 refreshIndexIfNecessary();
                 try {
                     // Both HTTP GET and HTTP POST can be used to execute search with body.
                     // Since not all clients support GET with body, POST is allowed as well.
-                    PostMethod method = new PostMethod(url);
+                    PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
                     method.setRequestEntity(new StringRequestEntity(requestJson.toString(),
                                 MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                     ElasticSearchConnector connector = new ElasticSearchConnector();
@@ -862,20 +981,7 @@ public final class ElasticSearchIndex extends IndexStore {
             JSONObject queryObj = new JSONObject();
             JSONObject termObj = new JSONObject();
             termObj.put(term.field(), term.text());
-            // TODO:  Resolve this issue:
-            //     One AbstractIndexStoreTest test does:
-            //        result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "test@zimbra.com")), 100);
-            //     where:
-            //        "l.contactData":"test@zimbra.com test @zimbra.com zimbra.com zimbra @zimbra first last "
-            //     My initial impression of what a "term" search is for ElasticSearch is an exact match to the
-            //     field value - so you wouldn't get a positive for that, however, the test passes for Lucene.
-            //     For now, treating as a text query.
-            //     Update.  I think it is the "@" symbols that are confusing things - we use an analyzer with
-            //     Lucene and presumably need to do something similar for ElasticSearch
-            //     See http://www.elasticsearch.org/guide/reference/index-modules/analysis/pattern-analyzer.html
             queryObj.put("term", termObj);
-            //queryObj.put("match_phrase", termObj);
-            // queryObj.put("field", termObj);
             return queryObj;
         }
 
@@ -898,7 +1004,7 @@ public final class ElasticSearchIndex extends IndexStore {
         }
 
         /**
-         * 
+         *
              { "range" :
                  { "letter" :
                      { "from" : "beta", "to" : "omega", "include_lower" : true, "include_upper": false, "boost" : 2.0 }
@@ -956,12 +1062,63 @@ public final class ElasticSearchIndex extends IndexStore {
             return queryObj;
         }
 
+        /**
+         * e.g. :
+         * "bool" : {
+         *      "should" : [
+         *           { "match_phrase" : { "l.content" : "from james hunt" } },
+         *           { "match_phrase" : { "l.content" : "from jimmy hunt" } },
+         *           { "match_phrase" : { "l.content" : "from jim hunt" } }
+         *           ],
+         *       "minimum_number_should_match" : 1,
+         * }
+         *
+         */
         private JSONObject MultiPhraseQueryToJSON(MultiPhraseQuery query) throws JSONException {
-            query.getSlop();
-            // TODO
-            ZimbraLog.index.error("ElasticSearchIndex does not support search queries of type %s",
-                        query.getClass().getName());
-            return null;
+            String field = null;
+            List<List <String>> phrases = Lists.newArrayList();
+            boolean firstWord = true;
+            // e.g. (ignoring field) : [["from"], ["james","jimmy","jim"], ["hunt"]]
+            for (Term[] wordsAtPos : query.getTermArrays()) {
+                List<List <String>> phrasesSoFar = Lists.newArrayList();
+                if (!firstWord) {
+                    phrasesSoFar.addAll(phrases);
+                    phrases = Lists.newArrayList();
+                }
+                for (Term term :wordsAtPos) {
+                    if (firstWord) {
+                        field = term.field();  // Assumption, the same field is used in all terms!
+                        List<String> words = Lists.newArrayList();
+                        words.add(term.text());
+                        phrases.add(words);
+                    } else {
+                        for (List <String> phraseSoFar : phrasesSoFar) {
+                            List<String> words = Lists.newArrayList();
+                            words.addAll(phraseSoFar);
+                            words.add(term.text());
+                            phrases.add(words);
+                        }
+                    }
+                }
+                firstWord = false;
+            }
+            if (phrases.isEmpty()) {
+                return null;
+            }
+            JSONObject queryObj = new JSONObject();
+            JSONObject boolObj = new JSONObject();
+            queryObj.put("bool", boolObj);
+            JSONArray shoulds = new JSONArray();
+            boolObj.put("should", shoulds);
+            boolObj.put("minimum_number_should_match", "1");
+            for (List <String> phrase : phrases) {
+                JSONObject matchPhraseObj = new JSONObject();
+                JSONObject fieldPhraseObj = new JSONObject();
+                fieldPhraseObj.put(field, Joiner.on(' ').join(phrase));
+                matchPhraseObj.put("match_phrase", fieldPhraseObj);
+                shoulds.put(matchPhraseObj);
+            }
+            return queryObj;
         }
 
         /**

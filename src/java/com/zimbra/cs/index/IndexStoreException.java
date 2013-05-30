@@ -1,28 +1,29 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013 VMware, Inc.
- * 
+ * Copyright (C) 2013 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index;
 
-/**
- * Unit test for {@link LuceneIndex}.
- */
+import java.io.IOException;
 
-public final class LuceneIndexTest extends AbstractIndexStoreTest {
+public class IndexStoreException extends IOException {
+    private static final long serialVersionUID = 5616624118610385214L;
 
-    @Override
-    protected String getIndexStoreFactory() {
-        // Default for LC.zimbra_class_index_store_factory.value() is USUALLY this
-        return "com.zimbra.cs.index.LuceneIndex$Factory";
+    public IndexStoreException(String message) {
+        super(message);
+    }
+
+    public IndexStoreException(String message, Exception exception) {
+        super(message, exception);
     }
 }

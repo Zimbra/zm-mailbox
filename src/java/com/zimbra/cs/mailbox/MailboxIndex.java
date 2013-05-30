@@ -94,7 +94,7 @@ public final class MailboxIndex {
 
     private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
-    private Semaphore indexLock = new Semaphore(1);
+    private final Semaphore indexLock = new Semaphore(1);
     private final Mailbox mailbox;
     private final Analyzer analyzer;
     private IndexStore indexStore;
@@ -374,7 +374,7 @@ public final class MailboxIndex {
     }
 
     @VisibleForTesting
-    void indexDeferredItems() throws ServiceException {
+    public void indexDeferredItems() throws ServiceException {
         indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), true);
     }
 
@@ -963,8 +963,8 @@ public final class MailboxIndex {
     }
 
     public static final class IndexStats {
-        private int maxDocs;
-        private int numDeletedDocs;
+        private final int maxDocs;
+        private final int numDeletedDocs;
 
         public IndexStats(int maxDocs, int numDeletedDocs) {
             super();
