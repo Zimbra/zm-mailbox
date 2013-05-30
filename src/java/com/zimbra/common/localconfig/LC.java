@@ -265,6 +265,9 @@ public final class LC {
     public static final KnownKey zimbra_index_lucene_max_terms_per_query = KnownKey.newKey(50000);
 
     @Supported
+    public static final KnownKey zimbra_index_elasticsearch_url_pattern = KnownKey.newKey("http://localhost:9200/%s/");
+
+    @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
 
     public static final KnownKey zimbra_index_rfc822address_max_token_length = KnownKey.newKey(256);
@@ -840,6 +843,7 @@ public final class LC {
     public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MariaDB");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
     public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
+    // public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.elasticsearch.ElasticSearchIndex$Factory");
     public static final KnownKey zimbra_class_application = KnownKey.newKey("com.zimbra.cs.util.ZimbraApplication");
     public static final KnownKey zimbra_class_rulerewriterfactory = KnownKey.newKey("com.zimbra.cs.filter.RuleRewriterFactory");
     public static final KnownKey zimbra_class_datasourcemanager = KnownKey.newKey("com.zimbra.cs.datasource.DataSourceManager");
