@@ -244,9 +244,6 @@ public final class LC {
     public static final KnownKey zimbra_index_lucene_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_avg_doc_per_segment = KnownKey.newKey(10000);
-
-    @Supported
     public static final KnownKey zimbra_index_lucene_merge_factor = KnownKey.newKey(10);
 
     @Supported
