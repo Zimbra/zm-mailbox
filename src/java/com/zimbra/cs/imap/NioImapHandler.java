@@ -2,30 +2,30 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.server.NioHandler;
-import com.zimbra.cs.server.NioOutputStream;
-import com.zimbra.cs.server.NioConnection;
-import com.zimbra.cs.stats.ZimbraPerf;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.server.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioOutputStream;
+import com.zimbra.cs.stats.ZimbraPerf;
 
 final class NioImapHandler extends ImapHandler implements NioHandler {
     private final ImapConfig config;
@@ -134,10 +134,14 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 return false;
             }
         } finally {
-            ZimbraPerf.STOPWATCH_IMAP.stop(start);
+            long elapsed = ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(lastCommand.toUpperCase(), start);
+                ZimbraLog.imap.info("%s elapsed=%d", lastCommand.toUpperCase(), elapsed);
+            } else {
+                ZimbraLog.imap.info("(unknown) elapsed=%d", elapsed);
             }
+
         }
     }
 
