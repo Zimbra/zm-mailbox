@@ -71,6 +71,12 @@ public abstract class IndexStore {
     public abstract void setPendingDelete(boolean pendingDelete);
 
     /**
+     * Primes the index for the fastest available search if the underlying IndexStore supports (and benefits from)
+     * an appropriate optimization feature.
+     */
+    public abstract void optimize();
+
+    /**
      * Runs a sanity check for the index data.  Used by the "VerifyIndexRequest" SOAP Admin request
      */
     public abstract boolean verify(PrintStream out) throws IOException;

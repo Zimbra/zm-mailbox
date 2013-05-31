@@ -465,7 +465,7 @@ public final class LuceneIndex extends IndexStore {
                 }
             }
         }
-        return new IndexerImpl(writerInfo.getWriterRef());
+        return new LuceneIndexerImpl(writerInfo.getWriterRef());
     }
 
     private IndexWriterRef openWriter() throws IOException {
@@ -787,10 +787,10 @@ public final class LuceneIndex extends IndexStore {
         }
     }
 
-    private static final class IndexerImpl implements Indexer {
+    private static final class LuceneIndexerImpl implements Indexer {
         private final IndexWriterRef writer;
 
-        IndexerImpl(IndexWriterRef writer) {
+        LuceneIndexerImpl(IndexWriterRef writer) {
             this.writer = writer;
         }
 
@@ -820,19 +820,6 @@ public final class LuceneIndex extends IndexStore {
                             new IndexSearcherImpl(newReader));
                     }
                 }
-            }
-        }
-
-        @Override
-        public void optimize() {
-            MergeScheduler scheduler = (MergeScheduler) writer.get().getConfig().getMergeScheduler();
-            scheduler.lock();
-            try {
-                writer.get().forceMerge(writer.get().maxDoc() / LC.zimbra_index_lucene_avg_doc_per_segment.intValue() + 1, true);
-            } catch (IOException e) {
-                ZimbraLog.index.error("Failed to optimize index", e);
-            } finally {
-                scheduler.release();
             }
         }
 
@@ -1096,5 +1083,14 @@ public final class LuceneIndex extends IndexStore {
         public IndexReader getLuceneReader() {
             return luceneReader;
         }
+    }
+
+    /**
+     * Note: Lucene 3.5.0 highly discourages optimizing the index as it is horribly inefficient and very rarely
+     *       justified. Please check {@code IndexWriter.forceMerge} API documentation for more details.
+     *       Code removed which used to use forceMerge.
+     */
+    @Override
+    public void optimize() {
     }
 }

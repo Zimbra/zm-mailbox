@@ -445,10 +445,6 @@ public final class ElasticSearchIndex extends IndexStore {
         }
 
         @Override
-        public void optimize() {
-        }
-
-        @Override
         public void compact() {
         }
 
@@ -1265,5 +1261,13 @@ public final class ElasticSearchIndex extends IndexStore {
             }
             return requestJson;
         }
+    }
+
+    /**
+     * Don't support Index optimization.  Rely on Elasticsearch to do appropriate house keeping itself.
+     */
+    @Override
+    public void optimize() {
+        return;
     }
 }
