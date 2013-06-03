@@ -7599,32 +7599,40 @@ public class Mailbox {
                                 delete(octxtNoConflicts, calItem.getId(), MailItem.Type.UNKNOWN);
                                 importIt = true;
                             } else {
-                                // Don't import if item is in a different folder.  It might be a regular appointment, and
-                                // should not be overwritten by a feed version. (bug 14306)
-                                // Import only if downloaded version is newer.
-                                boolean changed;
-                                Invite curInv = calItem.getInvite(inv.getRecurId());
-                                if (curInv == null) {
-                                    // We have an appointment with the same UID, but don't have an invite
-                                    // with the same RECURRENCE-ID.  Treat it as a changed item.
-                                    changed = true;
+                                Invite oldInvites[] = calItem.getInvites();
+                                if ((oldInvites == null) || (oldInvites.length == 0)) {
+                                    // Something is seriously wrong with the existing calendar item.  Delete it so
+                                    // new invite will import cleanly
+                                    delete(octxtNoConflicts, calItem.getId(), MailItem.Type.UNKNOWN);
+                                    importIt = true;
                                 } else {
-                                    if (inv.getSeqNo() > curInv.getSeqNo()) {
+                                    // Don't import if item is in a different folder.  It might be a regular appointment, and
+                                    // should not be overwritten by a feed version. (bug 14306)
+                                    // Import only if downloaded version is newer.
+                                    boolean changed;
+                                    Invite curInv = calItem.getInvite(inv.getRecurId());
+                                    if (curInv == null) {
+                                        // We have an appointment with the same UID, but don't have an invite
+                                        // with the same RECURRENCE-ID.  Treat it as a changed item.
                                         changed = true;
-                                    } else if (inv.getSeqNo() == curInv.getSeqNo()) {
-                                        // Compare LAST-MODIFIED rather than DTSTAMP. (bug 55735)
-                                        changed = inv.getLastModified() > curInv.getLastModified();
                                     } else {
-                                        changed = false;
+                                        if (inv.getSeqNo() > curInv.getSeqNo()) {
+                                            changed = true;
+                                        } else if (inv.getSeqNo() == curInv.getSeqNo()) {
+                                            // Compare LAST-MODIFIED rather than DTSTAMP. (bug 55735)
+                                            changed = inv.getLastModified() > curInv.getLastModified();
+                                        } else {
+                                            changed = false;
+                                        }
                                     }
-                                }
-                                importIt = sameFolder && changed;
-                                if (!importIt && ZimbraLog.calendar.isDebugEnabled()) {
-                                    if (sameFolder) {
-                                        ZimbraLog.calendar.debug("Skip importing UID=%s. Already present & not newer", uid);
-                                    } else {
-                                        ZimbraLog.calendar.debug("Skip importing UID=%s. Already in different folder id=%d",
-                                                uid, curFolder.getId());
+                                    importIt = sameFolder && changed;
+                                    if (!importIt && ZimbraLog.calendar.isDebugEnabled()) {
+                                        if (sameFolder) {
+                                            ZimbraLog.calendar.debug("Skip importing UID=%s. Already present & not newer", uid);
+                                        } else {
+                                            ZimbraLog.calendar.debug("Skip importing UID=%s. Already in different folder id=%d",
+                                                    uid, curFolder.getId());
+                                        }
                                     }
                                 }
                             }
