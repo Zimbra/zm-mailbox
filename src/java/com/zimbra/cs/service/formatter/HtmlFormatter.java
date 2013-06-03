@@ -39,6 +39,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.WebSplitUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -178,11 +179,8 @@ public class HtmlFormatter extends Formatter {
         }
 
         String mailUrl = PATH_MAIN_CONTEXT;
-        List<String> servicesInstalled = Arrays.asList(Provisioning.getInstance().getLocalServer().getServiceInstalled());
-        if (servicesInstalled != null && (!(servicesInstalled.contains("zimbra") && servicesInstalled.contains("service") &&
-                servicesInstalled.contains("zimbraAdmin") && servicesInstalled.contains("zimlets"))
-                && servicesInstalled.contains("service"))) {
-
+        List<String> zimbraServiceInstalled = Arrays.asList(Provisioning.getInstance().getLocalServer().getServiceInstalled());
+        if (WebSplitUtil.isZimbraServiceSplitEnabled(zimbraServiceInstalled)) {
             mailUrl = Provisioning.getInstance().getLocalServer().getWebClientURL() + PATH_JSP_REST_PAGE;
             HttpClient httpclient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
             /*
