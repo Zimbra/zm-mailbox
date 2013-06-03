@@ -651,6 +651,29 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
+    /**
+     * Diagnostic code to flag when odd RECURRENCE-ID is used
+     */
+    private void checkRecurIdIsSensible(RecurId recurId) throws ServiceException {
+        Collection<Instance> instancesNear = instancesNear(recurId);
+        if (instancesNear.isEmpty()) {
+            ZimbraLog.calendar.warn(
+                    "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.",
+                    recurId.toString());
+
+        } else if (!instanceMatches(recurId, instancesNear)) {
+            ICalTimeZone exdateTZ = recurId.getDt().getTimeZone();
+            StringBuilder sb = new StringBuilder();
+            for (Instance instance: instancesNear) {
+                long dtStart = instance.getStart();
+                sb.append(" ").append(ParsedDateTime.fromUTCTime(dtStart, exdateTZ));
+            }
+            ZimbraLog.calendar.warn(
+                "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.  Nearby times:%s",
+                recurId.toString(), sb.toString());
+        }
+    }
+
     private boolean updateRecurrence(long nextAlarm) throws ServiceException {
         long startTime, endTime;
 
@@ -680,6 +703,7 @@ public abstract class CalendarItem extends MailItem {
                         method.equals(ICalTok.PUBLISH.toString())) {
                         assert (cur.hasRecurId());
                         if (cur.hasRecurId() && cur.getStartTime() != null) {
+                            checkRecurIdIsSensible(cur.getRecurId());
                             Recurrence.ExceptionRule exceptRule = null;
                             IRecurrence curRule = cur.getRecurrence();
                             if (curRule != null && curRule instanceof Recurrence.ExceptionRule) {
