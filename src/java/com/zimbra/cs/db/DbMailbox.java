@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,18 +30,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxVersion;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxVersion;
+import com.zimbra.cs.mailbox.Metadata;
 
 /**
  * @since Oct 28, 2004
@@ -669,7 +669,7 @@ public final class DbMailbox {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     public static void incrementItemcacheCheckpoint(Mailbox mbox) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -723,13 +723,13 @@ public final class DbMailbox {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     public static int getMailboxId(DbConnection conn, String accountId) throws ServiceException {
-        
+
         if (DebugConfig.externalMailboxDirectory) {
             return -1;
         }
-        
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1081,10 +1081,10 @@ public final class DbMailbox {
     }
 
     public static class DeletedAccount {
-        private String mEmail;
-        private String mAccountId;
-        private int mMailboxId;
-        private long mDeletedAt;
+        private final String mEmail;
+        private final String mAccountId;
+        private final int mMailboxId;
+        private final long mDeletedAt;
 
         public DeletedAccount(String email, String accountId, int mailboxId, long deletedAt) {
             mEmail = email;
@@ -1272,39 +1272,4 @@ public final class DbMailbox {
 
         return groups;
     }
-    
-    public static void acquireLock(DbConnection conn, int mId) throws ServiceException {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            stmt = conn.prepareStatement("SELECT mailbox_id FROM locks WHERE mailbox_id = ? FOR UPDATE");
-            stmt.setInt(1, mId);
-            rs = stmt.executeQuery();
-            if (!rs.next()) {
-                stmt.close();
-                try {
-                    // insert the id
-                    stmt = conn.prepareStatement("INSERT INTO locks VALUES (?)");
-                    stmt.setInt(1, mId);
-                    stmt.executeUpdate();
-                    conn.commit();
-                    stmt.close();
-                } catch (SQLException e) {
-                    // ignore if already exist. Another client may have just inserted.
-                    if (!Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
-                        throw e;
-                    }
-                }
-                stmt = conn.prepareStatement("SELECT mailbox_id FROM locks WHERE mailbox_id = ? FOR UPDATE");
-                stmt.setInt(1, mId);
-                stmt.executeQuery();
-            }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("locking the mailbox " + mId, e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-        }
-    }
-
 }

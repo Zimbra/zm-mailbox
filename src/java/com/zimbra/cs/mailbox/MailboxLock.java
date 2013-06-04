@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,13 +17,13 @@ package com.zimbra.cs.mailbox;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbMailbox;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zookeeper.CuratorManager;
 
 /**
  * {@link MailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
@@ -37,26 +37,25 @@ import com.zimbra.cs.util.Zimbra;
  */
 public final class MailboxLock {
     private final Lock lock = new Lock();
-    private final int mId;
-    private DbConnection conn = null;
+    private InterProcessSemaphoreMutex dLock = null;
 
-    public MailboxLock(int mId) {
-        this.mId = mId;
+    public MailboxLock(String id) {
+        if (Zimbra.isAlwaysOn()) {
+            try {
+                dLock = CuratorManager.getInstance().createLock(id);
+            } catch (ServiceException se) {
+                ZimbraLog.mailbox.error("could not initialize distributed lock", se);
+            }
+        }
     }
 
-    private void acquireDbLock() throws ServiceException {
-        try {
-            if (Zimbra.isAlwaysOn()) {
-                conn = DbPool.getConnection();
-                DbMailbox.acquireLock(conn, mId);
+    private void acquireDistributedLock() throws ServiceException {
+        if (dLock != null) {
+            try {
+                dLock.acquire(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+            } catch (Exception e) {
+                throw new LockFailedException("could not acquire distributed lock", e);
             }
-        } catch (ServiceException se) {
-            ZimbraLog.mailbox.error("error while acquiring db lock", se);
-            if (conn != null) {
-                DbPool.quietRollback(conn);
-                DbPool.quietClose(conn);
-            }
-            throw se;
         }
     }
 
@@ -69,7 +68,7 @@ public final class MailboxLock {
         if (lock.tryLock()) { // This succeeds in most cases.
             try {
                 if (lock.getHoldCount() == 1) {
-                    acquireDbLock();
+                    acquireDistributedLock();
                 }
             } catch (ServiceException e) {
                 lock.unlock();
@@ -91,7 +90,7 @@ public final class MailboxLock {
             if (lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS)) {
                 try {
                     if (lock.getHoldCount() == 1) {
-                        acquireDbLock();
+                        acquireDistributedLock();
                     }
                 } catch (ServiceException e) {
                     lock.unlock();
@@ -120,9 +119,12 @@ public final class MailboxLock {
 
     public void release() {
         if (isLocked()) {
-            if (lock.getHoldCount() == 1 && conn != null) {
-                DbPool.quietRollback(conn);
-                DbPool.quietClose(conn);
+            if (lock.getHoldCount() == 1 && dLock != null) {
+                try {
+                    dLock.release();
+                } catch (Exception e) {
+                    ZimbraLog.mailbox.warn("error while releasing distributed lock", e);
+                }
             }
             lock.unlock();
         }

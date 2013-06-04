@@ -197,11 +197,6 @@ CREATE TABLE pending_acl_push (
    CONSTRAINT fk_pending_acl_push_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE
 );
 
-CREATE TABLE locks (
-   mailbox_id  INTEGER NOT NULL,
-   PRIMARY KEY (mailbox_id)
-);
-
 
 CREATE TABLE current_sessions (
 	id				INTEGER NOT NULL,

@@ -258,12 +258,6 @@ CREATE TABLE pending_acl_push (
    INDEX i_date (date)
 ) ENGINE = NDBCLUSTER;
 
--- table for db locks
-CREATE TABLE locks (
-    mailbox_id  INTEGER UNSIGNED NOT NULL,
-    PRIMARY KEY (mailbox_id)
-) ENGINE = NDBCLUSTER;
-
 CREATE TABLE current_sessions (
 	id				INTEGER UNSIGNED NOT NULL,
 	server_id		VARCHAR(127) NOT NULL,

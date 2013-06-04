@@ -15,36 +15,25 @@
 
 package com.zimbra.cs.zookeeper;
 
+import org.codehaus.jackson.map.annotate.JsonRootName;
+
+@JsonRootName("details")
 public class Service {
-    private final ServiceDiscovery serviceDiscovery;
-    private final ServiceMetadata metadata;
-    private final String serviceId;
+    private String id;
 
-    public Service(String serviceId, ServiceMetadata metadata,
-            ServiceDiscovery serviceDiscovery) {
-        this.serviceId = serviceId;
-        this.serviceDiscovery = serviceDiscovery;
-        this.metadata = metadata;
+    public Service() {
+        this("");
     }
 
-    public void start() throws Exception {
-        serviceDiscovery.register(serviceId, metadata);
+    public Service(String id) {
+        this.id = id;
     }
 
-    public void stop() {
-        serviceDiscovery.deregister(serviceId);
+    public void setService(String id) {
+        this.id = id;
     }
 
-    public ServiceDiscovery getServiceDiscovery() {
-        return serviceDiscovery;
+    public String getService() {
+        return id;
     }
-
-    public ServiceMetadata getMetadata() {
-        return metadata;
-    }
-
-    public String getServiceId() {
-        return serviceId;
-    }
-
 }

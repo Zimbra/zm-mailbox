@@ -673,7 +673,7 @@ public class Mailbox {
         index = new MailboxIndex(this);
         // version init done in open()
         // index init done in open()
-        lock = new MailboxLock(mId);
+        lock = new MailboxLock(data.accountId);
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {

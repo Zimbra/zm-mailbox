@@ -58,9 +58,8 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.zookeeper.CuratorManager;
 import com.zimbra.cs.zookeeper.Service;
-import com.zimbra.cs.zookeeper.ServiceDiscovery;
-import com.zimbra.cs.zookeeper.ServiceMetadata;
 import com.zimbra.znative.Util;
 
 /**
@@ -339,30 +338,18 @@ public final class Zimbra {
         ExtensionUtil.postInitAll();
 
         // Register the service with ZooKeeper
-        if (sIsMailboxd) { // && isAlwaysOn()) {
+        if (sIsMailboxd && isAlwaysOn()) {
             try {
-                registerService();
+                CuratorManager curatorManager = CuratorManager.getInstance();
+                if (curatorManager == null) {
+                    throw ServiceException.FAILURE("ZooKeeper addresses not configured.", null);
+                }
+                curatorManager.start();
             } catch (Exception e) {
-                throw ServiceException.FAILURE("Unable to register the service with Zookeeper.", e);
+                throw ServiceException.FAILURE("Unable to start Distributed Lock service.", e);
             }
         }
-
         sInited = true;
-    }
-
-    private static void registerService() throws Exception {
-        String serviceName = "mailbox";
-        ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
-        if (serviceDiscovery == null) {
-            return;
-        }
-        serviceDiscovery.start();
-        String serviceId = Provisioning.getInstance().getLocalServer().getId();
-        ServiceMetadata metadata = new ServiceMetadata();
-        metadata.setServer(serviceId);
-        metadata.setServiceName(serviceName);
-        service = new Service(serviceId, metadata, serviceDiscovery);
-        service.start();
     }
 
     public static synchronized void shutdown() throws ServiceException {
@@ -372,13 +359,6 @@ public final class Zimbra {
         sInited = false;
 
         if (sIsMailboxd) {
-            if (service != null) {
-                service.stop();
-            }
-            ServiceDiscovery serviceDiscovery = ServiceDiscovery.getInstance();
-            if (serviceDiscovery != null) {
-                serviceDiscovery.stop();
-            }
             PurgeThread.shutdown();
             AutoProvisionThread.shutdown();
         }
@@ -406,6 +386,11 @@ public final class Zimbra {
             dbSessionCleanup();
 
             SessionCache.shutdown();
+
+            CuratorManager curatorManager = CuratorManager.getInstance();
+            if (curatorManager != null) {
+                curatorManager.stop();
+            }
         }
 
         MailboxIndex.shutdown();
