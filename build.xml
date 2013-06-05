@@ -571,15 +571,6 @@
           <include name="jersey-*.jar"/>
           <include name="asm-*.jar"/>
           <include name="jsr*.jar"/>
-          <include name="gmbal-api-only-*.jar"/>
-          <include name="jaxb-api-*.jar"/>
-          <include name="jaxb-impl-*.jar"/>
-          <include name="jaxws-api-*.jar"/>
-          <include name="jaxws-rt-*.jar"/>
-          <include name="jsr181-api-*.jar"/>
-          <include name="policy-*.jar"/>
-          <include name="stax-ex-*.jar"/>
-          <include name="streambuffer-*.jar"/>
           <include name="cxf-*.jar"/>
           <include name="httpasyncclient-*.jar"/>
           <include name="httpclient-*.jar"/>
