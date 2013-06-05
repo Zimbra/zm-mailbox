@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130524-1426 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130605-1157 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8670,6 +8670,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1246)
     public static final String A_zimbraPrefFont = "zimbraPrefFont";
+
+    /**
+     * the font size for the web client
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public static final String A_zimbraPrefFontSize = "zimbraPrefFontSize";
 
     /**
      * what part of the original message to include during forwards
