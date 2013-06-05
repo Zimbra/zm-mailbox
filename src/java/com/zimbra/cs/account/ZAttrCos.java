@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 pburgu 20130524-1426 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130605-1157 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -28744,6 +28744,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefFont(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefFont, "");
+        return attrs;
+    }
+
+    /**
+     * the font size for the web client
+     *
+     * @return zimbraPrefFontSize, or "normal" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public String getPrefFontSize() {
+        return getAttr(Provisioning.A_zimbraPrefFontSize, "normal");
+    }
+
+    /**
+     * the font size for the web client
+     *
+     * @param zimbraPrefFontSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public void setPrefFontSize(String zimbraPrefFontSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFontSize, zimbraPrefFontSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the font size for the web client
+     *
+     * @param zimbraPrefFontSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public Map<String,Object> setPrefFontSize(String zimbraPrefFontSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFontSize, zimbraPrefFontSize);
+        return attrs;
+    }
+
+    /**
+     * the font size for the web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public void unsetPrefFontSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFontSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the font size for the web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public Map<String,Object> unsetPrefFontSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefFontSize, "");
         return attrs;
     }
 

@@ -7220,4 +7220,9 @@ TODO: delete them permanently from here
   <desc>list of host:port for zookeeper servers; set to empty value to disable the use of zookeeper</desc>
 </attr>
 
+<attr id="1448" name="zimbraPrefFontSize" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+  <defaultCOSValue>normal</defaultCOSValue>
+  <desc>the font size for the web client</desc>
+</attr>
+
 </attrs>
