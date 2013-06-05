@@ -1,17 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
+ *
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest.prov;
@@ -30,11 +30,12 @@ import java.util.Map;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AlwaysOnCluster;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -46,10 +47,10 @@ import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -59,13 +60,13 @@ public abstract class ProvTestUtil {
     public static final String DEFAULT_UC_PROVIDER = "mitel";
 
     // accounts, crs, groups, coses, servers, zimlets
-    private List<NamedEntry> createdEntries = new ArrayList<NamedEntry>();
+    private final List<NamedEntry> createdEntries = new ArrayList<NamedEntry>();
 
     // data sources, identities, signatures, need to delete these before deleting accounts
-    private List<NamedEntry> createdAccountSubordinates = new ArrayList<NamedEntry>();
+    private final List<NamedEntry> createdAccountSubordinates = new ArrayList<NamedEntry>();
 
     // domains, will be deleted after domain-ed entries are deleted
-    private List<NamedEntry> createdDomains = new ArrayList<NamedEntry>();
+    private final List<NamedEntry> createdDomains = new ArrayList<NamedEntry>();
 
     protected Provisioning prov;
 
@@ -476,8 +477,31 @@ public abstract class ProvTestUtil {
         return server;
     }
 
+    public AlwaysOnCluster createAlwaysOnCluster(String alwaysOnClusterName, Map<String, Object> attrs)
+    throws Exception {
+        if (attrs == null) {
+            attrs = new HashMap<String, Object>();
+        }
+        AlwaysOnCluster cluster = prov.get(Key.AlwaysOnClusterBy.name, alwaysOnClusterName);
+        assertNull(cluster);
+
+        cluster = prov.createAlwaysOnCluster(alwaysOnClusterName, attrs);
+        assertNotNull(cluster);
+
+        cluster = prov.get(Key.AlwaysOnClusterBy.name, alwaysOnClusterName);
+        assertNotNull(cluster);
+        assertEquals(alwaysOnClusterName.toLowerCase(), cluster.getName().toLowerCase());
+
+        createdEntries.add(cluster);
+        return cluster;
+    }
+
     public Server createServer(String serverName) throws Exception {
         return createServer(serverName, null);
+    }
+
+    public AlwaysOnCluster createAlwaysOnCluster(String alwaysOnClusterName) throws Exception {
+        return createAlwaysOnCluster(alwaysOnClusterName, null);
     }
 
     public UCService createUCService(String ucServiceName, Map<String, Object> attrs)

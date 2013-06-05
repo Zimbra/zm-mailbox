@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,15 +42,15 @@ public final class SearchGrants {
     private final Provisioning prov;
     private final Set<TargetType> targetTypes;
     private final Set<String> granteeIds;
-    
+
     private final Account acct;
     private final Set<Right> rights;
     private final boolean onMaster;
-    
+
     private final Set<String> fetchAttrs = Sets.newHashSet(
-            Provisioning.A_cn, 
+            Provisioning.A_cn,
             Provisioning.A_zimbraId,
-            Provisioning.A_objectClass, 
+            Provisioning.A_objectClass,
             Provisioning.A_zimbraACE);
 
     SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Set<String> granteeIds) {
@@ -61,11 +61,11 @@ public final class SearchGrants {
         this.rights = null;
         this.onMaster = true;
     }
-    
+
     /*
      * search for rights applied to the acct
      */
-    SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Account acct, 
+    SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Account acct,
             Set<Right> rights, boolean onMaster) {
         this.prov = prov;
         this.targetTypes = targetTypes;
@@ -84,8 +84,8 @@ public final class SearchGrants {
     }
 
     static final class GrantsOnTarget {
-        private Entry targetEntry;
-        private ZimbraACL acl;
+        private final Entry targetEntry;
+        private final ZimbraACL acl;
 
         private GrantsOnTarget(Entry targetEntry, ZimbraACL acl) {
             this.targetEntry = targetEntry;
@@ -105,11 +105,11 @@ public final class SearchGrants {
         private final Provisioning prov;
 
         // map of raw(in ldap data form, quick way for staging grants found in search visitor,
-        // because we don't want to do much processing in the visitor while taking a 
+        // because we don't want to do much processing in the visitor while taking a
         // ldap connection) search results
         //    key: target id (or name if zimlet)
         //    value: grants on this target
-        private final Map<String, GrantsOnTargetRaw> rawResults = 
+        private final Map<String, GrantsOnTargetRaw> rawResults =
             new HashMap<String, GrantsOnTargetRaw>();
 
         // results in the form usable by callers
@@ -143,7 +143,7 @@ public final class SearchGrants {
         /**
          * Converts a {@link SearchGrantsResults} to {@code <Entry, ZimbraACL>} pair.
          */
-        private GrantsOnTarget getGrants(Provisioning prov, GrantsOnTargetRaw sgr, boolean needFullDL) 
+        private GrantsOnTarget getGrants(Provisioning prov, GrantsOnTargetRaw sgr, boolean needFullDL)
         throws ServiceException {
             TargetType tt;
             if (sgr.objectClass.contains(AttributeClass.OC_zimbraCalendarResource)) {
@@ -155,13 +155,15 @@ public final class SearchGrants {
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraDistributionList)) {
                 tt = TargetType.dl;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraGroup)) {
-                tt = TargetType.group;    
+                tt = TargetType.group;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraDomain)) {
                 tt = TargetType.domain;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraServer)) {
                 tt = TargetType.server;
+            } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraAlwaysOnCluster)) {
+                tt = TargetType.alwaysoncluster;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraUCService)) {
-                tt = TargetType.ucservice;    
+                tt = TargetType.ucservice;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraXMPPComponent)) {
                 tt = TargetType.xmppcomponent;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraZimletEntry)) {
@@ -262,7 +264,7 @@ public final class SearchGrants {
        }
        return results;
     }
-    
+
     private Set<String> getGranteeIds() throws ServiceException {
         if (granteeIds != null) {
             return granteeIds;
@@ -274,19 +276,19 @@ public final class SearchGrants {
             if (domainId != null) {
                 ids.add(domainId);
             }
-            
+
             return ids;
         }
     }
 
-    private void search(String base, Set<String> ocs, SearchGrantVisitor visitor) 
+    private void search(String base, Set<String> ocs, SearchGrantVisitor visitor)
     throws ServiceException {
         StringBuilder query = new StringBuilder("(&(|");
         for (String oc : ocs) {
             query.append('(').append(Provisioning.A_objectClass).append('=').append(oc).append(")");
         }
         query.append(")(|");
-        
+
         if (rights == null) {
             for (String granteeId : getGranteeIds()) {
                 query.append('(').append(Provisioning.A_zimbraACE).append('=').append(granteeId).append("*)");
@@ -299,7 +301,7 @@ public final class SearchGrants {
             }
         }
         query.append("))");
-        
+
         if (onMaster) {
             LdapProv.getInst().searchLdapOnMaster(base, query.toString(),
                     fetchAttrs.toArray(new String[fetchAttrs.size()]), visitor);

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AlwaysOnCluster;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
@@ -361,6 +362,12 @@ public enum TargetType {
                 throw AccountServiceException.NO_SUCH_SERVER(target);
             }
             break;
+        case alwaysoncluster:
+            targetEntry = prov.get(Key.AlwaysOnClusterBy.fromString(targetBy.name()), target);
+            if (targetEntry == null && mustFind) {
+                throw AccountServiceException.NO_SUCH_ALWAYSONCLUSTER(target);
+            }
+            break;
         case ucservice:
             targetEntry = prov.get(Key.UCServiceBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind) {
@@ -421,6 +428,8 @@ public enum TargetType {
             return TargetType.group;
         else if (target instanceof Server)
             return TargetType.server;
+        else if (target instanceof AlwaysOnCluster)
+            return TargetType.alwaysoncluster;
         else if (target instanceof UCService)
             return TargetType.ucservice;
         else if (target instanceof Config)
@@ -508,6 +517,9 @@ public enum TargetType {
             break;
         case server:
             base = dit.serverBaseDN();
+            break;
+        case alwaysoncluster:
+            base = dit.alwaysOnClusterBaseDN();
             break;
         case ucservice:
             base = dit.ucServiceBaseDN();
