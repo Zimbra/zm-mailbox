@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -91,6 +91,8 @@ public class TagTest {
         checkName("invalid tag name (':')", "foo:bar", null);
         checkName("invalid tag name ('\\')", "foo\\bar", null);
         checkName("invalid tag name (control)", "foo\u0004bar", null);
+        // Note: ZWC currently disallows creation of tags containing double quotes but the server allows them
+        checkName("contains spaces and double quote", "Andrew \"Barney\"  Rubble", "Andrew \"Barney\"  Rubble");
     }
 
     private static final String tag1 = "foo", tag2 = "bar", tag3 = "baz", tag4 = "qux";

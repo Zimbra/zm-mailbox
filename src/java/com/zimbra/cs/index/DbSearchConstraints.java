@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -308,6 +308,20 @@ public interface DbSearchConstraints extends Cloneable {
             return result;
         }
 
+        /**
+         * If name contains spaces, quote the string using double quotes, taking care to escape any existing
+         * double quotes.
+         * Introduced for bug 81940 because the query parser regards TAG:(foo bar) as 2 tags, "foo" and "bar", so
+         * we need a way to preserve the integrity of tags containing spaces.
+         */
+        private String quoteIfNecessary(String name) {
+            if (name.indexOf(" ") < 0) {
+                return name;
+            }
+            String quoted = new StringBuilder("\"").append(name.replaceAll("\"", "\\\\\"")).append("\"").toString();
+            return quoted;
+        }
+
         @Override
         public StringBuilder toQueryString(StringBuilder out) {
             if (noResults) {
@@ -318,7 +332,7 @@ public interface DbSearchConstraints extends Cloneable {
                 out.append("TAG:(");
                 List<String> list = new ArrayList<String>(tags.size());
                 for (Tag tag : tags) {
-                    list.add(tag.getName());
+                    list.add(quoteIfNecessary(tag.getName()));
                 }
                 Joiner.on(' ').appendTo(out, list);
                 out.append(") ");
@@ -327,7 +341,7 @@ public interface DbSearchConstraints extends Cloneable {
                 out.append("-TAG:(");
                 List<String> list = new ArrayList<String>(excludeTags.size());
                 for (Tag tag : excludeTags) {
-                    list.add(tag.getName());
+                    list.add(quoteIfNecessary(tag.getName()));
                 }
                 Joiner.on(' ').appendTo(out, list);
                 out.append(") ");
@@ -1227,7 +1241,7 @@ public interface DbSearchConstraints extends Cloneable {
         DATE("DATE"), MDATE("MDATE"), MODSEQ("MODSEQ"), SIZE("SIZE"), CONV_COUNT("CONV-COUNT"),
         CAL_START_DATE("APPT-START"), CAL_END_DATE("APPT-END"), SUBJECT("SUBJECT"), SENDER("FROM");
 
-        private String query;
+        private final String query;
 
         private RangeType(String query) {
             this.query = query;
@@ -1331,9 +1345,9 @@ public interface DbSearchConstraints extends Cloneable {
     }
 
     public static final class RemoteFolderDescriptor {
-        private ItemId folderId;
+        private final ItemId folderId;
         private String subfolderPath;
-        private boolean includeSubfolders;
+        private final boolean includeSubfolders;
 
         public RemoteFolderDescriptor(ItemId iidFolder, String subpath, boolean includeSubfolders) {
             this.includeSubfolders = includeSubfolders;
