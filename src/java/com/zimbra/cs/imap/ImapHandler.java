@@ -2265,8 +2265,8 @@ abstract class ImapHandler {
      * of information for LSUB - see Bug 78659
      */
     private class SubscribedImapPath implements Comparable<SubscribedImapPath> {
-        private String imapPathString;
-        private boolean validSubscribeImapPath;
+        private final String imapPathString;
+        private final boolean validSubscribeImapPath;
         public SubscribedImapPath(ImapPath path)
         throws ServiceException {
             validSubscribeImapPath = path.isValidImapPath();
@@ -3363,7 +3363,9 @@ abstract class ImapHandler {
                 result.append(' ').append(getMessageId(i4msg, byUID));
             }
         } else if (options != RETURN_SAVE) {
-            result = new StringBuilder("E" + command + " (TAG \"").append(tag).append("\")");
+            // Note: rfc5267's ESORT reuses the ESEARCH response i.e. response result starts with "ESEARCH" NOT "ESORT"
+            //       This is slightly inconsistent as rfc5256's SORT response result starts with "SORT"...
+            result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
             if (byUID) {
                 result.append(" UID");
             }
