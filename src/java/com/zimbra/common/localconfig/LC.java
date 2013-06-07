@@ -1292,7 +1292,7 @@ public final class LC {
 
     //EWS web service
     public static final KnownKey ews_service_wsdl_location =
-        KnownKey.newKey("/opt/zimbra/conf/");
+        KnownKey.newKey("/opt/zimbra/conf/ews");
 
     static {
         // Automatically set the key name with the variable name.
