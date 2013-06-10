@@ -388,7 +388,7 @@ public final class VolumeManager {
         }
     }
 
-    void validatePath(String path) throws VolumeServiceException {
+    void validatePath(String path) throws ServiceException {
         if (Strings.isNullOrEmpty(path)) {
             throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
         }

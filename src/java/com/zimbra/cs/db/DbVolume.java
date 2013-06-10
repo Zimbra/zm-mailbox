@@ -286,7 +286,7 @@ public final class DbVolume {
         }
     }
 
-    private static Volume constructVolume(ResultSet rs) throws SQLException, VolumeServiceException {
+    private static Volume constructVolume(ResultSet rs) throws SQLException, ServiceException {
         VolumeMetadata metadata;
         try {
             metadata = new VolumeMetadata(new Metadata(rs.getString(CN_METADATA)));

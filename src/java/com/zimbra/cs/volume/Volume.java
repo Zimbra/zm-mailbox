@@ -20,8 +20,10 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.IncomingDirectory;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
 /**
@@ -167,12 +169,12 @@ public final class Volume {
             return this;
         }
 
-        public Builder setPath(String path, boolean normalize) throws VolumeServiceException {
+        public Builder setPath(String path, boolean normalize) throws VolumeServiceException, ServiceException {
             if (normalize) {
                 path = volume.normalizePath(path);
                 VolumeManager.getInstance().validatePath(path);
             }
-            volume.rootPath = path;
+            volume.rootPath = getConfiguredRootPath(path);
             return this;
         }
 
@@ -314,8 +316,32 @@ public final class Volume {
         return new VolumeMetadata(metadata);
     }
 
-    public static String getAbsolutePath(String path) {
-        return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
+    public static String getAbsolutePath(String path) throws ServiceException {
+        return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + getConfiguredRootPath(path) : path;
+    }
+    
+    public static String getConfiguredRootPath(String path) throws ServiceException
+    {
+        StringBuilder finalPath = new StringBuilder();
+        if (Zimbra.isAlwaysOn())
+        {
+        	String alwaysOnServerClusterId = Zimbra.getAlwaysOnClusterId();
+        	String localServerId = Provisioning.getInstance().getLocalServer().getId();
+        	if (alwaysOnServerClusterId != null)
+        	{
+        		finalPath.append(path).append(File.separator).append(alwaysOnServerClusterId);
+        	}
+        	else
+        	{
+        		finalPath.append(path).append(File.separator).append(localServerId);
+        	}
+        }
+        else
+        {
+        	String localServerId = Provisioning.getInstance().getLocalServer().getId();
+        	finalPath.append(path).append(File.separator).append(localServerId);
+        }
+        return finalPath.toString();
     }
 
     private StringBuilder getMailboxDir(int mboxId, String subdir) {

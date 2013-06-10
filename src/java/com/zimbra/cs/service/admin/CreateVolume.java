@@ -48,7 +48,7 @@ public final class CreateVolume extends AdminDocumentHandler {
         return new CreateVolumeResponse(vol.toJAXB());
     }
 
-    private Volume toVolume(VolumeInfo vol) throws VolumeServiceException {
+    private Volume toVolume(VolumeInfo vol) throws ServiceException {
         return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
                 .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
                 .build();
