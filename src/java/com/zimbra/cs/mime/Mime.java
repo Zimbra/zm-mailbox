@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -226,17 +226,19 @@ public class Mime {
         }
 
         if (emptyMultipart != null && parts.size() == 1) {
-            ZimbraLog.misc.debug("single multipart with no children. promoting the preamble into a single text part");
-            parts.remove(0);
-            MPartInfo mpart = new MPartInfo();
-            ZMimeBodyPart mp = new  ZMimeBodyPart();
             String text = emptyMultipart.getPreamble();
-            mp.setText(text, defaultCharset);
-            mpart.mPart = mp;
-            mpart.mContentType = mp.getContentType();
-            mpart.mDisposition = "";
-            mpart.mPartName = "1";
-            parts.add(mpart);
+            if (!StringUtil.isNullOrEmpty(text)) {
+                ZimbraLog.misc.debug("single multipart with no children. promoting the preamble into a single text part");
+                parts.remove(0);
+                MPartInfo mpart = new MPartInfo();
+                ZMimeBodyPart mp = new  ZMimeBodyPart();
+                mp.setText(text, defaultCharset);
+                mpart.mPart = mp;
+                mpart.mContentType = mp.getContentType();
+                mpart.mDisposition = "";
+                mpart.mPartName = "1";
+                parts.add(mpart);
+            }
         }
 
         return parts;
