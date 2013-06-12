@@ -30,6 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -923,7 +924,11 @@ public final class LuceneIndex implements IndexStore {
                     doc.removeSortPriority();
                     doc.addSortPriority(item.getFlagBitmask());
 
-                    writer.get().addDocument(doc.toDocument());
+                    Document luceneDoc = doc.toDocument();
+                    if (ZimbraLog.index.isTraceEnabled()) {
+                        ZimbraLog.index.trace("Adding lucene document %s", luceneDoc.toString());
+                    }
+                    writer.get().addDocument(luceneDoc);
                 }
             }
         }
