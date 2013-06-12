@@ -40,6 +40,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
+import com.zimbra.cs.account.accesscontrol.Rights;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
@@ -448,11 +449,14 @@ public final class ZimbraSoapContext {
         //1. authed account is an admin AND has admin rights for the target
         //2. authed account has been granted access (i.e. login) to the target account
         //3. target account has shared at least one item with authed account or enclosing group/cos/domain
+        //4. target account has granted sendAs or sendOnBehalfOf right to authed account
 
         Account authAccount = null;
+        boolean isAdmin = AuthToken.isAnyAdmin(mAuthToken);
+
         if (!GuestAccount.GUID_PUBLIC.equals(mAuthToken.getAccountId())) {
             authAccount = mAuthToken.getAccount();
-            if (AuthToken.isAnyAdmin(mAuthToken) && AccessManager.getInstance().canAccessAccount(mAuthToken, targetAccount, true)) {
+            if (isAdmin && AccessManager.getInstance().canAccessAccount(mAuthToken, targetAccount, true)) {
                 //case 1 - admin
                 return;
             }
@@ -531,6 +535,13 @@ public final class ZimbraSoapContext {
                 needRecheck = true;
             }
         } while (needRecheck);
+
+        //case 4 - sendAs/sendOnBehalfOf
+        AccessManager accessMgr = AccessManager.getInstance();
+        if (accessMgr.canDo(authAccount, targetAccount, Rights.User.R_sendAs, isAdmin) ||
+                accessMgr.canDo(authAccount, targetAccount, Rights.User.R_sendOnBehalfOf, isAdmin)) {
+            return;
+        }
 
         throw ServiceException.DEFEND_ACCOUNT_HARVEST(requestedKey);
     }
