@@ -875,7 +875,11 @@ public final class LuceneIndex extends IndexStore {
                 // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
                 synchronized (doc) {
                     setFields(item, doc);
-                    writer.get().addDocument(doc.toDocument());
+                    Document luceneDoc = doc.toDocument();
+                    if (ZimbraLog.index.isTraceEnabled()) {
+                        ZimbraLog.index.trace("Adding lucene document %s", luceneDoc.toString());
+                    }
+                    writer.get().addDocument(luceneDoc);
                 }
             }
         }
