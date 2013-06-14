@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -338,38 +338,91 @@ public final class QueryParserTest {
     }
 
     @Test
-    public void type() throws Exception {
+    public void typeAttachment() throws Exception {
         String src = "type:attachment";
         Assert.assertEquals("Q(type:attachment)", Query.toString(parser.parse(src)));
+    }
 
-        src = "type:text";
+    @Test
+    public void typeText() throws Exception {
+        String src = "type:text";
         Assert.assertEquals("Q(type:text)", Query.toString(parser.parse(src)));
+    }
 
-        src = "type:application";
+    @Test
+    public void typeApplication() throws Exception {
+        String src = "type:application";
         Assert.assertEquals("Q(type:application)", Query.toString(parser.parse(src)));
+    }
 
-        src = "type:word type:msword";
-        Assert.assertEquals("Q(type:application/msword) && Q(type:application/msword)",
-                Query.toString(parser.parse(src)));
+    @Test
+    public void typeWord() throws Exception {
+        String src = "type:word";
+        String expected =
+            "(Q(type:application/msword)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.wordprocessingml.document)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.wordprocessingml.template)" +
+            " || Q(type:application/vnd.ms-word.document.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-word.template.macroenabled.12))";
+        Assert.assertEquals(expected, Query.toString(parser.parse(src)));
+        src = "type:msword";
+        Assert.assertEquals(expected, Query.toString(parser.parse(src)));
+    }
 
-        src = "type:excel type:xls";
-        Assert.assertEquals("Q(type:application/vnd.ms-excel) && Q(type:application/vnd.ms-excel)",
-                Query.toString(parser.parse(src)));
+    @Test
+    public void typeExcel() throws Exception {
+        String src = "type:xls";
+        String expected =
+            "(Q(type:application/vnd.ms-excel)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.spreadsheetml.template)" +
+            " || Q(type:application/vnd.ms-excel.sheet.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-excel.template.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-excel.addin.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-excel.sheet.binary.macroenabled.12))";
+        Assert.assertEquals(expected, Query.toString(parser.parse(src)));
+        src = "type:excel";
+        Assert.assertEquals(expected, Query.toString(parser.parse(src)));
+    }
 
-        src = "type:ppt";
-        Assert.assertEquals("Q(type:application/vnd.ms-powerpoint)", Query.toString(parser.parse(src)));
+    @Test
+    public void typePowerpoint() throws Exception {
+        String src = "type:ppt";
+        String expected =
+            "(Q(type:application/vnd.ms-powerpoint)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.presentationml.presentation)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.presentationml.template)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.presentationml.slideshow)" +
+            " || Q(type:application/vnd.ms-powerpoint.addin.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-powerpoint.presentation.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-powerpoint.slideshow.macroenabled.12))";
+        Assert.assertEquals(expected, Query.toString(parser.parse(src)));
+        src = "type:powerpoint";
+        Assert.assertEquals(expected, Query.toString(parser.parse(src)));
+    }
 
-        src = "type:pdf";
+    @Test
+    public void typePdf() throws Exception {
+        String src = "type:pdf";
         Assert.assertEquals("Q(type:application/pdf)", Query.toString(parser.parse(src)));
+    }
 
-        src = "type:ms-tnef";
+    @Test
+    public void typeTnef() throws Exception {
+        String src = "type:ms-tnef";
         Assert.assertEquals("Q(type:application/ms-tnef)", Query.toString(parser.parse(src)));
+    }
 
-        src = "type:image type:jpeg type:gif type:bmp";
+    @Test
+    public void typeImages() throws Exception {
+        String src = "type:image type:jpeg type:gif type:bmp";
         Assert.assertEquals("Q(type:image) && Q(type:image/jpeg) && Q(type:image/gif) && Q(type:image/bmp)",
                 Query.toString(parser.parse(src)));
+    }
 
-        src = "type:none type:any";
+    @Test
+    public void typeNoneAndAny() throws Exception {
+        String src = "type:none type:any";
         Assert.assertEquals("Q(type:none) && Q(type:any)", Query.toString(parser.parse(src)));
     }
 

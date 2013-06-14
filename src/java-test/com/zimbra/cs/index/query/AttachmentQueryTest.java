@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -48,17 +48,54 @@ public final class AttachmentQueryTest {
     }
 
     @Test
-    public void toQueryString() throws Exception {
+    public void attachQueryToQueryString() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        AttachmentQuery query = new AttachmentQuery("any");
+        Query query = AttachmentQuery.createQuery("any");
         Assert.assertEquals("(attachment:any)", ((LuceneQueryOperation) query.compile(mbox, true)).toQueryString());
     }
 
     @Test
-    public void notAny() throws Exception {
-        AttachmentQuery query = new AttachmentQuery("any");
+    public void attachQueryNotAny() throws Exception {
+        Query query = AttachmentQuery.createQuery("any");
         query.setModifier(Query.Modifier.MINUS);
         Assert.assertEquals("Q(attachment:none)", query.toString());
+    }
+
+    @Test
+    public void attachQueryUnknown() throws Exception {
+        Query query = AttachmentQuery.createQuery("unknowncontenttype");
+        Assert.assertEquals("Q(attachment:unknowncontenttype)", query.toString());
+    }
+
+    @Test
+    public void attachQueryMsWord() throws Exception {
+        Query query = AttachmentQuery.createQuery("msword");
+        Assert.assertEquals(
+            "(Q(attachment:application/msword)" +
+            " || Q(attachment:application/vnd.openxmlformats-officedocument.wordprocessingml.document)" +
+            " || Q(attachment:application/vnd.openxmlformats-officedocument.wordprocessingml.template)" +
+            " || Q(attachment:application/vnd.ms-word.document.macroenabled.12)" +
+            " || Q(attachment:application/vnd.ms-word.template.macroenabled.12))",
+            query.toString());
+    }
+
+    @Test
+    public void typeQueryMsWord() throws Exception {
+        Query query = TypeQuery.createQuery("msword");
+        Assert.assertEquals(
+            "(Q(type:application/msword)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.wordprocessingml.document)" +
+            " || Q(type:application/vnd.openxmlformats-officedocument.wordprocessingml.template)" +
+            " || Q(type:application/vnd.ms-word.document.macroenabled.12)" +
+            " || Q(type:application/vnd.ms-word.template.macroenabled.12))",
+            query.toString());
+    }
+
+    @Test
+    public void typeQueryToQueryString() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Query query = TypeQuery.createQuery("any");
+        Assert.assertEquals("(type:any)", ((LuceneQueryOperation) query.compile(mbox, true)).toQueryString());
     }
 
 }

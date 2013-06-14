@@ -2,23 +2,26 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -41,6 +44,14 @@ abstract class LuceneQuery extends Query {
         } else {
             return toRet;
         }
+    }
+
+    public static Collection<String> lookup(Multimap<String, String> multimap, String what) {
+        Collection<String> types = multimap.get(what);
+        if (types.isEmpty()) {
+            types = ImmutableList.of(what); // Need new collection as original types is probably immutable
+        }
+        return types;
     }
 
     LuceneQuery(String queryField, String luceneField, String term) {
