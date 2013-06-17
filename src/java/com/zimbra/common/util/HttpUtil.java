@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,7 +19,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -35,7 +34,6 @@ import org.apache.commons.httpclient.HttpsURL;
 
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
-import com.mysql.jdbc.StringUtils;
 
 public final class HttpUtil {
 
@@ -70,7 +68,7 @@ public final class HttpUtil {
          * @return The index (like String.indexof) if present, -1 if not
          */
         int indexOf(String str) {
-            if (StringUtils.isNullOrEmpty(str)) {
+            if (StringUtil.isNullOrEmpty(str)) {
                 return -1;
             }
             return str.indexOf(userAgentStr);
@@ -517,7 +515,7 @@ public final class HttpUtil {
             return buf.toString();
         return str;
     }
-    
+
     public static String urlEscapeIncludingSlash(String str) {
         String escaped = urlEscape(str);
         return escaped.replaceAll("/", "%2F");
@@ -586,9 +584,9 @@ public final class HttpUtil {
                 fragments.add(urlUnescape(encodedFragment));
             }
         }
-        return fragments.toArray(new String[0]);  
+        return fragments.toArray(new String[0]);
     }
-    
+
     /**
      * Make the uri from decoded fragments
      * @param fragments
@@ -596,7 +594,7 @@ public final class HttpUtil {
      * @param tralingSlash
      * @return
      */
-    
+
     public static URI getUriFromFragments(String[] fragments, String queryString, boolean leadingSlash, boolean tralingSlash) {
         StringBuilder sb = new StringBuilder();
         if (leadingSlash) {
@@ -614,7 +612,7 @@ public final class HttpUtil {
         }
         return URI.create(sb.toString());
     }
-    
+
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
         System.out.println(getURIParams("foo=bar"));
