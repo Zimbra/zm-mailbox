@@ -30,10 +30,4 @@ public class MimeDetectTest {
         Assert.assertEquals("image/jpeg", MimeDetect.getMimeDetect().detect("2011.07.18 706+.jpg"));
         Assert.assertEquals("image/jpeg", MimeDetect.getMimeDetect().detect("2011.07.18 706+.jPg"));
     }
-
-    @Test
-    public void testXLSMFileName() throws IOException {
-        Assert.assertEquals("application/vnd.ms-excel.sheet.macroEnabled.12",
-                MimeDetect.getMimeDetect().detect("1.xlsm"));
-    }
 }
