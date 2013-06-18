@@ -1279,7 +1279,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="217" name="zimbraPrefComposeFormat" type="enum" value="text,html" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>text</defaultCOSValue>
+  <defaultCOSValue>html</defaultCOSValue>
   <desc>whether or not to compose in html or text.</desc>
 </attr>
 
