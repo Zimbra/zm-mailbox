@@ -174,7 +174,8 @@ public final class Volume {
                 path = volume.normalizePath(path);
                 VolumeManager.getInstance().validatePath(path);
             }
-            volume.rootPath = getConfiguredRootPath(path);
+            //volume.rootPath = getConfiguredRootPath(path);
+            volume.rootPath = path;
             return this;
         }
 
@@ -317,7 +318,8 @@ public final class Volume {
     }
 
     public static String getAbsolutePath(String path) throws ServiceException {
-        return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + getConfiguredRootPath(path) : path;
+        //return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + getConfiguredRootPath(path) : path;
+    	return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
     }
     
     public static String getConfiguredRootPath(String path) throws ServiceException
