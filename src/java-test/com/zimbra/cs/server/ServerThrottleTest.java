@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,11 +15,12 @@
 
 package com.zimbra.cs.server;
 
+import java.util.HashSet;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
-import com.zimbra.cs.server.ServerThrottle;
 
 public class ServerThrottleTest {
 
@@ -132,7 +133,54 @@ public class ServerThrottleTest {
     }
 
     @Test
+    public void throttleIpWhitelist() {
+        int numReqs = 100;
+        ServerThrottle throttle = new ServerThrottle("test");
+        throttle.setIpReqsPerSecond(numReqs);
+        long time = System.currentTimeMillis() + 10000000;
+        Assert.assertFalse(throttle.isIpThrottled(ip));
+
+        for (int i = 0; i < numReqs; i++) {
+            throttle.addIpReq(ip, time);
+        }
+
+        Assert.assertTrue(throttle.isIpThrottled(ip));
+        throttle.addWhitelistIp(ip);
+        Assert.assertFalse(throttle.isIpThrottled(ip));
+    }
+
+    @Test
+    public void throttleAcctWhitelist() {
+        int numReqs = 100;
+        ServerThrottle throttle = new ServerThrottle("test");
+        throttle.setAcctReqsPerSecond(numReqs);
+        long time = System.currentTimeMillis() + 10000000;
+        // add timestamps far enough in the future that they don't get pruned.
+        // this tests basic functions
+
+        Assert.assertFalse(throttle.isAccountThrottled(acctId, ip));
+
+        for (int i = 0; i < numReqs; i++) {
+            throttle.addAcctReq(acctId, time);
+        }
+
+        //add null to ip list just to be sure varargs is handled the way it should be
+        Assert.assertTrue(throttle.isAccountThrottled(acctId, ip, null));
+        Assert.assertTrue(throttle.isAccountThrottled(acctId, ip));
+        Assert.assertTrue(throttle.isAccountThrottled(acctId, null, ip));
+        Assert.assertTrue(throttle.isAccountThrottled(acctId, null, null, ip));
+        Assert.assertFalse(throttle.isIpThrottled(ip));
+
+        throttle.addWhitelistIp(ip);
+        //add null to ip list just to be sure varargs is handled the way it should be
+        Assert.assertFalse(throttle.isAccountThrottled(acctId, null, ip));
+        Assert.assertFalse(throttle.isAccountThrottled(acctId, ip));
+        Assert.assertFalse(throttle.isAccountThrottled(acctId, ip, null));
+        Assert.assertFalse(throttle.isAccountThrottled(acctId, null, null, ip));
+    }
+
+    @Test
     public void testUnknownHost() {
-        ServerThrottle.configureThrottle("IMAP", 1, 1, Sets.newHashSet("nosuchhost", "www.zimbra.com"));
+        ServerThrottle.configureThrottle("IMAP", 1, 1, Sets.newHashSet("nosuchhost", "www.zimbra.com"), new HashSet<String>());
     }
 }

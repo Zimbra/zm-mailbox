@@ -6908,7 +6908,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1383" name="zimbraThrottleSafeHosts" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
-  <desc>Hosts to ignore during IP based throttling. Typically should list nginx hostname and any other mailbox servers which can proxy to this server</desc>
+  <desc>Hosts to ignore during IP based throttling. Account and command rate limits will still be applied. Typically should list nginx hostname and any other mailbox servers which can proxy to this server</desc>
 </attr>
 
 <attr id="1384" name="zimbraReverseProxyDnsLookupInServerEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
@@ -7224,5 +7224,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>normal</defaultCOSValue>
   <desc>the font size for the web client</desc>
 </attr>
+
+<attr id="1449" name="zimbraThrottleWhitelist" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.5">
+  <desc>Hosts to whitelist during IP based throttling. Account and command rate limits will not be applied. This should only be used for internal servers which cannot service end user traffic; e.g. migration or monitoring hosts</desc>
+</attr>
+
 
 </attrs>

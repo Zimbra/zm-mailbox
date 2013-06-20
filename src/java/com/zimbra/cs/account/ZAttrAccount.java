@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130605-1157 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130619-1527 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -35229,11 +35229,11 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * <p>Valid values: [html, text]
      *
-     * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.text if unset and/or has invalid value
+     * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.html if unset and/or has invalid value
      */
     @ZAttr(id=217)
     public ZAttrProvisioning.PrefComposeFormat getPrefComposeFormat() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? ZAttrProvisioning.PrefComposeFormat.text : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefComposeFormat.text; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? ZAttrProvisioning.PrefComposeFormat.html : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefComposeFormat.html; }
     }
 
     /**
@@ -35241,11 +35241,11 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * <p>Valid values: [html, text]
      *
-     * @return zimbraPrefComposeFormat, or "text" if unset
+     * @return zimbraPrefComposeFormat, or "html" if unset
      */
     @ZAttr(id=217)
     public String getPrefComposeFormatAsString() {
-        return getAttr(Provisioning.A_zimbraPrefComposeFormat, "text");
+        return getAttr(Provisioning.A_zimbraPrefComposeFormat, "html");
     }
 
     /**

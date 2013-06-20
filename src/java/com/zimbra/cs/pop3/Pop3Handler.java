@@ -215,7 +215,7 @@ abstract class Pop3Handler {
                 ZimbraLog.pop.warn("ServiceException checking account status",e);
                 return false;
             }
-            if (throttle.isAccountThrottled(accountId)) {
+            if (throttle.isAccountThrottled(accountId, origRemoteAddress, clientAddress)) {
                 ZimbraLog.pop.warn("throttling POP3 connection for account %s due to too many requests", accountId);
                 dropConnection = true;
                 return false;

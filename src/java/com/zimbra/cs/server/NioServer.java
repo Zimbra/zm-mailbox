@@ -19,7 +19,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.security.KeyStore;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -60,6 +62,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -339,4 +342,26 @@ public abstract class NioServer implements Server {
         }
         return ((ThreadPoolExecutor) ex).getPoolSize();
     }
+
+    protected Set<String> getThrottleSafeHosts() throws ServiceException {
+
+        Set<String> safeHosts = new HashSet<String>();
+        for (com.zimbra.cs.account.Server server : Provisioning.getInstance().getAllServers()) {
+            safeHosts.add(server.getServiceHostname());
+        }
+        for (String ignoredHost : config.getThottleIgnoredHosts()) {
+            safeHosts.add(ignoredHost);
+        }
+        return safeHosts;
+    }
+
+    protected Set<String> getThrottleWhitelist() throws ServiceException {
+
+        Set<String> safeHosts = new HashSet<String>();
+        for (String whitelistHost : config.getThrottleWhitelist()) {
+            safeHosts.add(whitelistHost);
+        }
+        return safeHosts;
+    }
+
 }

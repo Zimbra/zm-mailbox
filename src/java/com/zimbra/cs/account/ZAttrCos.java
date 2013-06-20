@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130605-1157 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130619-1527 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -26922,11 +26922,11 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [html, text]
      *
-     * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.text if unset and/or has invalid value
+     * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.html if unset and/or has invalid value
      */
     @ZAttr(id=217)
     public ZAttrProvisioning.PrefComposeFormat getPrefComposeFormat() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? ZAttrProvisioning.PrefComposeFormat.text : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefComposeFormat.text; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? ZAttrProvisioning.PrefComposeFormat.html : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefComposeFormat.html; }
     }
 
     /**
@@ -26934,11 +26934,11 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [html, text]
      *
-     * @return zimbraPrefComposeFormat, or "text" if unset
+     * @return zimbraPrefComposeFormat, or "html" if unset
      */
     @ZAttr(id=217)
     public String getPrefComposeFormatAsString() {
-        return getAttr(Provisioning.A_zimbraPrefComposeFormat, "text");
+        return getAttr(Provisioning.A_zimbraPrefComposeFormat, "html");
     }
 
     /**

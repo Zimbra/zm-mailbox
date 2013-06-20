@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,7 +38,7 @@ public class ServerThrottle {
     }
 
     public static synchronized void configureThrottle(String serverType, int ipReqLimit, int acctReqLimit,
-            Iterable<String> safeHosts) {
+            Iterable<String> safeHosts, Iterable<String> whitelistHosts) {
         ServerThrottle throttle = getThrottle(serverType);
         if (throttle == null) {
             throttle = new ServerThrottle(serverType);
@@ -47,7 +47,10 @@ public class ServerThrottle {
         throttle.setIpReqsPerSecond(ipReqLimit);
         throttle.setAcctReqsPerSecond(acctReqLimit);
         for (String hostname : safeHosts) {
-            throttle.addIgnoredHost(hostname);
+            throttle.addToHostList(hostname, false);
+        }
+        for (String hostname : whitelistHosts) {
+            throttle.addToHostList(hostname, true);
         }
     }
 
@@ -70,6 +73,8 @@ public class ServerThrottle {
 
     private Set<String> ignoredIps = new HashSet<String>();
 
+    private Set<String> whitelistIps = new HashSet<String>();
+
     @VisibleForTesting
     void setIpReqsPerSecond(int ipReqsPerSecond) {
         this.ipReqsPerSecond = ipReqsPerSecond;
@@ -86,37 +91,73 @@ public class ServerThrottle {
         ignoredIps.add(ip);
     }
 
-    private void addIgnoredHost(String hostname) {
+    @VisibleForTesting
+    void addWhitelistIp(String ip) {
+        ZimbraLog.net.debug("adding IP %s to throttle whitelist", ip);
+        whitelistIps.add(ip);
+        addIgnoredIp(ip); //whitelist implicitly ignored; wire it up here so we don't have to check everywhere
+    }
+
+    private void addToHostList(String hostname, boolean whitelist) {
         try {
             InetAddress[] addrs = InetAddress.getAllByName(hostname);
             if (addrs != null) {
                 for (InetAddress addr : addrs) {
-                    addIgnoredIp(addr.getHostAddress());
+                    if (whitelist) {
+                        addWhitelistIp(addr.getHostAddress());
+                    } else {
+                        addIgnoredIp(addr.getHostAddress());
+
+                    }
                 }
             }
         } catch (UnknownHostException e) {
-            ZimbraLog.net.warn("unknown host %s cannot be added to throttle ignore list." +
+            ZimbraLog.net.warn("unknown host %s cannot be added to throttle %slist." +
             		" %s requests from this host may be throttled. " +
-            		"If this host is a proxy please add it to your DNS.", hostname, serverType);
+            		"If this host is a proxy please add it to your DNS.", (whitelist ? "white" : "ignore "), hostname, serverType);
         }
     }
 
     public boolean isIpThrottled(String ip) {
         if (ip == null) {
             return false;
-        } else if (ignoredIps.contains(ip)) {
+        } else if (isIpInSet(ip, ignoredIps)) {
             return false;
-        } else if (ip.indexOf('%') >= 0 && ignoredIps.contains(ip.substring(0, ip.indexOf('%')))) {
-            return false; // edge case with IPv6 scoped interface; the client
-            // connection is scoped but InetAddress.getAllByName()
-            // returned unscoped address
         } else {
             return isThrottled(ipReqs, ip, ipReqsPerSecond);
         }
     }
 
-    public boolean isAccountThrottled(String acctId) {
+    public boolean isIpWhitelisted(String ip) {
+        if (ip == null) {
+            return false;
+        } else {
+            return (isIpInSet(ip, whitelistIps));
+        }
+    }
+
+    public boolean isAccountThrottled(String acctId, String ...requestIps) {
+        for (String ip : requestIps) {
+            if (isIpWhitelisted(ip)) {
+                return false;
+            }
+        }
         return isThrottled(acctReqs, acctId, acctReqsPerSecond);
+    }
+
+    private boolean isIpInSet(String ip, Set<String> ips) {
+        if (ip == null) {
+            return false;
+        } else if (ips.contains(ip)) {
+            return true;
+        } else if (ip.indexOf('%') >= 0 && ips.contains(ip.substring(0, ip.indexOf('%')))) {
+            // edge case with IPv6 scoped interface; the client
+            // connection is scoped but InetAddress.getAllByName()
+            // returned unscoped address
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private boolean isThrottled(Map<String, List<Long>> reqMap, String key, int limit) {
