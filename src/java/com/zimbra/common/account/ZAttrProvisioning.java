@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130605-1157 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130619-1527 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -11347,14 +11347,25 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1383)
     public static final String A_zimbraThrottleSafeHosts = "zimbraThrottleSafeHosts";
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public static final String A_zimbraThrottleWhitelist = "zimbraThrottleWhitelist";
 
     /**
      * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Start
