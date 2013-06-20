@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 rgadipuuri 20130510-1145 */
+    /* build: 9.0.0_BETA1_1111 jflanigan 20130619-1527 */
 
     /**
      * RFC2256: descriptive information
@@ -41003,9 +41003,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @return zimbraThrottleSafeHosts, or empty array if unset
      *
@@ -41017,9 +41017,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param zimbraThrottleSafeHosts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41034,9 +41034,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param zimbraThrottleSafeHosts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41052,9 +41052,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param zimbraThrottleSafeHosts new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41069,9 +41069,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param zimbraThrottleSafeHosts new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -41087,9 +41087,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param zimbraThrottleSafeHosts existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41104,9 +41104,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param zimbraThrottleSafeHosts existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -41122,9 +41122,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41138,9 +41138,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Hosts to ignore during IP based throttling. Typically should list
-     * nginx hostname and any other mailbox servers which can proxy to this
-     * server
+     * Hosts to ignore during IP based throttling. Account and command rate
+     * limits will still be applied. Typically should list nginx hostname and
+     * any other mailbox servers which can proxy to this server
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41151,6 +41151,167 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetThrottleSafeHosts(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraThrottleSafeHosts, "");
+        return attrs;
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @return zimbraThrottleWhitelist, or empty array if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public String[] getThrottleWhitelist() {
+        return getMultiAttr(Provisioning.A_zimbraThrottleWhitelist);
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param zimbraThrottleWhitelist new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public void setThrottleWhitelist(String[] zimbraThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleWhitelist, zimbraThrottleWhitelist);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param zimbraThrottleWhitelist new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public Map<String,Object> setThrottleWhitelist(String[] zimbraThrottleWhitelist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleWhitelist, zimbraThrottleWhitelist);
+        return attrs;
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param zimbraThrottleWhitelist new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public void addThrottleWhitelist(String zimbraThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraThrottleWhitelist, zimbraThrottleWhitelist);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param zimbraThrottleWhitelist new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public Map<String,Object> addThrottleWhitelist(String zimbraThrottleWhitelist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraThrottleWhitelist, zimbraThrottleWhitelist);
+        return attrs;
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param zimbraThrottleWhitelist existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public void removeThrottleWhitelist(String zimbraThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraThrottleWhitelist, zimbraThrottleWhitelist);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param zimbraThrottleWhitelist existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public Map<String,Object> removeThrottleWhitelist(String zimbraThrottleWhitelist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraThrottleWhitelist, zimbraThrottleWhitelist);
+        return attrs;
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public void unsetThrottleWhitelist() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleWhitelist, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hosts to whitelist during IP based throttling. Account and command
+     * rate limits will not be applied. This should only be used for internal
+     * servers which cannot service end user traffic; e.g. migration or
+     * monitoring hosts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1449)
+    public Map<String,Object> unsetThrottleWhitelist(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThrottleWhitelist, "");
         return attrs;
     }
 

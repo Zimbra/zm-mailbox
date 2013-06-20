@@ -213,8 +213,13 @@ public abstract class ServerConfig {
         }
     }
 
-    public String[] getIgnoredHosts() throws ServiceException {
+    public String[] getThottleIgnoredHosts() throws ServiceException {
         return getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleSafeHosts);
     }
+
+    public String[] getThrottleWhitelist() throws ServiceException {
+        return getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleWhitelist);
+    }
+
 }
 
