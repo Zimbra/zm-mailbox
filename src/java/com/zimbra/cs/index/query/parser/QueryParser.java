@@ -292,6 +292,9 @@ public final class QueryParser {
      * @throws ServiceException if a grammar error detected
      */
     public List<Query> parse(String src) throws ServiceException {
+        if (Strings.isNullOrEmpty(src)) {
+            throw MailServiceException.QUERY_PARSE_ERROR(src, null, "", 0, "Empty query string not allowed");
+        }
         Parser parser = new Parser(new StringReader(src));
         try {
             SimpleNode node = parser.parse();
