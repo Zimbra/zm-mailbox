@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,6 +25,9 @@ import java.util.Set;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closeables;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -33,8 +36,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.ResultsPager;
@@ -57,7 +58,6 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -78,6 +78,9 @@ public class Search extends MailDocumentHandler  {
         }
 
         SearchParams params = SearchParams.parse(request, zsc, account.getPrefMailInitialSearch());
+        if (params.getLocale() == null) {
+            params.setLocale(mbox.getAccount().getLocale());
+        }
         if (params.inDumpster() && params.getTypes().contains(MailItem.Type.CONVERSATION)) {
             throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
         }
