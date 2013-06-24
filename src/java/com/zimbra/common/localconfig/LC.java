@@ -879,6 +879,7 @@ public final class LC {
     public static final KnownKey javamail_smtp_enable_starttls = KnownKey.newKey(true);
 
     public static final KnownKey mime_max_recursion = KnownKey.newKey(20);
+    public static final KnownKey mime_encode_compound_xwiniso2022jp_as_iso2022jp = KnownKey.newKey(true);
 
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
