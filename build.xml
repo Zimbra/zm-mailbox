@@ -585,6 +585,7 @@
         </lib>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
+        <classes dir="${config.dir}" includes="cxf.xml"/>
       </war>
     </target>
 
