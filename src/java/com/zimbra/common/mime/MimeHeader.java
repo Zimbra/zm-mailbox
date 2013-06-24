@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -164,7 +164,7 @@ public class MimeHeader implements Cloneable {
     /** Reserializes the {@code MimeHeader}, using {@code bvalue} as the
      *  field value (the bit after the '<tt>:</tt>').  {@code bvalue} is
      *  copied verbatim; no charset transforms, encoded-word handling, or
-     *  folding is performed.*/ 
+     *  folding is performed.*/
     MimeHeader updateContent(final byte[] bvalue) {
         byte[] bname = name.getBytes();
         int nlen = bname.length, vlen = bvalue == null ? 0 : bvalue.length;
@@ -365,11 +365,19 @@ public class MimeHeader implements Cloneable {
     }
 
     static class EncodedWord {
-        static String encode(final String value, final Charset requestedCharset) {
-            StringBuilder sb = new StringBuilder();
 
+        static String encode(final String value, final String requestedCharsetName) {
+            //bug 82851
+            //used for special case where we want to label as one charset but encode as another
+            //primarily for x-windows-iso2022jp vs iso-2022-jp internal/external mapping
+            Charset charset = CharsetUtil.checkCharset(value, CharsetUtil.toCharset(requestedCharsetName));
+            return encode(value, charset, requestedCharsetName);
+        }
+
+        private static String encode(final String value, Charset charset, String outputCharsetName) {
+            StringBuilder sb = new StringBuilder();
             // FIXME: need to limit encoded-words to 75 bytes
-            Charset charset = CharsetUtil.checkCharset(value, requestedCharset);
+
             byte[] content = null;
             try {
                 content = value.getBytes(charset);
@@ -383,8 +391,9 @@ public class MimeHeader implements Cloneable {
             } catch (Throwable t) {
                 content = value.getBytes(CharsetUtil.ISO_8859_1);
                 charset = CharsetUtil.ISO_8859_1;
+                outputCharsetName = charset.name();
             }
-            sb.append("=?").append(charset.name().toLowerCase());
+            sb.append("=?").append(outputCharsetName == null ? charset.name().toLowerCase() : outputCharsetName.toLowerCase());
 
             int invalidQ = 0;
             for (byte b : content) {
@@ -403,6 +412,11 @@ public class MimeHeader implements Cloneable {
             sb.append("?=");
 
             return sb.toString();
+        }
+
+        static String encode(final String value, final Charset requestedCharset) {
+            Charset charset = CharsetUtil.checkCharset(value, requestedCharset);
+            return encode(value, charset, charset.name());
         }
     }
 

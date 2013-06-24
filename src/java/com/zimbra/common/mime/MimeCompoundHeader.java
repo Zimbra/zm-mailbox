@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.CharsetUtil;
 
@@ -368,7 +369,20 @@ public class MimeCompoundHeader extends MimeHeader {
                 } catch (UnsupportedEncodingException e) {
                 }
             } else {
-                String encoded = EncodedWord.encode(value, CharsetUtil.toCharset(paramCharset));
+                String encoded = null;
+                Charset mappedCharset = CharsetUtil.toCharset(paramCharset);
+                if (LC.mime_encode_compound_xwiniso2022jp_as_iso2022jp.booleanValue()
+                        && paramCharset.equalsIgnoreCase("ISO-2022-JP")
+                        && mappedCharset.name().equalsIgnoreCase("x-windows-iso2022jp")) {
+                    //bug 82851
+                    //usually paramCharset and CharsetUtil.toCharset(paramCharset).name() are equivalent
+                    //however, if -Dsun.nio.cs.map is used then CharsetUtil.toCharset() returns a different charset
+                    //we need to label the MIME with universally understood charset; even though we're mapping that
+                    //internally to a variant that Java understands
+                    encoded = EncodedWord.encode(value, paramCharset);
+                } else {
+                    encoded = EncodedWord.encode(value, mappedCharset);
+                }
                 bb.append(param.getKey()).append('=').append('"').append(encoded).append('"');
             }
 

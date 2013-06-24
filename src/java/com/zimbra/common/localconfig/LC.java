@@ -945,6 +945,7 @@ public final class LC {
     public static final KnownKey mime_handle_nonprintable_subject = KnownKey.newKey(true);
     public static final KnownKey mime_encode_missing_blob = KnownKey.newKey(true);
     public static final KnownKey mime_exclude_empty_content = KnownKey.newKey(true);
+    public static final KnownKey mime_encode_compound_xwiniso2022jp_as_iso2022jp = KnownKey.newKey(true);
 
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
