@@ -341,16 +341,16 @@ abstract class ImapHandler {
         boolean isProxied = imapProxy != null;
 
         if (getCredentials() != null) {
-            if (reqThrottle.isAccountThrottled(getCredentials().getAccountId())) {
-                ZimbraLog.imap.warn("too many IMAP requests from account %s dropping connection",getCredentials().getAccountId());
+            if (reqThrottle.isAccountThrottled(getCredentials().getAccountId(), getOrigRemoteIp(), getRemoteIp())) {
+                ZimbraLog.imap.warn("too many IMAP requests from account %s dropping connection", getCredentials().getAccountId());
                 throw new ImapThrottledException("too many requests for acct");
             }
         }
         if (reqThrottle.isIpThrottled(getOrigRemoteIp())) {
-            ZimbraLog.imap.warn("too many IMAP requests from original remote ip %s dropping connection",getOrigRemoteIp());
+            ZimbraLog.imap.warn("too many IMAP requests from original remote ip %s dropping connection", getOrigRemoteIp());
             throw new ImapThrottledException("too many requests from original ip");
         } else if (reqThrottle.isIpThrottled(getRemoteIp())) {
-            ZimbraLog.imap.warn("too many IMAP requests from remote ip %s dropping connection",getRemoteIp());
+            ZimbraLog.imap.warn("too many IMAP requests from remote ip %s dropping connection", getRemoteIp());
             throw new ImapThrottledException("too many requests from remote ip");
         }
 
@@ -4280,7 +4280,9 @@ abstract class ImapHandler {
     }
 
     private void checkCommandThrottle(ImapCommand command) throws ImapThrottledException {
-        if (commandThrottle.isCommandThrottled(command)) {
+        if (reqThrottle.isIpWhitelisted(getOrigRemoteIp()) || reqThrottle.isIpWhitelisted(getRemoteIp())) {
+            return;
+        } else if (commandThrottle.isCommandThrottled(command)) {
             ZimbraLog.imap.warn("too many repeated %s requests dropping connection", command.getClass().getSimpleName().toUpperCase());
             throw new ImapThrottledException("too many repeated "+command.getClass().getSimpleName()+" requests");
         }
