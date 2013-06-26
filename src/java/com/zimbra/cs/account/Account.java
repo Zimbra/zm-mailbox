@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AclGroups;
@@ -25,6 +26,7 @@ import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.auth.AuthContext;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -243,6 +245,12 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         }
     }
 
+    public Set<String> getAllAddrsSet() {
+        Set<String> addrs = Sets.newHashSet();
+        addrs.add(getName());
+        addrs.addAll(getMultiAttrSet(Provisioning.A_zimbraMailAlias));
+        return Collections.unmodifiableSet(addrs);
+    }
     
     public String getAccountStatus(Provisioning prov) {
         
