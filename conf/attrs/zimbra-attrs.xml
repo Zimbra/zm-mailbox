@@ -7229,7 +7229,7 @@ TODO: delete them permanently from here
   <desc>Hosts to whitelist during IP based throttling. Account and command rate limits will not be applied. This should only be used for internal servers which cannot service end user traffic; e.g. migration or monitoring hosts</desc>
 </attr>
 
-<attr id="1450" name="zimbraDeviceCalendarSoftDeleteExcludePattern" type="cstring" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+<attr id="1450" name="zimbraDeviceCalendarSoftDeleteExcludePattern" type="cstring" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.5">
   <desc>
     Regex to be matched for preventing devices from soft deletion of out of range calendar items.
     Suppose device is set to sync calendar item of 2 months range then server will ONLY send softdelete for out of range (expired) calendar items, if device id DOES NOT match to the regex provided. 

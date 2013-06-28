@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130628-1816 */
+    /* build: 9.0.0_BETA1_1111 prashant 20130628-1854 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4528,7 +4528,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraDeviceCalendarSoftDeleteExcludePattern, or null if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.0.5
      */
     @ZAttr(id=1450)
     public String getDeviceCalendarSoftDeleteExcludePattern() {
@@ -4545,7 +4545,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraDeviceCalendarSoftDeleteExcludePattern new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.0.5
      */
     @ZAttr(id=1450)
     public void setDeviceCalendarSoftDeleteExcludePattern(String zimbraDeviceCalendarSoftDeleteExcludePattern) throws com.zimbra.common.service.ServiceException {
@@ -4565,7 +4565,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.0.5
      */
     @ZAttr(id=1450)
     public Map<String,Object> setDeviceCalendarSoftDeleteExcludePattern(String zimbraDeviceCalendarSoftDeleteExcludePattern, Map<String,Object> attrs) {
@@ -4583,7 +4583,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.0.5
      */
     @ZAttr(id=1450)
     public void unsetDeviceCalendarSoftDeleteExcludePattern() throws com.zimbra.common.service.ServiceException {
@@ -4602,7 +4602,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.0.5
      */
     @ZAttr(id=1450)
     public Map<String,Object> unsetDeviceCalendarSoftDeleteExcludePattern(Map<String,Object> attrs) {
