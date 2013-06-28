@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130619-1527 */
+    /* build: 8.0.0_BETA1_1111 prashant 20130628-1928 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -7912,6 +7912,98 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Regex to be matched for preventing devices from soft deletion of out
+     * of range calendar items. Suppose device is set to sync calendar item
+     * of 2 months range then server will ONLY send softdelete for out of
+     * range (expired) calendar items, if device id DOES NOT match to the
+     * regex provided.
+     *
+     * @return zimbraDeviceCalendarSoftDeleteExcludePattern, or null if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1450)
+    public String getDeviceCalendarSoftDeleteExcludePattern() {
+        return getAttr(Provisioning.A_zimbraDeviceCalendarSoftDeleteExcludePattern, null);
+    }
+
+    /**
+     * Regex to be matched for preventing devices from soft deletion of out
+     * of range calendar items. Suppose device is set to sync calendar item
+     * of 2 months range then server will ONLY send softdelete for out of
+     * range (expired) calendar items, if device id DOES NOT match to the
+     * regex provided.
+     *
+     * @param zimbraDeviceCalendarSoftDeleteExcludePattern new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1450)
+    public void setDeviceCalendarSoftDeleteExcludePattern(String zimbraDeviceCalendarSoftDeleteExcludePattern) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceCalendarSoftDeleteExcludePattern, zimbraDeviceCalendarSoftDeleteExcludePattern);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex to be matched for preventing devices from soft deletion of out
+     * of range calendar items. Suppose device is set to sync calendar item
+     * of 2 months range then server will ONLY send softdelete for out of
+     * range (expired) calendar items, if device id DOES NOT match to the
+     * regex provided.
+     *
+     * @param zimbraDeviceCalendarSoftDeleteExcludePattern new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1450)
+    public Map<String,Object> setDeviceCalendarSoftDeleteExcludePattern(String zimbraDeviceCalendarSoftDeleteExcludePattern, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceCalendarSoftDeleteExcludePattern, zimbraDeviceCalendarSoftDeleteExcludePattern);
+        return attrs;
+    }
+
+    /**
+     * Regex to be matched for preventing devices from soft deletion of out
+     * of range calendar items. Suppose device is set to sync calendar item
+     * of 2 months range then server will ONLY send softdelete for out of
+     * range (expired) calendar items, if device id DOES NOT match to the
+     * regex provided.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1450)
+    public void unsetDeviceCalendarSoftDeleteExcludePattern() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceCalendarSoftDeleteExcludePattern, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex to be matched for preventing devices from soft deletion of out
+     * of range calendar items. Suppose device is set to sync calendar item
+     * of 2 months range then server will ONLY send softdelete for out of
+     * range (expired) calendar items, if device id DOES NOT match to the
+     * regex provided.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1450)
+    public Map<String,Object> unsetDeviceCalendarSoftDeleteExcludePattern(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeviceCalendarSoftDeleteExcludePattern, "");
+        return attrs;
+    }
+
+    /**
      * Whether OpenWith feature is enabled on devices.
      *
      * @return zimbraDeviceFileOpenWithEnabled, or true if unset
@@ -15041,7 +15133,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @return zimbraFeatureSocialFiltersEnabled, or empty array if unset
      *
@@ -15055,7 +15147,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15072,7 +15164,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15090,7 +15182,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15107,7 +15199,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15125,7 +15217,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15141,7 +15233,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22278,7 +22370,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @return zimbraMailStatus, or null if unset and/or has invalid value
      */
@@ -22290,7 +22382,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @return zimbraMailStatus, or null if unset
      */
@@ -22302,7 +22394,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22317,7 +22409,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22333,7 +22425,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22348,7 +22440,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22364,7 +22456,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -22378,7 +22470,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -23615,7 +23707,8 @@ public abstract class ZAttrAccount  extends MailTarget {
         return attrs;
     }
 
-    /** whether the Bluetooth capabilities are allowed on the device. The
+    /**
+     * whether the Bluetooth capabilities are allowed on the device. The
      * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
      * - HANDSFREE 2 - ALLOW ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
@@ -34385,7 +34478,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.advanced if unset and/or has invalid value
      */
@@ -34397,7 +34490,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @return zimbraPrefClientType, or "advanced" if unset
      */
@@ -34409,7 +34502,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34424,7 +34517,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34440,7 +34533,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34455,7 +34548,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34471,7 +34564,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -34485,7 +34578,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [advanced, standard]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34703,31 +34796,31 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
-     * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.html if unset and/or has invalid value
+     * @return zimbraPrefComposeFormat, or ZAttrProvisioning.PrefComposeFormat.text if unset and/or has invalid value
      */
     @ZAttr(id=217)
     public ZAttrProvisioning.PrefComposeFormat getPrefComposeFormat() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? ZAttrProvisioning.PrefComposeFormat.html : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefComposeFormat.html; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefComposeFormat); return v == null ? ZAttrProvisioning.PrefComposeFormat.text : ZAttrProvisioning.PrefComposeFormat.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefComposeFormat.text; }
     }
 
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
-     * @return zimbraPrefComposeFormat, or "html" if unset
+     * @return zimbraPrefComposeFormat, or "text" if unset
      */
     @ZAttr(id=217)
     public String getPrefComposeFormatAsString() {
-        return getAttr(Provisioning.A_zimbraPrefComposeFormat, "html");
+        return getAttr(Provisioning.A_zimbraPrefComposeFormat, "text");
     }
 
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34742,7 +34835,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34758,7 +34851,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34773,7 +34866,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param zimbraPrefComposeFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34789,7 +34882,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -34803,7 +34896,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether or not to compose in html or text.
      *
-     * <p>Valid values: [text, html]
+     * <p>Valid values: [html, text]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35050,7 +35143,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @return zimbraPrefContactsInitialView, or ZAttrProvisioning.PrefContactsInitialView.list if unset and/or has invalid value
      */
@@ -35063,7 +35156,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @return zimbraPrefContactsInitialView, or "list" if unset
      */
@@ -35076,7 +35169,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35092,7 +35185,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35109,7 +35202,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35125,7 +35218,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param zimbraPrefContactsInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35142,7 +35235,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -35157,7 +35250,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Deprecated since: 6.0.5. We do not support cards view any more. See
      * bug 47439. Orig desc: initial contact view to use
      *
-     * <p>Valid values: [cards, list]
+     * <p>Valid values: [list, cards]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -38432,7 +38525,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @return zimbraPrefIMIdleStatus, or ZAttrProvisioning.PrefIMIdleStatus.away if unset and/or has invalid value
      *
@@ -38446,7 +38539,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @return zimbraPrefIMIdleStatus, or "away" if unset
      *
@@ -38460,7 +38553,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38477,7 +38570,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38495,7 +38588,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38512,7 +38605,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38530,7 +38623,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -38546,7 +38639,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, invisible, offline]
+     * <p>Valid values: [away, xa, offline, invisible]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41540,7 +41633,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @return zimbraPrefMailSignatureStyle, or ZAttrProvisioning.PrefMailSignatureStyle.outlook if unset and/or has invalid value
      */
@@ -41553,7 +41646,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @return zimbraPrefMailSignatureStyle, or "outlook" if unset
      */
@@ -41566,7 +41659,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41582,7 +41675,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41599,7 +41692,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41615,7 +41708,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41632,7 +41725,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -41647,7 +41740,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [outlook, internet]
+     * <p>Valid values: [internet, outlook]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -42858,7 +42951,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @return zimbraPrefOutOfOfficeFreeBusyStatus, or null if unset and/or has invalid value
      *
@@ -42872,7 +42965,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @return zimbraPrefOutOfOfficeFreeBusyStatus, or null if unset
      *
@@ -42886,7 +42979,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42903,7 +42996,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42921,7 +43014,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42938,7 +43031,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42956,7 +43049,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -42972,7 +43065,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [BUSY, OUTOFOFFICE]
+     * <p>Valid values: [OUTOFOFFICE, BUSY]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43422,7 +43515,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @return zimbraPrefPop3DeleteOption, or ZAttrProvisioning.PrefPop3DeleteOption.delete if unset and/or has invalid value
      *
@@ -43441,7 +43534,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @return zimbraPrefPop3DeleteOption, or "delete" if unset
      *
@@ -43460,7 +43553,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43482,7 +43575,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43505,7 +43598,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43527,7 +43620,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43550,7 +43643,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -43571,7 +43664,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [trash, delete, read, keep]
+     * <p>Valid values: [delete, trash, read, keep]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
