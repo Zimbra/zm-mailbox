@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130628-1816 */
+    /* build: 9.0.0_BETA1_1111 prashant 20130628-1854 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3466,7 +3466,7 @@ public class ZAttrProvisioning {
      * range (expired) calendar items, if device id DOES NOT match to the
      * regex provided.
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.0.5
      */
     @ZAttr(id=1450)
     public static final String A_zimbraDeviceCalendarSoftDeleteExcludePattern = "zimbraDeviceCalendarSoftDeleteExcludePattern";
