@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 jflanigan 20130619-1527 */
+    /* build: 9.0.0_BETA1_1111 prashant 20130628-1816 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3458,6 +3458,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1397)
     public static final String A_zimbraDeviceAllowedPasscodeLockoutDuration = "zimbraDeviceAllowedPasscodeLockoutDuration";
+
+    /**
+     * Regex to be matched for preventing devices from soft deletion of out
+     * of range calendar items. Suppose device is set to sync calendar item
+     * of 2 months range then server will ONLY send softdelete for out of
+     * range (expired) calendar items, if device id DOES NOT match to the
+     * regex provided.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1450)
+    public static final String A_zimbraDeviceCalendarSoftDeleteExcludePattern = "zimbraDeviceCalendarSoftDeleteExcludePattern";
 
     /**
      * Whether OpenWith feature is enabled on devices.
