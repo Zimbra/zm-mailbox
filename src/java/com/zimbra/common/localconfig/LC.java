@@ -105,9 +105,6 @@ public final class LC {
     public static final KnownKey zimbra_mysql_password = KnownKey.newKey("zimbra").protect();
 
     @Supported
-    public static final KnownKey zimbra_mysql_shutdown_timeout = KnownKey.newKey(60);
-
-    @Supported
     public static final KnownKey zimbra_ldap_userdn = KnownKey.newKey("uid=zimbra,cn=admins,cn=zimbra");
 
     @Supported
@@ -244,6 +241,9 @@ public final class LC {
     public static final KnownKey zimbra_index_lucene_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
 
     @Supported
+    public static final KnownKey zimbra_index_lucene_avg_doc_per_segment = KnownKey.newKey(10000);
+
+    @Supported
     public static final KnownKey zimbra_index_lucene_merge_factor = KnownKey.newKey(10);
 
     @Supported
@@ -260,9 +260,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lucene_max_terms_per_query = KnownKey.newKey(50000);
-
-    @Supported
-    public static final KnownKey zimbra_index_elasticsearch_url_base = KnownKey.newKey("http://localhost:9200/");
 
     @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
@@ -339,6 +336,8 @@ public final class LC {
     @Supported
     public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
 
+    public static final KnownKey index_store = KnownKey.newKey("lucene");
+
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
 
@@ -349,7 +348,7 @@ public final class LC {
     public static final KnownKey ldap_url = KnownKey.newKey("");
 
     @Supported
-    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/data/ldap/state/run/ldapi");
+    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/openldap/var/run/ldapi");
 
     @Supported
     public static final KnownKey ldap_master_url = KnownKey.newKey("");
@@ -432,16 +431,6 @@ public final class LC {
     public static final KnownKey ldap_monitor_critical = KnownKey.newKey(90);
     public static final KnownKey ldap_monitor_growth = KnownKey.newKey(25);
 
-    public static final KnownKey postjournal_enabled = KnownKey.newKey("false");
-    public static final KnownKey postjournal_helo_name = KnownKey.newKey("localhost");
-    public static final KnownKey postjournal_reinject_host = KnownKey.newKey(null);
-    public static final KnownKey postjournal_archive_host = KnownKey.newKey(null);
-    public static final KnownKey postjournal_archive_rcpt_to = KnownKey.newKey("<>");
-    public static final KnownKey postjournal_archive_bounce_to = KnownKey.newKey("<>");
-    public static final KnownKey postjournal_strip_postfix_proxy = KnownKey.newKey(1);
-    public static final KnownKey postjournal_per_user_journaling = KnownKey.newKey(1);
-    public static final KnownKey postjournal_smtp_read_timeout = KnownKey.newKey(60);
-
     public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
 
     @Supported
@@ -482,8 +471,6 @@ public final class LC {
     public static final KnownKey ldap_cache_server_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_ucservice_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_ucservice_maxage = KnownKey.newKey(15);
-    public static final KnownKey ldap_cache_alwaysoncluster_maxsize = KnownKey.newKey(100);
-    public static final KnownKey ldap_cache_alwaysoncluster_maxage = KnownKey.newKey(15);
 
     @Supported
     public static final KnownKey ldap_cache_timezone_maxsize = KnownKey.newKey(100);
@@ -555,6 +542,7 @@ public final class LC {
     public static final KnownKey mysql_innodb_log_file_size = KnownKey.newKey(null);
     public static final KnownKey mysql_sort_buffer_size = KnownKey.newKey(null);
     public static final KnownKey mysql_read_buffer_size = KnownKey.newKey(null);
+    public static final KnownKey mysql_table_cache = KnownKey.newKey(null);
 
     @Supported
     public static final KnownKey mysql_backup_retention = KnownKey.newKey(0);
@@ -597,7 +585,7 @@ public final class LC {
     public static final KnownKey postfix_smtp_helo_name = KnownKey.newKey("$myhostname");
     public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
     public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
-    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey("may");
+    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey(null);
     public static final KnownKey postfix_smtp_sasl_mechanism_filter = KnownKey.newKey(null);
     public static final KnownKey postfix_smtp_sasl_password_maps = KnownKey.newKey(null);
 
@@ -614,7 +602,6 @@ public final class LC {
     public static final KnownKey postfix_smtpd_tls_cert_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.crt");
     public static final KnownKey postfix_smtpd_tls_key_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.key");
     public static final KnownKey postfix_smtpd_tls_loglevel = KnownKey.newKey(1);
-    public static final KnownKey postfix_smtpd_tls_security_level = KnownKey.newKey("may");
     public static final KnownKey postfix_transport_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-transport.cf");
     public static final KnownKey postfix_virtual_alias_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vad.cf");
     public static final KnownKey postfix_virtual_alias_expansion_limit = KnownKey.newKey(10000);
@@ -624,10 +611,6 @@ public final class LC {
     public static final KnownKey postfix_virtual_transport = KnownKey.newKey("error");
 
     public static final KnownKey amavis_originating_bypass_sa = KnownKey.newKey(false);
-    public static final KnownKey amavis_enable_dkim_verification = KnownKey.newKey(true);
-    public static final KnownKey amavis_max_servers = KnownKey.newKey(10);
-
-    public static final KnownKey clamav_max_threads = KnownKey.newKey(10);
 
     public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
 
@@ -842,10 +825,8 @@ public final class LC {
 
     public static final KnownKey zimbra_class_accessmanager = KnownKey.newKey("com.zimbra.cs.account.accesscontrol.ACLAccessManager");
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
-    public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MariaDB");
+    public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
-    public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
-    // public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.elasticsearch.ElasticSearchIndex$Factory");
     public static final KnownKey zimbra_class_application = KnownKey.newKey("com.zimbra.cs.util.ZimbraApplication");
     public static final KnownKey zimbra_class_rulerewriterfactory = KnownKey.newKey("com.zimbra.cs.filter.RuleRewriterFactory");
     public static final KnownKey zimbra_class_datasourcemanager = KnownKey.newKey("com.zimbra.cs.datasource.DataSourceManager");
@@ -1195,8 +1176,6 @@ public final class LC {
     public static final KnownKey ldap_dit_base_dn_mime          = KnownKey.newKey("");
     // LDAP Custom DIT base DN for server entries
     public static final KnownKey ldap_dit_base_dn_server        = KnownKey.newKey("");
-    // LDAP Custom DIT base DN for alwaysOnCluster entries
-    public static final KnownKey ldap_dit_base_dn_alwaysoncluster        = KnownKey.newKey("");
     // LDAP Custom DIT base DN for uncservice entries
     public static final KnownKey ldap_dit_base_dn_ucservice     = KnownKey.newKey("");
     // LDAP Custom DIT base DN for share locator entries
@@ -1295,12 +1274,6 @@ public final class LC {
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
     public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
     public static final KnownKey defang_av_javascript = KnownKey.newKey("javascript");
-
-    //EWS web service
-    public static final KnownKey ews_service_wsdl_location =
-        KnownKey.newKey("/opt/zimbra/lib/ext/zimbraews/");
-    public static final KnownKey ews_service_log_file =
-        KnownKey.newKey("/opt/zimbra/log/ews.log");
 
     static {
         // Automatically set the key name with the variable name.
