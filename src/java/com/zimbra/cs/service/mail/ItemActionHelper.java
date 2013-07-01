@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -239,7 +240,7 @@ public class ItemActionHelper {
 
     protected SoapProtocol mResponseProtocol;
     protected Op mOperation;
-    protected int[] mIds;
+    protected int[] itemIds;
     protected MailItem.Type type;
     protected boolean mFlagValue;
     protected TargetConstraint mTargetConstraint;
@@ -342,9 +343,9 @@ public class ItemActionHelper {
         mResponseProtocol = responseProto;
 
         int i = 0;
-        mIds = new int[ids.size()];
+        itemIds = new int[ids.size()];
         for (int id : ids)
-            mIds[i++] = id;
+            itemIds[i++] = id;
 
         mOperation = op;
         if (mOperation == null)
@@ -354,8 +355,8 @@ public class ItemActionHelper {
         mTargetConstraint = tcon;
     }
 
-    private OperationContext mOpCtxt;
-    private Mailbox mMailbox;
+    private final OperationContext mOpCtxt;
+    private final Mailbox mMailbox;
     protected Mailbox getMailbox() { return mMailbox; }
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
@@ -385,7 +386,7 @@ public class ItemActionHelper {
         }
 
         StringBuilder successes = new StringBuilder();
-        for (int id : mIds)
+        for (int id : itemIds)
             successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
         mResult = successes.toString();
     }
@@ -398,57 +399,56 @@ public class ItemActionHelper {
         return mCreatedIds;
     }
 
-
-    private void executeLocal() throws ServiceException {
+    private void executeLocalBatch(int[] ids) throws ServiceException {
         // iterate over the local items and perform the requested operation
         switch (mOperation) {
             case FLAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.FlagInfo.FLAGGED, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), ids, type, Flag.FlagInfo.FLAGGED, mFlagValue, mTargetConstraint);
                 break;
             case PRIORITY:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.FlagInfo.PRIORITY, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), ids, type, Flag.FlagInfo.PRIORITY, mFlagValue, mTargetConstraint);
                 break;
             case READ:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.FlagInfo.UNREAD, !mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), ids, type, Flag.FlagInfo.UNREAD, !mFlagValue, mTargetConstraint);
                 break;
             case TAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, mTagName, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), ids, type, mTagName, mFlagValue, mTargetConstraint);
                 break;
             case COLOR:
-                getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
+                getMailbox().setColor(getOpCtxt(), ids, type, mColor);
                 break;
             case HARD_DELETE:
-                getMailbox().delete(getOpCtxt(), mIds, type, mTargetConstraint);
+                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint);
                 break;
             case RECOVER:
-                getMailbox().recover(getOpCtxt(), mIds, type, mIidFolder.getId());
+                getMailbox().recover(getOpCtxt(), ids, type, mIidFolder.getId());
                 break;
             case DUMPSTER_DELETE:
-                getMailbox().deleteFromDumpster(getOpCtxt(), mIds);
+                getMailbox().deleteFromDumpster(getOpCtxt(), ids);
                 break;
             case SPAM:
             case MOVE:
-                getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
+                getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
                 break;
             case COPY:
-                List<MailItem> copies = getMailbox().copy(getOpCtxt(), mIds, type, mIidFolder.getId());
-                mCreatedIds = new ArrayList<String>(mIds.length);
+                List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
+                mCreatedIds = new ArrayList<String>(ids.length);
                 for (MailItem item : copies) {
                     mCreatedIds.add(mIdFormatter.formatItemId(item));
                 }
                 break;
             case RENAME:
-                for (int id : mIds) {
+                for (int id : ids) {
                     getMailbox().rename(getOpCtxt(), id, type, mName, mIidFolder.getId());
                 }
                 break;
             case UPDATE:
                 if (mName != null) {
-                    for (int id : mIds) {
+                    for (int id : ids) {
                         getMailbox().rename(getOpCtxt(), id, type, mName, mIidFolder.getId());
                     }
                 } else if (mIidFolder.getId() > 0) {
-                    getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
+                    getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
                     int flagMask = Flag.toBitmask(mFlags);
@@ -459,24 +459,43 @@ public class ItemActionHelper {
                     if (mTags == null) {
                         mTags = MailItem.TAG_UNCHANGED;
                     }
-                    getMailbox().setTags(getOpCtxt(), mIds, type, flagMask, mTags, mTargetConstraint);
+                    getMailbox().setTags(getOpCtxt(), ids, type, flagMask, mTags, mTargetConstraint);
                 }
                 if (mColor != null) {
-                    getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
+                    getMailbox().setColor(getOpCtxt(), ids, type, mColor);
                 }
                 break;
             case LOCK:
-                for (int id : mIds) {
+                for (int id : ids) {
                     getMailbox().lock(getOpCtxt(), id, type, mAuthenticatedAccount.getId());
                 }
                 break;
             case UNLOCK:
-                for (int id : mIds) {
+                for (int id : ids) {
                     getMailbox().unlock(getOpCtxt(), id, type, mAuthenticatedAccount.getId());
                 }
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
+        }
+    }
+
+    private void executeLocal() throws ServiceException {
+        int batchSize = Provisioning.getInstance().getLocalServer().getItemActionBatchSize();
+        ZimbraLog.mailbox.debug("ItemAction batchSize=%d", batchSize);
+        if (itemIds.length <= batchSize) {
+            executeLocalBatch(itemIds);
+            return;
+        }
+        int offset = 0;
+        while (offset < itemIds.length) {
+            int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
+                    (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
+            executeLocalBatch(batchOfIds);
+            offset += batchSize;
+            if (offset < itemIds.length) {
+                Thread.yield();
+            }
         }
     }
 
@@ -526,12 +545,12 @@ public class ItemActionHelper {
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
-        mCreatedIds = new ArrayList<String>(mIds.length);
+        mCreatedIds = new ArrayList<String>(itemIds.length);
 
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
         boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
 
-        for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, type)) {
+        for (MailItem item : mMailbox.getItemById(mOpCtxt, itemIds, type)) {
             if (item == null) {
                 continue;
             }

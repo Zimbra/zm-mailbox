@@ -7236,4 +7236,11 @@ TODO: delete them permanently from here
    </desc>
 </attr>
 
+<attr id="1451" name="zimbraItemActionBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.5">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>
+    Maximum number of item to perform an ItemAction on at a time.
+  </desc>
+</attr>
+
 </attrs>

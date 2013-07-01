@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -66,16 +66,16 @@ public class ContactActionHelper extends ItemActionHelper {
             }
 
             if (mIidFolder.getId() > 0) {
-                getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
+                getMailbox().move(getOpCtxt(), itemIds, type, mIidFolder.getId(), mTargetConstraint);
             }
             if (mTags != null || mFlags != null) {
-                getMailbox().setTags(getOpCtxt(), mIds, type, Flag.toBitmask(mFlags), mTags, mTargetConstraint);
+                getMailbox().setTags(getOpCtxt(), itemIds, type, Flag.toBitmask(mFlags), mTags, mTargetConstraint);
             }
             if (mColor != null) {
-                getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
+                getMailbox().setColor(getOpCtxt(), itemIds, type, mColor);
             }
             if (mParsedContact != null) {
-                for (int id : mIds) {
+                for (int id : itemIds) {
                     getMailbox().modifyContact(getOpCtxt(), id, mParsedContact);
                 }
             }
@@ -85,7 +85,7 @@ public class ContactActionHelper extends ItemActionHelper {
         }
 
         StringBuilder successes = new StringBuilder();
-        for (int id : mIds) {
+        for (int id : itemIds) {
             successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
         }
         mResult = successes.toString();

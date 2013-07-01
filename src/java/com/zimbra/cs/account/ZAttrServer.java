@@ -41,8 +41,6 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130628-1854 */
-
     /**
      * RFC2256: common name(s) for which the entity is known by
      *
@@ -7360,6 +7358,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetIsMonitorHost(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIsMonitorHost, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of item to perform an ItemAction on at a time.
+     *
+     * @return zimbraItemActionBatchSize, or 1000 if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1451)
+    public int getItemActionBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraItemActionBatchSize, 1000);
+    }
+
+    /**
+     * Maximum number of item to perform an ItemAction on at a time.
+     *
+     * @param zimbraItemActionBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1451)
+    public void setItemActionBatchSize(int zimbraItemActionBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraItemActionBatchSize, Integer.toString(zimbraItemActionBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of item to perform an ItemAction on at a time.
+     *
+     * @param zimbraItemActionBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1451)
+    public Map<String,Object> setItemActionBatchSize(int zimbraItemActionBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraItemActionBatchSize, Integer.toString(zimbraItemActionBatchSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of item to perform an ItemAction on at a time.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1451)
+    public void unsetItemActionBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraItemActionBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of item to perform an ItemAction on at a time.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1451)
+    public Map<String,Object> unsetItemActionBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraItemActionBatchSize, "");
         return attrs;
     }
 

@@ -36,8 +36,6 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130628-1854 */
-
     /**
      * RFC2256: common name(s) for which the entity is known by
      *
