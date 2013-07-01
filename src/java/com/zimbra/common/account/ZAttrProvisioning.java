@@ -28,8 +28,6 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 9.0.0_BETA1_1111 prashant 20130628-1854 */
-
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
         USER("USER");
@@ -5793,6 +5791,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=376)
     public static final String A_zimbraIsSystemResource = "zimbraIsSystemResource";
+
+    /**
+     * Maximum number of item to perform an ItemAction on at a time.
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1451)
+    public static final String A_zimbraItemActionBatchSize = "zimbraItemActionBatchSize";
 
     /**
      * Whether to index junk messages
