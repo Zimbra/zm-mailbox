@@ -30,6 +30,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
@@ -84,6 +85,41 @@ public final class Zimbra {
         System.setProperty("mail.mime.base64.ignoreerrors",     "true");
         System.setProperty("mail.mime.ignoremultipartencoding", "false");
         System.setProperty("mail.mime.multipart.allowempty",    "true");
+    }
+
+    private static final String HEAP_DUMP_JAVA_OPTION = "-xx:heapdumppath=";
+
+    private static void validateJavaOptions() throws ServiceException {
+        String options = LC.mailboxd_java_options.value();
+        if (options != null && options.toLowerCase().indexOf(HEAP_DUMP_JAVA_OPTION) > -1) {
+            int start = options.toLowerCase().indexOf(HEAP_DUMP_JAVA_OPTION) + HEAP_DUMP_JAVA_OPTION.length();
+            int end = -1;
+            for (int i = start; i < options.length(); i++) {
+                char c = options.charAt(i);
+                if (c == ' ') {
+                    end = i;
+                    break;
+                }
+            }
+            String path = null;
+            if (end > -1) {
+                path = options.substring(start, end);
+            } else {
+                path = options.substring(start);
+            }
+            try {
+                if (path.trim().length() <= 0) {
+                    throw new IOException("Heap dump path not specified correctly? mailboxd_java_options="+LC.mailboxd_java_options.value());
+                }
+                File dir = new File(path);
+                FileUtil.ensureDirExists(dir);
+                if (!dir.canWrite()) {
+                    throw new IOException("Heap dump path not writable: " + path);
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Unable to find/create HeapDumpPath", e);
+            }
+        }
     }
 
     private static void checkForClass(String clzName, String jarName) {
@@ -165,6 +201,7 @@ public final class Zimbra {
         alwaysOnClusterId = server.getAlwaysOnClusterId();
 
         setSystemProperties();
+        validateJavaOptions();
 
         logVersionAndSysInfo();
 
