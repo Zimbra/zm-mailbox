@@ -2,17 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.service.mail;
+
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,9 +48,10 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 
@@ -177,5 +180,31 @@ public class SendShareNotificationTest extends SendShareNotification {
         request.addElement(MailConstants.E_ITEM).addAttribute(MailConstants.A_ID, f.getId());
         request.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS, "test2@zimbra.com");
         handle(request, ServiceTestUtil.getRequestContext(acct));
+    }
+
+
+    @Test
+    public void testShareFolderNotificationEmailNotes() throws Exception {
+        revoke = false;
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        Folder f = mbox.createFolder(null, "f1", Mailbox.ID_FOLDER_BRIEFCASE,
+            new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT));
+
+        mbox.grantAccess(null, f.getId(), acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
+
+        Element request = new Element.XMLElement(MailConstants.SEND_SHARE_NOTIFICATION_REQUEST);
+        request.addElement(MailConstants.E_ITEM).addAttribute(MailConstants.A_ID, f.getId());
+        request.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS,
+            "test2@zimbra.com");
+        request.addElement(MailConstants.E_NOTES).setText("this\n is\n a\nstandard\nmessage.");
+        handle(request, ServiceTestUtil.getRequestContext(acct));
+        MailItem sent = mbox.getItemById(null, 258, MailItem.Type.MESSAGE);
+        Message zMsg = (Message) sent;
+        String body = new String(zMsg.getContent());
+        String expected = "this<br> is<br> a<br>standard<br>message.<br>";
+        assertTrue(body.indexOf(expected) != -1);
     }
 }

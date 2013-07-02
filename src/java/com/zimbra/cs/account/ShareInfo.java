@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -84,6 +84,7 @@ public class ShareInfo {
 //    private static String S_DELIMITER = ";";
 
     protected ShareInfoData mData;
+
 
     //
     // Grants that are applicable to the entry the share info is for.
@@ -561,6 +562,8 @@ public class ShareInfo {
                                                   ACL.RIGHT_INSERT |
                                                   ACL.RIGHT_DELETE |
                                                   ACL.RIGHT_ACTION;
+        private static final String HTML_LINE_BREAK = "<br>";
+        private static final String NEWLINE = "\n";
 
 
         public static MimeMultipart genNotifBody(ShareInfoData sid, String notes,
@@ -667,8 +670,14 @@ public class ShareInfo {
                         locale, extUserShareAcceptUrl, extUserLoginUrl);
             }
             if (!Strings.isNullOrEmpty(senderNotes)) {
-                senderNotes = L10nUtil.getMessage(
-                        html ? MsgKey.shareNotifBodyNotesHtml : MsgKey.shareNotifBodyNotesText, locale, senderNotes);
+                if (!html) {
+                    senderNotes = L10nUtil.getMessage(MsgKey.shareNotifBodyNotesText, locale,
+                        senderNotes);
+                } else {
+                    senderNotes = senderNotes.replaceAll(NotificationSender.NEWLINE, HTML_LINE_BREAK);
+                    senderNotes = L10nUtil.getMessage(MsgKey.shareNotifBodyNotesHtml, locale,
+                        senderNotes);
+                }
             }
             MsgKey msgKey;
             if (shareModified) {
@@ -1131,6 +1140,7 @@ public class ShareInfo {
                 return NAME;
             }
         }
+
     }
 }
 
