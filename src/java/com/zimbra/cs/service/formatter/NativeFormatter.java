@@ -343,7 +343,7 @@ public final class NativeFormatter extends Formatter {
             ctxt.req.setAttribute(ATTR_MSGDIGEST, digest);
             ctxt.req.setAttribute(ATTR_FILENAME, filename);
             ctxt.req.setAttribute(ATTR_CONTENTTYPE, ct);
-            ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURL().toString());
+            ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURI());
             ctxt.req.setAttribute(ATTR_CONTENTLENGTH, length);
             RequestDispatcher dispatcher = ctxt.req.getRequestDispatcher(CONVERSION_PATH);
             dispatcher.forward(ctxt.req, ctxt.resp);
