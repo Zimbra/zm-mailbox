@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -63,8 +63,9 @@ public class CommonDocumentInfo {
     private Long size;
 
     /**
-     * @zm-api-field-tag date
-     * @zm-api-field-description Date
+     * @zm-api-field-tag date-millis
+     * @zm-api-field-description Date the item's content was last modified in milliseconds since 1970-01-01 00:00:00 UTC.
+     * For immutable objects (e.g. received messages), this will be the same as the date the item was created.
      */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
@@ -98,8 +99,9 @@ public class CommonDocumentInfo {
     private Integer metadataVersion;
 
     /**
-     * @zm-api-field-tag change-date
-     * @zm-api-field-description Modified date in seconds
+     * @zm-api-field-tag change-date-seconds
+     * @zm-api-field-description The date the item's metadata and/or content was last modified in seconds since
+     * 1970-01-01 00:00:00 UTC.
      */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
@@ -176,8 +178,8 @@ public class CommonDocumentInfo {
     private String creator;
 
     /**
-     * @zm-api-field-tag revision-create-date
-     * @zm-api-field-description Revision creation date
+     * @zm-api-field-tag revision-create-date-millis
+     * @zm-api-field-description Revision creation date in milliseconds since 1970-01-01 00:00:00 UTC.
      */
     @XmlAttribute(name=MailConstants.A_CREATED_DATE /* cd */, required=false)
     private Long createdDate;
@@ -186,7 +188,7 @@ public class CommonDocumentInfo {
      * @zm-api-field-description Metadata
      */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
+    private final List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag fragment
