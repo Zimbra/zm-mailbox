@@ -593,17 +593,20 @@ public class TagTest {
                 Assert.assertFalse("implicit tags should not be notified", item instanceof Tag);
             }
 
+            ml.clear();
             // new real tags *should* be included in notifications
             mbox.createTag(null, tag1, (byte) 0);
             Assert.assertFalse("explicit tag create must produce notifications", ml.pms.created.isEmpty());
             Assert.assertTrue("explicit tags must be notified", ml.pms.created.values().iterator().next() instanceof Tag);
 
+            ml.clear();
             // changes to implicit tags should not be included in notifications
             int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
             for (Change chg : ml.pms.modified.values()) {
                 Assert.assertFalse("implicit tag changes should not be notified", chg.what instanceof Tag);
             }
 
+            ml.clear();
             // changes to real tags *should* be included in notifications
             mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, true, null);
             Assert.assertFalse("explicit tag apply must produce notifications", ml.pms.modified == null || ml.pms.modified.isEmpty());

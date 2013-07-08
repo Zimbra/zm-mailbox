@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
@@ -192,10 +193,48 @@ public final class MailboxTest {
     }
 
     static class MockListener extends MailboxListener {
+        /**
+         * Information on creations/modifications and deletions seen since
+         * {@link clear} was last called (or listener was instantiated)
+         */
         PendingModifications pms;
 
         @Override public void notify(ChangeNotification notification) {
-            this.pms = notification.mods;
+            PendingModifications newPms = notification.mods;
+
+            if (this.pms == null) {
+                this.pms = newPms;
+            } else {
+                if (newPms.created != null) {
+                    if (pms.created == null) {
+                        pms.created = Maps.newLinkedHashMap();
+                    }
+                    pms.created.putAll(newPms.created);
+                }
+                if (newPms.modified != null) {
+                    if (pms.modified == null) {
+                        pms.modified = Maps.newHashMap();
+                    }
+                    pms.modified.putAll(newPms.modified);
+                }
+                if (newPms.deleted != null) {
+                    if (pms.deleted == null) {
+                        pms.deleted = Maps.newHashMap();
+                    }
+                    pms.deleted.putAll(newPms.deleted);
+                }
+            }
+        }
+
+        public PendingModifications getPms() {
+            return pms;
+        }
+
+        /**
+         * Regard all previously items seen during listening as processed.
+         */
+        public void clear() {
+            pms = null;
         }
     }
 
@@ -214,16 +253,16 @@ public final class MailboxTest {
             ModificationKey fkey = new ModificationKey(f);
             ModificationKey fParentKey = new ModificationKey(fParent);
 
-            Assert.assertNull("no deletes after create", ml.pms.deleted);
+            Assert.assertNull("no deletes after create", ml.getPms().deleted);
 
-            Assert.assertNotNull("creates aren't null", ml.pms.created);
-            Assert.assertEquals("one created folder", 1, ml.pms.created.size());
-            Assert.assertNotNull("created folder has entry", ml.pms.created.get(fkey));
-            Assert.assertEquals("created folder matches created entry", f.getId(), ml.pms.created.get(fkey).getId());
+            Assert.assertNotNull("creates aren't null", ml.getPms().created);
+            Assert.assertEquals("one created folder", 1, ml.getPms().created.size());
+            Assert.assertNotNull("created folder has entry", ml.getPms().created.get(fkey));
+            Assert.assertEquals("created folder matches created entry", f.getId(), ml.getPms().created.get(fkey).getId());
 
-            Assert.assertNotNull("modifications aren't null", ml.pms.modified);
-            Assert.assertEquals("one modified folder", 1, ml.pms.modified.size());
-            PendingModifications.Change pModification = ml.pms.modified.get(fParentKey);
+            Assert.assertNotNull("modifications aren't null", ml.getPms().modified);
+            Assert.assertEquals("one modified folder", 1, ml.getPms().modified.size());
+            PendingModifications.Change pModification = ml.getPms().modified.get(fParentKey);
             Assert.assertNotNull("parent folder modified", pModification);
             Assert.assertEquals("parent folder matches modified entry",
                                 fParent.getId(), ((Folder) pModification.what).getId());
@@ -235,24 +274,28 @@ public final class MailboxTest {
             Message m = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), dopt, null);
             ModificationKey mkey = new ModificationKey(m);
 
+            ml.clear();
             mbox.delete(null, f.getId(), MailItem.Type.FOLDER);
 
-            Assert.assertNull("no creates after delete", ml.pms.created);
+            Assert.assertNull("no creates after delete", ml.getPms().created);
 
-            Assert.assertNotNull("deletes aren't null", ml.pms.deleted);
-            Assert.assertEquals("one deleted folder, one deleted message, one deleted vconv", 3, ml.pms.deleted.size());
-            PendingModifications.Change fDeletion = ml.pms.deleted.get(fkey);
+            Assert.assertNotNull("deletes aren't null", ml.getPms().deleted);
+            Assert.assertEquals("1 deleted folder, 1 deleted message, 1 deleted vconv", 3, ml.getPms().deleted.size());
+            PendingModifications.Change fDeletion = ml.getPms().deleted.get(fkey);
             Assert.assertNotNull("deleted folder has entry", fDeletion);
             Assert.assertTrue("deleted folder matches deleted entry",
                               f.getType() == fDeletion.what && f.getId() == ((Folder) fDeletion.preModifyObj).getId());
-            PendingModifications.Change mDeletion = ml.pms.deleted.get(mkey);
+            PendingModifications.Change mDeletion = ml.getPms().deleted.get(mkey);
             Assert.assertNotNull("deleted message has entry", mDeletion);
             // Note that preModifyObj may be null for the deleted message, so just check for the type
             Assert.assertTrue("deleted message matches deleted entry", m.getType() == mDeletion.what);
 
-            Assert.assertNotNull("modifications aren't null", ml.pms.modified);
-            Assert.assertEquals("parent folder modified, mailbox size modified", 2, ml.pms.modified.size());
-            pModification = ml.pms.modified.get(fParentKey);
+            Assert.assertNotNull("modifications aren't null", ml.getPms().modified);
+            // Bug 80980 "folder size modified" notification present because folder delete is now a 2 stage operation.
+            // Empty folder, then delete it.
+            Assert.assertEquals("parent folder modified, mailbox size modified, folder size modified",
+                    3, ml.getPms().modified.size());
+            pModification = ml.getPms().modified.get(fParentKey);
             Assert.assertNotNull("parent folder modified", pModification);
             Assert.assertEquals("parent folder matches modified entry",
                                 fParent.getId(), ((Folder) pModification.what).getId());

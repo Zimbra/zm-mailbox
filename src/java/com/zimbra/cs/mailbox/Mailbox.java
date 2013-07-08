@@ -46,6 +46,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Options;
@@ -688,10 +689,6 @@ public class Mailbox {
         return open;
     }
 
-    private Mailbox getMailbox() {
-        return this;
-    }
-
     /**
      * Called by the MailboxManager before returning the mailbox, this function makes sure the Mailbox is ready to use
      * (index initialized, version check, etc etc).
@@ -967,7 +964,6 @@ public class Mailbox {
             			DbSession.create(conn, session.getMailbox().getId(), Provisioning.getInstance().getLocalServer().getId());
             			conn.commit();
             		} catch (ServiceException e) {
-            			// TODO Auto-generated catch block
             			ZimbraLog.session.info("exception while inserting session into DB", e);
             		} finally {
             			if (conn != null)
@@ -6704,19 +6700,21 @@ public class Mailbox {
         delete(octxt, new int[] { itemId }, type, tcon);
     }
 
-    /** Deletes the <tt>MailItem</tt>s with the given id.  If there is no
-     *  <tt>MailItem</tt> for a given id, that id is ignored.  If the id maps
-     *  to an existing <tt>MailItem</tt> of an incompatible type, however,
-     *  an error is thrown.
+    /**
+     * Delete the <tt>MailItem</tt>s with the given ids.  If there is no <tt>MailItem</tt> for a given id, that id is
+     * ignored.  If the id maps to an existing <tt>MailItem</tt> of an incompatible type, however, an error is thrown.
      *
      * @param octxt operation context or {@code null}
      * @param itemIds item ids
      * @param type item type or {@link MailItem.Type#UNKNOWN}
-     * @param tcon target constraint or {@code null} */
-    public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
+     * @param tcon target constraint or {@code null}
+     */
+    private void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon,
+            boolean useEmptyForFolders)
     throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
+        List<Integer> folderIds = Lists.newArrayList();
         boolean success = false;
         try {
             beginTransaction("delete", octxt, redoRecorder);
@@ -6740,9 +6738,12 @@ public class Mailbox {
                 } else if (!checkItemChangeID(item) && item instanceof Tag) {
                     throw MailServiceException.MODIFY_CONFLICT();
                 }
-
-                // delete the item, but don't write the tombstone until we're finished...
-                item.delete(false);
+                if (useEmptyForFolders && MailItem.Type.FOLDER.equals(item.getType())) {
+                    folderIds.add(id); // removed later to allow batching delete of contents in there own transactions
+                } else {
+                    // delete the item, but don't write the tombstone until we're finished...
+                    item.delete(false);
+                }
             }
 
             // deletes have already been collected, so fetch the tombstones and write once
@@ -6755,6 +6756,23 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+        for (Integer folderId : folderIds) {
+            emptyFolder(octxt, folderId, true /* removeTopLevelFolder */, true /* removeSubfolders */, tcon);
+        }
+    }
+
+    /**
+     * Delete the <tt>MailItem</tt>s with the given ids.  If there is no <tt>MailItem</tt> for a given id, that id is
+     * ignored.  If the id maps to an existing <tt>MailItem</tt> of an incompatible type, however, an error is thrown.
+     *
+     * @param octxt operation context or {@code null}
+     * @param itemIds item ids
+     * @param type item type or {@link MailItem.Type#UNKNOWN}
+     * @param tcon target constraint or {@code null}
+     */
+    public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
+    throws ServiceException {
+        delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */);
     }
 
     TypedIdList collectPendingTombstones() {
@@ -7716,12 +7734,41 @@ public class Mailbox {
         }
     }
 
-    public void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
+    private boolean deletedBatchOfItemsInFolder(OperationContext octxt, QueryParams params, TargetConstraint tcon)
+    throws ServiceException {
+        // Lock this mailbox to make sure that no one modifies the items we're about to delete.
+        lock.lock();
+        try {
+            DeleteItem redoRecorder = new DeleteItem(mId, MailItem.Type.UNKNOWN, tcon);
+            boolean success = false;
+            try {
+                beginTransaction("delete", octxt, redoRecorder);
+                setOperationTargetConstraint(tcon);
+                PendingDelete info = DbMailItem.getLeafNodes(this, params);
+                if (info.itemIds.isEmpty()) {
+                    return false;
+                }
+                redoRecorder.setIds(ArrayUtil.toIntArray(info.itemIds.getAllIds()));
+                MailItem.delete(this, info, null, true /* writeTombstones */, false /* not fromDumpster */);
+                success = true;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
+        return true;
+    }
+
+    /**
+     * @param removeTopLevelFolder - delete folder after it has been emptied
+     */
+    private void emptyFolder(OperationContext octxt, int folderId,
+            boolean removeTopLevelFolder, boolean removeSubfolders, TargetConstraint tcon)
     throws ServiceException {
         int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
-        ZimbraLog.mailbox.debug("Emptying folder %s, removeSubfolders=%b, batchSize=%d",
-            folderId, removeSubfolders, batchSize);
-
+        ZimbraLog.mailbox.debug("Emptying folder %s, removeTopLevelFolder=%b, removeSubfolders=%b, batchSize=%d",
+            folderId, removeTopLevelFolder, removeSubfolders, batchSize);
         List<Integer> folderIds = new ArrayList<Integer>();
         if (!removeSubfolders) {
             folderIds.add(folderId);
@@ -7732,8 +7779,7 @@ public class Mailbox {
             }
         }
 
-        // Make sure that the user has the delete permission for all folders in
-        // the hierarchy.
+        // Make sure that the user has the delete permission for all folders in the hierarchy.
         for (int id : folderIds) {
             if ((getEffectivePermissions(octxt, id, MailItem.Type.FOLDER) & ACL.RIGHT_DELETE) == 0) {
                throw ServiceException.PERM_DENIED("not authorized to empty folder " + getFolderById(octxt, id).getPath());
@@ -7745,7 +7791,7 @@ public class Mailbox {
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         boolean firstTime = true;
-        while (true) {
+        do {
             // Give other threads a chance to use the mailbox between deletion batches.
             if (firstTime) {
                 firstTime = false;
@@ -7758,39 +7804,27 @@ public class Mailbox {
                     ZimbraLog.mailbox.warn("Sleep was interrupted", e);
                 }
             }
+        } while (deletedBatchOfItemsInFolder(octxt, params, tcon));
 
-            // Lock this mailbox to make sure that no one modifies the items we're about to delete.
-            lock.lock();
-            try {
-                DeleteItem redoRecorder = new DeleteItem(mId, MailItem.Type.UNKNOWN, null);
-                boolean success = false;
+        if ((removeTopLevelFolder || removeSubfolders) && (!folderIds.isEmpty())) {
+            if (!removeTopLevelFolder) {
+                folderIds.remove(0);   // 0th position is the folder being emptied
+            }
+            if (!folderIds.isEmpty()) {
+                lock.lock();
                 try {
-                    beginTransaction("delete", octxt, redoRecorder);
-                    PendingDelete info = DbMailItem.getLeafNodes(this, params);
-                    if (info.itemIds.isEmpty())
-                        break;
-
-                    redoRecorder.setIds(ArrayUtil.toIntArray(info.itemIds.getAllIds()));
-                    MailItem.delete(this, info, null, true, false);
-                    success = true;
+                    delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, tcon,
+                            false /* don't useEmptyForFolders */);
                 } finally {
-                    endTransaction(success);
+                    lock.release();
                 }
-            } finally {
-                lock.release();
             }
         }
+    }
 
-        if (removeSubfolders && folderIds.size() > 1) {
-            // delete the subfolders
-            folderIds.remove(0);   // 0th position is the folder being emptied which we do not want to delete
-            lock.lock();
-            try {
-                delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, null);
-            } finally {
-                lock.release();
-            }
-        }
+    public void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
+    throws ServiceException {
+        emptyFolder(octxt, folderId, false /* removeTopLevelFolder */, removeSubfolders, null /* TargetConstraint */);
     }
 
     public SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query,
