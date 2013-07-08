@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -256,7 +256,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public int imapId   = -1;
         public String locator;
         private String blobDigest;
-        public int date;
+        public int date; /* Seconds since 1970-01-01 00:00:00 UTC */
         public long size;
         public int unreadCount;
         private int flags;
@@ -265,7 +265,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public String name;
         public String metadata;
         public int modMetadata;
-        public int dateChanged;
+        public int dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
         public int modContent;
         public String uuid;
 
@@ -877,9 +877,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mVersion;
     }
 
-    /** Returns the date the item's content was last modified.  For immutable
-     *  objects (e.g. received messages), this will be the same as the date
-     *  the item was created. */
+    /** Returns the date the item's content was last modified as number of milliseconds since 1970-01-01 00:00:00 UTC.
+     *  For immutable objects (e.g. received messages), this will be the same as the date the item was created. */
     public long getDate() {
         return mData.date * 1000L;
     }
@@ -891,9 +890,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mData.modContent;
     }
 
-    /** Returns the date the item's metadata and/or content was last modified.
-     *  This includes changes in tags and flags as well as folder-to-folder
-     *  moves and recoloring. */
+    /** Returns the date the item's metadata and/or content was last modified as number of milliseconds since
+     * 1970-01-01 00:00:00 UTC. Includes changes in tags and flags as well as folder-to-folder moves and recoloring. */
     public long getChangeDate() {
         return mData.dateChanged * 1000L;
     }
@@ -1873,14 +1871,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Changes the item's date.
      *
-     * @param date  The item's new date.
+     * @param date  The item's new date - as number of milliseconds since 1970-01-01 00:00:00 UTC (i.e. Java Date).
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void setDate(long date) throws ServiceException {
-        if (mData.date == date)
+        if (mData.date == (int) (date / 1000L)) {
             return;
+        }
 
         if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
