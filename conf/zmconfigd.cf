@@ -58,6 +58,7 @@ SECTION archiving DEPENDS amavis
 
 SECTION mta DEPENDS amavis
 	LOCAL postfix_enable_smtpd_policyd
+	LOCAL postjournal_enabled
 	REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
 	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
 	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
