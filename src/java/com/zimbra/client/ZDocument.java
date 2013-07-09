@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,36 +27,37 @@ import java.net.URLEncoder;
 
 public class ZDocument implements ZItem, ToZJSONObject {
 
-	private boolean isWiki;
-	private String name;
-	private String id;
-	private String uuid;
-	private String folderId;
-	private String version;
-	private String editor;
-	private String creator;
-	private String restUrl;
-	private long createdDate;
-	private long modifiedDate;
-	private long metadataChangeDate;
-	private long size;
-	private String contentType;
-	private String tagIds;
-	private String flags;
+    private final boolean isWiki;
+    private final String name;
+    private final String id;
+    private final String uuid;
+    private final String folderId;
+    private final String version;
+    private final String editor;
+    private final String creator;
+    private final String restUrl;
+    private final long createdDate; /* Revision creation date - millis since 1970-01-01 00:00 UTC. */
+    private final long modifiedDate; /* content last modified - millis since 1970-01-01 00:00 UTC. */
+    private final long metadataChangeDate; /* metadata &/or content last modified - millis since 1970-01-01 00:00 UTC */
+    private final long size;
+    private String contentType;
+    private final String tagIds;
+    private final String flags;
 
     public ZDocument(Element e) throws ServiceException {
-    	isWiki = "w".equals(e.getName());
-    	name = e.getAttribute(MailConstants.A_NAME);
-    	id = e.getAttribute(MailConstants.A_ID);
-    	uuid = e.getAttribute(MailConstants.A_UUID, null);
-    	folderId = e.getAttribute(MailConstants.A_FOLDER);
-    	version = e.getAttribute(MailConstants.A_VERSION);
-    	editor = e.getAttribute(MailConstants.A_LAST_EDITED_BY);
-    	creator = e.getAttribute(MailConstants.A_CREATOR);
-    	restUrl = e.getAttribute(MailConstants.A_REST_URL, null);
-    	createdDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
-    	modifiedDate = e.getAttributeLong(MailConstants.A_DATE, 0);
-    	metadataChangeDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
+        isWiki = "w".equals(e.getName());
+        name = e.getAttribute(MailConstants.A_NAME);
+        id = e.getAttribute(MailConstants.A_ID);
+        uuid = e.getAttribute(MailConstants.A_UUID, null);
+        folderId = e.getAttribute(MailConstants.A_FOLDER);
+        version = e.getAttribute(MailConstants.A_VERSION);
+        editor = e.getAttribute(MailConstants.A_LAST_EDITED_BY);
+        creator = e.getAttribute(MailConstants.A_CREATOR);
+        restUrl = e.getAttribute(MailConstants.A_REST_URL, null);
+        createdDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0);
+        modifiedDate = e.getAttributeLong(MailConstants.A_DATE, 0);
+        /* Note: attribute MailConstants.A_CHANGE_DATE is in seconds, not milliseconds */
+        metadataChangeDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
         size = e.getAttributeLong(MailConstants.A_SIZE,0);
         if(isWiki){
             contentType = MimeConstants.CT_TEXT_HTML; //"text/html";
@@ -110,14 +111,14 @@ public class ZDocument implements ZItem, ToZJSONObject {
         return name;
     }
 
-	public String getNameURLEncoded() {
-		try {
-			return URLEncoder.encode(name, "utf-8").replace("+", "%20");
-		}
-		catch (UnsupportedEncodingException e) {
-			return name;
-		}
-	}
+    public String getNameURLEncoded() {
+        try {
+            return URLEncoder.encode(name, "utf-8").replace("+", "%20");
+        }
+        catch (UnsupportedEncodingException e) {
+            return name;
+        }
+    }
 
     public String getFolderId() {
         return folderId;
