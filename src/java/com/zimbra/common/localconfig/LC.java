@@ -726,6 +726,8 @@ public final class LC {
 
     public static final KnownKey ssl_disable_dh_cipher_suite = KnownKey.newKey(true);
 
+    public static final KnownKey ssl_default_digest = KnownKey.newKey("sha1");
+
     @Supported
     public static final KnownKey zimlet_directory = KnownKey.newKey("${zimbra_home}/zimlets-deployed");
 
