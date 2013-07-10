@@ -38778,6 +38778,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @return zimbraWebClientOfflineSyncMaxDays, or 30 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public int getWebClientOfflineSyncMaxDays() {
+        return getIntAttr(Provisioning.A_zimbraWebClientOfflineSyncMaxDays, 30);
+    }
+
+    /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @param zimbraWebClientOfflineSyncMaxDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public void setWebClientOfflineSyncMaxDays(int zimbraWebClientOfflineSyncMaxDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientOfflineSyncMaxDays, Integer.toString(zimbraWebClientOfflineSyncMaxDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @param zimbraWebClientOfflineSyncMaxDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public Map<String,Object> setWebClientOfflineSyncMaxDays(int zimbraWebClientOfflineSyncMaxDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientOfflineSyncMaxDays, Integer.toString(zimbraWebClientOfflineSyncMaxDays));
+        return attrs;
+    }
+
+    /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public void unsetWebClientOfflineSyncMaxDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientOfflineSyncMaxDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public Map<String,Object> unsetWebClientOfflineSyncMaxDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientOfflineSyncMaxDays, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to show link to offline version in the web UI top bar
      *
      * @return zimbraWebClientShowOfflineLink, or true if unset

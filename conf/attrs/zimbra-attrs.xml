@@ -7243,4 +7243,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1452" name="zimbraWebClientOfflineSyncMaxDays" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="9.0.0">
+  <defaultCOSValue>30</defaultCOSValue>
+  <desc>limit for the number of days that the web client would use to sync any mail folder's data for offline use</desc>
+</attr>
+
 </attrs>
