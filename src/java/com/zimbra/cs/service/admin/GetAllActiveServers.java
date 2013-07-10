@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2013 VMware, Inc.
+ * Copyright (C) 2012 VMware, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,14 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Jun 17, 2004
- */
 package com.zimbra.cs.service.admin;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -29,50 +28,46 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.zookeeper.CuratorManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author schemers
- */
-public class GetAllServers extends AdminDocumentHandler {
+public final class GetAllActiveServers extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-
-	@Override
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
+        Element response = zsc.createElement(AdminConstants.GET_ALL_ACTIVE_SERVERS_RESPONSE);
+        CuratorManager curator = CuratorManager.getInstance();
+        if (curator == null) {
+            return response;
+        }
+        Set<String> serverIds;
+        try {
+            serverIds = curator.getActiveServers();
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("error while getting active servers", e);
+        }
         Provisioning prov = Provisioning.getInstance();
-
-        String service = request.getAttribute(AdminConstants.A_SERVICE, null);
-        String alwaysOnClusterId = request.getAttribute(AdminConstants.A_ALWAYSONCLUSTER_ID, null);
-
-        boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
-        List<Server> servers;
-        if (alwaysOnClusterId == null) {
-            servers = prov.getAllServers(service);
-        } else {
-            servers = prov.getAllServers(service, alwaysOnClusterId);
+        List<Server> servers = new ArrayList<Server>();
+        for (String serverId : serverIds) {
+            Server server = prov.getServerById(serverId);
+            servers.add(server);
         }
 
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
 
-        Element response = zsc.createElement(AdminConstants.GET_ALL_SERVERS_RESPONSE);
         for (Iterator<Server> it = servers.iterator(); it.hasNext(); ) {
             Server server = it.next();
             if (aac.hasRightsToList(server, Admin.R_listServer, null))
-                GetServer.encodeServer(response, server, applyConfig, null, aac.getAttrRightChecker(server));
+                GetServer.encodeServer(response, server, true, null, aac.getAttrRightChecker(server));
         }
 
-	    return response;
-	}
+        return response;
+    }
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_listServer);
-        relatedRights.add(Admin.R_getServer);
-
-        notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
+        notes.add(AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);
     }
 }

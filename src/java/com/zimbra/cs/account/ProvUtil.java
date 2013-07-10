@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -519,9 +519,10 @@ public class ProvUtil implements HttpDebugListener {
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5, Via.ldap),
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "[-s/--server hostname] {name@domain|id}", Category.LOG, 1, 3),
+        GET_ALL_ACTIVE_SERVERS("getAllActiveServers", "gaas", "[-v]", Category.SERVER, 0, 1),
         GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[-s/--server hostname]", Category.LOG, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
-        GET_ALL_ALWAYSONCLUSTERS("getAllAlwaysOnClusters", "gaaoc", "[-v]", Category.ALWAYSONCLUSTER, 0, 3),
+        GET_ALL_ALWAYSONCLUSTERS("getAllAlwaysOnClusters", "gaaoc", "[-v]", Category.ALWAYSONCLUSTER, 0, 1),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
@@ -602,9 +603,11 @@ public class ProvUtil implements HttpDebugListener {
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH, 1, Integer.MAX_VALUE, Via.ldap),
         SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
+        SET_LOCAL_SERVER_ONLINE("setLocalServerOnline", "slso", "", Category.SERVER, 0, 0),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE),
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
+        SET_SERVER_OFFLINE("setServerOffline", "sso", "{name|id}", Category.SERVER, 1, 1),
         GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
         GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.REVERSEPROXY, 0, 0),
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.REVERSEPROXY, 0, 0),
@@ -913,6 +916,9 @@ public class ProvUtil implements HttpDebugListener {
             case GET_ALL_ACCOUNTS:
                 doGetAllAccounts(args);
                 break;
+            case GET_ALL_ACTIVE_SERVERS:
+                doGetAllActiveServers(args);
+                break;
             case GET_ALL_ADMIN_ACCOUNTS:
                 doGetAllAdminAccounts(args);
                 break;
@@ -1123,6 +1129,12 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case SET_ACCOUNT_COS:
                 prov.setCOS(lookupAccount(args[1]),lookupCos(args[2]));
+                break;
+            case SET_SERVER_OFFLINE:
+                doSetServerOffline(args);
+                break;
+            case SET_LOCAL_SERVER_ONLINE:
+                doSetLocalServerOnline();
                 break;
             case SEARCH_ACCOUNTS:
                 doSearchAccounts(args);
@@ -2566,6 +2578,32 @@ public class ProvUtil implements HttpDebugListener {
                 dumpAlwaysOnCluster(cluster, null);
             } else {
                 console.println(cluster.getName());
+            }
+        }
+    }
+
+    private void doGetAllActiveServers(String[] args) throws ServiceException {
+        boolean verbose = false;
+
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v")) {
+                verbose = true;
+            }
+            i++;
+        }
+
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+
+        List<Server> servers = ((SoapProvisioning)prov).getAllActiveServers();
+        for (Server server : servers) {
+            if (verbose) {
+                dumpServer(server, true, null);
+            } else {
+                console.println(server.getName());
             }
         }
     }
@@ -4388,6 +4426,21 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doGetXMPPComponent(String[] args) throws ServiceException {
         dumpXMPPComponent(lookupXMPPComponent(args[1]), getArgNameSet(args, 2));
+    }
+
+    private void doSetServerOffline(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        String key = args[1];
+        ((SoapProvisioning)prov).setServerOffline(guessServerBy(key), key);
+    }
+
+    private void doSetLocalServerOnline() throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        ((SoapProvisioning)prov).setLocalServerOnline();
     }
 
     static private class RightArgs {

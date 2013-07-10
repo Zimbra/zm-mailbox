@@ -1612,7 +1612,10 @@ public class Mailbox {
         }
         if (Zimbra.isAlwaysOn()) {
             // refresh mailbox stats
-            mData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+            MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+            if (newData != null) { // Mailbox may have been deleted
+                mData = newData;
+            }
         }
         boolean needRedo = needRedo(octxt, recorder);
         // have a single, consistent timestamp for anything affected by this operation

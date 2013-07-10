@@ -143,6 +143,20 @@ public class CuratorManager {
         return activeServers;
     }
 
+    public void unregisterService(String serverId) throws Exception {
+        Collection<ServiceInstance<Service>> instances = serviceCache.getInstances();
+        for (ServiceInstance<Service> instance : instances ) {
+            if (serverId.equals(instance.getPayload().getService())) {
+                serviceDiscovery.unregisterService(instance);
+                break;
+            }
+        }
+    }
+
+    public void registerLocalService() throws Exception {
+        serviceDiscovery.registerService(thisInstance);
+    }
+
     public synchronized void start() throws Exception {
         if (client != null) {
             client.start();
