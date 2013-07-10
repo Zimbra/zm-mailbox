@@ -6917,14 +6917,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileNotificationEnabled = "zimbraMobileNotificationEnabled";
 
     /**
-     * Whether to permit Outlook to sync via Active Sync
-     *
-     * @since ZCS 8.0.5
-     */
-    @ZAttr(id=1453)
-    public static final String A_zimbraMobileOutlookSyncEnabled = "zimbraMobileOutlookSyncEnabled";
-
-    /**
      * whether the Bluetooth capabilities are allowed on the device. The
      * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
      * - HANDSFREE 2 - ALLOW ignored if
@@ -10093,6 +10085,19 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1332)
     public static final String A_zimbraReverseProxyErrorHandlerURL = "zimbraReverseProxyErrorHandlerURL";
+
+    /**
+     * During migrations Nginx lookup handler rewrites non-qualified username
+     * to fully qualified breaking proxy to external legacy mail platform.
+     * When zimbraReverseProxyUseExternalRoute is set to TRUE and
+     * zimbraReverseProxyExternalRouteIncludeOriginalAuthusername is set to
+     * FALSE nginx lookup handler drops the domain name from the userAccount
+     * and returns just the username.
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1454)
+    public static final String A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername = "zimbraReverseProxyExternalRouteIncludeOriginalAuthusername";
 
     /**
      * Control whether to generate per virtual hostname nginx configuration.

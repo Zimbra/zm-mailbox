@@ -272,8 +272,6 @@ public final class LC {
 
     public static final KnownKey zimbra_rights_delegated_admin_supported = KnownKey.newKey(true);
 
-    public static final KnownKey zimbra_reverseproxy_externalroute_include_original_authusername = KnownKey.newKey(false);
-
     @Supported
     public static final KnownKey zimbra_spam_report_queue_size = KnownKey.newKey(100);
 
