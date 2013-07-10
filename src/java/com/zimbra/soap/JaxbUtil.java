@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -604,6 +604,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllAccountLoggersResponse.class,
             com.zimbra.soap.admin.message.GetAllAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAccountsResponse.class,
+            com.zimbra.soap.admin.message.GetAllActiveServersRequest.class,
+            com.zimbra.soap.admin.message.GetAllActiveServersResponse.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsResponse.class,
             com.zimbra.soap.admin.message.GetAllAlwaysOnClustersRequest.class,
@@ -888,8 +890,12 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SearchMultiMailboxResponse.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeRequest.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
+            com.zimbra.soap.admin.message.SetLocalServerOnlineRequest.class,
+            com.zimbra.soap.admin.message.SetLocalServerOnlineResponse.class,
             com.zimbra.soap.admin.message.SetPasswordRequest.class,
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
+            com.zimbra.soap.admin.message.SetServerOfflineRequest.class,
+            com.zimbra.soap.admin.message.SetServerOfflineResponse.class,
             com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
             com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
