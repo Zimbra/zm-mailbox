@@ -6848,6 +6848,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileMetadataMaxSizeEnabled = "zimbraMobileMetadataMaxSizeEnabled";
 
     /**
+     * Whether to permit Outlook to sync via Active Sync
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1453)
+    public static final String A_zimbraMobileOutlookSyncEnabled = "zimbraMobileOutlookSyncEnabled";
+
+    /**
      * whether the Bluetooth capabilities are allowed on the device. The
      * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
      * - HANDSFREE 2 - ALLOW ignored if
