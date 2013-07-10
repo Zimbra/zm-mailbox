@@ -7248,4 +7248,8 @@ TODO: delete them permanently from here
   <desc>limit for the number of days that the web client would use to sync any mail folder's data for offline use</desc>
 </attr>
 
+<attr id="1453" name="zimbraMobileOutlookSyncEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.0.5">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether to permit Outlook to sync via Active Sync</desc>
+</attr>
 </attrs>
