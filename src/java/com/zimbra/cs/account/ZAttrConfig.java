@@ -29886,6 +29886,103 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * During migrations Nginx lookup handler rewrites non-qualified username
+     * to fully qualified breaking proxy to external legacy mail platform.
+     * When zimbraReverseProxyUseExternalRoute is set to TRUE and
+     * zimbraReverseProxyExternalRouteIncludeOriginalAuthusername is set to
+     * FALSE nginx lookup handler drops the domain name from the userAccount
+     * and returns just the username.
+     *
+     * @return zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, or false if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1454)
+    public boolean isReverseProxyExternalRouteIncludeOriginalAuthusername() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, false);
+    }
+
+    /**
+     * During migrations Nginx lookup handler rewrites non-qualified username
+     * to fully qualified breaking proxy to external legacy mail platform.
+     * When zimbraReverseProxyUseExternalRoute is set to TRUE and
+     * zimbraReverseProxyExternalRouteIncludeOriginalAuthusername is set to
+     * FALSE nginx lookup handler drops the domain name from the userAccount
+     * and returns just the username.
+     *
+     * @param zimbraReverseProxyExternalRouteIncludeOriginalAuthusername new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1454)
+    public void setReverseProxyExternalRouteIncludeOriginalAuthusername(boolean zimbraReverseProxyExternalRouteIncludeOriginalAuthusername) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, zimbraReverseProxyExternalRouteIncludeOriginalAuthusername ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * During migrations Nginx lookup handler rewrites non-qualified username
+     * to fully qualified breaking proxy to external legacy mail platform.
+     * When zimbraReverseProxyUseExternalRoute is set to TRUE and
+     * zimbraReverseProxyExternalRouteIncludeOriginalAuthusername is set to
+     * FALSE nginx lookup handler drops the domain name from the userAccount
+     * and returns just the username.
+     *
+     * @param zimbraReverseProxyExternalRouteIncludeOriginalAuthusername new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1454)
+    public Map<String,Object> setReverseProxyExternalRouteIncludeOriginalAuthusername(boolean zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, zimbraReverseProxyExternalRouteIncludeOriginalAuthusername ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * During migrations Nginx lookup handler rewrites non-qualified username
+     * to fully qualified breaking proxy to external legacy mail platform.
+     * When zimbraReverseProxyUseExternalRoute is set to TRUE and
+     * zimbraReverseProxyExternalRouteIncludeOriginalAuthusername is set to
+     * FALSE nginx lookup handler drops the domain name from the userAccount
+     * and returns just the username.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1454)
+    public void unsetReverseProxyExternalRouteIncludeOriginalAuthusername() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * During migrations Nginx lookup handler rewrites non-qualified username
+     * to fully qualified breaking proxy to external legacy mail platform.
+     * When zimbraReverseProxyUseExternalRoute is set to TRUE and
+     * zimbraReverseProxyExternalRouteIncludeOriginalAuthusername is set to
+     * FALSE nginx lookup handler drops the domain name from the userAccount
+     * and returns just the username.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1454)
+    public Map<String,Object> unsetReverseProxyExternalRouteIncludeOriginalAuthusername(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, "");
+        return attrs;
+    }
+
+    /**
      * Control whether to generate per virtual hostname nginx configuration.
      * This would be helpful when multiple virtual host names are defined,
      * but they are actually share the same configuration (like ssl cert,
