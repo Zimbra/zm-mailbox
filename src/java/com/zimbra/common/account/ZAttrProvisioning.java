@@ -11772,6 +11772,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientMaxInputBufferLength = "zimbraWebClientMaxInputBufferLength";
 
     /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public static final String A_zimbraWebClientOfflineSyncMaxDays = "zimbraWebClientOfflineSyncMaxDays";
+
+    /**
      * whether or not to show link to offline version in the web UI top bar
      *
      * @since ZCS 6.0.0_GA
