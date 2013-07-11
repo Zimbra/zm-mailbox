@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,8 +19,10 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Set;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -28,7 +30,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -295,5 +296,55 @@ public class MimeTest {
         for (MPartInfo body : bodies) {
             Assert.assertTrue("Expected: " +body.getContentType(), types.remove(body.getContentType()));
         }
+    }
+
+    @Test
+    public void fileTypesAsStream() throws Exception {
+        fileAsStream("txt", false);
+        //not testing all types here, just make sure we don't have special code for pdf somewhere
+        fileAsStream("pdf", false);
+        fileAsStream("doc", false);
+        fileAsStream("xls", false);
+    }
+
+    @Test
+    public void rfc822AsStream() throws Exception {
+        fileAsStream("eml", true);
+        fileAsStream("msg", true);
+    }
+
+    private void fileAsStream(String extension, boolean expectText) throws MessagingException, IOException {
+        if (extension.charAt(0) == '.') {
+            extension = extension.substring(1);
+        }
+        String content =
+                        "From: user1@example.com\r\n"
+                        + "To: user2@example.com\r\n"
+                        + "Subject: test\r\n"
+                        + "Content-Type: application/octet-stream;name=\"test." + extension + "\"\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n\r\n"
+                        + "R0a1231312ad124svsdsal=="; //obviously not a real file
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        MimePart part = Mime.getMimePart(mm, "1");
+        String expectedType = expectText ? "text/plain" : "application/octet-stream";
+        Assert.assertEquals(expectedType, Mime.getContentType(part.getContentType()));
+    }
+
+    @Test
+    public void pdfAsStream() throws Exception {
+        String content =
+                        "From: user1@example.com\r\n"
+                        + "To: user2@example.com\r\n"
+                        + "Subject: test\r\n"
+                        + "Content-Type: application/octet-stream;name=\"test.pdf\"\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n\r\n"
+                        + "R0a1231312ad124svsdsal=="; //obviously not a real pdf
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        MimePart part = Mime.getMimePart(mm, "1");
+        Assert.assertEquals("application/octet-stream", Mime.getContentType(part.getContentType()));
     }
 }
