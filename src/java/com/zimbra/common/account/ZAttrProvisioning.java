@@ -4169,6 +4169,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureFreeBusyViewEnabled = "zimbraFeatureFreeBusyViewEnabled";
 
     /**
+     * whether to display from address control in user preferences
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1455)
+    public static final String A_zimbraFeatureFromDisplayEnabled = "zimbraFeatureFromDisplayEnabled";
+
+    /**
      * enable auto-completion from the GAL, zimbraFeatureGalEnabled also has
      * to be enabled for the auto-completion feature
      */
