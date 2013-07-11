@@ -2,22 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.soap.account;
-
-import com.google.common.base.Charsets;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
@@ -38,15 +33,34 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
 import junit.framework.Assert;
+
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.dom4j.QName;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.message.GetWhiteBlackListResponse;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
@@ -70,6 +84,7 @@ import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactActionSelector;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
+import com.zimbra.soap.mail.type.MessageHitInfo;
 import com.zimbra.soap.mail.type.ModifyGroupMemberOperation;
 import com.zimbra.soap.mail.type.NoteActionSelector;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
@@ -79,16 +94,6 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.util.JaxbElementInfo;
 import com.zimbra.soap.util.JaxbInfo;
 import com.zimbra.soap.util.JaxbNodeInfo;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.W3cDomUtil;
-import com.zimbra.common.util.StringUtil;
 
 /**
  * Unit test for {@link GetInfoResponse} which exercises
@@ -183,7 +188,7 @@ public class JaxbToElementTest {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
             String actual = el.prettyPrint();
-            // TODO: At present some stuff is wrong/missing 
+            // TODO: At present some stuff is wrong/missing
             // so just check the first part.
             Assert.assertEquals(getInfoResponseXml.substring(0, 1000),
                     actual.substring(0, 1000));
@@ -233,7 +238,7 @@ public class JaxbToElementTest {
     }
 
     /**
-     * Using Dom4j seems problematic - hence why elementToJaxbUsingDom4j is deprecated.  e.g. Seen this from 
+     * Using Dom4j seems problematic - hence why elementToJaxbUsingDom4j is deprecated.  e.g. Seen this from
      * Jenkins, so now disabling the test - the underlying method is deprecated anyway.
      * com.zimbra.common.service.ServiceException: system failure: Unable to unmarshal response for GetInfoResponse
      * <pre>
@@ -363,7 +368,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         // JAXB attribute A_LIMIT
         queryE.addElement(AdminConstants.A_LIMIT).setText("99");
         for (int sfx = 1; sfx <= 3; sfx++) {
-            // List<QueueQueryField> fields 
+            // List<QueueQueryField> fields
             Element fE = queryE.addElement(AdminConstants.E_FIELD);
             fE.addAttribute(AdminConstants.A_NAME, "name" + sfx);
             // List<ValueAttrib> matches
@@ -517,7 +522,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         rootElem.addElement(MailConstants.A_WAITSET_ID /* waitSet */).addText("myWaitSet");
         // JAXB Attribute - not Element
         rootElem.addElement(MailConstants.A_SEQ /* seq */).addText("lastKnownSeq");
-        // JAXB XmlElementWrapper 
+        // JAXB XmlElementWrapper
         Element addElem = rootElem.addElement(MailConstants.E_WAITSET_ADD /* add */);
         Element aElem = addElem.addElement(MailConstants.E_A /* a */);
         // JAXB Attribute - not Element
@@ -657,7 +662,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         attrs.put("key2", "value2 wonderful");
         id.setAttrs(attrs);
         CreateIdentityRequest request = new CreateIdentityRequest(id);
-        Assert.assertEquals("toString output", 
+        Assert.assertEquals("toString output",
             "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
             request.toString());
     }
@@ -766,9 +771,9 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     }
 
     // Simplified version of what appears in mail.ToXML
-    public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, 
+    public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname,
             boolean allowed) {
-        
+
         Element.KeyValuePair kvPair;
         if (allowed) {
             kvPair = parent.addKeyValuePair(key, value, eltname, attrname);
@@ -813,6 +818,73 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
             ModifyGroupMemberOperation.fromString(null);
             Assert.fail("ServiceException NOT thrown for null");
         } catch (ServiceException e) {
+        }
+    }
+
+    @Test
+    public void jaxbElementNameOrderXmlElementWrapperTest() throws Exception {
+        JaxbInfo jaxbInfo = JaxbInfo.getFromCache(GetWhiteBlackListResponse.class);
+        List<List <org.dom4j.QName>> expectedOrder = Lists.newArrayList();
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName(AccountConstants.E_WHITE_LIST, AccountConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName(AccountConstants.E_BLACK_LIST, AccountConstants.NAMESPACE)));
+
+        List<List <org.dom4j.QName>> nameOrder = jaxbInfo.getElementNameOrder();
+        Assert.assertTrue(String.format(
+                "Number of entries in order expected=%d actual=%d", expectedOrder.size(), nameOrder.size()),
+                expectedOrder.size() == nameOrder.size());
+        for (int ndx = 0;ndx <nameOrder.size();ndx++) {
+            List<QName> expected = expectedOrder.get(ndx);
+            List<QName> actual = nameOrder.get(ndx);
+            Assert.assertTrue(String.format(
+                    "Number of entries at pos %d expected=%d actual=%d", ndx, expected.size(), actual.size()),
+                    expected.size() == actual.size());
+            for (int cnt = 0;cnt <actual.size();cnt++) {
+                QName qExpected = expected.get(cnt);
+                QName qActual = actual.get(cnt);
+                Assert.assertEquals(String.format("Element name at pos %d/%d", ndx, cnt),
+                        qExpected.getName(), qActual.getName());
+                Assert.assertEquals(String.format("Element namespaceURI at pos %d/%d", ndx, cnt),
+                        qExpected.getNamespaceURI(), qActual.getNamespaceURI());
+            }
+        }
+    }
+    @Test
+    public void jaxbMessageHitInfoElementNameOrder() throws Exception {
+        JaxbInfo jaxbInfo = JaxbInfo.getFromCache(MessageHitInfo.class);
+        List<List <org.dom4j.QName>> expectedOrder = Lists.newArrayList();
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("meta", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("fr", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("e", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("su", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("mid", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("irt", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("inv", MailConstants.NAMESPACE)));
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("header", MailConstants.NAMESPACE)));
+        List <org.dom4j.QName> sameOrder = Lists.newArrayList();
+        sameOrder.add(new org.dom4j.QName("mp", MailConstants.NAMESPACE));
+        sameOrder.add(new org.dom4j.QName("shr", MailConstants.NAMESPACE));
+        sameOrder.add(new org.dom4j.QName("dlSubs", MailConstants.NAMESPACE));
+        expectedOrder.add(sameOrder);
+        expectedOrder.add(Lists.newArrayList(new org.dom4j.QName("hp", MailConstants.NAMESPACE)));
+
+        List<List <org.dom4j.QName>> nameOrder = jaxbInfo.getElementNameOrder();
+        Assert.assertTrue(String.format(
+                "Number of entries in order expected=%d actual=%d", expectedOrder.size(), nameOrder.size()),
+                expectedOrder.size() == nameOrder.size());
+        for (int ndx = 0;ndx <nameOrder.size();ndx++) {
+            List<QName> expected = expectedOrder.get(ndx);
+            List<QName> actual = nameOrder.get(ndx);
+            Assert.assertTrue(String.format(
+                    "Number of entries at pos %d expected=%d actual=%d", ndx, expected.size(), actual.size()),
+                    expected.size() == actual.size());
+            for (int cnt = 0;cnt <actual.size();cnt++) {
+                QName qExpected = expected.get(cnt);
+                QName qActual = actual.get(cnt);
+                Assert.assertEquals(String.format("Element name at pos %d/%d", ndx, cnt),
+                        qExpected.getName(), qActual.getName());
+                Assert.assertEquals(String.format("Element namespaceURI at pos %d/%d", ndx, cnt),
+                        qExpected.getNamespaceURI(), qActual.getNamespaceURI());
+            }
         }
     }
 }
