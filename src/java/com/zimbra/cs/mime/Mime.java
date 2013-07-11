@@ -646,6 +646,11 @@ public class Mime {
         }
     }
 
+    private static boolean isEmlAttachment(MimePart mp) {
+        String filename = getFilename(mp);
+        return filename != null && (filename.endsWith(".eml") || filename.endsWith(".msg"));
+    }
+
     public static MimePart getMimePart(MimePart mp, String part) throws IOException, MessagingException {
         if (mp == null) {
             return null;
@@ -678,7 +683,7 @@ public class Mime {
                         continue;
                     }
                 }
-            } else if (ct.equals(MimeConstants.CT_MESSAGE_RFC822) || ct.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
+            } else if (ct.equals(MimeConstants.CT_MESSAGE_RFC822) || (ct.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM) && isEmlAttachment(mp))) {
                 MimeMessage content = getMessageContent(mp);
                 if (content != null) {
                     if (mp instanceof MimeMessage) {
