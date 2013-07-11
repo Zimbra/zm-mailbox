@@ -7262,4 +7262,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1455" name="zimbraFeatureFromDisplayEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.5">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to display from address control in user preferences</desc>
+</attr>
+
 </attrs>

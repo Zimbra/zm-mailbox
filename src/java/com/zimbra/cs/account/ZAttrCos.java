@@ -7825,6 +7825,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether to display from address control in user preferences
+     *
+     * @return zimbraFeatureFromDisplayEnabled, or true if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1455)
+    public boolean isFeatureFromDisplayEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureFromDisplayEnabled, true);
+    }
+
+    /**
+     * whether to display from address control in user preferences
+     *
+     * @param zimbraFeatureFromDisplayEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1455)
+    public void setFeatureFromDisplayEnabled(boolean zimbraFeatureFromDisplayEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFromDisplayEnabled, zimbraFeatureFromDisplayEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to display from address control in user preferences
+     *
+     * @param zimbraFeatureFromDisplayEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1455)
+    public Map<String,Object> setFeatureFromDisplayEnabled(boolean zimbraFeatureFromDisplayEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFromDisplayEnabled, zimbraFeatureFromDisplayEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to display from address control in user preferences
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1455)
+    public void unsetFeatureFromDisplayEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFromDisplayEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to display from address control in user preferences
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1455)
+    public Map<String,Object> unsetFeatureFromDisplayEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFromDisplayEnabled, "");
+        return attrs;
+    }
+
+    /**
      * enable auto-completion from the GAL, zimbraFeatureGalEnabled also has
      * to be enabled for the auto-completion feature
      *
