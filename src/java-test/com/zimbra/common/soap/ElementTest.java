@@ -24,11 +24,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dom4j.DocumentException;
+import org.dom4j.QName;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +38,7 @@ import org.junit.rules.TestName;
 import org.python.google.common.base.Joiner;
 import org.xml.sax.SAXException;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.soap.Element.XMLElement;
@@ -535,6 +538,43 @@ public class ElementTest {
             //    parse error: Fatal Error: Problem on line 19 of document : The parser has encountered more than
             //    "100,000" entity expansions in this document; this is the limit imposed by the application.
         }
+    }
+
+    @Test
+    public void reorderChildren() {
+        final String expected =
+            "<top attr=\"val\"><z/><a>1</a><a>2</a><b/><c/><d><kid/></d><f>W</f><h2/><h3/><h4/><j/><p/><q/></top>";
+        Element top = new Element.XMLElement("top");
+        top.addAttribute("attr", "val");
+        top.addElement("b");
+        top.addElement("c");
+        top.addElement("p");
+        top.addElement("f").addText("W");
+        top.addElement("a").addText("1");
+        top.addElement("z");
+        top.addElement("j");
+        top.addElement("a").addText("2");
+        top.addElement("h2");
+        top.addElement("h3");
+        top.addElement("h4");
+        top.addElement("d").addElement("kid");
+        top.addElement("q");
+        List<List<QName>> order = Lists.newArrayList();
+        order.add(Lists.newArrayList(new QName("z")));
+        order.add(Lists.newArrayList(new QName("a")));
+        order.add(Lists.newArrayList(new QName("g")));
+        order.add(Lists.newArrayList(new QName("b")));
+        order.add(Lists.newArrayList(new QName("c")));
+        order.add(Lists.newArrayList(new QName("d")));
+        order.add(Lists.newArrayList(new QName("e")));
+        order.add(Lists.newArrayList(new QName("f")));
+        order.add(Lists.newArrayList(new QName("h4"), new QName("h3"), new QName("h2"), new QName("h1")));
+        order.add(Lists.newArrayList(new QName("i")));
+        order.add(Lists.newArrayList(new QName("j")));
+        order.add(Lists.newArrayList(new QName("k")));
+        top = Element.reorderChildElements(top, order);
+        logInfo("       Element value:\n%1$s", top.toString());
+        Assert.assertEquals("Reordered element", expected, top.toString());
     }
 
     private static final String xmlCdata = "<xml>\n" +

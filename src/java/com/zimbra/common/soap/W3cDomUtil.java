@@ -44,6 +44,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.google.common.base.Strings;
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.Log;
@@ -144,7 +145,13 @@ public class W3cDomUtil {
 
     public static Element parseXML(File file)
     throws ServiceException, FileNotFoundException {
-        return parseXML(new FileInputStream(file));
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            return parseXML(new FileInputStream(file));
+        } finally {
+            Closeables.closeQuietly(fis);
+        }
     }
 
     public static Element parseXML(InputStream is)

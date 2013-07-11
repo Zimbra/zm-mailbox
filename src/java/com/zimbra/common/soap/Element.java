@@ -40,6 +40,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -719,6 +720,51 @@ public abstract class Element implements Cloneable {
             }
         }
         return elt.setText(content.toString());
+    }
+
+    /**
+     * Re-order the child elements under {@code top} into the order specified in {@code order}.
+     * Any child elements which have names not found in {@code order} will be moved after those that
+     * are in {@code order}.
+     * <p>Useful for ensuring XML conforms to WSDL where it is derived from JAXB that enforces propOrder.  Certain
+     * constructs in the legacy Zimbra SOAP API result in JAXB that won't create valid WSDL unless propOrder is
+     * enforced in the JAXB.
+     * <p>This typically happens when we have a list of possible elements with different names that are NOT wrapped
+     * under a parent element.</p>
+     * <p>Using JAXB to construct the XML would avoid this issue but in some instances would be too disruptive</p>
+     * @return {@code top} with the child elements re-ordered
+     */
+    public static Element reorderChildElements(Element top, List<List<QName>> order) {
+        if (top == null) {
+            return top;
+        }
+        List<Element> ordered = Lists.newArrayList();
+        for (List<QName> childNames : order) {
+            List<Element> orphans = null; // detach child elements from top AFTER processing the list of them
+            for (Element child : top.listElements()) {
+                if (childNames.contains(child.getQName())) {
+                    if (orphans == null) {
+                        orphans = Lists.newArrayList();
+                    }
+                    orphans.add(child);
+                    ordered.add(child);
+                }
+            }
+            if (orphans != null) {
+                for (Element orphan : orphans) {
+                    orphan.detach();
+                }
+            }
+        }
+        /* add any elements with names which are not in order */
+        for (Element child : top.listElements()) {
+            child.detach();
+            ordered.add(child);
+        }
+        for (Element child : ordered) {
+            top.addElement(child);
+        }
+        return top;
     }
 
     public static class ContainerException extends RuntimeException {
