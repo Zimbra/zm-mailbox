@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,9 +16,9 @@
 package com.zimbra.soap.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -30,11 +30,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
@@ -86,7 +88,7 @@ public final class JaxbInfo {
     private String rootElementName = null;
     private String rootElementNamespace = null;
     private XmlType xmlType = null;
-    
+
     /**
      * names of known attributes that can be associated with the element
      */
@@ -260,6 +262,84 @@ public final class JaxbInfo {
             propOrder.add(prop);
         }
         return propOrder;
+    }
+
+    private List<List <org.dom4j.QName>> getNameOrderFromElems() {
+        List<List <org.dom4j.QName>> nameOrder = Lists.newArrayList();
+        for (JaxbNodeInfo node : jaxbElemNodeInfo) {
+            if (node instanceof JaxbPseudoNodeChoiceInfo) {
+                JaxbPseudoNodeChoiceInfo choiceNode = (JaxbPseudoNodeChoiceInfo) node;
+                List <org.dom4j.QName> names = Lists.newArrayList();
+                for (JaxbNodeInfo choiceSub : choiceNode.getElements()) {
+                    if (choiceSub instanceof JaxbElementInfo) {
+                        JaxbElementInfo jei = (JaxbElementInfo) choiceSub;
+                        names.add(getQName(jei));
+                    }
+                }
+                nameOrder.add(names);
+            } else if (node instanceof JaxbElementInfo) {
+                nameOrder.add(Lists.newArrayList(getQName(node)));
+            } else if (node instanceof WrappedElementInfo) {
+                nameOrder.add(Lists.newArrayList(getQName(node)));
+            }
+        }
+        return nameOrder;
+    }
+
+    public List<List <org.dom4j.QName>> getElementNameOrder() {
+        List<List <org.dom4j.QName>> nameOrder = Lists.newArrayList();
+        JaxbInfo encClassInfo = getSuperClassInfo();
+        if (encClassInfo != null) {
+            nameOrder.addAll(encClassInfo.getElementNameOrder());
+        }
+        List<String> propOrder = getPropOrder();
+        if (propOrder.isEmpty()) {
+            if (!nameOrder.isEmpty()) {
+                // Super class specifies order, forcing it to be required.  Add names in order
+                nameOrder.addAll(getNameOrderFromElems());
+            }
+            return nameOrder;
+        }
+        for (String fieldName : propOrder) {
+            List <org.dom4j.QName> names = Lists.newArrayList();
+            for (JaxbNodeInfo node : jaxbElemNodeInfo) {
+                if (node instanceof JaxbPseudoNodeChoiceInfo) {
+                    JaxbPseudoNodeChoiceInfo choiceNode = (JaxbPseudoNodeChoiceInfo) node;
+                    if (fieldName.equals(choiceNode.getFieldName())) {
+                        for (JaxbNodeInfo choiceSub : choiceNode.getElements()) {
+                            if (choiceSub instanceof JaxbElementInfo) {
+                                JaxbElementInfo jei = (JaxbElementInfo) choiceSub;
+                                names.add(getQName(jei));
+                            }
+                        }
+                    }
+                } else if (node instanceof JaxbElementInfo) {
+                    JaxbElementInfo elemNode = (JaxbElementInfo) node;
+                    if (fieldName.equals(elemNode.getFieldName())) {
+                        names.add(getQName(elemNode));
+                    }
+                } else if (node instanceof WrappedElementInfo) {
+                    WrappedElementInfo wNode = (WrappedElementInfo) node;
+                    if (fieldName.equals(wNode.getFieldName())) {
+                        names.add(getQName(wNode));
+                    }
+                }
+            }
+            if (!names.isEmpty()) {
+                nameOrder.add(names);
+            }
+        }
+        return nameOrder;
+    }
+
+    private org.dom4j.QName getQName(JaxbNodeInfo elemNode) {
+        String elemNs = elemNode.getNamespace();
+        if (DEFAULT_MARKER.equals(elemNs)) {
+            XmlSchema xmlSchemaAnnot = jaxbClass.getPackage().getAnnotation(XmlSchema.class);
+            elemNs = XmlNsForm.QUALIFIED.equals(xmlSchemaAnnot.elementFormDefault()) ? xmlSchemaAnnot.namespace() : "";
+        }
+        org.dom4j.Namespace dom4jNS = new org.dom4j.Namespace("", elemNs);
+        return new org.dom4j.QName(elemNode.getName(), dom4jNS);
     }
 
     public static String getRootElementName(Class<?> kls) {
@@ -465,7 +545,7 @@ public final class JaxbInfo {
             return false;
         }
         if (method.getParameterTypes().length != 0) {
-            return false;  
+            return false;
         }
         return (!void.class.equals(method.getReturnType()));
     }
@@ -558,16 +638,16 @@ public final class JaxbInfo {
         rootElementName = null;
         XmlAccessType accessType = null;
 
-        XmlRootElement rootE = (XmlRootElement) jaxbClass.getAnnotation(XmlRootElement.class);
+        XmlRootElement rootE = jaxbClass.getAnnotation(XmlRootElement.class);
         if (rootE != null) {
             rootElementName = rootE.name();
         }
-        xmlType = (XmlType) jaxbClass.getAnnotation(XmlType.class);
+        xmlType = jaxbClass.getAnnotation(XmlType.class);
 
-        accessorType = (XmlAccessorType) jaxbClass.getAnnotation(XmlAccessorType.class);
+        accessorType = jaxbClass.getAnnotation(XmlAccessorType.class);
         if (accessorType == null) {
             Package pkg = jaxbClass.getPackage();
-            accessorType = (XmlAccessorType) pkg.getAnnotation(XmlAccessorType.class);
+            accessorType = pkg.getAnnotation(XmlAccessorType.class);
         }
         if (accessorType != null) {
             accessType = accessorType.value();
@@ -579,7 +659,7 @@ public final class JaxbInfo {
 
         Field fields[] = jaxbClass.getDeclaredFields();
         for (Field field: fields) {
-            XmlTransient xmlTransient = (XmlTransient) field.getAnnotation(XmlTransient.class);
+            XmlTransient xmlTransient = field.getAnnotation(XmlTransient.class);
             if (xmlTransient != null) {
                 continue;
             }
@@ -596,7 +676,7 @@ public final class JaxbInfo {
 
         Method methods[] = jaxbClass.getDeclaredMethods();
         for (Method method : methods) {
-            XmlTransient xmlTransient = (XmlTransient) method.getAnnotation(XmlTransient.class);
+            XmlTransient xmlTransient = method.getAnnotation(XmlTransient.class);
             if (xmlTransient != null) {
                 continue;
             }
