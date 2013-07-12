@@ -694,4 +694,95 @@ public class DefangFilterTest {
 
     }
 
+    @Test
+    public void testBug82303() throws Exception {
+        String html = "<a href=\"http://ebobby.org/2013/05/18/"
+            + "Fun-with-Javascript-and-function-tracing.html\" "
+            + "style=\"color: #187AAB; text-decoration: none\" target=\"_blank\">";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("Fun-with-Javascript-and-function-tracing.html"));
+
+        html = "<a href=\"javascript-and-function-tracing.html\" "
+            + "style=\"color: #187AAB; text-decoration: none\" target=\"_blank\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("javascript-and-function-tracing.html"));
+
+        html = "<a href=\"javascript:myJsFunc()\">Link Text</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"javascriptlessDestination.html\" onclick=\"myJSFunc(); "
+            + "return false;\">Link text</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("javascriptlessDestination.html"));
+
+        html = "<a href=\"javascript:alert('Hello');\"></a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"http://ebobby.org/2013/05/18/" + "javascript/Lessonsinjavascript.html\" "
+            + "style=\"color: #187AAB; text-decoration: none\" target=\"_blank\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("javascript/Lessonsinjavascript.html"));
+
+        html = "<a href='javascript:myFunction()'> Click Me! <a/>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = " <a href=\"javascript:void(0)\" onclick=\"loadProducts(<?php echo $categoryId ?>)\"> ";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"#\" onclick=\"someFunction();\" return false;\">LINK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.equals("<a href=\"#\">LINK</a>"));
+
+        html = "<a href='javascript:my_Function()'> Click Me! <a/>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href='javascript:myFunction(field1, field2)'> Click Me! <a/>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href='javaScript:document.f1.findString(this.t1.value)'>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href='javaScript:document.f1.findString(this.t1.value)'>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"#\" onclick=\"findString(document.getElementById('t1').value); return false;\">Click Me</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("<a href=\"#\">Click Me</a>"));
+
+        html = "<a href=\"javascript:alert('0');\">Click Me</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"  javascript:alert('0');\">Click Me</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+    }
+
 }
