@@ -1294,7 +1294,7 @@ public final class LC {
     public static final KnownKey defang_comment = KnownKey.newKey("/\\*.*?\\*/");
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
     public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
-    public static final KnownKey defang_av_javascript = KnownKey.newKey("javascript");
+    public static final KnownKey defang_av_javascript = KnownKey.newKey("^\\s*javascript:");
 
     //EWS web service
     public static final KnownKey ews_service_wsdl_location =
