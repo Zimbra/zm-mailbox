@@ -33,7 +33,12 @@ public class MariaDB extends MySQL {
 
         @Override
         protected String getRootUrl() {
-            return "jdbc:mysql://" + LC.mysql_bind_address.value() + ":" + LC.mysql_port.value() + "/";
+            String bindAddress = LC.mysql_bind_address.value();
+            if (bindAddress.indexOf(':') > -1) {
+                bindAddress = "[" + bindAddress + "]";
+            }
+
+            return "jdbc:mysql://" + bindAddress + ":" + LC.mysql_port.value() + "/";
         }
 
     }
