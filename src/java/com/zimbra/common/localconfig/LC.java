@@ -608,6 +608,9 @@ public final class LC {
     public static final KnownKey postfix_smtpd_sasl_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
     public static final KnownKey postfix_smtpd_client_restrictions = KnownKey.newKey("reject_unauth_pipelining");
     public static final KnownKey postfix_smtpd_data_restrictions = KnownKey.newKey("reject_unauth_pipelining");
+    public static final KnownKey postfix_smtpd_hard_error_limit = KnownKey.newKey(20);
+    public static final KnownKey postfix_smtpd_soft_error_limit = KnownKey.newKey(10);
+    public static final KnownKey postfix_smtpd_error_sleep_time = KnownKey.newKey("1s");
     public static final KnownKey postfix_smtpd_helo_required = KnownKey.newKey("yes");
     public static final KnownKey postfix_smtpd_tls_cert_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.crt");
     public static final KnownKey postfix_smtpd_tls_key_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.key");
