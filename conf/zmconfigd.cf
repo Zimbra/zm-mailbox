@@ -155,6 +155,9 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_key_file			LOCAL postfix_smtpd_tls_key_file
 	POSTCONF smtpd_tls_loglevel			LOCAL postfix_smtpd_tls_loglevel
 	POSTCONF smtpd_tls_security_level		LOCAL postfix_smtpd_tls_security_level
+	POSTCONF smtpd_error_sleep_time			LOCAL postfix_smtpd_error_sleep_time
+	POSTCONF smtpd_hard_error_limit			LOCAL postfix_smtpd_hard_error_limit
+	POSTCONF smtpd_soft_error_limit			LOCAL postfix_smtpd_soft_error_limit
 	POSTCONF in_flow_delay				LOCAL postfix_in_flow_delay
 	POSTCONF import_environment			LOCAL postfix_import_environment
 	POSTCONF queue_run_delay			LOCAL postfix_queue_run_delay
