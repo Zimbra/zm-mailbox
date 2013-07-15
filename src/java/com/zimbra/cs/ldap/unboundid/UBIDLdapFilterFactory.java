@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -78,6 +78,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALLAUTHED_SHARE;
     private static Filter FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH;
     private static Filter FILTER_WITH_ARCHIVE;
+    private static Filter FILTER_EXT_ACCOUNTS;
 
 
     private static boolean initialized = false;
@@ -256,6 +257,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createORFilter(
                         FILTER_ALL_DYNAMIC_GROUPS,
                         FILTER_ALL_DISTRIBUTION_LISTS);
+
+        FILTER_EXT_ACCOUNTS = Filter.createANDFilter(
+            FILTER_ALL_ACCOUNTS,
+            Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT));
     }
 
     @Override
@@ -425,7 +430,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ACCOUNT_BY_MEMBEROF,
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_zimbraMemberOf, dynGroupId),
-                        FILTER_ALL_ACCOUNTS));
+                        FILTER_EXT_ACCOUNTS));
     }
 
     @Override

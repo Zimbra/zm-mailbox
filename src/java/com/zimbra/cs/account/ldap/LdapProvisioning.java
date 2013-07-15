@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -9867,16 +9867,20 @@ public class LdapProvisioning extends LdapProv {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
 
             /*
-             * this DynamicGroup object must not be a basic group with minimum attrs,
-             * we need the member attribute
+             * this DynamicGroup object must not be a basic group with minimum
+             * attrs, we need the member attribute
              */
             String[] memberDNs = group.getMultiAttr(Provisioning.A_member);
 
-            final String[] addrToGet = new String[]{Provisioning.A_zimbraMailDeliveryAddress};
+            final String[] attrsToGet = new String[] { Provisioning.A_zimbraMailDeliveryAddress,
+                Provisioning.A_zimbraIsExternalVirtualAccount };
             for (String memberDN : memberDNs) {
-                ZAttributes memberAddrs = zlc.getAttributes(memberDN, addrToGet);
-                String memberAddr = memberAddrs.getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
-                if (memberAddr != null) {
+                ZAttributes memberAttrs = zlc.getAttributes(memberDN, attrsToGet);
+                String memberAddr = memberAttrs
+                    .getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
+                boolean isVirtualAcct = memberAttrs.hasAttributeValue(
+                    Provisioning.A_zimbraIsExternalVirtualAccount, "TRUE");
+                if ((memberAddr != null && (!isVirtualAcct))) {
                     members.add(memberAddr);
                 }
             }
