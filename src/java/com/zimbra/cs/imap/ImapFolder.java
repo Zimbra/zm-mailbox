@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -47,8 +47,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.Session;
 
 /**
  * @since Apr 30, 2005
@@ -762,16 +762,113 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return normalized;
     }
 
+    /**
+     * SubSequenceRange encapsulates a list of ranges to allow a convenient way to iterate through the range of
+     * numbers in the ranges
+     */
+    static class SubSequenceRanges {
+        List<Pair<Integer, Integer>> ranges;
+        int rangeIndex = 0;
+        int nextNum = 0;
+
+        /**
+         * @param theRanges list of start/end numbers in ranges. Must be in ascending order
+         */
+        SubSequenceRanges(List<Pair<Integer, Integer>> theRanges) {
+            ranges = theRanges;
+            if (!ranges.isEmpty()) {
+                nextNum = ranges.get(rangeIndex).getFirst();
+            }
+        }
+
+        boolean hasNext() {
+            return (rangeIndex < ranges.size() && nextNum <= ranges.get(rangeIndex).getSecond());
+        }
+
+        /** DON'T CALL unless hasNext() returns true */
+        int next() {
+            int retVal = nextNum;
+            if (nextNum < ranges.get(rangeIndex).getSecond()) {
+                nextNum++;
+            } else {
+                rangeIndex++;
+                if (rangeIndex < ranges.size()) {
+                    nextNum = ranges.get(rangeIndex).getFirst();
+                }
+            }
+            return retVal;
+        }
+    }
+
+    /**
+     * This method is used when processing the fourth argument of the QRESYNC Parameter to SELECT/EXAMINE - see
+     * <br />http://tools.ietf.org/html/rfc5162#section-3.1
+     * <br />The fourth argument is described as:
+     * <br />    {@code an optional parenthesized list of known sequence ranges and their corresponding UIDs.}
+     * <br />The BNF for this argument is:
+     * <br />    {@code seq-match-data      =  "(" known-sequence-set SP known-uid-set ")"}
+     * <p>
+     * Conceptually, the client provides a small sample of sequence numbers for which it knows the corresponding UIDs.
+     * The server then compares each sequence number and UID pair the client provides with the current state of the
+     * mailbox.  If a pair matches, then the client knows of any expunges up to, and including, the message, and
+     * thus will not include that range in the VANISHED response, even if the "mod-sequence-value" provided by the
+     * client is too old for the server to have data of when those messages were expunged.</p>
+     * @return The lowest UID that needs reporting in a VANISHED response.
+     * @param tag - IMAP command tag
+     * @param seqMilestones - known-sequence-set
+     * @param uidMilestones - known-uid-set
+     */
+    int getSequenceMatchDataLowWater(String tag, String seqMilestones, String uidMilestones)
+    throws ImapParseException {
+        int lowwater = 1;
+        if (seqMilestones == null || seqMilestones.trim().isEmpty() ||
+                uidMilestones == null || uidMilestones.trim().isEmpty()) {
+            // Should we error if there aren't the same number of entries in both? Bug 82493 has an example where the
+            // number of entries differs - so wont for now...
+            return lowwater;
+        }
+
+        SubSequenceRanges seqRanges = new SubSequenceRanges(normalizeSubsequence(seqMilestones, false));
+        SubSequenceRanges uidRanges = new SubSequenceRanges(normalizeSubsequence(uidMilestones, true));
+        while (seqRanges.hasNext()) {
+            int currSeq = seqRanges.next();
+            if (currSeq < 1) {
+                throw new ImapParseException(tag, String.format("invalid message sequence number: %s", seqMilestones));
+            }
+            if (uidRanges.hasNext()) {
+                int currUid = uidRanges.next();
+                ImapMessage i4msgBySeq = getBySequence(currSeq, false);
+                ImapMessage i4msgByUid = getByImapId(currUid);
+                if ((i4msgByUid == null) || (i4msgByUid != i4msgBySeq)) {
+                    // A message with a lower UID must have been expunged since the client cache was last refreshed
+                    break;
+                }
+                lowwater = i4msgByUid.imapUid + 1;
+            } else {
+                /* Different numbers of entries in seqMilestones and uidMilestones - should this be an error? */
+                break;
+            }
+        }
+        return lowwater;
+    }
+
     ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID) throws ImapParseException {
         return getSubsequence(tag, subseqStr, byUID, false);
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH) throws ImapParseException {
-        return getSubsequence(tag, subseqStr, byUID, isSEARCH, false);
+    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq)
+    throws ImapParseException {
+        return getSubsequence(tag, subseqStr, byUID, allowOutOfRangeMsgSeq, false /* includeExpunged */);
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH, boolean isFETCH)
-            throws ImapParseException {
+    /**
+     * {@code allowOutOfRangeMsgSeq} introduced for Bug 27855 to workaround iPhone IMAP client bug where
+     * it used to(?) include out of range message sequence numbers in SEARCH requests. Also used when fetching
+     * flag information as part of SELECT/EXAMINE with QRESYNC
+     */
+    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq,
+            boolean includeExpunged)
+    throws ImapParseException {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().isEmpty()) {
             return result;
@@ -780,20 +877,20 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
             int lower = range.getFirst(), upper = range.getSecond();
-            if (!byUID && (lower < 1 || upper > getSize()) && !isSEARCH) {
+            if (!byUID && !allowOutOfRangeMsgSeq && ((lower < 1) || upper > getSize())) {
                 // 9: "The server should respond with a tagged BAD response to a command that uses a message
                 //     sequence number greater than the number of messages in the selected mailbox.  This
                 //     includes "*" if the selected mailbox is empty."
                 throw new ImapParseException(tag, "invalid message sequence number: " + subseqStr);
             } else if (lower == upper) {
                 // single message -- get it and add it (may be null)
-                result.add(byUID ? getByImapId(lower) : getBySequence(lower, isFETCH));
+                result.add(byUID ? getByImapId(lower) : getBySequence(lower, includeExpunged));
             } else {
                 // range of messages -- get them and add them (may be null)
                 if (!byUID) {
                     upper = Math.min(getSize(), upper);
                     for (int seq = Math.max(0, lower); seq <= upper; seq++) {
-                        result.add(getBySequence(seq, isFETCH));
+                        result.add(getBySequence(seq, includeExpunged));
                     }
                 } else {
                     ImapMessage i4msg;

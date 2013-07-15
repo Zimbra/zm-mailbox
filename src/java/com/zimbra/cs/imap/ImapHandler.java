@@ -1547,17 +1547,7 @@ abstract class ImapHandler {
             boolean sentVanished = false;
             String knownUIDs = qri.knownUIDs == null ? "1:" + (initial.uidnext - 1) : qri.knownUIDs;
             if (qri.seqMilestones != null && qri.uidMilestones != null) {
-                int lowwater = 1;
-                ImapMessageSet seqset = i4folder.getSubsequence(tag, qri.seqMilestones, false);
-                ImapMessageSet uidset = i4folder.getSubsequence(tag, qri.uidMilestones, true);
-                seqset.remove(null);  uidset.remove(null);
-                for (Iterator<ImapMessage> itseq = seqset.iterator(), ituid = uidset.iterator(); itseq.hasNext() && ituid.hasNext(); ) {
-                    ImapMessage i4msg;
-                    if ((i4msg = itseq.next()) != ituid.next()) {
-                        break;
-                    }
-                    lowwater = i4msg.imapUid + 1;
-                }
+                int lowwater = i4folder.getSequenceMatchDataLowWater(tag, qri.seqMilestones, qri.uidMilestones);
                 if (lowwater > 1) {
                     String constrainedSet = i4folder.cropSubsequence(knownUIDs, true, lowwater, -1);
                     String vanished = i4folder.invertSubsequence(constrainedSet, true, i4folder.getAllMessages());
@@ -1567,7 +1557,15 @@ abstract class ImapHandler {
                     sentVanished = true;
                 }
             }
-            fetch(tag, knownUIDs, FETCH_FLAGS | (sentVanished ? 0 : FETCH_VANISHED), null, true, qri.modseq, false);
+            /* From http://tools.ietf.org/html/rfc5162
+             * If the list of known UIDs was also provided, the server should only report flag changes and expunges
+             * for the specified messages.  If the client did not provide the list of UIDs, the server acts as if the
+             * client has specified "1:<maxuid>", where <maxuid> is the mailbox's UIDNEXT value minus 1.  If the
+             * mailbox is empty and never had any messages in it, then lack of the list of UIDs is interpreted as an
+             * empty set of UIDs.
+             */
+            fetch(tag, knownUIDs, FETCH_FLAGS | (sentVanished ? 0 : FETCH_VANISHED), null, true /* byUID */, qri.modseq,
+                    false /* standalone */, true /* allowOutOfRangeMsgSeq */);
         }
 
         sendOK(tag, (writable ? "[READ-WRITE] " : "[READ-ONLY] ") + command + " completed");
@@ -3563,6 +3561,13 @@ abstract class ImapHandler {
 
     boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID,
             int changedSince, boolean standalone) throws IOException, ImapException {
+        return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, standalone,
+                false /* allowOutOfRangeMsgSeq */);
+    }
+
+    boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID,
+            int changedSince, boolean standalone, boolean allowOutOfRangeMsgSeq)
+    throws IOException, ImapException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3615,7 +3620,7 @@ abstract class ImapHandler {
         Mailbox mbox = i4folder.getMailbox();
         mbox.lock.lock();
         try {
-            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, false, true);
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, allowOutOfRangeMsgSeq, true /* includeExpunged */);
             i4set.remove(null);
         } finally {
             mbox.lock.release();
