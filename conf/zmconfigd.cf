@@ -184,6 +184,10 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtp_tls_security_level		LOCAL postfix_smtp_tls_security_level
 	POSTCONF smtp_sasl_mechanism_filter		LOCAL postfix_smtp_sasl_mechanism_filter
 	POSTCONF smtp_sasl_password_maps		LOCAL postfix_smtp_sasl_password_maps
+	POSTCONF milter_connect_timeout			LOCAL postfix_milter_connect_timeout
+	POSTCONF milter_command_timeout			LOCAL postfix_milter_command_timeout
+	POSTCONF milter_content_timeout			LOCAL postfix_milter_content_timeout
+	POSTCONF milter_default_action			LOCAL postfix_milter_default_action
 	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
 	RESTART mta
 
