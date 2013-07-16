@@ -9880,7 +9880,7 @@ public class LdapProvisioning extends LdapProv {
                     .getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
                 boolean isVirtualAcct = memberAttrs.hasAttributeValue(
                     Provisioning.A_zimbraIsExternalVirtualAccount, "TRUE");
-                if ((memberAddr != null && (!isVirtualAcct))) {
+                if (memberAddr != null && !isVirtualAcct) {
                     members.add(memberAddr);
                 }
             }

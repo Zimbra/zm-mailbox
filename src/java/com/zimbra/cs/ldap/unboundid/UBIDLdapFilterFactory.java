@@ -78,7 +78,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALLAUTHED_SHARE;
     private static Filter FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH;
     private static Filter FILTER_WITH_ARCHIVE;
-    private static Filter FILTER_EXT_ACCOUNTS;
+    private static Filter FILTER_ALL_INTERNAL_ACCOUNTS;
 
 
     private static boolean initialized = false;
@@ -258,7 +258,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_DYNAMIC_GROUPS,
                         FILTER_ALL_DISTRIBUTION_LISTS);
 
-        FILTER_EXT_ACCOUNTS = Filter.createANDFilter(
+        FILTER_ALL_INTERNAL_ACCOUNTS = Filter.createANDFilter(
             FILTER_ALL_ACCOUNTS,
             Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT));
     }
@@ -430,7 +430,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ACCOUNT_BY_MEMBEROF,
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_zimbraMemberOf, dynGroupId),
-                        FILTER_EXT_ACCOUNTS));
+                        FILTER_ALL_INTERNAL_ACCOUNTS));
     }
 
     @Override
