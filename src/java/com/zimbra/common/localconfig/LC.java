@@ -591,6 +591,11 @@ public final class LC {
     public static final KnownKey postfix_sender_canonical_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-scm.cf");
     public static final KnownKey postfix_sendmail_path = KnownKey.newKey("${zimbra_home}/postfix/sbin/sendmail");
 
+    public static final KnownKey postfix_milter_connect_timeout = KnownKey.newKey("30s");
+    public static final KnownKey postfix_milter_command_timeout = KnownKey.newKey("30s");
+    public static final KnownKey postfix_milter_content_timeout = KnownKey.newKey("300s");
+    public static final KnownKey postfix_milter_default_action = KnownKey.newKey("tempfail");
+
     public static final KnownKey postfix_smtp_cname_overrides_servername = KnownKey.newKey("no");
     public static final KnownKey postfix_smtp_helo_name = KnownKey.newKey("$myhostname");
     public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
