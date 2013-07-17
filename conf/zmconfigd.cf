@@ -63,7 +63,6 @@ SECTION mta DEPENDS amavis
 	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
 	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
 	REWRITE conf/mta_milter_options.in conf/mta_milter_options
-	VAR zimbraMilterServerEnabled
 	VAR zimbraIPMode
 	VAR zimbraMtaRestriction
 	VAR zimbraMtaFallbackRelayHost
