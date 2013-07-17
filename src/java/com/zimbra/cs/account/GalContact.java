@@ -18,14 +18,18 @@ package com.zimbra.cs.account;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
+
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.gal.GalSearchConfig.GalType;
+import com.zimbra.cs.mailbox.Contact;
 
 /**
  * @author schemers
@@ -80,9 +84,21 @@ public class GalContact implements Comparable {
 
     public String getSingleAttr(String name) {
         Object val = mAttrs.get(name);
-        if (val instanceof String) return (String) val;
-        else if (val instanceof String[]) return ((String[])val)[0];
-        else return null;
+        String strValue = null;
+        if (val instanceof String) {
+            strValue = (String) val;
+            try {
+                String [] vals = Contact.parseMultiValueAttr(strValue);
+                if(vals.length >= 1) {
+                    strValue = vals[0];
+                }
+            } catch (JSONException jex) {
+                ZimbraLog.mailop.debug("Not a valid JSON format : %s", strValue, jex);
+            }
+        } else if (val instanceof String[]) {
+            strValue = ((String[])val)[0];
+        }
+        return strValue;
     }
     
     public boolean isGroup() {
