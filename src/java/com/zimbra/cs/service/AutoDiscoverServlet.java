@@ -94,12 +94,22 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
         Domain domain = prov.getDomain(acct);
+        String serviceUrl = "";
 
         if (LC.zimbra_activesync_autodiscover_use_service_url.booleanValue()) {
-            return URLUtil.getServiceURL(server, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
+            serviceUrl = URLUtil.getServiceURL(server, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
+        } else {
+            serviceUrl = URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
         }
 
-        return URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
+        //fix for bug 83212 suppress port number, if default port is used as per the protocol
+        if (serviceUrl.toLowerCase().startsWith(URLUtil.PROTO_HTTPS)) {
+            serviceUrl = serviceUrl.replace(":" + URLUtil.DEFAULT_HTTPS_PORT + "/","/");
+        } else if (serviceUrl.toLowerCase().startsWith(URLUtil.PROTO_HTTP)) {
+            serviceUrl = serviceUrl.replace(":" + URLUtil.DEFAULT_HTTP_PORT + "/","/");
+        }
+
+        return serviceUrl;
     }
 
     //FIXME for windows phone
@@ -439,7 +449,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         xmlDoc.appendChild(root);
 
         //Add the response element.
-        Element response = xmlDoc.createElementNS(NS, "Response");
+        Element response = xmlDoc.createElementNS(NS_MOBILE, "Response");
         root.appendChild(response);
 
         //Add culture to to response
