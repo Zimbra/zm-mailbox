@@ -41,8 +41,8 @@ public class URLUtil {
     public static final String PROTO_HTTP  = "http";
     public static final String PROTO_HTTPS = "https";
     
-    private static int DEFAULT_HTTP_PORT = 80;
-    private static int DEFAULT_HTTPS_PORT = 443;
+    public static int DEFAULT_HTTP_PORT = 80;
+    public static int DEFAULT_HTTPS_PORT = 443;
     
     /**
      * Return the URL where SOAP service is available for given store server.
