@@ -493,6 +493,9 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.METADATA)) {
             encodeAllCustomMetadata(elem, folder, fields);
+            if (folder.getWebOfflineSyncDays() > 0) {
+                elem.addAttribute(MailConstants.A_WEB_OFFLINE_SYNC_DAYS, folder.getWebOfflineSyncDays());
+            }
         }
         if (needToOutput(fields, Change.DISABLE_ACTIVESYNC)) {
             elem.addAttribute(MailConstants.A_ACTIVESYNC_DISABLED, folder.isActiveSyncDisabled());

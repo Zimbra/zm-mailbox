@@ -206,6 +206,7 @@ import com.zimbra.cs.redolog.op.SetItemTags;
 import com.zimbra.cs.redolog.op.SetPermissions;
 import com.zimbra.cs.redolog.op.SetRetentionPolicy;
 import com.zimbra.cs.redolog.op.SetSubscriptionData;
+import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
 import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
 import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.cs.redolog.op.TrackImap;
@@ -7465,6 +7466,24 @@ public class Mailbox {
             folder.setUrl(url);
             success = true;
             updateRssDataSource(folder);
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void setFolderWebOfflineSyncDays(OperationContext octxt, int folderId, int days) throws ServiceException {
+        SetWebOfflineSyncDays redoRecorder = new SetWebOfflineSyncDays(mId, folderId, days);
+
+        boolean success = false;
+        try {
+            beginTransaction("setFolderWebOfflineSyncDays", octxt, redoRecorder);
+
+            Folder folder = getFolderById(folderId);
+            if (!checkItemChangeID(folder)) {
+                throw MailServiceException.MODIFY_CONFLICT();
+            }
+            folder.setWebOfflineSyncDays(days);
+            success = true;
         } finally {
             endTransaction(success);
         }

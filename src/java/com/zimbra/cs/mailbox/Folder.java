@@ -190,6 +190,7 @@ public class Folder extends MailItem {
     private int       deletedUnreadCount;
     private RetentionPolicy retentionPolicy;
     private boolean   activeSyncDisabled;
+    private int webOfflineSyncDays;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
@@ -827,7 +828,7 @@ public class Folder extends MailItem {
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
-                mbox.getOperationChangeID(), -1, 0, 0, 0, null, false);
+                mbox.getOperationChangeID(), -1, 0, 0, 0, null, false, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
@@ -895,6 +896,28 @@ public class Folder extends MailItem {
         markItemModified(Change.URL);
         syncData = new SyncData(url);
         saveMetadata();
+    }
+
+    /**
+     * Sets the number of days for which web client would sync the folder data for offline use.
+     *
+     * @param days
+     * @throws ServiceException
+     */
+    void setWebOfflineSyncDays(int days) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_WRITE)) {
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+        }
+        if (days < 0 || days > getAccount().getWebClientOfflineSyncMaxDays()) {
+            throw ServiceException.INVALID_REQUEST("invalid web offline folder sync days: " + days, null);
+        }
+        markItemModified(Change.METADATA);
+        webOfflineSyncDays = days;
+        saveMetadata();
+    }
+
+    public int getWebOfflineSyncDays() {
+        return webOfflineSyncDays;
     }
 
     /** Records the last-synced information for a subscribed folder.  If the
@@ -1403,27 +1426,31 @@ public class Folder extends MailItem {
         }
 
         activeSyncDisabled = meta.getBool(Metadata.FN_DISABLE_ACTIVESYNC, false);
+
+        webOfflineSyncDays = meta.getInt(Metadata.FN_WEB_OFFLINE_SYNC_DAYS, 0);
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
         Metadata m = encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, rights, syncData,
                 imapUIDNEXT, totalSize, imapMODSEQ, imapRECENT, imapRECENTCutoff, deletedCount,
-                deletedUnreadCount, retentionPolicy, activeSyncDisabled);
+                deletedUnreadCount, retentionPolicy, activeSyncDisabled, webOfflineSyncDays);
         return m;
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, byte attributes, Type view,
             ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff,
-            int deleted, int deletedUnread, RetentionPolicy rp, boolean disableActiveSync) {
+            int deleted, int deletedUnread, RetentionPolicy rp, boolean disableActiveSync, int webOfflineSyncdDays) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, attributes, view, rights, fsd, uidnext,
-                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread, rp, disableActiveSync).toString();
+                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread, rp,
+                              disableActiveSync, webOfflineSyncdDays).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
             byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
-            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp, boolean disableActiveSync) {
+            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp,
+            boolean disableActiveSync, int webOfflineSyncdDays) {
         if (view != null && view != Type.UNKNOWN) {
             meta.put(Metadata.FN_VIEW, view.toByte());
         }
@@ -1462,6 +1489,9 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }
         meta.put(Metadata.FN_DISABLE_ACTIVESYNC, disableActiveSync);
+        if (webOfflineSyncdDays > 0) {
+            meta.put(Metadata.FN_WEB_OFFLINE_SYNC_DAYS, webOfflineSyncdDays);
+        }
 
         return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, extended);
     }

@@ -58,6 +58,7 @@ public final class Metadata {
     public static final String FN_MIME_TYPE        = "ct";
     public static final String FN_DRAFT            = "d";
     public static final String FN_DISABLE_ACTIVESYNC = "das";
+    public static final String FN_WEB_OFFLINE_SYNC_DAYS = "wosd";
     public static final String FN_DESCRIPTION      = "de";
     public static final String FN_DESC_ENABLED     = "dee";
     public static final String FN_REPLY_ORIG       = "do";
