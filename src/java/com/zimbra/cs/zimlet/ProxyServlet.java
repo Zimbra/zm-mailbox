@@ -286,7 +286,9 @@ public class ProxyServlet extends ZimbraServlet {
             }
             
             try {
-                method.setFollowRedirects(true);
+                if (!(reqMethod.equalsIgnoreCase("POST") || reqMethod.equalsIgnoreCase("PUT"))) {
+                    method.setFollowRedirects(true);
+                }
                 HttpClientUtil.executeMethod(client, method);
             } catch (HttpException ex) {
                 ZimbraLog.zimlet.info("exception while proxying " + target, ex);
