@@ -94,6 +94,9 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
  *     - If set, disable access to the folder via activesync.
  *       Note: Only works for user folders, doesn't have any effect on system folders.
  *
+ *   &lt;action op="webofflinesyncdays" id="{list}" webofflinesyncdays="num-days"/>
+ *     - set the number of days for which web client would sync folder data for offline use
+ *       {num-days} must not be greater than value of zimbraWebClientOfflineSyncMaxDays account attribute
  *   &lt;action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"]
  *                          [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>
  *     [&lt;acl>&lt;grant .../>*&lt;/acl>]

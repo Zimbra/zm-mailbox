@@ -242,6 +242,13 @@ public class Folder {
     private ZmBoolean activeSyncDisabled;
 
     /**
+     * @zm-api-field-tag num-days
+     * @zm-api-field-description Number of days for which web client would sync folder data for offline use
+     */
+    @XmlAttribute(name=MailConstants.A_WEB_OFFLINE_SYNC_DAYS /* webOfflineSyncDays */, required=false)
+    private Integer webOfflineSyncDays;
+
+    /**
      * @zm-api-field-tag effective-perms
      * @zm-api-field-description Foor remote folders, the access rights the authenticated user has on the folder -
      * will contain the calculated (c)reate folder permission if the user has both (i)nsert and (r)ead access on the
@@ -320,6 +327,7 @@ public class Folder {
 
     public String getUrl() { return url; }
     public Boolean isActiveSyncDisabled() { return ZmBoolean.toBool(activeSyncDisabled); }
+    public Integer getWebOfflineSyncDays() { return webOfflineSyncDays; }
     public String getPerm() { return perm; }
     public List<Folder> getSubfolders() {
         return Collections.unmodifiableList(subfolders);
@@ -360,6 +368,7 @@ public class Folder {
     public void setView(View view) { this.view = view; }
     public void setUrl(String url) { this.url = url; }
     public void setDisableActiveSync(Boolean disableActiveSync) { this.recursive = ZmBoolean.fromBool(disableActiveSync); }
+    public void setWebOfflineSyncDays(Integer webOfflineSyncDays) { this.webOfflineSyncDays = webOfflineSyncDays; }
     public void setPerm(String perm) { this.perm = perm; }
     public void setRestUrl(String restUrl) { this.restUrl = restUrl; }
 
