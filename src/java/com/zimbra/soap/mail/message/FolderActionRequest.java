@@ -97,6 +97,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
  *   &lt;action op="webofflinesyncdays" id="{list}" numDays="{web-offline-sync-days}/>
  *     - set the number of days for which web client would sync folder data for offline use
  *       {web-offline-sync-days} must not be greater than value of zimbraWebClientOfflineSyncMaxDays account attribute
+ *
  *   &lt;action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"]
  *                          [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>
  *     [&lt;acl>&lt;grant .../>*&lt;/acl>]
