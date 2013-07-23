@@ -828,7 +828,7 @@ public class Folder extends MailItem {
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
-                mbox.getOperationChangeID(), -1, 0, 0, 0, null, false, 0);
+                mbox.getOperationChangeID(), -1, 0, 0, 0, null, false, -1);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
@@ -916,8 +916,22 @@ public class Folder extends MailItem {
         saveMetadata();
     }
 
-    public int getWebOfflineSyncDays() {
-        return webOfflineSyncDays;
+    /**
+     * Gets the number of days for which web client would sync the folder data for offline use.
+     *
+     * @return
+     * @throws ServiceException if there's an error in getting the {@link Account} object corresponding
+     *                          to the mailbox.
+     */
+    public int getWebOfflineSyncDays() throws ServiceException {
+        if (webOfflineSyncDays < 0 & getId() == Mailbox.ID_FOLDER_INBOX) {
+            // sync days property has not been set by the user on Inbox
+            return getAccount().getWebClientOfflineSyncMaxDays();
+        } else if (webOfflineSyncDays < 0) {
+            return 0;
+        } else {
+            return webOfflineSyncDays;
+        }
     }
 
     /** Records the last-synced information for a subscribed folder.  If the
@@ -1427,7 +1441,7 @@ public class Folder extends MailItem {
 
         activeSyncDisabled = meta.getBool(Metadata.FN_DISABLE_ACTIVESYNC, false);
 
-        webOfflineSyncDays = meta.getInt(Metadata.FN_WEB_OFFLINE_SYNC_DAYS, 0);
+        webOfflineSyncDays = meta.getInt(Metadata.FN_WEB_OFFLINE_SYNC_DAYS, -1);
     }
 
     @Override
