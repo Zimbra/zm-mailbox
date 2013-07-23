@@ -924,7 +924,7 @@ public class Folder extends MailItem {
      *                          to the mailbox.
      */
     public int getWebOfflineSyncDays() throws ServiceException {
-        if (webOfflineSyncDays < 0 & getId() == Mailbox.ID_FOLDER_INBOX) {
+        if (webOfflineSyncDays < 0 && getId() == Mailbox.ID_FOLDER_INBOX) {
             // sync days property has not been set by the user on Inbox
             return getAccount().getWebClientOfflineSyncMaxDays();
         } else if (webOfflineSyncDays < 0) {
