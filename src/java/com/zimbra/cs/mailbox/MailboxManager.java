@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,8 +23,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
@@ -41,9 +45,6 @@ import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxManager {
 
@@ -77,6 +78,8 @@ public class MailboxManager {
         private final int    mailboxId;
         private Mailbox mailbox;
         private List<Thread> allowedThreads;
+        private boolean nestedAllowed = false;
+        private boolean inner = false;
 
         MailboxLock(String acct, int id)  { this(acct, id, null); }
         MailboxLock(String acct, int id, Mailbox mbox) {
@@ -90,21 +93,58 @@ public class MailboxManager {
         int getMailboxId()     { return mailboxId; }
         Mailbox getMailbox()   { return mailbox; }
 
+        synchronized void registerOuterAllowedThread(Thread t) throws MailServiceException {
+            if (inner) {
+                throw MailServiceException.MAINTENANCE(mailboxId, "cannot add new maintenance thread when inner maintenance is already started");
+            } else if (!nestedAllowed) {
+                throw MailServiceException.MAINTENANCE(mailboxId, "cannot add outer maintenance thread when nested is not enabled");
+            } else if (allowedThreads.size() > 0) {
+                throw MailServiceException.MAINTENANCE(mailboxId, "cannot add multiple outer maintenance threads");
+            }
+            registerAllowedThread(t);
+        }
+
         public synchronized void registerAllowedThread(Thread t) {
             allowedThreads.add(t);
         }
 
-        synchronized boolean canAccess() {
-            Thread curr = Thread.currentThread();
-            for (Thread t : allowedThreads) {
-                if (curr == t)
-                    return true;
+        synchronized void removeAllowedThread(Thread t) {
+            allowedThreads.remove(t);
+        }
+
+        synchronized void setNestedAllowed(boolean allowed) {
+            nestedAllowed = allowed;
+        }
+
+        synchronized void startInnerMaintenance() throws MailServiceException {
+            if (inner) {
+                throw MailServiceException.MAINTENANCE(mailboxId, "attempted to nest maintenance when already nested");
+            } else if (!nestedAllowed || !canAccess()) {
+                throw MailServiceException.MAINTENANCE(mailboxId, "attempted to nest maintenance when not allowed");
             }
-            return false;
+            inner = true;
+        }
+
+        synchronized boolean endInnerMaintenance() {
+            boolean set = inner;
+            assert(nestedAllowed || !set);
+            inner = false;
+            return set;
+        }
+
+        synchronized boolean isNestedAllowed() {
+            return nestedAllowed;
+        }
+
+
+        synchronized boolean canAccess() {
+            return allowedThreads.contains(Thread.currentThread());
         }
 
         synchronized void markUnavailable()  {
             mailbox = null;
+            inner = false;
+            nestedAllowed = false;
             allowedThreads.clear();
         }
 
@@ -113,6 +153,8 @@ public class MailboxManager {
                 mailbox = mbox;
         }
     }
+
+    private ConcurrentHashMap<String, MailboxLock> maintenanceLocks = new ConcurrentHashMap<String, MailboxLock>();
 
     private CopyOnWriteArrayList<Listener> mListeners = new CopyOnWriteArrayList<Listener>();
 
@@ -488,7 +530,7 @@ public class MailboxManager {
                         DbPool.quietClose(conn);
                 }
             }
-            
+
             mbox = instantiateMailbox(data);
             Account account = mbox.getAccount();
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
@@ -528,6 +570,24 @@ public class MailboxManager {
         }
 
         ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
+
+        if (maintenanceLocks.containsKey(mbox.getAccountId()) && mbox.getMailboxLock() == null) {
+            //case here where mailbox was unloaded (due to memory pressure or similar) but
+            //it was in maintenance before so needs to be in maintenance now that it is reloaded
+            MailboxLock oldMaint = maintenanceLocks.get(mbox.getAccountId());
+            MailboxLock maint = null;
+            synchronized (mbox) {
+                maint = mbox.beginMaintenance();
+                synchronized (this) {
+                    mMailboxCache.put(mailboxId, maint);
+                }
+            }
+            if (oldMaint.isNestedAllowed()) {
+                maint.setNestedAllowed(true);
+            }
+            maint.removeAllowedThread(Thread.currentThread());
+            maintenanceLocks.put(mbox.getAccountId(), maint);
+        }
         return mbox;
     }
 
@@ -585,10 +645,16 @@ public class MailboxManager {
             Object cached = mMailboxCache.get(mailboxId, trackGC);
             if (cached instanceof MailboxLock) {
                 MailboxLock lock = (MailboxLock) cached;
-                if (!lock.canAccess())
-                    throw MailServiceException.MAINTENANCE(mailboxId);
-                if (lock.getMailbox() != null)
+                if (!lock.canAccess()) {
+                    if (isMailboxLockedOut(lock.getAccountId())) {
+                        throw MailServiceException.MAINTENANCE(mailboxId, "mailbox locked out for maintenance");
+                    } else {
+                        throw MailServiceException.MAINTENANCE(mailboxId);
+                    }
+                }
+                if (lock.getMailbox() != null) {
                     return lock.getMailbox();
+                }
             }
             // if we've retrieved NULL or a Mailbox or an accessible lock, return it
             return cached;
@@ -641,8 +707,10 @@ public class MailboxManager {
 
         synchronized (this) {
             Object obj = mMailboxCache.get(lock.getMailboxId());
-            if (obj != lock)
-                throw MailServiceException.MAINTENANCE(lock.getMailboxId());
+            if (obj != lock) {
+                ZimbraLog.mailbox.debug("maintenance ended with wrong object. passed %s; expected %s", lock, obj);
+                throw MailServiceException.MAINTENANCE(lock.getMailboxId(), "attempting to end maintenance with wrong object");
+            }
 
             // start by removing the lock from the Mailbox object cache
             mMailboxCache.remove(lock.getMailboxId());
@@ -667,8 +735,13 @@ public class MailboxManager {
                         }
                         // Note: mbox is left in maintenance mode.
                     } else {
-                        mbox.endMaintenance(success);
-                        cacheMailbox(lock.getMailbox());
+                        if (mbox.endMaintenance(success)) {
+                            ZimbraLog.mailbox.debug("no longer in maintenace; caching mailbox");
+                            cacheMailbox(lock.getMailbox());
+                        } else {
+                            ZimbraLog.mailbox.debug("still in maintenance; caching lock");
+                            mMailboxCache.put(mbox.getId(), mbox.getMailboxLock());
+                        }
                     }
                     availableMailbox = mbox;
                 }
@@ -809,7 +882,7 @@ public class MailboxManager {
         do {
             if (mailboxKey != null)
                 return getMailboxById(mailboxKey);
-            
+
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
             synchronized (this) {
                 // check to make sure the mailbox doesn't already exist
@@ -898,6 +971,7 @@ public class MailboxManager {
         synchronized (this) {
             mMailboxIds.remove(accountId);
             mMailboxCache.remove(mailbox.getId());
+            maintenanceLocks.remove(accountId);
         }
         notifyMailboxDeleted(accountId);
     }
@@ -916,6 +990,53 @@ public class MailboxManager {
         ZimbraLog.mailbox.debug(sb.toString());
     }
 
+    public void lockoutMailbox(String accountId) throws ServiceException {
+        ZimbraLog.mailbox.debug("locking out mailbox for account %s", accountId);
+        Mailbox mbox = getMailboxByAccountId(accountId);
+        MailboxLock maintenance = beginMaintenance(accountId, mbox.getId());
+        maintenance.setNestedAllowed(true);
+        maintenance.removeAllowedThread(Thread.currentThread());
+        maintenanceLocks.put(mbox.getAccountId(), maintenance);
+    }
+
+    public void undoLockout(String accountId, boolean endMaintenance) throws ServiceException {
+        ZimbraLog.mailbox.debug("undoing lockout for account %s", accountId);
+        MailboxLock maintenance = maintenanceLocks.remove(accountId);
+        if (maintenance == null) {
+            throw ServiceException.FAILURE("No lock known for account " + accountId, null);
+        }
+        if (endMaintenance) {
+            maintenance.registerAllowedThread(Thread.currentThread());
+            endMaintenance(maintenance, true, false);
+        }
+    }
+
+    public void undoLockout(String accountId) throws ServiceException {
+        undoLockout(accountId, true);
+    }
+
+    public boolean isMailboxLockedOut(String accountId) {
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
+            ZimbraLog.mailbox.debug("Checking is locked for account %s? %s", accountId, maintenanceLocks.containsKey(accountId));
+        }
+        return maintenanceLocks.containsKey(accountId);
+    }
+
+    public void registerOuterMaintenanceThread(String accountId) throws MailServiceException {
+        ZimbraLog.mailbox.debug("registering maintenance thread for account %s", accountId);
+        MailboxLock maintenance = maintenanceLocks.get(accountId);
+        if (maintenance != null) {
+            maintenance.registerOuterAllowedThread(Thread.currentThread());
+        }
+    }
+
+    public void unregisterMaintenanceThread(String accountId) {
+        ZimbraLog.mailbox.debug("unregistering maintenance thread for account %s", accountId);
+        MailboxLock maintenance = maintenanceLocks.get(accountId);
+        if (maintenance != null) {
+            maintenance.removeAllowedThread(Thread.currentThread());
+        }
+    }
 
     protected static class MailboxMap implements Map<Integer, Object> {
         final int mHardSize;

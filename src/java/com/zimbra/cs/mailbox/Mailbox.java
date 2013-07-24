@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -697,7 +697,7 @@ public class Mailbox {
             return;
         assert(session.getSessionId() != null);
         if (mMaintenance != null)
-            throw MailServiceException.MAINTENANCE(mId);
+            throw MailServiceException.MAINTENANCE(mId, "cannot add listener while in maintenance");
         if (!mListeners.contains(session))
             mListeners.add(session);
 
@@ -1228,8 +1228,11 @@ public class Mailbox {
      * @throws ServiceException MailServiceException.MAINTENANCE if the
      *         <tt>Mailbox</tt> is already in maintenance mode. */
     synchronized MailboxLock beginMaintenance() throws ServiceException {
-        if (mMaintenance != null)
-            throw MailServiceException.MAINTENANCE(mId);
+        if (mMaintenance != null) {
+            mMaintenance.startInnerMaintenance();
+            ZimbraLog.mailbox.info("already in maintenance, nesting access for mailboxId %d", getId());
+            return mMaintenance;
+        }
         ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
 
         purgeListeners();
@@ -1239,16 +1242,29 @@ public class Mailbox {
         return mMaintenance;
     }
 
-    synchronized void endMaintenance(boolean success) throws ServiceException {
+    /**
+     * End maintenance mode
+     * @param success - whether to mark operation as success or take mailbox out of commision due to failure
+     * @return true if maintenance is actually ended; false if maintenance is still wrapped by outer lockout
+     * @throws ServiceException
+     */
+    synchronized boolean endMaintenance(boolean success) throws ServiceException {
         if (mMaintenance == null)
             throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
 
         if (success) {
             ZimbraLog.mailbox.info("Ending maintenance on mailbox %d.", getId());
-            mMaintenance = null;
+            if (mMaintenance.endInnerMaintenance()) {
+                ZimbraLog.mailbox.info("decreasing depth for mailboxId %d", getId());
+                return false;
+            } else {
+                mMaintenance = null;
+                return true;
+            }
         } else {
             ZimbraLog.mailbox.info("Ending maintenance and marking mailbox %d as unavailable.", getId());
             mMaintenance.markUnavailable();
+            return true;
         }
     }
 
