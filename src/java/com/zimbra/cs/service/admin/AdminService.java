@@ -272,6 +272,7 @@ public class AdminService implements DocumentService {
 
         // clear cookie
         dispatcher.registerHandler(AdminConstants.CLEAR_COOKIE_REQUEST, new ClearCookie());
+        dispatcher.registerHandler(AdminConstants.LOCKOUT_MAILBOX_REQUEST, new LockoutMailbox());
 
         // Retention policy
         dispatcher.registerHandler(AdminConstants.GET_SYSTEM_RETENTION_POLICY_REQUEST, new GetSystemRetentionPolicy());
