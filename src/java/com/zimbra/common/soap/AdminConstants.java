@@ -157,6 +157,8 @@ public final class AdminConstants {
     public static final String E_DELETE_MAILBOX_RESPONSE = "DeleteMailboxResponse";
     public static final String E_GET_MAILBOX_REQUEST = "GetMailboxRequest";
     public static final String E_GET_MAILBOX_RESPONSE = "GetMailboxResponse";
+    public static final String E_LOCKOUT_MAILBOX_REQUEST = "LockoutMailboxRequest";
+    public static final String E_LOCKOUT_MAILBOX_RESPONSE = "LockoutMailboxResponse";
 
     public static final String E_RUN_UNIT_TESTS_REQUEST = "RunUnitTestsRequest";
     public static final String E_RUN_UNIT_TESTS_RESPONSE = "RunUnitTestsResponse";
@@ -646,6 +648,8 @@ public final class AdminConstants {
     public static final QName DELETE_MAILBOX_RESPONSE = QName.get(E_DELETE_MAILBOX_RESPONSE, NAMESPACE);
     public static final QName GET_MAILBOX_REQUEST = QName.get(E_GET_MAILBOX_REQUEST, NAMESPACE);
     public static final QName GET_MAILBOX_RESPONSE = QName.get(E_GET_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName LOCKOUT_MAILBOX_REQUEST = QName.get(E_LOCKOUT_MAILBOX_REQUEST, NAMESPACE);
+    public static final QName LOCKOUT_MAILBOX_RESPONSE = QName.get(E_LOCKOUT_MAILBOX_RESPONSE, NAMESPACE);
 
     public static final QName RUN_UNIT_TESTS_REQUEST = QName.get(E_RUN_UNIT_TESTS_REQUEST, NAMESPACE);
     public static final QName RUN_UNIT_TESTS_RESPONSE = QName.get(E_RUN_UNIT_TESTS_RESPONSE, NAMESPACE);
@@ -1357,6 +1361,7 @@ public final class AdminConstants {
     public static final String OP_MODIFY = "modify";
     public static final String OP_REMOVE = "remove";
 
+    public static final String A_OPERATION = "op";
     // XmlFixupRules (FixCalenderTZ)
     public static final String E_TZFIXUP = "tzfixup";
     public static final String E_FIXUP_RULE = "fixupRule";
