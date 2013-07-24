@@ -1566,21 +1566,30 @@ public class Mailbox {
         }
     }
 
-    void endMaintenance(boolean success) throws ServiceException {
-        lock.lock();
-        try {
-            if (maintenance == null) {
-                throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
-            }
-            if (success) {
-                ZimbraLog.mailbox.info("Ending maintenance on mailbox %d.", getId());
-                maintenance = null;
+
+    /**
+     * End maintenance mode
+     * @param success - whether to mark operation as success or take mailbox out of commision due to failure
+     * @return true if maintenance is actually ended; false if maintenance is still wrapped by outer lockout
+     * @throws ServiceException
+     */
+    synchronized boolean endMaintenance(boolean success) throws ServiceException {
+        if (maintenance == null)
+            throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
+
+        if (success) {
+            ZimbraLog.mailbox.info("Ending maintenance on mailbox %d.", getId());
+            if (maintenance.endInnerMaintenance()) {
+                ZimbraLog.mailbox.info("decreasing depth for mailboxId %d", getId());
+                return false;
             } else {
-                ZimbraLog.mailbox.info("Ending maintenance and marking mailbox %d as unavailable.", getId());
-                maintenance.markUnavailable();
+                maintenance = null;
+                return true;
             }
-        } finally {
-            lock.release();
+        } else {
+            ZimbraLog.mailbox.info("Ending maintenance and marking mailbox %d as unavailable.", getId());
+            maintenance.markUnavailable();
+            return true;
         }
     }
 
