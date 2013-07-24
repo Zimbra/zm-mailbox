@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -132,6 +132,8 @@ public class AdminConstants {
     public static final QName DELETE_MAILBOX_RESPONSE= QName.get("DeleteMailboxResponse", NAMESPACE);
     public static final QName GET_MAILBOX_REQUEST = QName.get("GetMailboxRequest", NAMESPACE);
     public static final QName GET_MAILBOX_RESPONSE= QName.get("GetMailboxResponse", NAMESPACE);
+    public static final QName LOCKOUT_MAILBOX_REQUEST = QName.get("LockoutMailboxRequest", NAMESPACE);
+    public static final QName LOCKOUT_MAILBOX_RESPONSE = QName.get("LockoutMailboxResponse", NAMESPACE);
 
     public static final QName RUN_UNIT_TESTS_REQUEST = QName.get("RunUnitTestsRequest", NAMESPACE);
     public static final QName RUN_UNIT_TESTS_RESPONSE = QName.get("RunUnitTestsResponse", NAMESPACE);
@@ -413,16 +415,16 @@ public class AdminConstants {
     // wiki migration
     public static final QName MIGRATE_ACCOUNT_REQUEST = QName.get("MigrateAccountRequest", NAMESPACE);
     public static final QName MIGRATE_ACCOUNT_RESPONSE = QName.get("MigrateAccountResponse", NAMESPACE);
-    
+
     // noop
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
-    
+
     // cookie
     // noop
     public static final QName CLEAR_COOKIE_REQUEST = QName.get("ClearCookieRequest", NAMESPACE);
     public static final QName CLEAR_COOKIE_RESPONSE = QName.get("ClearCookieResponse", NAMESPACE);
-    
+
     // SMIME config
     public static final QName GET_SMIME_CONFIG_REQUEST = QName.get("GetSMIMEConfigRequest", NAMESPACE);
     public static final QName GET_SMIME_CONFIG_RESPONSE = QName.get("GetSMIMEConfigResponse", NAMESPACE);
@@ -755,12 +757,14 @@ public class AdminConstants {
     public static final String A_ALLSERVERS = "allServers";
 
     public static final String A_SYNCHRONOUS = "synchronous";
-    
+
     public static final String E_MIGRATE = "migrate";
-    
+
     public static final String A_ERROR = "error";
-    
+
     public static final String OP_MODIFY = "modify";
     public static final String OP_REMOVE = "remove";
-    
+
+    public static final String A_OPERATION = "op";
+
 }
