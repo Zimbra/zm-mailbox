@@ -1552,7 +1552,9 @@ public class Mailbox {
         lock.lock();
         try {
             if (maintenance != null) {
-                throw MailServiceException.MAINTENANCE(mId);
+                maintenance.startInnerMaintenance();
+                ZimbraLog.mailbox.info("already in maintenance, nesting access for mailboxId %d", getId());
+                return maintenance;
             }
             ZimbraLog.mailbox.info("Putting mailbox %d under maintenance.", getId());
 
