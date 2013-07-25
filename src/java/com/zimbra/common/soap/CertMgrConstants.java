@@ -56,6 +56,7 @@ public final class CertMgrConstants {
     public static final String A_FILENAME = "filename" ;
     public static final String E_VALIDATION_DAYS = "validation_days" ;
     public static final String E_SUBJECT = "subject" ;
+    public static final String E_DIGEST = "digest";
     public static final String E_KEYSIZE = "keysize" ;
     public static final String E_comm_cert = "comm_cert";
     public static final String E_cert = "cert";
