@@ -1464,7 +1464,7 @@ public class Folder extends MailItem {
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
             byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
             int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp,
-            boolean disableActiveSync, int webOfflineSyncdDays) {
+            boolean disableActiveSync, int webOfflineSyncDays) {
         if (view != null && view != Type.UNKNOWN) {
             meta.put(Metadata.FN_VIEW, view.toByte());
         }
@@ -1503,8 +1503,8 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }
         meta.put(Metadata.FN_DISABLE_ACTIVESYNC, disableActiveSync);
-        if (webOfflineSyncdDays > 0) {
-            meta.put(Metadata.FN_WEB_OFFLINE_SYNC_DAYS, webOfflineSyncdDays);
+        if (webOfflineSyncDays >= 0) {
+            meta.put(Metadata.FN_WEB_OFFLINE_SYNC_DAYS, webOfflineSyncDays);
         }
 
         return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, extended);
