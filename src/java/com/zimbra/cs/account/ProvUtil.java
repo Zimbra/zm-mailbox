@@ -235,9 +235,11 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void usage(Command.Via violatedVia) {
+        boolean givenHelp = false;
         if (command != null) {
             if (violatedVia == null) {
                 console.printf("usage:  %s(%s) %s\n", command.getName(), command.getAlias(), command.getHelp());
+                givenHelp = true;
                 CommandHelp extraHelp = command.getExtraHelp();
                 if (extraHelp != null) {
                     extraHelp.printHelp();
@@ -252,6 +254,10 @@ public class ProvUtil implements HttpDebugListener {
         }
         if (interactiveMode) {
             return;
+        }
+        if (givenHelp) {
+            console.println("For general help, type : zmprov --help");
+            System.exit(1);
         }
         console.println("");
         console.println("zmprov [args] [cmd] [cmd-args ...]");
@@ -334,19 +340,25 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         static void helpRIGHT() {
-            helpRIGHTCommon();
-            helpRIGHTRights(false);
+            helpRIGHTCommon(false);
+            helpRIGHTRights(false, true);
         }
 
-        static void helpRIGHTCommand() {
-            helpRIGHTCommon();
-            helpRIGHTRights(false);
+        static void helpRIGHTCommand(boolean printRights, boolean secretPossible, boolean modifierPossible) {
+            helpRIGHTCommon(secretPossible);
+            helpRIGHTRights(false, modifierPossible);
         }
 
-        static void helpRIGHTRights(boolean printRights) {
+        static void helpRIGHTRights(boolean printRights, boolean modifierPossible) {
             // rights
             console.println();
-            console.println("    {right}: if right is prefixed with a '-', it means negative right, i.e., specifically deny");
+            if (modifierPossible) {
+                console.println("    {right}: can have the following prefixes:");
+                for (RightModifier rm : RightModifier.values()) {
+                    console.println("            " + rm.getModifier() + " : " + rm.getDescription());
+                }
+                console.println();
+            }
 
             if (printRights) {
                 try {
@@ -365,13 +377,13 @@ public class ProvUtil implements HttpDebugListener {
                     console.println("cannot get RightManager instance: " + e.getMessage());
                 }
             } else {
-                console.println("             for complete list of rights, do \"zmprov [-l] gar\"");
+                console.println("         for complete list of rights, do \"zmprov gar -c ALL\"");
             }
 
             console.println();
         }
 
-        static void helpRIGHTCommon() {
+        static void helpRIGHTCommon(boolean secretPossible) {
             // target types
             console.println();
             StringBuilder tt = new StringBuilder();
@@ -395,6 +407,7 @@ public class ProvUtil implements HttpDebugListener {
             console.println();
             StringBuilder gt = new StringBuilder();
             StringBuilder gtNeedsGranteeIdentity = new StringBuilder();
+            StringBuilder gtNeedsSecret = new StringBuilder();
             GranteeType[] gts = GranteeType.values();
             for (int i = 0; i < gts.length; i++) {
                 if (i > 0) {
@@ -404,11 +417,19 @@ public class ProvUtil implements HttpDebugListener {
                 if (gts[i].needsGranteeIdentity()) {
                     gtNeedsGranteeIdentity.append(gts[i].getCode() + " ");
                 }
+                if (secretPossible && gts[i].allowSecret()) {
+                    gtNeedsSecret.append(gts[i].getCode() + " ");
+                }
             }
             console.println("    {grantee-type} = " + gt.toString());
             console.println();
-            console.println("    {grantee-id|grantee-name} is required if grantee-type is: " + gtNeedsGranteeIdentity + ",");
+            console.println("    {grantee-id|grantee-name} is required if grantee-type is one of: " + gtNeedsGranteeIdentity);
             console.println("        otherwise {target-id|target-name} should not be specified");
+            if (secretPossible) {
+                console.println();
+                console.println("    {secret} is required if grantee-type is one of: " + gtNeedsSecret);
+                console.println("        otherwise {secret} should not be specified");
+            }
 
         }
 
@@ -436,9 +457,17 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     static class RightCommandHelp implements CommandHelp {
+        boolean printRights;
+        boolean secretPossible;
+        boolean modifierPossible;
+        RightCommandHelp(boolean printRights, boolean secretPossible, boolean modifierPossible) {
+            this.printRights = printRights;
+            this.secretPossible = secretPossible;
+            this.modifierPossible = modifierPossible;
+        }
         @Override
         public void printHelp() {
-            Category.helpRIGHTCommand();
+            Category.helpRIGHTCommand(printRights, secretPossible, modifierPossible);
         }
     }
 
@@ -474,7 +503,8 @@ public class ProvUtil implements HttpDebugListener {
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         AUTO_PROV_CONTROL("autoProvControl", "apc", "{start|status|stop}", Category.COMMANDS, 1, 1),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
-        CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}", Category.RIGHT, 3, 4, null, new RightCommandHelp()),
+        CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}",
+                Category.RIGHT, 3, 4, null, new RightCommandHelp(false, false, true)),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
         COUNT_OBJECTS("countObjects", "cto", "{" + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4),
@@ -544,13 +574,15 @@ public class ProvUtil implements HttpDebugListener {
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
         GET_CONFIG_SMIME_CONFIG("getConfigSMIMEConfig", "gcsc", "[configName]", Category.DOMAIN, 0, 1),
         GET_DOMAIN_SMIME_CONFIG("getDomainSMIMEConfig", "gdsc", "name|id [configName]", Category.DOMAIN, 1, 2),
-        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5, null, new RightCommandHelp()),
+        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]",
+                Category.RIGHT, 1, 5, null, new RightCommandHelp(false, false, false)),
 
         // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
         GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
 
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 2, 7, null, new RightCommandHelp()),
+        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]",
+                Category.RIGHT, 2, 7, null, new RightCommandHelp(false, false, false)),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),
         GET_RIGHT("getRight", "gr", "{right} [-e] (whether to expand combo rights recursively)", Category.RIGHT, 1, 2),
@@ -560,7 +592,8 @@ public class ProvUtil implements HttpDebugListener {
         GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
         GET_SPNEGO_DOMAIN("getSpnegoDomain", "gsd", "", Category.MISC, 0, 0),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {[-]right}", Category.RIGHT, 3, 6, null, new RightCommandHelp()),
+        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {right}",
+                Category.RIGHT, 3, 6, null, new RightCommandHelp(false, true, true)),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         LDAP(".ldap", ".l"),
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
@@ -599,7 +632,8 @@ public class ProvUtil implements HttpDebugListener {
         COMPACT_INBOX_MAILBOX("compactIndexMailbox", "cim", "{name@domain|id} {start|status}", Category.MAILBOX, 2, Integer.MAX_VALUE),
         VERIFY_INDEX("verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1),
         GET_INDEX_STATS("getIndexStats", "gis", "{name@domain|id}", Category.MAILBOX, 1, 1),
-        REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {[-]right}", Category.RIGHT, 3, 5, null, new RightCommandHelp()),
+        REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {right}",
+                Category.RIGHT, 3, 5, null, new RightCommandHelp(false, false, true)),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH, 1, Integer.MAX_VALUE, Via.ldap),
         SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
@@ -3909,7 +3943,7 @@ public class ProvUtil implements HttpDebugListener {
                     throw ServiceException.INVALID_REQUEST("attribute is already specified as " + descArgs.mAttr, null);
                 }
                 if (args.length <= i + 1) {
-                    throw ServiceException.INVALID_REQUEST("not enough number of args", null);
+                    throw ServiceException.INVALID_REQUEST("not enough args", null);
                 }
                 i++;
                 descArgs.mAttr = args[i];
@@ -4464,7 +4498,7 @@ public class ProvUtil implements HttpDebugListener {
             if (hasNext())
                 return mArgs[mCurPos++];
             else
-                throw ServiceException.INVALID_REQUEST("not enough number of arguments", null);
+                throw ServiceException.INVALID_REQUEST("not enough arguments", null);
         }
 
         boolean hasNext() {
@@ -4474,13 +4508,13 @@ public class ProvUtil implements HttpDebugListener {
 
     private void getRightArgsTarget(RightArgs ra) throws ServiceException, ArgException {
         if (ra.mCurPos >= ra.mArgs.length) {
-            throw new ArgException("not enough number of arguments");
+            throw new ArgException("not enough arguments");
         }
         ra.mTargetType = ra.mArgs[ra.mCurPos++];
         TargetType tt = TargetType.fromCode(ra.mTargetType);
         if (tt.needsTargetIdentity()) {
             if (ra.mCurPos >= ra.mArgs.length) {
-                throw new ArgException("not enough number of arguments");
+                throw new ArgException("not enough arguments");
             }
             ra.mTargetIdOrName = ra.mArgs[ra.mCurPos++];
         } else {
@@ -4491,7 +4525,7 @@ public class ProvUtil implements HttpDebugListener {
     private void getRightArgsGrantee(RightArgs ra, boolean needGranteeType, boolean needSecret)
             throws ServiceException, ArgException {
         if (ra.mCurPos >= ra.mArgs.length) {
-            throw new ArgException("not enough number of arguments");
+            throw new ArgException("not enough arguments");
         }
         GranteeType gt = null;
         if (needGranteeType) {
@@ -4504,14 +4538,14 @@ public class ProvUtil implements HttpDebugListener {
             return;
         }
         if (ra.mCurPos >= ra.mArgs.length) {
-            throw new ArgException("not enough number of arguments");
+            throw new ArgException("not enough arguments");
         }
         ra.mGranteeIdOrName = ra.mArgs[ra.mCurPos++];
 
         if (needSecret && gt != null) {
             if (gt.allowSecret()) {
                 if (ra.mCurPos >= ra.mArgs.length) {
-                    throw new ArgException("not enough number of arguments");
+                    throw new ArgException("not enough arguments");
                 }
                 ra.mSecret = ra.mArgs[ra.mCurPos++];
             }
@@ -4520,7 +4554,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void getRightArgsRight(RightArgs ra) throws ServiceException, ArgException {
         if (ra.mCurPos >= ra.mArgs.length) {
-            throw new ArgException("not enough number of arguments");
+            throw new ArgException("not enough arguments");
         }
 
         ra.mRight = ra.mArgs[ra.mCurPos++];
