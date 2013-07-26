@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -43,10 +43,21 @@ public class GranteeSelector {
         }
     }
 
-    // TODO:  Is this correct or should this be TargetType?  Looking at GrantRight source, looks more like TargetType
     /**
-     * @zm-api-field-tag
-     * @zm-api-field-description
+     * @zm-api-field-tag grantee-type
+     * @zm-api-field-description Grantee type
+     * <table>
+     * <tr> <td> <b>usr</b> </td> <td> Zimbra User </td> </tr>
+     * <tr> <td> <b>grp</b> </td> <td> Zimbra Group (distribution list) </td> </tr>
+     * <tr> <td> <b>egp</b> </td> <td> an external AD group </td> </tr>
+     * <tr> <td> <b>dom</b> </td> <td> Zimbra domain </td> </tr>
+     * <tr> <td> <b>edom</b> </td> <td> non-Zimbra domain (used with sendToDistList right) </td> </tr>
+     * <tr> <td> <b>all</b> </td> <td> all authenticated users </td> </tr>
+     * <tr> <td> <b>gst</b> </td> <td> non-Zimbra email address and password </td> </tr>
+     * <tr> <td> <b>key</b> </td> <td> external user with accesskey </td> </tr>
+     * <tr> <td> <b>pub</b> </td> <td> public authenticated and unauthenticated access </td> </tr>
+     * <tr> <td> <b>email</b> </td> <td> Pseudo grantee type.  Granting code will map to usr/grp/egp or gst </td> </tr>
+     * </table>
      */
     @XmlAttribute(name=AdminConstants.A_TYPE, required=false)
     private final GranteeType type;
