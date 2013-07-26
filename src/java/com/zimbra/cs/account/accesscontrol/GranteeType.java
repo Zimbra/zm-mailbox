@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,14 +17,14 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 
 public enum GranteeType {
 
@@ -32,11 +32,13 @@ public enum GranteeType {
     GT_USER("usr",      com.zimbra.soap.type.GranteeType.usr, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
     GT_GROUP("grp",     com.zimbra.soap.type.GranteeType.grp, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP      | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
     GT_EXT_GROUP("egp", com.zimbra.soap.type.GranteeType.egp, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
-    GT_AUTHUSER("all",  com.zimbra.soap.type.GranteeType.all, (short)(                      GranteeFlag.F_AUTHUSER)),
+    GT_AUTHUSER("all",  com.zimbra.soap.type.GranteeType.all, (                      GranteeFlag.F_AUTHUSER)), // all authenticated users
     GT_DOMAIN("dom",    com.zimbra.soap.type.GranteeType.dom, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_DOMAIN     | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
+    // "edom" - Used for grantee type in conjunction with sendToDistList for non-Zimbra domains
+    GT_EXT_DOMAIN("edom",com.zimbra.soap.type.GranteeType.dom,(                             GranteeFlag.F_INDIVIDUAL)),
     GT_GUEST("gst",     com.zimbra.soap.type.GranteeType.gst, (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
     GT_KEY("key",       com.zimbra.soap.type.GranteeType.key, (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
-    GT_PUBLIC("pub",    com.zimbra.soap.type.GranteeType.pub, (short)(                      GranteeFlag.F_PUBLIC)),
+    GT_PUBLIC("pub",    com.zimbra.soap.type.GranteeType.pub, (                      GranteeFlag.F_PUBLIC)),
 
     /*
      * pseudo grantee type that can be specified in granting requests.

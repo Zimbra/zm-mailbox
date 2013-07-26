@@ -2,29 +2,28 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 
 public class ZimbraACE {
@@ -45,13 +44,14 @@ public class ZimbraACE {
      * grp: zimbraId of the entry being granted rights
      * egp: email address of the external group
      * gst: email address of the guest being granted rights
+     * edom: domain name that the email address must match
      * all: The pseudo-GUID GUID_AUTHUSER signifying "all authenticated users"
      * pub: The pseudo-GUID GUID_PUBLIC signifying "all authenticated and unauthenticated users"
      */
     private String mGrantee;
 
     // The type of object the grantee's ID refers to.
-    private GranteeType mGranteeType;
+    private final GranteeType mGranteeType;
 
     // The right being granted.
     private Right mRight;
@@ -78,6 +78,8 @@ public class ZimbraACE {
                 -----------------------------------------------------
                 usr             zimbraId of the account
                 grp             zimbraId of the distribution list or dynamic group
+                dom             zimbraId of the Zimbra domain
+                edom            domain name
                 egp             {zimbraId of the Zimbra domain}:{email addr of the external group}
                 gst             {grantee email}:{password}
                 key             {grantee email (or just a name)}:{access key}
@@ -87,7 +89,7 @@ public class ZimbraACE {
                 grantee name for key grantees, password, and access key(if provided by user)
                 can have spaces, they are enclosed in {}.  {} are not allowed for them.
 
-        grantee-type: usr | grp | egp | gst | key | all | pub
+        grantee-type: usr | grp | dom | edom | egp | gst | key | all | pub
 
         right: one of the supported rights.
                if a '-' (minus sign) is prepended to the right, it means the right is
@@ -121,8 +123,8 @@ public class ZimbraACE {
     public static class ExternalGroupInfo {
         // zimbraId of the Zimbra domain when persisted in ZimbraACE
         // name of the Zimbra domain when specified in CLI and SOAP
-        private String zimbraDomain;
-        private String extGroupName;
+        private final String zimbraDomain;
+        private final String extGroupName;
 
         private ExternalGroupInfo(String zimbraDomain, String externalGroupName) {
             this.zimbraDomain = zimbraDomain;
@@ -203,6 +205,9 @@ public class ZimbraACE {
             // to get the zimbra domain part and external group part.
             mGrantee = grantee;
             break;
+        case GT_EXT_DOMAIN:
+            mGrantee = grantee;
+            break;
         case GT_GUEST:
         case GT_KEY:
             String[] externalParts = grantee.split(S_SECRET_DELIMITER);
@@ -271,6 +276,7 @@ public class ZimbraACE {
     /**
      * return a deep copy of the ZimbraACE object
      */
+    @Override
     public ZimbraACE clone() {
         return new ZimbraACE(this);
     }
@@ -404,6 +410,8 @@ public class ZimbraACE {
                 return extGroup.inGroup(acct, asAdmin);
             case GT_DOMAIN:
                 return mGrantee.equals(acct.getDomainId());
+            case GT_EXT_DOMAIN:
+                return matchesDomainForGuest(acct);
             case GT_USER:
                 return mGrantee.equals(acct.getId());
             case GT_GUEST:
@@ -425,6 +433,10 @@ public class ZimbraACE {
         if (!(acct instanceof GuestAccount))
             return false;
         return ((GuestAccount) acct).matchesAccessKey(mGrantee, mSecret);
+    }
+
+    private boolean matchesDomainForGuest(Account acct) {
+        return mGrantee.equalsIgnoreCase(acct.getDomainName());
     }
 
     /*
@@ -466,6 +478,7 @@ public class ZimbraACE {
                 break;
             case GT_GUEST:
             case GT_KEY:
+            case GT_EXT_DOMAIN:
                 return mGrantee;
             case GT_AUTHUSER:
             case GT_PUBLIC:
