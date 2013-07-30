@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -129,6 +129,8 @@ import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
+import com.zimbra.soap.mail.message.GetAppointmentRequest;
+import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
 import com.zimbra.soap.mail.message.GetFilterRulesRequest;
@@ -328,8 +330,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     private static class ItemCache {
-        private Map<String /* id */, ZItem> idMap;
-        private Map<String /* uuid */, ZItem> uuidMap;
+        private final Map<String /* id */, ZItem> idMap;
+        private final Map<String /* uuid */, ZItem> uuidMap;
 
         public ItemCache() {
             idMap = new HashMap<String, ZItem>();
@@ -392,7 +394,7 @@ public class ZMailbox implements ToZJSONObject {
     private boolean mNoTagCache;
     private ZContactByPhoneCache mContactByPhoneCache;
 
-    private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
+    private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
     public static ZMailbox getMailbox(Options options) throws ServiceException {
         return new ZMailbox(options);
@@ -600,6 +602,13 @@ public class ZMailbox implements ToZJSONObject {
     public <T> T invokeJaxb(Object jaxbObject) throws ServiceException {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = invoke(req);
+        return (T) JaxbUtil.elementToJaxb(res);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T invokeJaxbOnTargetAccount(Object jaxbObject, String requestedAccountId) throws ServiceException {
+        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        Element res = invoke(req, requestedAccountId);
         return (T) JaxbUtil.elementToJaxb(res);
     }
 
@@ -1589,8 +1598,8 @@ public class ZMailbox implements ToZJSONObject {
 
     public static class ZImportContactsResult {
 
-        private String mIds;
-        private long mCount;
+        private final String mIds;
+        private final long mCount;
 
         public ZImportContactsResult(Element response) throws ServiceException {
             mIds = response.getAttribute(MailConstants.A_ID, null);
@@ -2026,7 +2035,7 @@ public class ZMailbox implements ToZJSONObject {
     throws ServiceException {
         return uploadContentAsStream(name, in, contentType, contentLength, msTimeout, false);
     }
-  
+
     public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout, boolean limitByFileUploadMaxSize)
         throws ServiceException {
         String aid = null;
@@ -2793,8 +2802,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZActionResult {
-        private String mIds;
-        private Element mResponse;
+        private final String mIds;
+        private final Element mResponse;
 
         public ZActionResult(Element response) throws ServiceException {
             String ids = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
@@ -3404,7 +3413,7 @@ public class ZMailbox implements ToZJSONObject {
 
         public static class MessagePart {
             private String mContentType;
-            private String mContent;
+            private final String mContent;
             private List<MessagePart> mSubParts;
             private List<AttachedMessagePart> mAttachSubParts;
 
@@ -3902,11 +3911,11 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZImportStatus {
-        private String mType;
-        private boolean mIsRunning;
-        private boolean mSuccess;
-        private String mError;
-        private String mId;
+        private final String mType;
+        private final boolean mIsRunning;
+        private final boolean mSuccess;
+        private final String mError;
+        private final String mId;
 
         ZImportStatus(Element e) throws ServiceException {
             mType = e.getName();
@@ -3999,7 +4008,7 @@ public class ZMailbox implements ToZJSONObject {
         Collections.sort(result);
         return result;
     }
-	
+
 	public List<String> getAvailableLocales() throws ServiceException {
         Element req = newRequestElement(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST);
         Element resp = invoke(req);
@@ -4026,10 +4035,10 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZSearchGalResult {
-        private boolean mMore;
-        private List<ZContact> mContacts;
-        private String mQuery;
-        private GalEntryType mType;
+        private final boolean mMore;
+        private final List<ZContact> mContacts;
+        private final String mQuery;
+        private final GalEntryType mType;
 
         public ZSearchGalResult(List<ZContact> contacts, boolean more, String query, GalEntryType type) {
             mMore = more;
@@ -4107,12 +4116,12 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZApptSummaryResult {
-        private String mFolderId;
-        private List<ZAppointmentHit> mAppointments;
-        private long mStart;
-        private long mEnd;
-        private TimeZone mTimeZone;
-        private String mQuery;
+        private final String mFolderId;
+        private final List<ZAppointmentHit> mAppointments;
+        private final long mStart;
+        private final long mEnd;
+        private final TimeZone mTimeZone;
+        private final String mQuery;
 
         ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, List<ZAppointmentHit> appointments, String query) {
             mFolderId = folderId;
@@ -4152,8 +4161,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZGetMiniCalResult {
-        private Set<String> mDates;
-        private List<ZMiniCalError> mErrors;
+        private final Set<String> mDates;
+        private final List<ZMiniCalError> mErrors;
 
         public ZGetMiniCalResult(Set<String> dates, List<ZMiniCalError> errors) {
             mDates = dates;
@@ -4165,9 +4174,9 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZMiniCalError {
-        private String mFolderId;
-        private String mErrCode;
-        private String mErrMsg;
+        private final String mFolderId;
+        private final String mErrCode;
+        private final String mErrMsg;
         public ZMiniCalError(String folderId, String errcode, String errmsg) {
             mFolderId = folderId;
             mErrCode = errcode;
@@ -4368,8 +4377,8 @@ public class ZMailbox implements ToZJSONObject {
 
     public static class ZAppointmentResult {
 
-        private String mCalItemId;
-        private String mInviteId;
+        private final String mCalItemId;
+        private final String mInviteId;
 
         public ZAppointmentResult(Element response) {
             mCalItemId = response.getAttribute(MailConstants.A_CAL_ID, null);
@@ -4470,7 +4479,7 @@ public class ZMailbox implements ToZJSONObject {
         public static final String STATUS_ALREADY_REPLIED = "ALREADY-REPLIED";
         public static final String STATUS_FAIL = "FAIL";
 
-        private String mStatus;
+        private final String mStatus;
 
         public ZSendInviteReplyResult(Element response) {
             mStatus = response.getAttribute(MailConstants.A_STATUS, "OK");
@@ -4527,6 +4536,15 @@ public class ZMailbox implements ToZJSONObject {
         return new ZAppointment(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
+    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByUID(String requestedAccountId, String uid,
+            boolean includeInvites, boolean includeContent)
+    throws ServiceException {
+        GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
+                        GetAppointmentRequest.createForUidInvitesContent(uid, includeInvites, includeContent),
+                        requestedAccountId);
+        return resp == null ? null : resp.getItem();
+    }
+
     public void clearMessageCache() {
         mMessageCache.clear();
     }
@@ -4537,8 +4555,8 @@ public class ZMailbox implements ToZJSONObject {
 
     public static class ZImportAppointmentsResult {
 
-        private String mIds;
-        private long mCount;
+        private final String mIds;
+        private final long mCount;
 
         public ZImportAppointmentsResult(Element response) throws ServiceException {
             mIds = response.getAttribute(MailConstants.A_ID, null);
@@ -4566,8 +4584,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZGetFreeBusyResult {
-        private String mId;
-        private List<ZFreeBusyTimeSlot> mTimeSlots;
+        private final String mId;
+        private final List<ZFreeBusyTimeSlot> mTimeSlots;
 
         public ZGetFreeBusyResult(String id, List<ZFreeBusyTimeSlot> timeSlots) {
             mId = id;
@@ -4591,9 +4609,9 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public static class ZFreeBusyTimeSlot {
-        private ZFreeBusySlotType mType;
-        private long mStart;
-        private long mEnd;
+        private final ZFreeBusySlotType mType;
+        private final long mStart;
+        private final long mEnd;
 
         public ZFreeBusyTimeSlot(ZFreeBusySlotType type, long start, long end) {
             mType = type;
