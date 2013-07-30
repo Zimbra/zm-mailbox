@@ -941,6 +941,150 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * domain mandatory mail html signature
+     *
+     * @return zimbraAmavisDomainDisclaimerHTML, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1457)
+    public String getAmavisDomainDisclaimerHTML() {
+        return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, null);
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @param zimbraAmavisDomainDisclaimerHTML new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1457)
+    public void setAmavisDomainDisclaimerHTML(String zimbraAmavisDomainDisclaimerHTML) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, zimbraAmavisDomainDisclaimerHTML);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @param zimbraAmavisDomainDisclaimerHTML new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1457)
+    public Map<String,Object> setAmavisDomainDisclaimerHTML(String zimbraAmavisDomainDisclaimerHTML, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, zimbraAmavisDomainDisclaimerHTML);
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1457)
+    public void unsetAmavisDomainDisclaimerHTML() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1457)
+    public Map<String,Object> unsetAmavisDomainDisclaimerHTML(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, "");
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @return zimbraAmavisDomainDisclaimerText, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1456)
+    public String getAmavisDomainDisclaimerText() {
+        return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerText, null);
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @param zimbraAmavisDomainDisclaimerText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1456)
+    public void setAmavisDomainDisclaimerText(String zimbraAmavisDomainDisclaimerText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, zimbraAmavisDomainDisclaimerText);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @param zimbraAmavisDomainDisclaimerText new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1456)
+    public Map<String,Object> setAmavisDomainDisclaimerText(String zimbraAmavisDomainDisclaimerText, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, zimbraAmavisDomainDisclaimerText);
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1456)
+    public void unsetAmavisDomainDisclaimerText() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1456)
+    public Map<String,Object> unsetAmavisDomainDisclaimerText(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, "");
+        return attrs;
+    }
+
+    /**
      * fallback to local auth if external mech fails
      *
      * @return zimbraAuthFallbackToLocal, or false if unset
@@ -5339,7 +5483,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @return zimbraDomainMandatoryMailSignatureHTML, or null if unset
      *
@@ -5351,7 +5497,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @param zimbraDomainMandatoryMailSignatureHTML new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5366,7 +5514,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @param zimbraDomainMandatoryMailSignatureHTML new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5382,7 +5532,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5396,7 +5548,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5411,7 +5565,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @return zimbraDomainMandatoryMailSignatureText, or null if unset
      *
@@ -5423,7 +5579,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @param zimbraDomainMandatoryMailSignatureText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5438,7 +5596,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @param zimbraDomainMandatoryMailSignatureText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5454,7 +5614,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5468,7 +5630,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

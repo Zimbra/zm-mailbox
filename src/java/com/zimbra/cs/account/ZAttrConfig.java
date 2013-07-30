@@ -8291,7 +8291,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @return zimbraDomainMandatoryMailSignatureHTML, or null if unset
      *
@@ -8303,7 +8305,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @param zimbraDomainMandatoryMailSignatureHTML new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8318,7 +8322,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @param zimbraDomainMandatoryMailSignatureHTML new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8334,7 +8340,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8348,7 +8356,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8363,7 +8373,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @return zimbraDomainMandatoryMailSignatureText, or null if unset
      *
@@ -8375,7 +8387,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @param zimbraDomainMandatoryMailSignatureText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8390,7 +8404,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @param zimbraDomainMandatoryMailSignatureText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8406,7 +8422,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8420,7 +8438,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -4888,12 +4888,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable domain mandatory mail signature</desc>
 </attr>
 
-<attr id="1070" name="zimbraDomainMandatoryMailSignatureText" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4">
+<attr id="1070" name="zimbraDomainMandatoryMailSignatureText" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4" deprecatedSince="9.0.0">
   <desc>domain mandatory mail plain text signature</desc>
+  <deprecateDesc>deprecated in favor of zimbraAmavisDomainDisclaimerText</deprecateDesc>
 </attr>
 
-<attr id="1071" name="zimbraDomainMandatoryMailSignatureHTML" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4">
+<attr id="1071" name="zimbraDomainMandatoryMailSignatureHTML" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4" deprecatedSince="9.0.0">
   <desc>domain mandatory mail html signature</desc>
+  <deprecateDesc>deprecated in favor of zimbraAmavisDomainDisclaimerHTML</deprecateDesc>
 </attr>
 
 <attr id="1072" name="zimbraPrefMailFoldersCheckedForNewMsgIndicator" type="string" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.5">
@@ -7265,6 +7267,14 @@ TODO: delete them permanently from here
 <attr id="1455" name="zimbraFeatureFromDisplayEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.5">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to display from address control in user preferences</desc>
+</attr>
+
+<attr id="1456" name="zimbraAmavisDomainDisclaimerText" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
+  <desc>domain mandatory mail plain text signature</desc>
+</attr>
+
+<attr id="1457" name="zimbraAmavisDomainDisclaimerHTML" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
+  <desc>domain mandatory mail html signature</desc>
 </attr>
 
 </attrs>
