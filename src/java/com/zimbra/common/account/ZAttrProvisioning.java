@@ -1930,6 +1930,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAlwaysOnClusterId = "zimbraAlwaysOnClusterId";
 
     /**
+     * domain mandatory mail html signature
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1457)
+    public static final String A_zimbraAmavisDomainDisclaimerHTML = "zimbraAmavisDomainDisclaimerHTML";
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1456)
+    public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
+
+    /**
      * When a virus is detected quarantine message to this account
      *
      * @since ZCS 7.0.0
@@ -3681,7 +3697,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureEnabled = "zimbraDomainMandatoryMailSignatureEnabled";
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @since ZCS 6.0.4
      */
@@ -3689,7 +3707,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureHTML = "zimbraDomainMandatoryMailSignatureHTML";
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @since ZCS 6.0.4
      */
