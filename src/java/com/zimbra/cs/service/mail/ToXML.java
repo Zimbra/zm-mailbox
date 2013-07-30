@@ -1487,7 +1487,7 @@ public final class ToXML {
         if (inv.hasRecurId()) {
             ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
         }
-        encodeInviteComponent(ie, ifmt, octxt, cal, inv, NOTIFY_FIELDS, neuter);
+        encodeInviteComponent(ie, ifmt, octxt, cal, (ItemId) null, inv, NOTIFY_FIELDS, neuter);
 
         if (includeContent && (inv.isPublic() || allowPrivateAccess(octxt, cal))) {
             int invId = inv.getMailItemId();
@@ -1680,7 +1680,7 @@ public final class ToXML {
                     encodeCalendarReplies(invElt, calItem, invites[0], recurIdZ);
                 }
                 for (Invite inv : invites) {
-                    encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS, neuter);
+                    encodeInviteComponent(invElt, ifmt, octxt, calItem, (ItemId) null, inv, NOTIFY_FIELDS, neuter);
                 }
             }
 
@@ -1900,7 +1900,8 @@ public final class ToXML {
     }
 
     public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem /* may be null */, Invite invite, int fields, boolean neuter)
+            CalendarItem calItem /* may be null */, ItemId calId /* may be null */,
+            Invite invite, int fields, boolean neuter)
     throws ServiceException {
         boolean allFields = true;
 
@@ -2033,14 +2034,21 @@ public final class ToXML {
             e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
             e.addAttribute(MailConstants.A_CAL_DATETIME, invite.getDTStamp()); //zdsync
 
-            if (calItem != null) {
-                String itemId = ifmt.formatItemId(calItem);
-                e.addAttribute(MailConstants.A_CAL_ID, itemId);
+            String itemId = null;
+            if (calId != null) {
+                itemId = calId.toString(ifmt);
+            } else if (calItem != null) {
+                itemId = ifmt.formatItemId(calItem);
+            }
+            if (itemId != null) {
+                e.addAttribute(MailConstants.A_CAL_ID /* calItemId */, itemId);
                 if (invite.isEvent()) {
-                    e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+                    e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME /* apptId */, itemId);  // for backward compat
                 }
-                ItemId ciFolderId = new ItemId(calItem.getMailbox(), calItem.getFolderId());
-                e.addAttribute(MailConstants.A_CAL_ITEM_FOLDER, ifmt.formatItemId(ciFolderId));
+                if (calItem != null) {
+                    ItemId ciFolderId = new ItemId(calItem.getMailbox(), calItem.getFolderId());
+                    e.addAttribute(MailConstants.A_CAL_ITEM_FOLDER /* ciFolder */, ifmt.formatItemId(ciFolderId));
+                }
             }
 
             Recurrence.IRecurrence recur = invite.getRecurrence();
@@ -2236,7 +2244,7 @@ public final class ToXML {
             if (invite != null) {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
-                encodeInviteComponent(ie, ifmt, octxt, calItem, invite, fields, neuter);
+                encodeInviteComponent(ie, ifmt, octxt, calItem, info.getCalendarItemId(), invite, fields, neuter);
                 ICalTok invMethod = Invite.lookupMethod(invite.getMethod());
                 if (ICalTok.REQUEST.equals(invMethod) || ICalTok.PUBLISH.equals(invMethod)) {
                     InviteChanges invChanges = info.getInviteChanges();

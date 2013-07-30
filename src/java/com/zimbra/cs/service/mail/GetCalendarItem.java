@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,12 +17,11 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -30,7 +29,9 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.GetCalendarItemRequestBase;
 
 /**
  * @author tim
@@ -62,12 +63,14 @@ public class GetCalendarItem extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+        GetCalendarItemRequestBase req = JaxbUtil.elementToJaxb(request);
 
-        boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
-        boolean includeContent = request.getAttributeBool(MailConstants.A_CAL_INCLUDE_CONTENT, false);
+        boolean sync = req.getSync() == null ? false : req.getSync();
+        boolean includeContent = req.getIncludeContent() == null ? false : req.getIncludeContent();
+        boolean includeInvites = req.getIncludeInvites() == null ? true : req.getIncludeInvites();
         ItemId iid = null;
-        String uid = request.getAttribute(MailConstants.A_UID, null);
-        String id = request.getAttribute(MailConstants.A_ID, null);
+        String uid = req.getUid();
+        String id = req.getId();
         if (uid != null) {
             if (id != null) {
                 throw ServiceException.INVALID_REQUEST("either id or uid should be specified, but not both", null);
@@ -93,12 +96,12 @@ public class GetCalendarItem extends CalendarRequest {
                     throw MailServiceException.NO_SUCH_CALITEM(uid);
                 }
             } else {
-                calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                calItem = mbox.getCalendarItemById(octxt, iid);
                 if (calItem == null) {
-                    throw MailServiceException.NO_SUCH_CALITEM(iid.getId());
+                    throw MailServiceException.NO_SUCH_CALITEM(iid.toString());
                 }
             }
-            ToXML.encodeCalendarItemSummary(response, ifmt, octxt, calItem, fields, true, includeContent);
+            ToXML.encodeCalendarItemSummary(response, ifmt, octxt, calItem, fields, includeInvites, includeContent);
         } finally {
             mbox.lock.release();
         }

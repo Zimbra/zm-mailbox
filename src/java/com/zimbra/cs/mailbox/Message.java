@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -50,6 +50,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -132,15 +133,22 @@ public class Message extends MailItem {
         private final int mComponentNo;
         private final Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
         private final InviteChanges mInviteChanges;
+        private final String calOwner;  // set only when matching calendar item is in someone else's calendar
 
-        CalendarItemInfo(int calItemId, int componentNo, Invite inv, InviteChanges changes) {
+        CalendarItemInfo(int calItemId, String owner, int componentNo, Invite inv, InviteChanges changes) {
             mCalendarItemId = calItemId;
             mComponentNo = componentNo;
             mInvite = inv;
             mInviteChanges = changes;
+            calOwner = owner;
         }
 
-        public int getCalendarItemId()  { return mCalendarItemId; }
+        CalendarItemInfo(int calItemId, int componentNo, Invite inv, InviteChanges changes) {
+            this(calItemId, null, componentNo, inv, changes);
+        }
+
+        public String getCalOwner() { return calOwner; }
+        public ItemId getCalendarItemId() { return new ItemId(calOwner, mCalendarItemId); }
         public int getComponentNo()    { return mComponentNo; }
         public Invite getInvite() { return mInvite; }
         public InviteChanges getInviteChanges() { return mInviteChanges; }
@@ -150,6 +158,7 @@ public class Message extends MailItem {
         private static final String FN_COMPNO = "c";
         private static final String FN_INV = "inv";
         private static final String FN_INV_CHANGES = "invChg";
+        private static final String FN_CAL_OWNER = "calOwner";
 
         Metadata encodeMetadata() {
             Metadata meta = new Metadata();
@@ -159,6 +168,8 @@ public class Message extends MailItem {
                 meta.put(FN_INV_CHANGES, mInviteChanges.toString());
             if (mInvite != null)
                 meta.put(FN_INV, Invite.encodeMetadata(mInvite));
+            if (calOwner != null)
+                meta.put(FN_CAL_OWNER, calOwner);
             return meta;
         }
 
@@ -166,6 +177,7 @@ public class Message extends MailItem {
             int calItemId = (int) meta.getLong(FN_CALITEMID, CalendarItemInfo.CALITEM_ID_NONE);
             int componentNo = (int) meta.getLong(FN_COMPNO);
             String changes = meta.get(FN_INV_CHANGES, null);
+            String owner = meta.get(FN_CAL_OWNER, null);
             InviteChanges invChanges = changes != null ? new InviteChanges(changes) : null;
             Invite inv = null;
             Metadata metaInv = meta.getMap(FN_INV, true);
@@ -174,7 +186,7 @@ public class Message extends MailItem {
                 ICalTimeZone accountTZ = Util.getAccountTimeZone(mbox.getAccount());
                 inv = Invite.decodeMetadata(mboxId, metaInv, null, accountTZ);
             }
-            return new CalendarItemInfo(calItemId, componentNo, inv, invChanges);
+            return new CalendarItemInfo(calItemId, owner, componentNo, inv, invChanges);
         }
     }
 
@@ -192,7 +204,7 @@ public class Message extends MailItem {
     Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     /**
      * this one will call back into decodeMetadata() to do our initialization.
      */
@@ -594,6 +606,95 @@ public class Message extends MailItem {
     }
 
     /**
+     * @return true if have right "ACTION" for a calender owned by {@code ownerEmail}
+     * @throws ServiceException
+     */
+    private boolean manageCalendar(String ownerEmail) throws ServiceException {
+        if (Strings.isNullOrEmpty(ownerEmail)) {
+            return false;
+        }
+        Account ownerAcct = Provisioning.getInstance().get(AccountBy.name, ownerEmail);
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ownerAcct);
+        for (Mountpoint sharedCal : getMailbox().getCalendarMountpoints(getMailbox().getOperationContext(), SortBy.NONE)) {
+            if (sharedCal.canAccess(ACL.RIGHT_ACTION)) {
+                String calOwner = Provisioning.getInstance().get(AccountBy.id, sharedCal.getOwnerId()).getName();
+                if (acctMatcher.matches(calOwner)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private class ProcessInvitesStatus {
+        // since this is the first time we've seen this Invite Message, we need to process it
+        // and see if it updates an existing CalendarItem in the database table, or whatever...
+        boolean updatedMetadata = false;
+        int calItemFolderId = Mailbox.ID_FOLDER_CALENDAR;
+
+        // Is this invite intended for me?  If not, we don't want to auto-apply it.
+        boolean isForwardedInvite = false;
+        String intendedForAddress = null;
+        boolean intendedForMe = true;
+        boolean intendedForCalendarIManage = false;
+        boolean addRevision = false;
+        // Whether to automatically add to calendar when invited to a new appointment.  This only applies
+        // to new appointments.  Cancels or updates to existing appointments are always processed immediately.
+        boolean autoAddNew;
+        AccountAddressMatcher acctMatcher = null;
+        private final Account account;
+        CalendarItem calItem = null;
+
+        ProcessInvitesStatus(Account acct, ParsedMessage pm) throws ServiceException {
+            account = acct;
+            try {
+                String headerVal = pm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+                if (headerVal != null && headerVal.length() > 0) {
+                    isForwardedInvite = true;
+                    intendedForAddress = headerVal;
+                    intendedForMe = getAcctMatcher().matches(headerVal);
+                    if (!intendedForMe) {
+                        calendarIntendedFor = headerVal;
+                        intendedForCalendarIManage = manageCalendar(calendarIntendedFor);
+                    }
+                }
+            } catch (MessagingException e) {
+                ZimbraLog.calendar.warn(
+                        "ignoring error while checking for " + CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR +
+                        " header on incoming message", e);
+            }
+        }
+
+        void initAddRevisionSetting(String uid, Set<String> calUidsSeen) {
+            if (!calUidsSeen.contains(uid)) {
+                addRevision = true;
+                calUidsSeen.add(uid);
+            } else {
+                addRevision = false;
+            }
+        }
+
+        void initAutoAddNew(OperationContext octxt) {
+        if (octxt != null && (octxt.getPlayer() instanceof CreateCalendarItemPlayer)) {
+            // We're executing redo.  Use the same auto-add choice as before, regardless of current pref.
+            // Create appointment if redo item has valid appointment id.
+            CreateCalendarItemPlayer player = (CreateCalendarItemPlayer) octxt.getPlayer();
+            autoAddNew = player.getCalendarItemId() != CalendarItemInfo.CALITEM_ID_NONE;
+        } else {
+            autoAddNew = account.isPrefCalendarAutoAddInvites();
+        }
+
+        }
+
+        AccountAddressMatcher getAcctMatcher() throws ServiceException {
+            if (acctMatcher == null) {
+                acctMatcher = new AccountAddressMatcher(account);
+            }
+            return acctMatcher;
+        }
+    }
+
+    /**
      * This has to be done as a separate step, after the MailItem has been added, because of foreign key constraints on
      * the CalendarItems table.
      */
@@ -608,101 +709,66 @@ public class Message extends MailItem {
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
         OperationContext octxt = getMailbox().getOperationContext();
 
-        // Is this invite intended for me?  If not, we don't want to auto-apply it.
-        boolean isForwardedInvite = false;
-        String intendedForAddress = null;
-        boolean intendedForMe = true;
-        try {
-            String headerVal = pm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
-            if (headerVal != null && headerVal.length() > 0) {
-                isForwardedInvite = true;
-                intendedForAddress = headerVal;
-                intendedForMe = acctMatcher.matches(headerVal);
-                if (!intendedForMe) {
-                    calendarIntendedFor = headerVal;
-                }
-            }
-        } catch (MessagingException e) {
-            ZimbraLog.calendar.warn(
-                    "ignoring error while checking for " + CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR +
-                    " header on incoming message", e);
-        }
-
-        // Whether to automatically add to calendar when invited to a new appointment.  This only applies
-        // to new appointments.  Cancels or updates to existing appointments are always processed immediately.
-        boolean autoAddNew;
-        if (octxt != null && (octxt.getPlayer() instanceof CreateCalendarItemPlayer)) {
-            // We're executing redo.  Use the same auto-add choice as before, regardless of current pref.
-            // Create appointment if redo item has valid appointment id.
-            CreateCalendarItemPlayer player = (CreateCalendarItemPlayer) octxt.getPlayer();
-            autoAddNew = player.getCalendarItemId() != CalendarItemInfo.CALITEM_ID_NONE;
-        } else {
-            autoAddNew = acct.isPrefCalendarAutoAddInvites();
-        }
+        ProcessInvitesStatus status = new ProcessInvitesStatus(acct, pm);
+        status.initAutoAddNew(octxt);
 
         boolean isOrganizerMethod = Invite.isOrganizerMethod(method);
-        if (!invites.isEmpty() && intendedForMe) {
+        if (isOrganizerMethod && !invites.isEmpty() && status.intendedForMe) {
             // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
             // namely REQUEST/PUBLISH/CANCEL/ADD/DECLINECOUNTER.  REPLY/REFRESH/COUNTER don't undergo
             // the check because they are not organizer-to-attendee methods.
-            if (isOrganizerMethod) {
-                String senderEmail;
-                Account senderAcct = null;
-                boolean onBehalfOf = false;
-                boolean canInvite;
-                AccessManager accessMgr = AccessManager.getInstance();
-                if (octxt != null && octxt.getAuthenticatedUser() != null) {
-                    onBehalfOf = octxt.isDelegatedRequest(getMailbox());
-                    senderAcct = octxt.getAuthenticatedUser();
-                    senderEmail = senderAcct.getName();
-                    canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges());
-                } else {
-                    senderEmail = pm.getSenderEmail(false);
-                    if (senderEmail != null) {
-                        senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
-                    }
-                    canInvite = accessMgr.canDo(senderEmail, acct, User.R_invite, false);
+            String senderEmail;
+            Account senderAcct = null;
+            boolean onBehalfOf = false;
+            boolean canInvite;
+            AccessManager accessMgr = AccessManager.getInstance();
+            if (octxt != null && octxt.getAuthenticatedUser() != null) {
+                onBehalfOf = octxt.isDelegatedRequest(getMailbox());
+                senderAcct = octxt.getAuthenticatedUser();
+                senderEmail = senderAcct.getName();
+                canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges());
+            } else {
+                senderEmail = pm.getSenderEmail(false);
+                if (senderEmail != null) {
+                    senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
                 }
-                if (!canInvite) {
-                    Invite invite = invites.get(0);
-                    boolean sameDomain = false;
-                    if (senderAcct != null) {
-                        String senderDomain = senderAcct.getDomainName();
-                        sameDomain = senderDomain != null && senderDomain.equalsIgnoreCase(acct.getDomainName());
-                    }
-                    boolean directAttendee =
+                canInvite = accessMgr.canDo(senderEmail, acct, User.R_invite, false);
+            }
+            if (!canInvite) {
+                Invite invite = invites.get(0);
+                boolean sameDomain = false;
+                if (senderAcct != null) {
+                    String senderDomain = senderAcct.getDomainName();
+                    sameDomain = senderDomain != null && senderDomain.equalsIgnoreCase(acct.getDomainName());
+                }
+                boolean directAttendee =
                         DebugConfig.calendarEnableInviteDeniedReplyForUnlistedAttendee
                         || invite.getMatchingAttendee(acct) != null;
-                    // Send auto replies only to users in the same domain and if addressed directly as an attendee,
-                    // not indirectly via a mailing list.
-                    if (acct.isPrefCalendarSendInviteDeniedAutoReply() && senderEmail != null && sameDomain && directAttendee) {
-                        RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
-                        RedoLogProvider redoProvider = RedoLogProvider.getInstance();
-                        // Don't generate auto-reply email during redo playback or if delivering to a system account. (e.g. archiving, galsync, ham/spam)
-                        boolean needAutoReply =
+                // Send auto replies only to users in the same domain and if addressed directly as an attendee,
+                // not indirectly via a mailing list.
+                if (acct.isPrefCalendarSendInviteDeniedAutoReply() && senderEmail != null && sameDomain && directAttendee) {
+                    RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
+                    RedoLogProvider redoProvider = RedoLogProvider.getInstance();
+                    // Don't generate auto-reply email during redo playback or if delivering to a system account. (e.g. archiving, galsync, ham/spam)
+                    boolean needAutoReply =
                             applyToCalendar &&  // no auto-reply when processing as message-only
                             redoProvider.isMaster() &&
                             (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
                             !acct.isIsSystemResource();
-                        if (needAutoReply) {
-                            ItemId origMsgId = new ItemId(getMailbox(), getId());
-                            CalendarMailSender.sendInviteDeniedMessage(
-                                    octxt, acct, senderAcct, onBehalfOf, true, getMailbox(), origMsgId, senderEmail, invite);
-                        }
+                    if (needAutoReply) {
+                        ItemId origMsgId = new ItemId(getMailbox(), getId());
+                        CalendarMailSender.sendInviteDeniedMessage(
+                                octxt, acct, senderAcct, onBehalfOf, true, getMailbox(), origMsgId, senderEmail, invite);
                     }
-                    String sender = senderEmail != null ? senderEmail : "unkonwn sender";
-                    ZimbraLog.calendar.info("Calendar invite from " + sender + " to " + acct.getName() + " is not allowed");
-
-                    // Turn off auto-add.  We still have to run through the code below to save the invite's
-                    // data in message's metadata.
-                    autoAddNew = false;
                 }
+                String inviteSender = senderEmail != null ? senderEmail : "unknown sender";
+                ZimbraLog.calendar.info("Calendar invite from %s to %s is not allowed", inviteSender, acct.getName());
+
+                // Turn off auto-add.  We still have to run through the code below to save the invite's
+                // data in message's metadata.
+                status.autoAddNew = false;
             }
         }
-
-        // since this is the first time we've seen this Invite Message, we need to process it
-        // and see if it updates an existing CalendarItem in the database table, or whatever...
-        boolean updatedMetadata = false;
 
         // Override CLASS property if preference says to mark everything as private.
         PrefCalendarApptVisibility prefClass = acct.getPrefCalendarApptVisibility();
@@ -776,7 +842,7 @@ public class Message extends MailItem {
         }
 
         boolean publicInvites = true;  // used to check if any invite is non-public
-        int calItemFolderId = invites.size() > 0 && invites.get(0).isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+        status.calItemFolderId = invites.size() > 0 && invites.get(0).isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
         CalendarItem firstCalItem = null;
         Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
@@ -793,8 +859,8 @@ public class Message extends MailItem {
                 if (fromEmail != null) {
                     boolean dangerousSender = false;
                     // Is sender == recipient?  If so, clear attendees.
-                    if (intendedForAddress != null) {
-                        if (intendedForAddress.equalsIgnoreCase(fromEmail)) {
+                    if (status.intendedForAddress != null) {
+                        if (status.intendedForAddress.equalsIgnoreCase(fromEmail)) {
                             ZimbraLog.calendar.info(
                                     "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
                             cur.clearAttendees();
@@ -832,14 +898,14 @@ public class Message extends MailItem {
                                 }
                             }
                             if (org == null) {
-                                if (intendedForAddress != null) {
-                                    org = new ZOrganizer(intendedForAddress, null);
+                                if (status.intendedForAddress != null) {
+                                    org = new ZOrganizer(status.intendedForAddress, null);
                                 } else {
                                     org = new ZOrganizer(acct.getName(), null);
                                 }
                             }
                             cur.setOrganizer(org);
-                            cur.setIsOrganizer(intendedForMe);
+                            cur.setIsOrganizer(status.intendedForMe);
                             ZimbraLog.calendar.info("Got malformed reply missing organizer.  Defaulting to " + org.toString());
                         }
                     }
@@ -847,14 +913,7 @@ public class Message extends MailItem {
             }
 
             cur.setLocalOnly(false);
-            String uid = cur.getUid();
-            boolean addRevision;
-            if (!calUidsSeen.contains(uid)) {
-                addRevision = true;
-                calUidsSeen.add(uid);
-            } else {
-                addRevision = false;
-            }
+            status.initAddRevisionSetting(cur.getUid(), calUidsSeen);
 
             // If inviting a calendar resource, don't allow the organizer to specify intended free/busy value
             // other than BUSY.  And don't allow transparent meetings.  This will prevent double booking in the future.
@@ -877,139 +936,13 @@ public class Message extends MailItem {
                     Invite.setDefaultAlarm(cur, acct);
             }
 
-            boolean calItemIsNew = false;
-            boolean modifiedCalItem = false;
-            CalendarItem calItem = null;
-            boolean success = false;
-            try {
-                InviteChanges invChanges = null;
-                // Look for organizer-provided change list.
-                ZProperty changesProp = cur.getXProperty(ICalTok.X_ZIMBRA_CHANGES.toString());
-                if (changesProp != null) {
-                    invChanges = new InviteChanges(changesProp.getValue());
-                    // Don't let the x-prop propagate further.  This x-prop is used during transport only.  Presence
-                    // of this x-prop in the appointment object can confuse clients.
-                    cur.removeXProp(ICalTok.X_ZIMBRA_CHANGES.toString());
-                }
-                if (intendedForMe) {
-                    cur.sanitize(true);
-                    calItem = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
-                    if (applyToCalendar &&
-                        !ICalTok.REPLY.equals(methodTok) &&  // replies are handled elsewhere (in Mailbox.addMessage())
-                        !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
-                        if (calItem == null) {
-                            // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
-                            // Allow PUBLISH method as well depending on the preference.
-                            if (ICalTok.REQUEST.equals(methodTok) ||
-                                (ICalTok.PUBLISH.equals(methodTok) &&
-                                 getAccount().getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false))) {
-                                if (autoAddNew) {
-                                    int flags = 0;
-//                                  int flags = Flag.BITMASK_INDEXING_DEFERRED;
-//                                  mMailbox.incrementIndexDeferredCount(1);
-                                    int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                                    calItem = mMailbox.createCalendarItem(defaultFolder, flags, null, cur.getUid(), pm, cur, null);
-                                    calItemIsNew = true;
-                                    calItemFolderId = calItem.getFolderId();
-                                }
-                            } else {
-                                LOG.info("Mailbox %d Message %d SKIPPING Invite %s b/c no CalendarItem could be found",
-                                        getMailboxId(), getId(), method);
-                            }
-                        } else {
-                            // bug 27887: Ignore when calendar request email somehow made a loop back to the
-                            // organizer address.  Necessary conditions are:
-                            //
-                            // 1) This mailbox is currently organizer.
-                            // 2) ORGANIZER in the request is this mailbox.
-                            // 3) User/COS preference doesn't explicitly allow it. (bug 29777)
-                            //
-                            // If ORGANIZER in the request is a different user this is an organizer change request,
-                            // which should be allowed to happen.
-                            boolean ignore = false;
-                            Invite defInv = calItem.getDefaultInviteOrNull();
-                            if (defInv != null && defInv.isOrganizer()) {
-                                ZOrganizer org = cur.getOrganizer();
-                                String orgAddress = org != null ? org.getAddress() : null;
-                                if (acctMatcher.matches(orgAddress))
-                                    ignore = !acct.getBooleanAttr(
-                                            Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, false);
-                            }
-                            if (ignore) {
-                                ZimbraLog.calendar.info(
-                                        "Ignoring calendar request emailed from organizer to self, " +
-                                        "possibly in a mail loop involving mailing lists and/or forwards; " +
-                                        "calItemId=" + calItem.getId() + ", msgId=" + getId());
-                            } else {
-                                // When updating an existing calendar item, ignore the
-                                // passed-in folderId which will usually be Inbox.  Leave
-                                // the calendar item in the folder it's currently in.
-                                if (addRevision)
-                                    calItem.snapshotRevision(false);
-                                // If updating (but not canceling) an appointment in trash folder,
-                                // use default calendar folder and discard all existing invites.
-                                boolean discardExistingInvites = false;
-                                int calFolderId = calItem.getFolderId();
-                                if (!cur.isCancel() && calItem.inTrash()) {
-                                    discardExistingInvites = true;
-                                    if (calItem.getType() == MailItem.Type.TASK) {
-                                        calFolderId = Mailbox.ID_FOLDER_TASKS;
-                                    } else {
-                                        calFolderId = Mailbox.ID_FOLDER_CALENDAR;
-                                    }
-                                }
-
-                                // If organizer didn't provide X-ZIMBRA-CHANGES, calculate what changed by comparing
-                                // against the current appointment data.
-                                if (invChanges == null && !cur.isCancel()) {
-                                    Invite prev = calItem.getInvite(cur.getRecurId());
-                                    if (prev == null) {
-                                        // If incoming invite is a brand-new exception instance, we have to compare against
-                                        // the series data, but adjusted to the RECURRENCE-ID of the instance.
-                                        Invite series = calItem.getInvite(null);
-                                        if (series != null)
-                                            prev = series.makeInstanceInvite(cur.getRecurId().getDt());
-                                    }
-                                    if (prev != null)
-                                        invChanges = new InviteChanges(prev, cur);
-                                }
-
-                                modifiedCalItem = calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
-                                calItemFolderId = calFolderId;
-                                calItem.getFolder().updateHighestMODSEQ();
-                            }
-                        }
-                    }
-
-                    int calItemId = calItem != null ? calItem.getId() : CalendarItemInfo.CALITEM_ID_NONE;
-                    CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur, invChanges);
-                    calendarItemInfos.add(info);
-                    updatedMetadata = true;
-                    if (calItem != null && (calItemIsNew || modifiedCalItem)) {
-                        mMailbox.index.add(calItem);
-                    }
-                } else {
-                    // Not intended for me.  Just save the invite detail in metadata.
-                    CalendarItemInfo info = new CalendarItemInfo(
-                            CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur, invChanges);
-                    calendarItemInfos.add(info);
-                    updatedMetadata = true;
-                }
-                success = true;
-            } finally {
-                if (!success && calItem != null) {
-                    // Error occurred and the calItem in memory may be out of sync with
-                    // the database.  Uncache it here, because the error will be ignore
-                    // by this method's caller.
-                    getMailbox().uncache(calItem);
-                }
-            }
+            getInfoForAssociatedCalendarItem(acct, cur, method, pm, applyToCalendar, status);
             if (firstCalItem == null) {
-                firstCalItem = calItem;
+                firstCalItem = status.calItem;
             }
         }
 
-        if (updatedMetadata) {
+        if (status.updatedMetadata) {
             saveMetadata();
         }
 
@@ -1020,7 +953,7 @@ public class Message extends MailItem {
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward the message being added to Sent folder.
         // Don't forward from a system account. (e.g. archiving, galsync, ham/spam)
-        if (applyToCalendar && !isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT &&
+        if (applyToCalendar && !status.isForwardedInvite && status.intendedForMe && folderId != Mailbox.ID_FOLDER_SENT &&
             !invites.isEmpty() && !acct.isIsSystemResource()) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
@@ -1061,9 +994,9 @@ public class Message extends MailItem {
                     List<String> rcptsFiltered = new ArrayList<String>();    // recipients to receive message filtered to remove private data
                     Folder calFolder = null;
                     try {
-                        calFolder = getMailbox().getFolderById(calItemFolderId);
+                        calFolder = getMailbox().getFolderById(status.calItemFolderId);
                     } catch (NoSuchItemException e) {
-                        ZimbraLog.mailbox.warn("No such calendar folder (" + calItemFolderId + ") during invite auto-forwarding");
+                        ZimbraLog.mailbox.warn("No such calendar folder (" + status.calItemFolderId + ") during invite auto-forwarding");
                     }
                     for (String fwd : forwardTo) {
                         if (fwd != null) {
@@ -1136,6 +1069,170 @@ public class Message extends MailItem {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Update {@code status.calItem} and {@code calendarItemInfos}
+     */
+    private void getInfoForAssociatedCalendarItem(Account acct, Invite cur, String method, ParsedMessage pm,
+            boolean applyToCalendar, ProcessInvitesStatus status) throws ServiceException {
+        boolean calItemIsNew = false;
+        boolean modifiedCalItem = false;
+        boolean success = false;
+        try {
+            InviteChanges invChanges = null;
+            // Look for organizer-provided change list.
+            ZProperty changesProp = cur.getXProperty(ICalTok.X_ZIMBRA_CHANGES.toString());
+            if (changesProp != null) {
+                invChanges = new InviteChanges(changesProp.getValue());
+                // Don't let the x-prop propagate further. This x-prop is used during transport only. Presence
+                // of this x-prop in the appointment object can confuse clients.
+                cur.removeXProp(ICalTok.X_ZIMBRA_CHANGES.toString());
+            }
+            if (!(status.intendedForMe || status.intendedForCalendarIManage)) {
+                // Not intended for me. Just save the invite detail in metadata.
+                CalendarItemInfo info = new CalendarItemInfo(CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(),
+                        cur, invChanges);
+                calendarItemInfos.add(info);
+                status.updatedMetadata = true;
+                success = true;
+                return;
+            }
+
+            OperationContext octxt = getMailbox().getOperationContext();
+            ICalTok methodTok = Invite.lookupMethod(method);
+            AccountAddressMatcher acctMatcher = status.getAcctMatcher();
+            cur.sanitize(true);
+            if (status.intendedForCalendarIManage) {
+                Provisioning prov = Provisioning.getInstance();
+                Account ownerAcct = prov.get(AccountBy.name, calendarIntendedFor);
+                com.zimbra.soap.mail.type.CalendarItemInfo cii =
+                        getMailbox().getRemoteCalItemByUID(ownerAcct, cur.getUid(), false, false);
+                CalendarItemInfo info;
+                if (cii == null) {
+                    info = new CalendarItemInfo(CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur, invChanges);
+                    calendarItemInfos.add(info);
+                } else {
+                    int calItemId;
+                    String owner;
+                    try {
+                        ItemId iid = new ItemId(cii.getId(), (String)null);
+                        calItemId = iid.getId();
+                        owner = iid.getAccountId();
+                    } catch (Exception e) {
+                        calItemId = CalendarItemInfo.CALITEM_ID_NONE;
+                        owner = null;
+                    }
+                    info = new CalendarItemInfo(calItemId, owner, cur.getComponentNum(), cur, invChanges);
+                    calendarItemInfos.add(info);
+                }
+                status.updatedMetadata = true;
+                success = true;
+                return;
+            }
+            status.calItem = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
+            if (applyToCalendar &&
+                !ICalTok.REPLY.equals(methodTok) && // replies are handled elsewhere (in Mailbox.addMessage())
+                !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
+                if (status.calItem == null) {
+                    // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
+                    // Allow PUBLISH method as well depending on the preference.
+                    if (ICalTok.REQUEST.equals(methodTok)
+                            || (ICalTok.PUBLISH.equals(methodTok) && getAccount().getBooleanAttr(
+                                    Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false))) {
+                        if (status.autoAddNew) {
+                            int flags = 0;
+                            // int flags = Flag.BITMASK_INDEXING_DEFERRED;
+                            // mMailbox.incrementIndexDeferredCount(1);
+                            int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+                            status.calItem = mMailbox.createCalendarItem(defaultFolder, flags, null, cur.getUid(), pm,
+                                    cur, null);
+                            calItemIsNew = true;
+                            status.calItemFolderId = status.calItem.getFolderId();
+                        }
+                    } else {
+                        LOG.info("Mailbox %d Message %d SKIPPING Invite %s b/c no CalendarItem could be found",
+                                getMailboxId(), getId(), method);
+                    }
+                } else {
+                    // bug 27887: Ignore when calendar request email somehow made a loop back to the
+                    // organizer address.  Necessary conditions are:
+                    //
+                    // 1) This mailbox is currently organizer.
+                    // 2) ORGANIZER in the request is this mailbox.
+                    // 3) User/COS preference doesn't explicitly allow it. (bug 29777)
+                    //
+                    // If ORGANIZER in the request is a different user this is an organizer change request,
+                    // which should be allowed to happen.
+                    boolean ignore = false;
+                    Invite defInv = status.calItem.getDefaultInviteOrNull();
+                    if (defInv != null && defInv.isOrganizer()) {
+                        ZOrganizer org = cur.getOrganizer();
+                        String orgAddress = org != null ? org.getAddress() : null;
+                        if (acctMatcher.matches(orgAddress))
+                            ignore = !acct.getBooleanAttr(
+                                    Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, false);
+                    }
+                    if (ignore) {
+                        ZimbraLog.calendar.info("Ignoring calendar request emailed from organizer to self, " +
+                                "possibly in a mail loop involving mailing lists and/or forwards; " +
+                                "calItemId=" + status.calItem.getId() + ", msgId=" + getId());
+                    } else {
+                        // When updating an existing calendar item, ignore the
+                        // passed-in folderId which will usually be Inbox.  Leave
+                        // the calendar item in the folder it's currently in.
+                        if (status.addRevision)
+                            status.calItem.snapshotRevision(false);
+                        // If updating (but not canceling) an appointment in trash folder,
+                        // use default calendar folder and discard all existing invites.
+                        boolean discardExistingInvites = false;
+                        int calFolderId = status.calItem.getFolderId();
+                        if (!cur.isCancel() && status.calItem.inTrash()) {
+                            discardExistingInvites = true;
+                            if (status.calItem.getType() == MailItem.Type.TASK) {
+                                calFolderId = Mailbox.ID_FOLDER_TASKS;
+                            } else {
+                                calFolderId = Mailbox.ID_FOLDER_CALENDAR;
+                            }
+                        }
+
+                        // If organizer didn't provide X-ZIMBRA-CHANGES, calculate what changed by comparing
+                        // against the current appointment data.
+                        if (invChanges == null && !cur.isCancel()) {
+                            Invite prev = status.calItem.getInvite(cur.getRecurId());
+                            if (prev == null) {
+                                // If incoming invite is a brand-new exception instance, we have to compare
+                                // against the series data, but adjusted to the RECURRENCE-ID of the instance.
+                                Invite series = status.calItem.getInvite(null);
+                                if (series != null)
+                                    prev = series.makeInstanceInvite(cur.getRecurId().getDt());
+                            }
+                            if (prev != null)
+                                invChanges = new InviteChanges(prev, cur);
+                        }
+
+                        modifiedCalItem = status.calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
+                        status.calItemFolderId = calFolderId;
+                        status.calItem.getFolder().updateHighestMODSEQ();
+                    }
+                }
+            }
+
+            int calItemId = status.calItem != null ? status.calItem.getId() : CalendarItemInfo.CALITEM_ID_NONE;
+            CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur, invChanges);
+            calendarItemInfos.add(info);
+            status.updatedMetadata = true;
+            if (status.calItem != null && (calItemIsNew || modifiedCalItem)) {
+                mMailbox.index.add(status.calItem);
+            }
+            success = true;
+        } finally {
+            if (!success && status.calItem != null) {
+                // Error occurred and the calItem in memory may be out of sync with the database.
+                // Uncache it here, because the error will be ignored by this method's caller.
+                getMailbox().uncache(status.calItem);
             }
         }
     }
@@ -1287,12 +1384,12 @@ public class Message extends MailItem {
         if (!getSubject().equals(pm.getSubject())) {
             markItemModified(Change.SUBJECT);
         }
-        
+
         rawSubject = pm.getSubject();
         mData.setSubject(pm.getNormalizedSubject());
-        
+
         markItemModified(Change.METADATA);
-        
+
         // recipients may have changed
         recipients = pm.getRecipients();
 

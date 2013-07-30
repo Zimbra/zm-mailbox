@@ -3865,21 +3865,37 @@ public class Mailbox {
         return isVisible ? node : null;
     }
 
+    public static boolean isCalendarFolder(Folder f) {
+        MailItem.Type view = f.getDefaultView();
+        return (view == MailItem.Type.APPOINTMENT || view == MailItem.Type.TASK);
+    }
+
+    public List<Mountpoint> getCalendarMountpoints(OperationContext octxt, SortBy sort) throws ServiceException {
+        lock.lock();
+        try {
+            List<Mountpoint> calFolders = Lists.newArrayList();
+            for (MailItem item : getItemList(octxt, MailItem.Type.MOUNTPOINT, -1, sort)) {
+                if (isCalendarFolder((Mountpoint) item)) {
+                    calFolders.add((Mountpoint) item);
+                }
+            }
+            return calFolders;
+        } finally {
+            lock.release();
+        }
+    }
+
     public List<Folder> getCalendarFolders(OperationContext octxt, SortBy sort) throws ServiceException {
         lock.lock();
         try {
-            List<Folder> calFolders = new ArrayList<Folder>();
+            List<Folder> calFolders = Lists.newArrayList();
             for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, -1, sort)) {
-                Folder f = (Folder) item;
-                MailItem.Type view = f.getDefaultView();
-                if (view == MailItem.Type.APPOINTMENT || view == MailItem.Type.TASK) {
+                if (isCalendarFolder((Folder) item)) {
                     calFolders.add((Folder) item);
                 }
             }
             for (MailItem item : getItemList(octxt, MailItem.Type.MOUNTPOINT, -1, sort)) {
-                Folder f = (Folder) item;
-                MailItem.Type view = f.getDefaultView();
-                if (view == MailItem.Type.APPOINTMENT || view == MailItem.Type.TASK) {
+                if (isCalendarFolder((Folder) item)) {
                     calFolders.add((Folder) item);
                 }
             }
@@ -4132,6 +4148,17 @@ public class Mailbox {
         }
     }
 
+    /**
+     * Get Calendar entry associated with {@code id} as long as the calendar belongs to this mailbox
+     * Note: This means that entries for mounted calendars are NOT returned.
+     */
+    public CalendarItem getCalendarItemById(OperationContext octxt, ItemId id) throws ServiceException {
+        if ((id == null) || (!id.belongsTo(this))) {
+            return null;
+        }
+        return getCalendarItemById(octxt, id.getId());
+    }
+
     public CalendarItem getCalendarItemById(OperationContext octxt, int id) throws ServiceException {
         lock.lock();
         try {
@@ -4143,7 +4170,7 @@ public class Mailbox {
         }
     }
 
-    CalendarItem getCalendarItemById(int id) throws ServiceException {
+    private CalendarItem getCalendarItemById(int id) throws ServiceException {
         MailItem item = getItemById(id, MailItem.Type.UNKNOWN);
         checkCalendarType(item);
         return (CalendarItem) item;
@@ -5313,6 +5340,26 @@ public class Mailbox {
                     }
                 }
             }
+        }
+    }
+
+    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByUID(Account ownerAccount, String uid,
+            boolean includeInvites, boolean includeContent)
+    throws ServiceException {
+        Options options = new Options();
+        options.setAuthToken(getAuthToken(getOperationContext()).toZAuthToken());
+        options.setTargetAccount(getAccount().getName());
+        options.setTargetAccountBy(AccountBy.name);
+        options.setUri(AccountUtil.getSoapUri(ownerAccount));
+        options.setNoSession(true);
+        ZMailbox zmbox = ZMailbox.getMailbox(options);
+        try {
+            return zmbox.getRemoteCalItemByUID(ownerAccount.getId(), uid, includeInvites, includeContent);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                return null;
+            else
+                throw e;
         }
     }
 

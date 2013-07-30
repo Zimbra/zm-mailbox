@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,8 +22,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.util.ZimbraLog;
-
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -31,38 +32,36 @@ import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -125,7 +124,7 @@ public class SendInviteReply extends CalendarRequest {
             // directly accepting the calendar item
             calItemId = iid.getId();
             inviteMsgId = iid.getSubpartId();
-            calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
+            calItem = safeGetCalendarItemById(mbox, octxt, iid.getId());
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
             oldInv = calItem.getInvite(inviteMsgId, compNum);
@@ -214,7 +213,7 @@ public class SendInviteReply extends CalendarRequest {
                             throw ServiceException.FAILURE("Could not create/update calendar item", null);
                         calItemId = aid.calItemId;
                         // Refetch updated item.
-                        calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
+                        calItem = safeGetCalendarItemById(mbox, octxt, aid.calItemId);
                         if (calItem == null)
                             throw ServiceException.FAILURE("Could not refetch created/updated calendar item", null);
                     } else {
@@ -222,11 +221,11 @@ public class SendInviteReply extends CalendarRequest {
                     }
                     oldInv = inv;
                 } else if (info.calItemCreated()) {
-                    calItemId = info.getCalendarItemId();
                     // legacy case (before we added Invite info to Message metadata)
-                    calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
+                    calItem = safeGetCalendarItemById(mbox, octxt, info.getCalendarItemId());
                     if (calItem == null)
                         throw ServiceException.FAILURE("Missing invite data", null);
+                    calItemId = info.getCalendarItemId().getId();  // Must be for this mailbox
                     wasInTrash = calItem.inTrash();
                     oldInv = calItem.getInvite(inviteMsgId, compNum);
                 } else {
@@ -435,9 +434,9 @@ public class SendInviteReply extends CalendarRequest {
     }
 
     private static class AddInviteResult {
-        private int mCalItemId;
-        private int mInvId;
-        private int mCompNum;
+        private final int mCalItemId;
+        private final int mInvId;
+        private final int mCompNum;
         public AddInviteResult(int calItemId, int invId, int compNum) {
             mCalItemId = calItemId;
             mInvId = invId;
@@ -489,6 +488,25 @@ public class SendInviteReply extends CalendarRequest {
         req.addAttribute(MailConstants.A_ID, idStr);
         req.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, ids.getCompNum());
         zmbx.invoke(req);
+    }
+
+    /**
+     * Note returns null if {@code calItemId} represents a remote calendar item
+     */
+    private static CalendarItem safeGetCalendarItemById(Mailbox mbox, OperationContext octxt, ItemId calItemId)
+    throws ServiceException {
+        try {
+            return mbox.getCalendarItemById(octxt, calItemId);
+        } catch (MailServiceException e) {
+            String code = e.getCode();
+            if (MailServiceException.NO_SUCH_ITEM.equals(code)
+                || MailServiceException.NO_SUCH_CALITEM.equals(code)
+                || MailServiceException.NO_SUCH_APPT.equals(code)
+                || MailServiceException.NO_SUCH_TASK.equals(code))
+                return null;
+            else
+                throw e;
+        }
     }
 
     private static CalendarItem safeGetCalendarItemById(Mailbox mbox, OperationContext octxt, int calItemId)

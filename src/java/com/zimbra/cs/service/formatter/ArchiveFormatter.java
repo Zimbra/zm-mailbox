@@ -464,12 +464,15 @@ public abstract class ArchiveFormatter extends Formatter {
                 Message msg = (Message) mi;
 
                 if (msg.hasCalendarItemInfos()) {
-                    Set<Integer> calItems = new HashSet<Integer>();
+                    Set<ItemId> calItems = Sets.newHashSet();
 
                     for (Iterator<CalendarItemInfo> it = msg.getCalendarItemInfoIterator(); it.hasNext(); ) {
-                        calItems.add(it.next().getCalendarItemId());
+                        ItemId iid = it.next().getCalendarItemId();
+                        if (iid != null) {
+                            calItems.add(iid);
+                        }
                     }
-                    for (Integer i : calItems) {
+                    for (ItemId i : calItems) {
                         if (extra == null) {
                             extra = "calendar=" + i.toString();
                         } else {
