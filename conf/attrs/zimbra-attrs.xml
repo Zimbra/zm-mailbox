@@ -7277,4 +7277,9 @@ TODO: delete them permanently from here
   <desc>domain mandatory mail html signature</desc>
 </attr>
 
+<attr id="1458" name="zimbraAmavisFinalSpamDestiny" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+  <globalConfigValue>D_DISCARD</globalConfigValue>
+  <desc>Amavis final destination for Spam.  Default is to discard it</desc>
+</attr>
+
 </attrs>

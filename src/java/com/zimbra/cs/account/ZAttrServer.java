@@ -946,6 +946,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @return zimbraAmavisFinalSpamDestiny, or "D_DISCARD" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public String getAmavisFinalSpamDestiny() {
+        return getAttr(Provisioning.A_zimbraAmavisFinalSpamDestiny, "D_DISCARD");
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @param zimbraAmavisFinalSpamDestiny new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public void setAmavisFinalSpamDestiny(String zimbraAmavisFinalSpamDestiny) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @param zimbraAmavisFinalSpamDestiny new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public Map<String,Object> setAmavisFinalSpamDestiny(String zimbraAmavisFinalSpamDestiny, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
+        return attrs;
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public void unsetAmavisFinalSpamDestiny() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public Map<String,Object> unsetAmavisFinalSpamDestiny(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of characters that will be indexed for a given MIME
      * part.
      *
