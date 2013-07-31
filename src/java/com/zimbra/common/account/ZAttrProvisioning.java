@@ -1946,6 +1946,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
 
     /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
+
+    /**
      * When a virus is detected quarantine message to this account
      *
      * @since ZCS 7.0.0
