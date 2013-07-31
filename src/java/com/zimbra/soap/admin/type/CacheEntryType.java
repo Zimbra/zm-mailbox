@@ -18,7 +18,6 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.google.common.base.Joiner;
-
 import com.zimbra.common.service.ServiceException;
 
 // TODO: Use this in ZimbraServer code instead of Provisioning.CacheEntryType
@@ -42,6 +41,7 @@ public enum CacheEntryType {
     group,
     mime,
     server,
+    alwaysOnCluster,
     zimlet;
 
     private static Joiner PIPE_JOINER = Joiner.on("|");
