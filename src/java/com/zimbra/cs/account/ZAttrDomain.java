@@ -947,7 +947,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1457)
+    @ZAttr(id=1459)
     public String getAmavisDomainDisclaimerHTML() {
         return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, null);
     }
@@ -960,7 +960,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1457)
+    @ZAttr(id=1459)
     public void setAmavisDomainDisclaimerHTML(String zimbraAmavisDomainDisclaimerHTML) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, zimbraAmavisDomainDisclaimerHTML);
@@ -976,7 +976,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1457)
+    @ZAttr(id=1459)
     public Map<String,Object> setAmavisDomainDisclaimerHTML(String zimbraAmavisDomainDisclaimerHTML, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, zimbraAmavisDomainDisclaimerHTML);
@@ -990,7 +990,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1457)
+    @ZAttr(id=1459)
     public void unsetAmavisDomainDisclaimerHTML() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, "");
@@ -1005,7 +1005,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1457)
+    @ZAttr(id=1459)
     public Map<String,Object> unsetAmavisDomainDisclaimerHTML(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, "");
@@ -1019,7 +1019,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1456)
+    @ZAttr(id=1458)
     public String getAmavisDomainDisclaimerText() {
         return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerText, null);
     }
@@ -1032,7 +1032,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1456)
+    @ZAttr(id=1458)
     public void setAmavisDomainDisclaimerText(String zimbraAmavisDomainDisclaimerText) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, zimbraAmavisDomainDisclaimerText);
@@ -1048,7 +1048,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1456)
+    @ZAttr(id=1458)
     public Map<String,Object> setAmavisDomainDisclaimerText(String zimbraAmavisDomainDisclaimerText, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, zimbraAmavisDomainDisclaimerText);
@@ -1062,7 +1062,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1456)
+    @ZAttr(id=1458)
     public void unsetAmavisDomainDisclaimerText() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, "");
@@ -1077,7 +1077,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1456)
+    @ZAttr(id=1458)
     public Map<String,Object> unsetAmavisDomainDisclaimerText(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisDomainDisclaimerText, "");

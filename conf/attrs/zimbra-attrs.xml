@@ -7269,15 +7269,25 @@ TODO: delete them permanently from here
   <desc>whether to display from address control in user preferences</desc>
 </attr>
 
-<attr id="1456" name="zimbraAmavisDomainDisclaimerText" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
+<attr id="1456" name="zimbraAntispamExtractionBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.5">
+  <globalConfigValue>25</globalConfigValue>
+  <desc>batch size for zmspamextract</desc>
+</attr>
+
+<attr id="1457" name="zimbraAntispamExtractionBatchDelay" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.5">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>delay between each batch for zmspamextract</desc>
+</attr>
+
+<attr id="1458" name="zimbraAmavisDomainDisclaimerText" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
   <desc>domain mandatory mail plain text signature</desc>
 </attr>
 
-<attr id="1457" name="zimbraAmavisDomainDisclaimerHTML" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
+<attr id="1459" name="zimbraAmavisDomainDisclaimerHTML" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
   <desc>domain mandatory mail html signature</desc>
 </attr>
 
-<attr id="1458" name="zimbraAmavisFinalSpamDestiny" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1460" name="zimbraAmavisFinalSpamDestiny" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
   <globalConfigValue>D_DISCARD</globalConfigValue>
   <desc>Amavis final destination for Spam.  Default is to discard it</desc>
 </attr>

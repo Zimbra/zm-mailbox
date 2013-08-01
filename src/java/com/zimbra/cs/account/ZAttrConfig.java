@@ -1774,7 +1774,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1458)
+    @ZAttr(id=1460)
     public String getAmavisFinalSpamDestiny() {
         return getAttr(Provisioning.A_zimbraAmavisFinalSpamDestiny, "D_DISCARD");
     }
@@ -1787,7 +1787,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1458)
+    @ZAttr(id=1460)
     public void setAmavisFinalSpamDestiny(String zimbraAmavisFinalSpamDestiny) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
@@ -1803,7 +1803,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1458)
+    @ZAttr(id=1460)
     public Map<String,Object> setAmavisFinalSpamDestiny(String zimbraAmavisFinalSpamDestiny, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
@@ -1817,7 +1817,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1458)
+    @ZAttr(id=1460)
     public void unsetAmavisFinalSpamDestiny() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, "");
@@ -1832,7 +1832,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1458)
+    @ZAttr(id=1460)
     public Map<String,Object> unsetAmavisFinalSpamDestiny(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, "");
@@ -1908,6 +1908,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAmavisQuarantineAccount(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisQuarantineAccount, "");
+        return attrs;
+    }
+
+    /**
+     * delay between each batch for zmspamextract
+     *
+     * @return zimbraAntispamExtractionBatchDelay, or 100 if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1457)
+    public int getAntispamExtractionBatchDelay() {
+        return getIntAttr(Provisioning.A_zimbraAntispamExtractionBatchDelay, 100);
+    }
+
+    /**
+     * delay between each batch for zmspamextract
+     *
+     * @param zimbraAntispamExtractionBatchDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1457)
+    public void setAntispamExtractionBatchDelay(int zimbraAntispamExtractionBatchDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchDelay, Integer.toString(zimbraAntispamExtractionBatchDelay));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * delay between each batch for zmspamextract
+     *
+     * @param zimbraAntispamExtractionBatchDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1457)
+    public Map<String,Object> setAntispamExtractionBatchDelay(int zimbraAntispamExtractionBatchDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchDelay, Integer.toString(zimbraAntispamExtractionBatchDelay));
+        return attrs;
+    }
+
+    /**
+     * delay between each batch for zmspamextract
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1457)
+    public void unsetAntispamExtractionBatchDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * delay between each batch for zmspamextract
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1457)
+    public Map<String,Object> unsetAntispamExtractionBatchDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchDelay, "");
+        return attrs;
+    }
+
+    /**
+     * batch size for zmspamextract
+     *
+     * @return zimbraAntispamExtractionBatchSize, or 25 if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1456)
+    public int getAntispamExtractionBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraAntispamExtractionBatchSize, 25);
+    }
+
+    /**
+     * batch size for zmspamextract
+     *
+     * @param zimbraAntispamExtractionBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1456)
+    public void setAntispamExtractionBatchSize(int zimbraAntispamExtractionBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchSize, Integer.toString(zimbraAntispamExtractionBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * batch size for zmspamextract
+     *
+     * @param zimbraAntispamExtractionBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1456)
+    public Map<String,Object> setAntispamExtractionBatchSize(int zimbraAntispamExtractionBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchSize, Integer.toString(zimbraAntispamExtractionBatchSize));
+        return attrs;
+    }
+
+    /**
+     * batch size for zmspamextract
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1456)
+    public void unsetAntispamExtractionBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * batch size for zmspamextract
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1456)
+    public Map<String,Object> unsetAntispamExtractionBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAntispamExtractionBatchSize, "");
         return attrs;
     }
 

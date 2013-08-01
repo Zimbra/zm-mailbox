@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,6 +16,7 @@
 package com.zimbra.cs.util;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,8 +24,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
@@ -46,7 +50,10 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.lang.StringUtils;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -69,41 +76,53 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.service.formatter.ArchiveFormatter.ArchiveInputEntry;
+import com.zimbra.cs.service.formatter.ArchiveFormatter.ArchiveInputStream;
+import com.zimbra.cs.service.formatter.TarArchiveInputStream;
 import com.zimbra.cs.service.mail.ItemAction;
+import com.zimbra.cs.service.util.ItemData;
 
 public class SpamExtract {
 
-    private static Log mLog = LogFactory.getLog(SpamExtract.class);
+    private static Log LOG = LogFactory.getLog(SpamExtract.class);
 
-    private static Options mOptions = new Options();
+    private static Options options = new Options();
+
+    private static boolean verbose = false;
+
+    private static int BATCH_SIZE = 25;
+
+    private static int SLEEP_TIME = 100;
 
     static {
-        mOptions.addOption("s", "spam", false, "extract messages from configured spam mailbox");
-        mOptions.addOption("n", "notspam", false, "extract messages from configured notspam mailbox");
-        mOptions.addOption("m", "mailbox", true, "extract messages from specified mailbox");
+        options.addOption("s", "spam", false, "extract messages from configured spam mailbox");
+        options.addOption("n", "notspam", false, "extract messages from configured notspam mailbox");
+        options.addOption("m", "mailbox", true, "extract messages from specified mailbox");
 
-        mOptions.addOption("d", "delete", false, "delete extracted messages (default is to keep)");
-        mOptions.addOption("o", "outdir", true, "directory to store extracted messages");
+        options.addOption("d", "delete", false, "delete extracted messages (default is to keep)");
+        options.addOption("o", "outdir", true, "directory to store extracted messages");
 
-        mOptions.addOption("a", "admin", true, "admin user name for auth (default is zimbra_ldap_userdn)");
-        mOptions.addOption("p", "password", true, "admin password for auth (default is zimbra_ldap_password)");
-        mOptions.addOption("u", "url", true, "admin SOAP service url (default is target mailbox's server's admin service port)");
+        options.addOption("a", "admin", true, "admin user name for auth (default is zimbra_ldap_userdn)");
+        options.addOption("p", "password", true, "admin password for auth (default is zimbra_ldap_password)");
+        options.addOption("u", "url", true, "admin SOAP service url (default is target mailbox's server's admin service port)");
 
-        mOptions.addOption("q", "query", true, "search query whose results should be extracted (default is in:inbox)");
-        mOptions.addOption("r", "raw", false, "extract raw message (default: gets message/rfc822 attachments)");
+        options.addOption("q", "query", true, "search query whose results should be extracted (default is in:inbox)");
+        options.addOption("r", "raw", false, "extract raw message (default: gets message/rfc822 attachments)");
 
-        mOptions.addOption("h", "help", false, "show this usage text");
-        mOptions.addOption("D", "debug", false, "enable debug level logging");
-        mOptions.addOption("v", "verbose", false, "be verbose while running");
+        options.addOption("h", "help", false, "show this usage text");
+        options.addOption("D", "debug", false, "enable debug level logging");
+        options.addOption("v", "verbose", false, "be verbose while running");
     }
 
     private static void usage(String errmsg) {
         if (errmsg != null) {
-            mLog.error(errmsg);
+            LOG.error(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("zmspamextract [options] ",
-            "where [options] are one of:", mOptions,
+            "where [options] are one of:", options,
             "SpamExtract retrieve messages that may have been marked as spam or not spam in the Zimbra Web Client.");
         System.exit((errmsg == null) ? 0 : 1);
     }
@@ -112,7 +131,7 @@ public class SpamExtract {
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
         try {
-            cl = parser.parse(mOptions, args);
+            cl = parser.parse(options, args);
         } catch (ParseException pe) {
             usage(pe.getMessage());
         }
@@ -123,8 +142,6 @@ public class SpamExtract {
         return cl;
     }
 
-    private static boolean mVerbose = false;
-
     public static void main(String[] args) throws ServiceException, HttpException, SoapFaultException, IOException {
         CommandLine cl = parseArgs(args);
 
@@ -134,7 +151,7 @@ public class SpamExtract {
             CliUtil.toolSetup("INFO");
         }
         if (cl.hasOption('v')) {
-            mVerbose = true;
+            verbose = true;
         }
 
         boolean optDelete = cl.hasOption('d');
@@ -145,10 +162,10 @@ public class SpamExtract {
         String optDirectory = cl.getOptionValue('o');
         File outputDirectory = new File(optDirectory);
         if (!outputDirectory.exists()) {
-            mLog.info("Creating directory: " + optDirectory);
+            LOG.info("Creating directory: " + optDirectory);
             outputDirectory.mkdirs();
             if (!outputDirectory.exists()) {
-                mLog.error("could not create directory " + optDirectory);
+                LOG.error("could not create directory " + optDirectory);
                 System.exit(2);
             }
         }
@@ -179,7 +196,9 @@ public class SpamExtract {
 
         boolean optRaw = cl.hasOption('r');
 
-        if (mVerbose) mLog.info("Extracting from account " + account.getName());
+        if (verbose) {
+            LOG.info("Extracting from account " + account.getName());
+        }
 
         Server server = Provisioning.getInstance().getServer(account);
 
@@ -191,10 +210,10 @@ public class SpamExtract {
         }
         String adminAuthToken = getAdminAuthToken(optAdminURL, optAdminUser, optAdminPassword);
         String authToken = getDelegateAuthToken(optAdminURL, account, adminAuthToken);
+        BATCH_SIZE = Provisioning.getInstance().getLocalServer().getAntispamExtractionBatchSize();
+        SLEEP_TIME = Provisioning.getInstance().getLocalServer().getAntispamExtractionBatchDelay();
         extract(authToken, account, server, optQuery, outputDirectory, optDelete, optRaw);
     }
-
-    public static final String TYPE_MESSAGE = "message";
 
     private static void extract(String authToken, Account account, Server server, String query, File outdir, boolean delete, boolean raw) throws ServiceException, HttpException, SoapFaultException, IOException {
         String soapURL = getSoapURL(server, false);
@@ -210,7 +229,9 @@ public class SpamExtract {
         hc.getHostConfiguration().setHost(restURL.getHost(), restURL.getPort(), Protocol.getProtocol(restURL.getProtocol()));
         gm.getParams().setSoTimeout(60000);
 
-        if (mVerbose) mLog.info("Mailbox requests to: " + restURL);
+        if (verbose) {
+            LOG.info("Mailbox requests to: " + restURL);
+        }
 
         SoapHttpTransport transport = new SoapHttpTransport(soapURL);
         transport.setRetryCount(1);
@@ -223,27 +244,46 @@ public class SpamExtract {
         while (haveMore) {
             Element searchReq = new Element.XMLElement(MailConstants.SEARCH_REQUEST);
             searchReq.addElement(MailConstants.A_QUERY).setText(query);
-            searchReq.addAttribute(MailConstants.A_SEARCH_TYPES, TYPE_MESSAGE);
+            searchReq.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.MESSAGE.toString());
             searchReq.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
+            searchReq.addAttribute(MailConstants.A_LIMIT, BATCH_SIZE);
 
             try {
-                if (mLog.isDebugEnabled()) mLog.debug(searchReq.prettyPrint());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(searchReq.prettyPrint());
+                }
                 Element searchResp = transport.invoke(searchReq, false, true, account.getId());
-                if (mLog.isDebugEnabled()) mLog.debug(searchResp.prettyPrint());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(searchResp.prettyPrint());
+                }
 
                 StringBuilder deleteList = new StringBuilder();
 
+                List<String> ids = new ArrayList<String>();
                 for (Iterator<Element> iter = searchResp.elementIterator(MailConstants.E_MSG); iter.hasNext();) {
                     offset++;
                     Element e = iter.next();
                     String mid = e.getAttribute(MailConstants.A_ID);
                     if (mid == null) {
-                        mLog.warn("null message id SOAP response");
+                        LOG.warn("null message id SOAP response");
                         continue;
                     }
-                    String path = "/service/user/" + account.getName() + "/?id=" + mid;
-                    if (extractMessage(hc, gm, path, outdir, raw)) {
-                        deleteList.append(mid).append(',');
+
+                    LOG.debug("adding id %s", mid);
+                    ids.add(mid);
+                    if (ids.size() >= BATCH_SIZE || !iter.hasNext()) {
+                        StringBuilder path = new StringBuilder("/service/user/" + account.getName() + "/?fmt=tgz&list=" + StringUtils.join(ids, ","));
+                        LOG.debug("sending request for path %s", path.toString());
+                        List<String> extractedIds = extractMessages(hc, gm, path.toString(), outdir, raw);
+                        if (ids.size() > extractedIds.size()) {
+                            ids.removeAll(extractedIds);
+                            LOG.warn("failed to extract %s", ids);
+                        }
+                        for (String id : extractedIds) {
+                            deleteList.append(id).append(',');
+                        }
+
+                        ids.clear();
                     }
                     totalProcessed++;
                 }
@@ -255,9 +295,13 @@ public class SpamExtract {
                         int m = Integer.parseInt(more);
                         if (m > 0) {
                             haveMore = true;
+                            try {
+                                Thread.sleep(SLEEP_TIME);
+                            } catch (InterruptedException e) {
+                            }
                         }
                     } catch (NumberFormatException nfe) {
-                        mLog.warn("more flag from server not a number: " + more, nfe);
+                        LOG.warn("more flag from server not a number: " + more, nfe);
                     }
                 }
 
@@ -268,16 +312,21 @@ public class SpamExtract {
                     action.addAttribute(MailConstants.A_ID, deleteList.toString());
                     action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_HARD_DELETE);
 
-                    if (mLog.isDebugEnabled()) mLog.debug(msgActionReq.prettyPrint());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(msgActionReq.prettyPrint());
+                    }
                     Element msgActionResp = transport.invoke(msgActionReq, false, true, account.getId());
-                    if (mLog.isDebugEnabled()) mLog.debug(msgActionResp.prettyPrint());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(msgActionResp.prettyPrint());
+                    }
+                    offset = 0; //put offset back to 0 so we always get top N messages even after delete
                 }
             } finally {
                 gm.releaseConnection();
             }
 
         }
-        mLog.info("Total messages processed: " + totalProcessed);
+        LOG.info("Total messages processed: " + totalProcessed);
     }
 
     private static Session mJMSession;
@@ -291,73 +340,109 @@ public class SpamExtract {
         mOutputPrefix = Long.toHexString(System.currentTimeMillis());
     }
 
-    private static boolean extractMessage(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) {
-        try {
-            extractMessage0(hc, gm, path, outdir, raw);
-            return true;
-        } catch (MessagingException me) {
-            mLog.warn("exception occurred fetching message", me);
-        } catch (IOException ioe) {
-            mLog.warn("exception occurred fetching message", ioe);
-        }
-        return false;
-    }
-
     private static int mExtractIndex;
     private static final int MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 
-    private static void extractMessage0(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) throws IOException, MessagingException {
+    private static List<String> extractMessages(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) throws HttpException, IOException {
+        List<String> extractedIds = new ArrayList<String>();
         gm.setPath(path);
-        if (mLog.isDebugEnabled()) mLog.debug("Fetching " + path);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Fetching " + path);
+        }
         HttpClientUtil.executeMethod(hc, gm);
         if (gm.getStatusCode() != HttpStatus.SC_OK) {
             throw new IOException("HTTP GET failed: " + gm.getPath() + ": " + gm.getStatusCode() + ": " + gm.getStatusText());
         }
 
-        if (raw) {
-            // Write the message as-is.
-            File file = new File(outdir, mOutputPrefix + "-" + mExtractIndex++);
-            OutputStream os = null;
-            try {
-                os = new BufferedOutputStream(new FileOutputStream(file));
-                ByteUtil.copy(gm.getResponseBodyAsStream(), true, os, false);
-                if (mVerbose) mLog.info("Wrote: " + file);
-            } catch (java.io.IOException e) {
-                String fileName = outdir + "/" + mOutputPrefix + "-" + mExtractIndex;
-                mLog.error("Cannot write to " + fileName, e);
-            } finally {
-                if (os != null)
-                    os.close();
-            }
-
-            return;
-        }
-
-        // Write the attached message to the output directory.
-        BufferStream buffer = new BufferStream(gm.getResponseContentLength(), MAX_BUFFER_SIZE);
-        buffer.setSequenced(false);
-        MimeMessage mm = null;
-        InputStream fis = null;
+        ArchiveInputStream tgzStream = null;
         try {
-            ByteUtil.copy(gm.getResponseBodyAsStream(), true, buffer, false);
-            if (buffer.isSpooled()) {
-                fis = new ZSharedFileInputStream(buffer.getFile());
-                mm = new ZMimeMessage(mJMSession, fis);
-            } else {
-                mm = new ZMimeMessage(mJMSession, buffer.getInputStream());
+            tgzStream = new TarArchiveInputStream(new GZIPInputStream(gm.getResponseBodyAsStream()), Charsets.UTF_8.name());
+            ArchiveInputEntry entry = null;
+            while ((entry = tgzStream.getNextEntry()) != null) {
+                LOG.debug("got entry name %s", entry.getName());
+                if (entry.getName().endsWith(".meta")) {
+                    ItemData itemData = new ItemData(readArchiveEntry(tgzStream, entry));
+                    UnderlyingData ud = itemData.ud;
+                    entry = tgzStream.getNextEntry(); //.meta always followed by .eml
+                    if (raw) {
+                        // Write the message as-is.
+                        File file = new File(outdir, mOutputPrefix + "-" + mExtractIndex++);
+                        OutputStream os = null;
+                        try {
+                            os = new BufferedOutputStream(new FileOutputStream(file));
+                            byte[] data = readArchiveEntry(tgzStream, entry);
+                            ByteUtil.copy(new ByteArrayInputStream(data), true, os, false);
+                            if (verbose) {
+                                LOG.info("Wrote: " + file);
+                            }
+                            extractedIds.add(ud.id + "");
+                        } catch (java.io.IOException e) {
+                            String fileName = outdir + "/" + mOutputPrefix + "-" + mExtractIndex;
+                            LOG.error("Cannot write to " + fileName, e);
+                        } finally {
+                            if (os != null) {
+                                os.close();
+                            }
+                        }
+                    } else {
+                        // Write the attached message to the output directory.
+                        BufferStream buffer = new BufferStream(entry.getSize(), MAX_BUFFER_SIZE);
+                        buffer.setSequenced(false);
+                        MimeMessage mm = null;
+                        InputStream fis = null;
+                        try {
+                            byte[] data = readArchiveEntry(tgzStream, entry);
+                            ByteUtil.copy(new ByteArrayInputStream(data), true, buffer, false);
+                            if (buffer.isSpooled()) {
+                                fis = new ZSharedFileInputStream(buffer.getFile());
+                                mm = new ZMimeMessage(mJMSession, fis);
+                            } else {
+                                mm = new ZMimeMessage(mJMSession, buffer.getInputStream());
+                            }
+                            writeAttachedMessages(mm, outdir, entry.getName());
+                            extractedIds.add(ud.id + "");
+                        } catch (MessagingException me) {
+                            LOG.warn("exception occurred fetching message", me);
+                        } finally {
+                            ByteUtil.closeStream(fis);
+                        }
+
+                    }
+                }
             }
-            writeAttachedMessages(mm, outdir, gm.getPath());
         } finally {
-            ByteUtil.closeStream(fis);
+            Closeables.closeQuietly(tgzStream);
+        }
+        return extractedIds;
+    }
+
+    private static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
+    throws IOException {
+        if (aie == null) {
+            return null;
         }
 
+        int dsz = (int) aie.getSize();
+        byte[] data;
+
+        if (dsz == 0) {
+            return null;
+        } else if (dsz == -1) {
+            data = ByteUtil.getContent(ais.getInputStream(), -1, false);
+        } else {
+            data = new byte[dsz];
+            if (ais.read(data, 0, dsz) != dsz) {
+                throw new IOException("archive read err");
+            }
+        }
+        return data;
     }
 
     private static void writeAttachedMessages(MimeMessage mm, File outdir, String msgUri)
     throws IOException, MessagingException {
         // Not raw - ignore the spam report and extract messages that are in attachments...
         if (!(mm.getContent() instanceof MimeMultipart)) {
-            mLog.warn("Spam/notspam messages must have attachments (skipping " + msgUri + ")");
+            LOG.warn("Spam/notspam messages must have attachments (skipping " + msgUri + ")");
             return;
         }
 
@@ -386,12 +471,12 @@ public class SpamExtract {
             } finally {
                 os.close();
             }
-            if (mVerbose) mLog.info("Wrote: " + file);
+            if (verbose) LOG.info("Wrote: " + file);
         }
 
         if (!foundAtleastOneAttachedMessage) {
             String msgid = mm.getHeader("Message-ID", " ");
-            mLog.warn("message uri=" + msgUri + " message-id=" + msgid + " had no attachments");
+            LOG.warn("message uri=" + msgUri + " message-id=" + msgid + " had no attachments");
         }
     }
 
@@ -449,10 +534,10 @@ public class SpamExtract {
         authReq.addAttribute(AdminConstants.E_NAME, adminUser, Element.Disposition.CONTENT);
         authReq.addAttribute(AdminConstants.E_PASSWORD, adminPassword, Element.Disposition.CONTENT);
         try {
-            if (mVerbose) mLog.info("Auth request to: " + adminURL);
-            if (mLog.isDebugEnabled()) mLog.debug(authReq.prettyPrint());
+            if (verbose) LOG.info("Auth request to: " + adminURL);
+            if (LOG.isDebugEnabled()) LOG.debug(authReq.prettyPrint());
             Element authResp = transport.invokeWithoutSession(authReq);
-            if (mLog.isDebugEnabled()) mLog.debug(authResp.prettyPrint());
+            if (LOG.isDebugEnabled()) LOG.debug(authResp.prettyPrint());
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             return authToken;
         } catch (Exception e) {
@@ -471,10 +556,10 @@ public class SpamExtract {
         acctElem.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
         acctElem.setText(account.getId());
         try {
-            if (mVerbose) mLog.info("Delegate auth request to: " + adminURL);
-            if (mLog.isDebugEnabled()) mLog.debug(daReq.prettyPrint());
+            if (verbose) LOG.info("Delegate auth request to: " + adminURL);
+            if (LOG.isDebugEnabled()) LOG.debug(daReq.prettyPrint());
             Element daResp = transport.invokeWithoutSession(daReq);
-            if (mLog.isDebugEnabled()) mLog.debug(daResp.prettyPrint());
+            if (LOG.isDebugEnabled()) LOG.debug(daResp.prettyPrint());
             String authToken = daResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             return authToken;
         } catch (Exception e) {
@@ -495,38 +580,38 @@ public class SpamExtract {
 
         if (cl.hasOption('s')) {
             if (cl.hasOption('n') || cl.hasOption('m')) {
-                mLog.error("only one of s, n or m options can be specified");
+                LOG.error("only one of s, n or m options can be specified");
                 return null;
             }
             name = conf.getAttr(Provisioning.A_zimbraSpamIsSpamAccount);
             if (name == null || name.length() == 0) {
-                mLog.error("no account configured for spam");
+                LOG.error("no account configured for spam");
                 return null;
             }
         } else if (cl.hasOption('n')) {
             if (cl.hasOption('m')) {
-                mLog.error("only one of s, n, or m options can be specified");
+                LOG.error("only one of s, n, or m options can be specified");
                 return null;
             }
             name = conf.getAttr(Provisioning.A_zimbraSpamIsNotSpamAccount);
             if (name == null || name.length() == 0) {
-                mLog.error("no account configured for ham");
+                LOG.error("no account configured for ham");
                 return null;
             }
         } else if (cl.hasOption('m')) {
             name = cl.getOptionValue('m');
             if (name.length() == 0) {
-                mLog.error("illegal argument to m option");
+                LOG.error("illegal argument to m option");
                 return null;
             }
         } else {
-            mLog.error("one of s, n or m options must be specified");
+            LOG.error("one of s, n or m options must be specified");
             return null;
         }
 
         Account account = prov.get(AccountBy.name, name);
         if (account == null) {
-            mLog.error("can not find account " + name);
+            LOG.error("can not find account " + name);
             return null;
         }
 

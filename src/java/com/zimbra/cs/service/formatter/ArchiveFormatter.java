@@ -15,6 +15,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -150,15 +151,13 @@ public abstract class ArchiveFormatter extends Formatter {
         public void setSize(long size);
     }
 
-    public abstract interface ArchiveInputStream {
-        public void close() throws IOException;
+    public abstract interface ArchiveInputStream extends Closeable {
         public InputStream getInputStream();
         public ArchiveInputEntry getNextEntry() throws IOException;
         public int read(byte[] buf, int offset, int len) throws IOException;
     }
 
-    public abstract interface ArchiveOutputStream {
-        public void close() throws IOException;
+    public abstract interface ArchiveOutputStream extends Closeable {
         public void closeEntry() throws IOException;
         public OutputStream getOutputStream();
         public int getRecordSize();
