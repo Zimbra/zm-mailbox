@@ -1921,6 +1921,39 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAllowNonLDHCharsInDomain = "zimbraAllowNonLDHCharsInDomain";
 
     /**
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1446)
+    public static final String A_zimbraAlwaysOnClusterId = "zimbraAlwaysOnClusterId";
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1459)
+    public static final String A_zimbraAmavisDomainDisclaimerHTML = "zimbraAmavisDomainDisclaimerHTML";
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1458)
+    public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1460)
+    public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
+
+    /**
      * When a virus is detected quarantine message to this account
      *
      * @since ZCS 7.0.0
@@ -2295,7 +2328,25 @@ public class ZAttrProvisioning {
      * singleton listener instance is invoked after each account is auto
      * created in Zimbra. Listener can be plugged in as a server extension to
      * handle tasks like updating the account auto provision status in the
-     * external LDAP directory.
+     * external LDAP directory. At each eager provision interval, ZCS does an
+     * LDAP search based on the value configured in
+     * zimbraAutoProvLdapSearchFilter. Returned entries from this search are
+     * candidates to be auto provisioned in this batch. The
+     * zimbraAutoProvLdapSearchFilter should include an assertion that will
+     * only hit entries in the external directory that have not yet been
+     * provisioned in ZCS, otherwise it&#039;s likely the same entries will
+     * be repeated pulled in to ZCS. After an account is auto provisioned in
+     * ZCS,
+     * com.zimbra.cs.account.Account.AutoProvisionListener.postCreate(Domain
+     * domain, Account acct, String externalDN) will be called by the auto
+     * provisioning framework. Customer can implement the
+     * AutoProvisionListener interface in a ZCS server extension and get
+     * their AutoProvisionListener.postCreate() get called. The
+     * implementation of customer&#039;s postCreate method can be, for
+     * example, setting an attribute in the external directory on the account
+     * just provisioned in ZCS. The attribute can be included as a condition
+     * in the zimbraAutoProvLdapSearchFilter, so the entry won&#039;t be
+     * returned again by the LDAP search in the next interval.
      *
      * @since ZCS 8.0.0
      */
@@ -2999,6 +3050,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraConvertdURL = "zimbraConvertdURL";
 
     /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1441)
+    public static final String A_zimbraConverterHints = "zimbraConverterHints";
+
+    /**
      * Object classes to add when creating a zimbra cos object.
      *
      * @since ZCS 6.0.0_BETA1
@@ -3217,7 +3277,7 @@ public class ZAttrProvisioning {
      * whether to invoke data imports for all data sources owned by an
      * account after successful user login from the login page
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public static final String A_zimbraDataSourceImportOnLogin = "zimbraDataSourceImportOnLogin";
@@ -3661,7 +3721,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureEnabled = "zimbraDomainMandatoryMailSignatureEnabled";
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @since ZCS 6.0.4
      */
@@ -3669,7 +3731,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureHTML = "zimbraDomainMandatoryMailSignatureHTML";
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 9.0.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @since ZCS 6.0.4
      */
@@ -4668,6 +4732,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileLifetime = "zimbraFileLifetime";
 
     /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1442)
+    public static final String A_zimbraFilePreviewMaxSize = "zimbraFilePreviewMaxSize";
+
+    /**
      * Maximum allowed lifetime of public file shares. A value of 0 indicates
      * that there&#039;s no limit on a public file share&#039;s lifetime. .
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
@@ -4694,7 +4766,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
@@ -6851,6 +6923,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1423)
+    public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
+
+    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
@@ -6870,6 +6951,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1425)
     public static final String A_zimbraMobileMetadataMaxSizeEnabled = "zimbraMobileMetadataMaxSizeEnabled";
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1422)
+    public static final String A_zimbraMobileNotificationAdminAddress = "zimbraMobileNotificationAdminAddress";
+
+    /**
+     * whether mobile sync notification enabled or not
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1421)
+    public static final String A_zimbraMobileNotificationEnabled = "zimbraMobileNotificationEnabled";
 
     /**
      * Whether to permit Outlook to sync via Active Sync
@@ -7121,7 +7218,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyApprovedApplicationList = "zimbraMobilePolicyApprovedApplicationList";
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 9.0.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
@@ -7319,6 +7418,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1294)
     public static final String A_zimbraMobilePolicyRequireSignedSMIMEMessages = "zimbraMobilePolicyRequireSignedSMIMEMessages";
+
+    /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1444)
+    public static final String A_zimbraMobilePolicyRequireStorageCardEncryption = "zimbraMobilePolicyRequireStorageCardEncryption";
 
     /**
      * when set to TRUE, suppresses DeviceEncryptionEnabled to be sent down
@@ -8642,6 +8750,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefFont = "zimbraPrefFont";
 
     /**
+     * the font size for the web client
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1448)
+    public static final String A_zimbraPrefFontSize = "zimbraPrefFontSize";
+
+    /**
      * what part of the original message to include during forwards
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
@@ -9608,6 +9724,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=456)
     public static final String A_zimbraPrefWarnOnExit = "zimbraPrefWarnOnExit";
+
+    /**
+     * user preference to enable/disable access to his mailbox data in the
+     * web client when offline
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1443)
+    public static final String A_zimbraPrefWebClientOfflineAccessEnabled = "zimbraPrefWebClientOfflineAccessEnabled";
 
     /**
      * if replying/forwarding a message in this folder, use this identity
@@ -11376,6 +11501,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
+     * whether JavaScript error tracking via third party service is enabled
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1433)
+    public static final String A_zimbraTouchJSErrorTrackingEnabled = "zimbraTouchJSErrorTrackingEnabled";
+
+    /**
+     * Key to be used for JavaScript error tracking via third party service
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1434)
+    public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
+
+    /**
      * call control service URL for the UC service
      *
      * @since ZCS 8.0.0
@@ -11704,12 +11845,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientMaxInputBufferLength = "zimbraWebClientMaxInputBufferLength";
 
     /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1452)
+    public static final String A_zimbraWebClientOfflineSyncMaxDays = "zimbraWebClientOfflineSyncMaxDays";
+
+    /**
      * whether or not to show link to offline version in the web UI top bar
      *
      * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1047)
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1445)
+    public static final String A_zimbraWebClientURL = "zimbraWebClientURL";
 
     /**
      * XMPP Category of the component
@@ -11911,6 +12070,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1447)
+    public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     ///// END-AUTO-GEN-REPLACE
 }

@@ -91,7 +91,7 @@ public class Key {
             }
         }
     }
-    
+
     public static enum UCServiceBy {
 
         // case must match protocol
@@ -218,6 +218,19 @@ public class Key {
         public static ShareLocatorBy fromString(String s) throws ServiceException {
             try {
                 return ShareLocatorBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+
+    public static enum AlwaysOnClusterBy {
+
+        id, name;
+
+        public static AlwaysOnClusterBy fromString(String s) throws ServiceException {
+            try {
+                return AlwaysOnClusterBy.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
