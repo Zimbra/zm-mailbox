@@ -1929,6 +1929,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisQuarantineAccount = "zimbraAmavisQuarantineAccount";
 
     /**
+     * delay between each batch for zmspamextract
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1457)
+    public static final String A_zimbraAntispamExtractionBatchDelay = "zimbraAntispamExtractionBatchDelay";
+
+    /**
+     * batch size for zmspamextract
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1456)
+    public static final String A_zimbraAntispamExtractionBatchSize = "zimbraAntispamExtractionBatchSize";
+
+    /**
      * Mailboxes in which the current account in archived. Multi-value attr
      * with eg values { user-2006@example.com.archive,
      * user-2007@example.com.archive } that tells us that user@example.com
