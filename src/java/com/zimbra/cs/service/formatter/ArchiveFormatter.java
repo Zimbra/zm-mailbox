@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,6 +15,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,13 +46,13 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.collect.Sets;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
 import org.eclipse.jetty.server.AbstractHttpConnection;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
@@ -97,7 +98,6 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -151,15 +151,13 @@ public abstract class ArchiveFormatter extends Formatter {
         public void setSize(long size);
     }
 
-    public abstract interface ArchiveInputStream {
-        public void close() throws IOException;
+    public abstract interface ArchiveInputStream extends Closeable {
         public InputStream getInputStream();
         public ArchiveInputEntry getNextEntry() throws IOException;
         public int read(byte[] buf, int offset, int len) throws IOException;
     }
 
-    public abstract interface ArchiveOutputStream {
-        public void close() throws IOException;
+    public abstract interface ArchiveOutputStream extends Closeable {
         public void closeEntry() throws IOException;
         public OutputStream getOutputStream();
         public int getRecordSize();
