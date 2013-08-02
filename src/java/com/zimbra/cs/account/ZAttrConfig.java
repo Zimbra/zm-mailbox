@@ -1840,6 +1840,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @return zimbraAmavisMaxServers, or 10 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1461)
+    public int getAmavisMaxServers() {
+        return getIntAttr(Provisioning.A_zimbraAmavisMaxServers, 10);
+    }
+
+    /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @param zimbraAmavisMaxServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1461)
+    public void setAmavisMaxServers(int zimbraAmavisMaxServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisMaxServers, Integer.toString(zimbraAmavisMaxServers));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @param zimbraAmavisMaxServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1461)
+    public Map<String,Object> setAmavisMaxServers(int zimbraAmavisMaxServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisMaxServers, Integer.toString(zimbraAmavisMaxServers));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1461)
+    public void unsetAmavisMaxServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisMaxServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1461)
+    public Map<String,Object> unsetAmavisMaxServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisMaxServers, "");
+        return attrs;
+    }
+
+    /**
      * When a virus is detected quarantine message to this account
      *
      * @return zimbraAmavisQuarantineAccount, or null if unset
