@@ -17,7 +17,7 @@ SECTION amavis
 	LOCAL av_notify_user
 	LOCAL ldap_url
 	LOCAL ldap_amavis_password
-	LOCAL amavis_max_servers
+	VAR zimbraAmavisMaxServers
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
@@ -64,6 +64,7 @@ SECTION mta DEPENDS amavis
 	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
 	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
 	REWRITE conf/mta_milter_options.in conf/mta_milter_options
+	VAR zimbraAmavisMaxServers
 	VAR zimbraIPMode
 	VAR zimbraMtaRestriction
 	VAR zimbraMtaFallbackRelayHost
