@@ -1954,6 +1954,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
 
     /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1461)
+    public static final String A_zimbraAmavisMaxServers = "zimbraAmavisMaxServers";
+
+    /**
      * When a virus is detected quarantine message to this account
      *
      * @since ZCS 7.0.0
