@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,7 +33,7 @@ import com.zimbra.cs.util.Zimbra;
  * Iterates all the mailboxes in the system, purges them one at a time
  * and sleeps between purges for a time interval specified by
  * {@link Provisioning#A_zimbraMailPurgeSleepInterval}.
- * 
+ *
  * @author bburtin
  */
 public class PurgeThread
@@ -42,7 +42,7 @@ extends Thread {
     private static volatile PurgeThread sPurgeThread = null;
     private static Object THREAD_CONTROL_LOCK = new Object();
     private boolean mShutdownRequested = false;
-    
+
     private PurgeThread() {
         setName("MailboxPurge");
     }
@@ -107,7 +107,7 @@ extends Thread {
             }
         }
     }
-    
+
     /**
      * Iterates all mailboxes, purging one at a time and sleeping
      * between purges.
@@ -125,12 +125,12 @@ extends Thread {
             sPurgeThread = null;
             return;
         }
-        
+
         Set<Integer> purgePendingMailboxes = new HashSet<Integer>();
         while (true) {
             List<Integer> mailboxIds = getMailboxIds();
             boolean slept = false;
-            
+
             for (int i = 0; i < mailboxIds.size(); i++) {
                 int mailboxId = mailboxIds.get(i);
                 if (mShutdownRequested) {
@@ -150,7 +150,7 @@ extends Thread {
                         Account account = mbox.getAccount();
                         Provisioning prov = Provisioning.getInstance();
                         if (!Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(account.getAccountStatus(prov)) &&
-                                !account.isIsExternalVirtualAccount()) { 
+                                !account.isIsExternalVirtualAccount()) {
                             ZimbraLog.addAccountNameToContext(account.getName());
                             boolean purgedAll = mbox.purgeMessages(null);
                             if (!purgedAll) {
@@ -164,14 +164,22 @@ extends Thread {
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
                     }
-                } catch (Throwable t) {
-                    if (t instanceof OutOfMemoryError) {
-                        Zimbra.halt("Ran out of memory while purging mailboxes", t);
+                } catch (ServiceException se) {
+                    if (ServiceException.WRONG_HOST.equals(se.getCode())) {
+                        if (ZimbraLog.purge.isDebugEnabled()) {
+                            ZimbraLog.purge.debug("not purging mailbox moved to other host ", se);
+                        } else {
+                            ZimbraLog.purge.info("not purging mailbox %d; account moved to another host", mailboxId);
+                        }
                     } else {
-                        ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, t);
+                        ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, se);
                     }
+                } catch (OutOfMemoryError oome) {
+                    Zimbra.halt("Ran out of memory while purging mailboxes", oome);
+                } catch (Throwable t) {
+                    ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, t);
                 }
-                
+
                 ZimbraLog.clearContext();
                 if (attemptedPurge) {
                     // Sleep after every purge attempt.
@@ -180,11 +188,11 @@ extends Thread {
                 }
            }
 
-            // If nothing's getting purged, sleep to avoid a tight loop 
+            // If nothing's getting purged, sleep to avoid a tight loop
             if (!slept) {
                 sleep();
             }
-            
+
             try {
                 long lastPurgeMaxDuration = Provisioning.getInstance().getLocalServer().getLastPurgeMaxDuration();
                 purgePendingMailboxes = MailboxManager.getInstance().getPurgePendingMailboxes(System.currentTimeMillis() - lastPurgeMaxDuration);
@@ -193,7 +201,7 @@ extends Thread {
             }
         }
     }
-    
+
     /**
      * Sleeps for the time interval specified by {@link Provisioning#A_zimbraMailPurgeSleepInterval}.
      * If sleep is interrupted, sets {@link #mShutdownRequested} to <tt>true</tt>.
@@ -201,7 +209,7 @@ extends Thread {
     private void sleep() {
         long interval = getSleepInterval();
         ZimbraLog.purge.debug("Sleeping for %d milliseconds.", interval);
-        
+
         if (interval > 0) {
             try {
                 Thread.sleep(interval);
@@ -213,17 +221,17 @@ extends Thread {
             mShutdownRequested = true;
         }
     }
-    
+
     private void requestShutdown() {
         mShutdownRequested = true;
     }
-    
+
     /**
      * Stores the sleep interval, so that the purge thread doesn't
      * die if there's a problem talking to LDAP.  See bug 32639.
      */
     private static long sSleepInterval = 0;
-    
+
     /**
      * Returns the current value of {@link Provisioning#A_zimbraMailPurgeSleepInterval},
      * or <tt>0</tt> if it cannot be determined.
@@ -237,10 +245,10 @@ extends Thread {
             ZimbraLog.purge.warn("Unable to determine value of %s.  Using previous value: %d.",
                 Provisioning.A_zimbraMailPurgeSleepInterval, sSleepInterval, e);
         }
-        
+
         return sSleepInterval;
     }
-    
+
     /**
      * Returns all the mailbox id's in purge order, starting with the one
      * after {@link Config#KEY_PURGE_LAST_MAILBOX_ID}.
@@ -254,7 +262,7 @@ extends Thread {
                 mailboxIds.add(id);
             }
             Collections.sort(mailboxIds);
-            
+
             // Reorder id's so that we start with the one after the last purged
             int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
             for (int i = 0; i < mailboxIds.size(); i++) {
@@ -263,12 +271,12 @@ extends Thread {
                     break;
                 }
             }
-            
+
         } catch (ServiceException e) {
             ZimbraLog.purge.warn("Unable to get mailbox id's", e);
             return Collections.emptyList();
         }
-        
+
         return mailboxIds;
     }
 }
