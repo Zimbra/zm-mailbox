@@ -393,44 +393,50 @@
 	      <arg value="${open.file}"/>
 		</exec>
 	</target>
+	
+	<target name="p4-revert-unchanged-file">
+		<exec executable="/usr/local/bin/p4" outputproperty="diff.output">
+	      <arg value="diff"/>
+	      <arg value="-sr"/>
+		  <arg value="${revert.file}"/>
+		</exec>
+		<if>
+		  <equals arg1="${revert.file}" arg2="${diff.output}"/>
+		  <then>
+			<echo message="revert file ${revert.file}"/>
+			<exec executable="/usr/local/bin/p4">
+		      <arg value="revert"/>
+			  <arg value="${revert.file}"/>
+			</exec>
+		  </then>
+	    </if>
+	</target>
+	
+	<path id="p4-prov-files">
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrAccount.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrCalendarResource.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrCos.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrDomain.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrServer.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrUCService.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrConfig.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrDistributionList.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrDynamicGroup.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrShareLocator.java"/>
+	  <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrAlwaysOnCluster.java"/>
+	  <pathelement location="${common.src.java.dir}/com/zimbra/common/account/ZAttrProvisioning.java"/>
+	</path>
 
 	<target name="p4-open-prov">
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrAccount.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrCalendarResource.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrCos.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrDomain.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrServer.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrUCService.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrConfig.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrDistributionList.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrDynamicGroup.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrShareLocator.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${src.java.dir}/com/zimbra/cs/account/ZAttrAlwaysOnCluster.java"/>
-		</antcall>
-		<antcall target="p4-open">
-		  <param name="open.file" value="${common.src.java.dir}/com/zimbra/common/account/ZAttrProvisioning.java"/>
-		</antcall>
+	  <foreach target="p4-open" param="open.file">
+	    <path refid="p4-prov-files"/>
+	  </foreach>
+	</target>
+	
+	<target name="p4-revert-unchanged-prov">
+      <foreach target="p4-revert-unchanged-file" param="revert.file">
+		<path refid="p4-prov-files"/>
+      </foreach>
 	</target>
 	
     <target name="generate-getter">
