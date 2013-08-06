@@ -1946,6 +1946,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
 
     /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1463)
+    public static final String A_zimbraAmavisEnableDKIMVerification = "zimbraAmavisEnableDKIMVerification";
+
+    /**
      * Amavis final destination for Spam. Default is to discard it
      *
      * @since ZCS 9.0.0
@@ -1960,6 +1968,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1461)
     public static final String A_zimbraAmavisMaxServers = "zimbraAmavisMaxServers";
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1464)
+    public static final String A_zimbraAmavisOriginatingBypassSA = "zimbraAmavisOriginatingBypassSA";
 
     /**
      * When a virus is detected quarantine message to this account
@@ -2945,6 +2962,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=450)
     public static final String A_zimbraChildVisibleAccount = "zimbraChildVisibleAccount";
+
+    /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1462)
+    public static final String A_zimbraClamAVMaxThreads = "zimbraClamAVMaxThreads";
 
     /**
      * Regex for identifying client types
