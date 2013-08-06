@@ -1768,6 +1768,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @return zimbraAmavisEnableDKIMVerification, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1463)
+    public boolean isAmavisEnableDKIMVerification() {
+        return getBooleanAttr(Provisioning.A_zimbraAmavisEnableDKIMVerification, true);
+    }
+
+    /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @param zimbraAmavisEnableDKIMVerification new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1463)
+    public void setAmavisEnableDKIMVerification(boolean zimbraAmavisEnableDKIMVerification) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisEnableDKIMVerification, zimbraAmavisEnableDKIMVerification ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @param zimbraAmavisEnableDKIMVerification new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1463)
+    public Map<String,Object> setAmavisEnableDKIMVerification(boolean zimbraAmavisEnableDKIMVerification, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisEnableDKIMVerification, zimbraAmavisEnableDKIMVerification ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1463)
+    public void unsetAmavisEnableDKIMVerification() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisEnableDKIMVerification, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1463)
+    public Map<String,Object> unsetAmavisEnableDKIMVerification(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisEnableDKIMVerification, "");
+        return attrs;
+    }
+
+    /**
      * Amavis final destination for Spam. Default is to discard it
      *
      * @return zimbraAmavisFinalSpamDestiny, or "D_DISCARD" if unset
@@ -1908,6 +1980,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAmavisMaxServers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisMaxServers, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @return zimbraAmavisOriginatingBypassSA, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1464)
+    public boolean isAmavisOriginatingBypassSA() {
+        return getBooleanAttr(Provisioning.A_zimbraAmavisOriginatingBypassSA, false);
+    }
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @param zimbraAmavisOriginatingBypassSA new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1464)
+    public void setAmavisOriginatingBypassSA(boolean zimbraAmavisOriginatingBypassSA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOriginatingBypassSA, zimbraAmavisOriginatingBypassSA ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @param zimbraAmavisOriginatingBypassSA new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1464)
+    public Map<String,Object> setAmavisOriginatingBypassSA(boolean zimbraAmavisOriginatingBypassSA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOriginatingBypassSA, zimbraAmavisOriginatingBypassSA ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1464)
+    public void unsetAmavisOriginatingBypassSA() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOriginatingBypassSA, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1464)
+    public Map<String,Object> unsetAmavisOriginatingBypassSA(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOriginatingBypassSA, "");
         return attrs;
     }
 
@@ -5945,6 +6094,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetChangePasswordURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraChangePasswordURL, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @return zimbraClamAVMaxThreads, or 10 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1462)
+    public int getClamAVMaxThreads() {
+        return getIntAttr(Provisioning.A_zimbraClamAVMaxThreads, 10);
+    }
+
+    /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @param zimbraClamAVMaxThreads new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1462)
+    public void setClamAVMaxThreads(int zimbraClamAVMaxThreads) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVMaxThreads, Integer.toString(zimbraClamAVMaxThreads));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @param zimbraClamAVMaxThreads new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1462)
+    public Map<String,Object> setClamAVMaxThreads(int zimbraClamAVMaxThreads, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVMaxThreads, Integer.toString(zimbraClamAVMaxThreads));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1462)
+    public void unsetClamAVMaxThreads() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVMaxThreads, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1462)
+    public Map<String,Object> unsetClamAVMaxThreads(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVMaxThreads, "");
         return attrs;
     }
 

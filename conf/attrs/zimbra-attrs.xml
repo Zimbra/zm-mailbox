@@ -7297,4 +7297,19 @@ TODO: delete them permanently from here
   <desc>Maximum number of Amavis servers to run.  Default is 10</desc>
 </attr>
 
+<attr id="1462" name="zimbraClamAVMaxThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Maximum number of ClamAV servers to run.  Default is 10</desc>
+</attr>
+
+<attr id="1463" name="zimbraAmavisEnableDKIMVerification" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether or not Amavis should verify DKIM keys.  Defaults to TRUE</desc>
+</attr>
+
+<attr id="1464" name="zimbraAmavisOriginatingBypassSA" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not Amavis should Bypass SpamAsassin for originating email.  Defaults to FALSE</desc>
+</attr>
+
 </attrs>

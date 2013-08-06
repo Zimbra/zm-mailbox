@@ -11,13 +11,13 @@ SECTION amavis
 		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	LOCAL amavis_dspam_enabled
-	LOCAL amavis_originating_bypass_sa
-	LOCAL amavis_enable_dkim_verification
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
 	LOCAL ldap_amavis_password
+	VAR zimbraAmavisEnableDKIMVerification
 	VAR zimbraAmavisMaxServers
+	VAR zimbraAmavisOriginatingBypassSA
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
@@ -38,7 +38,7 @@ SECTION antivirus DEPENDS amavis
 	VAR zimbraVirusDefinitionsUpdateFrequency
 	VAR zimbraVirusBlockEncryptedArchive
   	VAR zimbraMtaMaxMessageSize
-	LOCAL clamav_max_threads
+	VAR clamav_max_threads
 	RESTART antivirus mta
 
 SECTION antispam DEPENDS amavis
