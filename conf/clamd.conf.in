@@ -107,7 +107,7 @@ StreamMaxLength %%zimbraMtaMaxMessageSize%%
 
 # Maximum number of threads running at the same time.
 # Default: 10
-MaxThreads @@clamav_max_threads@@
+MaxThreads %%zimbraClamAVMaxThreads%%
 
 # Waiting for data from a client socket will timeout after this time (seconds).
 # Value of 0 disables the timeout.
