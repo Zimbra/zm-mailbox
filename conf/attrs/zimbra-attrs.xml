@@ -7312,4 +7312,14 @@ TODO: delete them permanently from here
   <desc>Whether or not Amavis should Bypass SpamAsassin for originating email.  Defaults to FALSE</desc>
 </attr>
 
+<attr id="1465" name="zimbraAmavisDSPAMEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not Amavis should use DSPAM as an additional score factor for SPAM. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1466" name="zimbraPostfixEnableSmtpdPolicyd" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to FALSE</desc>
+</attr>
+
 </attrs>

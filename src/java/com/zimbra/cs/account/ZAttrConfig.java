@@ -1768,6 +1768,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @return zimbraAmavisDSPAMEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1465)
+    public boolean isAmavisDSPAMEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAmavisDSPAMEnabled, false);
+    }
+
+    /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @param zimbraAmavisDSPAMEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1465)
+    public void setAmavisDSPAMEnabled(boolean zimbraAmavisDSPAMEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDSPAMEnabled, zimbraAmavisDSPAMEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @param zimbraAmavisDSPAMEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1465)
+    public Map<String,Object> setAmavisDSPAMEnabled(boolean zimbraAmavisDSPAMEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDSPAMEnabled, zimbraAmavisDSPAMEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1465)
+    public void unsetAmavisDSPAMEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDSPAMEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1465)
+    public Map<String,Object> unsetAmavisDSPAMEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisDSPAMEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
      *
      * @return zimbraAmavisEnableDKIMVerification, or true if unset
@@ -27192,6 +27269,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPop3ShutdownGraceSeconds(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
+     * FALSE
+     *
+     * @return zimbraPostfixEnableSmtpdPolicyd, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1466)
+    public boolean isPostfixEnableSmtpdPolicyd() {
+        return getBooleanAttr(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, false);
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
+     * FALSE
+     *
+     * @param zimbraPostfixEnableSmtpdPolicyd new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1466)
+    public void setPostfixEnableSmtpdPolicyd(boolean zimbraPostfixEnableSmtpdPolicyd) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, zimbraPostfixEnableSmtpdPolicyd ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
+     * FALSE
+     *
+     * @param zimbraPostfixEnableSmtpdPolicyd new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1466)
+    public Map<String,Object> setPostfixEnableSmtpdPolicyd(boolean zimbraPostfixEnableSmtpdPolicyd, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, zimbraPostfixEnableSmtpdPolicyd ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
+     * FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1466)
+    public void unsetPostfixEnableSmtpdPolicyd() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
+     * FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1466)
+    public Map<String,Object> unsetPostfixEnableSmtpdPolicyd(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, "");
         return attrs;
     }
 

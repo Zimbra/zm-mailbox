@@ -10876,11 +10876,11 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether to allow use of briefcase feature
      *
-     * @return zimbraFeatureBriefcasesEnabled, or false if unset
+     * @return zimbraFeatureBriefcasesEnabled, or true if unset
      */
     @ZAttr(id=498)
     public boolean isFeatureBriefcasesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, true);
     }
 
     /**

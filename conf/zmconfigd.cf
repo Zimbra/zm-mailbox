@@ -10,7 +10,6 @@ SECTION amavis
 	if SERVICE archiving
 		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
-	LOCAL amavis_dspam_enabled
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
@@ -24,6 +23,7 @@ SECTION amavis
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
 	VAR zimbraAmavisQuarantineAccount
+	VAR zimbraAmavisDSPAMEnabled
 	VAR zimbraMtaMyNetworks
 	VAR zimbraDomainMandatoryMailSignatureEnabled
 	VAR zimbraIPMode
@@ -58,12 +58,12 @@ SECTION archiving DEPENDS amavis
 	RESTART archiving mta
 
 SECTION mta DEPENDS amavis
-	LOCAL postfix_enable_smtpd_policyd
 	LOCAL postjournal_enabled
 	REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
 	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
 	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
 	REWRITE conf/mta_milter_options.in conf/mta_milter_options
+	VAR zimbraPostfixEnableSmtpdPolicyd
 	VAR zimbraAmavisMaxServers
 	VAR zimbraIPMode
 	VAR zimbraMtaRestriction
@@ -79,10 +79,10 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
-	if LOCAL postfix_enable_smtpd_policyd
+	if VAR zimbraPostfixEnableSmtpdPolicyd
 		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	fi
-	if LOCAL !postfix_enable_smtpd_policyd
+	if LOCAL !zimbraPostfixEnableSmtpdPolicyd
 		POSTCONFD policy_time_limit
 	fi
 	if VAR zimbraMtaMyNetworks
