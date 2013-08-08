@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 
@@ -382,60 +383,64 @@ public class ZimbraACE {
         return mTargetName;
     }
 
-    /** Returns whether this grant applies to the given {@link Account}.
-     *  If <tt>acct</tt> is <tt>null</tt>, only return
+    /** Returns whether this grant applies to the given {@link MailTarget}.
+     *  If <tt>mailTarget</tt> is <tt>null</tt>, only return
      *  <tt>true</tt> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
     // orig: ACL.Grant.matches
-    private boolean matches(Account acct, boolean asAdmin) throws ServiceException {
+    private boolean matches(MailTarget mailTarget, boolean asAdmin) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        if (acct == null)
+        if (mailTarget == null)
             return mGranteeType == GranteeType.GT_PUBLIC;
         switch (mGranteeType) {
             case GT_PUBLIC:
                 return true;
             case GT_AUTHUSER:
-                return !(acct instanceof GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
+                if (mailTarget instanceof Account) {
+                    return !(mailTarget instanceof GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
+                } else {
+                    return false;
+                }
             /*
              * actually never called
              * Group grantees are checked differently via checkGroupPresetRight
              */
             case GT_GROUP:
-                return prov.inDistributionList(acct, mGrantee);
+                return prov.inDistributionList(mailTarget, mGrantee);
             case GT_EXT_GROUP:
                 ExternalGroup extGroup = ExternalGroup.get(DomainBy.id, mGrantee, asAdmin);
                 if (extGroup == null) {
                     ZimbraLog.account.warn("unable to find external group grantee " + mGrantee);
                     return false;
                 }
-                return extGroup.inGroup(acct, asAdmin);
+                return extGroup.inGroup(mailTarget, asAdmin);
             case GT_DOMAIN:
-                return mGrantee.equals(acct.getDomainId());
+                return mGrantee.equals(mailTarget.getDomainId());
             case GT_EXT_DOMAIN:
-                return matchesDomainForGuest(acct);
+                return matchesDomainForGuest(mailTarget);
             case GT_USER:
-                return mGrantee.equals(acct.getId());
+                return mGrantee.equals(mailTarget.getId());
             case GT_GUEST:
-                return matchesGuestAccount(acct);
+                return matchesGuestAccount(mailTarget);
             case GT_KEY:
-                return matchesAccessKey(acct);
+                return matchesAccessKey(mailTarget);
             default:
                 throw ServiceException.FAILURE("unknown ACL grantee type: " + mGranteeType, null);
         }
     }
 
-    private boolean matchesGuestAccount(Account acct) {
+    private boolean matchesGuestAccount(MailTarget acct) {
         if (!(acct instanceof GuestAccount))
             return false;
         return ((GuestAccount) acct).matches(mGrantee, mSecret);
     }
 
-    private boolean matchesAccessKey(Account acct) {
+    private boolean matchesAccessKey(MailTarget acct) {
         if (!(acct instanceof GuestAccount))
             return false;
         return ((GuestAccount) acct).matchesAccessKey(mGrantee, mSecret);
     }
 
-    private boolean matchesDomainForGuest(Account acct) {
+    private boolean matchesDomainForGuest(MailTarget acct) {
         return mGrantee.equalsIgnoreCase(acct.getDomainName());
     }
 
@@ -447,7 +452,7 @@ public class ZimbraACE {
     }
     */
 
-    boolean matchesGrantee(Account grantee, boolean asAdmin) throws ServiceException {
+    boolean matchesGrantee(MailTarget grantee, boolean asAdmin) throws ServiceException {
         return matches(grantee, asAdmin);
     }
 

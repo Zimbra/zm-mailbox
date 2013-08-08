@@ -84,13 +84,13 @@ import com.zimbra.cs.account.GroupedEntry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ProvisioningExt;
-import com.zimbra.cs.account.SearchAccountsOptions;
-import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.ProvisioningExt.PostCreateAccountListener;
+import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
@@ -99,6 +99,7 @@ import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
@@ -113,11 +114,11 @@ import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.cache.DomainCache;
+import com.zimbra.cs.account.cache.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.cache.IAccountCache;
 import com.zimbra.cs.account.cache.IDomainCache;
 import com.zimbra.cs.account.cache.IMimeTypeCache;
 import com.zimbra.cs.account.cache.INamedEntryCache;
-import com.zimbra.cs.account.cache.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 import com.zimbra.cs.account.gal.GalNamedFilter;
@@ -217,22 +218,22 @@ public class LdapProvisioning extends LdapProv {
     private boolean useCache;
     private LdapCache cache;
 
-    private IAccountCache accountCache;
-    private INamedEntryCache<LdapCos> cosCache;
-    private IDomainCache domainCache;
-    private INamedEntryCache<Group> groupCache;
-    private IMimeTypeCache mimeTypeCache;
-    private INamedEntryCache<Server> serverCache;
-    private INamedEntryCache<UCService> ucServiceCache;
-    private INamedEntryCache<ShareLocator> shareLocatorCache;
-    private INamedEntryCache<XMPPComponent> xmppComponentCache;
-    private INamedEntryCache<LdapZimlet> zimletCache;
+    private final IAccountCache accountCache;
+    private final INamedEntryCache<LdapCos> cosCache;
+    private final IDomainCache domainCache;
+    private final INamedEntryCache<Group> groupCache;
+    private final IMimeTypeCache mimeTypeCache;
+    private final INamedEntryCache<Server> serverCache;
+    private final INamedEntryCache<UCService> ucServiceCache;
+    private final INamedEntryCache<ShareLocator> shareLocatorCache;
+    private final INamedEntryCache<XMPPComponent> xmppComponentCache;
+    private final INamedEntryCache<LdapZimlet> zimletCache;
 
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
-    private Groups allDLs; // email addresses of all distribution lists on the system
-    private ZLdapFilterFactory filterFactory;
+    private final Groups allDLs; // email addresses of all distribution lists on the system
+    private final ZLdapFilterFactory filterFactory;
 
     private String[] BASIC_DL_ATTRS;
     private String[] BASIC_DYNAMIC_GROUP_ATTRS;
@@ -403,8 +404,8 @@ public class LdapProvisioning extends LdapProv {
             mOldAddrs = oldAddrs;
             mNewAddrs = newAddrs;
         }
-        private String mOldAddrs[];
-        private String mNewAddrs[];
+        private final String mOldAddrs[];
+        private final String mNewAddrs[];
 
         public String[] oldAddrs() { return mOldAddrs; }
         public String[] newAddrs() { return mNewAddrs; }
@@ -1831,15 +1832,15 @@ public class LdapProvisioning extends LdapProv {
     @TODO
     private static class SearchObjectsVisitor extends SearchLdapVisitor {
 
-        private LdapProvisioning prov;
-        private ZLdapContext zlc;
-        private String configBranchBaseDn;
-        private NamedEntry.Visitor visitor;
-        private int maxResults;
-        private MakeObjectOpt makeObjOpt;
-        private String returnAttrs[];
+        private final LdapProvisioning prov;
+        private final ZLdapContext zlc;
+        private final String configBranchBaseDn;
+        private final NamedEntry.Visitor visitor;
+        private final int maxResults;
+        private final MakeObjectOpt makeObjOpt;
+        private final String returnAttrs[];
 
-        private int total = 0;
+        private final int total = 0;
 
         private SearchObjectsVisitor(LdapProvisioning prov, ZLdapContext zlc,
                 NamedEntry.Visitor visitor, int maxResults, MakeObjectOpt makeObjOpt,
@@ -4226,7 +4227,7 @@ public class LdapProvisioning extends LdapProv {
             try {
                 addr = getEmailAddrByDomainAlias(addr);
                 if (addr != null) {
-                    isDL = allDLs.isGroup(addr);    
+                    isDL = allDLs.isGroup(addr);
                 }
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to get local domain address of " + addr, e);
@@ -7726,21 +7727,23 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                              Key.GranteeBy granteeBy, String grantee,
+                              Key.GranteeBy granteeBy, String granteeVal,
                               String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
-        GuestAccount guest = null;
+        MailTarget grantee = null;
 
         try {
-            GranteeType.lookupGrantee(this, GranteeType.GT_USER, granteeBy, grantee);
+            NamedEntry ne = GranteeType.lookupGrantee(this, GranteeType.GT_EMAIL, granteeBy, granteeVal);
+            if (ne instanceof MailTarget) {
+                grantee = (MailTarget) ne;
+            }
         } catch (ServiceException e) {
-            guest = new GuestAccount(grantee, null);
+        }
+        if (grantee == null) {
+            grantee = new GuestAccount(granteeVal, null);
         }
 
-        return RightCommand.checkRight(this,
-                                       targetType, targetBy, target,
-                                       granteeBy, grantee, guest,
-                                       right, attrs, via);
+        return RightCommand.checkRight(this, targetType, targetBy, target, grantee, right, attrs, via);
     }
 
     @Override
