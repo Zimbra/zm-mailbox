@@ -570,7 +570,6 @@ public final class LC {
     public static final KnownKey postfix_bounce_queue_lifetime = KnownKey.newKey("5d");
     public static final KnownKey postfix_command_directory = KnownKey.newKey("${zimbra_home}/postfix/sbin");
     public static final KnownKey postfix_daemon_directory = KnownKey.newKey("${zimbra_home}/postfix/libexec");
-    public static final KnownKey postfix_enable_smtpd_policyd = KnownKey.newKey("no");
     public static final KnownKey postfix_delay_warning_time = KnownKey.newKey("0h");
     public static final KnownKey postfix_header_checks = KnownKey.newKey("pcre:${zimbra_home}/conf/postfix_header_checks");
     public static final KnownKey postfix_import_environment = KnownKey.newKey("");

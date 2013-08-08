@@ -1946,6 +1946,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
 
     /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1465)
+    public static final String A_zimbraAmavisDSPAMEnabled = "zimbraAmavisDSPAMEnabled";
+
+    /**
      * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
      *
      * @since ZCS 9.0.0
@@ -8183,6 +8192,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=448)
     public static final String A_zimbraPortalName = "zimbraPortalName";
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
+     * FALSE
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1466)
+    public static final String A_zimbraPostfixEnableSmtpdPolicyd = "zimbraPostfixEnableSmtpdPolicyd";
 
     /**
      * preauth secret key
