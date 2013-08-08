@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,9 +22,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
+import com.zimbra.soap.admin.type.CheckedRight;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
-import com.zimbra.soap.admin.type.CheckedRight;
 
 /**
  * @zm-api-command-auth-required true
@@ -32,13 +32,14 @@ import com.zimbra.soap.admin.type.CheckedRight;
  * @zm-api-command-description Check if a principal has the specified right on target.
  * <br />
  * A successful return means the principal specified by the <b>&lt;grantee></b> is allowed for the specified right on
- * the * target object.
+ * the target object.
  * <br />
  * If PERM_DENIED is thrown, it means the authed user does not have privilege to run this SOAP command (has to be an
  * admin because this command is in admin namespace).
  * <br />
  * Result of CheckRightRequest is in the allow="1|0" attribute in CheckRightResponse.
- * <b>&lt;via></b> in the CheckRightResponse is the grant that decisively lead to the result.
+ * If a specific grant decisively lead to the result, details of it are specified in <b>&lt;via></b> in the
+ * <b>&lt;CheckRightResponse></b>.
  * <br />
  * <br />
  * e.g. if a combo right C containing renameAccount is granted to group G on domain D, and admin A is in group G, then:
@@ -90,7 +91,7 @@ public class CheckRightRequest extends AdminAttrsImpl {
     private final EffectiveRightsTargetSelector target;
 
     /**
-     * @zm-api-field-description Grantee
+     * @zm-api-field-description Grantee - valid values for type are "usr" and "email"
      */
     @XmlElement(name=AdminConstants.E_GRANTEE /* grantee */, required=true)
     private final GranteeSelector grantee;
