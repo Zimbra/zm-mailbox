@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
@@ -189,7 +190,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     /**
      * User right entrance - do not throw
      */
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin) {
+    public boolean canDo(MailTarget grantee, Entry target, Right rightNeeded, boolean asAdmin) {
         try {
             return canDo(grantee, target, rightNeeded, asAdmin, null);
         } catch (ServiceException e) {
@@ -225,7 +226,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     @Override
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded,
+    public boolean canDo(MailTarget grantee, Entry target, Right rightNeeded,
             boolean asAdmin, ViaGrant via) throws ServiceException {
 
         // check hard rules
@@ -264,9 +265,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     public boolean canDo(String granteeEmail, Entry target, Right rightNeeded,
             boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
-            Account granteeAcct = AccessControlUtil.emailAddrToAccount(granteeEmail, rightNeeded);
-            if (granteeAcct != null) {
-                return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
+            MailTarget grantee = AccessControlUtil.emailAddrToMailTarget(granteeEmail, rightNeeded);
+            if (grantee != null) {
+                return canDo(grantee, target, rightNeeded, asAdmin, via);
             }
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("ACL checking failed", e);
@@ -358,6 +359,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         return canSetAttrs(grantee.getAccount(), target, attrs, asAdmin);
     }
 
+    @Override
     public boolean canSetAttrsOnCreate(Account grantee, TargetType targetType, String entryName,
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         Key.DomainBy domainBy = null;
@@ -393,7 +395,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     @Override
-    public boolean canPerform(Account grantee, Entry target,
+    public boolean canPerform(MailTarget grantee, Entry target,
             Right rightNeeded, boolean canDelegateNeeded,
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant)
     throws ServiceException {
@@ -407,14 +409,11 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         boolean allowed = false;
         if (rightNeeded.isPresetRight()) {
             allowed = checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, asAdmin, viaGrant);
-
         } else if (rightNeeded.isAttrRight()) {
-            AttrRight attrRight = (AttrRight)rightNeeded;
-            allowed = checkAttrRight(grantee, target, (AttrRight)rightNeeded, canDelegateNeeded, attrs, asAdmin);
-
+            if (grantee instanceof Account) {
+                allowed = checkAttrRight((Account)grantee, target, (AttrRight)rightNeeded, canDelegateNeeded, attrs, asAdmin);
+            }
         } else if (rightNeeded.isComboRight()) {
-            // throw ServiceException.FAILURE("checking right for combo right is not supported", null);
-
             ComboRight comboRight = (ComboRight)rightNeeded;
             // check all directly and indirectly contained rights
             for (Right right : comboRight.getAllRights()) {
@@ -440,7 +439,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
 
 
     // all user and admin preset rights go through here
-    private boolean checkPresetRight(Account grantee, Entry target,
+    private boolean checkPresetRight(MailTarget grantee, Entry target,
             Right rightNeeded, boolean canDelegateNeeded, boolean asAdmin, ViaGrant via) {
         try {
             if (grantee == null) {
@@ -467,7 +466,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
 
                     // check the loginAs right and family access - if the right being asked for is not loginAs
                     if (rightNeeded != Rights.User.R_loginAs) {
-                        if (canAccessAccount(grantee, (Account)target, asAdmin)) {
+                        if (canAccessAccount((Account)grantee, (Account)target, asAdmin)) {
                             return true;
                         }
                     }
@@ -500,8 +499,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
 
                 // call the fallback if there is one for the right
                 CheckRightFallback fallback = rightNeeded.getFallback();
-                if (fallback != null) {
-                    Boolean fallbackResult = fallback.checkRight(grantee, target, asAdmin);
+                if ((fallback != null) && (grantee instanceof Account)) {
+                    Boolean fallbackResult = fallback.checkRight((Account)grantee, target, asAdmin);
                     if (fallbackResult != null) {
                         ZimbraLog.acl.debug("checkPresetRight fallback to: " + fallbackResult.booleanValue());
                         return fallbackResult.booleanValue();
@@ -602,6 +601,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     // AdminConsoleCapable methods
     // ===========================
 
+    @Override
     public void getAllEffectiveRights(RightBearer rightBearer,
             boolean expandSetAttrs, boolean expandGetAttrs,
             AllEffectiveRights result) throws ServiceException {
@@ -609,6 +609,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
                 rightBearer, expandSetAttrs, expandGetAttrs, result);
     }
 
+    @Override
     public void getEffectiveRights(RightBearer rightBearer, Entry target,
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
@@ -617,6 +618,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
 
     }
 
+    @Override
     public Set<TargetType> targetTypesForGrantSearch() {
         // we want all target types
         return new HashSet<TargetType>(Arrays.asList(TargetType.values()));

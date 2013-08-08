@@ -22,6 +22,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
@@ -182,8 +183,29 @@ public enum GranteeType {
                 throw AccountServiceException.NO_SUCH_DOMAIN(grantee);
             }
             break;
+        case GT_EMAIL:
+            // see if it is an internal account
+            granteeEntry = prov.get(AccountBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null) {
+                // see if it is an internal group
+                granteeEntry = prov.getGroupBasic(Key.DistributionListBy.fromString(granteeBy.name()), grantee);
+            }
+            if (granteeEntry == null) {
+                // see if it is an external group
+                try {
+                    ExternalGroup.get(DomainBy.name, grantee, false /* asAdmin */);
+                } catch (ServiceException e) {
+                    // ignore, external group as grantee is probably not configured on the domain
+                }
+            }
+
+            if (granteeEntry == null) {
+                // still not found, must be a guest
+                granteeEntry = new GuestAccount(grantee, null);
+            }
+            break;
         default:
-            throw ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" +
+            throw ServiceException.INVALID_REQUEST("invalid grantee type for lookupGrantee:" +
                     granteeType.getCode(), null);
         }
 

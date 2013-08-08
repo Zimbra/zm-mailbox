@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -381,6 +381,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
         reload(e);
     }
 
+    public Domain getDomain(MailTarget mailTarget) throws ServiceException {
+        if (mailTarget instanceof Alias) {
+            return getDomain((Alias) mailTarget);
+        } else if (mailTarget instanceof Account) {
+            return getDomain((Account) mailTarget);
+        } else if (mailTarget instanceof DistributionList) {
+            return getDomain((DistributionList) mailTarget);
+        } else if (mailTarget instanceof DynamicGroup) {
+            return getDomain((DynamicGroup) mailTarget);
+        }
+        return null;
+    }
+
     /**
      * @return the domain of this account, or null if an admin account.
      * @throws ServiceException
@@ -579,6 +592,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw new UnsupportedOperationException();
     }
 
+    public boolean inDistributionList(MailTarget mailTarget, String zimbraId)
+    throws ServiceException {
+        if (mailTarget instanceof Account) {
+            return inDistributionList((Account) mailTarget, zimbraId);
+        } else if (mailTarget instanceof DistributionList) {
+            return inDistributionList((DistributionList) mailTarget, zimbraId);
+        }
+        return false;
+    }
+
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
      * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.
@@ -688,12 +711,30 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
+     * @param mailTarget
+     * @param adminGroupsOnly return admin groups only
+     * @return List of all direct and indirect groups this mailTarget belongs to.
+     *         The returned List is sorted by "shortest distance" to the mailTarget,
+     *         the shorter the distance is, the earlier it appears in the returned List.
+     * @throws ServiceException
+     */
+    public GroupMembership getGroupMembership(MailTarget mailTarget, boolean adminGroupsOnly)
+    throws ServiceException {
+        if (mailTarget instanceof Account) {
+            return getGroupMembership((Account) mailTarget, adminGroupsOnly);
+        } else if (mailTarget instanceof DistributionList) {
+            return getGroupMembership((Account) mailTarget, adminGroupsOnly);
+        }
+        return new GroupMembership();
+    }
+
+    /**
      *
      * @param acct
      * @param adminGroupsOnly return admin groups only
      * @return List of all direct and indirect groups this account belongs to.
      *         The returned List is sorted by "shortest distance" to the account,
-     *         the sorter the distance is, the earlier it appears in the returned List.
+     *         the shorter the distance is, the earlier it appears in the returned List.
      * @throws ServiceException
      */
     public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly)
@@ -706,7 +747,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param list
      * @param adminGroupsOnly return admin groups only
      * @return List of all the zimbraId's of lists this list belongs to, including any list in other list.
-     *         The returned List is sorted by "shortest distance" to the list, the sorter the distance is,
+     *         The returned List is sorted by "shortest distance" to the list, the shorter the distance is,
      *         the earlier it appears in the returned List.
      * @throws ServiceException
      */

@@ -3,12 +3,12 @@
  * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * 
@@ -26,22 +26,21 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.names.NameUtil;
 
 public class GlobalAccessManager extends AccessManager implements AdminConsoleCapable {
 
     // embed a ACLAccessManager for handling user rights
     private ACLAccessManager mAclAccessManager;
-    
+
     public GlobalAccessManager() {
         try {
             mAclAccessManager = new ACLAccessManager();
@@ -49,7 +48,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
             ZimbraLog.acl.warn("unable to instaintiate ACLAccessManager, user rights will not be honored", e);
         }
     }
-    
+
     @Override
     public boolean isAdequateAdminAccount(Account acct) {
         return acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
@@ -60,15 +59,15 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
             boolean asAdmin) throws ServiceException {
         if (!at.isZimbraUser())
             return false;
-        
+
         checkDomainStatus(target);
-        
-        if (isGlobalAdmin(at, asAdmin)) 
+
+        if (isGlobalAdmin(at, asAdmin))
             return true;
-        
-        if (isParentOf(at, target)) 
+
+        if (isParentOf(at, target))
             return true;
-        
+
         return canDo(at, target, User.R_loginAs, asAdmin);
     }
 
@@ -83,17 +82,17 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
             boolean asAdmin) throws ServiceException {
         if (credentials == null)
             return false;
-        
+
         checkDomainStatus(target);
-        
+
         // admin auth account will always succeed
         if (AccessControlUtil.isGlobalAdmin(credentials, asAdmin))
             return true;
-        
+
         // parent auth account will always succeed
         if (isParentOf(credentials, target))
             return true;
-        
+
         return canDo(credentials, target, User.R_loginAs, asAdmin);
     }
 
@@ -107,81 +106,81 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     public boolean canAccessCos(AuthToken at, Cos cos) throws ServiceException {
         if (!at.isZimbraUser())
             return false;
-        
+
         return isGlobalAdmin(at);
     }
-    
+
     @Override
     public boolean canCreateGroup(AuthToken at, String groupEmail)
             throws ServiceException {
         Domain domain = Provisioning.getInstance().getDomainByEmailAddr(groupEmail);
         checkDomainStatus(domain);
-        
+
         boolean asAdmin = true;
         Right rightNeeded = User.R_createDistList;
         Account authedAcct = AccessControlUtil.authTokenToAccount(at, rightNeeded);
-        
+
         if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
             return true;
         }
-        
+
         return canDo(at, domain, rightNeeded, asAdmin);
     }
-    
+
     @Override
     public boolean canCreateGroup(Account credentials, String groupEmail)
             throws ServiceException {
         Domain domain = Provisioning.getInstance().getDomainByEmailAddr(groupEmail);
         checkDomainStatus(domain);
-        
+
         boolean asAdmin = true;
         Right rightNeeded = User.R_createDistList;
         Account authedAcct = credentials;
-        
+
         if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
             return true;
         }
-        
+
         return canDo(credentials, domain, rightNeeded, asAdmin);
     }
-    
+
     @Override
     public boolean canAccessGroup(AuthToken at, Group group) throws ServiceException {
         checkDomainStatus(group);
-        
+
         boolean asAdmin = true;
         Right rightNeeded = Group.GroupOwner.GROUP_OWNER_RIGHT;
         Account authedAcct = AccessControlUtil.authTokenToAccount(at, rightNeeded);
-        
+
         if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
             return true;
         }
-        
+
         return canDo(at, group, rightNeeded, asAdmin);
     }
-    
+
     @Override
-    public boolean canAccessGroup(Account credentials, Group group, boolean asAdmin) 
+    public boolean canAccessGroup(Account credentials, Group group, boolean asAdmin)
     throws ServiceException {
         checkDomainStatus(group);
-        
+
         Right rightNeeded = Group.GroupOwner.GROUP_OWNER_RIGHT;
         Account authedAcct = credentials;
-        
+
         if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
             return true;
         }
-        
+
         return canDo(credentials, group, rightNeeded, asAdmin);
     }
-    
+
     @Override
     public boolean canAccessDomain(AuthToken at, String domainName)
             throws ServiceException {
         if (!at.isZimbraUser())
             return false;
         checkDomainStatus(domainName);
-        
+
         return isGlobalAdmin(at);
     }
 
@@ -191,7 +190,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         if (!at.isZimbraUser())
             return false;
         checkDomainStatus(domain);
-        
+
         return isGlobalAdmin(at);
     }
 
@@ -201,7 +200,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         String parts[] = EmailUtil.getLocalPartAndDomain(email);
         if (parts == null)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
-        
+
         // check for family mailbox
         Account targetAcct = Provisioning.getInstance().get(Key.AccountBy.name, email, at);
         if (targetAcct != null) {
@@ -212,8 +211,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     }
 
     @Override
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded,
-            boolean asAdmin) {
+    public boolean canDo(MailTarget grantee, Entry target, Right rightNeeded, boolean asAdmin) {
         if (rightNeeded != null && rightNeeded.isUserRight()) {
             // need a user right, delegate to the ACLAccessmanager
             if (mAclAccessManager != null)
@@ -227,7 +225,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     @Override
     public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded,
             boolean asAdmin) {
-        
+
         Account granteeAcct = AccessControlUtil.authTokenToAccount(grantee, rightNeeded);
         if (granteeAcct != null)
             return canDo(granteeAcct, target, rightNeeded, asAdmin);
@@ -253,12 +251,12 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         else
             return AllowedAttrs.DENY_ALL_ATTRS();
     }
-    
+
     @Override
     public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
         return getGetAttrsChecker(credentials.getAccount(), target, asAdmin);
     }
-    
+
     @Override
     public boolean canGetAttrs(Account credentials, Entry target,
             Set<String> attrs, boolean asAdmin) throws ServiceException {
@@ -305,33 +303,36 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     public boolean isDomainAdminOnly(AuthToken at) {
         return false;
     }
-    
+
     private boolean isGlobalAdmin(AuthToken at) {
         return isGlobalAdmin(at, true);
     }
-    
+
     private boolean isGlobalAdmin(AuthToken at, boolean asAdmin) {
         return asAdmin && at.isAdmin();
     }
-    
-    
+
+
     // ===========================
     // AdminConsoleCapable methods
     // ===========================
 
-    public void getAllEffectiveRights(RightBearer rightBearer, 
+    @Override
+    public void getAllEffectiveRights(RightBearer rightBearer,
             boolean expandSetAttrs, boolean expandGetAttrs,
             AllEffectiveRights result) throws ServiceException {
         CollectAllEffectiveRights.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, result);
     }
-    
-    public void getEffectiveRights(RightBearer rightBearer, Entry target, 
+
+    @Override
+    public void getEffectiveRights(RightBearer rightBearer, Entry target,
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
         CollectEffectiveRights.getEffectiveRights(rightBearer, target, expandSetAttrs, expandGetAttrs, result);
-        
+
     }
-    
+
+    @Override
     public Set<TargetType> targetTypesForGrantSearch() {
         // we want only targets type on which user can grant rights on
         HashSet<TargetType> tts = new HashSet<TargetType>();
@@ -339,8 +340,8 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         tts.add(TargetType.calresource);
         tts.add(TargetType.dl);
         tts.add(TargetType.group);
-        
+
         return tts;
     }
-    
+
 }

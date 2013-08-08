@@ -85,6 +85,7 @@ import com.zimbra.cs.account.GroupedEntry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
@@ -7934,21 +7935,23 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                              Key.GranteeBy granteeBy, String grantee,
+                              Key.GranteeBy granteeBy, String granteeVal,
                               String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
-        GuestAccount guest = null;
+        MailTarget grantee = null;
 
         try {
-            GranteeType.lookupGrantee(this, GranteeType.GT_USER, granteeBy, grantee);
+            NamedEntry ne = GranteeType.lookupGrantee(this, GranteeType.GT_EMAIL, granteeBy, granteeVal);
+            if (ne instanceof MailTarget) {
+                grantee = (MailTarget) ne;
+            }
         } catch (ServiceException e) {
-            guest = new GuestAccount(grantee, null);
+        }
+        if (grantee == null) {
+            grantee = new GuestAccount(granteeVal, null);
         }
 
-        return RightCommand.checkRight(this,
-                                       targetType, targetBy, target,
-                                       granteeBy, grantee, guest,
-                                       right, attrs, via);
+        return RightCommand.checkRight(this, targetType, targetBy, target, grantee, right, attrs, via);
     }
 
     @Override
