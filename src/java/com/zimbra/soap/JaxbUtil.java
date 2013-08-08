@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ * Copyright (C) 2010, 2011, 2012 VMware, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,9 +45,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.json.JacksonUtil;
@@ -486,6 +486,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CopyCosResponse.class,
             com.zimbra.soap.admin.message.CountAccountRequest.class,
             com.zimbra.soap.admin.message.CountAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.CreateAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.CountObjectsRequest.class,
             com.zimbra.soap.admin.message.CountObjectsResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
@@ -526,6 +528,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.DelegateAuthResponse.class,
             com.zimbra.soap.admin.message.DeleteAccountRequest.class,
             com.zimbra.soap.admin.message.DeleteAccountResponse.class,
+            com.zimbra.soap.admin.message.DeleteAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.DeleteAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.DeleteCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.DeleteCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.DeleteCosRequest.class,
@@ -600,8 +604,12 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllAccountLoggersResponse.class,
             com.zimbra.soap.admin.message.GetAllAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAccountsResponse.class,
+            com.zimbra.soap.admin.message.GetAllActiveServersRequest.class,
+            com.zimbra.soap.admin.message.GetAllActiveServersResponse.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsResponse.class,
+            com.zimbra.soap.admin.message.GetAllAlwaysOnClustersRequest.class,
+            com.zimbra.soap.admin.message.GetAllAlwaysOnClustersResponse.class,
             com.zimbra.soap.admin.message.GetAllCalendarResourcesRequest.class,
             com.zimbra.soap.admin.message.GetAllCalendarResourcesResponse.class,
             com.zimbra.soap.admin.message.GetAllConfigRequest.class,
@@ -640,6 +648,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetApplianceHSMFSResponse.class,
             com.zimbra.soap.admin.message.GetAttributeInfoRequest.class,
             com.zimbra.soap.admin.message.GetAttributeInfoResponse.class,
+            com.zimbra.soap.admin.message.GetAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.GetAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.GetCSRRequest.class,
             com.zimbra.soap.admin.message.GetCSRResponse.class,
             com.zimbra.soap.admin.message.GetCalendarResourceRequest.class,
@@ -766,6 +776,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ModifyAccountResponse.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesRequest.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesResponse.class,
+            com.zimbra.soap.admin.message.ModifyAlwaysOnClusterRequest.class,
+            com.zimbra.soap.admin.message.ModifyAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.ModifyCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.ModifyCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.ModifyConfigRequest.class,
@@ -880,8 +892,12 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SearchMultiMailboxResponse.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeRequest.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
+            com.zimbra.soap.admin.message.SetLocalServerOnlineRequest.class,
+            com.zimbra.soap.admin.message.SetLocalServerOnlineResponse.class,
             com.zimbra.soap.admin.message.SetPasswordRequest.class,
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
+            com.zimbra.soap.admin.message.SetServerOfflineRequest.class,
+            com.zimbra.soap.admin.message.SetServerOfflineResponse.class,
             com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
             com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
@@ -1216,6 +1232,16 @@ public final class JaxbUtil {
      * </pre>
      * In JAXB, we typically use {@link XmlElement} for the associated field.  Round tripping from XML will result in
      * an element but round tripping from JSON will result in an attribute.
+     * <li>Zimbra uses key/value pairs which serialize to JSON as:
+     * <pre>
+     *     "_attrs":{"anID":"val","anID2":"val2"}
+     * </pre>
+     * If this is read into a JSONElement structure and written out as XML, you get:
+     * <pre>
+     *     &lt;a n="anID">val&lt;/a>&lt;a n="anID2">val2&lt;/a>
+     * </pre>
+     * The element name "a" and the attribute name "n" are defaults - the actual expected values can be different - so
+     * we query the JAXB classes to see what they should be.
      * </ol>
      * @param klass is the JAXB class for {@code elem} which must be under the "com.zimbra" package hierarchy.
      */
@@ -1285,6 +1311,24 @@ public final class JaxbUtil {
                         orphans = Lists.newArrayList();
                     }
                     orphans.add(child);
+                } else if (Element.XMLElement.E_ATTRIBUTE.equals(childName)) {
+                    // This might be a keyvaluepair, the Element code doesn't have access to JAXB info, so defaults
+                    // the element name to "a" and its attribute will be "n".  If this is what has happened, replace
+                    // it with a corrected equivalent using the JAXB object for reference.
+                    JaxbInfo.KeyValuePairXmlRepresentationInfo kvpXmlRep = jaxbInfo.getKeyValuePairElementInfo();
+                    if (kvpXmlRep != null) {
+                        elem.getNamespaceURI();
+                        org.w3c.dom.Element newElem = elem.getOwnerDocument().createElementNS(elem.getNamespaceURI(),
+                                kvpXmlRep.getXmlElementName());
+                        newElem.setTextContent(child.getTextContent());
+                        newElem.setAttribute(kvpXmlRep.getXmlAttributeName(),
+                                child.getAttribute(Element.XMLElement.A_ATTR_NAME));
+                        elem.appendChild(newElem);
+                        if (orphans == null) {
+                            orphans = Lists.newArrayList();
+                        }
+                        orphans.add(child);
+                    }
                 } else {
                     LOG.debug("JAXB class " + klass.getName() + " does NOT recognise element named:" + childName);
                 }

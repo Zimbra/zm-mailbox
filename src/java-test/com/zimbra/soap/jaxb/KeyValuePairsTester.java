@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -31,7 +31,6 @@ import com.zimbra.soap.type.KeyValuePair;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="key-value-pairs-tester")
 public class KeyValuePairsTester {
-    // Note: Can use a different name BUT won't be able to round trip back to JAXB from JSON if you do
     @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
     @ZimbraKeyValuePairs
     private List<KeyValuePair> attrList;

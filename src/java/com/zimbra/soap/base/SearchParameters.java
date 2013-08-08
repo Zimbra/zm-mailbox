@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -40,7 +40,7 @@ public interface SearchParameters {
     public void setWantHtml(Boolean wantHtml);
     public void setNeedCanExpand(Boolean needCanExpand);
     public void setNeuterImages(Boolean neuterImages);
-    public void setWantRecipients(Boolean wantRecipients);
+    public void setWantRecipients(Integer wantRecipients);
     public void setPrefetch(Boolean prefetch);
     public void setResultMode(String resultMode);
     public void setField(String field);
@@ -69,7 +69,7 @@ public interface SearchParameters {
     public Boolean getWantHtml();
     public Boolean getNeedCanExpand();
     public Boolean getNeuterImages();
-    public Boolean getWantRecipients();
+    public Integer getWantRecipients();
     public Boolean getPrefetch();
     public String getResultMode();
     public String getField();

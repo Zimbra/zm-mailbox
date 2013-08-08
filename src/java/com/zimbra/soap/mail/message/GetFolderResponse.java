@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2010, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,11 +16,14 @@
 package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.Mountpoint;
+import com.zimbra.soap.mail.type.SearchFolder;
 
 /*
 <GetFolderResponse>
@@ -42,7 +45,11 @@ public class GetFolderResponse {
     /**
      * @zm-api-field-description Folder information
      */
-    @XmlElement(name=MailConstants.E_FOLDER /* folder */, required=true)
+    @XmlElements({
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=Folder.class),
+        @XmlElement(name=MailConstants.E_MOUNT /* link */, type=Mountpoint.class),
+        @XmlElement(name=MailConstants.E_SEARCH /* search */, type=SearchFolder.class)
+    })
     private Folder folder;
 
     public GetFolderResponse() {

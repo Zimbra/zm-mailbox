@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,7 +18,6 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.google.common.base.Joiner;
-
 import com.zimbra.common.service.ServiceException;
 
 // TODO: Use this in ZimbraServer code instead of Provisioning.CacheEntryType
@@ -42,6 +41,7 @@ public enum CacheEntryType {
     group,
     mime,
     server,
+    alwaysOnCluster,
     zimlet;
 
     private static Joiner PIPE_JOINER = Joiner.on("|");

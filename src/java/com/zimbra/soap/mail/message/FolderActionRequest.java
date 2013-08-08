@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -93,6 +93,10 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
  *   &lt;action op="[!]disableactivesync" id="{list}"/>
  *     - If set, disable access to the folder via activesync.
  *       Note: Only works for user folders, doesn't have any effect on system folders.
+ *
+ *   &lt;action op="webofflinesyncdays" id="{list}" numDays="{web-offline-sync-days}/>
+ *     - set the number of days for which web client would sync folder data for offline use
+ *       {web-offline-sync-days} must not be greater than value of zimbraWebClientOfflineSyncMaxDays account attribute
  *
  *   &lt;action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"]
  *                          [l="{target-folder}"] [color="{new-color}"] [view="{new-view}"]>
