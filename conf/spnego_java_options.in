@@ -1,1 +1,1 @@
-  %%contains VAR:zimbraSpnegoAuthEnabled TRUE, @@spnego_java_options@@ %%
+  %%contains VAR:zimbraSpnegoAuthEnabled TRUE^ @@spnego_java_options@@ %%

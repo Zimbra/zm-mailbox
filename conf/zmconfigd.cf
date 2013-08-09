@@ -2,29 +2,33 @@ SECTION amavis
 	REWRITE conf/amavisd.conf.in conf/amavisd.conf
 	POSTCONF content_filter 
 	if SERVICE antivirus
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	if SERVICE antispam
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
 	if SERVICE archiving
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
-	LOCAL amavis_dspam_enabled
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
 	LOCAL ldap_amavis_password
+	VAR zimbraAmavisEnableDKIMVerification
+	VAR zimbraAmavisMaxServers
+	VAR zimbraAmavisOriginatingBypassSA
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
 	VAR zimbraAmavisQuarantineAccount
+	VAR zimbraAmavisDSPAMEnabled
 	VAR zimbraMtaMyNetworks
 	VAR zimbraDomainMandatoryMailSignatureEnabled
 	VAR zimbraIPMode
 	VAR zimbraQuarantineBannedItems
+	VAR zimbraAmavisFinalSpamDestiny
 	RESTART archiving antispam antivirus mta
 
 SECTION antivirus DEPENDS amavis
@@ -34,12 +38,15 @@ SECTION antivirus DEPENDS amavis
 	VAR zimbraVirusDefinitionsUpdateFrequency
 	VAR zimbraVirusBlockEncryptedArchive
   	VAR zimbraMtaMaxMessageSize
+	VAR zimbraClamAVMaxThreads
 	RESTART antivirus mta
 
 SECTION antispam DEPENDS amavis
-	REWRITE conf/salocal.cf.in conf/salocal.cf
+	REWRITE conf/salocal.cf.in conf/sa/salocal.cf
+	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
+	VAR zimbraIPMode
 	LOCAL antispam_mysql_enabled
 	LOCAL antispam_mysql_host
 	LOCAL antispam_mysql_port
@@ -51,12 +58,16 @@ SECTION archiving DEPENDS amavis
 	RESTART archiving mta
 
 SECTION mta DEPENDS amavis
-	LOCAL postfix_enable_smtpd_policyd
+	LOCAL postjournal_enabled
 	REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
+	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
+	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
 	REWRITE conf/mta_milter_options.in conf/mta_milter_options
-	VAR zimbraMilterServerEnabled
+	VAR zimbraPostfixEnableSmtpdPolicyd
+	VAR zimbraAmavisMaxServers
 	VAR zimbraIPMode
 	VAR zimbraMtaRestriction
+	VAR zimbraMtaFallbackRelayHost
 	VAR zimbraMtaAuthEnabled
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraMtaRecipientDelimiter
@@ -68,6 +79,12 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
+	if VAR zimbraPostfixEnableSmtpdPolicyd
+		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
+	fi
+	if LOCAL !zimbraPostfixEnableSmtpdPolicyd
+		POSTCONFD policy_time_limit
+	fi
 	if VAR zimbraMtaMyNetworks
 		POSTCONF mynetworks VAR zimbraMtaMyNetworks
 	fi
@@ -85,6 +102,9 @@ SECTION mta DEPENDS amavis
 	if VAR zimbraMtaNonSmtpdMilters
 		POSTCONF non_smtpd_milters VAR zimbraMtaNonSmtpdMilters
 	fi
+	if SERVICE !cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions
+	fi
 	LOCAL zimbra_server_hostname
 	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
 	POSTCONF myhostname		LOCAL zimbra_server_hostname
@@ -99,8 +119,10 @@ SECTION mta DEPENDS amavis
 	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit		                0
 	POSTCONF relayhost				                    VAR zimbraMtaRelayHost
-	POSTCONF smtpd_recipient_restrictions FILE postfix_recipient_restrictions.cf
-	POSTCONF smtpd_sender_restrictions FILE smtpd_sender_restrictions.cf
+	POSTCONF smtp_fallback_relay			VAR zimbraMtaFallbackRelayHost
+	POSTCONF smtpd_recipient_restrictions FILE zmconfigd/smtpd_recipient_restrictions.cf
+	POSTCONF smtpd_relay_restrictions FILE zmconfigd/smtpd_relay_restrictions.cf
+	POSTCONF smtpd_sender_restrictions FILE zmconfigd/smtpd_sender_restrictions.cf
 	POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
 
 	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
@@ -109,29 +131,36 @@ SECTION mta DEPENDS amavis
 	POSTCONF bounce_notice_recipient              LOCAL postfix_bounce_notice_recipient
 	POSTCONF mail_owner                           LOCAL postfix_mail_owner
 	POSTCONF setgid_group                         LOCAL postfix_setgid_group
-	POSTCONF command_directory					          LOCAL postfix_command_directory
-	POSTCONF daemon_directory					            LOCAL postfix_daemon_directory
-	POSTCONF delay_warning_time                   LOCAL postfix_delay_warning_time
-	POSTCONF header_checks						            LOCAL postfix_header_checks
+	POSTCONF command_directory			LOCAL postfix_command_directory
+	POSTCONF daemon_directory			LOCAL postfix_daemon_directory
+	POSTCONF delay_warning_time			LOCAL postfix_delay_warning_time
+	POSTCONF header_checks				LOCAL postfix_header_checks
 	if VAR zimbraMtaBlockedExtensionWarnRecipient
 		POSTCONF header_checks
 	fi
-	POSTCONF mailq_path							              LOCAL postfix_mailq_path
-	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
-	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
-	POSTCONF notify_classes                       LOCAL postfix_notify_classes
-	POSTCONF queue_directory					            LOCAL postfix_queue_directory
-	POSTCONF smtpd_sasl_authenticated_header			LOCAL postfix_smtpd_sasl_authenticated_header
-	POSTCONF sender_canonical_maps				        LOCAL postfix_sender_canonical_maps
-	POSTCONF sendmail_path						            LOCAL postfix_sendmail_path
-	POSTCONF smtpd_client_restrictions			      LOCAL postfix_smtpd_client_restrictions
-	POSTCONF smtpd_data_restrictions			        LOCAL postfix_smtpd_data_restrictions
+	POSTCONF mailq_path				LOCAL postfix_mailq_path
+	POSTCONF manpage_directory			LOCAL postfix_manpage_directory
+	POSTCONF newaliases_path			LOCAL postfix_newaliases_path
+	POSTCONF notify_classes				LOCAL postfix_notify_classes
+	POSTCONF queue_directory			LOCAL postfix_queue_directory
+	POSTCONF smtpd_sasl_authenticated_header	LOCAL postfix_smtpd_sasl_authenticated_header
+	POSTCONF sender_canonical_maps			LOCAL postfix_sender_canonical_maps
+	POSTCONF sendmail_path				LOCAL postfix_sendmail_path
+	POSTCONF smtpd_banner				LOCAL postfix_smtpd_banner
+	POSTCONF smtpd_client_restrictions		LOCAL postfix_smtpd_client_restrictions
+	POSTCONF smtpd_data_restrictions		LOCAL postfix_smtpd_data_restrictions
 	POSTCONF smtpd_helo_required			LOCAL postfix_smtpd_helo_required
-	POSTCONF smtpd_reject_unlisted_recipient	no
+	POSTCONF smtpd_reject_unlisted_recipient	LOCAL postfix_smtpd_reject_unlisted_recipient
+	POSTCONF smtpd_reject_unlisted_sender		LOCAL postfix_smtpd_reject_unlisted_sender
 	POSTCONF smtpd_tls_cert_file			LOCAL postfix_smtpd_tls_cert_file
 	POSTCONF smtpd_tls_key_file			LOCAL postfix_smtpd_tls_key_file
 	POSTCONF smtpd_tls_loglevel			LOCAL postfix_smtpd_tls_loglevel
+	POSTCONF smtpd_tls_security_level		LOCAL postfix_smtpd_tls_security_level
+	POSTCONF smtpd_error_sleep_time			LOCAL postfix_smtpd_error_sleep_time
+	POSTCONF smtpd_hard_error_limit			LOCAL postfix_smtpd_hard_error_limit
+	POSTCONF smtpd_soft_error_limit			LOCAL postfix_smtpd_soft_error_limit
 	POSTCONF in_flow_delay				LOCAL postfix_in_flow_delay
+	POSTCONF import_environment			LOCAL postfix_import_environment
 	POSTCONF queue_run_delay			LOCAL postfix_queue_run_delay
 	POSTCONF minimal_backoff_time			LOCAL postfix_minimal_backoff_time
 	POSTCONF maximal_backoff_time			LOCAL postfix_maximal_backoff_time
@@ -149,14 +178,30 @@ SECTION mta DEPENDS amavis
 	POSTCONF always_add_missing_headers		LOCAL postfix_always_add_missing_headers
 	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
 	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
+	POSTCONF smtp_helo_name				LOCAL postfix_smtp_helo_name
 	POSTCONF smtp_cname_overrides_servername	LOCAL postfix_smtp_cname_overrides_servername
 	POSTCONF smtp_sasl_auth_enable			LOCAL postfix_smtp_sasl_auth_enable
 	POSTCONF smtp_sasl_security_options		LOCAL postfix_smtp_sasl_security_options
 	POSTCONF smtp_tls_security_level		LOCAL postfix_smtp_tls_security_level
 	POSTCONF smtp_sasl_mechanism_filter		LOCAL postfix_smtp_sasl_mechanism_filter
 	POSTCONF smtp_sasl_password_maps		LOCAL postfix_smtp_sasl_password_maps
+	POSTCONF milter_connect_timeout			LOCAL postfix_milter_connect_timeout
+	POSTCONF milter_command_timeout			LOCAL postfix_milter_command_timeout
+	POSTCONF milter_content_timeout			LOCAL postfix_milter_content_timeout
+	POSTCONF milter_default_action			LOCAL postfix_milter_default_action
 	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
 	RESTART mta
+
+SECTION opendkim DEPENDS mta
+	LOCAL ldap_postfix_password
+	LOCAL ldap_starttls_supported
+	LOCAL av_notify_user
+	LOCAL ldap_url
+	VAR zimbraMtaMyNetworks
+	VAR zimbraIPMode
+	REWRITE conf/opendkim.conf.in conf/opendkim.conf
+	REWRITE conf/opendkim-localnets.conf.in conf/opendkim-localnets.conf
+	RESTART opendkim
 
 SECTION sasl
 	VAR getAllMtaAuthURLs
@@ -168,6 +213,7 @@ SECTION sasl
 SECTION webxml
 	VAR zimbraMailPort
 	VAR zimbraMailSSLPort
+	VAR zimbraIPMode
 	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
 	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
@@ -270,9 +316,7 @@ SECTION ldap
 	LOCAL ldap_common_threads
 	LOCAL ldap_common_toolthreads
 	LOCAL ldap_common_writetimeout
-	LOCAL ldap_db_checkpoint
 	LOCAL ldap_db_maxsize
-	LOCAL ldap_accesslog_checkpoint
 	LOCAL ldap_accesslog_maxsize
 	LOCAL ldap_overlay_syncprov_checkpoint
 	LOCAL ldap_overlay_accesslog_logpurge
@@ -281,9 +325,7 @@ SECTION ldap
 	LDAP ldap_common_threads LOCAL ldap_common_threads
 	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
 	LDAP ldap_common_writetimeout LOCAL ldap_common_writetimeout
-	LDAP ldap_db_checkpoint LOCAL ldap_db_checkpoint
 	LDAP ldap_db_maxsize LOCAL ldap_db_maxsize
-	LDAP ldap_accesslog_checkpoint LOCAL ldap_accesslog_checkpoint
 	LDAP ldap_accesslog_maxsize LOCAL ldap_accesslog_maxsize
 	LDAP ldap_overlay_syncprov_checkpoint LOCAL ldap_overlay_syncprov_checkpoint
 	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
@@ -296,22 +338,22 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_log_level
 	LOCAL cbpolicyd_log_mail
 	LOCAL cbpolicyd_log_detail
-	LOCAL cbpolicyd_bind_host
 	LOCAL cbpolicyd_bind_port
 	LOCAL cbpolicyd_timeout
 	LOCAL cbpolicyd_bypass_mode
 	LOCAL cbpolicyd_bypass_timeout
 	LOCAL cbpolicyd_module_accesscontrol
 	LOCAL cbpolicyd_module_greylisting
+	LOCAL cbpolicyd_module_greylisting_training
+	LOCAL cbpolicyd_module_greylisting_defer_msg
+	LOCAL cbpolicyd_module_greylisting_blacklist_msg
 	LOCAL cbpolicyd_module_checkhelo
 	LOCAL cbpolicyd_module_checkspf
 	LOCAL cbpolicyd_module_quotas
+	LOCAL cbpolicyd_module_amavis
+	LOCAL cbpolicyd_module_accounting
 	if SERVICE cbpolicyd
-		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
-		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
-	fi
-	if SERVICE !cbpolicyd
-		POSTCONF smtpd_end_of_data_restrictions
+		POSTCONF smtpd_end_of_data_restrictions FILE zmconfigd/smtpd_end_of_data_restrictions.cf
 	fi
 	RESTART cbpolicyd mta
 
