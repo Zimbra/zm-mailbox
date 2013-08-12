@@ -5354,6 +5354,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHsmPolicy = "zimbraHsmPolicy";
 
     /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public static final String A_zimbraHttpCompressionEnabled = "zimbraHttpCompressionEnabled";
+
+    /**
      * Maximum Idle time in milli seconds for a connection. This is applied
      * when waiting for a new request to be received on a connection; when
      * reading the headers and content of a request; when writing the headers
@@ -11710,6 +11718,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1047)
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public static final String A_zimbraWebGzipEnabled = "zimbraWebGzipEnabled";
 
     /**
      * XMPP Category of the component
