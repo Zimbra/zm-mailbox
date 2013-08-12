@@ -275,8 +275,6 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_spam_report_queue_size = KnownKey.newKey(100);
 
-    public static final KnownKey zimbra_web_generate_gzip = KnownKey.newKey(true);
-
     @Supported
     public static final KnownKey zimbra_im_chat_flush_time = KnownKey.newKey(300);
 
