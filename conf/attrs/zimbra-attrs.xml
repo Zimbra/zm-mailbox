@@ -5766,4 +5766,14 @@ TODO: delete them permerntly from here
   <desc>Regular Expression for words to ignore during spell check.</desc>
 </attr>
 
+<attr id="1467" name="zimbraHttpCompressionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.2.5">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether or not to enable HTTP compression. Defaults to true.</desc>
+</attr>
+
+<attr id="1468" name="zimbraWebGzipEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.2.5">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether or not to gzip static web content. Defaults to true.</desc>
+</attr>
+
 </attrs>

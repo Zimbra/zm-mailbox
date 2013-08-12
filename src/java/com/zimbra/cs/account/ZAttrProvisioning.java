@@ -995,8 +995,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum TableMaintenanceOperation {
-        OPTIMIZE("OPTIMIZE"),
-        ANALYZE("ANALYZE");
+        ANALYZE("ANALYZE"),
+        OPTIMIZE("OPTIMIZE");
         private String mValue;
         private TableMaintenanceOperation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1006,8 +1006,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isOPTIMIZE() { return this == OPTIMIZE;}
         public boolean isANALYZE() { return this == ANALYZE;}
+        public boolean isOPTIMIZE() { return this == OPTIMIZE;}
     }
 
     /**
@@ -4187,6 +4187,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1024)
     public static final String A_zimbraHsmPolicy = "zimbraHsmPolicy";
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public static final String A_zimbraHttpCompressionEnabled = "zimbraHttpCompressionEnabled";
 
     /**
      * Maximum Idle time in milli seconds for a connection. This is applied
@@ -9267,6 +9275,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1047)
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public static final String A_zimbraWebGzipEnabled = "zimbraWebGzipEnabled";
 
     /**
      * XMPP Category of the component

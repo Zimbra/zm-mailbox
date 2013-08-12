@@ -6161,7 +6161,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @return zimbraDataSourceConnectionType, or ZAttrProvisioning.DataSourceConnectionType.cleartext if unset and/or has invalid value
      */
@@ -6175,7 +6175,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @return zimbraDataSourceConnectionType, or "cleartext" if unset
      */
@@ -6189,7 +6189,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6206,7 +6206,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6224,7 +6224,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6241,7 +6241,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6259,7 +6259,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -6275,7 +6275,7 @@ public class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, ssl, tls_if_available, cleartext]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10787,6 +10787,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetHsmPolicy(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHsmPolicy, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @return zimbraHttpCompressionEnabled, or true if unset
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public boolean isHttpCompressionEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraHttpCompressionEnabled, true);
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @param zimbraHttpCompressionEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public void setHttpCompressionEnabled(boolean zimbraHttpCompressionEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, zimbraHttpCompressionEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @param zimbraHttpCompressionEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public Map<String,Object> setHttpCompressionEnabled(boolean zimbraHttpCompressionEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, zimbraHttpCompressionEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public void unsetHttpCompressionEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public Map<String,Object> unsetHttpCompressionEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, "");
         return attrs;
     }
 
@@ -20461,7 +20533,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @return zimbraMtaTlsSecurityLevel, or ZAttrProvisioning.MtaTlsSecurityLevel.may if unset and/or has invalid value
      *
@@ -20475,7 +20547,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @return zimbraMtaTlsSecurityLevel, or "may" if unset
      *
@@ -20489,7 +20561,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20506,7 +20578,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20524,7 +20596,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20541,7 +20613,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @param zimbraMtaTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20559,7 +20631,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20575,7 +20647,7 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_security_level
      *
-     * <p>Valid values: [none, may]
+     * <p>Valid values: [may, none]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35604,7 +35676,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @return zimbraTableMaintenanceOperation, or ZAttrProvisioning.TableMaintenanceOperation.ANALYZE if unset and/or has invalid value
      */
@@ -35618,7 +35690,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @return zimbraTableMaintenanceOperation, or "ANALYZE" if unset
      */
@@ -35632,7 +35704,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35649,7 +35721,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35667,7 +35739,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35684,7 +35756,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35702,7 +35774,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -35718,7 +35790,7 @@ public class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37911,6 +37983,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetWebClientLogoutURLAllowedUA(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @return zimbraWebGzipEnabled, or true if unset
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public boolean isWebGzipEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraWebGzipEnabled, true);
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @param zimbraWebGzipEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public void setWebGzipEnabled(boolean zimbraWebGzipEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, zimbraWebGzipEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @param zimbraWebGzipEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public Map<String,Object> setWebGzipEnabled(boolean zimbraWebGzipEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, zimbraWebGzipEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public void unsetWebGzipEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public Map<String,Object> unsetWebGzipEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, "");
         return attrs;
     }
 
