@@ -2,35 +2,55 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.zimlet;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.activation.MimetypesFileTypeMap;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+
+import org.mozilla.javascript.ErrorReporter;
+import org.mozilla.javascript.EvaluatorException;
+
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.DiskCacheServlet;
-import org.mozilla.javascript.ErrorReporter;
-import org.mozilla.javascript.EvaluatorException;
-
-import javax.activation.MimetypesFileTypeMap;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SuppressWarnings("serial")
 public class ZimletResources extends DiskCacheServlet {
@@ -52,6 +72,8 @@ public class ZimletResources extends DiskCacheServlet {
     private static final Pattern RE_REMOTE = Pattern.compile("^((https?|ftps?)://|/)");
     private static final Pattern RE_CSS_URL = Pattern.compile("(url\\(['\"]?)([^'\"\\)]*)", Pattern.CASE_INSENSITIVE);
 
+    private boolean supportsGzip = true;
+
     static {
         TYPES.put("css", "text/css");
         TYPES.put("js", "text/javascript");
@@ -67,24 +89,36 @@ public class ZimletResources extends DiskCacheServlet {
     // HttpServlet methods
     //
 
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        String val = getServletConfig().getInitParameter("shouldSupportGzip");
+        if (val != null) {
+            this.supportsGzip = Boolean.valueOf(val);
+        } else {
+            this.supportsGzip = true;
+        }
+    }
+
+    @Override
     public void service(ServletRequest request, ServletResponse response)
             throws IOException, ServletException {
         if (flushCache(request))
             return;
-        
+
         ZimbraLog.clearContext();
 
         HttpServletRequest req = (HttpServletRequest)request;
         HttpServletResponse resp = (HttpServletResponse)response;
-        
+
         String uri = req.getRequestURI();
         String pathInfo = req.getPathInfo();
-        
+
         if (pathInfo == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        
+
         @SuppressWarnings("unchecked")
         Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
         Set<String> allZimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALL_ZIMLETS);
@@ -98,13 +132,13 @@ public class ZimletResources extends DiskCacheServlet {
             dispatcher.forward(req, resp);
             return;
         }
-        
+
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
         boolean debug = req.getParameter(P_DEBUG) != null;
         boolean compress =
             !debug &&
-            LC.zimbra_web_generate_gzip.booleanValue() && uri.endsWith(COMPRESSED_EXT)
+            supportsGzip && uri.endsWith(COMPRESSED_EXT)
         ;
 
         String cacheId = getCacheId(req, type, zimletNames, allZimletNames);
@@ -119,7 +153,7 @@ public class ZimletResources extends DiskCacheServlet {
         // generate buffer
         File file = !debug ? getCacheFile(cacheId) : null;
         String text = null;
-        
+
         if (file == null || !file.exists()) {
             StringWriter writer = new StringWriter();
             PrintWriter printer = new PrintWriter(writer);
@@ -167,6 +201,7 @@ public class ZimletResources extends DiskCacheServlet {
                 JavaScriptCompressor compressor = new JavaScriptCompressor(
                     new StringReader(text), new ErrorReporter() {
 
+                    @Override
                     public void warning(String message, String sourceName,
                         int line, String lineSource, int lineOffset) {
                         if (line < 0) {
@@ -176,6 +211,7 @@ public class ZimletResources extends DiskCacheServlet {
                         }
                     }
 
+                    @Override
                     public void error(String message, String sourceName,
                         int line, String lineSource, int lineOffset) {
                         if (line < 0) {
@@ -185,6 +221,7 @@ public class ZimletResources extends DiskCacheServlet {
                         }
                     }
 
+                    @Override
                     public EvaluatorException runtimeError(String message,
                         String sourceName, int line, String lineSource, int lineOffset) {
                         error(message, sourceName, line, lineSource, lineOffset);
@@ -282,7 +319,7 @@ public class ZimletResources extends DiskCacheServlet {
     //
 
     private static MimetypesFileTypeMap sFileTypeMap = new MimetypesFileTypeMap();
-    
+
     @SuppressWarnings("unused")
     private void printFile(HttpServletResponse resp, String zimletName,
         String file) throws IOException, ZimletException {
@@ -314,7 +351,7 @@ public class ZimletResources extends DiskCacheServlet {
             resp.setContentType(contentType);
     	ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
     }
-    
+
     private void generate(Set<String> zimletNames, String type, PrintWriter out)
         throws IOException {
         boolean isCSS = type.equals(T_CSS);
@@ -363,7 +400,7 @@ public class ZimletResources extends DiskCacheServlet {
     private void printFile(PrintWriter out, BufferedReader in,
         String zimletName, boolean isCSS) throws IOException {
         String line;
-        
+
         while ((line = in.readLine()) != null) {
             if (isCSS) {
                 Matcher url = RE_CSS_URL.matcher(line);
@@ -378,7 +415,7 @@ public class ZimletResources extends DiskCacheServlet {
 
                         String s = url.group(2);
                         Matcher remote = RE_REMOTE.matcher(s);
-                        
+
                         if (!remote.find()) {
                             out.print(ZimletUtil.ZIMLET_BASE + "/" +
                                 zimletName + "/");
@@ -468,6 +505,7 @@ public class ZimletResources extends DiskCacheServlet {
             this.filename = filename;
         }
 
+        @Override
         public String getRequestURI() {
             return filename + ".js";
         }
@@ -476,6 +514,7 @@ public class ZimletResources extends DiskCacheServlet {
             if (this.parameters == null) this.parameters = new HashMap<String,String>();
             this.parameters.put(name, value);
         }
+        @Override
         public String getParameter(String name) {
             String value = this.parameters != null ? this.parameters.get(name) : null;
             return value == null ? super.getParameter(name) : value;
@@ -490,14 +529,18 @@ public class ZimletResources extends DiskCacheServlet {
             this.out = out;
         }
 
+        @Override
         public void setHeader(String name, String value) { /* NOP */ }
 
+        @Override
         public void addHeader(String name, String value) { /* NOP */ }
 
+        @Override
         public ServletOutputStream getOutputStream() throws IOException {
             return new ServletStream(getWriter());
         }
 
+        @Override
         public PrintWriter getWriter() throws IOException {
             return out;
         }
@@ -510,62 +553,77 @@ public class ZimletResources extends DiskCacheServlet {
             this.out = out;
         }
 
+        @Override
         public void write(int i) throws IOException {
             out.write(i);
         }
-        
+
+        @Override
         public void write(byte[] b, int off, int len) throws IOException {
             out.print(new String(b, off, len, "UTF-8"));
         }
 
+        @Override
         public void print(boolean b) throws IOException {
             out.print(b);
         }
 
+        @Override
         public void print(char c) throws IOException {
             out.print(c);
         }
 
+        @Override
         public void print(float f) throws IOException {
             out.print(f);
         }
 
+        @Override
         public void print(int i) throws IOException {
             out.print(i);
         }
 
+        @Override
         public void print(long l) throws IOException {
             out.print(l);
         }
 
+        @Override
         public void print(String s) throws IOException {
             out.print(s);
         }
 
+        @Override
         public void println() throws IOException {
             out.println();
         }
 
+        @Override
         public void println(boolean b) throws IOException {
             out.println(b);
         }
 
+        @Override
         public void println(char c) throws IOException {
             out.println(c);
         }
 
+        @Override
         public void println(float f) throws IOException {
             out.println(f);
         }
 
+        @Override
         public void println(int i) throws IOException {
             out.println(i);
         }
 
+        @Override
         public void println(long l) throws IOException {
             out.println(l);
         }
 
+        @Override
         public void println(String s) throws IOException {
             out.println(s);
         }

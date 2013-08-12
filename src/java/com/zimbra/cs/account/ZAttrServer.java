@@ -5036,6 +5036,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @return zimbraHttpCompressionEnabled, or true if unset
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public boolean isHttpCompressionEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraHttpCompressionEnabled, true);
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @param zimbraHttpCompressionEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public void setHttpCompressionEnabled(boolean zimbraHttpCompressionEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, zimbraHttpCompressionEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @param zimbraHttpCompressionEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public Map<String,Object> setHttpCompressionEnabled(boolean zimbraHttpCompressionEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, zimbraHttpCompressionEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public void unsetHttpCompressionEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable HTTP compression. Defaults to true.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1467)
+    public Map<String,Object> unsetHttpCompressionEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpCompressionEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Maximum Idle time in milli seconds for a connection. This is applied
      * when waiting for a new request to be received on a connection; when
      * reading the headers and content of a request; when writing the headers
@@ -25693,6 +25765,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetWebClientURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraWebClientURL, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @return zimbraWebGzipEnabled, or true if unset
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public boolean isWebGzipEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraWebGzipEnabled, true);
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @param zimbraWebGzipEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public void setWebGzipEnabled(boolean zimbraWebGzipEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, zimbraWebGzipEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @param zimbraWebGzipEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public Map<String,Object> setWebGzipEnabled(boolean zimbraWebGzipEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, zimbraWebGzipEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public void unsetWebGzipEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to gzip static web content. Defaults to true.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.2.5
+     */
+    @ZAttr(id=1468)
+    public Map<String,Object> unsetWebGzipEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebGzipEnabled, "");
         return attrs;
     }
 

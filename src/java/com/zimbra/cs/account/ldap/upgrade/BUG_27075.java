@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -102,8 +102,8 @@ public class BUG_27075 extends UpgradeOp {
 
         if (!am.beforeVersion(attr, since) && !attrVersion.isFuture())
             return true;
-        
-        
+
+
         //
         // bug 38426
         //
@@ -126,15 +126,15 @@ public class BUG_27075 extends UpgradeOp {
                 return true;
             }
         }
-        
+
         /*
          * bug 56667
-         * 
+         *
          * zimbraFreebusyExchangeServerType was added in 6.0.11, *after* 7.0.0 and before 7.0.1
-         * 
+         *
          * [from] 7.0.0 -> [to] higher version
          * upgrades will miss it.
-         * 
+         *
          * [from] 7.0.1 and above -> [to] higher version
          * upgrades will be fine because:
          *   - if the [from] is a fresh install, it will have the default value set.
@@ -142,7 +142,7 @@ public class BUG_27075 extends UpgradeOp {
          *         - if from 7.0.0, fixed by this fix.
          *         - if from below 7.0.0:
          *               - if 6.0.11 and above, no problem
-         *               - if below 6.0.11, taken care by the regular logic, no problem.    
+         *               - if below 6.0.11, taken care by the regular logic, no problem.
          */
         if (Provisioning.A_zimbraFreebusyExchangeServerType.equalsIgnoreCase(attr)) {
             boolean fromATroubledInstall = (mSince.compare("7.0.0") == 0);
@@ -150,12 +150,12 @@ public class BUG_27075 extends UpgradeOp {
                 return true;
             }
         }
-        
+
         /*
          * bug 58084
-         * 
+         *
          * zimbraMailEmptyFolderBatchThreshold was added in 6.0.13, *after* 7.1.0 and before 7.1.1
-         * 
+         *
          */
         if (Provisioning.A_zimbraMailEmptyFolderBatchThreshold.equalsIgnoreCase(attr)) {
             boolean fromATroubledInstall = (mSince.compare("7.0.0") >= 0 &&
@@ -164,7 +164,7 @@ public class BUG_27075 extends UpgradeOp {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -275,15 +275,15 @@ public class BUG_27075 extends UpgradeOp {
             }
         }
     }
-    
+
     private void doBug79208(Config config) throws ServiceException {
         // perform this step if the following condition is met (IV = installed version)
-        // ((IV < 7.2.3) OR ((IV >= 8.0.0) AND (IV < 8.0.3)) 
+        // ((IV < 7.2.3) OR ((IV >= 8.0.0) AND (IV < 8.0.3))
         boolean stepRequired = mSince.compare("7.2.3") < 0  || (mSince.compare("8.0.0") >= 0 && mSince.compare("8.0.3") < 0);
         if (!stepRequired) {
             return;
         }
-        // check if the attribute already exists. It's possible that server may have been upgraded from 
+        // check if the attribute already exists. It's possible that server may have been upgraded from
         // 7.2.2->7.2.3, 7.2.3->8.0.0 and then 8.0.0->8.0.3. The 7.2.2->7.2.3 would have already added the attribute.
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         String attr = Provisioning.A_zimbraHttpThreadPoolMaxIdleTimeMillis;
@@ -307,10 +307,44 @@ public class BUG_27075 extends UpgradeOp {
         }
     }
 
+    private void doBug83551(Config config) throws ServiceException {
+        // perform this step if the following condition is met (IV = installed version)
+        // ((IV < 7.2.4) OR ((IV >= 8.0.0) AND (IV < 8.0.5))
+        boolean stepRequired = mSince.compare("7.2.5") < 0  || (mSince.compare("8.0.0") >= 0 && mSince.compare("8.0.5") < 0);
+        if (!stepRequired) {
+            return;
+        }
+        // check if the attribute already exists. It's possible that server may have been upgraded from
+        // 7.2.2->7.2.5, 7.2.5->8.0.0 and then 8.0.0->8.0.5. The 7.2.2->7.2.5 would have already added the attribute.
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        String attr = Provisioning.A_zimbraWebGzipEnabled;
+        String curVal = config.getAttr(attr, null);
+        if (curVal == null) {
+            attrs.put(attr, config.isWebGzipEnabled());
+        }
+
+        attr = Provisioning.A_zimbraHttpCompressionEnabled;
+        curVal = config.getAttr(attr, null);
+        if (curVal == null) {
+            attrs.put(attr, config.isHttpCompressionEnabled());
+        }
+
+        if (!attrs.isEmpty()) {
+            try {
+                printer.println("Setting " + attrs.keySet() + " on globalConfig");
+                prov.modifyAttrs(config, attrs);
+            } catch (ServiceException e) {
+                printer.println("Caught ServiceException while setting " + attrs.keySet() + " on globalConfig");
+                printer.printStackTrace(e);
+            }
+        }
+    }
+
     private void doGlobalConfig(ZLdapContext zlc) throws ServiceException {
         Config config = prov.getConfig();
         doEntry(zlc, config, "global config", AttributeClass.globalConfig);
         doBug79208(config);
+        doBug83551(config);
     }
 
     private void doAllCos(ZLdapContext zlc) throws ServiceException {
