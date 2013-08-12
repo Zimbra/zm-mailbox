@@ -86,7 +86,8 @@
     <filter-name>SpnegoFilter</filter-name>
     <url-pattern>/spnego/*</url-pattern>
   </filter-mapping>
-  
+
+  <!-- HTTPCOMPRESSIONBEGIN %%comment VAR:zimbraHttpCompressionEnabled,-->%%
   <filter>
     <filter-name>GzipFilter</filter-name>
     <filter-class>org.eclipse.jetty.servlets.IncludableGzipFilter</filter-class>
@@ -121,6 +122,7 @@
     <filter-name>GzipFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
+  %%comment VAR:zimbraHttpCompressionEnabled,<!--%% HTTPCOMPRESSIONEND -->
 
   <filter>
     <filter-name>SetHeaderFilter</filter-name>
@@ -419,6 +421,10 @@
     </description>
     <param-name>resource-cache-dir</param-name>
     <param-value>${webapp}/../../work/resource-cache</param-value>
+  </init-param>
+  <init-param>
+    <param-name>shouldSupportGzip</param-name>
+    <param-value>%%zimbraWebGzipEnabled%%</param-value>
   </init-param>
   </servlet>
 
