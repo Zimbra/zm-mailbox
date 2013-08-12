@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- *
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013 VMware, Inc.
- *
+ * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- *
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -26,19 +24,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.dom4j.DocumentException;
-import org.dom4j.QName;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.python.google.common.base.Joiner;
-import org.xml.sax.SAXException;
+import org.python.google.common.collect.Lists;
 
-import com.google.common.collect.Lists;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
+import org.dom4j.DocumentException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.soap.Element.XMLElement;
@@ -52,10 +48,10 @@ public class ElementTest {
 
     private static final Logger LOG = Logger.getLogger(ElementTest.class);
     private static final int maxiter = 50000;
-    private static final ByteArrayInputStream getInfoRespBais =
-            toBais(ElementTest.class.getResourceAsStream("GetInfoResponseSOAP.xml"));
-    private static final ByteArrayInputStream getInfoReqBais =
-            toBais(ElementTest.class.getResourceAsStream("GetInfoRequestSOAP.xml"));
+    private static final int maxiterInThreads = 1000;
+    private static final int numThreads = 30;
+    private static final ByteArrayInputStream getInfoRespBais = fileToBais("GetInfoResponseSOAP.xml");
+    private static final ByteArrayInputStream getInfoReqBais = fileToBais("GetInfoRequestSOAP.xml");
 
     static {
         BasicConfigurator.configure();
@@ -70,8 +66,13 @@ public class ElementTest {
     }
 
     private void logNewAndLegacyElements(Element elem, Element legacyElem) {
+        String newString = elem.toString();
+        String legacyString = legacyElem.toString();
+        if ((newString != null) && newString.equals(legacyString)) {
+            return;
+        }
         logInfo("\n\nElement toString() value:\n%1$s\n\nLegacy Element toString() value:\n%2$s",
-                elem.toString(), legacyElem.toString());
+                newString, legacyString);
     }
 
     @Test
@@ -90,25 +91,13 @@ public class ElementTest {
         element.addElement("a").addAttribute("n", "pfxPassword").addText("secret");
         element.addElement("a").addAttribute("n", "hostPwd").addText("secret");
         element.addElement("a").addAttribute("n", "webexZimlet_pwd1").addText("secret");
-        element.addElement("dummy2")
-               .addAttribute("password", "secret")
-               .addAttribute("pass", "secret")
-               .addAttribute("pwd", "secret");
+        element.addElement("dummy2").
+                addAttribute("password", "secret").
+                addAttribute("pass", "secret").
+                addAttribute("pwd", "secret");
         element.addElement("prop").addAttribute("name", "passwd").addText("secret");
         String elementStr = element.prettyPrint(true);
         Assert.assertFalse("Sensitive values have not been masked\n" + elementStr, elementStr.contains("secret"));
-    }
-
-    @Test
-    public void jsonNamespace() throws Exception {
-        Element json = Element.parseJSON("{ \"purge\": [{}] }");
-        Assert.assertEquals("default toplevel namespace", "urn:zimbraSoap", json.getNamespaceURI(""));
-
-        json = Element.parseJSON("{ \"purge\": [{}], \"_jsns\": \"urn:zimbraMail\" }");
-        Assert.assertEquals("explicit toplevel namespace", "urn:zimbraMail", json.getNamespaceURI(""));
-
-        json = Element.parseJSON("{ \"purge\": [{}], foo: { a: 1, \"_jsns\": \"urn:zimbraMail\" } }");
-        Assert.assertEquals("explicit child namespace", "urn:zimbraMail", json.getElement("foo").getNamespaceURI(""));
     }
 
     @Test
@@ -166,7 +155,7 @@ public class ElementTest {
     }
 
     private static final String nsTestXml =
-            "<xml xmlns=\"urn:zimbra\" xmlns:admin=\"urn:zimbraAdmin\"><e attr=\"aVal\">text</e><admin:b/></xml>";
+            "<xml xmlns=\"urn:zimbra\" xmlns:admin=\"urn:zimbraAdmin\">\n<e attr=\"aVal\">text</e>\n<admin:b/>\n</xml>";
     @Test
     public void parseNamespaceTestXml() throws Exception {
         ByteArrayInputStream bais = new ByteArrayInputStream(nsTestXml.getBytes());
@@ -174,80 +163,7 @@ public class ElementTest {
         bais.reset();
         Element elem = Element.parseXML(bais);
         logNewAndLegacyElements(elem, legacyElem);
-        Assert.assertEquals("element toString value", legacyElem.toString(), elem.toString());
-    }
-
-    private static final String nsUnusedTestXml =
-            "<xml xmlns=\"urn:zimbra\" xmlns:admin=\"urn:zimbraAdmin\"><e attr=\"aVal\">text</e></xml>";
-    @Test
-    public void parseUnusedNamespaceTestXml() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream(nsUnusedTestXml.getBytes());
-        Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
-        bais.reset();
-        Element elem = Element.parseXML(bais);
-        logNewAndLegacyElements(elem, legacyElem);
-        Assert.assertEquals("element toString value", legacyElem.toString(), elem.toString());
-        elem = Element.parseXML(elem.toString());  // Testing that re-parse succeeds
-    }
-
-    private static final String[] getAcctReqXml = {
-                "<ns7:GetAccountRequest",
-                "   xmlns:ns7=\"urn:zimbraAdmin\"",
-                "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"",
-                "   xsi:type=\"ns7:getAccountRequest\"",
-                "   applyCos=\"false\">",
-                "  <ns7:account by=\"name\">user1@coco.local</ns7:account>",
-                "</ns7:GetAccountRequest>"} ;
-
-    private static final String parsedGetAcctReq = "<ns7:GetAccountRequest xsi:type=\"ns7:getAccountRequest\" " +
-        "applyCos=\"false\" xmlns:ns7=\"urn:zimbraAdmin\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-        "<ns7:account by=\"name\">user1@coco.local</ns7:account></ns7:GetAccountRequest>";
-    /**
-     * Bug 81490 xmlns:xsi namespace getting lost, resulting in parse problems if "Element" based XML is re-parsed.
-     */
-    @Test
-    public void nonZimbraAttributeNamespaceHandling() throws Exception {
-        String xmlString = Joiner.on("\n").join(getAcctReqXml);
-        ByteArrayInputStream bais = new ByteArrayInputStream(xmlString.getBytes());
-        Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
-        // Note: this is missing : xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance and is therefore corrupted.
-        //       <ns7:GetAccountRequest applyCos="false" xsi:type="ns7:getAccountRequest" xmlns:ns7="urn:zimbraAdmin">
-        //                <ns7:account by="name">user1@coco.local</ns7:account></ns7:GetAccountRequest>
-        logInfo("Parsed to legacy element\n%s", legacyElem.toString());
-        Element elem = Element.parseXML(xmlString);
-        logInfo("Parsed to element\n%s", elem.toString());
-        Assert.assertEquals("elem toString value", parsedGetAcctReq, elem.toString());
-        elem = Element.parseXML(elem.toString());  // Testing that re-parse succeeds
-    }
-
-    // Test string that has namespace definition in the envelope that is only used in a descendant's name
-    // and another namespace definition in the envelope that is only used in an attribute name in a descendant
-    private static final String[] attrNSonTopLevelXml = {
-        "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"",
-        "               xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"",
-        "               xmlns:fun=\"urn:fun\">",
-        "    <soap:Body>",
-        "        <ns7:GetAccountRequest xmlns:ns7=\"urn:zimbraAdmin\"",
-        "                               xsi:type=\"ns7:getAccountRequest\" applyCos=\"false\">",
-        "            <ns7:account by=\"name\">acct.that.exists@my.dom.loc</ns7:account>",
-        "            <fun:invented/>",
-        "        </ns7:GetAccountRequest>",
-        "    </soap:Body>",
-        "</soap:Envelope>"} ;
-    /**
-     * Bug 81620 xmlns:xsi namespace defined on Envelope element but only used on attribute of GetAccountRequest.
-     *           xmlns:xsi namespace definition was getting lost when GetAccountRequest was detached
-     */
-    @Test
-    public void attribNamespaceLostIfDefinedHigher() throws Exception {
-        String xmlString = Joiner.on("\n").join(attrNSonTopLevelXml);
-        Element envelope = Element.parseXML(xmlString);
-        logInfo("Envelope Parsed to element\n%s", envelope.toString());
-        Element elem = envelope.getElement("Body").getElement("GetAccountRequest");
-        logInfo("GetAccountRequest Element\n%s", elem.toString());
-        elem.detach();
-        logInfo("GetAccountRequest Element detached\n%s", elem.toString());
-        Element.parseXML(envelope.toString());  // Testing that re-parse succeeds
+        Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
     }
 
     private static final String brokenXml = "<xml xmlns=\"urn:zimbra\">\n<a fred=\"woof\"></a>\n<b/>\n</xmlbroken>";
@@ -261,7 +177,7 @@ public class ElementTest {
             // Expecting XmlParseException with mesage something like :
             //     "parse error: Fatal Error: Problem on line 4 of document :
             //         The end-tag for element type \"xml\" must end with a '>' delimiter.",
-            Assert.assertTrue("XmlParseException should have been thrown", e instanceof XmlParseException);
+            Assert.assertTrue("XmlParseException should have been thrown", e instanceof XmlParseException); 
         }
     }
 
@@ -305,40 +221,27 @@ public class ElementTest {
         Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
     }
 
-    private static String xhtmlString =
-            "<html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" " +
-                    "xmlns:xml=\"http://www.w3.org/XML/1998/namespace\">\n" +
-            "&lt;head xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
-            "    &lt;title>Fun&lt;/title>\n" +
-            "&lt;/head>\n" +
-            "&lt;body xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
-            "&lt;h1>Header 1&lt;/h1>\n" +
-            "Simple test\n" +
-            "&lt;/body>\n" +
-            "</html>";
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
      * when the input text is XHTML
      */
     @Test
-    public void xhtml()
+    public void xhtmlToElement()
     throws DocumentException, XmlParseException {
         ByteArrayInputStream bais = toBais(ElementTest.class.getResourceAsStream("xhtml.html"));
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         bais.reset();
         Element elem = Element.parseXML(bais);
         logNewAndLegacyElements(elem, legacyElem);
-        /* The file xhtml.html does not contain the namespace definition for "xml" in here.  The fix for
-         * bug 81620 introduces it.  If xhtml.html with this modification made is pasted into
-         * http://validator.w3.org/check it passes with 3 warnings, none of which relate to the added definition
-         */
-        Assert.assertEquals("toString value", xhtmlString, elem.toString());
 
         Assert.assertEquals("top node name", "html", elem.getName());
         Assert.assertEquals("Number of sub elements", 0, elem.listElements().size());
 
         Assert.assertEquals("Legacy top node name", "html", legacyElem.getName());
         Assert.assertEquals("Legacy Number of sub elements", 0, legacyElem.listElements().size());
+        // Disabling for Helix.  New style is same as Both are in IronMaiden but old style
+        // differs in white space handling - assuming IronMaiden fix not present.
+        // Assert.assertEquals("toString value", legacyElem.toString(), elem.toString());
     }
 
     /**
@@ -540,43 +443,6 @@ public class ElementTest {
         }
     }
 
-    @Test
-    public void reorderChildren() {
-        final String expected =
-            "<top attr=\"val\"><z/><a>1</a><a>2</a><b/><c/><d><kid/></d><f>W</f><h2/><h3/><h4/><j/><p/><q/></top>";
-        Element top = new Element.XMLElement("top");
-        top.addAttribute("attr", "val");
-        top.addElement("b");
-        top.addElement("c");
-        top.addElement("p");
-        top.addElement("f").addText("W");
-        top.addElement("a").addText("1");
-        top.addElement("z");
-        top.addElement("j");
-        top.addElement("a").addText("2");
-        top.addElement("h2");
-        top.addElement("h3");
-        top.addElement("h4");
-        top.addElement("d").addElement("kid");
-        top.addElement("q");
-        List<List<QName>> order = Lists.newArrayList();
-        order.add(Lists.newArrayList(new QName("z")));
-        order.add(Lists.newArrayList(new QName("a")));
-        order.add(Lists.newArrayList(new QName("g")));
-        order.add(Lists.newArrayList(new QName("b")));
-        order.add(Lists.newArrayList(new QName("c")));
-        order.add(Lists.newArrayList(new QName("d")));
-        order.add(Lists.newArrayList(new QName("e")));
-        order.add(Lists.newArrayList(new QName("f")));
-        order.add(Lists.newArrayList(new QName("h4"), new QName("h3"), new QName("h2"), new QName("h1")));
-        order.add(Lists.newArrayList(new QName("i")));
-        order.add(Lists.newArrayList(new QName("j")));
-        order.add(Lists.newArrayList(new QName("k")));
-        top = Element.reorderChildElements(top, order);
-        logInfo("       Element value:\n%1$s", top.toString());
-        Assert.assertEquals("Reordered element", expected, top.toString());
-    }
-
     private static final String xmlCdata = "<xml>\n" +
             "<cdatawrap><![CDATA[if (a>b) a++;\n]]>\n</cdatawrap>\n" +
             "<elem/>\n" +
@@ -597,6 +463,14 @@ public class ElementTest {
         Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
     }
 
+    private static ByteArrayInputStream fileToBais(String resFilename) {
+        InputStream is = ElementTest.class.getResourceAsStream(resFilename);
+        if (is == null) {
+            Assert.fail("Unable to process resource " + resFilename);
+        }
+        return toBais(is);
+    }
+
     /** Ensure that we can reset the input stream */
     private static ByteArrayInputStream toBais(InputStream is) {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -613,58 +487,122 @@ public class ElementTest {
         return new ByteArrayInputStream(buffer.toByteArray());
     }
 
-    /*   Speed tests */
-    // Enable for performance comparison @Test
-    public void iterNamespaceTest_OLD() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream(nsTestXml.getBytes());
+    public class ExerciseNewParse extends Thread {
+       private ByteArrayInputStream bais;
+
+       public ExerciseNewParse(ByteArrayInputStream bais) {
+          this.bais = bais;
+       }
+
+       @Override
+       public void run() {
+            try {
+                iter_NEW(bais, maxiterInThreads);
+            } catch (XmlParseException e) {
+                Assert.fail("Unexpected failure - " + e.getMessage());
+            }
+       }
+    }
+
+    public class ExerciseDom4JParse extends Thread {
+       private ByteArrayInputStream bais;
+
+       public ExerciseDom4JParse(ByteArrayInputStream bais) {
+          this.bais = bais;
+       }
+
+       @Override
+       public void run() {
+            try {
+                iter_OLD(bais, maxiterInThreads);
+            } catch (DocumentException e) {
+                Assert.fail("Unexpected failure - " + e.getMessage());
+            }
+       }
+    }
+
+    public void iter_OLD(ByteArrayInputStream bais, int maxiter) throws DocumentException {
         for (int i = 0;i< maxiter; i++) {
             bais.reset();
             parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         }
+    }
+
+    public void iter_NEW(ByteArrayInputStream bais, int maxiter) throws XmlParseException {
+        for (int i = 0;i< maxiter; i++) {
+            bais.reset();
+            Element.parseXML(bais);
+        }
+    }
+
+    public void iter_ThreadedDom4jParse(ByteArrayInputStream bais) {
+        List<ExerciseDom4JParse> threads = Lists.newArrayList();
+        for (int i = 0;i< numThreads; i++) {
+            threads.add(new ExerciseDom4JParse(bais));
+        }
+        for (ExerciseDom4JParse thread : threads) {
+            thread.run();
+        }
+    }
+
+    public void iter_ThreadedNewParse(ByteArrayInputStream bais) {
+        List<ExerciseNewParse> threads = Lists.newArrayList();
+        for (int i = 0;i< numThreads; i++) {
+            threads.add(new ExerciseNewParse(bais));
+        }
+        for (ExerciseNewParse thread : threads) {
+            thread.run();
+        }
+    }
+
+    /*   Speed tests */
+    // Enable for performance comparison @Test
+    public void iterNamespaceTest_OLD() throws Exception {
+        iter_OLD(new ByteArrayInputStream(nsTestXml.getBytes()), maxiter);
     }
 
     // Enable for performance comparison @Test
     public void iterNamespaceTest_NEW() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream(nsTestXml.getBytes());
-        for (int i = 0;i< maxiter; i++) {
-            bais.reset();
-            Element.parseXML(bais);
-        }
+        iter_NEW(new ByteArrayInputStream(nsTestXml.getBytes()), maxiter);
     }
 
     // Enable for performance comparison @Test
-    public void iterGetInfoResponseSOAP_OLD()
-    throws DocumentException, SAXException, IOException {
-        for (int i = 0;i< maxiter; i++) {
-            getInfoRespBais.reset();
-            parseXMLusingDom4j(getInfoRespBais, Element.XMLElement.mFactory);
-        }
+    public void iterGetInfoRequestSOAP_OLD() throws DocumentException {
+        iter_OLD(getInfoReqBais, maxiter);
     }
 
     // Enable for performance comparison @Test
-    public void iterGetInfoResponseSOAP_NEW()
-    throws XmlParseException {
-        for (int i = 0;i< maxiter; i++) {
-            getInfoRespBais.reset();
-            Element.parseXML(getInfoRespBais);
-        }
+    public void iterGetInfoRequestSOAP_NEW() throws XmlParseException {
+        iter_NEW(getInfoReqBais, maxiter);
     }
 
     // Enable for performance comparison @Test
-    public void iterFlatten_OLD() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream(xmlContainingMixed.getBytes());
-        for (int i = 0;i< maxiter; i++) {
-            bais.reset();
-            parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
-        }
+    public void iterGetInfoResponseSOAP_OLD() throws DocumentException {
+        iter_OLD(getInfoRespBais, maxiter);
     }
 
     // Enable for performance comparison @Test
-    public void iterFlatten_NEW() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream(xmlContainingMixed.getBytes());
-        for (int i = 0;i< maxiter; i++) {
-            bais.reset();
-            Element.parseXML(bais);
-        }
+    public void iterGetInfoResponseSOAP_NEW() throws XmlParseException {
+        iter_NEW(getInfoRespBais, maxiter);
+    }
+
+    // Enable for performance comparison @Test
+    public void iterThreadedGetInfoResponseSOAP_OLD() throws XmlParseException {
+        iter_ThreadedDom4jParse(getInfoRespBais);
+    }
+
+    // Enable for performance comparison @Test
+    public void iterThreadedGetInfoResponseSOAP_NEW() throws XmlParseException {
+        iter_ThreadedNewParse(getInfoRespBais);
+    }
+
+    // Enable for performance comparison @Test
+    public void iterThreadedGetInfoRequestSOAP_OLD() throws XmlParseException {
+        iter_ThreadedDom4jParse(getInfoReqBais);
+    }
+
+    // Enable for performance comparison @Test
+    public void iterThreadedGetInfoRequestSOAP_NEW() throws XmlParseException {
+        iter_ThreadedNewParse(getInfoReqBais);
     }
 }

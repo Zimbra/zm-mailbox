@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 VMware, Inc.
+ * Copyright (C) 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.rewrite.handler.Rule;
+import org.mortbay.jetty.handler.rewrite.Rule;
 
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -128,7 +128,7 @@ public class PortRule extends Rule {
      */
     public String toString()
     {
-        return super.toString()+"["+_port+"]"+"["+ ((_regex != null) ? _regex.toString() : "") +"]"+"["+_httpErrorStatusRegexNotmatched+"]";                
+        return super.toString()+"["+_port+"]"+"["+_regex.toString()+"]"+"["+_httpErrorStatusRegexNotmatched+"]";                
     }
 
 }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012 VMware, Inc.
- *
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -69,7 +69,6 @@ public final class ContactConstants {
     public static final String A_firstName = Attr.firstName.name();
     public static final String A_phoneticFirstName = Attr.phoneticFirstName.name();
     public static final String A_fullName = Attr.fullName.name();
-    public static final String A_groupMember = Attr.groupMember.name();
     public static final String A_homeCity = Attr.homeCity.name();
     public static final String A_homeCountry = Attr.homeCountry.name();
     public static final String A_homeFax = Attr.homeFax.name();
@@ -149,16 +148,7 @@ public final class ContactConstants {
     public static final String A_vCardURL    = "vcardURL";
     public static final String A_vCardXProps = "vcardXProps";
 
-
     public static final String TYPE_GROUP = "group";
-
-    // move to ZimbraSoap?
-    public static final String GROUP_MEMBER_TYPE_CONTACT_REF = "C";
-    public static final String GROUP_MEMBER_TYPE_GAL_REF = "G";
-    public static final String GROUP_MEMBER_TYPE_INLINE = "I";
-
-    //outlook contact attributes besides the standard zimbra ones
-
 
     /**
      * "well known attrs". keep in sync with ContactConstants.A_* above.
@@ -176,7 +166,7 @@ public final class ContactConstants {
         companyPhone,
         description,
         department,
-        dlist,  //TODO deprecate? or use use?  don't touch/keep for backward compatibility?
+        dlist,
         email,
         email2,
         email3,
@@ -184,7 +174,6 @@ public final class ContactConstants {
         firstName,
         phoneticFirstName,
         fullName,
-        groupMember,
         homeCity,
         homeCountry,
         homeFax,
@@ -255,9 +244,7 @@ public final class ContactConstants {
         otherCustom4,
         vCardUID,
         vCardXProps,
-        zimbraId,
-        outlookProps;
-
+        zimbraId;
 
         public static Attr fromString(String s) throws ServiceException {
             try {

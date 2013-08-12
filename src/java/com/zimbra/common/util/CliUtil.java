@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010, 2012 VMware, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -15,11 +15,8 @@
 
 package com.zimbra.common.util;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 
 import jline.ConsoleReader;
 import jline.ConsoleReaderInputStream;
@@ -116,22 +113,4 @@ public class CliUtil {
         }
         ConsoleReaderInputStream.setIn(reader);
     }
-    
-    public static boolean confirm(String msg) {
-        System.out.print(msg + " [Y]es, [N]o: ");
-        BufferedReader in;
-        try {
-            in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
-            String line = StringUtil.readLine(in);
-            if ("y".equalsIgnoreCase(line) || "yes".equalsIgnoreCase(line)) {
-                return true;
-            }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
 }

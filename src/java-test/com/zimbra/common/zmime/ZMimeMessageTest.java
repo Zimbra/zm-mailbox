@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012 VMware, Inc.
+ * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -14,7 +14,6 @@
  */
 package com.zimbra.common.zmime;
 
-import java.util.Enumeration;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
@@ -58,27 +57,6 @@ public class ZMimeMessageTest {
         }
         mm.setContent("", mm.getContentType());
         mm.writeTo(System.out);
-
-        String subject = "re: Your Brains";
-
-        Assert.assertEquals(subject, mm.getSubject());
-
-        @SuppressWarnings("unchecked")
-        Enumeration<String> headerLines = mm.getAllHeaderLines();
-        boolean foundSubject = false;
-        if (headerLines != null) {
-            while (headerLines.hasMoreElements()) {
-                String line = headerLines.nextElement();
-                if (line.startsWith("Subject: ")) {
-                    System.out.println(line);
-                    Assert.assertEquals("Subject: "+subject, line);
-                    foundSubject = true;
-                    break;
-                }
-            }
-        }
-
-        Assert.assertTrue(foundSubject);
     }
 
     @Test
@@ -100,37 +78,5 @@ public class ZMimeMessageTest {
 
         mm.setHeader("Content-Disposition", "foo");
         Assert.assertEquals("cdisp defaulted", "attachment", mm.getDisposition());
-    }
-
-    @Test
-    public void iso2022jp() throws Exception {
-        MimeMessage mm = new MimeMessageWithId("<sample-823745-asd-23432452345@example.com>");
-        String subjectValue =  "\u001b$B@E2,;TKI:R%a!<%k!!EPO?!&JQ99$N$40FFb\u001b(B";
-        for (String line : HEADERS) {
-            if (line.indexOf("Subject") == 0) {
-                mm.addHeaderLine("Subject:" + subjectValue);
-            } else {
-                mm.addHeaderLine(line + "\r\n");
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        Enumeration<String> headerLines = mm.getAllHeaderLines();
-        boolean foundEncodedSubject = false;
-        if (headerLines != null) {
-            while (headerLines.hasMoreElements()) {
-                String line = headerLines.nextElement();
-                if (line.startsWith("Subject: ")) {
-                    String encoded = "Subject: =?iso-2022-jp?B?GyRCQEUyLDtUS0k6UiVhITwlayEhRVBPPyEmSlE5OSROJDQwRkZiGyhC?=";
-                    //should be equivalent to EncodedWord.encode(subjectValue, Charset.forName("ISO-2022-JP"));
-                    Assert.assertEquals(encoded, line);
-                    foundEncodedSubject = true;
-                    break;
-                }
-            }
-        }
-        Assert.assertTrue(foundEncodedSubject);
-        //UTF-8 equivalent
-        Assert.assertEquals("\u9759\u5ca1\u5e02\u9632\u707d\u30e1\u30fc\u30eb\u3000\u767b\u9332\u30fb\u5909\u66f4\u306e\u3054\u6848\u5185", mm.getSubject());
     }
 }

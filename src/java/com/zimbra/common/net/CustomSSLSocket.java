@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2012 VMware, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -58,9 +58,6 @@ class CustomSSLSocket extends SSLSocket {
         this.factory = factory;
         this.sslSocket = sslSocket;
         this.host = host;
-        if (LC.ssl_disable_dh_cipher_suite.booleanValue()) {
-            this.sslSocket.setEnabledCipherSuites(filterDHcipher(sslSocket.getEnabledCipherSuites()));
-        }
     }
 
     CustomSSLSocket(CustomSSLSocketFactory factory, Socket socket) {
@@ -127,16 +124,6 @@ class CustomSSLSocket extends SSLSocket {
         }
         return enableSessionCreation;
     }
-    
-    private String[] filterDHcipher(String[] suites) {
-        List<String> list = new ArrayList<String>();
-        for (String suite : suites) {
-            if(!suite.contains("_DHE_")) {
-                list.add(suite);
-            }
-        }
-        return list.toArray(new String[0]);
-    }
 
     @Override
     public String[] getEnabledCipherSuites() {
@@ -144,11 +131,7 @@ class CustomSSLSocket extends SSLSocket {
             return sslSocket.getEnabledCipherSuites();
         }
         if (enabledCipherSuites == null) {
-            if (LC.ssl_disable_dh_cipher_suite.booleanValue()) {
-                enabledCipherSuites = filterDHcipher(sampleSSLSocket().getEnabledCipherSuites());
-            } else {
-                enabledCipherSuites = sampleSSLSocket().getEnabledCipherSuites();
-            }
+            enabledCipherSuites = sampleSSLSocket().getEnabledCipherSuites();
         }
         return enabledCipherSuites;
     }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013 VMware, Inc.
- *
+ * Copyright (C) 2012, 2013 Zimbra Software, LLC.
+ * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,20 +34,19 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.CDATASection;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import com.google.common.base.Strings;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 public class W3cDomUtil {
     private static final Log LOG = ZimbraLog.misc;
@@ -145,13 +143,7 @@ public class W3cDomUtil {
 
     public static Element parseXML(File file)
     throws ServiceException, FileNotFoundException {
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(file);
-            return parseXML(new FileInputStream(file));
-        } finally {
-            Closeables.closeQuietly(fis);
-        }
+        return parseXML(new FileInputStream(file));
     }
 
     public static Element parseXML(InputStream is)
@@ -250,7 +242,7 @@ public class W3cDomUtil {
         return false;
     }
 
-    private static final String XMLNS_COLON = Element.XMLElement.A_NAMESPACE + ":";
+    private static final String XMLNS_COLON = Element.XMLElement.A_NAMESPACE + ":"; 
 
     public static Element nodeToElement(Node node, ElementFactory factory) {
         int nodeType = node.getNodeType();
@@ -276,24 +268,14 @@ public class W3cDomUtil {
             Node attrNode = attrs.item(ndx);
             String nodeName = attrNode.getNodeName();
             String qualifiedName;
-            String prefix = attrNode.getPrefix();
             if (nodeName.contains(":")) {
                 qualifiedName = nodeName;
             } else {
+                String prefix = attrNode.getPrefix();
                 qualifiedName = prefix == null ? nodeName : String.format("%s:%s", prefix, nodeName);
             }
             if (!(Element.XMLElement.A_NAMESPACE.equals(qualifiedName) || qualifiedName.startsWith(XMLNS_COLON))) {
                 elt.addAttribute(qualifiedName, attrNode.getNodeValue());
-                String nsURI = attrNode.getNamespaceURI();
-                if (!Strings.isNullOrEmpty(nsURI)) {
-                    /* The approach to namespaces is to ALWAYS store them on elements that use them (for either the
-                     * element's name or in one of its attributes names) but ignore them where they are not used.
-                     * This means that unused namespace definitions may be dropped - but that shouldn't matter.
-                     * It also means that namespaces won't be dropped by mistake from detached elements because the
-                     * namespace is only stored in a parent element where it was defined.
-                     */
-                    elt.setNamespace(prefix, nsURI);
-                }
             }
         }
     }
@@ -347,11 +329,7 @@ public class W3cDomUtil {
     private static org.dom4j.QName dom4jQNameForNode(Node node) {
         org.dom4j.Namespace ns = node.getNamespaceURI() == null ? null :
             new org.dom4j.Namespace(node.getPrefix(), node.getNamespaceURI());
-        String localName = node.getNodeName();
-        if (localName.contains(":")) {
-            localName = localName.substring(localName.indexOf(':') + 1);
-        }
-        return new org.dom4j.QName(localName, ns);
+        return new org.dom4j.QName(node.getLocalName(), ns);
     }
 
     // Error handler to report errors and warnings
@@ -371,7 +349,7 @@ public class W3cDomUtil {
         public void warning(SAXParseException spe) throws SAXException {
             ZimbraLog.misc.warn(getParseExceptionInfo("Warning", spe));
         }
-
+        
         @Override
         public void error(SAXParseException spe) throws SAXException {
             throw new SAXException(getParseExceptionInfo("Error", spe));

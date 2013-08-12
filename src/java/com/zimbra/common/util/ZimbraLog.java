@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -120,29 +120,30 @@ public final class ZimbraLog {
     public static final Log net = LogFactory.getLog("zimbra.net");
 
     /**
-     * the "zimbra.index" logger. For indexing.
+     * the "zimbra.index" logger. For general indexing-related events.
      */
     public static final Log index = LogFactory.getLog("zimbra.index");
 
     /**
-     * the "zimbra.search" logger. For search.
+     * the "zimbra.index.lucene" logger. For logging of low-level lucene operations (debug-level only)
      */
-    public static final Log search = LogFactory.getLog("zimbra.search");
+    public static final Log index_lucene = LogFactory.getLog("zimbra.index.lucene");
 
     /**
-     * the "zimbra.searchstat" logger. For search statistics.
+     * the "zimbra.index.search" logger. For logging of the search side of indexing
      */
-    public static final Log searchstat = LogFactory.getLog("zimbra.searchstat");
+    public static final Log index_search = LogFactory.getLog("zimbra.index.search");
 
     /**
-     * The "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
+     * the "zimbra.index.add" logger. For the add-to-the-index part of indexing
+     */
+    public static final Log index_add = LogFactory.getLog("zimbra.index.indexadd");
+
+
+    /**
+     * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
      */
     public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
-
-    /**
-     * The "zimbra.elasticsearch" logger.  For logging interactions with Elasticsearch
-     */
-    public static final Log elasticsearch = LogFactory.getLog("zimbra.elasticsearch");
 
     /**
      * the "zimbra.redolog" logger. For redolog-releated events.
@@ -213,11 +214,6 @@ public final class ZimbraLog {
      * the "zimbra.account" logger. For account-related events.
      */
     public static final Log account = LogFactory.getLog("zimbra.account");
-
-    /**
-     * the "zimbra.autoprov" logger. For account auto provision related events.
-     */
-    public static final Log autoprov = LogFactory.getLog("zimbra.autoprov");
 
     /**
      * the "zimbra.gal" logger. For gal-related events.
@@ -330,9 +326,9 @@ public final class ZimbraLog {
     public static final Log zimlet = LogFactory.getLog("zimbra.zimlet");
 
     /**
-     * the "zimbra.doc" logger. For document sharing.
+     * the "zimbra.wiki" logger. For wiki and document sharing.
      */
-    public static final Log doc = LogFactory.getLog("zimbra.doc");
+    public static final Log wiki = LogFactory.getLog("zimbra.wiki");
 
     /**
      * the "zimbra.op" logger. Logs server operations
@@ -405,28 +401,6 @@ public final class ZimbraLog {
     public static final Log tnef = LogFactory.getLog("zimbra.tnef");
 
 
-    public static final Log nginxlookup = LogFactory.getLog("zimbra.nginxlookup");
-
-    /**
-     * the "zimbra.contact" logger.  Logs contact operations.
-     */
-    public static final Log contact = LogFactory.getLog("zimbra.contact");
-
-    /**
-     * the "zimbra.share" logger.  Logs share operations.
-     */
-    public static final Log share = LogFactory.getLog("zimbra.share");
-
-    /**
-     * the "zimbra.activity" logger. For ACTIVITY-related events
-     */
-    public static final Log activity = LogFactory.getLog("zimbra.activity");
-    /**
-     * the "zimbra.activity" logger. For ACTIVITY-related events
-     */
-    public static final Log ews = LogFactory.getLog("zimbra.ews");
-
-
     /**
      * Maps the log category name to its description.
      */
@@ -476,8 +450,7 @@ public final class ZimbraLog {
         // won't be listed in zmprov online help.
         Map<String, String> descriptions = new TreeMap<String, String>();
         descriptions.put(misc.getCategory(), "Miscellaneous");
-        descriptions.put(index.getCategory(), "Indexing operations");
-        descriptions.put(search.getCategory(), "Search operations");
+        descriptions.put(index.getCategory(), "Index operations");
         descriptions.put(redolog.getCategory(), "Redo log operations");
         descriptions.put(lmtp.getCategory(), "LMTP server (incoming mail)");
         descriptions.put(smtp.getCategory(), "SMTP client (outgoing mail)");
@@ -490,7 +463,6 @@ public final class ZimbraLog {
         descriptions.put(calendar.getCategory(), "Calendar operations");
         descriptions.put(im.getCategory(), "Instant messaging operations");
         descriptions.put(account.getCategory(), "Account operations");
-        descriptions.put(autoprov.getCategory(), "Auto provision operations");
         descriptions.put(gal.getCategory(), "GAL operations");
         descriptions.put(ldap.getCategory(), "LDAP operations");
         descriptions.put(acl.getCategory(), "ACL operations");
@@ -506,15 +478,13 @@ public final class ZimbraLog {
         descriptions.put(sync.getCategory(), "Sync client operations");
         descriptions.put(extensions.getCategory(), "Server extension loading");
         descriptions.put(zimlet.getCategory(), "Zimlet operations");
-        descriptions.put(doc.getCategory(), "Docs operations");
+        descriptions.put(wiki.getCategory(), "Wiki operations");
         descriptions.put(mailop.getCategory(), "Changes to mailbox state");
         descriptions.put(dav.getCategory(), "DAV operations");
         descriptions.put(io.getCategory(), "Filesystem operations");
         descriptions.put(store.getCategory(), "Mail store disk operations");
         descriptions.put(purge.getCategory(), "Mailbox purge operations");
         descriptions.put(datasource.getCategory(), "Data Source operations");
-        descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
-        descriptions.put(activity.getCategory(), "Document operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
@@ -732,28 +702,6 @@ public final class ZimbraLog {
             contextMap.clear();
         }
         sContextString.remove();
-    }
-
-    public static String getStackTrace(int maxDepth) {
-        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
-        StackTraceElement [] stElems = new Throwable().getStackTrace();
-
-        if (stElems == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        int count = -1;
-        for (StackTraceElement stElem : stElems) {
-            count++;
-            if (count == 0) {
-                continue;  // Skip element for this method.
-            }
-            sb.append(stElem.toString()).append('\n');
-            if (count >= maxDepth) {
-                break;
-            }
-        }
-        return sb.toString();
     }
 
     /**
