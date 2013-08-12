@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -40,18 +40,19 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.index.LuceneIndex;
-import com.zimbra.cs.index.LuceneDirectory;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.index.LuceneDirectory;
+import com.zimbra.cs.index.LuceneIndex;
+import com.zimbra.cs.service.admin.GetMailQueue;
 
 public class RemoteMailQueue {
     private static Map<String,RemoteMailQueue> mMailQueueCache = new HashMap<String,RemoteMailQueue>();
@@ -78,7 +79,7 @@ public class RemoteMailQueue {
     }
 
     public enum QueueAttr {
-        id, time, size, from, to, host, addr, reason, filter, todomain, fromdomain
+        id, time, size, from, to, host, addr, reason, filter, todomain, fromdomain, received
     }
 
     public enum QueueAction {
@@ -136,6 +137,7 @@ public class RemoteMailQueue {
             addSimpleField(doc, map, QueueAttr.host);
             addSimpleField(doc, map, QueueAttr.filter);
             addSimpleField(doc, map, QueueAttr.reason);
+            addSimpleField(doc, map, QueueAttr.received);
 
             String from = map.get(QueueAttr.from.toString());
             if (from != null && from.length() > 0) {
@@ -394,7 +396,8 @@ public class RemoteMailQueue {
                         attr == QueueAttr.to ||
                         attr == QueueAttr.fromdomain ||
                         attr == QueueAttr.todomain ||
-                        attr == QueueAttr.reason)
+                        attr == QueueAttr.reason ||
+                        attr == QueueAttr.received)
                     {
                         List<SummaryItem> list = result.sitems.get(attr);
                         if (list == null) {
