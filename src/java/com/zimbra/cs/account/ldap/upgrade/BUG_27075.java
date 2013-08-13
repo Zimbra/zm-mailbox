@@ -320,13 +320,13 @@ public class BUG_27075 extends UpgradeOp {
         String attr = Provisioning.A_zimbraWebGzipEnabled;
         String curVal = config.getAttr(attr, null);
         if (curVal == null) {
-            attrs.put(attr, config.isWebGzipEnabled());
+            attrs.put(attr, ("" + config.isWebGzipEnabled()).toUpperCase());
         }
 
         attr = Provisioning.A_zimbraHttpCompressionEnabled;
         curVal = config.getAttr(attr, null);
         if (curVal == null) {
-            attrs.put(attr, config.isHttpCompressionEnabled());
+            attrs.put(attr, ("" + config.isHttpCompressionEnabled()).toUpperCase());
         }
 
         if (!attrs.isEmpty()) {
