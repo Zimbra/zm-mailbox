@@ -15,6 +15,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 import junit.framework.TestCase;
 
@@ -85,22 +86,94 @@ public class TestDistListACL extends TestCase {
         }
     }
 
+    private void doCheckSentToDistListGuestRight(DistributionList targetDl, String email, String guest,
+            boolean expected)
+    throws ServiceException {
+        ZimbraLog.test.info("DL name %s ID %s", targetDl.getName(), targetDl.getId());
+        Group group = prov.getGroupBasic(Key.DistributionListBy.name, listAddress);
+        assertNotNull("Unable to find Group object for DL by name", group);
+        AccessManager.ViaGrant via = new AccessManager.ViaGrant();
+        NamedEntry ne = GranteeType.lookupGrantee(prov, GranteeType.GT_GUEST, GranteeBy.name, email);
+        MailTarget grantee = null;
+        if (ne instanceof MailTarget) {
+            grantee = (MailTarget) ne;
+        }
+        boolean result = RightCommand.checkRight(prov, "dl" /* targetType */, TargetBy.name,
+                listAddress, grantee, RightConsts.RT_sendToDistList, null /* attrs */, via);
+        if (expected) {
+            assertTrue(String.format("%s should be able to send to DL (as guest %s)", email, guest),
+                    accessMgr.canDo(email, group, User.R_sendToDistList, false));
+            assertTrue(String.format("%s should have right to send to DL (as guest %s)", email, guest),
+                    result);
+            ZimbraLog.test.info("Test for %s against dom %s Via=%s", email, guest, via);
+        } else {
+            assertFalse(String.format("%s should NOT be able to send to DL (because not guest %s)",
+                    email, guest), accessMgr.canDo(email, group, User.R_sendToDistList, false));
+            assertFalse(String.format("%s should NOT have right to send to DL (because not guest %s)",
+                    email, guest), result);
+        }
+    }
+
     /**
      * "gst" GranteeType testing.
      * Sender must match the configured guest email address.  The secret is ignored!
      */
-    public void testMilterGuest() throws Exception {
+    public void testMilterGuestSendToDL() throws Exception {
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
+        String guestName = "fred@example.test";
         prov.grantRight("dl", TargetBy.name, listAddress, GranteeType.GT_GUEST.getCode(), Key.GranteeBy.name,
-                "fred@example.test", "" /* secret */,
+                guestName, "" /* secret */,
                 RightConsts.RT_sendToDistList, (RightModifier) null /* rightModifier */);
-        ZimbraLog.test.info("DL name %s ID %s", dl.getName(), dl.getId());
+        doCheckSentToDistListGuestRight(dl, guestName, guestName, true);
+        doCheckSentToDistListGuestRight(dl, "pete@example.test", guestName, false);
+        // Bug 83252 case shouldn't matter
+        doCheckSentToDistListGuestRight(dl, "FreD@example.test", guestName, true);
+    }
+
+    private void doCheckSentToDistListUserRight(DistributionList targetDl, String email, String user,
+            boolean expected)
+    throws ServiceException {
+        ZimbraLog.test.info("DL name %s ID %s", targetDl.getName(), targetDl.getId());
         Group group = prov.getGroupBasic(Key.DistributionListBy.name, listAddress);
         assertNotNull("Unable to find Group object for DL by name", group);
-        assertTrue("fred@example.test should be able to send to DL",
-                accessMgr.canDo("fred@example.test", group, User.R_sendToDistList, false));
-        assertFalse("pete@example.test should NOT be able to send to DL",
-                accessMgr.canDo("pete@example.test", group, User.R_sendToDistList, false));
+        AccessManager.ViaGrant via = new AccessManager.ViaGrant();
+        //  More permissive that GT_USER - want to test called functions
+        NamedEntry ne = GranteeType.lookupGrantee(prov, GranteeType.GT_EMAIL, GranteeBy.name, email);
+        MailTarget grantee = null;
+        if (ne instanceof MailTarget) {
+            grantee = (MailTarget) ne;
+        }
+        boolean result = RightCommand.checkRight(prov, "dl" /* targetType */, TargetBy.name,
+                listAddress, grantee, RightConsts.RT_sendToDistList, null /* attrs */, via);
+        if (expected) {
+            assertTrue(String.format("%s should be able to send to DL (as user %s)", email, user),
+                    accessMgr.canDo(email, group, User.R_sendToDistList, false));
+            assertTrue(String.format("%s should have right to send to DL (as user %s)", email, user),
+                    result);
+            ZimbraLog.test.info("Test for %s against dom %s Via=%s", email, user, via);
+        } else {
+            assertFalse(String.format("%s should NOT be able to send to DL (because not user %s)",
+                    email, user), accessMgr.canDo(email, group, User.R_sendToDistList, false));
+            assertFalse(String.format("%s should NOT have right to send to DL (because not user %s)",
+                    email, user), result);
+        }
+    }
+
+    /**
+     * "usr" GranteeType testing.
+     * Sender must match the configured user email address.
+     */
+    public void testMilterUserSendToDL() throws Exception {
+        DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
+        String user1email = TestUtil.getAddress("user1");
+        String user2email = TestUtil.getAddress("user2");
+        prov.grantRight("dl", TargetBy.name, listAddress, GranteeType.GT_USER.getCode(), Key.GranteeBy.name,
+                user1email, null /* secret */,
+                RightConsts.RT_sendToDistList, (RightModifier) null /* rightModifier */);
+        doCheckSentToDistListUserRight(dl, user1email, user1email, true);
+        doCheckSentToDistListUserRight(dl, "pete@example.test", user1email, false);
+        doCheckSentToDistListUserRight(dl, user2email, user1email, false);
+        doCheckSentToDistListUserRight(dl, user1email.toUpperCase(Locale.ENGLISH), user1email, true);
     }
 
     private void doCheckSentToDistListDomRight(DistributionList targetDl, String email, String grantDomain, boolean expected)
@@ -134,7 +207,7 @@ public class TestDistListACL extends TestCase {
      * "dom" GranteeType testing.
      * Sender must exist and be in the domain that is allowed to send to the DL
      */
-    public void testMilterDomain() throws Exception {
+    public void testMilterDomainSendToDL() throws Exception {
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
         String user1email = TestUtil.getAddress("user1");
         Account user1account = TestUtil.getAccount("user1");
@@ -143,6 +216,7 @@ public class TestDistListACL extends TestCase {
                 RightConsts.RT_sendToDistList, (RightModifier) null /* rightModifier */);
         doCheckSentToDistListDomRight(dl, user1email, user1account.getDomainName(), true);
         doCheckSentToDistListDomRight(dl, "pete@example.test", user1account.getDomainName(), false);
+        doCheckSentToDistListDomRight(dl, user1email.toUpperCase(Locale.ENGLISH), user1account.getDomainName(), true);
     }
 
     /**
@@ -151,7 +225,7 @@ public class TestDistListACL extends TestCase {
      * Note that currently, an alias address is resolved to the associated account before the domain
      * check is done which might or might not be the best approach.
      */
-    public void testMilterDomainWithAcctAliasSender() throws Exception {
+    public void testMilterDomainSendToDLWithAcctAliasSender() throws Exception {
         prov.createDomain(otherDomain, new HashMap<String, Object>());
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
         Account acct = prov.createAccount(auser, "test123", new HashMap<String, Object>());
@@ -165,7 +239,7 @@ public class TestDistListACL extends TestCase {
      * "dom" GranteeType testing.
      * Sender must exist and be in the domain that is allowed to send to the DL - Sender MAY be a DL
      */
-    public void testMilterDomainWithDlSender() throws Exception {
+    public void testMilterDomainSendToDLWithDlSender() throws Exception {
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
         DistributionList dl2 = prov.createDistributionList(listAddress2, new HashMap<String, Object>());
         prov.grantRight("dl", TargetBy.name, listAddress, GranteeType.GT_DOMAIN.getCode(), Key.GranteeBy.name,
@@ -179,7 +253,7 @@ public class TestDistListACL extends TestCase {
      * Note that currently, an alias address is resolved to the associated account before the domain
      * check is done which might or might not be the best approach.
      */
-    public void testMilterDomainWithDlAliasSender() throws Exception {
+    public void testMilterDomainSendToDLWithDlAliasSender() throws Exception {
         prov.createDomain(otherDomain, new HashMap<String, Object>());
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
         DistributionList dl2 = prov.createDistributionList(listAddress2, new HashMap<String, Object>());
@@ -194,7 +268,7 @@ public class TestDistListACL extends TestCase {
      * "edom" GranteeType testing.  Check that a sender whose address has a domain which matches the
      * external domain will be able to send to the DL
      */
-    public void testMilterExternalDomain() throws Exception {
+    public void testMilterExternalDomainSendToDL() throws Exception {
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
         String user1email = TestUtil.getAddress("user1");
         prov.grantRight("dl", TargetBy.name, listAddress, GranteeType.GT_EXT_DOMAIN.getCode(), Key.GranteeBy.name,

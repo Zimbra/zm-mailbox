@@ -183,6 +183,9 @@ public enum GranteeType {
                 throw AccountServiceException.NO_SUCH_DOMAIN(grantee);
             }
             break;
+        case GT_GUEST:
+            granteeEntry = new GuestAccount(grantee, null);
+            break;
         case GT_EMAIL:
             // see if it is an internal account
             granteeEntry = prov.get(AccountBy.fromString(granteeBy.name()), grantee);
