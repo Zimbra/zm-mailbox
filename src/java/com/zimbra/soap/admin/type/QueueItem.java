@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,8 +18,6 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-
-import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class QueueItem {
@@ -112,17 +110,25 @@ public class QueueItem {
     @XmlAttribute(name="todomain", required=true)
     private final String todomain;
 
+    // See RemoteMailQueue.QueueAttr
+    /**
+     * @zm-api-field-tag received
+     * @zm-api-field-description IP address message received from
+     */
+    @XmlAttribute(name="received", required=true)
+    private final String received;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private QueueItem() {
         this((String) null, (String) null, (String) null, (String) null, (String) null, (String) null,
-                (String) null, (String) null, (String) null, (String) null, (String) null);
+                (String) null, (String) null, (String) null, (String) null, (String) null, (String) null);
     }
 
     public QueueItem(String id, String time, String fromdomain, String size, String from, String to,
-                    String host, String addr, String reason, String filter, String todomain) {
+                    String host, String addr, String reason, String filter, String todomain, String received) {
         this.id = id;
         this.time = time;
         this.fromdomain = fromdomain;
@@ -134,6 +140,7 @@ public class QueueItem {
         this.reason = reason;
         this.filter = filter;
         this.todomain = todomain;
+        this.received = received;
     }
 
     public String getId() { return id; }
@@ -147,4 +154,5 @@ public class QueueItem {
     public String getReason() { return reason; }
     public String getFilter() { return filter; }
     public String getTodomain() { return todomain; }
+    public String getReceived() { return received; }
 }
