@@ -678,7 +678,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraZookeeperClientServerList, or empty array if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public String[] getZookeeperClientServerList() {
@@ -692,7 +692,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraZookeeperClientServerList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public void setZookeeperClientServerList(String[] zimbraZookeeperClientServerList) throws com.zimbra.common.service.ServiceException {
@@ -709,7 +709,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public Map<String,Object> setZookeeperClientServerList(String[] zimbraZookeeperClientServerList, Map<String,Object> attrs) {
@@ -725,7 +725,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraZookeeperClientServerList new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public void addZookeeperClientServerList(String zimbraZookeeperClientServerList) throws com.zimbra.common.service.ServiceException {
@@ -742,7 +742,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public Map<String,Object> addZookeeperClientServerList(String zimbraZookeeperClientServerList, Map<String,Object> attrs) {
@@ -758,7 +758,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraZookeeperClientServerList existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public void removeZookeeperClientServerList(String zimbraZookeeperClientServerList) throws com.zimbra.common.service.ServiceException {
@@ -775,7 +775,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public Map<String,Object> removeZookeeperClientServerList(String zimbraZookeeperClientServerList, Map<String,Object> attrs) {
@@ -790,7 +790,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public void unsetZookeeperClientServerList() throws com.zimbra.common.service.ServiceException {
@@ -806,7 +806,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public Map<String,Object> unsetZookeeperClientServerList(Map<String,Object> attrs) {

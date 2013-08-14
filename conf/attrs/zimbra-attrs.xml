@@ -4483,7 +4483,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="847" name="zimbraMobilePolicyDeviceEncryptionEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0_BETA1" deprecatedSince="9.0.0">
+<attr id="847" name="zimbraMobilePolicyDeviceEncryptionEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="6.0.0_BETA1" deprecatedSince="8.5.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     require data encryption on device;
@@ -4888,12 +4888,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable domain mandatory mail signature</desc>
 </attr>
 
-<attr id="1070" name="zimbraDomainMandatoryMailSignatureText" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4" deprecatedSince="9.0.0">
+<attr id="1070" name="zimbraDomainMandatoryMailSignatureText" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4" deprecatedSince="8.5.0">
   <desc>domain mandatory mail plain text signature</desc>
   <deprecateDesc>deprecated in favor of zimbraAmavisDomainDisclaimerText</deprecateDesc>
 </attr>
 
-<attr id="1071" name="zimbraDomainMandatoryMailSignatureHTML" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4" deprecatedSince="9.0.0">
+<attr id="1071" name="zimbraDomainMandatoryMailSignatureHTML" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.4" deprecatedSince="8.5.0">
   <desc>domain mandatory mail html signature</desc>
   <deprecateDesc>deprecated in favor of zimbraAmavisDomainDisclaimerHTML</deprecateDesc>
 </attr>
@@ -7099,16 +7099,16 @@ TODO: delete them permanently from here
   <desc>whether ldap based galsync disabled or not</desc>
 </attr>
 
-<attr id="1421" name="zimbraMobileNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+<attr id="1421" name="zimbraMobileNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.5.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether mobile sync notification enabled or not</desc>
 </attr>
 
-<attr id="1422" name="zimbraMobileNotificationAdminAddress" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+<attr id="1422" name="zimbraMobileNotificationAdminAddress" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <desc>admin email address used for receiving notifications</desc>
 </attr>
 
-<attr id="1423" name="zimbraMobileAttachSkippedItemEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+<attr id="1423" name="zimbraMobileAttachSkippedItemEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether mobile sync should zip the skipped item and attach it to the notification mail</desc>
 </attr>
@@ -7155,12 +7155,12 @@ TODO: delete them permanently from here
   <desc>Regular Expression for words to ignore during spell check.</desc>
 </attr>
 
-<attr id="1433" name="zimbraTouchJSErrorTrackingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="9.0.0">
+<attr id="1433" name="zimbraTouchJSErrorTrackingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether JavaScript error tracking via third party service is enabled</desc>
 </attr>
 
-<attr id="1434" name="zimbraTouchJSErrorTrackingKey" type="string" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="9.0.0">
+<attr id="1434" name="zimbraTouchJSErrorTrackingKey" type="string" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
   <desc>Key to be used for JavaScript error tracking via third party service</desc>
 </attr>
 
@@ -7188,21 +7188,21 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1441" name="zimbraConverterHints" type="cstring" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited" since="9.0.0">
+<attr id="1441" name="zimbraConverterHints" type="cstring" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
   <desc>Allows converter hints to be supplied on the COS level. Can be used to enable or disable some converters</desc>
 </attr>
 
-<attr id="1442" name="zimbraFilePreviewMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="9.0.0">
+<attr id="1442" name="zimbraFilePreviewMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
   <defaultCOSValue>20971520</defaultCOSValue>
   <desc>Maximum size in bytes for file preview in web client</desc>
 </attr>
 
-<attr id="1443" name="zimbraPrefWebClientOfflineAccessEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+<attr id="1443" name="zimbraPrefWebClientOfflineAccessEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>user preference to enable/disable access to his mailbox data in the web client when offline</desc>
 </attr>
 
-<attr id="1444" name="zimbraMobilePolicyRequireStorageCardEncryption" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+<attr id="1444" name="zimbraMobilePolicyRequireStorageCardEncryption" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     require data encryption on storage card;
@@ -7210,19 +7210,19 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0.0">
+<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <desc>weclient URL to directly connect when making service to JS calls from mail server in split mode</desc>
 </attr>
 
-<attr id="1446" name="zimbraAlwaysOnClusterId" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="9.0.0">
+<attr id="1446" name="zimbraAlwaysOnClusterId" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
   <desc>AlwaysOn cluster-id to which this server belongs to. If empty, it's not part of AlwaysOn and is a stand-alone server.</desc>
 </attr>
 
-<attr id="1447" name="zimbraZookeeperClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
+<attr id="1447" name="zimbraZookeeperClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
   <desc>list of host:port for zookeeper servers; set to empty value to disable the use of zookeeper</desc>
 </attr>
 
-<attr id="1448" name="zimbraPrefFontSize" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+<attr id="1448" name="zimbraPrefFontSize" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <defaultCOSValue>normal</defaultCOSValue>
   <desc>the font size for the web client</desc>
 </attr>
@@ -7245,7 +7245,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1452" name="zimbraWebClientOfflineSyncMaxDays" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="9.0.0">
+<attr id="1452" name="zimbraWebClientOfflineSyncMaxDays" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.5.0">
   <defaultCOSValue>30</defaultCOSValue>
   <desc>limit for the number of days that the web client would use to sync any mail folder's data for offline use</desc>
 </attr>
@@ -7279,45 +7279,45 @@ TODO: delete them permanently from here
   <desc>delay between each batch for zmspamextract</desc>
 </attr>
 
-<attr id="1458" name="zimbraAmavisDomainDisclaimerText" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
+<attr id="1458" name="zimbraAmavisDomainDisclaimerText" type="string" cardinality="single" optionalIn="domain" since="8.5.0">
   <desc>domain mandatory mail plain text signature</desc>
 </attr>
 
-<attr id="1459" name="zimbraAmavisDomainDisclaimerHTML" type="string" cardinality="single" optionalIn="domain" since="9.0.0">
+<attr id="1459" name="zimbraAmavisDomainDisclaimerHTML" type="string" cardinality="single" optionalIn="domain" since="8.5.0">
   <desc>domain mandatory mail html signature</desc>
 </attr>
 
-<attr id="1460" name="zimbraAmavisFinalSpamDestiny" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1460" name="zimbraAmavisFinalSpamDestiny" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>D_DISCARD</globalConfigValue>
   <desc>Amavis final destination for Spam.  Default is to discard it</desc>
 </attr>
 
-<attr id="1461" name="zimbraAmavisMaxServers" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1461" name="zimbraAmavisMaxServers" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>10</globalConfigValue>
   <desc>Maximum number of Amavis servers to run.  Default is 10</desc>
 </attr>
 
-<attr id="1462" name="zimbraClamAVMaxThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1462" name="zimbraClamAVMaxThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>10</globalConfigValue>
   <desc>Maximum number of ClamAV servers to run.  Default is 10</desc>
 </attr>
 
-<attr id="1463" name="zimbraAmavisEnableDKIMVerification" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1463" name="zimbraAmavisEnableDKIMVerification" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether or not Amavis should verify DKIM keys.  Defaults to TRUE</desc>
 </attr>
 
-<attr id="1464" name="zimbraAmavisOriginatingBypassSA" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1464" name="zimbraAmavisOriginatingBypassSA" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether or not Amavis should Bypass SpamAsassin for originating email.  Defaults to FALSE</desc>
 </attr>
 
-<attr id="1465" name="zimbraAmavisDSPAMEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1465" name="zimbraAmavisDSPAMEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether or not Amavis should use DSPAM as an additional score factor for SPAM. Defaults to FALSE</desc>
 </attr>
 
-<attr id="1466" name="zimbraPostfixEnableSmtpdPolicyd" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="9.0.0">
+<attr id="1466" name="zimbraPostfixEnableSmtpdPolicyd" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to FALSE</desc>
 </attr>

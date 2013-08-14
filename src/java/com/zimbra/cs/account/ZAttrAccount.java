@@ -6085,7 +6085,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraConverterHints, or empty array if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public String[] getConverterHints() {
@@ -6099,7 +6099,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraConverterHints new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public void setConverterHints(String[] zimbraConverterHints) throws com.zimbra.common.service.ServiceException {
@@ -6116,7 +6116,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public Map<String,Object> setConverterHints(String[] zimbraConverterHints, Map<String,Object> attrs) {
@@ -6132,7 +6132,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraConverterHints new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public void addConverterHints(String zimbraConverterHints) throws com.zimbra.common.service.ServiceException {
@@ -6149,7 +6149,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public Map<String,Object> addConverterHints(String zimbraConverterHints, Map<String,Object> attrs) {
@@ -6165,7 +6165,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraConverterHints existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public void removeConverterHints(String zimbraConverterHints) throws com.zimbra.common.service.ServiceException {
@@ -6182,7 +6182,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public Map<String,Object> removeConverterHints(String zimbraConverterHints, Map<String,Object> attrs) {
@@ -6197,7 +6197,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public void unsetConverterHints() throws com.zimbra.common.service.ServiceException {
@@ -6213,7 +6213,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public Map<String,Object> unsetConverterHints(Map<String,Object> attrs) {
@@ -16939,7 +16939,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraFilePreviewMaxSize, or 20971520 if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1442)
     public long getFilePreviewMaxSize() {
@@ -16952,7 +16952,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFilePreviewMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1442)
     public void setFilePreviewMaxSize(long zimbraFilePreviewMaxSize) throws com.zimbra.common.service.ServiceException {
@@ -16968,7 +16968,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1442)
     public Map<String,Object> setFilePreviewMaxSize(long zimbraFilePreviewMaxSize, Map<String,Object> attrs) {
@@ -16982,7 +16982,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1442)
     public void unsetFilePreviewMaxSize() throws com.zimbra.common.service.ServiceException {
@@ -16997,7 +16997,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1442)
     public Map<String,Object> unsetFilePreviewMaxSize(Map<String,Object> attrs) {
@@ -23755,7 +23755,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMobileAttachSkippedItemEnabled, or false if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1423)
     public boolean isMobileAttachSkippedItemEnabled() {
@@ -23769,7 +23769,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMobileAttachSkippedItemEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1423)
     public void setMobileAttachSkippedItemEnabled(boolean zimbraMobileAttachSkippedItemEnabled) throws com.zimbra.common.service.ServiceException {
@@ -23786,7 +23786,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1423)
     public Map<String,Object> setMobileAttachSkippedItemEnabled(boolean zimbraMobileAttachSkippedItemEnabled, Map<String,Object> attrs) {
@@ -23801,7 +23801,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1423)
     public void unsetMobileAttachSkippedItemEnabled() throws com.zimbra.common.service.ServiceException {
@@ -23817,7 +23817,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1423)
     public Map<String,Object> unsetMobileAttachSkippedItemEnabled(Map<String,Object> attrs) {
@@ -24074,7 +24074,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMobileNotificationAdminAddress, or null if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1422)
     public String getMobileNotificationAdminAddress() {
@@ -24087,7 +24087,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMobileNotificationAdminAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1422)
     public void setMobileNotificationAdminAddress(String zimbraMobileNotificationAdminAddress) throws com.zimbra.common.service.ServiceException {
@@ -24103,7 +24103,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1422)
     public Map<String,Object> setMobileNotificationAdminAddress(String zimbraMobileNotificationAdminAddress, Map<String,Object> attrs) {
@@ -24117,7 +24117,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1422)
     public void unsetMobileNotificationAdminAddress() throws com.zimbra.common.service.ServiceException {
@@ -24132,7 +24132,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1422)
     public Map<String,Object> unsetMobileNotificationAdminAddress(Map<String,Object> attrs) {
@@ -24146,7 +24146,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMobileNotificationEnabled, or true if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public boolean isMobileNotificationEnabled() {
@@ -24159,7 +24159,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMobileNotificationEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public void setMobileNotificationEnabled(boolean zimbraMobileNotificationEnabled) throws com.zimbra.common.service.ServiceException {
@@ -24175,7 +24175,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public Map<String,Object> setMobileNotificationEnabled(boolean zimbraMobileNotificationEnabled, Map<String,Object> attrs) {
@@ -24189,7 +24189,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public void unsetMobileNotificationEnabled() throws com.zimbra.common.service.ServiceException {
@@ -24204,7 +24204,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public Map<String,Object> unsetMobileNotificationEnabled(Map<String,Object> attrs) {
@@ -26375,7 +26375,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Use
+     * Deprecated since: 8.5.0. Use
      * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
      * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
@@ -26390,7 +26390,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Use
+     * Deprecated since: 8.5.0. Use
      * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
      * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
@@ -26408,7 +26408,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Use
+     * Deprecated since: 8.5.0. Use
      * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
      * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
@@ -26427,7 +26427,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Use
+     * Deprecated since: 8.5.0. Use
      * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
      * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
@@ -26444,7 +26444,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Use
+     * Deprecated since: 8.5.0. Use
      * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
      * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
@@ -28030,7 +28030,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMobilePolicyRequireStorageCardEncryption, or true if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public boolean isMobilePolicyRequireStorageCardEncryption() {
@@ -28044,7 +28044,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMobilePolicyRequireStorageCardEncryption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public void setMobilePolicyRequireStorageCardEncryption(boolean zimbraMobilePolicyRequireStorageCardEncryption) throws com.zimbra.common.service.ServiceException {
@@ -28061,7 +28061,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public Map<String,Object> setMobilePolicyRequireStorageCardEncryption(boolean zimbraMobilePolicyRequireStorageCardEncryption, Map<String,Object> attrs) {
@@ -28076,7 +28076,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public void unsetMobilePolicyRequireStorageCardEncryption() throws com.zimbra.common.service.ServiceException {
@@ -28092,7 +28092,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public Map<String,Object> unsetMobilePolicyRequireStorageCardEncryption(Map<String,Object> attrs) {
@@ -37355,7 +37355,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefFontSize, or "normal" if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1448)
     public String getPrefFontSize() {
@@ -37368,7 +37368,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefFontSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1448)
     public void setPrefFontSize(String zimbraPrefFontSize) throws com.zimbra.common.service.ServiceException {
@@ -37384,7 +37384,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1448)
     public Map<String,Object> setPrefFontSize(String zimbraPrefFontSize, Map<String,Object> attrs) {
@@ -37398,7 +37398,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1448)
     public void unsetPrefFontSize() throws com.zimbra.common.service.ServiceException {
@@ -37413,7 +37413,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1448)
     public Map<String,Object> unsetPrefFontSize(Map<String,Object> attrs) {
@@ -47758,7 +47758,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefWebClientOfflineAccessEnabled, or false if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1443)
     public boolean isPrefWebClientOfflineAccessEnabled() {
@@ -47772,7 +47772,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefWebClientOfflineAccessEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1443)
     public void setPrefWebClientOfflineAccessEnabled(boolean zimbraPrefWebClientOfflineAccessEnabled) throws com.zimbra.common.service.ServiceException {
@@ -47789,7 +47789,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1443)
     public Map<String,Object> setPrefWebClientOfflineAccessEnabled(boolean zimbraPrefWebClientOfflineAccessEnabled, Map<String,Object> attrs) {
@@ -47804,7 +47804,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1443)
     public void unsetPrefWebClientOfflineAccessEnabled() throws com.zimbra.common.service.ServiceException {
@@ -47820,7 +47820,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1443)
     public Map<String,Object> unsetPrefWebClientOfflineAccessEnabled(Map<String,Object> attrs) {
@@ -50470,7 +50470,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTouchJSErrorTrackingEnabled, or false if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1433)
     public boolean isTouchJSErrorTrackingEnabled() {
@@ -50483,7 +50483,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTouchJSErrorTrackingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1433)
     public void setTouchJSErrorTrackingEnabled(boolean zimbraTouchJSErrorTrackingEnabled) throws com.zimbra.common.service.ServiceException {
@@ -50499,7 +50499,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1433)
     public Map<String,Object> setTouchJSErrorTrackingEnabled(boolean zimbraTouchJSErrorTrackingEnabled, Map<String,Object> attrs) {
@@ -50513,7 +50513,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1433)
     public void unsetTouchJSErrorTrackingEnabled() throws com.zimbra.common.service.ServiceException {
@@ -50528,7 +50528,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1433)
     public Map<String,Object> unsetTouchJSErrorTrackingEnabled(Map<String,Object> attrs) {
@@ -50542,7 +50542,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTouchJSErrorTrackingKey, or null if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1434)
     public String getTouchJSErrorTrackingKey() {
@@ -50555,7 +50555,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTouchJSErrorTrackingKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1434)
     public void setTouchJSErrorTrackingKey(String zimbraTouchJSErrorTrackingKey) throws com.zimbra.common.service.ServiceException {
@@ -50571,7 +50571,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1434)
     public Map<String,Object> setTouchJSErrorTrackingKey(String zimbraTouchJSErrorTrackingKey, Map<String,Object> attrs) {
@@ -50585,7 +50585,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1434)
     public void unsetTouchJSErrorTrackingKey() throws com.zimbra.common.service.ServiceException {
@@ -50600,7 +50600,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1434)
     public Map<String,Object> unsetTouchJSErrorTrackingKey(Map<String,Object> attrs) {
@@ -50975,7 +50975,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraWebClientOfflineSyncMaxDays, or 30 if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1452)
     public int getWebClientOfflineSyncMaxDays() {
@@ -50989,7 +50989,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraWebClientOfflineSyncMaxDays new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1452)
     public void setWebClientOfflineSyncMaxDays(int zimbraWebClientOfflineSyncMaxDays) throws com.zimbra.common.service.ServiceException {
@@ -51006,7 +51006,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1452)
     public Map<String,Object> setWebClientOfflineSyncMaxDays(int zimbraWebClientOfflineSyncMaxDays, Map<String,Object> attrs) {
@@ -51021,7 +51021,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1452)
     public void unsetWebClientOfflineSyncMaxDays() throws com.zimbra.common.service.ServiceException {
@@ -51037,7 +51037,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1452)
     public Map<String,Object> unsetWebClientOfflineSyncMaxDays(Map<String,Object> attrs) {
