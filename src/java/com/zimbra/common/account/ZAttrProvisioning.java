@@ -1924,7 +1924,7 @@ public class ZAttrProvisioning {
      * AlwaysOn cluster-id to which this server belongs to. If empty,
      * it&#039;s not part of AlwaysOn and is a stand-alone server.
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1446)
     public static final String A_zimbraAlwaysOnClusterId = "zimbraAlwaysOnClusterId";
@@ -1932,7 +1932,7 @@ public class ZAttrProvisioning {
     /**
      * domain mandatory mail html signature
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1459)
     public static final String A_zimbraAmavisDomainDisclaimerHTML = "zimbraAmavisDomainDisclaimerHTML";
@@ -1940,7 +1940,7 @@ public class ZAttrProvisioning {
     /**
      * domain mandatory mail plain text signature
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1458)
     public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
@@ -1949,7 +1949,7 @@ public class ZAttrProvisioning {
      * Whether or not Amavis should use DSPAM as an additional score factor
      * for SPAM. Defaults to FALSE
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1465)
     public static final String A_zimbraAmavisDSPAMEnabled = "zimbraAmavisDSPAMEnabled";
@@ -1957,7 +1957,7 @@ public class ZAttrProvisioning {
     /**
      * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1463)
     public static final String A_zimbraAmavisEnableDKIMVerification = "zimbraAmavisEnableDKIMVerification";
@@ -1965,7 +1965,7 @@ public class ZAttrProvisioning {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1460)
     public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
@@ -1973,7 +1973,7 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of Amavis servers to run. Default is 10
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1461)
     public static final String A_zimbraAmavisMaxServers = "zimbraAmavisMaxServers";
@@ -1982,7 +1982,7 @@ public class ZAttrProvisioning {
      * Whether or not Amavis should Bypass SpamAsassin for originating email.
      * Defaults to FALSE
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1464)
     public static final String A_zimbraAmavisOriginatingBypassSA = "zimbraAmavisOriginatingBypassSA";
@@ -2975,7 +2975,7 @@ public class ZAttrProvisioning {
     /**
      * Maximum number of ClamAV servers to run. Default is 10
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1462)
     public static final String A_zimbraClamAVMaxThreads = "zimbraClamAVMaxThreads";
@@ -3095,7 +3095,7 @@ public class ZAttrProvisioning {
      * Allows converter hints to be supplied on the COS level. Can be used to
      * enable or disable some converters
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1441)
     public static final String A_zimbraConverterHints = "zimbraConverterHints";
@@ -3763,7 +3763,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureEnabled = "zimbraDomainMandatoryMailSignatureEnabled";
 
     /**
-     * Deprecated since: 9.0.0. deprecated in favor of
+     * Deprecated since: 8.5.0. deprecated in favor of
      * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
      * html signature
      *
@@ -3773,7 +3773,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureHTML = "zimbraDomainMandatoryMailSignatureHTML";
 
     /**
-     * Deprecated since: 9.0.0. deprecated in favor of
+     * Deprecated since: 8.5.0. deprecated in favor of
      * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
      * plain text signature
      *
@@ -4776,7 +4776,7 @@ public class ZAttrProvisioning {
     /**
      * Maximum size in bytes for file preview in web client
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1442)
     public static final String A_zimbraFilePreviewMaxSize = "zimbraFilePreviewMaxSize";
@@ -6976,7 +6976,7 @@ public class ZAttrProvisioning {
      * whether mobile sync should zip the skipped item and attach it to the
      * notification mail
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1423)
     public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
@@ -7005,7 +7005,7 @@ public class ZAttrProvisioning {
     /**
      * admin email address used for receiving notifications
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1422)
     public static final String A_zimbraMobileNotificationAdminAddress = "zimbraMobileNotificationAdminAddress";
@@ -7013,7 +7013,7 @@ public class ZAttrProvisioning {
     /**
      * whether mobile sync notification enabled or not
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public static final String A_zimbraMobileNotificationEnabled = "zimbraMobileNotificationEnabled";
@@ -7268,7 +7268,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyApprovedApplicationList = "zimbraMobilePolicyApprovedApplicationList";
 
     /**
-     * Deprecated since: 9.0.0. Use
+     * Deprecated since: 8.5.0. Use
      * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
      * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
@@ -7473,7 +7473,7 @@ public class ZAttrProvisioning {
      * require data encryption on storage card; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public static final String A_zimbraMobilePolicyRequireStorageCardEncryption = "zimbraMobilePolicyRequireStorageCardEncryption";
@@ -8205,7 +8205,7 @@ public class ZAttrProvisioning {
      * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
      * FALSE
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1466)
     public static final String A_zimbraPostfixEnableSmtpdPolicyd = "zimbraPostfixEnableSmtpdPolicyd";
@@ -8811,7 +8811,7 @@ public class ZAttrProvisioning {
     /**
      * the font size for the web client
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1448)
     public static final String A_zimbraPrefFontSize = "zimbraPrefFontSize";
@@ -9788,7 +9788,7 @@ public class ZAttrProvisioning {
      * user preference to enable/disable access to his mailbox data in the
      * web client when offline
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1443)
     public static final String A_zimbraPrefWebClientOfflineAccessEnabled = "zimbraPrefWebClientOfflineAccessEnabled";
@@ -11562,7 +11562,7 @@ public class ZAttrProvisioning {
     /**
      * whether JavaScript error tracking via third party service is enabled
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1433)
     public static final String A_zimbraTouchJSErrorTrackingEnabled = "zimbraTouchJSErrorTrackingEnabled";
@@ -11570,7 +11570,7 @@ public class ZAttrProvisioning {
     /**
      * Key to be used for JavaScript error tracking via third party service
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1434)
     public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
@@ -11907,7 +11907,7 @@ public class ZAttrProvisioning {
      * limit for the number of days that the web client would use to sync any
      * mail folder&#039;s data for offline use
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1452)
     public static final String A_zimbraWebClientOfflineSyncMaxDays = "zimbraWebClientOfflineSyncMaxDays";
@@ -11924,7 +11924,7 @@ public class ZAttrProvisioning {
      * weclient URL to directly connect when making service to JS calls from
      * mail server in split mode
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1445)
     public static final String A_zimbraWebClientURL = "zimbraWebClientURL";
@@ -12142,7 +12142,7 @@ public class ZAttrProvisioning {
      * list of host:port for zookeeper servers; set to empty value to disable
      * the use of zookeeper
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1447)
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
