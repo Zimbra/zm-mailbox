@@ -325,16 +325,19 @@ SECTION ldap
 
 SECTION cbpolicyd
 	REWRITE conf/cbpolicyd.conf.in conf/cbpolicyd.conf
-	LOCAL cbpolicyd_pid_file
-	LOCAL cbpolicyd_log_file
-	LOCAL cbpolicyd_db_file
-	LOCAL cbpolicyd_log_level
-	LOCAL cbpolicyd_log_mail
-	LOCAL cbpolicyd_log_detail
 	LOCAL cbpolicyd_bind_port
-	LOCAL cbpolicyd_timeout
 	LOCAL cbpolicyd_bypass_mode
 	LOCAL cbpolicyd_bypass_timeout
+	LOCAL cbpolicyd_db_file
+	LOCAL cbpolicyd_log_detail
+	LOCAL cbpolicyd_log_file
+	LOCAL cbpolicyd_log_level
+	LOCAL cbpolicyd_log_mail
+	LOCAL cbpolicyd_max_servers
+	LOCAL cbpolicyd_max_spare_servers
+	LOCAL cbpolicyd_max_requests
+	LOCAL cbpolicyd_min_servers
+	LOCAL cbpolicyd_min_spare_servers
 	LOCAL cbpolicyd_module_accesscontrol
 	LOCAL cbpolicyd_module_greylisting
 	LOCAL cbpolicyd_module_greylisting_training
@@ -345,6 +348,9 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_module_quotas
 	LOCAL cbpolicyd_module_amavis
 	LOCAL cbpolicyd_module_accounting
+	LOCAL cbpolicyd_pid_file
+	LOCAL cbpolicyd_timeout_idle
+	LOCAL cbpolicyd_timeout_busy
 	if SERVICE cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions FILE zmconfigd/smtpd_end_of_data_restrictions.cf
 	fi
