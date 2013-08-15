@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -48,9 +49,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.IndexDocument;
@@ -153,7 +154,7 @@ public final class MailboxIndex {
      */
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params)
             throws ServiceException {
-        assert(!mailbox.lock.isLocked());
+        assert(mailbox.lock.isUnlocked());
         assert(octx != null);
 
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
@@ -346,7 +347,7 @@ public final class MailboxIndex {
      */
     private void indexDeferredItems(Set<MailItem.Type> types, BatchStatus status, boolean wait)
             throws ServiceException {
-        assert(!mailbox.lock.isLocked());
+        assert(mailbox.lock.isUnlocked());
         if ((indexStore != null) && indexStore.isPendingDelete()) {
             ZimbraLog.index.debug("index delete is in progress by other thread, skipping");
             return;  // No point in indexing if we are going to delete the index
@@ -677,7 +678,7 @@ public final class MailboxIndex {
      * @throws ServiceException {@link ServiceException#INTERRUPTED} if {@link #cancelReIndex()} is called
      */
     private void indexItemList(Collection<Integer> ids, BatchStatus status) throws ServiceException {
-        assert(!mailbox.lock.isLocked());
+        assert(mailbox.lock.isUnlocked());
 
         status.setTotal(ids.size());
         if (ids.isEmpty()) {
@@ -862,7 +863,7 @@ public final class MailboxIndex {
      * Adds index documents. The caller must hold the mailbox lock.
      */
     synchronized void add(List<IndexItemEntry> entries) throws ServiceException {
-        assert(mailbox.lock.isLocked());
+        assert(mailbox.lock.isWriteLockedByCurrentThread());
         if (entries.isEmpty()) {
             return;
         }

@@ -87,7 +87,7 @@ public class GetCalendarItem extends CalendarRequest {
             fields |= Change.CONFLICT;
         }
         Element response = getResponseElement(zsc);
-        mbox.lock.lock();
+        mbox.lock.lock(false);
         try {
             CalendarItem calItem;
             if (uid != null) {

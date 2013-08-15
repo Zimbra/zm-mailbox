@@ -1218,7 +1218,7 @@ public final class DbMailbox {
     }
 
     public static void optimize(DbConnection conn, Mailbox mbox, int level) throws ServiceException {
-        assert(mbox.lock.isLocked());
+        assert(mbox.lock.isWriteLockedByCurrentThread());
 
         String name = getDatabaseName(mbox);
 

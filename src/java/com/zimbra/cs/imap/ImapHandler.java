@@ -3305,7 +3305,7 @@ abstract class ImapHandler {
         try {
             Mailbox mbox = i4folder.getMailbox();
             if (unsorted && i4search.canBeRunLocally()) {
-                mbox.lock.lock();
+                mbox.lock.lock(false);
                 try {
                     hits = i4search.evaluate(i4folder);
                     hits.remove(null);
@@ -3421,7 +3421,7 @@ abstract class ImapHandler {
         TimeZone tz = acct == null ? null : WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
 
         String search;
-        mbox.lock.lock();
+        mbox.lock.lock(false);
         try {
             search = i4search.toZimbraSearch(i4folder);
             if (!i4folder.isVirtual()) {
@@ -3618,7 +3618,7 @@ abstract class ImapHandler {
 
         ImapMessageSet i4set;
         Mailbox mbox = i4folder.getMailbox();
-        mbox.lock.lock();
+        mbox.lock.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, allowOutOfRangeMsgSeq, true /* includeExpunged */);
             i4set.remove(null);

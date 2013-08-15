@@ -503,6 +503,12 @@ public final class MailboxTest {
         assertEquals(3, contactList.size());
     }
 
+    @Test
+    public void getVisibleFolders() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        mbox.getVisibleFolders(new OperationContext(mbox));
+    }
+
     /**
      * @throws java.lang.Exception
      */

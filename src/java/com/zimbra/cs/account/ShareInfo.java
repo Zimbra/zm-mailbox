@@ -316,7 +316,7 @@ public class ShareInfo {
 
             Map<String, Integer> mountpoints = new HashMap<String, Integer>();
 
-            mbox.lock.lock();
+            mbox.lock.lock(false);
             try {
                 // get the root node...
                 int folderId = Mailbox.ID_FOLDER_USER_ROOT;

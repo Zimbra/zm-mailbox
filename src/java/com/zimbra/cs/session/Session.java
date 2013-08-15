@@ -159,7 +159,7 @@ public abstract class Session {
     public Session unregister() {
         // locking order is always Mailbox then Session
         Mailbox mbox = mailbox;
-        assert(mbox == null || mbox.lock.isLocked() || !Thread.holdsLock(this));
+        assert(mbox == null || mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
 
         if (mbox != null && isMailboxListener()) {
             mbox.removeListener(this);
