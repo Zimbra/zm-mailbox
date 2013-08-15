@@ -7332,4 +7332,99 @@ TODO: delete them permanently from here
   <desc>Whether or not to gzip static web content. Defaults to true.</desc>
 </attr>
 
+<attr id="1469" name="zimbraCBPolicydAccessControlEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd Access Control module. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1470" name="zimbraCBPolicydAccountingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd Accounting module. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1471" name="zimbraCBPolicydAmavisEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1472" name="zimbraCBPolicydCheckHeloEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd Check Helo module. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1473" name="zimbraCBPolicydCheckSPFEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1474" name="zimbraCBPolicydGreylistingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd Greylisting module. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1475" name="zimbraCBPolicydGreylistingTrainingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not to put CBPolicyd Greylisting module in training only mode. Defaults to FALSE</desc>
+</attr>
+
+<attr id="1476" name="zimbraCBPolicydQuotasEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE</desc>
+</attr>
+
+<attr id="1477" name="zimbraCBPolicydMinServers" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>4</globalConfigValue>
+  <desc>Minimum number of CBPolicyd servers to have running. Defaults to 4</desc>
+</attr>
+
+<attr id="1478" name="zimbraCBPolicydMinSpareServers" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>4</globalConfigValue>
+  <desc>Minimum number of spare servers to have on hand. Defaults to 4</desc>
+</attr>
+
+<attr id="1479" name="zimbraCBPolicydMaxSpareServers" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>12</globalConfigValue>
+  <desc>Maximum number of spare servers to have on hand that are idle. Defaults to 12</desc>
+</attr>
+
+<attr id="1480" name="zimbraCBPolicydMaxServers" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>25</globalConfigValue>
+  <desc>Maximum number of servers to allow. Defaults to 25</desc>
+</attr>
+
+<attr id="1481" name="zimbraCBPolicydMaxRequests" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>Maximum number of requests to process per server. Defaults to 1000</desc>
+</attr>
+
+<attr id="1482" name="zimbraCBPolicydTimeoutIdle" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>1020</globalConfigValue>
+  <desc>Timeout when talking to clients and servers are idle. Defaults to 1020 seconds</desc>
+</attr>
+
+<attr id="1483" name="zimbraCBPolicydTimeoutBusy" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>120</globalConfigValue>
+  <desc>Timeout when talking to clients and servers are busy. Defaults to 120 seconds</desc>
+</attr>
+
+<attr id="1484" name="zimbraCBPolicydBypassTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>30</globalConfigValue>
+  <desc>Bypass timeout. Defaults to 30 seconds</desc>
+</attr>
+
+<attr id="1485" name="zimbraCBPolicydBypassMode" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>tempfail</globalConfigValue>
+  <desc>Bypass fail mode. Default is tempfail</desc>
+</attr>
+
+<attr id="1486" name="zimbraCBPolicydGreylistingDeferMsg" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>Greylisting in effect, please come back later</globalConfigValue>
+  <desc>Message to give when deferring email. Default is Greylisting in effect, please come back later</desc>
+</attr>
+
+<attr id="1487" name="zimbraCBPolicydGreylistingBlacklistMsg" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>Greylisting in effect, sending server blacklisted</globalConfigValue>
+  <desc>Message to give when client is on blacklist. Default is Greylisting in effect, sending server blacklisted</desc>
+</attr>
+
 </attrs>

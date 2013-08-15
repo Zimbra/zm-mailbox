@@ -4559,6 +4559,1424 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @return zimbraCBPolicydAccessControlEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public boolean isCBPolicydAccessControlEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydAccessControlEnabled, false);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydAccessControlEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public void setCBPolicydAccessControlEnabled(boolean zimbraCBPolicydAccessControlEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccessControlEnabled, zimbraCBPolicydAccessControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydAccessControlEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public Map<String,Object> setCBPolicydAccessControlEnabled(boolean zimbraCBPolicydAccessControlEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccessControlEnabled, zimbraCBPolicydAccessControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public void unsetCBPolicydAccessControlEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccessControlEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public Map<String,Object> unsetCBPolicydAccessControlEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccessControlEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @return zimbraCBPolicydAccountingEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public boolean isCBPolicydAccountingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydAccountingEnabled, false);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydAccountingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public void setCBPolicydAccountingEnabled(boolean zimbraCBPolicydAccountingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccountingEnabled, zimbraCBPolicydAccountingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydAccountingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public Map<String,Object> setCBPolicydAccountingEnabled(boolean zimbraCBPolicydAccountingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccountingEnabled, zimbraCBPolicydAccountingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public void unsetCBPolicydAccountingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccountingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public Map<String,Object> unsetCBPolicydAccountingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAccountingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @return zimbraCBPolicydAmavisEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public boolean isCBPolicydAmavisEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydAmavisEnabled, false);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @param zimbraCBPolicydAmavisEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public void setCBPolicydAmavisEnabled(boolean zimbraCBPolicydAmavisEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAmavisEnabled, zimbraCBPolicydAmavisEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @param zimbraCBPolicydAmavisEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public Map<String,Object> setCBPolicydAmavisEnabled(boolean zimbraCBPolicydAmavisEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAmavisEnabled, zimbraCBPolicydAmavisEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public void unsetCBPolicydAmavisEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAmavisEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public Map<String,Object> unsetCBPolicydAmavisEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydAmavisEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @return zimbraCBPolicydBypassMode, or "tempfail" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public String getCBPolicydBypassMode() {
+        return getAttr(Provisioning.A_zimbraCBPolicydBypassMode, "tempfail");
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @param zimbraCBPolicydBypassMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public void setCBPolicydBypassMode(String zimbraCBPolicydBypassMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @param zimbraCBPolicydBypassMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public Map<String,Object> setCBPolicydBypassMode(String zimbraCBPolicydBypassMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode);
+        return attrs;
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public void unsetCBPolicydBypassMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public Map<String,Object> unsetCBPolicydBypassMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, "");
+        return attrs;
+    }
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @return zimbraCBPolicydBypassTimeout, or 30 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public int getCBPolicydBypassTimeout() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydBypassTimeout, 30);
+    }
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @param zimbraCBPolicydBypassTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public void setCBPolicydBypassTimeout(int zimbraCBPolicydBypassTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassTimeout, Integer.toString(zimbraCBPolicydBypassTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @param zimbraCBPolicydBypassTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public Map<String,Object> setCBPolicydBypassTimeout(int zimbraCBPolicydBypassTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassTimeout, Integer.toString(zimbraCBPolicydBypassTimeout));
+        return attrs;
+    }
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public void unsetCBPolicydBypassTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public Map<String,Object> unsetCBPolicydBypassTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @return zimbraCBPolicydCheckHeloEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public boolean isCBPolicydCheckHeloEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydCheckHeloEnabled, false);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydCheckHeloEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public void setCBPolicydCheckHeloEnabled(boolean zimbraCBPolicydCheckHeloEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckHeloEnabled, zimbraCBPolicydCheckHeloEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydCheckHeloEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public Map<String,Object> setCBPolicydCheckHeloEnabled(boolean zimbraCBPolicydCheckHeloEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckHeloEnabled, zimbraCBPolicydCheckHeloEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public void unsetCBPolicydCheckHeloEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckHeloEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public Map<String,Object> unsetCBPolicydCheckHeloEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckHeloEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @return zimbraCBPolicydCheckSPFEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public boolean isCBPolicydCheckSPFEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydCheckSPFEnabled, false);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @param zimbraCBPolicydCheckSPFEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public void setCBPolicydCheckSPFEnabled(boolean zimbraCBPolicydCheckSPFEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckSPFEnabled, zimbraCBPolicydCheckSPFEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @param zimbraCBPolicydCheckSPFEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public Map<String,Object> setCBPolicydCheckSPFEnabled(boolean zimbraCBPolicydCheckSPFEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckSPFEnabled, zimbraCBPolicydCheckSPFEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public void unsetCBPolicydCheckSPFEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckSPFEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public Map<String,Object> unsetCBPolicydCheckSPFEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydCheckSPFEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @return zimbraCBPolicydGreylistingBlacklistMsg, or "Greylisting in effect, sending server blacklisted" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public String getCBPolicydGreylistingBlacklistMsg() {
+        return getAttr(Provisioning.A_zimbraCBPolicydGreylistingBlacklistMsg, "Greylisting in effect, sending server blacklisted");
+    }
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @param zimbraCBPolicydGreylistingBlacklistMsg new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public void setCBPolicydGreylistingBlacklistMsg(String zimbraCBPolicydGreylistingBlacklistMsg) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingBlacklistMsg, zimbraCBPolicydGreylistingBlacklistMsg);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @param zimbraCBPolicydGreylistingBlacklistMsg new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public Map<String,Object> setCBPolicydGreylistingBlacklistMsg(String zimbraCBPolicydGreylistingBlacklistMsg, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingBlacklistMsg, zimbraCBPolicydGreylistingBlacklistMsg);
+        return attrs;
+    }
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public void unsetCBPolicydGreylistingBlacklistMsg() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingBlacklistMsg, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public Map<String,Object> unsetCBPolicydGreylistingBlacklistMsg(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingBlacklistMsg, "");
+        return attrs;
+    }
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @return zimbraCBPolicydGreylistingDeferMsg, or "Greylisting in effect, please come back later" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public String getCBPolicydGreylistingDeferMsg() {
+        return getAttr(Provisioning.A_zimbraCBPolicydGreylistingDeferMsg, "Greylisting in effect, please come back later");
+    }
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @param zimbraCBPolicydGreylistingDeferMsg new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public void setCBPolicydGreylistingDeferMsg(String zimbraCBPolicydGreylistingDeferMsg) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingDeferMsg, zimbraCBPolicydGreylistingDeferMsg);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @param zimbraCBPolicydGreylistingDeferMsg new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public Map<String,Object> setCBPolicydGreylistingDeferMsg(String zimbraCBPolicydGreylistingDeferMsg, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingDeferMsg, zimbraCBPolicydGreylistingDeferMsg);
+        return attrs;
+    }
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public void unsetCBPolicydGreylistingDeferMsg() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingDeferMsg, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public Map<String,Object> unsetCBPolicydGreylistingDeferMsg(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingDeferMsg, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @return zimbraCBPolicydGreylistingEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public boolean isCBPolicydGreylistingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydGreylistingEnabled, false);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydGreylistingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public void setCBPolicydGreylistingEnabled(boolean zimbraCBPolicydGreylistingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingEnabled, zimbraCBPolicydGreylistingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @param zimbraCBPolicydGreylistingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public Map<String,Object> setCBPolicydGreylistingEnabled(boolean zimbraCBPolicydGreylistingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingEnabled, zimbraCBPolicydGreylistingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public void unsetCBPolicydGreylistingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public Map<String,Object> unsetCBPolicydGreylistingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @return zimbraCBPolicydGreylistingTrainingEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public boolean isCBPolicydGreylistingTrainingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydGreylistingTrainingEnabled, false);
+    }
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @param zimbraCBPolicydGreylistingTrainingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public void setCBPolicydGreylistingTrainingEnabled(boolean zimbraCBPolicydGreylistingTrainingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingTrainingEnabled, zimbraCBPolicydGreylistingTrainingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @param zimbraCBPolicydGreylistingTrainingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public Map<String,Object> setCBPolicydGreylistingTrainingEnabled(boolean zimbraCBPolicydGreylistingTrainingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingTrainingEnabled, zimbraCBPolicydGreylistingTrainingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public void unsetCBPolicydGreylistingTrainingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingTrainingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public Map<String,Object> unsetCBPolicydGreylistingTrainingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydGreylistingTrainingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @return zimbraCBPolicydMaxRequests, or 1000 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public int getCBPolicydMaxRequests() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydMaxRequests, 1000);
+    }
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @param zimbraCBPolicydMaxRequests new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public void setCBPolicydMaxRequests(int zimbraCBPolicydMaxRequests) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxRequests, Integer.toString(zimbraCBPolicydMaxRequests));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @param zimbraCBPolicydMaxRequests new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public Map<String,Object> setCBPolicydMaxRequests(int zimbraCBPolicydMaxRequests, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxRequests, Integer.toString(zimbraCBPolicydMaxRequests));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public void unsetCBPolicydMaxRequests() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxRequests, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public Map<String,Object> unsetCBPolicydMaxRequests(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxRequests, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @return zimbraCBPolicydMaxServers, or 25 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public int getCBPolicydMaxServers() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydMaxServers, 25);
+    }
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @param zimbraCBPolicydMaxServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public void setCBPolicydMaxServers(int zimbraCBPolicydMaxServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxServers, Integer.toString(zimbraCBPolicydMaxServers));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @param zimbraCBPolicydMaxServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public Map<String,Object> setCBPolicydMaxServers(int zimbraCBPolicydMaxServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxServers, Integer.toString(zimbraCBPolicydMaxServers));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public void unsetCBPolicydMaxServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public Map<String,Object> unsetCBPolicydMaxServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxServers, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @return zimbraCBPolicydMaxSpareServers, or 12 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public int getCBPolicydMaxSpareServers() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydMaxSpareServers, 12);
+    }
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @param zimbraCBPolicydMaxSpareServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public void setCBPolicydMaxSpareServers(int zimbraCBPolicydMaxSpareServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxSpareServers, Integer.toString(zimbraCBPolicydMaxSpareServers));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @param zimbraCBPolicydMaxSpareServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public Map<String,Object> setCBPolicydMaxSpareServers(int zimbraCBPolicydMaxSpareServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxSpareServers, Integer.toString(zimbraCBPolicydMaxSpareServers));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public void unsetCBPolicydMaxSpareServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxSpareServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public Map<String,Object> unsetCBPolicydMaxSpareServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMaxSpareServers, "");
+        return attrs;
+    }
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @return zimbraCBPolicydMinServers, or 4 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public int getCBPolicydMinServers() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydMinServers, 4);
+    }
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @param zimbraCBPolicydMinServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public void setCBPolicydMinServers(int zimbraCBPolicydMinServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinServers, Integer.toString(zimbraCBPolicydMinServers));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @param zimbraCBPolicydMinServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public Map<String,Object> setCBPolicydMinServers(int zimbraCBPolicydMinServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinServers, Integer.toString(zimbraCBPolicydMinServers));
+        return attrs;
+    }
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public void unsetCBPolicydMinServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public Map<String,Object> unsetCBPolicydMinServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinServers, "");
+        return attrs;
+    }
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @return zimbraCBPolicydMinSpareServers, or 4 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public int getCBPolicydMinSpareServers() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydMinSpareServers, 4);
+    }
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @param zimbraCBPolicydMinSpareServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public void setCBPolicydMinSpareServers(int zimbraCBPolicydMinSpareServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinSpareServers, Integer.toString(zimbraCBPolicydMinSpareServers));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @param zimbraCBPolicydMinSpareServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public Map<String,Object> setCBPolicydMinSpareServers(int zimbraCBPolicydMinSpareServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinSpareServers, Integer.toString(zimbraCBPolicydMinSpareServers));
+        return attrs;
+    }
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public void unsetCBPolicydMinSpareServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinSpareServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public Map<String,Object> unsetCBPolicydMinSpareServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydMinSpareServers, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @return zimbraCBPolicydQuotasEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public boolean isCBPolicydQuotasEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCBPolicydQuotasEnabled, true);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @param zimbraCBPolicydQuotasEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public void setCBPolicydQuotasEnabled(boolean zimbraCBPolicydQuotasEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydQuotasEnabled, zimbraCBPolicydQuotasEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @param zimbraCBPolicydQuotasEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public Map<String,Object> setCBPolicydQuotasEnabled(boolean zimbraCBPolicydQuotasEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydQuotasEnabled, zimbraCBPolicydQuotasEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public void unsetCBPolicydQuotasEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydQuotasEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public Map<String,Object> unsetCBPolicydQuotasEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydQuotasEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @return zimbraCBPolicydTimeoutBusy, or 120 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public int getCBPolicydTimeoutBusy() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydTimeoutBusy, 120);
+    }
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @param zimbraCBPolicydTimeoutBusy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public void setCBPolicydTimeoutBusy(int zimbraCBPolicydTimeoutBusy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutBusy, Integer.toString(zimbraCBPolicydTimeoutBusy));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @param zimbraCBPolicydTimeoutBusy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public Map<String,Object> setCBPolicydTimeoutBusy(int zimbraCBPolicydTimeoutBusy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutBusy, Integer.toString(zimbraCBPolicydTimeoutBusy));
+        return attrs;
+    }
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public void unsetCBPolicydTimeoutBusy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutBusy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public Map<String,Object> unsetCBPolicydTimeoutBusy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutBusy, "");
+        return attrs;
+    }
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @return zimbraCBPolicydTimeoutIdle, or 1020 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public int getCBPolicydTimeoutIdle() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydTimeoutIdle, 1020);
+    }
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @param zimbraCBPolicydTimeoutIdle new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public void setCBPolicydTimeoutIdle(int zimbraCBPolicydTimeoutIdle) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutIdle, Integer.toString(zimbraCBPolicydTimeoutIdle));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @param zimbraCBPolicydTimeoutIdle new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public Map<String,Object> setCBPolicydTimeoutIdle(int zimbraCBPolicydTimeoutIdle, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutIdle, Integer.toString(zimbraCBPolicydTimeoutIdle));
+        return attrs;
+    }
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public void unsetCBPolicydTimeoutIdle() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutIdle, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public Map<String,Object> unsetCBPolicydTimeoutIdle(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydTimeoutIdle, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 5.0. deprecated in favor of the accountInherited
      * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
