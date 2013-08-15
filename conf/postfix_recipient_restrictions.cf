@@ -8,6 +8,7 @@ reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_non_fqdn_helo_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_non_fqdn_sender%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_client_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_unknown_reverse_client_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_helo_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_sender_domain%%
 %%explode reject_rbl_client VAR:zimbraMtaRestrictionRBLs%%
