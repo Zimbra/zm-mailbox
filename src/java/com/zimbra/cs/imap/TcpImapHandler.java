@@ -84,6 +84,7 @@ final class TcpImapHandler extends ProtocolHandler {
 
     @Override
     protected boolean processCommand() throws IOException {
+        delegate.setLoggingContext();
         // FIXME: throw an exception instead?
         if (input == null) {
             clearRequest();
