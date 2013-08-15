@@ -199,6 +199,8 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(60); // seconds
 
+    public static final KnownKey zimbra_mailbox_lock_readwrite = KnownKey.newKey(true);
+
     @Supported
     public static final KnownKey zimbra_index_threads = KnownKey.newKey(10);
 
