@@ -7255,7 +7255,7 @@ TODO: delete them permanently from here
   <desc>Whether to permit Outlook to sync via Active Sync</desc>
 </attr>
 
-<attr id="1454" name="zimbraReverseProxyExternalRouteIncludeOriginalAuthusername" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainAdminModifiable" since="8.0.5">
+<attr id="1454" name="zimbraReverseProxyExternalRouteIncludeOriginalAuthusername" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited,domainAdminModifiable" since="8.0.5">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
       During migrations Nginx lookup handler rewrites non-qualified username to fully qualified breaking proxy to external legacy mail platform.
