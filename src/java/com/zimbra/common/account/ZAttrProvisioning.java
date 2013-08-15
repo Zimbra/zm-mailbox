@@ -2929,6 +2929,168 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalResType = "zimbraCalResType";
 
     /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public static final String A_zimbraCBPolicydAccessControlEnabled = "zimbraCBPolicydAccessControlEnabled";
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public static final String A_zimbraCBPolicydAccountingEnabled = "zimbraCBPolicydAccountingEnabled";
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public static final String A_zimbraCBPolicydAmavisEnabled = "zimbraCBPolicydAmavisEnabled";
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public static final String A_zimbraCBPolicydBypassMode = "zimbraCBPolicydBypassMode";
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public static final String A_zimbraCBPolicydBypassTimeout = "zimbraCBPolicydBypassTimeout";
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public static final String A_zimbraCBPolicydCheckHeloEnabled = "zimbraCBPolicydCheckHeloEnabled";
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public static final String A_zimbraCBPolicydCheckSPFEnabled = "zimbraCBPolicydCheckSPFEnabled";
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public static final String A_zimbraCBPolicydGreylistingBlacklistMsg = "zimbraCBPolicydGreylistingBlacklistMsg";
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public static final String A_zimbraCBPolicydGreylistingDeferMsg = "zimbraCBPolicydGreylistingDeferMsg";
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public static final String A_zimbraCBPolicydGreylistingEnabled = "zimbraCBPolicydGreylistingEnabled";
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public static final String A_zimbraCBPolicydGreylistingTrainingEnabled = "zimbraCBPolicydGreylistingTrainingEnabled";
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public static final String A_zimbraCBPolicydMaxRequests = "zimbraCBPolicydMaxRequests";
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public static final String A_zimbraCBPolicydMaxServers = "zimbraCBPolicydMaxServers";
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public static final String A_zimbraCBPolicydMaxSpareServers = "zimbraCBPolicydMaxSpareServers";
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public static final String A_zimbraCBPolicydMinServers = "zimbraCBPolicydMinServers";
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public static final String A_zimbraCBPolicydMinSpareServers = "zimbraCBPolicydMinSpareServers";
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public static final String A_zimbraCBPolicydQuotasEnabled = "zimbraCBPolicydQuotasEnabled";
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public static final String A_zimbraCBPolicydTimeoutBusy = "zimbraCBPolicydTimeoutBusy";
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public static final String A_zimbraCBPolicydTimeoutIdle = "zimbraCBPolicydTimeoutIdle";
+
+    /**
      * When creating self-signed SSL certs during an install, we also create
      * a local Certificate Authority (CA) to sign these SSL certs. This local
      * CA-s own cert is then added to different applications &quot;trusted
