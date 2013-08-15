@@ -7287,7 +7287,7 @@ TODO: delete them permanently from here
   <desc>domain mandatory mail html signature</desc>
 </attr>
 
-<attr id="1460" name="zimbraAmavisFinalSpamDestiny" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+<attr id="1460" name="zimbraAmavisFinalSpamDestiny" type="enum" value="D_PASS,D_BOUNCE,D_REJECT,D_DISCARD" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>D_DISCARD</globalConfigValue>
   <desc>Amavis final destination for Spam.  Default is to discard it</desc>
 </attr>
@@ -7412,7 +7412,7 @@ TODO: delete them permanently from here
   <desc>Bypass timeout. Defaults to 30 seconds</desc>
 </attr>
 
-<attr id="1485" name="zimbraCBPolicydBypassMode" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+<attr id="1485" name="zimbraCBPolicydBypassMode" type="enum" value="tempfail,pass" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>tempfail</globalConfigValue>
   <desc>Bypass fail mode. Default is tempfail</desc>
 </attr>

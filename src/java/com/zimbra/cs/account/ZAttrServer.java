@@ -1097,17 +1097,35 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
+     *
+     * @return zimbraAmavisFinalSpamDestiny, or ZAttrProvisioning.AmavisFinalSpamDestiny.D_DISCARD if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1460)
+    public ZAttrProvisioning.AmavisFinalSpamDestiny getAmavisFinalSpamDestiny() {
+        try { String v = getAttr(Provisioning.A_zimbraAmavisFinalSpamDestiny); return v == null ? ZAttrProvisioning.AmavisFinalSpamDestiny.D_DISCARD : ZAttrProvisioning.AmavisFinalSpamDestiny.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.AmavisFinalSpamDestiny.D_DISCARD; }
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
+     *
      * @return zimbraAmavisFinalSpamDestiny, or "D_DISCARD" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1460)
-    public String getAmavisFinalSpamDestiny() {
+    public String getAmavisFinalSpamDestinyAsString() {
         return getAttr(Provisioning.A_zimbraAmavisFinalSpamDestiny, "D_DISCARD");
     }
 
     /**
      * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param zimbraAmavisFinalSpamDestiny new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1115,14 +1133,16 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1460)
-    public void setAmavisFinalSpamDestiny(String zimbraAmavisFinalSpamDestiny) throws com.zimbra.common.service.ServiceException {
+    public void setAmavisFinalSpamDestiny(ZAttrProvisioning.AmavisFinalSpamDestiny zimbraAmavisFinalSpamDestiny) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny.toString());
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param zimbraAmavisFinalSpamDestiny new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1131,7 +1151,42 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1460)
-    public Map<String,Object> setAmavisFinalSpamDestiny(String zimbraAmavisFinalSpamDestiny, Map<String,Object> attrs) {
+    public Map<String,Object> setAmavisFinalSpamDestiny(ZAttrProvisioning.AmavisFinalSpamDestiny zimbraAmavisFinalSpamDestiny, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny.toString());
+        return attrs;
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
+     *
+     * @param zimbraAmavisFinalSpamDestiny new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1460)
+    public void setAmavisFinalSpamDestinyAsString(String zimbraAmavisFinalSpamDestiny) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
+     *
+     * @param zimbraAmavisFinalSpamDestiny new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1460)
+    public Map<String,Object> setAmavisFinalSpamDestinyAsString(String zimbraAmavisFinalSpamDestiny, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisFinalSpamDestiny, zimbraAmavisFinalSpamDestiny);
         return attrs;
@@ -1139,6 +1194,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1153,6 +1210,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Amavis final destination for Spam. Default is to discard it
+     *
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3098,17 +3157,35 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Bypass fail mode. Default is tempfail
      *
+     * <p>Valid values: [tempfail, pass]
+     *
+     * @return zimbraCBPolicydBypassMode, or ZAttrProvisioning.CBPolicydBypassMode.tempfail if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public ZAttrProvisioning.CBPolicydBypassMode getCBPolicydBypassMode() {
+        try { String v = getAttr(Provisioning.A_zimbraCBPolicydBypassMode); return v == null ? ZAttrProvisioning.CBPolicydBypassMode.tempfail : ZAttrProvisioning.CBPolicydBypassMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.CBPolicydBypassMode.tempfail; }
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
+     *
      * @return zimbraCBPolicydBypassMode, or "tempfail" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1485)
-    public String getCBPolicydBypassMode() {
+    public String getCBPolicydBypassModeAsString() {
         return getAttr(Provisioning.A_zimbraCBPolicydBypassMode, "tempfail");
     }
 
     /**
      * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
      *
      * @param zimbraCBPolicydBypassMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3116,14 +3193,16 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1485)
-    public void setCBPolicydBypassMode(String zimbraCBPolicydBypassMode) throws com.zimbra.common.service.ServiceException {
+    public void setCBPolicydBypassMode(ZAttrProvisioning.CBPolicydBypassMode zimbraCBPolicydBypassMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode);
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode.toString());
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
      *
      * @param zimbraCBPolicydBypassMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3132,7 +3211,42 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1485)
-    public Map<String,Object> setCBPolicydBypassMode(String zimbraCBPolicydBypassMode, Map<String,Object> attrs) {
+    public Map<String,Object> setCBPolicydBypassMode(ZAttrProvisioning.CBPolicydBypassMode zimbraCBPolicydBypassMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode.toString());
+        return attrs;
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
+     *
+     * @param zimbraCBPolicydBypassMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public void setCBPolicydBypassModeAsString(String zimbraCBPolicydBypassMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
+     *
+     * @param zimbraCBPolicydBypassMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public Map<String,Object> setCBPolicydBypassModeAsString(String zimbraCBPolicydBypassMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCBPolicydBypassMode, zimbraCBPolicydBypassMode);
         return attrs;
@@ -3140,6 +3254,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3154,6 +3270,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Bypass fail mode. Default is tempfail
+     *
+     * <p>Valid values: [tempfail, pass]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
