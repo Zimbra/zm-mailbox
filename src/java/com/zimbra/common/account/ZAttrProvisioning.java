@@ -84,6 +84,26 @@ public class ZAttrProvisioning {
         public boolean isGlobal() { return this == global;}
     }
 
+    public static enum AmavisFinalSpamDestiny {
+        D_REJECT("D_REJECT"),
+        D_BOUNCE("D_BOUNCE"),
+        D_DISCARD("D_DISCARD"),
+        D_PASS("D_PASS");
+        private String mValue;
+        private AmavisFinalSpamDestiny(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AmavisFinalSpamDestiny fromString(String s) throws ServiceException {
+            for (AmavisFinalSpamDestiny value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isD_REJECT() { return this == D_REJECT;}
+        public boolean isD_BOUNCE() { return this == D_BOUNCE;}
+        public boolean isD_DISCARD() { return this == D_DISCARD;}
+        public boolean isD_PASS() { return this == D_PASS;}
+    }
+
     public static enum AutoProvAuthMech {
         KRB5("KRB5"),
         LDAP("LDAP"),
@@ -168,6 +188,22 @@ public class ZAttrProvisioning {
         }
         public boolean isEquipment() { return this == Equipment;}
         public boolean isLocation() { return this == Location;}
+    }
+
+    public static enum CBPolicydBypassMode {
+        tempfail("tempfail"),
+        pass("pass");
+        private String mValue;
+        private CBPolicydBypassMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static CBPolicydBypassMode fromString(String s) throws ServiceException {
+            for (CBPolicydBypassMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isTempfail() { return this == tempfail;}
+        public boolean isPass() { return this == pass;}
     }
 
     public static enum ClusterType {
