@@ -514,7 +514,11 @@ public class Mailbox {
 
         public void put(Folder folder) {
             mapById.put(folder.getId(), folder);
-            mapByUuid.put(folder.getUuid(), folder);
+            if (folder.getUuid() == null) {
+                ZimbraLog.cache.warn("attempting to cache folder [%s] id [%d] with null uuid ", folder, folder.getId(), new Exception());
+            } else {
+                mapByUuid.put(folder.getUuid(), folder);
+            }
         }
 
         public Folder get(int id) {
@@ -2093,14 +2097,11 @@ public class Mailbox {
                 return;
             }
         }
-        ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
+        if (ZimbraLog.cache.isDebugEnabled()) {
+            ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
+        }
         assert(currentChange().writeChange);
         assert(lock.isWriteLockedByCurrentThread());
-        if (requiresWriteLock) {
-            requiresWriteLock = false;
-            ZimbraLog.mailbox.debug("consuming forceWriteMode");
-            //ok, we're going to reload folder/tags so new callers can go back to using read
-        }
 
         ZimbraLog.cache.info("initializing folder and tag caches for mailbox %d", getId());
         try {
@@ -2190,6 +2191,11 @@ public class Mailbox {
 
             if (!loadedFromMemcached && !DebugConfig.disableFoldersTagsCache) {
                 cacheFoldersTagsToMemcached();
+            }
+            if (requiresWriteLock) {
+                requiresWriteLock = false;
+                ZimbraLog.mailbox.debug("consuming forceWriteMode");
+                //we've reloaded folder/tags so new callers can go back to using read
             }
         } catch (ServiceException e) {
             mTagCache = null;
