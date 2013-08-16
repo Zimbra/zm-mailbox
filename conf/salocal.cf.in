@@ -41,3 +41,8 @@ add_header spam Flag _YESNOCAPS_
 add_header all Status _YESNO_, score=_SCORE_ required=_REQD_ tests=_TESTS_ autolearn=_AUTOLEARN_ version=_VERSION_
 add_header all Level _STARS(*)_
 add_header all Checker-Version SpamAssassin _VERSION_ (_SUBVERSION_) on _HOSTNAME_
+
+header __FROM_FACEBOOK Return-Path:addr =~ /no-reply\@facebook\.com/i
+meta __FORGED_SENDER (!SPF_PASS && !DKIM_VALID_AU)
+meta FORGED_FACEBOOK_FROM (__FROM_FACEBOOK && __FORGED_SENDER)
+score FORGED_FACEBOOK 5 5 5 5
