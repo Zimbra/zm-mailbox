@@ -514,9 +514,7 @@ public class Mailbox {
 
         public void put(Folder folder) {
             mapById.put(folder.getId(), folder);
-            if (folder.getUuid() == null) {
-                ZimbraLog.cache.warn("attempting to cache folder [%s] id [%d] with null uuid ", folder, folder.getId(), new Exception());
-            } else {
+            if (folder.getUuid() != null) {
                 mapByUuid.put(folder.getUuid(), folder);
             }
         }
