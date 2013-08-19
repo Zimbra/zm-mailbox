@@ -7200,4 +7200,9 @@ TODO: delete them permanently from here
   <desc>Whether or not to gzip static web content. Defaults to true.</desc>
 </attr>
 
+<attr id="1488" name="zimbraAmavisLogLevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.5">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Loglevel for Amavis. Defaults to 1</desc>
+</attr>
+
 </attrs>
