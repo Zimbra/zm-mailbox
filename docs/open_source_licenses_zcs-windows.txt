@@ -1,6 +1,6 @@
 open_source_license.txt
 
-VMware Zimbra Windows Components 8.0.4 GA
+VMware Zimbra Windows Components 8.0.5 GA
 
 
 ===========================================================================

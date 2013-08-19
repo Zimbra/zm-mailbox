@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Collaboration Suite 8.0.4 GA
+Zimbra Collaboration Suite 8.0.5 GA
 
 
 ===========================================================================
@@ -218,7 +218,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> bouncycastle-1.46
    >>> bouncycastle-zimbra-20110708
    >>> chunkin-nginx-module-0.23rc2
-   >>> curl-7.30.0
+   >>> curl-7.31.0
    >>> cyrus-sasl-zimbra-2.1.26
    >>> dom4j-1.5.2
    >>> freetype-2.4.9
@@ -234,7 +234,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> javamail-1.4.5
    >>> jaxen-1.1.3
    >>> jce_policy-7
-   >>> jdk-1.7.0_21
+   >>> jdk-1.7.0_25
    >>> jdom-1.1
    >>> jplayer-2.1.0
    >>> json-1.0
@@ -252,7 +252,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nginx-1.2-zimbra
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
-   >>> opendkim-2.8.0
+   >>> opendkim-2.8.4
    >>> openldap-2.4.35
    >>> openssl-1.0.1e
    >>> perl-data-uuid-1.218
@@ -262,7 +262,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-net-ssleay-1.52
    >>> perl-socket6-0.23
    >>> perl-try-tiny-0.11
-   >>> php-5.4.6
+   >>> php-5.4.17
    >>> sendmail-8.14.5
    >>> slf4j-1.6.4
    >>> soundmanager2-2.0b
@@ -305,7 +305,7 @@ SECTION 2: Apache License, V2.0
    >>> guava-10.0.1
    >>> jackson-1.9.2
    >>> jettison-1.1
-   >>> jetty-7.6.10
+   >>> jetty-7.6.12
    >>> jsieve-0.4
    >>> junixsocket-1.3
    >>> lucene-3.5.0
@@ -405,7 +405,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> cluebringer-2.1.0-beta
    >>> libtool-2.2.6b
    >>> libwww-perl-6.04
-   >>> mysql-5.5.30
+   >>> mysql-5.5.32
    >>> mysql-connector-java-5.1.18
    >>> perl-archive-tar-1.90
    >>> perl-archive-zip-1.30
@@ -547,7 +547,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
 
 SECTION 11: GNU Lesser General Public License, V3.0
 
-   >>> zeromq-3.2.2
+   >>> zeromq-3.2.3
 
 
 
@@ -560,7 +560,7 @@ SECTION 12: GNU Library General Public License, V2.0
 
 SECTION 13: IBM Public License, V1.0
 
-   >>> postfix-2.10.0
+   >>> postfix-2.10.1
 
 
 
