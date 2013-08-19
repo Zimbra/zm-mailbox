@@ -1921,6 +1921,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAllowNonLDHCharsInDomain = "zimbraAllowNonLDHCharsInDomain";
 
     /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public static final String A_zimbraAmavisLogLevel = "zimbraAmavisLogLevel";
+
+    /**
      * When a virus is detected quarantine message to this account
      *
      * @since ZCS 7.0.0
