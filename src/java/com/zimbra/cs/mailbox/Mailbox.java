@@ -5229,7 +5229,7 @@ public class Mailbox {
     public CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getCalendarItemByUid", octxt);
+            beginReadTransaction("getCalendarItemByUid", octxt);
             MailItem.UnderlyingData data = DbMailItem.getCalendarItem(this, uid);
             CalendarItem calItem = (CalendarItem) getItem(data);
             success = true;

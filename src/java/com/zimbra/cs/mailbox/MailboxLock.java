@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.EmptyStackException;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -124,7 +125,11 @@ public final class MailboxLock {
         }
         if (zLock.getWriteHoldCount() == 0) {
             if (write) {
-                assert(assertReadLocks.get() == null);
+                Boolean readLock = assertReadLocks.get();
+                if (readLock != null) {
+                    ZimbraLog.mailbox.error("read lock held before write", new Exception());
+                    assert(false);
+                }
             } else {
                 assertReadLocks.set(true);
             }
@@ -207,7 +212,16 @@ public final class MailboxLock {
     }
 
     public void release() {
-        Boolean write = lockStack.pop();
+        Boolean write = false;
+        try {
+            write = lockStack.pop();
+        } catch (EmptyStackException ese) {
+            //should only occur if locked failed; i.e. tryLock() returned error
+            //or if call site has unbalanced lock/release
+            ZimbraLog.mailbox.trace("release when not locked?");
+            assert(getHoldCount() == 0);
+            return;
+        }
         //keep release in order so caller doesn't have to manage write/read flag
         ZimbraLog.mailbox.trace("RELEASE " + (write ? "WRITE" : "READ"));
 
