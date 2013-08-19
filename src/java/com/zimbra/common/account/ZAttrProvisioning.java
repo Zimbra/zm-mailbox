@@ -2007,6 +2007,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
 
     /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public static final String A_zimbraAmavisLogLevel = "zimbraAmavisLogLevel";
+
+    /**
      * Maximum number of Amavis servers to run. Default is 10
      *
      * @since ZCS 8.5.0
