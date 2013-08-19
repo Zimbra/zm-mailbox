@@ -2048,6 +2048,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @return zimbraAmavisLogLevel, or 1 if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public int getAmavisLogLevel() {
+        return getIntAttr(Provisioning.A_zimbraAmavisLogLevel, 1);
+    }
+
+    /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @param zimbraAmavisLogLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public void setAmavisLogLevel(int zimbraAmavisLogLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisLogLevel, Integer.toString(zimbraAmavisLogLevel));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @param zimbraAmavisLogLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public Map<String,Object> setAmavisLogLevel(int zimbraAmavisLogLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisLogLevel, Integer.toString(zimbraAmavisLogLevel));
+        return attrs;
+    }
+
+    /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public void unsetAmavisLogLevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisLogLevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Loglevel for Amavis. Defaults to 1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1488)
+    public Map<String,Object> unsetAmavisLogLevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisLogLevel, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of Amavis servers to run. Default is 10
      *
      * @return zimbraAmavisMaxServers, or 10 if unset
