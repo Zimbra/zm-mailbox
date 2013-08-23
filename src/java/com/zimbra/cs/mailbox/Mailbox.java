@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -2913,6 +2913,7 @@ public class Mailbox {
                 MailItem item = getCachedItem(key, type);
                 // special-case virtual conversations
                 if (item == null && ids[i] <= -FIRST_USER_ID) {
+
                     if (!MailItem.isAcceptableType(type, MailItem.Type.CONVERSATION)) {
                         throw MailItem.noSuchItem(ids[i], type);
                     }
@@ -2947,6 +2948,7 @@ public class Mailbox {
             tempCache.put(item.getId(), item);
         }
         uncached.clear();
+        Map<Integer, Integer> virtualConvsToRealConvs = new HashMap<Integer, Integer>();
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
                 if (ids[i] <= -FIRST_USER_ID) {
@@ -2958,8 +2960,9 @@ public class Mailbox {
                         items[i] = new VirtualConversation(this, (Message) item);
                     } else {
                         items[i] = tempCache.get(item.getParentId());
-                        if (items[i] == null)
-                            uncached.add(item.getParentId());
+                        if (items[i] == null) {
+                            virtualConvsToRealConvs.put(ids[i],item.getParentId());
+                        }
                     }
                 } else {
                     if ((items[i] = tempCache.get(ids[i])) == null)
@@ -2969,17 +2972,14 @@ public class Mailbox {
         }
 
         // special case asking for VirtualConversation but having it be a real Conversation
-        if (!uncached.isEmpty()) {
-            itemsFromDb = MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
+        if (!virtualConvsToRealConvs.isEmpty()) {
+            itemsFromDb = MailItem.getById(this, virtualConvsToRealConvs.values(), MailItem.Type.CONVERSATION);
             for (MailItem item : itemsFromDb) {
                 tempCache.put(item.getId(), item);
             }
             for (int i = 0; i < ids.length; i++) {
                 if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                    MailItem item = tempCache.get(ids[i]);
-                    if (!(item instanceof Message) || item.getParentId() == ids[i])
-                        throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
-                    items[i] = tempCache.get(item.getParentId());
+                    items[i] = tempCache.get(virtualConvsToRealConvs.get(ids[i]));
                     if (items[i] == null)
                         throw MailItem.noSuchItem(ids[i], type);
                 }
