@@ -771,7 +771,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>block all attachment downloading</desc>
 </attr>
 
-<attr id="116" name="zimbraAttachmentsViewInHtmlOnly" type="boolean" cardinality="single" optionalIn="account,cos,globalConfig" flags="accountInherited,domainAdminModifiable">
+<attr id="116" name="zimbraAttachmentsViewInHtmlOnly" type="boolean" cardinality="single" optionalIn="account,cos,globalConfig" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>view all attachments in html only</desc>
