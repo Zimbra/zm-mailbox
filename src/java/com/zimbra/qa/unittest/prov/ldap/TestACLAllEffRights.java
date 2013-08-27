@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,59 +25,59 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.accesscontrol.CollectAllEffectiveRights;
+import com.zimbra.cs.account.accesscontrol.CollectAllEffectiveRights.AllGroupMembers;
+import com.zimbra.cs.account.accesscontrol.CollectAllEffectiveRights.GroupShape;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.CollectAllEffectiveRights.AllGroupMembers;
-import com.zimbra.cs.account.accesscontrol.CollectAllEffectiveRights.GroupShape;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.qa.unittest.prov.Verify;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestACLAllEffRights extends LdapTest {
     private static LdapProvTestUtil provUtil;
     private static LdapProv prov;
-    
+
     @BeforeClass
     public static void init() throws Exception {
         provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
     }
-    
+
     @AfterClass
     public static void cleanup() throws Exception {
         Cleanup.deleteAll(baseDomainName());
     }
-    
+
     private AllGroupMembers allGroupMembers(DistributionList dl) throws ServiceException {
         CollectAllEffectiveRights caer = new CollectAllEffectiveRights(null, false, false, null);
         return caer.getAllGroupMembers(dl);
     }
-    
+
     @Test
     public void shapeTest1() throws Exception {
         /*
          * setup
          */
         String domainName = genDomainName(baseDomainName());
-        
+
         Domain domain = provUtil.createDomain(domainName);
-        
+
         DistributionList groupA = provUtil.createDistributionList("groupA", domain);
         DistributionList groupB = provUtil.createDistributionList("groupB", domain);
         DistributionList groupC = provUtil.createDistributionList("groupC", domain);
         DistributionList groupD = provUtil.createDistributionList("groupD", domain);
-        
+
         Account A = provUtil.createAccount("A", domain);
         Account B = provUtil.createAccount("B", domain);
         Account C = provUtil.createAccount("C", domain);
@@ -93,28 +93,28 @@ public class TestACLAllEffRights extends LdapTest {
         Account ACD = provUtil.createAccount("ACD", domain);
         Account BCD = provUtil.createAccount("BCD", domain);
         Account ABCD = provUtil.createAccount("ABCD", domain);
-        
-        groupA.addMembers(new String[]{A.getName(), 
+
+        groupA.addMembers(new String[]{A.getName(),
                                        AB.getName(), AC.getName(), AD.getName(),
                                        ABC.getName(), ABD.getName(), ACD.getName(),
                                        ABCD.getName()});
-        
-        groupB.addMembers(new String[]{B.getName(), 
+
+        groupB.addMembers(new String[]{B.getName(),
                                        AB.getName(), BC.getName(), BD.getName(),
                                        ABC.getName(), ABD.getName(), BCD.getName(),
                                        ABCD.getName()});
-        
-        groupC.addMembers(new String[]{C.getName(), 
+
+        groupC.addMembers(new String[]{C.getName(),
                                        AC.getName(), BC.getName(), CD.getName(),
                                        ABC.getName(), ACD.getName(), BCD.getName(),
                                        ABCD.getName()});
-        
-        groupD.addMembers(new String[]{D.getName(), 
+
+        groupD.addMembers(new String[]{D.getName(),
                                        AD.getName(), BD.getName(), CD.getName(),
                                        ABD.getName(), ACD.getName(), BCD.getName(),
                                        ABCD.getName()});
-        
-        
+
+
         /*
          * test
          */
@@ -123,11 +123,11 @@ public class TestACLAllEffRights extends LdapTest {
         groupsWithGrants.add(groupB);
         groupsWithGrants.add(groupC);
         groupsWithGrants.add(groupD);
-        
+
         Set<GroupShape> accountShapes = new HashSet<GroupShape>();
         Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
         Set<GroupShape> distributionListShapes = new HashSet<GroupShape>();
-        
+
         for (DistributionList group : groupsWithGrants) {
             DistributionList dl = prov.get(DistributionListBy.id, group.getId());
             AllGroupMembers allMembers = allGroupMembers(dl);
@@ -135,8 +135,8 @@ public class TestACLAllEffRights extends LdapTest {
             GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
             GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembers);
         }
-        
-        
+
+
         /*
          * verify
          */
@@ -144,7 +144,7 @@ public class TestACLAllEffRights extends LdapTest {
         int count = 1;
         for (GroupShape shape : accountShapes) {
             List<String> elements = new ArrayList<String>();
-            
+
             System.out.println("\n" + count++);
             for (String group : shape.getGroups()) {
                 System.out.println("group " + group);
@@ -155,7 +155,7 @@ public class TestACLAllEffRights extends LdapTest {
                 elements.add("member " + member);
             }
             Collections.sort(elements);
-            
+
             // only verifying shapes have members
             // there could be empty shapes spawned than necessary (bug?),
             // but it does not affect functionality
@@ -163,7 +163,7 @@ public class TestACLAllEffRights extends LdapTest {
                 result.add(Verify.makeResultStr(elements));
             }
         }
-        
+
         Set<String> expected = new HashSet<String>();
         expected.add(Verify.makeResultStr(Lists.newArrayList(
                 "group " + groupA.getName(),
@@ -227,34 +227,34 @@ public class TestACLAllEffRights extends LdapTest {
                 "group " + groupC.getName(),
                 "group " + groupD.getName(),
                 "member " + ABCD.getName())));
-        
+
         Verify.verifyEquals(expected, result);
     }
-    
+
     @Test
     public void shapeTest2() throws Exception {
         /*
          * setup
          */
         String domainName = genDomainName(baseDomainName());
-        
+
         Domain domain = provUtil.createDomain(domainName);
-        
+
         DistributionList groupA = provUtil.createDistributionList("groupA", domain);
         DistributionList groupB = provUtil.createDistributionList("groupB", domain);
         DistributionList groupC = provUtil.createDistributionList("groupC", domain);
         DistributionList groupD = provUtil.createDistributionList("groupD", domain);
-        
+
         Account A = provUtil.createAccount("A", domain);
         Account B = provUtil.createAccount("B", domain);
         Account C = provUtil.createAccount("C", domain);
         Account D = provUtil.createAccount("D", domain);
-        
+
         groupA.addMembers(new String[]{A.getName(), groupB.getName()});
         groupB.addMembers(new String[]{B.getName(), groupC.getName()});
         groupC.addMembers(new String[]{C.getName(), groupD.getName()});
         groupD.addMembers(new String[]{D.getName()});
-        
+
         /*
          * test
          */
@@ -263,11 +263,11 @@ public class TestACLAllEffRights extends LdapTest {
         groupsWithGrants.add(groupB);
         groupsWithGrants.add(groupC);
         groupsWithGrants.add(groupD);
-        
+
         Set<GroupShape> accountShapes = new HashSet<GroupShape>();
         Set<GroupShape> calendarResourceShapes = new HashSet<GroupShape>();
         Set<GroupShape> distributionListShapes = new HashSet<GroupShape>();
-        
+
         for (DistributionList group : groupsWithGrants) {
             DistributionList dl = prov.get(DistributionListBy.id, group.getId());
             AllGroupMembers allMembers = allGroupMembers(dl);
@@ -275,7 +275,7 @@ public class TestACLAllEffRights extends LdapTest {
             GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);
             GroupShape.shapeMembers(TargetType.dl, distributionListShapes, allMembers);
         }
-        
+
         /*
          * verify
          */
@@ -283,7 +283,7 @@ public class TestACLAllEffRights extends LdapTest {
         int count = 1;
         for (GroupShape shape : accountShapes) {
             List<String> elements = new ArrayList<String>();
-            
+
             System.out.println("\n" + count++);
             for (String group : shape.getGroups()) {
                 System.out.println("group " + group);
@@ -294,7 +294,7 @@ public class TestACLAllEffRights extends LdapTest {
                 elements.add("member " + member);
             }
             Collections.sort(elements);
-            
+
             // only verifying shapes have members
             // there could be empty shapes spawned than necessary (bug?),
             // but it does not affect functionality
@@ -302,7 +302,7 @@ public class TestACLAllEffRights extends LdapTest {
                 result.add(Verify.makeResultStr(elements));
             }
         }
-        
+
         Set<String> expected = new HashSet<String>();
         expected.add(Verify.makeResultStr(Lists.newArrayList(
                 "group " + groupA.getName(),
@@ -310,7 +310,7 @@ public class TestACLAllEffRights extends LdapTest {
         expected.add(Verify.makeResultStr(Lists.newArrayList(
                 "group " + groupA.getName(),
                 "group " + groupB.getName(),
-                "member " + B.getName()))); 
+                "member " + B.getName())));
         expected.add(Verify.makeResultStr(Lists.newArrayList(
                 "group " + groupA.getName(),
                 "group " + groupB.getName(),
@@ -321,32 +321,32 @@ public class TestACLAllEffRights extends LdapTest {
                 "group " + groupB.getName(),
                 "group " + groupC.getName(),
                 "group " + groupD.getName(),
-                "member " + D.getName()))); 
-        
+                "member " + D.getName())));
+
         Verify.verifyEquals(expected, result);
     }
-    
+
     /*
     zmprov cdl dl@test.com
     zmprov cdl subdl@test.com
     zmprov cdl subsubdl@test.com
-    
+
     zmprov ca da1@test.com test123 zimbraIsDelegatedAdminAccount TRUE
     zmprov ca da2@test.com test123 zimbraIsDelegatedAdminAccount TRUE
-    
+
     zmprov ca a_dl@test.com test123
     zmprov ca a_subdl@test.com test123
     zmprov ca a_subsubdl@test.com test123
-    
+
     zmprov adlm dl@test.com subdl@test.com a_dl@test.com
     zmprov adlm subdl@test.com subsubdl@test.com a_subdl@test.com
     zmprov adlm subsubdl@test.com a_subsubdl@test.com
-    
+
     zmprov grr dl dl@test.com usr da1@test.com addDistributionListMember
     zmprov grr dl dl@test.com usr da1@test.com modifyDistributionList
     zmprov grr dl dl@test.com usr da1@test.com modifyAccount
     zmprov grr dl dl@test.com usr da1@test.com listAccount
-    
+
     zmprov grr dl dl@test.com usr da2@test.com ^addDistributionListMember
     zmprov grr dl dl@test.com usr da2@test.com ^modifyDistributionList
     zmprov grr dl dl@test.com usr da2@test.com ^modifyAccount
@@ -357,23 +357,23 @@ public class TestACLAllEffRights extends LdapTest {
         /*
          * setup
          */
-        
+
         /*
          * dl has members:
          *    subdl
          *    a_dl
-         *  
+         *
          * subdl has members:
          *    subsubdl
          *    a_subdl
-         *    
+         *
          * subsubdl has members:
-         *    a_subsubdl      
+         *    a_subsubdl
          */
         String domainName = genDomainName(baseDomainName());
-        
+
         Domain domain = provUtil.createDomain(domainName);
-        
+
         // groups
         DistributionList dl = provUtil.createDistributionList("dl", domain);
         DistributionList subdl = provUtil.createDistributionList("subdl", domain);
@@ -391,46 +391,46 @@ public class TestACLAllEffRights extends LdapTest {
         dl.addMembers(new String[]{subdl.getName(), a_dl.getName()});
         subdl.addMembers(new String[]{subsubdl.getName(), a_subdl.getName()});
         subsubdl.addMembers(new String[]{a_subsubdl.getName()});
-        
+
         Right DL_RESET_RIGHT = Admin.R_addDistributionListMember;
         Right DL_ATTR_RIGHT = Admin.R_modifyDistributionList;
         Right ACCT_PRESET_RIGHT = Admin.R_listAccount;
         Right ACCT_ATTR_RIGHT = Admin.R_modifyAccount;
-        
+
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da1.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da1.getName(), null,
                 DL_RESET_RIGHT.getName(), null);
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da1.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da1.getName(), null,
                 DL_ATTR_RIGHT.getName(), null);
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da1.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da1.getName(), null,
                 ACCT_PRESET_RIGHT.getName(), null);
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da1.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da1.getName(), null,
                 ACCT_ATTR_RIGHT.getName(), null);
-        
+
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da2.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da2.getName(), null,
                 DL_RESET_RIGHT.getName(), RightModifier.RM_DENY);
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da2.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da2.getName(), null,
                 DL_ATTR_RIGHT.getName(), RightModifier.RM_DENY);
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da2.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da2.getName(), null,
                 ACCT_PRESET_RIGHT.getName(), RightModifier.RM_DENY);
         RightCommand.grantRight(prov, null,
                 TargetType.dl.getCode(), TargetBy.name, dl.getName(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.name, da2.getName(), null,
+                GranteeType.GT_USER.getCode(), GranteeBy.name, da2.getName(), null,
                 ACCT_ATTR_RIGHT.getName(), RightModifier.RM_DENY);
 
     }
-    
+
 }

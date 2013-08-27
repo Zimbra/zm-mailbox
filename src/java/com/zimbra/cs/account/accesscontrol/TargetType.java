@@ -47,6 +47,7 @@ import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.type.TargetBy;
 
 /**
@@ -287,6 +288,16 @@ public enum TargetType {
 
     AttributeClass getAttributeClass() {
         return mAttrClass;
+    }
+
+    public static Entry lookupTarget(Provisioning prov, EffectiveRightsTargetSelector targSel)
+    throws ServiceException {
+        return lookupTarget(prov, targSel, true);
+    }
+
+    public static Entry lookupTarget(Provisioning prov, EffectiveRightsTargetSelector targSel, boolean mustFind)
+            throws ServiceException {
+        return lookupTarget(prov, fromJaxb(targSel.getType()), targSel.getBy(), targSel.getValue(), mustFind);
     }
 
     public static Entry lookupTarget(Provisioning prov, TargetType targetType,

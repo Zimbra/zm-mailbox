@@ -76,6 +76,7 @@ import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
 import com.zimbra.qa.unittest.prov.ProvTestUtil;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestACLAll extends LdapTest {
@@ -946,7 +947,7 @@ public class TestACLAll extends LdapTest {
             RightCommand.grantRight(
                     prov, grantingAccount,
                     grantedOnTargetType.getCode(), TargetBy.name, targetName,
-                    granteeType.getCode(), Key.GranteeBy.name, granteeName, secret,
+                    granteeType.getCode(), GranteeBy.name, granteeName, secret,
                     right.getName(), null);
 
         } catch (ServiceException e) {
@@ -1360,7 +1361,7 @@ public class TestACLAll extends LdapTest {
                     prov,
                     TargetType.getTargetType(target).getCode(),
                     TargetBy.name, target.getLabel(),
-                    Key.GranteeBy.name, grantee.getName(),
+                    GranteeBy.name, grantee.getName(),
                     false, false);
         } catch (ServiceException e) {
             // getEffectiveRights should not throw in the normal case.
@@ -1385,7 +1386,7 @@ public class TestACLAll extends LdapTest {
         try {
             allEffRights = RightCommand.getAllEffectiveRights(
                     prov,
-                    GranteeType.GT_USER.getCode(), Key.GranteeBy.name, grantee.getName(),
+                    GranteeType.GT_USER.getCode(), GranteeBy.name, grantee.getName(),
                     false, false);
         } catch (ServiceException e) {
             // getEffectiveRights should not throw in the normal case.
@@ -1421,7 +1422,7 @@ public class TestACLAll extends LdapTest {
                 TargetType.getTargetType(target).getCode(),
                 Key.DomainBy.name, domainName,
                 null, null,
-                Key.GranteeBy.name, grantee.getName());
+                GranteeBy.name, grantee.getName());
 
         } catch (ServiceException e) {
             if (!expectFailure) {
@@ -1817,7 +1818,7 @@ public class TestACLAll extends LdapTest {
             RightCommand.revokeRight(prov,
                 globalAdmin,
                 ace.targetType(), TargetBy.id, ace.targetId(),
-                ace.granteeType(), Key.GranteeBy.id, ace.granteeId(),
+                ace.granteeType(), GranteeBy.id, ace.granteeId(),
                 ace.right(), ace.rightModifier());
         }
     }

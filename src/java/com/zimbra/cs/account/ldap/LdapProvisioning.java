@@ -43,7 +43,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
@@ -195,6 +194,7 @@ import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
@@ -7935,7 +7935,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                              Key.GranteeBy granteeBy, String granteeVal,
+                              GranteeBy granteeBy, String granteeVal,
                               String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
         MailTarget grantee = null;
@@ -7956,7 +7956,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getAllEffectiveRights(this,
                                                   granteeType, granteeBy, grantee,
@@ -7966,7 +7966,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public RightCommand.EffectiveRights getEffectiveRights(
             String targetType, TargetBy targetBy, String target,
-            Key.GranteeBy granteeBy, String grantee,
+            GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getEffectiveRights(this,
                                                targetType, targetBy, target,
@@ -7978,7 +7978,7 @@ public class LdapProvisioning extends LdapProv {
     public EffectiveRights getCreateObjectAttrs(String targetType,
             Key.DomainBy domainBy, String domainStr,
             Key.CosBy cosBy, String cosStr,
-            Key.GranteeBy granteeBy, String grantee)
+            GranteeBy granteeBy, String grantee)
     throws ServiceException {
         return RightCommand.getCreateObjectAttrs(this,
                                                  targetType,
@@ -7989,7 +7989,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public RightCommand.Grants getGrants(String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs)
     throws ServiceException {
         return RightCommand.getGrants(this, targetType, targetBy, target,
@@ -7998,7 +7998,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void grantRight(String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier)
     throws ServiceException {
         RightCommand.grantRight(this,
@@ -8010,7 +8010,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void revokeRight(String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier)
     throws ServiceException {
          RightCommand.revokeRight(this,

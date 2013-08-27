@@ -21,7 +21,6 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -37,6 +36,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
 public class CheckRight extends RightDocumentHandler {
@@ -55,12 +55,12 @@ public class CheckRight extends RightDocumentHandler {
         }
 
         Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
-        GranteeType granteeType = GranteeType.fromCodeAllowAll(
+        GranteeType granteeType = GranteeType.fromCode(
                 eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_EMAIL.getCode()));
         if ((granteeType != GranteeType.GT_USER) && (granteeType != GranteeType.GT_EMAIL)) {
             throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
         }
-        Key.GranteeBy granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+        GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String granteeVal = eGrantee.getText();
 
         Element eRight = request.getElement(AdminConstants.E_RIGHT);

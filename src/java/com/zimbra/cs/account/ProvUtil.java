@@ -124,6 +124,7 @@ import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
 
@@ -340,7 +341,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         static void helpRIGHT() {
-            helpRIGHTCommon(false);
+            helpRIGHTCommon(true);
             helpRIGHTRights(false, true);
         }
 
@@ -388,6 +389,7 @@ public class ProvUtil implements HttpDebugListener {
             console.println();
             StringBuilder tt = new StringBuilder();
             StringBuilder ttNeedsTargetIdentity = new StringBuilder();
+            StringBuilder ttNoTargetId = new StringBuilder();
             TargetType[] tts = TargetType.values();
             for (int i = 0; i < tts.length; i++) {
                 if (i > 0) {
@@ -396,18 +398,22 @@ public class ProvUtil implements HttpDebugListener {
                 tt.append(tts[i].getCode());
                 if (tts[i].needsTargetIdentity()) {
                     ttNeedsTargetIdentity.append(tts[i].getCode() + " ");
+                } else {
+                    ttNoTargetId.append(tts[i].getCode() + " ");
                 }
             }
             console.println("    {target-type} = " + tt.toString());
             console.println();
-            console.println("    {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity + ",");
-            console.println("        otherwise {target-id|target-name} should not be specified");
+            console.println("    {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity);
+            console.println("    {target-id|target-name} should not be specified if target-type is: " + ttNoTargetId);
 
             // grantee types
             console.println();
             StringBuilder gt = new StringBuilder();
             StringBuilder gtNeedsGranteeIdentity = new StringBuilder();
+            StringBuilder gtNoGranteeId = new StringBuilder();
             StringBuilder gtNeedsSecret = new StringBuilder();
+            StringBuilder gtNoSecret = new StringBuilder();
             GranteeType[] gts = GranteeType.values();
             for (int i = 0; i < gts.length; i++) {
                 if (i > 0) {
@@ -416,21 +422,28 @@ public class ProvUtil implements HttpDebugListener {
                 gt.append(gts[i].getCode());
                 if (gts[i].needsGranteeIdentity()) {
                     gtNeedsGranteeIdentity.append(gts[i].getCode() + " ");
+                } else {
+                    gtNoGranteeId.append(gts[i].getCode() + " ");
                 }
-                if (secretPossible && gts[i].allowSecret()) {
-                    gtNeedsSecret.append(gts[i].getCode() + " ");
+                if (secretPossible) {
+                    if (gts[i].allowSecret()) {
+                        gtNeedsSecret.append(gts[i].getCode() + " ");
+                    } else {
+                        gtNoSecret.append(gts[i].getCode() + " ");
+                    }
                 }
             }
             console.println("    {grantee-type} = " + gt.toString());
             console.println();
-            console.println("    {grantee-id|grantee-name} is required if grantee-type is one of: " + gtNeedsGranteeIdentity);
-            console.println("        otherwise {target-id|target-name} should not be specified");
+            console.println("    {grantee-id|grantee-name} is required if grantee-type is one of: " +
+                                gtNeedsGranteeIdentity);
+            console.println("    {grantee-id|grantee-name} should not be specified if grantee-type is one of: " +
+                                gtNoGranteeId);
             if (secretPossible) {
                 console.println();
                 console.println("    {secret} is required if grantee-type is one of: " + gtNeedsSecret);
-                console.println("        otherwise {secret} should not be specified");
+                console.println("    {secret} should not be specified if grantee-type is one of: " + gtNoSecret);
             }
-
         }
 
         static void helpLOG() {
@@ -3246,11 +3259,11 @@ public class ProvUtil implements HttpDebugListener {
         return TargetBy.name;
     }
 
-    public static Key.GranteeBy guessGranteeBy(String value) {
+    public static GranteeBy guessGranteeBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return Key.GranteeBy.id;
+            return GranteeBy.id;
         }
-        return Key.GranteeBy.name;
+        return GranteeBy.name;
     }
 
     private void checkDeprecatedAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
@@ -4576,7 +4589,7 @@ public class ProvUtil implements HttpDebugListener {
         Map<String, Object> attrs = getMap(args, ra.mCurPos);
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        Key.GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
 
         AccessManager.ViaGrant via = new AccessManager.ViaGrant();
         boolean allow = prov.checkRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, granteeBy, ra.mGranteeIdOrName,
@@ -4621,7 +4634,7 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.AllEffectiveRights allEffRights = prov.getAllEffectiveRights(
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
@@ -4709,7 +4722,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.EffectiveRights effRights = prov.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName,
                 granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
@@ -4792,7 +4805,7 @@ public class ProvUtil implements HttpDebugListener {
             cos = args[3];
         }
 
-        Key.GranteeBy granteeBy = null;
+        GranteeBy granteeBy = null;
         String grantee = null;
 
         // take grantee arg only if LdapProv
@@ -4837,7 +4850,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.Grants grants = prov.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName,
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, granteeIncludeGroupsGranteeBelongs);
@@ -4874,7 +4887,7 @@ public class ProvUtil implements HttpDebugListener {
         getRightArgs(ra, true, true);
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
                 ra.mSecret, ra.mRight, ra.mRightModifier);
@@ -4885,7 +4898,7 @@ public class ProvUtil implements HttpDebugListener {
         getRightArgs(ra, true, false);
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
                 ra.mRight, ra.mRightModifier);

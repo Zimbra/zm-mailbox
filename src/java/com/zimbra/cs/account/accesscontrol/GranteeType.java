@@ -26,6 +26,8 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
+import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 
 public enum GranteeType {
 
@@ -50,9 +52,9 @@ public enum GranteeType {
      * - if not, see if it is an external group, if yes, the actual grantee type will be egp
      * - if not, treat it as a gst
      *
-     * This grantee type will never be persisted in ACL.
+     * This grantee type CAN be persisted in ACL (that used not to be possible).
      */
-    GT_EMAIL("email", com.zimbra.soap.type.GranteeType.email, (short)0);
+    GT_EMAIL("email", com.zimbra.soap.type.GranteeType.email, GranteeFlag.F_INDIVIDUAL);
 
 
     private static class GT {
@@ -75,26 +77,7 @@ public enum GranteeType {
         if (gt == null) {
             throw ServiceException.PARSE_ERROR("invalid grantee type: " + granteeType, null);
         }
-
-        if (GT_EMAIL == gt) {
-            throw ServiceException.FAILURE(GT_EMAIL + " is not a valid grantee type", null);
-        }
-
         return gt;
-    }
-
-    public static GranteeType fromCodeAllowAll(String granteeType) throws ServiceException {
-        GranteeType gt = GT.sCodeMap.get(granteeType);
-        if (gt == null) {
-            throw ServiceException.PARSE_ERROR("invalid grantee type: " + granteeType, null);
-        }
-
-        return gt;
-    }
-
-    public static boolean isEmailGranteeType(String granteeType) {
-        GranteeType gt = GT.sCodeMap.get(granteeType);
-        return (GT_EMAIL == gt);
     }
 
     /* return equivalent JAXB enum */
@@ -160,7 +143,7 @@ public enum GranteeType {
      * @throws ServiceException
      */
     public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType,
-            Key.GranteeBy granteeBy, String grantee, boolean mustFind)
+            GranteeBy granteeBy, String grantee, boolean mustFind)
     throws ServiceException {
         NamedEntry granteeEntry = null;
 
@@ -216,14 +199,24 @@ public enum GranteeType {
     }
 
     public static NamedEntry lookupGrantee(Provisioning prov, GranteeType granteeType,
-            Key.GranteeBy granteeBy, String grantee)
+            GranteeBy granteeBy, String grantee)
     throws ServiceException {
         return lookupGrantee(prov, granteeType, granteeBy,  grantee, true);
     }
 
+    public static NamedEntry lookupGrantee(Provisioning prov, GranteeSelector selector, boolean mustFind)
+    throws ServiceException {
+        return lookupGrantee(prov, GranteeType.fromJaxb(selector.getType()), selector.getBy(),  selector.getKey(),
+                mustFind);
+    }
+
+    public static NamedEntry lookupGrantee(Provisioning prov, GranteeSelector selector)
+    throws ServiceException {
+        return lookupGrantee(prov, selector, true);
+    }
 
     public static GranteeType determineGranteeType(GranteeType granteeType,
-            Key.GranteeBy granteeBy, String grantee, String domainName)
+            GranteeBy granteeBy, String grantee, String domainName)
     throws ServiceException {
 
         if (granteeType != GranteeType.GT_EMAIL) {

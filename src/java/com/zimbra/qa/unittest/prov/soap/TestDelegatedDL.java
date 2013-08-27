@@ -2,19 +2,23 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest.prov.soap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,11 +35,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapTransport;
@@ -47,8 +49,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Verify;
@@ -64,17 +66,17 @@ import com.zimbra.soap.account.message.GetDistributionListRequest;
 import com.zimbra.soap.account.message.GetDistributionListResponse;
 import com.zimbra.soap.account.message.SubscribeDistributionListRequest;
 import com.zimbra.soap.account.message.SubscribeDistributionListResponse;
+import com.zimbra.soap.account.type.DLInfo;
 import com.zimbra.soap.account.type.DistributionListAction;
+import com.zimbra.soap.account.type.DistributionListAction.Operation;
 import com.zimbra.soap.account.type.DistributionListGranteeInfo;
-import com.zimbra.soap.account.type.DistributionListInfo;
 import com.zimbra.soap.account.type.DistributionListGranteeSelector;
+import com.zimbra.soap.account.type.DistributionListInfo;
 import com.zimbra.soap.account.type.DistributionListRightInfo;
 import com.zimbra.soap.account.type.DistributionListRightSpec;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 import com.zimbra.soap.account.type.MemberOfSelector;
-import com.zimbra.soap.account.type.DistributionListAction.Operation;
-import com.zimbra.soap.account.type.DLInfo;
 import com.zimbra.soap.admin.message.AddDistributionListAliasRequest;
 import com.zimbra.soap.admin.message.AddDistributionListAliasResponse;
 import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
@@ -88,6 +90,7 @@ import com.zimbra.soap.admin.message.RemoveDistributionListAliasResponse;
 import com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest;
 import com.zimbra.soap.admin.message.RemoveDistributionListMemberResponse;
 import com.zimbra.soap.admin.type.GranteeInfo;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
 import com.zimbra.soap.type.DistributionListGranteeBy;
 import com.zimbra.soap.type.DistributionListSelector;
