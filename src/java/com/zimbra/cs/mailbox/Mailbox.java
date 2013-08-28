@@ -2484,7 +2484,7 @@ public class Mailbox {
                     throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getEffectivePermissions", octxt);
+            beginReadTransaction("getEffectivePermissions", octxt);
 
             // fetch the item without perm check so we get it even if the
             // authenticated user doesn't have read permissions on it
@@ -2509,7 +2509,7 @@ public class Mailbox {
 
         boolean success = false;
         try {
-            beginTransaction("getEffectivePermissions", new OperationContext(authedAcct, asAdmin));
+            beginReadTransaction("getEffectivePermissions", new OperationContext(authedAcct, asAdmin));
 
             // fetch the item without perm check so we get it even if the
             // authenticated user doesn't have read permissions on it
