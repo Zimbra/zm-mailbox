@@ -7317,9 +7317,9 @@ TODO: delete them permanently from here
   <desc>Whether or not Amavis should use DSPAM as an additional score factor for SPAM. Defaults to FALSE</desc>
 </attr>
 
-<attr id="1466" name="zimbraPostfixEnableSmtpdPolicyd" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+<attr id="1466" name="zimbraMtaEnableSmtpdPolicyd" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to FALSE</desc>
+  <desc>Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE</desc>
 </attr>
 
 <attr id="1467" name="zimbraHttpCompressionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.2.5">
@@ -7430,6 +7430,11 @@ TODO: delete them permanently from here
 <attr id="1488" name="zimbraAmavisLogLevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.5">
   <globalConfigValue>1</globalConfigValue>
   <desc>Loglevel for Amavis. Defaults to 1</desc>
+</attr>
+
+<attr id="1489" name="zimbraMtaLmdbMapSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.5">
+  <globalConfigValue>16777216</globalConfigValue>
+  <desc>Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)</desc>
 </attr>
 
 </attrs>

@@ -25140,6 +25140,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @return zimbraMtaEnableSmtpdPolicyd, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public boolean isMtaEnableSmtpdPolicyd() {
+        return getBooleanAttr(Provisioning.A_zimbraMtaEnableSmtpdPolicyd, false);
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @param zimbraMtaEnableSmtpdPolicyd new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public void setMtaEnableSmtpdPolicyd(boolean zimbraMtaEnableSmtpdPolicyd) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaEnableSmtpdPolicyd, zimbraMtaEnableSmtpdPolicyd ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @param zimbraMtaEnableSmtpdPolicyd new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public Map<String,Object> setMtaEnableSmtpdPolicyd(boolean zimbraMtaEnableSmtpdPolicyd, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaEnableSmtpdPolicyd, zimbraMtaEnableSmtpdPolicyd ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public void unsetMtaEnableSmtpdPolicyd() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaEnableSmtpdPolicyd, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public Map<String,Object> unsetMtaEnableSmtpdPolicyd(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaEnableSmtpdPolicyd, "");
+        return attrs;
+    }
+
+    /**
      * Fallback value for postconf relayhost.
      *
      * @return zimbraMtaFallbackRelayHost, or null if unset
@@ -25208,6 +25280,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaFallbackRelayHost(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaFallbackRelayHost, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     *
+     * @return zimbraMtaLmdbMapSize, or 16777216 if unset
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1489)
+    public int getMtaLmdbMapSize() {
+        return getIntAttr(Provisioning.A_zimbraMtaLmdbMapSize, 16777216);
+    }
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     *
+     * @param zimbraMtaLmdbMapSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1489)
+    public void setMtaLmdbMapSize(int zimbraMtaLmdbMapSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmdbMapSize, Integer.toString(zimbraMtaLmdbMapSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     *
+     * @param zimbraMtaLmdbMapSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1489)
+    public Map<String,Object> setMtaLmdbMapSize(int zimbraMtaLmdbMapSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmdbMapSize, Integer.toString(zimbraMtaLmdbMapSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1489)
+    public void unsetMtaLmdbMapSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmdbMapSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1489)
+    public Map<String,Object> unsetMtaLmdbMapSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmdbMapSize, "");
         return attrs;
     }
 
@@ -28949,83 +29093,6 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPop3ShutdownGraceSeconds(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, "");
-        return attrs;
-    }
-
-    /**
-     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
-     * FALSE
-     *
-     * @return zimbraPostfixEnableSmtpdPolicyd, or false if unset
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1466)
-    public boolean isPostfixEnableSmtpdPolicyd() {
-        return getBooleanAttr(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, false);
-    }
-
-    /**
-     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
-     * FALSE
-     *
-     * @param zimbraPostfixEnableSmtpdPolicyd new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1466)
-    public void setPostfixEnableSmtpdPolicyd(boolean zimbraPostfixEnableSmtpdPolicyd) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, zimbraPostfixEnableSmtpdPolicyd ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
-     * FALSE
-     *
-     * @param zimbraPostfixEnableSmtpdPolicyd new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1466)
-    public Map<String,Object> setPostfixEnableSmtpdPolicyd(boolean zimbraPostfixEnableSmtpdPolicyd, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, zimbraPostfixEnableSmtpdPolicyd ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
-     * FALSE
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1466)
-    public void unsetPostfixEnableSmtpdPolicyd() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
-     * FALSE
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1466)
-    public Map<String,Object> unsetPostfixEnableSmtpdPolicyd(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPostfixEnableSmtpdPolicyd, "");
         return attrs;
     }
 
