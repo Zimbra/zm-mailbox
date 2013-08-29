@@ -7798,12 +7798,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
 
     /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public static final String A_zimbraMtaEnableSmtpdPolicyd = "zimbraMtaEnableSmtpdPolicyd";
+
+    /**
      * Fallback value for postconf relayhost.
      *
      * @since ZCS 8.0.4
      */
     @ZAttr(id=1435)
     public static final String A_zimbraMtaFallbackRelayHost = "zimbraMtaFallbackRelayHost";
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     *
+     * @since ZCS 8.0.5
+     */
+    @ZAttr(id=1489)
+    public static final String A_zimbraMtaLmdbMapSize = "zimbraMtaLmdbMapSize";
 
     /**
      * Maximum total size of a mail message. Enforced in mailbox server and
@@ -8406,15 +8422,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=448)
     public static final String A_zimbraPortalName = "zimbraPortalName";
-
-    /**
-     * Whether or not to enable zmpostfixpolicyd with Postfix. Defaults to
-     * FALSE
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1466)
-    public static final String A_zimbraPostfixEnableSmtpdPolicyd = "zimbraPostfixEnableSmtpdPolicyd";
 
     /**
      * preauth secret key
