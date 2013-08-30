@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -580,9 +580,8 @@ public class MailSender {
                 }
             }
 
-            // for delegated sends where the authenticated user is reflected in the Sender header (c.f. updateHeaders),
-            //   automatically save a copy to the "From" user's mailbox
-            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.isPrefSaveToSent()) {
+            // for delegated sends automatically save a copy to the "From" user's mailbox
+            if (hasRecipients && isDelegatedRequest && acct.isPrefSaveToSent()) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
