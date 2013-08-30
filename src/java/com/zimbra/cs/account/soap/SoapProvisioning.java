@@ -37,7 +37,6 @@ import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
@@ -129,6 +128,7 @@ import com.zimbra.soap.admin.type.DomainInfo;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
@@ -2326,7 +2326,7 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         GranteeSelector granteeSel = null;
         if (granteeType != null && granteeBy != null && grantee != null) {
-            granteeSel = new GranteeSelector(GranteeType.fromString(granteeType), toJaxb(granteeBy), grantee);
+            granteeSel = new GranteeSelector(GranteeType.fromString(granteeType), granteeBy, grantee);
         }
         GetAllEffectiveRightsResponse resp =
             invokeJaxb(new GetAllEffectiveRightsRequest(granteeSel, expandSetAttrs, expandGetAttrs));
@@ -2341,8 +2341,7 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         GranteeSelector granteeSel = null;
         if (granteeBy != null && grantee != null) {
-            granteeSel = new GranteeSelector(
-                    toJaxb(granteeBy), grantee);
+            granteeSel = new GranteeSelector(granteeBy, grantee);
         }
         EffectiveRightsTargetSelector targetSel =
             new EffectiveRightsTargetSelector(
@@ -2729,14 +2728,6 @@ public class SoapProvisioning extends Provisioning {
     private static DomainSelector.DomainBy toJaxb(DomainBy provDomainBy) throws ServiceException {
         return DomainSelector.DomainBy.fromString(provDomainBy.toString());
     }
-
-
-    /* Convert to equivalent JAXB object */
-    private static GranteeSelector.GranteeBy toJaxb(Key.GranteeBy g)
-    throws ServiceException {
-        return GranteeSelector.GranteeBy.fromString(g.name());
-    }
-
 
     /* Convert to equivalent JAXB object */
     private static DistributionListSelector.DistributionListBy toJaxb(Key.DistributionListBy d)

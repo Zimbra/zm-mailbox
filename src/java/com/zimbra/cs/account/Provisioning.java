@@ -54,6 +54,7 @@ import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.UCServiceSelector;
 import com.zimbra.soap.type.AccountSelector;
@@ -1992,21 +1993,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public boolean checkRight(
             String targetType, TargetBy targetBy, String target,
-            Key.GranteeBy granteeBy, String grantee,
+            GranteeBy granteeBy, String grantee,
             String right, Map<String, Object> attrs,
             AccessManager.ViaGrant via) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.EffectiveRights getEffectiveRights(
             String targetType, TargetBy targetBy, String target,
-            Key.GranteeBy granteeBy, String grantee,
+            GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -2015,27 +2016,27 @@ public abstract class Provisioning extends ZAttrProvisioning {
             String targetType,
             Key.DomainBy domainBy, String domainStr,
             Key.CosBy cosBy, String cosStr,
-            Key.GranteeBy granteeBy, String grantee) throws ServiceException {
+            GranteeBy granteeBy, String grantee) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.Grants getGrants(
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException{
         throw ServiceException.UNSUPPORTED();
     }
 
     public void grantRight(
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
     public void revokeRight(
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }

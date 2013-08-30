@@ -52,7 +52,10 @@ import com.zimbra.soap.admin.type.EffectiveAttrsInfo;
 import com.zimbra.soap.admin.type.EffectiveRightsInfo;
 import com.zimbra.soap.admin.type.EffectiveRightsTarget;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetInfo;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeInfo;
+import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.InDomainInfo;
 import com.zimbra.soap.admin.type.RightWithName;
 import com.zimbra.soap.admin.type.RightsEntriesInfo;
@@ -981,7 +984,7 @@ public class RightCommand {
     }
 
     public static AllEffectiveRights getAllEffectiveRights(Provisioning prov,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
 
@@ -999,7 +1002,7 @@ public class RightCommand {
 
     public static EffectiveRights getEffectiveRights(Provisioning prov,
             String targetType, TargetBy targetBy, String target,
-            Key.GranteeBy granteeBy, String grantee,
+            GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs)
     throws ServiceException {
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
@@ -1027,7 +1030,7 @@ public class RightCommand {
             Provisioning prov, String targetType,
             Key.DomainBy domainBy, String domainStr,
             Key.CosBy cosBy, String cosStr,
-            Key.GranteeBy granteeBy, String grantee)
+            GranteeBy granteeBy, String grantee)
     throws ServiceException {
 
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
@@ -1062,7 +1065,7 @@ public class RightCommand {
 
     public static Grants getGrants(Provisioning prov,
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
              boolean granteeIncludeGroupsGranteeBelongs)
     throws ServiceException {
         verifyAccessManager();
@@ -1298,43 +1301,55 @@ public class RightCommand {
     public static void verifyGrantRight(
             Provisioning prov, Account authedAcct,
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier)
     throws ServiceException {
-        grantRightInternal(prov, authedAcct, targetType, targetBy, target,
-                granteeType, granteeBy, grantee, secret,
+        grantRightInternal(prov, authedAcct, TargetType.fromCode(targetType), targetBy, target,
+                GranteeType.fromCode(granteeType), granteeBy, grantee, secret,
                 right, rightModifier, true);
     }
 
-    public static void grantRight(
-            Provisioning prov, Account authedAcct,
+    public static void grantRight(Provisioning prov, Account authedAcct,
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
+            String right, RightModifier rightModifier)
+    throws ServiceException {
+        grantRight( prov, authedAcct, TargetType.fromCode(targetType), targetBy, target, granteeType,
+                granteeBy, grantee, secret, right, rightModifier);
+    }
+
+    public static void grantRight(Provisioning prov, Account authedAcct, EffectiveRightsTargetSelector targSel,
+            GranteeSelector granteeSel, String right, RightModifier rightModifier) throws ServiceException {
+        grantRightInternal(prov, authedAcct, TargetType.fromJaxb(targSel.getType()), targSel.getBy(), targSel.getValue(),
+                GranteeType.fromJaxb(granteeSel.getType()), granteeSel.getBy(),
+                granteeSel.getKey(), granteeSel.getSecret(), right, rightModifier, false);
+    }
+
+    public static void grantRight(Provisioning prov, Account authedAcct,
+            TargetType targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier)
     throws ServiceException {
         grantRightInternal(prov, authedAcct, targetType, targetBy, target,
-                granteeType, granteeBy, grantee, secret,
-                right, rightModifier, false);
+                GranteeType.fromCode(granteeType), granteeBy, grantee, secret, right, rightModifier, false);
     }
 
     private static void grantRightInternal(
             Provisioning prov, Account authedAcct,
-            String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
+            TargetType tt, TargetBy targetBy, String target,
+            GranteeType gt, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier, boolean dryRun)
     throws ServiceException {
 
         verifyAccessManager();
 
         // target
-        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
 
         // right
         Right r = RightManager.getInstance().getRight(right);
 
         // grantee
-        GranteeType gt = GranteeType.fromCode(granteeType);
         NamedEntry granteeEntry = null;
         String granteeId;
         if (gt.isZimbraEntry()) {
@@ -1369,21 +1384,37 @@ public class RightCommand {
         ACLUtil.grantRight(prov, targetEntry, aces);
     }
 
+    public static void revokeRight(Provisioning prov, Account authedAcct, EffectiveRightsTargetSelector targSel,
+            GranteeSelector granteeSel, String right, RightModifier rightModifier) throws ServiceException {
+        revokeRight(prov, authedAcct,
+            TargetType.fromJaxb(targSel.getType()), targSel.getBy(), targSel.getValue(),
+            GranteeType.fromJaxb(granteeSel.getType()), granteeSel.getBy(), granteeSel.getKey(),
+            right, rightModifier);
+    }
+
     public static void revokeRight(
             Provisioning prov, Account authedAcct,
             String targetType, TargetBy targetBy, String target,
-            String granteeType, Key.GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            String right, RightModifier rightModifier)
+    throws ServiceException {
+        revokeRight(prov, authedAcct, TargetType.fromCode(targetType), targetBy, target,
+                GranteeType.fromCode(granteeType), granteeBy, grantee, right, rightModifier);
+    }
+
+    public static void revokeRight(
+            Provisioning prov, Account authedAcct,
+            TargetType tt, TargetBy targetBy, String target,
+            GranteeType gt, GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier)
     throws ServiceException {
 
         verifyAccessManager();
 
         // target
-        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
 
         // grantee
-        GranteeType gt = GranteeType.fromCode(granteeType);
         NamedEntry granteeEntry = null;
         String granteeId = null;
         try {
@@ -1406,7 +1437,7 @@ public class RightCommand {
 
                 // grantee had been probably deleted.
                 // if granteeBy is id, we try to revoke the orphan grant
-                if (granteeBy == Key.GranteeBy.id)
+                if (granteeBy == GranteeBy.id)
                     granteeId = grantee;
                 else
                     throw ServiceException.INVALID_REQUEST("cannot find grantee by name: " + grantee +

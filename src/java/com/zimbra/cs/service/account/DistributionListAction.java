@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,9 +34,7 @@ import javax.mail.internet.MimeMultipart;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -66,6 +64,7 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.DistributionListAction.Operation;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
 public class DistributionListAction extends DistributionListDocumentHandler {
@@ -306,8 +305,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
             String domain = prov.getDomain(authedAcct).getName();
             for (Element eGrantee : parent.listElements(granteeElem)) {
-                GranteeType type = GranteeType.fromCodeAllowAll(
-                        eGrantee.getAttribute(AccountConstants.A_TYPE));
+                GranteeType type = GranteeType.fromCode(eGrantee.getAttribute(AccountConstants.A_TYPE));
 
                 GranteeBy by = null;
                 String grantee = null;
@@ -329,7 +327,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
 
         protected void verifyGrantRight(Right right, GranteeType granteeType,
-                Key.GranteeBy granteeBy, String grantee) throws ServiceException {
+                GranteeBy granteeBy, String grantee) throws ServiceException {
             RightCommand.verifyGrantRight(prov,
                     null,  // grant the right as a a system admin
                     TargetType.dl.getCode(), TargetBy.id, group.getId(),
@@ -338,7 +336,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
 
         protected void grantRight(Right right, GranteeType granteeType,
-                Key.GranteeBy granteeBy, String grantee)
+                GranteeBy granteeBy, String grantee)
         throws ServiceException {
             RightCommand.grantRight(prov,
                     null,  // grant the right as a a system admin
@@ -353,7 +351,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
 
         protected void revokeRight(Right right, GranteeType granteeType,
-                Key.GranteeBy granteeBy, String grantee)
+                GranteeBy granteeBy, String grantee)
         throws ServiceException {
             RightCommand.revokeRight(prov,
                     null,  // grant the right as a a system admin
@@ -405,7 +403,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
 
         private static void verifyOwner(ModifyRightHandler handler,
-                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
+                GranteeType granteeType, GranteeBy granteeBy, String grantee)
         throws ServiceException {
             if (!VALID_GRANTEE_TYPES.contains(granteeType)) {
                 throw ServiceException.INVALID_REQUEST(
@@ -417,7 +415,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
 
         private static void addOwner(ModifyRightHandler handler,
-                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
+                GranteeType granteeType, GranteeBy granteeBy, String grantee)
         throws ServiceException {
             handler.grantRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
                     granteeType, granteeBy, grantee);
@@ -444,7 +442,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
         }
         private static void removeOwner(ModifyRightHandler handler,
-                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
+                GranteeType granteeType, GranteeBy granteeBy, String grantee)
         throws ServiceException {
             handler.revokeRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
                     granteeType, granteeBy, grantee);
@@ -477,7 +475,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             List<GroupOwner> curOwners = GroupOwner.getOwners(group, false);
             for (GroupOwner owner : curOwners) {
                 RemoveOwnersHandler.removeOwner(this, owner.getType(),
-                        Key.GranteeBy.id, owner.getId());
+                        GranteeBy.id, owner.getId());
             }
 
             // add owners
@@ -588,7 +586,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 if (acl != null) {
                     for (ZimbraACE ace : acl) {
                         revokeRight(right, ace.getGranteeType(),
-                                Key.GranteeBy.id, ace.getGrantee());
+                                GranteeBy.id, ace.getGrantee());
                     }
                 }
 

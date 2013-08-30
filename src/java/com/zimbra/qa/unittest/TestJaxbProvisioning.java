@@ -2,18 +2,23 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.qa.unittest;
+
+import java.util.List;
+import java.util.Map;
+
+import junit.framework.TestCase;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
@@ -48,15 +53,12 @@ import com.zimbra.soap.admin.message.GetServerNIfsResponse;
 import com.zimbra.soap.admin.message.GetVersionInfoRequest;
 import com.zimbra.soap.admin.message.GetVersionInfoResponse;
 import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.LicenseExpirationInfo;
 import com.zimbra.soap.admin.type.NetworkInformation;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.VersionInfo;
-import junit.framework.TestCase;
 import com.zimbra.soap.type.TargetBy;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Primary focus of these tests is to ensure that Jaxb objects work, in
@@ -510,7 +512,7 @@ public class TestJaxbProvisioning extends TestCase {
         ZimbraLog.test.debug("Starting testGetEffectiveRights");
         EffectiveRights er = prov.getEffectiveRights("account" /* targetType */,
                 TargetBy.name /* targetBy */, "admin" /* target */,
-                Key.GranteeBy.name /* granteeBy */, "admin" /* grantee */,
+                GranteeBy.name /* granteeBy */, "admin" /* grantee */,
                 true /* expandSetAttrs */, true /* expandGetAttrs */);
         assertNotNull("EffectiveRights", er);
     }

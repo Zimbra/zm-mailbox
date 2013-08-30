@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,24 +23,24 @@ import java.util.Set;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
-import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
 public class BUG_66387 extends UpgradeOp {
@@ -51,12 +51,12 @@ public class BUG_66387 extends UpgradeOp {
     BUG_66387() throws ServiceException {
         AccessManager.getInstance();  // get the annoying log message out of the way
     }
-    
+
     @Override
     Description getDescription() {
         return new Description(
-                this, 
-                new String[] {Provisioning.A_zimbraAllowFromAddress, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender}, 
+                this,
+                new String[] {Provisioning.A_zimbraAllowFromAddress, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender},
                 new EntryType[] {EntryType.ACCOUNT, EntryType.DISTRIBUTIONLIST},
                 "see notes",
                 "see notes",

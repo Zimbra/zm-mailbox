@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,69 +17,43 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.type.TargetBy;
+import com.zimbra.soap.admin.message.GrantRightRequest;
+import com.zimbra.soap.admin.type.RightModifierInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 public class GrantRight extends RightDocumentHandler {
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
-        Element eTarget = request.getElement(AdminConstants.E_TARGET);
-        String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
-        TargetBy targetBy = null;
-        String target = null;
-        if (TargetType.fromCode(targetType).needsTargetIdentity()) {
-            targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
-            target = eTarget.getText();
-        }
-            
-        Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
-        String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
-        Key.GranteeBy granteeBy = null;
-        String grantee = null;
-        String secret = null;
-        if (GranteeType.fromCode(granteeType).needsGranteeIdentity()) {
-            granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
-            grantee = eGrantee.getText();
-            secret = eGrantee.getAttribute(AdminConstants.A_SECRET, null);
-        }
-        
-        Element eRight = request.getElement(AdminConstants.E_RIGHT);
-        String right = eRight.getText();
-        
-        RightModifier rightModifier = getRightModifier(eRight);
-        
+
+        GrantRightRequest grReq = JaxbUtil.elementToJaxb(request);
+        RightModifier rightModifier = getRightModifier(grReq.getRight());
+
         // right checking is done in RightCommand
-        
-        RightCommand.grantRight(Provisioning.getInstance(),
-                                getAuthenticatedAccount(zsc),
-                                targetType, targetBy, target,
-                                granteeType, granteeBy, grantee, secret,
-                                right, rightModifier);
-        
+
+        RightCommand.grantRight(Provisioning.getInstance(), getAuthenticatedAccount(zsc), grReq.getTarget(),
+                                grReq.getGrantee(), grReq.getRight().getValue(), rightModifier);
+
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
         return response;
     }
 
-    static RightModifier getRightModifier(Element eRight) throws ServiceException {
-        boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
-        boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
-        boolean disinheritSubGroups = eRight.getAttributeBool(AdminConstants.A_DISINHERIT_SUB_GROUPS, false);
-        boolean subDomain = eRight.getAttributeBool(AdminConstants.A_SUB_DOMAIN, false);
-        
+    static RightModifier getRightModifier(RightModifierInfo eRight) throws ServiceException {
+        boolean deny = ZmBoolean.toBool(eRight.getDeny(), false);
+        boolean canDelegate = ZmBoolean.toBool(eRight.getCanDelegate(), false);
+        boolean disinheritSubGroups = ZmBoolean.toBool(eRight.getDisinheritSubGroups(), false);
+        boolean subDomain = ZmBoolean.toBool(eRight.getSubDomain(), false);
+
         int numModifiers = 0;
         if (deny) {
             numModifiers++;
@@ -93,11 +67,11 @@ public class GrantRight extends RightDocumentHandler {
         if (subDomain) {
             numModifiers++;
         }
-        
+
         if (numModifiers > 1) {
             throw ServiceException.INVALID_REQUEST("can only have one modifier", null);
         }
-        
+
         RightModifier rightModifier = null;
         if (deny) {
             rightModifier = RightModifier.RM_DENY;
@@ -110,10 +84,10 @@ public class GrantRight extends RightDocumentHandler {
         }
         return rightModifier;
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add("Grantor must have the same or more rights on the same target or " + 
+        notes.add("Grantor must have the same or more rights on the same target or " +
                 "on a larger target set.");
     }
 

@@ -20,6 +20,7 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
@@ -223,6 +224,9 @@ public class ZimbraACE {
                 mSecret = null;
             }
             break;
+        case GT_EMAIL:
+            mGrantee = grantee;
+            break;
         default:
             throw ServiceException.PARSE_ERROR("invalid grantee type " + mGranteeType, null);
         }
@@ -423,9 +427,22 @@ public class ZimbraACE {
                 return matchesGuestAccount(mailTarget);
             case GT_KEY:
                 return matchesAccessKey(mailTarget);
+            case GT_EMAIL:
+                return matchesEmail(mailTarget, asAdmin);
             default:
                 throw ServiceException.FAILURE("unknown ACL grantee type: " + mGranteeType, null);
         }
+    }
+
+    private boolean matchesEmail(MailTarget mailTarget, boolean asAdmin) {
+        if (mailTarget instanceof GuestAccount) {
+            return matchesGuestAccount(mailTarget);
+        } else if (mailTarget instanceof Account) {
+            return mGrantee.equalsIgnoreCase(mailTarget.getName());
+        } else if (mailTarget instanceof DistributionList) {
+            return mGrantee.equalsIgnoreCase(mailTarget.getName());
+        }
+        return false;
     }
 
     private boolean matchesGuestAccount(MailTarget acct) {
