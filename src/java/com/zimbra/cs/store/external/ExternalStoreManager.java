@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,7 +16,6 @@
 package com.zimbra.cs.store.external;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
@@ -148,17 +147,8 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (mblob == null) {
             return null;
         }
-        FileCache.Item cached = localCache.get(mblob.getLocator());
-        if (cached != null) {
-            return new FileInputStream(cached.file);
-        }
-
-        InputStream is = readStreamFromStore(mblob.getLocator(), mblob.getMailbox());
-        if (is == null) {
-            throw new IOException("Store " + this.getClass().getName() +" returned null for locator " + mblob.getLocator());
-        } else {
-            return is;
-        }
+        Blob blob = getLocalBlob(mblob.getMailbox(), mblob.getLocator(), true);
+        return blob.getInputStream();
     }
 
     @Override
