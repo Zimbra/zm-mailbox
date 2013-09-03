@@ -2,24 +2,23 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.common.mime.MimeAddressHeader;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
 
 public class InternetAddress implements Cloneable {
@@ -199,7 +198,7 @@ public class InternetAddress implements Cloneable {
             } else if (c == '"') {
                 quoted = true;
                 empty = false;
-            } else if (c == ',' || (c == ';' && group != null)) {
+            } else if (c == ',' || (c == ';' && (group != null || LC.mime_split_address_at_semicolon.booleanValue()))) {
                 // this concludes the address portion of our program
                 if (!empty) {
                     if (group != null) {
