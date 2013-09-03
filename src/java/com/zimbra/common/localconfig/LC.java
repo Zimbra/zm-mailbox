@@ -223,9 +223,6 @@ public final class LC {
     public static final KnownKey zimbra_index_reader_cache_ttl = KnownKey.newKey(300);
 
     @Supported
-    public static final KnownKey zimbra_index_reader_cache_sweep_frequency = KnownKey.newKey(30);
-
-    @Supported
     public static final KnownKey zimbra_index_deferred_items_failure_delay = KnownKey.newKey(300);
 
     @Supported
@@ -1161,6 +1158,12 @@ public final class LC {
 
     @Supported
     public static final KnownKey antispam_backup_retention = KnownKey.newKey(0);
+    public static final KnownKey av_notify_domain = KnownKey.newKey("");
+    
+    @Supported
+    public static final KnownKey av_notify_user = KnownKey.newKey("");
+    public static final KnownKey postfix_mail_owner = KnownKey.newKey("postfix");
+    public static final KnownKey postfix_setgid_group = KnownKey.newKey("postdrop");
 
     // LDAP Custom DIT base DN for LDAP app admin entries
     public static final KnownKey ldap_dit_base_dn_appadmin      = KnownKey.newKey("");
