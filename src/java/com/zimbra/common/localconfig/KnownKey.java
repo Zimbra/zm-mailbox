@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.util.L10nUtil;
 
@@ -257,7 +258,7 @@ public final class KnownKey {
     public KnownKey setDefault(long defaultValue) {
         return setDefault(String.valueOf(defaultValue));
     }
-    
+
     public KnownKey setDefault(boolean defaultValue) {
         return setDefault(String.valueOf(defaultValue));
     }
@@ -265,6 +266,11 @@ public final class KnownKey {
     public KnownKey setForceToEdit(boolean value) {
         forceToEdit = value;
         return this;
+    }
+
+    @VisibleForTesting
+    void setValue(String value) {
+        this.value = value;
     }
 
     KnownKey protect() {

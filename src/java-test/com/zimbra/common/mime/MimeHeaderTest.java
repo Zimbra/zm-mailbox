@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,12 +17,20 @@ package com.zimbra.common.mime;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LocalConfigTestUtil;
 import com.zimbra.common.util.CharsetUtil;
 
 public class MimeHeaderTest {
+
+    @After
+    public void reset() {
+        LocalConfigTestUtil.resetLC(LC.mime_split_address_at_semicolon);
+    }
 
     @SuppressWarnings("deprecation")
     @Test
@@ -163,5 +171,74 @@ public class MimeHeaderTest {
 
         // encoding should *not* use a superset charset
         Assert.assertEquals("=?UTF-8?Q?=E2=82=AC200000?=", MimeHeader.escape("\u20ac200000", CharsetUtil.ISO_8859_1, true).toUpperCase());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void semiColonSeparatedGroup() {
+        for (int i = 0; i < 2; i++) {
+            //this one should be the same regardless of split at semicolor for addresses on/off
+            String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>, Group User 2 <user2@group.com>;=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>";
+            MimeAddressHeader hdr = new MimeAddressHeader("To", src);
+            List<InternetAddress> iaddrs = hdr.expandAddresses();
+            Assert.assertEquals(3, iaddrs.size());
+            Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
+            Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());
+            Assert.assertEquals("Group User 2", iaddrs.get(1).getPersonal());
+            Assert.assertEquals("user2@group.com", iaddrs.get(1).getAddress());
+            Assert.assertEquals("Bob the Builder 2", iaddrs.get(2).getPersonal());
+            Assert.assertEquals("bob@example.com", iaddrs.get(2).getAddress());
+            LocalConfigTestUtil.setLC(LC.mime_split_address_at_semicolon, "false");
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void semiColonSeparatedGroupMixed() {
+        String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>, Group User 2 <user2@group.com>;=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>;=?us-ascii?Q?Bob the Builder 3?= <bob3@example.com>";
+        MimeAddressHeader hdr = new MimeAddressHeader("To", src);
+        List<InternetAddress> iaddrs = hdr.expandAddresses();
+        Assert.assertEquals(4, iaddrs.size());
+        Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
+        Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());
+        Assert.assertEquals("Group User 2", iaddrs.get(1).getPersonal());
+        Assert.assertEquals("user2@group.com", iaddrs.get(1).getAddress());
+        Assert.assertEquals("Bob the Builder 2", iaddrs.get(2).getPersonal());
+        Assert.assertEquals("bob@example.com", iaddrs.get(2).getAddress());
+        Assert.assertEquals("Bob the Builder 3", iaddrs.get(3).getPersonal());
+        Assert.assertEquals("bob3@example.com", iaddrs.get(3).getAddress());
+        LocalConfigTestUtil.setLC(LC.mime_split_address_at_semicolon, "false");
+
+        hdr = new MimeAddressHeader("To", src);
+        iaddrs = hdr.expandAddresses();
+        Assert.assertEquals(3, iaddrs.size());
+        Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
+        Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());
+        Assert.assertEquals("Group User 2", iaddrs.get(1).getPersonal());
+        Assert.assertEquals("user2@group.com", iaddrs.get(1).getAddress());
+        Assert.assertEquals("Bob the Builder 2", iaddrs.get(2).getPersonal());
+        Assert.assertEquals("bob@example.com", iaddrs.get(2).getAddress());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void semiColonSeparated() {
+        String src = "user1@example.com;user2@example.com";
+        MimeAddressHeader hdr = new MimeAddressHeader("To", src);
+        List<InternetAddress> iaddrs = hdr.expandAddresses();
+        Assert.assertEquals(2, iaddrs.size());
+        Assert.assertEquals("user1@example.com", iaddrs.get(0).getAddress());
+        Assert.assertEquals("user2@example.com", iaddrs.get(1).getAddress());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void semiColonSeparationDisabled() {
+        LocalConfigTestUtil.setLC(LC.mime_split_address_at_semicolon, "false");
+        String src = "user1@example.com;user2@example.com";
+        MimeAddressHeader hdr = new MimeAddressHeader("To", src);
+        List<InternetAddress> iaddrs = hdr.expandAddresses();
+        Assert.assertEquals(1, iaddrs.size());
+        Assert.assertEquals(src, iaddrs.get(0).getAddress());
     }
 }
