@@ -14,18 +14,24 @@
  */
 package com.zimbra.cs.milter;
 
-import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.session.IoSession;
+import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-final class NioMilterDecoder extends CumulativeProtocolDecoder {
+import com.zimbra.cs.mina.MinaStats;
 
-    @Override
-    public boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) {
-        if (!in.prefixedDataAvailable(4)) {
+public class MinaMilterDecoder extends CumulativeProtocolDecoder {
+    private final MinaStats stats;
+    
+    MinaMilterDecoder(MinaStats stats) {
+        this.stats = stats;
+    }
+    
+    @Override public boolean doDecode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
+        if (!in.prefixedDataAvailable(4))
             return false;
-        }
+        
         int len = in.getInt();
         byte cmd = in.get();
         byte[] data = null;
@@ -35,6 +41,10 @@ final class NioMilterDecoder extends CumulativeProtocolDecoder {
         }
         MilterPacket packet = new MilterPacket(len, cmd, data);
         out.write(packet);
+        
+        if (stats != null) {
+            stats.receivedBytes.addAndGet(len + 4);
+        }
         return true;
     }
 }
