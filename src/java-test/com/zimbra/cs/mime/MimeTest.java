@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,7 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Set;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -346,5 +347,28 @@ public class MimeTest {
 
         MimePart part = Mime.getMimePart(mm, "1");
         Assert.assertEquals("application/octet-stream", Mime.getContentType(part.getContentType()));
+    }
+
+    @Test
+    public void semiColonAddressSeparator() throws Exception {
+        StringBuilder to = new StringBuilder("To: ");
+        int count = 4;
+        for (int i = 1; i < count+1; i++) {
+            to.append("user").append(count).append("@example.com").append(";");
+        }
+        to.setLength(to.length() - 1);
+        to.append("\r\n");
+        String content =
+                        "From: user1@example.com\r\n"
+                        + to.toString()
+                        + "Subject: test\r\n"
+                        + "Content-Type: test/plain\r\n\r\n"
+                        + "test message";
+
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        Address[] recipients = mm.getAllRecipients();
+        Assert.assertEquals(count, recipients.length);
     }
 }
