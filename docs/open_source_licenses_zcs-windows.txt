@@ -1,19 +1,19 @@
 open_source_license.txt
 
-VMware Zimbra Windows Components 8.0.5 GA
+Zimbra Windows Components 8.0.5 GA
 
 
 ===========================================================================
 
 The following copyright statements and licenses apply to various open
 source software components (or portions thereof) that are distributed with
-this VMware software products.
+this Telligent software products.
 
-The VMware Product may also include other VMware components, which may contain additional open 
+The Telligent Product may also include other Telligent components, which may contain additional open 
 source software packages. One or more such open_source_licenses.txt files may therefore 
-accompany this VMware Product. 
+accompany this Telligent Product. 
 
-The VMware product that includes this file does not necessarily use all the
+The Telligent product that includes this file does not necessarily use all the
 open source software components referred to below and may also only use
 portions of a given component.
 
@@ -159,16 +159,16 @@ source code and/or modifications to source code to be made
 available (as would be noted above), you may obtain a copy of
 the source code corresponding to the binaries for such open
 source components and modifications thereto, if any, (the
-"Source Files"), by downloading the Source Files from VMware's website at
-http://www.vmware.com/download/open_source.html, or by sending a request, with
-your name and address to: VMware, Inc., 3401 Hillview Avenue,
-Palo Alto, CA 94304,United States of America. All such
+"Source Files"), by downloading the Source Files from Telligent's source repository
+described at http://wiki.zimbra.com/wiki/Building_Zimbra_using_Perforce, or by
+sending a request, with your name and address to:
+Telligent, Inc., 3000 Internet Blvd., Suite 200
+Frisco, TX 75034,United States of America. All such
 requests should clearly specify: OPEN SOURCE FILES REQUEST,
-Attention General Counsel. VMware shall mail a copy of the
+Attention General Counsel. Telligent shall mail a copy of the
 Source Files to you on a CD or equivalent physical medium. This
 offer to obtain a copy of the Source Files is valid for three
 years from the date you acquired this Software product. Alternatively,
-the Source Files may accompany the VMware product.
+the Source Files may accompany the Telligent product.
 
-
-[ZCSWINDOWS804GAVV051013]
+[ZCSWINDOWS805GAVV051013]
