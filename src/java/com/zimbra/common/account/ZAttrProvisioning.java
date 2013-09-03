@@ -7814,7 +7814,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaFallbackRelayHost = "zimbraMtaFallbackRelayHost";
 
     /**
-     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB)
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB).
+     * Databases will not grow beyond this point.
      *
      * @since ZCS 8.0.5
      */
