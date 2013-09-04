@@ -8413,7 +8413,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> curl-7.30.0
+>>> curl-7.31.0
 
 COPYRIGHT AND PERMISSION NOTICE
 
@@ -8442,7 +8442,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD
 
-curl-7.30.0.tar.gz\curl-7.30.0.tar\curl-7.30.0\lib\security.c
+curl-7.31.0.tar.gz\curl-7.31.0.tar\curl-7.31.0\lib\security.c
 
 
 Copyright (c) 1998, 1999 Kungliga Tekniska Hgskolan
@@ -8483,7 +8483,7 @@ SUCH DAMAGE.
 > RSA Data Security
 
 
-curl-7.30.0.tar.gz\curl-7.30.0.tar\curl-7.30.0\lib\md4.c
+curl-7.31.0.tar.gz\curl-7.31.0.tar\curl-7.31.0\lib\md4.c
 
 
 Copyright (C) 1990-2, RSA Data Security, Inc. All rights reserved.
@@ -22761,7 +22761,7 @@ Copyright (C) 2011 Nicolas Viennot <nicolas@viennot.biz>
 This file is subject to the terms and conditions of the MIT License.
 
 
->>> opendkim-2.8.0
+>>> opendkim-2.8.4
 
 Copyright (c) 2009, 2010, 2012, The Trusted Domain Project.
 All rights reserved.
@@ -22801,7 +22801,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > SENDMAIL OPEN SOURCE LICENSE
 
-opendkim-2.8.0.tar.gz\opendkim-2.8.0.tar\opendkim-2.8.0\LICENSE
+opendkim-2.8.4.tar.gz\opendkim-2.8.4.tar\opendkim-2.8.4\LICENSE
 
 The following license terms and conditions apply to this open source
 software ("Software"), unless a different license is obtained directly
@@ -22882,7 +22882,7 @@ $Revision: 1.1 $ $Date: 2009/07/16 18:43:18 $
 
 > MIT
 
-opendkim-2.8.0.tar.gz\opendkim-2.8.0.tar\opendkim-2.8.0\libopendkim\base32.c
+opendkim-2.8.4.tar.gz\opendkim-2.8.4.tar\opendkim-2.8.4\libopendkim\base32.c
 
 Copyright (c) 2006-2009 Bjorn Andersson <flex@kryo.se>,
 Erik Ekman <yarrick@kryo.se>
@@ -23275,7 +23275,7 @@ This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.4.6
+>>> php-5.4.17
 
 The PHP License, version 3.01
 
@@ -23304,7 +23304,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD style
 
-php-5.4.6.tar.bz2\php-5.4.6.tar\php-5.4.6\Zend\LICENSE
+php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\Zend\LICENSE
 
 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -23328,7 +23328,7 @@ THIS SOFTWARE IS PROVIDED BY ZEND TECHNOLOGIES LTD. ``AS IS'' AND  ANY EXPRESSED
 
 > GPL 2.0
 
-php-5.4.6.tar.bz2\php-5.4.6.tar\php-5.4.6\build\shtool
+php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\build\shtool
 
 GNU shtool -- The GNU Portable Shell Tool
 Copyright (c) 1994-2008 Ralf S. Engelschall <rse@engelschall.com>
@@ -23349,14 +23349,14 @@ NOTICE: Given that you include this file verbatim into your own source tree, you
 
 > LGPL 2.1
 
-php-5.4.6.tar.bz2\php-5.4.6.tar\php-5.4.6\ext\bcmath\libbcmath\COPYING.LIB
+php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\bcmath\libbcmath\COPYING.LIB
 
 License: LGPL 2.1
 
 
 > LGPL 2.0
 
-php-5.4.6.tar.bz2\php-5.4.6.tar\php-5.4.6\ext\bcmath\libbcmath\src\add.c
+php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\bcmath\libbcmath\src\add.c
 
 Copyright (C) 1991, 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 Copyright (C) 2000 Philip A. Nelson
@@ -23377,7 +23377,7 @@ Bellingham, WA 98226-9062
 
 > MIT
 
-php-5.4.6.tar.bz2\php-5.4.6.tar\php-5.4.6\ext\gd\libgd\ COPYING
+php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\gd\libgd\ COPYING
 
 Portions copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002 by Cold Spring Harbor Laboratory. Funded under Grant P41-RR02188 by the National Institutes of Health.
  
@@ -23403,7 +23403,7 @@ Although their code does not appear in gd, the authors wish to thank David Kobla
 
 > Public Domain
 
-php-5.4.6.tar.bz2\php-5.4.6.tar\php-5.4.6\ext\sqlite3\libsqlite\sqlite3.h
+php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\sqlite3\libsqlite\sqlite3.h
 
 2001 September 15
 
@@ -25669,7 +25669,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
->>> jetty-7.6.10
+>>> jetty-7.6.12
 
 [PLEASE NOTE:  TELLIGENT, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE APACHE 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE APACHE 2.0.THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.] 
 
@@ -25681,42 +25681,42 @@ A copy of the ASL is available at http://www.apache.org/licenses/LICENSE-2.0.htm
 If you did not receive this Content directly from the Eclipse Foundation, the Content is being redistributed by another party and different terms and conditions may apply to your use of any object code in the Content.  Check the Redistributor's license that was provided with the Content.  If no such license exists, contact the Redistributor.  Unless otherwise indicated below, the terms and conditions of the EPL still apply to any source code in the Content and such source code may be obtained at <a http://www.eclipse.org">http://www.eclipse.org/.
 
 start.jar
-spdy-jetty-http-7.6.10.v20130312.jar
-spdy-jetty-7.6.10.v20130312.jar
-spdy-core-7.6.10.v20130312.jar
-jetty-monitor-7.6.10.v20130312.jar
+spdy-jetty-http-7.6.12.v20130726.jar
+spdy-jetty-7.6.12.v20130726.jar
+spdy-core-7.6.12.v20130726.jar
+jetty-monitor-7.6.12.v20130726.jar
 javax.transaction-1.1.1.v201105210645.jar
 javax.mail.glassfish-1.4.1.v201005082020.jar
 javax.activation-1.1.0.v201105071233.jar
 org.objectweb.asm-3.1.0.v200803061910.jar
 javax.annotation-1.1.0.v201108011116.jar
 servlet-api-2.5.jar
-jetty-xml-7.6.10.v20130312.jar
-jetty-websocket-7.6.10.v20130312.jar
-jetty-webapp-7.6.10.v20130312.jar
-jetty-util-7.6.10.v20130312.jar
-jetty-servlets-7.6.10.v20130312.jar
-jetty-servlet-7.6.10.v20130312.jar
-jetty-server-7.6.10.v20130312.jar
-jetty-security-7.6.10.v20130312.jar
-jetty-rewrite-7.6.10.v20130312.jar
-jetty-policy-7.6.10.v20130312.jar
-jetty-plus-7.6.10.v20130312.jar
-jetty-overlay-deployer-7.6.10.v20130312.jar
-jetty-overlay-deployer-7.6.10.v20130312.jar
-jetty-jmx-7.6.10.v20130312.jar
-jetty-io-7.6.10.v20130312.jar
-jetty-http-7.6.10.v20130312.jar
-jetty-deploy-7.6.10.v20130312.jar
-jetty-continuation-7.6.10.v20130312.jar
-jetty-client-7.6.10.v20130312.jar
-jetty-annotations-7.6.10.v20130312.jar
-jetty-ajp-7.6.10.v20130312.jar
+jetty-xml-7.6.12.v20130726.jar
+jetty-websocket-7.6.12.v20130726.jar
+jetty-webapp-7.6.12.v20130726.jar
+jetty-util-7.6.12.v20130726.jar
+jetty-servlets-7.6.12.v20130726.jar
+jetty-servlet-7.6.12.v20130726.jar
+jetty-server-7.6.12.v20130726.jar
+jetty-security-7.6.12.v20130726.jar
+jetty-rewrite-7.6.12.v20130726.jar
+jetty-policy-7.6.12.v20130726.jar
+jetty-plus-7.6.12.v20130726.jar
+jetty-overlay-deployer-7.6.12.v20130726.jar
+jetty-overlay-deployer-7.6.12.v20130726.jar
+jetty-jmx-7.6.12.v20130726.jar
+jetty-io-7.6.12.v20130726.jar
+jetty-http-7.6.12.v20130726.jar
+jetty-deploy-7.6.12.v20130726.jar
+jetty-continuation-7.6.12.v20130726.jar
+jetty-client-7.6.12.v20130726.jar
+jetty-annotations-7.6.12.v20130726.jar
+jetty-ajp-7.6.12.v20130726.jar
 
 
 > EPL 1.0
 
-jetty-distribution-7.6.10.v20130312.tar.gz\jetty-distribution-7.6.10.v20130312.tar\jetty-distribution-7.6.10.v20130312\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
+jetty-distribution-7.6.12.v20130726.tar.gz\jetty-distribution-7.6.12.v20130726.tar\jetty-distribution-7.6.12.v20130726\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
 
 The Eclipse Foundation makes available all content in this plug-in unless otherwise indicated below, the Content is provided to you under the terms and conditions of the Eclipse Public License Version 1.0.
 
@@ -25745,7 +25745,7 @@ servlet-api-2.5.jar
 
 > MIT
 
-jetty-distribution-7.6.10.v20130312.tar.gz\jetty-distribution-7.6.10.v20130312.tar\jetty-distribution-7.6.10.v20130312\lib\monitor\jetty-monitor-7.6.10.v20130312.jar\about.html
+jetty-distribution-7.6.12.v20130726.tar.gz\jetty-distribution-7.6.12.v20130726.tar\jetty-distribution-7.6.12.v20130726\lib\monitor\jetty-monitor-7.6.12.v20130726.jar\about.html
 
 Copyright 1996 Aki Yoshida,
 
@@ -25758,7 +25758,7 @@ granted provided that the copyright notice appears in all copies.
 
 > Apache 2.0
 
-jetty-distribution-7.6.10.v20130312.tar.gz\jetty-istribution-7.6.10.v20130312.tar\jetty-distribution-7.6.10.v20130312\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
+jetty-distribution-7.6.12.v20130726.tar.gz\jetty-istribution-7.6.12.v20130726.tar\jetty-distribution-7.6.12.v20130726\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -25787,7 +25787,7 @@ javax.activation-1.1.0.v201105071233.jar
 
 > CDDL 1.0
 
-jetty-distribution-7.6.10.v20130312.tar.gz\jetty-distribution-7.6.10.v20130312.tar\jetty-distribution-7.6.10.v20130312\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
+jetty-distribution-7.6.12.v20130726.tar.gz\jetty-distribution-7.6.12.v20130726.tar\jetty-distribution-7.6.12.v20130726\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
 
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -25835,7 +25835,7 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 
 > 3RD-PARTY-LICENSE.txt
 
-jetty-distribution-7.6.10.v20130312.tar.gz\jetty-distribution-7.6.10.v20130312.tar\jetty-distribution-7.6.10.v20130312\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
+jetty-distribution-7.6.12.v20130726.tar.gz\jetty-distribution-7.6.12.v20130726.tar\jetty-distribution-7.6.12.v20130726\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
 
 DO NOT TRANSLATE OR LOCALIZE.
 
@@ -33992,7 +33992,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mysql-5.5.30
+>>> mysql-5.5.32
 
 Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
 
@@ -34030,7 +34030,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > LGPL 2.0
 
-mysql-5.5.30.tar.gz\mysql-5.5.30.tar\mysql-5.5.30\client\completion_hash.h
+mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\client\completion_hash.h
 
 Copyright (C) 2000-2002 MySQL AB
 
@@ -34052,7 +34052,7 @@ MA 02111-1307, USA
 
 > BSD
 
-mysql-5.5.30.tar.gz\mysql-5.5.30.tar\mysql-5.5.30\cmd-line-utils\libedit\np\fgetln.c
+mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\cmd-line-utils\libedit\np\fgetln.c
 
 Copyright (c) 1998 The NetBSD Foundation, Inc.
 All rights reserved.
@@ -34084,7 +34084,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 > MIT Style
 
-mysql-5.5.30.tar.gz\mysql-5.5.30.tar\mysql-5.5.30\cmd-line-utils\libedit\np\strlcat.c
+mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\cmd-line-utils\libedit\np\strlcat.c
 
 Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
 
@@ -34103,7 +34103,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 > Public Domain
 
-mysql-5.5.30.tar.gz\mysql-5.5.30.tar\mysql-5.5.30\dbug\dbug.c
+mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\dbug\dbug.c
 
 N O T I C E
 
@@ -36202,7 +36202,7 @@ License.
 GNU Lesser General Public License, V3.0 is applicable to the following component(s).
 
 
->>> zeromq-3.2.2
+>>> zeromq-3.2.3
 
 Copyright (c) 2010-2011 250bpm s.r.o.
     Copyright (c) 2010-2011 Other contributors as noted in the AUTHORS file
@@ -36225,7 +36225,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > GPL 3.0
 
-C:\Documents and Settings\karabi.d\My Documents\Downloads\zeromq-3.2.2.tar.gz\zeromq-3.2.2.tar\zeromq-3.2.2\COPYING
+C:\Documents and Settings\karabi.d\My Documents\Downloads\zeromq-3.2.3.tar.gz\zeromq-3.2.3.tar\zeromq-3.2.3\COPYING
 
 License: GPL 3.0
 
@@ -36233,7 +36233,7 @@ License: GPL 3.0
 
 > MIT
 
-\zeromq-3.2.2.tar.gz\zeromq-3.2.2.tar\zeromq-3.2.2\config\ltsugar.m4
+\zeromq-3.2.3.tar.gz\zeromq-3.2.3.tar\zeromq-3.2.3\config\ltsugar.m4
 
 Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 Written by Gary V. Vaughan, 2004
@@ -36296,7 +36296,7 @@ Boston, MA 02111-1307, USA.
 IBM Public License, V1.0 is applicable to the following component(s).
 
 
->>> postfix-2.10.0
+>>> postfix-2.10.1
 
 License: IBM Public License 1.0
 
@@ -36304,7 +36304,7 @@ Additional license information:
 
 >BSD
 
-postfix_2.10.0.orig.tar.gz\postfix_2.10.0.orig.tar\postfix-2.10.0\COPYRIGHT
+postfix_2.10.1.orig.tar.gz\postfix_2.10.1.orig.tar\postfix-2.10.1\COPYRIGHT
 
 Copyright (c) 1987, 1993
 The Regents of the University of California.  All rights reserved.
