@@ -7437,4 +7437,20 @@ TODO: delete them permanently from here
   <desc>Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB). Databases will not grow beyond this point.</desc>
 </attr>
 
+<attr id="1490" name="zimbraFeatureSocialEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
+  <desc>internal social features</desc>
+</attr>
+
+<attr id="1491" name="zimbraFeatureSocialExternalEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
+  <desc>external social features</desc>
+</attr>
+
+<attr id="1492" name="zimbraFeatureSocialExternalURL" type="string" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
+  <desc>external social URL</desc>
+</attr>
+
 </attrs>
