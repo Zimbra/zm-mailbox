@@ -4819,6 +4819,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSocialcastEnabled = "zimbraFeatureSocialcastEnabled";
 
     /**
+     * internal social features
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public static final String A_zimbraFeatureSocialEnabled = "zimbraFeatureSocialEnabled";
+
+    /**
+     * external social features
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public static final String A_zimbraFeatureSocialExternalEnabled = "zimbraFeatureSocialExternalEnabled";
+
+    /**
+     * external social URL
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public static final String A_zimbraFeatureSocialExternalURL = "zimbraFeatureSocialExternalURL";
+
+    /**
      * message social filters enabled in the web client UI
      *
      * @since ZCS 8.0.0
