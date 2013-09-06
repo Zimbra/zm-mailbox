@@ -135,6 +135,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF command_directory			VAR zimbraMtaCommandDirectory
 	POSTCONF daemon_directory			VAR zimbraMtaDaemonDirectory
 	POSTCONF delay_warning_time			VAR zimbraMtaDelayWarningTime
+	POSTCONF default_process_limit			VAR zimbraMtaDefaultProcessLimit
 	POSTCONF lmdb_map_size				VAR zimbraMtaLmdbMapSize
 	POSTCONF header_checks				LOCAL postfix_header_checks
 	if VAR zimbraMtaBlockedExtensionWarnRecipient

@@ -16696,6 +16696,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf default_process_limit
+     *
+     * @return zimbraMtaDefaultProcessLimit, or "100" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public String getMtaDefaultProcessLimit() {
+        return getAttr(Provisioning.A_zimbraMtaDefaultProcessLimit, "100");
+    }
+
+    /**
+     * Value for postconf default_process_limit
+     *
+     * @param zimbraMtaDefaultProcessLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public void setMtaDefaultProcessLimit(String zimbraMtaDefaultProcessLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaDefaultProcessLimit, zimbraMtaDefaultProcessLimit);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf default_process_limit
+     *
+     * @param zimbraMtaDefaultProcessLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public Map<String,Object> setMtaDefaultProcessLimit(String zimbraMtaDefaultProcessLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaDefaultProcessLimit, zimbraMtaDefaultProcessLimit);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf default_process_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public void unsetMtaDefaultProcessLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaDefaultProcessLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf default_process_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public Map<String,Object> unsetMtaDefaultProcessLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaDefaultProcessLimit, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf delay_warning_time
      *
      * @return zimbraMtaDelayWarningTime, or "0h" if unset
@@ -16979,7 +17051,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaLmdbMapSize, or 16777216 if unset
      *
-     * @since ZCS 8.0.5
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1489)
     public int getMtaLmdbMapSize() {
@@ -16993,7 +17065,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaLmdbMapSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.5
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1489)
     public void setMtaLmdbMapSize(int zimbraMtaLmdbMapSize) throws com.zimbra.common.service.ServiceException {
@@ -17010,7 +17082,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.5
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1489)
     public Map<String,Object> setMtaLmdbMapSize(int zimbraMtaLmdbMapSize, Map<String,Object> attrs) {
@@ -17025,7 +17097,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.5
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1489)
     public void unsetMtaLmdbMapSize() throws com.zimbra.common.service.ServiceException {
@@ -17041,7 +17113,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.5
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1489)
     public Map<String,Object> unsetMtaLmdbMapSize(Map<String,Object> attrs) {
