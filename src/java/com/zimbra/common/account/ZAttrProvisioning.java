@@ -7904,6 +7904,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaDaemonDirectory = "zimbraMtaDaemonDirectory";
 
     /**
+     * Value for postconf default_process_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public static final String A_zimbraMtaDefaultProcessLimit = "zimbraMtaDefaultProcessLimit";
+
+    /**
      * Value for postconf delay_warning_time
      *
      * @since ZCS 8.5.0
@@ -7937,7 +7945,7 @@ public class ZAttrProvisioning {
      * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB).
      * Databases will not grow beyond this point.
      *
-     * @since ZCS 8.0.5
+     * @since ZCS 8.5.0
      */
     @ZAttr(id=1489)
     public static final String A_zimbraMtaLmdbMapSize = "zimbraMtaLmdbMapSize";
