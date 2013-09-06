@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -159,33 +159,8 @@ public final class MailboxLock {
         write = write || mbox.requiresWriteLock();
         ZimbraLog.mailbox.trace("LOCK " + (write ? "WRITE" : "READ"));
         assert(neverReadBeforeWrite(write));
-        if (tryLock(write)) {
-            if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
-                //writer finished a purge while we waited
-                promote();
-                return;
-            }
-            lockStack.push(write);
-            try {
-                acquireDistributedLock(write);
-            } catch (ServiceException e) {
-                release();
-                LockFailedException lfe = new LockFailedException("lockdb");
-                lfe.logStackTrace();
-                throw lfe;
-            }
-            return;
-        }
-        int queueLength = zLock.getQueueLength();
-        if (queueLength >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
-            // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
-            // here because once requests back up, each new incoming request falls into here, which creates too much
-            // noise in the logs.
-            throw new LockFailedException("too many waiters: " + queueLength);
-        }
         try {
-            // Wait for the lock up to the timeout.
-            if (tryLockWithTimeout(write)) {
+            if (tryLock(write)) {
                 if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
                     //writer finished a purge while we waited
                     promote();
@@ -202,12 +177,41 @@ public final class MailboxLock {
                 }
                 return;
             }
+            int queueLength = zLock.getQueueLength();
+            if (queueLength >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+                // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
+                // here because once requests back up, each new incoming request falls into here, which creates too much
+                // noise in the logs.
+                throw new LockFailedException("too many waiters: " + queueLength);
+            }
+            try {
+                // Wait for the lock up to the timeout.
+                if (tryLockWithTimeout(write)) {
+                    if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
+                        //writer finished a purge while we waited
+                        promote();
+                        return;
+                    }
+                    lockStack.push(write);
+                    try {
+                        acquireDistributedLock(write);
+                    } catch (ServiceException e) {
+                        release();
+                        LockFailedException lfe = new LockFailedException("lockdb");
+                        lfe.logStackTrace();
+                        throw lfe;
+                    }
+                    return;
+                }
 
-            LockFailedException e = new LockFailedException("timeout");
-            e.logStackTrace();
-            throw e;
-        } catch (InterruptedException e) {
-            throw new LockFailedException("interrupted", e);
+                LockFailedException e = new LockFailedException("timeout");
+                e.logStackTrace();
+                throw e;
+            } catch (InterruptedException e) {
+                throw new LockFailedException("interrupted", e);
+            }
+        } finally {
+            assert(!isUnlocked() || debugReleaseReadLock());
         }
     }
 
@@ -220,6 +224,7 @@ public final class MailboxLock {
             //or if call site has unbalanced lock/release
             ZimbraLog.mailbox.trace("release when not locked?");
             assert(getHoldCount() == 0);
+            assert(debugReleaseReadLock());
             return;
         }
         //keep release in order so caller doesn't have to manage write/read flag
