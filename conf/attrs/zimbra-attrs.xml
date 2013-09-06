@@ -7453,4 +7453,24 @@ TODO: delete them permanently from here
   <desc>external social URL</desc>
 </attr>
 
+<attr id="1493" name="zimbraMtaAliasMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>lmdb:/etc/aliases</globalConfigValue>
+  <desc>Value for postconf alias_maps</desc>
+</attr>
+
+<attr id="1494" name="zimbraMtaAlwaysAddMissingHeaders" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>yes</globalConfigValue>
+  <desc>Value for postconf always_add_missing_headers</desc>
+</attr>
+
+<attr id="1495" name="zimbraMtaBrokenSaslAuthClients" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>yes</globalConfigValue>
+  <desc>Value for postconf broken_sasl_auth_clients</desc>
+</attr>
+
+<attr id="1496" name="zimbraMtaBounceNoticeRecipient" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>postmaster</globalConfigValue>
+  <desc>Value for postconf bounce_notice_recipient</desc>
+</attr>
+
 </attrs>

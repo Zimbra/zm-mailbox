@@ -126,10 +126,10 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_sender_restrictions FILE zmconfigd/smtpd_sender_restrictions.cf
 	POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
 
-	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
-	POSTCONF broken_sasl_auth_clients			        LOCAL postfix_broken_sasl_auth_clients
+	POSTCONF alias_maps				VAR zimbraMtaAliasMaps
+	POSTCONF broken_sasl_auth_clients		VAR zimbraMtaBrokenSaslAuthClients
 	POSTCONF bounce_queue_lifetime                LOCAL postfix_bounce_queue_lifetime
-	POSTCONF bounce_notice_recipient              LOCAL postfix_bounce_notice_recipient
+	POSTCONF bounce_notice_recipient		VAR zimbraMtaBounceNoticeRecipient
 	POSTCONF mail_owner                           LOCAL postfix_mail_owner
 	POSTCONF setgid_group                         LOCAL postfix_setgid_group
 	POSTCONF command_directory			LOCAL postfix_command_directory
@@ -177,7 +177,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF virtual_mailbox_domains		LOCAL postfix_virtual_mailbox_domains
 	POSTCONF virtual_mailbox_maps			LOCAL postfix_virtual_mailbox_maps
 	POSTCONF virtual_transport			LOCAL postfix_virtual_transport
-	POSTCONF always_add_missing_headers		LOCAL postfix_always_add_missing_headers
+	POSTCONF always_add_missing_headers		VAR zimbraMtaAlwaysAddMissingHeaders
 	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
 	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
 	POSTCONF smtp_helo_name				LOCAL postfix_smtp_helo_name
