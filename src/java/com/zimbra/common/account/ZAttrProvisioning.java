@@ -8005,7 +8005,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaRelayHost = "zimbraMtaRelayHost";
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      */
     @ZAttr(id=226)
     public static final String A_zimbraMtaRestriction = "zimbraMtaRestriction";
