@@ -26823,7 +26823,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @return zimbraMtaRestriction, or empty array if unset
      */
@@ -26833,7 +26833,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param zimbraMtaRestriction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26846,7 +26846,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param zimbraMtaRestriction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26860,7 +26860,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param zimbraMtaRestriction new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26873,7 +26873,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param zimbraMtaRestriction new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -26887,7 +26887,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param zimbraMtaRestriction existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26900,7 +26900,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param zimbraMtaRestriction existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -26914,7 +26914,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -26926,7 +26926,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

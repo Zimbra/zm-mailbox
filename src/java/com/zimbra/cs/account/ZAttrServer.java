@@ -17622,6 +17622,122 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @return zimbraMtaRestriction, or empty array if unset
+     */
+    @ZAttr(id=226)
+    public String[] getMtaRestriction() {
+        return getMultiAttr(Provisioning.A_zimbraMtaRestriction);
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param zimbraMtaRestriction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=226)
+    public void setMtaRestriction(String[] zimbraMtaRestriction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaRestriction, zimbraMtaRestriction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param zimbraMtaRestriction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=226)
+    public Map<String,Object> setMtaRestriction(String[] zimbraMtaRestriction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaRestriction, zimbraMtaRestriction);
+        return attrs;
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param zimbraMtaRestriction new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=226)
+    public void addMtaRestriction(String zimbraMtaRestriction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaRestriction, zimbraMtaRestriction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param zimbraMtaRestriction new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=226)
+    public Map<String,Object> addMtaRestriction(String zimbraMtaRestriction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaRestriction, zimbraMtaRestriction);
+        return attrs;
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param zimbraMtaRestriction existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=226)
+    public void removeMtaRestriction(String zimbraMtaRestriction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaRestriction, zimbraMtaRestriction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param zimbraMtaRestriction existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=226)
+    public Map<String,Object> removeMtaRestriction(String zimbraMtaRestriction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaRestriction, zimbraMtaRestriction);
+        return attrs;
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=226)
+    public void unsetMtaRestriction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaRestriction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * smtpd_recipient_restrictions used to reject email in various scenarios
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=226)
+    public Map<String,Object> unsetMtaRestriction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaRestriction, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_sasl_auth_enable
      *
      * <p>Valid values: [yes, no]
