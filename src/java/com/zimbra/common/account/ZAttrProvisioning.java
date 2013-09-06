@@ -656,6 +656,38 @@ public class ZAttrProvisioning {
         public boolean isSubjrefs() { return this == subjrefs;}
     }
 
+    public static enum MtaAlwaysAddMissingHeaders {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaAlwaysAddMissingHeaders(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaAlwaysAddMissingHeaders fromString(String s) throws ServiceException {
+            for (MtaAlwaysAddMissingHeaders value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaBrokenSaslAuthClients {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaBrokenSaslAuthClients(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaBrokenSaslAuthClients fromString(String s) throws ServiceException {
+            for (MtaBrokenSaslAuthClients value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaSaslAuthEnable {
         yes("yes"),
         no("no");
@@ -7750,6 +7782,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSyncKeyFormatConvertedFolders = "zimbraMobileSyncKeyFormatConvertedFolders";
 
     /**
+     * Value for postconf alias_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1493)
+    public static final String A_zimbraMtaAliasMaps = "zimbraMtaAliasMaps";
+
+    /**
+     * Value for postconf always_add_missing_headers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1494)
+    public static final String A_zimbraMtaAlwaysAddMissingHeaders = "zimbraMtaAlwaysAddMissingHeaders";
+
+    /**
      * mta anti spam lock method.
      *
      * @since ZCS 5.0.3
@@ -7810,10 +7858,58 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaBlockedExtensionWarnRecipient = "zimbraMtaBlockedExtensionWarnRecipient";
 
     /**
+     * Value for postconf bounce_notice_recipient
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1496)
+    public static final String A_zimbraMtaBounceNoticeRecipient = "zimbraMtaBounceNoticeRecipient";
+
+    /**
+     * Value for postconf bounce_queue_lifetime
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1497)
+    public static final String A_zimbraMtaBounceQueueLifetime = "zimbraMtaBounceQueueLifetime";
+
+    /**
+     * Value for postconf broken_sasl_auth_clients
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1495)
+    public static final String A_zimbraMtaBrokenSaslAuthClients = "zimbraMtaBrokenSaslAuthClients";
+
+    /**
+     * Value for postconf command_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1498)
+    public static final String A_zimbraMtaCommandDirectory = "zimbraMtaCommandDirectory";
+
+    /**
      * Commonly blocked attachment file extensions
      */
     @ZAttr(id=196)
     public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";
+
+    /**
+     * Value for postconf daemon_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1499)
+    public static final String A_zimbraMtaDaemonDirectory = "zimbraMtaDaemonDirectory";
+
+    /**
+     * Value for postconf delay_warning_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1500)
+    public static final String A_zimbraMtaDelayWarningTime = "zimbraMtaDelayWarningTime";
 
     /**
      * Value for postconf disable_dns_lookups (note enable v. disable)
