@@ -560,10 +560,6 @@ public final class LC {
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
-    public static final KnownKey postfix_alias_maps = KnownKey.newKey("lmdb:/etc/aliases");
-    public static final KnownKey postfix_always_add_missing_headers = KnownKey.newKey("yes");
-    public static final KnownKey postfix_broken_sasl_auth_clients = KnownKey.newKey("yes");
-    public static final KnownKey postfix_bounce_notice_recipient = KnownKey.newKey("postmaster");
     public static final KnownKey postfix_bounce_queue_lifetime = KnownKey.newKey("5d");
     public static final KnownKey postfix_command_directory = KnownKey.newKey("${zimbra_home}/postfix/sbin");
     public static final KnownKey postfix_daemon_directory = KnownKey.newKey("${zimbra_home}/postfix/libexec");
