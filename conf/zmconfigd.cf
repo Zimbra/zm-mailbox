@@ -112,26 +112,26 @@ SECTION mta DEPENDS amavis
 	if VAR zimbraMtaMyHostname
 		POSTCONF myhostname VAR zimbraMtaMyHostname
 	fi
-	POSTCONF recipient_delimiter	                VAR zimbraMtaRecipientDelimiter
-	POSTCONF smtpd_sasl_auth_enable               VAR zimbraMtaSaslAuthEnable
-	POSTCONF smtpd_tls_auth_only	                VAR zimbraMtaTlsAuthOnly
-	POSTCONF smtpd_tls_security_level			                 VAR zimbraMtaTlsSecurityLevel
-	POSTCONF disable_dns_lookups	                VAR !zimbraMtaDnsLookupsEnabled	
-	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
-	POSTCONF mailbox_size_limit		                0
-	POSTCONF relayhost				                    VAR zimbraMtaRelayHost
+	POSTCONF recipient_delimiter			VAR zimbraMtaRecipientDelimiter
+	POSTCONF smtpd_sasl_auth_enable			VAR zimbraMtaSaslAuthEnable
+	POSTCONF smtpd_tls_auth_only			VAR zimbraMtaTlsAuthOnly
+	POSTCONF smtpd_tls_security_level		VAR zimbraMtaTlsSecurityLevel
+	POSTCONF disable_dns_lookups			VAR !zimbraMtaDnsLookupsEnabled	
+	POSTCONF message_size_limit			VAR zimbraMtaMaxMessageSize
+	POSTCONF mailbox_size_limit			0
+	POSTCONF relayhost				VAR zimbraMtaRelayHost
 	POSTCONF smtp_fallback_relay			VAR zimbraMtaFallbackRelayHost
-	POSTCONF smtpd_recipient_restrictions FILE zmconfigd/smtpd_recipient_restrictions.cf
-	POSTCONF smtpd_relay_restrictions FILE zmconfigd/smtpd_relay_restrictions.cf
-	POSTCONF smtpd_sender_restrictions FILE zmconfigd/smtpd_sender_restrictions.cf
-	POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
+	POSTCONF smtpd_recipient_restrictions		FILE zmconfigd/smtpd_recipient_restrictions.cf
+	POSTCONF smtpd_relay_restrictions		FILE zmconfigd/smtpd_relay_restrictions.cf
+	POSTCONF smtpd_sender_restrictions		FILE zmconfigd/smtpd_sender_restrictions.cf
+	POSTCONF local_header_rewrite_clients		permit_mynetworks,permit_sasl_authenticated
 
 	POSTCONF alias_maps				VAR zimbraMtaAliasMaps
 	POSTCONF broken_sasl_auth_clients		VAR zimbraMtaBrokenSaslAuthClients
 	POSTCONF bounce_queue_lifetime			VAR zimbraMtaBounceQueueLifetime
 	POSTCONF bounce_notice_recipient		VAR zimbraMtaBounceNoticeRecipient
-	POSTCONF mail_owner                           LOCAL postfix_mail_owner
-	POSTCONF setgid_group                         LOCAL postfix_setgid_group
+	POSTCONF mail_owner				LOCAL postfix_mail_owner
+	POSTCONF setgid_group				LOCAL postfix_setgid_group
 	POSTCONF command_directory			VAR zimbraMtaCommandDirectory
 	POSTCONF daemon_directory			VAR zimbraMtaDaemonDirectory
 	POSTCONF delay_warning_time			VAR zimbraMtaDelayWarningTime
