@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -161,10 +161,14 @@ public final class FolderTest {
     public void defaultFolderFlags() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        account.setDefaultFolderFlags("*");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder inbox = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
-        Assert.assertTrue(inbox.isFlagSet(Flag.BITMASK_SUBSCRIBED));
+        try {
+            account.setDefaultFolderFlags("*");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Folder inbox = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
+            Assert.assertTrue(inbox.isFlagSet(Flag.BITMASK_SUBSCRIBED));
+        } finally {
+            account.setDefaultFolderFlags(null); //don't leave account in modified state since other tests (such as create) assume no default flags
+        }
     }
 
     @Test
