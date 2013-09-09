@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -70,7 +71,7 @@ public class MimeHeader implements Cloneable {
     MimeHeader(final String name, final String value, final String charset) {
         this.hinfo = HeaderInfo.of(name);
         this.name = hinfo.name == null ? name : hinfo.name;
-        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
+        updateContent(escape(value, CharsetUtil.toCharset(charset), charset, false).getBytes());
     }
 
     /** Creates a new {@code MimeHeader} serialized as "<tt>{name}:
@@ -429,6 +430,10 @@ public class MimeHeader implements Cloneable {
     }
 
     public static String escape(final String value, final Charset charset, final boolean phrase) {
+        return escape(value, charset, null, phrase);
+    }
+
+    public static String escape(final String value, final Charset charset, final String requestedCharsetName, final boolean phrase) {
         boolean needsQuote = false, wsp = true;
         int needs2047 = 0, needsEscape = 0, cleanTo = 0, cleanFrom = value.length();
         for (int i = 0, len = value.length(); i < len; i++) {
@@ -460,7 +465,18 @@ public class MimeHeader implements Cloneable {
 
         if (needs2047 > 0) {
             String prefix = value.substring(0, cleanTo), suffix = value.substring(cleanFrom);
-            return prefix + EncodedWord.encode(value.substring(cleanTo, cleanFrom), charset) + suffix;
+            String cleaned = value.substring(cleanTo, cleanFrom);
+            String encoded = null;
+            if (LC.mime_encode_compound_xwiniso2022jp_as_iso2022jp.booleanValue()
+                            && requestedCharsetName != null
+                            && charset != null
+                            && requestedCharsetName.equalsIgnoreCase("ISO-2022-JP")
+                            && charset.name().equalsIgnoreCase("x-windows-iso2022jp")) {
+                encoded = EncodedWord.encode(cleaned, requestedCharsetName);
+            } else {
+                encoded = EncodedWord.encode(cleaned, charset);
+            }
+            return prefix + encoded + suffix;
         } else if (needsQuote && needsEscape > 0) {
             return quote(value, needsEscape);
         } else if (needsQuote) {
