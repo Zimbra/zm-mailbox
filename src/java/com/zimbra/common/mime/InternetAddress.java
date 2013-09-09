@@ -24,6 +24,7 @@ import com.zimbra.common.util.CharsetUtil;
 public class InternetAddress implements Cloneable {
     private String display;
     private String email;
+    private String requestedCharset;
     private Charset charset;
 
     public InternetAddress() {
@@ -84,6 +85,10 @@ public class InternetAddress implements Cloneable {
         return charset;
     }
 
+    String getRequestedCharset() {
+        return requestedCharset;
+    }
+
     public InternetAddress setAddress(String address) {
         this.email = address;
         return this;
@@ -95,12 +100,14 @@ public class InternetAddress implements Cloneable {
     }
 
     public InternetAddress setCharset(String charset) {
+        this.requestedCharset = charset;
         this.charset = charset == null || charset.trim().equals("") ? CharsetUtil.UTF_8 : CharsetUtil.toCharset(charset.trim());
         return this;
     }
 
     public InternetAddress setCharset(Charset charset) {
         this.charset = charset == null ? CharsetUtil.UTF_8 : charset;
+        this.requestedCharset = this.charset.name();
         return this;
     }
 
@@ -108,7 +115,7 @@ public class InternetAddress implements Cloneable {
     @Override
     public String toString() {
         if (display != null) {
-            return MimeHeader.escape(display, charset, true) + (email != null ? (" <" + email + '>') : "");
+            return MimeHeader.escape(display, charset, requestedCharset, true) + (email != null ? (" <" + email + '>') : "");
         } else if (email != null) {
             return email;
         } else {
@@ -300,7 +307,7 @@ public class InternetAddress implements Cloneable {
 
         @Override
         public String toString() {
-            return MimeHeader.escape(getName(), getCharset(), true) + ": " + getAddress();
+            return MimeHeader.escape(getName(), getCharset(), getRequestedCharset(), true) + ": " + getAddress();
         }
 
         @Override
