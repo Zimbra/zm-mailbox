@@ -225,8 +225,8 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
                     // init PKIX parameters
                     PKIXParameters params = new PKIXParameters(trustedCertsSet);
 
-                    // Activate certificate revocation checking
-                    params.setRevocationEnabled(true);
+                    // Activate certificate revocation checking if required
+                    params.setRevocationEnabled(Provisioning.getInstance().getLocalServer().isMailSSLClientCertOCSPEnabled());
 
                     // Ensure that the ocsp.responderURL property is not set.
                     if (Security.getProperty("ocsp.responderURL") != null) {
@@ -256,7 +256,7 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
             } catch (InvalidAlgorithmParameterException e) {
                 throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received InvalidAlgorithmParameter while obtaining instance of certpath validator", e);
             } catch (CertPathValidatorException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received CertPathValidatorException while performing OCSP validation:" + e.getMessage(), e);}
+                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received CertPathValidatorException" + e.getMessage(), e);}
 
           }
     }
