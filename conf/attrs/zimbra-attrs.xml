@@ -7479,12 +7479,12 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1498" name="zimbraMtaCommandDirectory" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <globalConfigValue>${zimbra_home}/postfix/sbin</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/postfix/sbin</globalConfigValue>
   <desc>Value for postconf command_directory</desc>
 </attr>
 
 <attr id="1499" name="zimbraMtaDaemonDirectory" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <globalConfigValue>${zimbra_home}/postfix/libexec</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/postfix/libexec</globalConfigValue>
   <desc>Value for postconf daemon_directory</desc>
 </attr>
 

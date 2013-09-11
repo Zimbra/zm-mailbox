@@ -25442,13 +25442,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf command_directory
      *
-     * @return zimbraMtaCommandDirectory, or "${zimbra_home}/postfix/sbin" if unset
+     * @return zimbraMtaCommandDirectory, or "/opt/zimbra/postfix/sbin" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1498)
     public String getMtaCommandDirectory() {
-        return getAttr(Provisioning.A_zimbraMtaCommandDirectory, "${zimbra_home}/postfix/sbin");
+        return getAttr(Provisioning.A_zimbraMtaCommandDirectory, "/opt/zimbra/postfix/sbin");
     }
 
     /**
@@ -25630,13 +25630,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf daemon_directory
      *
-     * @return zimbraMtaDaemonDirectory, or "${zimbra_home}/postfix/libexec" if unset
+     * @return zimbraMtaDaemonDirectory, or "/opt/zimbra/postfix/libexec" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1499)
     public String getMtaDaemonDirectory() {
-        return getAttr(Provisioning.A_zimbraMtaDaemonDirectory, "${zimbra_home}/postfix/libexec");
+        return getAttr(Provisioning.A_zimbraMtaDaemonDirectory, "/opt/zimbra/postfix/libexec");
     }
 
     /**
