@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -40,33 +40,35 @@ import com.zimbra.cs.util.Zimbra;
 public class ZRecur implements Cloneable {
 
     public static enum Frequency { DAILY, HOURLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, YEARLY }
-    
+
     public static class ZWeekDayNum {
         public static class DayOnlyComparator implements Comparator<ZWeekDayNum>
         {
+            @Override
             public int compare(ZWeekDayNum lhs, ZWeekDayNum rhs)
             {
                 return lhs.mDay.getCalendarDay() - rhs.mDay.getCalendarDay();
             }
-            
+
         }
-        
+
         public ZWeekDay mDay;
         public int mOrdinal; // -4,-3,-2,-1,+1,+2,+3,+4
-        
+
         public ZWeekDayNum() {}
         public ZWeekDayNum(int ord, ZWeekDay day) { mOrdinal = ord; mDay = day; };
-        
+
+        @Override
         public String toString() {
-            if (mOrdinal != 0) 
+            if (mOrdinal != 0)
                 return Integer.toString(mOrdinal)+mDay;
             else
                 return mDay.toString();
         }
     };
-    
+
     private static enum Tokens {
-        BYDAY, BYHOUR, BYMINUTE, BYMONTH, BYMONTHDAY, BYSECOND, BYSETPOS, BYWEEKNO, 
+        BYDAY, BYHOUR, BYMINUTE, BYMONTH, BYMONTHDAY, BYSECOND, BYSETPOS, BYWEEKNO,
         BYYEARDAY, COUNT, FREQ, INTERVAL, UNTIL, WKST;
     }
 
@@ -176,10 +178,10 @@ public class ZRecur implements Cloneable {
                 first = false;
             toRet.append(obj.toString());
         }
-            
+
         return toRet.toString();
     }
-    
+
     public static void main(String[] args) {
         ICalTimeZone tzUTC = ICalTimeZone.getUTC();
         TimeZoneMap tzmap = new TimeZoneMap(tzUTC);
@@ -192,17 +194,17 @@ public class ZRecur implements Cloneable {
 
         Date rangeStart;
         Date rangeEnd;
-        
+
         GregorianCalendar cal = new GregorianCalendar();
         cal.clear();
         cal.setTimeZone(tzUTC);
-        
+
         cal.set(2005, 4, 15, 0, 0, 0);
         rangeStart = cal.getTime();
 
         cal.set(2006, 0, 1, 0, 0, 0);
         rangeEnd = cal.getTime();
-        
+
 
         try {
             ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6", tzmap);
@@ -217,7 +219,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYDAY=TH,-1MO", tzmap);
             System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
@@ -231,7 +233,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31", tzmap);
             System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
@@ -244,7 +246,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -258,7 +260,7 @@ public class ZRecur implements Cloneable {
             e.printStackTrace();
         }
 
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA;BYHOUR=21,0", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -311,7 +313,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1,3;BYHOUR=2,14", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -324,7 +326,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1;;BYMINUTE=10;BYSECOND=11,12", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -337,12 +339,12 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
-        
+
+
 
         cal.set(2010, 0, 1, 0, 0, 0);
         rangeEnd = cal.getTime();
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=YEARLY", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -369,7 +371,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-                
+
         try {
             ZRecur test = new ZRecur("FREQ=SECONDLY", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -382,7 +384,7 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         try {
             ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", tzmap, tzUTC, tzUTC);
             ZRecur test = new ZRecur("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=12;BYDAY=-1SU", tzmap);
@@ -399,10 +401,10 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
         cal.set(2010, 0, 1, 0, 0, 0);
         rangeEnd = cal.getTime();
-        
+
         try {
             ZRecur test = new ZRecur("FREQ=YEARLY;BYMONTH=12;BYDAY=1WE", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
@@ -415,27 +417,27 @@ public class ZRecur implements Cloneable {
             System.out.println("Caught ServiceException"+e);
             e.printStackTrace();
         }
-        
+
 
     }
-    
+
     private List<ZWeekDayNum> mByDayList = new ArrayList<ZWeekDayNum>();
     private List<Integer> mByHourList = new ArrayList<Integer>();
     private List<Integer> mByMinuteList = new ArrayList<Integer>();
     private List<Integer> mByMonthDayList = new ArrayList<Integer>();
     private List<Integer> mByMonthList = new ArrayList<Integer>();
     private List<Integer> mBySecondList = new ArrayList<Integer>();
-    
+
     private List<Integer> mBySetPosList = new ArrayList<Integer>();
     private List<Integer> mByWeekNoList = new ArrayList<Integer>();
     private List<Integer> mByYearDayList = new ArrayList<Integer>();
-    
+
     private int mCount = 0;
     private Frequency mFreq = Frequency.WEEKLY;
     private int mInterval = 0;
     private ParsedDateTime mUntil = null;
     private ZWeekDay mWkSt = null;
-    
+
 
     public ZRecur(String str, TimeZoneMap tzmap) throws ServiceException {
         parse(str, tzmap);
@@ -458,6 +460,7 @@ public class ZRecur implements Cloneable {
         mWkSt = other.mWkSt;
     }
 
+    @Override
     public Object clone() {
         return new ZRecur(this);
     }
@@ -580,7 +583,7 @@ public class ZRecur implements Cloneable {
         long rangeEnd)
     throws ServiceException {
         List<Date> toRet = new LinkedList<Date>();
-        
+
         Date rangeStartDate = new Date(rangeStart);
         // subtract 1000ms (1sec) because the code in the method treats
         // end time as inclusive while the rangeEnd input argument is
@@ -593,7 +596,7 @@ public class ZRecur implements Cloneable {
             earliestDate = dtStartDate;
         else
             earliestDate = rangeStartDate;
-        
+
         if (mUntil != null) {
             Date until = mUntil.getDateForRecurUntil(dtStart.getTimeZone());
             if (until.before(rangeEndDate))
@@ -615,28 +618,28 @@ public class ZRecur implements Cloneable {
         Date hardEndDate = getEstimatedEndTime(dtStart);
         if (hardEndDate.before(rangeEndDate))
             rangeEndDate = hardEndDate;
-        
+
         if (rangeEndDate.before(earliestDate))
             return toRet;
 
         GregorianCalendar cur = dtStart.getCalendarCopy();
         int baseMonthDay = cur.get(Calendar.DAY_OF_MONTH);
         boolean baseIsLeapDay = ((baseMonthDay == 29) && (cur.get(Calendar.MONTH) == Calendar.FEBRUARY));
-        
+
         // until we hit rangeEnd, or we've SAVED count entries:
         //
         //     gather each set {
-        //        
-        //        
-        //        
+        //
+        //
+        //
         //        curDate forward one INTERVAL
         //
-        //     } 
+        //     }
         //     check Set against BYSETPOS & ranges & count
         //
-        
+
         int interval = mInterval;
-        if (interval <= 0) 
+        if (interval <= 0)
             interval = 1;
 
         // DTSTART is always part of the expansion, as long as it falls within
@@ -652,7 +655,7 @@ public class ZRecur implements Cloneable {
             boolean curIsAtOrAfterEarliestDate = !cur.getTime().before(earliestDate);
             boolean curIsAfterEndDate = cur.getTime().after(rangeEndDate);
             List<Calendar> addList = new LinkedList<Calendar>();
-            
+
             switch (mFreq) {
             case HOURLY:
                 /*
@@ -666,80 +669,80 @@ public class ZRecur implements Cloneable {
                  */
                 if (!checkMonthList(cur))
                     continue;
-                
+
                 if (!checkYearDayList(cur))
                     continue;
-                
+
                 if (!checkMonthDayList(cur))
                     continue;
-                
+
                 if (!checkDayList(cur))
                     continue;
-                
+
                 if (!checkHourList(cur))
                     continue;
-                
+
                 addList.add((Calendar)(cur.clone()));
-                
+
                 cur.add(Calendar.HOUR_OF_DAY, interval);
-                
+
                 addList = expandHourList(addList);
                 addList = expandMinuteList(addList);
-                addList = expandSecondList(addList);                
-                
+                addList = expandSecondList(addList);
+
                 break;
             case DAILY:
                 /*
                  * BYSECOND - for each listed second in day
-                 * BYMINUTE - for each listed minute in day 
+                 * BYMINUTE - for each listed minute in day
                  * BYHOUR - for each listed hour in day
                  * BYDAY - no ordinal allowed, match iff in day list
                  * BYMONTHDAY - only that day
                  * BYYEARDAY - only that day
                  * BYWEEKNO -- YEARLY ONLY
                  * BYMONTH - only that month
-                 * 
-                 * while (count check & until check & rangeEnd check) { 
+                 *
+                 * while (count check & until check & rangeEnd check) {
                  *    if (byMonth && !month matches)
                  *      curDay = set MONTH to matching month
-                 *      
+                 *
                  *    if (byYearDay && !yearday matches)
                  *      curDay = set DAY to next matching yearday
-                 *      
+                 *
                  *    if (byMonthday && !monthday matches)
                  *      curDay = skip to next matching monthday
-                 *      
+                 *
                  *    if (byDay && !day in list)
                  *      curDay = skip to next mathcing byDay
-                 *      
+                 *
                  *    if (!byHour or FOR EACH HOUR IN HOURLIST)
                  *      if (!byMinute or FOR EACH MINUTE IN MINLIST)
                  *        if (!bySecond or FOR EACH SECOND IN LIST)
                  *          ----add to list---
-                 *     
+                 *
                  *     check against BYSETPOS
-                 *                    
+                 *
                  *     curDay+=1 day
-                 * } 
-                 * 
+                 * }
+                 *
                  */
-                
+
                 if (!checkMonthList(cur))
                     continue;
-                
+
                 if (!checkYearDayList(cur))
                     continue;
-                
+
                 if (!checkMonthDayList(cur))
                     continue;
-                
+
                 if (!checkDayList(cur))
                     continue;
-                
+
                 addList.add((Calendar)(cur.clone()));
-                
+
                 cur.add(Calendar.DAY_OF_YEAR, interval);
-                
+
                 addList = expandHourList(addList);
                 addList = expandMinuteList(addList);
                 addList = expandSecondList(addList);
@@ -753,14 +756,14 @@ public class ZRecur implements Cloneable {
                  * BYMONTHDAY - MAYBE once a month
                  * BYYEARDAY - MAYBE once a year
                  * BYMONTH - iff month matches
-                 * 
-                 *  for each (INTERVAL)WEEK{ 
+                 *
+                 *  for each (INTERVAL)WEEK{
                  *    if (byMonth && !month matches)
                  *      curDay = set MONTH to DtStart in next matching month
-                 *      
+                 *
                  *    if (byYearDay && !yearday matches)
                  *      curDay = set date to next matching yearday
-                 *      
+                 *
                  *    if (byMonthDay && !monthday matches)
                  *      curDay = skip to next matching monthday
                  *
@@ -769,16 +772,16 @@ public class ZRecur implements Cloneable {
                  *        if (!byMinute or FOREACH minute in list)
                  *          if (!bySecond or FOREACH second in list)
                  *            ----add to list----
-                 *         
+                 *
                  *    check against BYSETPOS
-                 *    
+                 *
                  *    curDay += 1 week
                  * } while (count check & until check & rangeEnd check)
-                 * 
+                 *
                  */
                 if (!checkMonthList(cur))
                     continue;
-                
+
                 if (!checkYearDayList(cur))
                     continue;
 
@@ -786,9 +789,9 @@ public class ZRecur implements Cloneable {
                     continue;
 
                 addList.add((Calendar)(cur.clone()));
-                
+
                 cur.add(Calendar.WEEK_OF_YEAR, interval);
-                
+
                 addList = expandDayListForWeekly(addList);
                 addList = expandHourList(addList);
                 addList = expandMinuteList(addList);
@@ -797,32 +800,32 @@ public class ZRecur implements Cloneable {
             case MONTHLY:
                 if (!checkMonthList(cur))
                     continue;
-                
+
                 if (!checkYearDayList(cur))
                     continue;
-                
+
                 addList.add((Calendar)(cur.clone()));
 
                 cur.set(Calendar.DAY_OF_MONTH, 1);
                 cur.add(Calendar.MONTH, interval);
                 int daysInMonth = cur.getActualMaximum(Calendar.DAY_OF_MONTH);
                 cur.set(Calendar.DAY_OF_MONTH, Math.min(baseMonthDay, daysInMonth));
-                
+
                 addList = expandMonthDayList(addList);
                 addList = expandDayListForMonthlyYearly(addList);
                 addList = expandHourList(addList);
                 addList = expandMinuteList(addList);
                 addList = expandSecondList(addList);
-                
+
                 break;
             case YEARLY:
                 /*
                  * BYSECOND
                  * BYMINUTE
-                 * BYHOUR 
+                 * BYHOUR
                  * BYDAY
-                 * BYMONTHDAY 
-                 * BYYEARDAY 
+                 * BYMONTHDAY
+                 * BYYEARDAY
                  * BYWEEKNO - specified week
                  * BYMONTH - once
                  */
@@ -837,24 +840,24 @@ public class ZRecur implements Cloneable {
                     break;
                 }
                 addList.add((Calendar)(cur.clone()));
-                
+
                 cur.add(Calendar.YEAR, interval);
-                
+
                 addList = expandMonthList(addList);
                 addList = expandYearDayList(addList);
-                
+
                 addList = expandMonthDayList(addList);
                 addList = expandDayListForMonthlyYearly(addList);
                 addList = expandHourList(addList);
                 addList = expandMinuteList(addList);
                 addList = expandSecondList(addList);
-                
+
                 break;
             default:
                 // MINUTELY and SECONDLY are intentionally not supported for performance reasons.
                 return toRet;
             }
-            
+
             addList = handleSetPos(addList);
 
             boolean noInstanceFound = true;
@@ -915,6 +918,7 @@ public class ZRecur implements Cloneable {
         return toRet;
     }
 
+    @Override
     public String toString() {
         StringBuffer toRet = new StringBuffer("FREQ=").append(mFreq);
 
@@ -922,9 +926,9 @@ public class ZRecur implements Cloneable {
             toRet.append(';').append("UNTIL=");
             toRet.append(mUntil.getDateTimePartString(false));
         }
-        if (mCount > 0) 
+        if (mCount > 0)
             toRet.append(';').append("COUNT=").append(mCount);
-        if (mInterval > 0) 
+        if (mInterval > 0)
             toRet.append(';').append("INTERVAL=").append(mInterval);
         if (mBySecondList.size() > 0)
             toRet.append(';').append("BYSECOND=").append(listAsStr(mBySecondList));
@@ -949,21 +953,21 @@ public class ZRecur implements Cloneable {
     }
     /**
      * This version is for HOURLY/DAILY frequencies: it does NOT check the ordinal at all,
-     * it only verifies that the day-of-the-week matches 
-     * 
+     * it only verifies that the day-of-the-week matches
+     *
      * @param cal
      * @return
      */
     private boolean checkDayList(GregorianCalendar cal)
     {
         assert(mFreq!=Frequency.MONTHLY && mFreq!=Frequency.YEARLY && mFreq!=Frequency.WEEKLY);
-        
+
         if (mByDayList.size() > 0) {
             for (ZWeekDayNum listCur: mByDayList) {
                 int curDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
                 if (listCur.mDay.getCalendarDay() == curDayOfWeek)
                     return true;
-                
+
                 // since the DayOfWeek list is in week-order, if we hit a HIGHER one,
                 // then we know out current one isn't in the list, and therefore
                 // we should go to this one we just found in the list
@@ -972,8 +976,8 @@ public class ZRecur implements Cloneable {
                     return false;
                 }
             }
-            
-            // we've not found a match AND we've not found a 
+
+            // we've not found a match AND we've not found a
             // higher value in our list -- so wrap
             cal.set(Calendar.DAY_OF_WEEK, mByDayList.get(0).mDay.getCalendarDay());
             cal.add(Calendar.WEEK_OF_YEAR, 1);
@@ -981,7 +985,7 @@ public class ZRecur implements Cloneable {
         }
         return true;
     }
-    
+
     /**
      * @param cal
      * @return
@@ -993,7 +997,7 @@ public class ZRecur implements Cloneable {
                 int curHour = cal.get(Calendar.HOUR_OF_DAY);
                 if (curHour == cur.intValue())
                     return true;
-                
+
                 // since the month list is in order, if we hit a HIGHER month,
                 // then we know out current month isn't in the list, and therefore
                 // we should go to this next one
@@ -1002,8 +1006,8 @@ public class ZRecur implements Cloneable {
                     return false; // must re-start checks
                 }
             }
-            
-            // we've not found a match AND we've not found a 
+
+            // we've not found a match AND we've not found a
             // higher value in our list -- so wrap
             cal.set(Calendar.HOUR, mByHourList.get(0));
             cal.add(Calendar.DAY_OF_YEAR, 1);
@@ -1018,7 +1022,7 @@ public class ZRecur implements Cloneable {
                 int curMonthDay = cal.get(Calendar.DAY_OF_MONTH);
                 if (cur == curMonthDay)
                     return true;
-                
+
                 // since the list is in order, if we hit a HIGHER one,
                 // then we know out current one isn't in the list, and therefore
                 // we should go to this one we just found in the list
@@ -1027,8 +1031,8 @@ public class ZRecur implements Cloneable {
                     return false;
                 }
             }
-            
-            // we've not found a match AND we've not found a 
+
+            // we've not found a match AND we've not found a
             // higher value in our list -- so wrap
             cal.set(Calendar.DAY_OF_MONTH, mByMonthDayList.get(0));
             cal.add(Calendar.MONTH, 1);
@@ -1043,7 +1047,7 @@ public class ZRecur implements Cloneable {
                 int curMonth = cal.get(Calendar.MONTH)+1;
                 if (cur == curMonth)
                     return true;
-                
+
                 // since the month list is in order, if we hit a HIGHER month,
                 // then we know out current month isn't in the list, and therefore
                 // we should go to this next one
@@ -1052,8 +1056,8 @@ public class ZRecur implements Cloneable {
                     return false; // must re-start checks
                 }
             }
-            
-            // we've not found a match AND we've not found a 
+
+            // we've not found a match AND we've not found a
             // higher value in our list -- so wrap
             cal.set(Calendar.MONTH, mByMonthList.get(0)-1);
             cal.add(Calendar.YEAR, 1);
@@ -1068,7 +1072,7 @@ public class ZRecur implements Cloneable {
                 int curYearDay = cal.get(Calendar.DAY_OF_YEAR);
                 if (cur == curYearDay)
                     return true;
-                
+
                 // since the YearDay list is in order, if we hit a HIGHER one,
                 // then we know out current one isn't in the list, and therefore
                 // we should go to this one we just found in the list
@@ -1077,8 +1081,8 @@ public class ZRecur implements Cloneable {
                     return false;
                 }
             }
-            
-            // we've not found a match AND we've not found a 
+
+            // we've not found a match AND we've not found a
             // higher value in our list -- so wrap
             cal.set(Calendar.DAY_OF_YEAR, mByYearDayList.get(0));
             cal.add(Calendar.YEAR, 1);
@@ -1090,35 +1094,35 @@ public class ZRecur implements Cloneable {
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
-        
+
         if (mByDayList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new ArrayList<Calendar>();
         Set<Integer> months = new HashSet<Integer>();
-        
-        
+
+
         for (Calendar cur : list) {
-            int curYear = cur.get(Calendar.YEAR); 
+            int curYear = cur.get(Calendar.YEAR);
             int curMonth = cur.get(Calendar.MONTH);
             if (!months.contains(curMonth)) {
                 months.add(curMonth);
-                
+
                 for (ZWeekDayNum day : mByDayList) {
-                    
+
                     // find all the cals matching this day-of-week
                     ArrayList<Integer> matching = new ArrayList<Integer>();
-                    
+
                     cur.set(Calendar.DAY_OF_MONTH, 1);
                     do {
-                        if (cur.get(Calendar.DAY_OF_WEEK) == day.mDay.getCalendarDay()) 
+                        if (cur.get(Calendar.DAY_OF_WEEK) == day.mDay.getCalendarDay())
                             matching.add(cur.get(Calendar.DAY_OF_MONTH));
                         cur.add(Calendar.DAY_OF_MONTH, 1);
                     } while(cur.get(Calendar.MONTH) == curMonth);
-                    
+
                     cur.set(Calendar.MONTH, curMonth);
                     cur.set(Calendar.YEAR, curYear);
-                    
+
                     if (day.mOrdinal == 0) {
                         for (Integer matchDay: matching) {
                             cur.set(Calendar.DAY_OF_MONTH, matchDay);
@@ -1141,11 +1145,11 @@ public class ZRecur implements Cloneable {
             } // month already seen?
         }
 
-        
+
         // we unfortunately have to sort here because, for example, the "-1FR" could happen before the "-1TH"
         assert (toRet instanceof ArrayList);
         Collections.sort(toRet);
-        
+
         return toRet;
     }
 
@@ -1159,7 +1163,7 @@ public class ZRecur implements Cloneable {
      * Therefore, ignore this year if the last day isn't 29th for patterns:
      *     RRULE:FREQ=YEARLY;BYMONTHDAY=29;BYMONTH=2
      *     and "RRULE:FREQ=YEARLY" where DTSTART is a leap day
-     * 
+     *
      * @param cur
      * @param baseIsLeapDay
      * @return
@@ -1193,7 +1197,7 @@ public class ZRecur implements Cloneable {
 
     /**
      * Very simple function b/c it can completely ignore the Ordinal value
-     * 
+     *
      * @param list
      * @return
      */
@@ -1201,70 +1205,70 @@ public class ZRecur implements Cloneable {
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq==Frequency.WEEKLY);
-        
+
         if (mByDayList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
+
+        for (Calendar cur : list) {
             for (ZWeekDayNum day : mByDayList) {
                 cur.set(Calendar.DAY_OF_WEEK, day.mDay.getCalendarDay());
                 toRet.add((Calendar)(cur.clone()));
             }
         }
-        
+
         return toRet;
     }
     private List<Calendar> expandHourList(List<Calendar> list)
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq==Frequency.DAILY || mFreq==Frequency.WEEKLY || mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
-        
+
         if (mByHourList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
+
+        for (Calendar cur : list) {
             for (Integer hour : mByHourList) {
                 cur.set(Calendar.HOUR_OF_DAY, hour);
                 toRet.add((Calendar)(cur.clone()));
             }
         }
-        
+
         return toRet;
     }
     private List<Calendar> expandMinuteList(List<Calendar> list)
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq != Frequency.MINUTELY && mFreq != Frequency.SECONDLY);
-        
+
         if (mByMinuteList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
+
+        for (Calendar cur : list) {
             for (Integer minute: mByMinuteList) {
                 cur.set(Calendar.MINUTE, minute);
                 toRet.add((Calendar)(cur.clone()));
             }
         }
-        
+
         return toRet;
     }
     private List<Calendar> expandMonthDayList(List<Calendar> list)
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
-        
+
         if (mByMonthDayList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
+
+        for (Calendar cur : list) {
             int curMonth = cur.get(Calendar.MONTH);
             int lastMonthDay = cur.getActualMaximum(Calendar.DAY_OF_MONTH);
             boolean seenLastMonthDay = false;
@@ -1292,123 +1296,123 @@ public class ZRecur implements Cloneable {
                 }
             }
         }
-        
+
         return toRet;
     }
-    
-    
+
+
     private List<Calendar> expandMonthList(List<Calendar> list)
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq==Frequency.YEARLY);
-        
+
         if (mByMonthList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
+
+        for (Calendar cur : list) {
             for (Integer month: mByMonthList) {
                 cur.set(Calendar.MONTH, month-1);
-                    
+
                 toRet.add((Calendar)(cur.clone()));
             }
         }
-        
+
         return toRet;
     }
-    
-    
+
+
     private List<Calendar> expandSecondList(List<Calendar> list)
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq != Frequency.SECONDLY);
-        
+
         if (mBySecondList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
+
+        for (Calendar cur : list) {
             for (Integer second: mBySecondList) {
                 cur.set(Calendar.SECOND, second);
                 toRet.add((Calendar)(cur.clone()));
             }
         }
-        
+
         return toRet;
     }
-    
+
     private List<Calendar> expandYearDayList(List<Calendar> list)
     {
         // this func ONLY works for expanding, NOT for contracting
         assert(mFreq==Frequency.YEARLY);
-        
+
         if (mByYearDayList.size() <= 0)
             return list;
-        
+
         List<Calendar> toRet = new LinkedList<Calendar>();
         Set<Integer> years = new HashSet<Integer>();
-        
-        
+
+
         for (Calendar cur : list) {
-            int curYear = cur.get(Calendar.YEAR); 
+            int curYear = cur.get(Calendar.YEAR);
             if (!years.contains(curYear)) {
                 years.add(curYear);
-                
+
                 for (Integer yearDay : mByYearDayList) {
-                    
-                    if (yearDay > 0) 
+
+                    if (yearDay > 0)
                         cur.set(Calendar.DAY_OF_YEAR, yearDay);
                     else {
                         cur.set(Calendar.DAY_OF_YEAR, 1);
                         cur.roll(Calendar.DAY_OF_YEAR, yearDay);
                     }
-                    
+
                     toRet.add((Calendar)(cur.clone()));
                 }
             } // year already seen?
         }
-        
+
         return toRet;
     }
-    
+
     private List<Calendar> handleSetPos(List<Calendar> list)
     {
-        if (mBySetPosList.size() <= 0) 
+        if (mBySetPosList.size() <= 0)
             return list;
-        
-        
+
+
         Calendar[] array = new Calendar[list.size()];
         array = list.toArray(array);
-        
+
         LinkedList<Calendar> toRet = new LinkedList<Calendar>();
-        
+
         ArrayList<Integer> idxsToInclude = new ArrayList<Integer>();
-            
+
         for (Integer cur : mBySetPosList) {
             int idx = cur;
-            if (idx>=-366 && idx <= 366 && idx!= 0) { 
+            if (idx>=-366 && idx <= 366 && idx!= 0) {
                 if (idx> 0)
                     idx--; // 1-indexed!
                 else
                     idx = array.length + idx;
-                
+
                 if (idx>=0 && idx < array.length)
                     if (!idxsToInclude.contains(idx))
                         idxsToInclude.add(idx);
             }
         }
-        
+
         Collections.sort(idxsToInclude);
-        
+
         for (Integer idx : idxsToInclude) {
             toRet.add(array[idx]);
         }
-        
+
         return toRet;
     }
-    
+
     private void parse(String str, TimeZoneMap tzmap) throws ServiceException {
         try {
             int numByParts = 0;
@@ -1425,7 +1429,7 @@ public class ZRecur implements Cloneable {
                 rhs = rhs.replaceAll("\\s+", "");
 
                 try {
-                    switch(Tokens.valueOf(s[0])) { 
+                    switch(Tokens.valueOf(s[0])) {
                     case FREQ:
                         mFreq = Frequency.valueOf(rhs);
                         break;
@@ -1540,16 +1544,16 @@ public class ZRecur implements Cloneable {
     private void parseByDayList(String str, List<ZWeekDayNum> list) {
         for (String s : str.split("\\s*,\\s*")) {
             ZWeekDayNum wdn = new ZWeekDayNum();
-            
+
             String dayStr = s;
-            
+
             if (s.length() > 2) {
                 String numStr = s.substring(0,s.length()-2);
                 dayStr = dayStr.substring(s.length()-2);
                 wdn.mOrdinal = parseSignedInt(numStr);
             }
             wdn.mDay = ZWeekDay.valueOf(dayStr);
-            
+
             list.add(wdn);
         }
 
