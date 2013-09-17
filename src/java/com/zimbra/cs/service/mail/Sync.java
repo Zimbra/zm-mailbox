@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -132,6 +132,9 @@ public class Sync extends MailDocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
     private static enum SyncPhase { INITIAL, DELTA };
 
+    /**
+     * @param calendarStart start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     */
     private static boolean folderSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, Folder folder,
             Set<Folder> visible, long calendarStart, long messageSyncStart, SyncPhase phase)
     throws ServiceException {
@@ -201,6 +204,9 @@ public class Sync extends MailDocumentHandler {
 
     private static final Set<MailItem.Type> CALENDAR_TYPES = EnumSet.of(MailItem.Type.APPOINTMENT, MailItem.Type.TASK);
 
+    /**
+     * @param calendarStart start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     */
     private static void initialCalendarSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox,
             Folder folder, long calendarStart)
     throws ServiceException {

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -52,6 +52,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -1230,7 +1231,7 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, String idColumn, int itemId,
             int revision, String locator, String digest) throws ServiceException {
         PreparedStatement stmt = null;
@@ -3272,7 +3273,7 @@ public class DbMailItem {
                 (volumeId > -1 ? " AND locator = ?" : "");
                 stmt = conn.prepareStatement(query);
                 getAllBlobs(stmt, volumeId, lastSyncDate, currentSyncDate, blobs);
-            
+
                 query = "SELECT " + (DebugConfig.disableMailboxGroups ? groupId : "mailbox_id") + ", item_id, mod_content," +
                 " locator, blob_digest FROM " + getRevisionTableName(groupId, fromDumpster) + " WHERE blob_digest IS NOT NULL " +
                 (currentSyncDate > 0 ? " AND ((date >= ? AND date < ?) OR (change_date >= ? AND change_date < ?))" : "") +
@@ -3293,7 +3294,7 @@ public class DbMailItem {
 
     /**
      * Get the list of blobs related to this mailbox. This must be called inside the mailbox transaction.
-     * @param mbox 
+     * @param mbox
      * @return all the blobs related to this mailbox
      * @throws ServiceException
      */
@@ -3407,7 +3408,7 @@ public class DbMailItem {
         } catch (SQLException e) {
             throw ServiceException.FAILURE("visiting blob digests list for mailbox " + mbox.getId(), e);
         } finally {
-            DbPool.closeStatement(stmt);  
+            DbPool.closeStatement(stmt);
         }
     }
 
@@ -3581,8 +3582,8 @@ public class DbMailItem {
     /**
      * Return all of the Invite records within the range start&lt;=Invites&lt;end.  IE "Give me all the
      * invites between 7:00 and 9:00" will return you everything from 7:00 to 8:59:59.99
-     * @param start
-     * @param end
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
      * @param folderId
      * @return list of invites
      */
@@ -3639,6 +3640,10 @@ public class DbMailItem {
         }
     }
 
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
     public static TypedIdList listCalendarItems(Mailbox mbox, MailItem.Type type, long start, long end, int folderId,
             int[] excludeFolderIds) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
@@ -3661,13 +3666,20 @@ public class DbMailItem {
         }
     }
 
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
     private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
             Mailbox mbox, MailItem.Type type, long start, long end, int folderId, int[] excludeFolderIds)
             throws SQLException {
         boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
 
-        String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
-        String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
+        // Note - Negative times are valid.  However, treat -1 as meaning "unconstrained"
+        // Want appointments that start before the end time
+        String endConstraint = (end != -1) ? " AND ci.start_time < ?" : "";
+        // Want appointments that end after the start time
+        String startConstraint = (start != -1) ? " AND ci.end_time > ?" : "";
         String typeConstraint = type == MailItem.Type.UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
 
         String excludeFolderPart = "";
@@ -3681,10 +3693,12 @@ public class DbMailItem {
                 (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
 
         int pos = 1;
-        if (end > 0)
+        if (!endConstraint.isEmpty()) {
             stmt.setTimestamp(pos++, new Timestamp(end));
-        if (start > 0)
+        }
+        if (!startConstraint.isEmpty()) {
             stmt.setTimestamp(pos++, new Timestamp(start));
+        }
         pos = setMailboxId(stmt, mbox, pos);
         if (folderSpecified)
             stmt.setInt(pos++, folderId);
@@ -3979,9 +3993,10 @@ public class DbMailItem {
     public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
 
+        long start = calItem.getStartTime();
         long end = calItem.getEndTime();
-        Timestamp startTs = new Timestamp(calItem.getStartTime());
-        Timestamp endTs = new Timestamp(end <= 0 ? MAX_DATE : end);
+        Timestamp startTs = new Timestamp(start);
+        Timestamp endTs = getEnd(start, end);
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -4005,12 +4020,35 @@ public class DbMailItem {
     }
 
     private static long MAX_DATE = new GregorianCalendar(9999, 1, 1).getTimeInMillis();
+    /**
+     * Return the {@link Timestamp} to be associated with {@code end}
+     * Value used to be:
+     *     new Timestamp(end <= 0 ? MAX_DATE : end);
+     * This means you couldn't have an end date before 1970.
+     * This treatment was introduced without explanation in change 7809.  Other changes at that time
+     * Recurrence.java had these lines added in the same change which MAY be related?
+     *       // get the last time (-1 means forever) for which the rule has instances
+     *       public ParsedDateTime getEndTime() throws ServiceException;
+     * Code now loosens the restrictions so that most likely situations where "end" had a special value
+     * which should be translated to MAX_DATE will be covered just in case, whilst allowing likely real
+     * world real end dates to remain uncorrupted.
+     */
+    private static Timestamp getEnd(long start, long end) {
+        if (end <= 0) {
+            if ((end == 0) || (end == -1) || (end < start) || (end > start + Constants.MILLIS_PER_DAY * 366)) {
+                end = MAX_DATE;
+            }
+        }
+        return new Timestamp(end);
+    }
+
 
     public static void updateInCalendarItemTable(CalendarItem calItem) throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
+        long start = calItem.getStartTime();
         long end = calItem.getEndTime();
-        Timestamp startTs = new Timestamp(calItem.getStartTime());
-        Timestamp endTs = new Timestamp(end <= 0 ? MAX_DATE : end);
+        Timestamp startTs = new Timestamp(start);
+        Timestamp endTs = getEnd(start, end);
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -4052,7 +4090,12 @@ public class DbMailItem {
         }
     }
 
-    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end) throws ServiceException {
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
+    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end)
+    throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
         ArrayList<CalendarItem.CalendarMetadata> result = new ArrayList<CalendarItem.CalendarMetadata>();
@@ -4061,20 +4104,26 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
-            String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
+            // Note - Negative times are valid.  However, treat -1 as meaning "unconstrained"
+            // Want appointments that end after the start time
+            String startConstraint = (start != -1) ? " AND ci.end_time > ?" : "";
+            // Want appointments that start before the end time
+            String endConstraint = (end != -1) ? " AND ci.start_time < ?" : "";
             String folderConstraint = " AND mi.folder_id = ?";
-            stmt = conn.prepareStatement("SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" +
+            stmt = conn.prepareStatement(
+                    "SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" +
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
                         " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" +
                         (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? ") +
                         startConstraint + endConstraint + folderConstraint);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            if (start > 0)
+            if (!startConstraint.isEmpty()) {
                 stmt.setTimestamp(pos++, new Timestamp(start));
-            if (end > 0)
+            }
+            if (!endConstraint.isEmpty()) {
                 stmt.setTimestamp(pos++, new Timestamp(end));
+            }
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -30,7 +31,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -39,13 +39,14 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.FolderACL;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -92,15 +93,16 @@ public class CalSummaryCache {
     throws ServiceException {
         CalendarItemData calItemData = null;
         try {
-            boolean rangeValid = (rangeStart >= 0 && rangeEnd > 0 && rangeStart < rangeEnd);
-            if (!rangeValid)
+            boolean rangeValid = (rangeStart >= CalendarUtils.MICROSOFT_EPOC_START_MS_SINCE_EPOC &&
+                    rangeEnd > CalendarUtils.MICROSOFT_EPOC_START_MS_SINCE_EPOC && rangeStart < rangeEnd);
+            if (!rangeValid) {
                 return null;
+            }
 
             Invite defaultInvite = calItem.getDefaultInviteOrNull();
             if (defaultInvite == null) {
                 ZimbraLog.calendar.info(
-                        "Could not load defaultinfo for calendar item with id=" +
-                        calItem.getId() + "; SKIPPING");
+                        "Could not load defaultinfo for calendar item with id=" + calItem.getId() + "; SKIPPING");
                 return null;
             }
             String defaultFba = null;
@@ -156,7 +158,8 @@ public class CalSummaryCache {
                 try {
                     long instStart = inst.getStart();
                     long duration = inst.getEnd() - instStart;
-                    Long instStartLong = instStart > 0 ? Long.valueOf(instStart) : null;
+                    // 0 means "no DTSTART", however, note that negative numbers are valid
+                    Long instStartLong = instStart != 0 ? Long.valueOf(instStart) : null;
                     Long durationLong = duration > 0 ? Long.valueOf(duration) : null;
 
                     // For an instance whose alarm time is within the time range, we must
@@ -256,8 +259,9 @@ public class CalSummaryCache {
                     // by old id to return a MailItem object having the new id.  We must ignore it here.  If
                     // we don't, we'll end up with duplicates because the new id is also in the stale item ids
                     // list.
-                    if (calItemData.getCalItemId() == calItemId)
+                    if (calItemData.getCalItemId() == calItemId) {
                         calData.addCalendarItem(calItemData);
+                    }
                 }
             }
         }
@@ -270,8 +274,9 @@ public class CalSummaryCache {
                 // by old id to return a MailItem object having the new id.  We must ignore it here.  If
                 // we don't, we'll end up with duplicates because the new id is also in the stale item ids
                 // list.
-                if (calItemData.getCalItemId() == calItemId)
+                if (calItemData.getCalItemId() == calItemId) {
                     calData.addCalendarItem(calItemData);
+                }
             }
         }
         return calData;  // return a non-null object even if there are no items in the range
@@ -356,12 +361,12 @@ public class CalSummaryCache {
 
     @SuppressWarnings("serial")
     private static class SummaryLRU extends LinkedHashMap<CalSummaryKey, CalendarData> {
-        private int mMaxAllowed;
+        private final int mMaxAllowed;
 
         // map that keeps track of which calendar folders are cached for each account
         // This map is updated every time a calendar folder is added, removed, or aged out
         // of the LRU.
-        private Map<String /* account id */, Set<Integer> /* folder ids */> mAccountFolders;
+        private final Map<String /* account id */, Set<Integer> /* folder ids */> mAccountFolders;
 
         private SummaryLRU(int capacity) {
             super(capacity + 1, 1.0f, true);
@@ -471,9 +476,9 @@ public class CalSummaryCache {
     }
 
     // LRU cache containing range-limited calendar summary by calendar folder
-    private SummaryLRU mSummaryCache;
-    private int mLRUCapacity;
-    private CalSummaryMemcachedCache mMemcachedCache;
+    private final SummaryLRU mSummaryCache;
+    private final int mLRUCapacity;
+    private final CalSummaryMemcachedCache mMemcachedCache;
 
     CalSummaryCache(final int capacity) {
         mLRUCapacity = capacity;

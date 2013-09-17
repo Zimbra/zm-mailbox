@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,23 +23,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -47,8 +46,8 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -80,27 +79,27 @@ public class GetCalendarItemSummaries extends CalendarRequest {
     }
 
     private static final String DEFAULT_FOLDER = "" + Mailbox.ID_AUTO_INCREMENT;
-    
+
     private static final long MSEC_PER_DAY = 1000*60*60*24;
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
-    
+
     static class EncodeCalendarItemResult {
         Element element;
         int numInstancesExpanded;
     }
-    
+
     /**
-     * Encodes a calendar item 
-     * 
+     * Encodes a calendar item
+     *
      * @param parent
      * @param elementName
      *         name of element to add (MailConstants .E_APPOINTMENT or MailConstants.E_TASK)
-     * @param rangeStart 
-     *         start period to expand instances
+     * @param rangeStart
+     *         start period to expand instances (or -1 for no start time constraint)
      * @param rangeEnd
-     *         end period to expand instances
+     *         end period to expand instances (or -1 for no end time constraint)
      * @param newFormat
-     *         temporary HACK - true: SearchRequest, false: GetAppointmentSummaries        
+     *         temporary HACK - true: SearchRequest, false: GetAppointmentSummaries
      * @return
      */
     static EncodeCalendarItemResult encodeCalendarItemInstances(
@@ -121,9 +120,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     rangeEnd = Long.MAX_VALUE;
                 }
             } else {
-                expandRanges = (rangeStart > 0 && rangeEnd > 0 && rangeStart < rangeEnd);
+                expandRanges = (rangeStart != -1 && rangeEnd != -1 && rangeStart < rangeEnd);
             }
-            
+
             boolean isAppointment = calItem instanceof Appointment;
 
             // Use the marshalling code in calendar summary cache for uniform output, when we can.
@@ -142,12 +141,12 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             // But there are other cases (e.g. tasks, no time range) that require the legacy code below.
 
             Element calItemElem = null; // don't initialize until we find at least one valid instance
-            
+
             Invite defaultInvite = calItem.getDefaultInviteOrNull();
-            
+
             if (defaultInvite == null) {
                 mLog.info("Could not load defaultinfo for calendar item with id="+calItem.getId()+" SKIPPING");
-                return toRet; 
+                return toRet;
             }
 
             ParsedDuration defDuration = defaultInvite.getEffectiveDuration();
@@ -166,19 +165,19 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 long et = s.add(defDuration).getUtcTime();
                 defDurationMsecs = et - s.getUtcTime();
             }
-            
+
             String defaultFba = null;
             if (calItem instanceof Appointment) {
                 defaultFba = ((Appointment) calItem).getEffectiveFreeBusyActual(defaultInvite, null);
             }
-            
+
             String defaultPtSt = calItem.getEffectivePartStat(defaultInvite, null);
 
             AlarmData alarmData = calItem.getAlarmData();
 
             // add all the instances:
             int numInRange = 0;
-            
+
             if (expandRanges) {
                 Collection<CalendarItem.Instance> instances = calItem.expandInstances(rangeStart, rangeEnd, true);
                 long alarmTime = 0;
@@ -364,7 +363,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 } // iterate all the instances
             } // if expandRanges
 
-            
+
             if (!expandRanges || numInRange > 0) { // if we found any calItems at all, we have to encode the "Default" data here
                 boolean showAll = !hidePrivate || defaultInvite.isPublic();
                 if (calItemElem == null) {
@@ -384,7 +383,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         org.toXml(calItemElem);
                     }
                 }
-                
+
                 if (showAll) {
                     if (alarmData != null)
                         ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
@@ -450,7 +449,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 if (calItem.hasExceptions()) {
                     calItemElem.addAttribute(MailConstants.A_CAL_HAS_EXCEPTIONS, true);
                 }
-                
+
                 toRet.element = calItemElem;
             }
             toRet.numInstancesExpanded = numInRange;
@@ -459,30 +458,31 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         } catch (RuntimeException e) {
             mLog.info("Caught Exception "+e+ " while getting summary info for calendar item: "+calItem.getId(), e);
         }
-        
+
         return toRet;
     }
-    
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
-        
+
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
-        
+
         if (rangeEnd < rangeStart) {
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
         }
-        
+
         long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
         if (days > MAX_PERIOD_SIZE_IN_DAYS) {
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
         }
-        
-        
+
+
         ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), zsc);
-        
+
         Element response = getResponseElement(zsc);
 
         OperationContext octxt = getOperationContext(zsc, context);
@@ -529,7 +529,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 	                response.addElement(encoded.element);
 	        }
         }
-        
+
         return response;
     }
 }

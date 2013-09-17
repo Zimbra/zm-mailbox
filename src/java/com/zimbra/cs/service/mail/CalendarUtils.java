@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,20 +29,20 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TZIDMapper;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -79,6 +79,12 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 public class CalendarUtils {
+    // Start of Microsoft time
+    // Likely to encounter problems with any dates before this in Outlook connector
+    // Value obtained from:
+    //     ParsedDateTime.parseUtcOnly("16010101T000000").getDate().getTime();
+    public static final long MICROSOFT_EPOC_START_MS_SINCE_EPOC = -11644473600000L;
+
     /**
      * Useful for sync and import, parse an <inv> that is specified using raw
      * iCalendar data in the format: <inv> <content uid="UID" summary="summary">
@@ -367,7 +373,7 @@ public class CalendarUtils {
         Invite inv = new Invite(ICalTok.COUNTER.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(account, type, inviteElem, inv, true, true);
-        
+
         // Get the existing invite to populate X-MS-OLK-ORIGINALSTART and X-MS-OLK-ORIGINALEND
         if (oldInvite == null) {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -375,7 +381,7 @@ public class CalendarUtils {
             if (calItem != null)
                 oldInvite = calItem.getInvite(inv.getRecurId());
         }
-        
+
         if (oldInvite != null) {
             // Add TZIDs from oldInvite to inv
             inv.getTimeZoneMap().add(oldInvite.getTimeZoneMap());
@@ -399,9 +405,9 @@ public class CalendarUtils {
             }
             // Add LOCATION if not already exist.
             if (inv.getLocation() == null || inv.getLocation().isEmpty())
-                inv.setLocation(oldInvite.getLocation());       
+                inv.setLocation(oldInvite.getLocation());
         }
-        
+
         // UID
         String uid = inv.getUid();
         if (uid == null || uid.length() == 0)
@@ -1497,14 +1503,14 @@ public class CalendarUtils {
 
         return cancel;
     }
-    
+
     /**
-     * Move appointments from TASKS type folders to Calendar folder. 
+     * Move appointments from TASKS type folders to Calendar folder.
      * Also, move tasks from APPOINTMENT type folders to Tasks folder.
      * @param mbox
      * @throws ServiceException
      */
-    
+
     public static void migrateAppointmentsAndTasks(Mailbox mbox) throws ServiceException {
         // get the list of folders.
         List<Folder> folderList = mbox.getFolderList(null, SortBy.NONE);
@@ -1513,29 +1519,29 @@ public class CalendarUtils {
             int targetId;
             TypedIdList idlist;
             MailItem.Type type;
-            
+
             if (folder.getDefaultView() == MailItem.Type.APPOINTMENT) {
                 // get tasks from this folder and move them to TASKS folder.
-                idlist = mbox.listCalendarItemsForRange(null, MailItem.Type.TASK, 0, 0, folder.getId());
+                idlist = mbox.listCalendarItemsForRange(null, MailItem.Type.TASK, -1, -1, folder.getId());
                 targetId = Mailbox.ID_FOLDER_TASKS;
                 type = MailItem.Type.TASK;
             } else if (folder.getDefaultView() == MailItem.Type.TASK) {
                 // get appointments from this folder and move them to Calendar folder.
-                idlist = mbox.listCalendarItemsForRange(null, MailItem.Type.APPOINTMENT, 0, 0, folder.getId());
+                idlist = mbox.listCalendarItemsForRange(null, MailItem.Type.APPOINTMENT, -1, -1, folder.getId());
                 targetId = Mailbox.ID_FOLDER_CALENDAR;
                 type = MailItem.Type.APPOINTMENT;
             } else {
                 continue;
             }
-            
+
             if (!idlist.isEmpty()) {
                 if (type == MailItem.Type.APPOINTMENT)
-                    ZimbraLog.calendar.info("Migrating " + idlist.size() + " Appointment(s) from '" + 
+                    ZimbraLog.calendar.info("Migrating " + idlist.size() + " Appointment(s) from '" +
                             folder.getName() + "' to 'Calendar' folder for mailbox " + mbox.getId());
-                else 
-                    ZimbraLog.calendar.info("Migrating " + idlist.size() + " Task(s) from '" + 
+                else
+                    ZimbraLog.calendar.info("Migrating " + idlist.size() + " Task(s) from '" +
                             folder.getName() + "' to 'Tasks' folder for mailbox " + mbox.getId());
-                
+
                 int[] items = new int[idlist.size()];
                 int i = 0;
                 for (Integer id : idlist.getAllIds()) {
@@ -1546,7 +1552,7 @@ public class CalendarUtils {
             }
         }
     }
-    
+
     /**
      * Checks whether two given addresses belong to same account
      * @param address1

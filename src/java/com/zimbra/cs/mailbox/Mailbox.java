@@ -4296,6 +4296,10 @@ public class Mailbox {
         return getItemList(octxt, MailItem.Type.TASK, folderId);
     }
 
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
     public TypedIdList listCalendarItemsForRange(OperationContext octxt, MailItem.Type type, long start, long end,
                     int folderId) throws ServiceException {
         if (folderId == ID_AUTO_INCREMENT) {
@@ -4322,6 +4326,10 @@ public class Mailbox {
         return getCalendarItemsForRange(octxt, type, -1, -1, folderId, null);
     }
 
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
     public List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, long start, long end,
             int folderId, int[] excludeFolders) throws ServiceException {
         return getCalendarItemsForRange(octxt, MailItem.Type.UNKNOWN, start, end, folderId, excludeFolders);
@@ -4371,8 +4379,9 @@ public class Mailbox {
                 try {
                     CalendarItem calItem = getCalendarItem(data);
                     if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox())) {
-                        if (calItem.canAccess(ACL.RIGHT_READ))
+                        if (calItem.canAccess(ACL.RIGHT_READ)) {
                             calItems.add(calItem);
+                        }
                     }
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Error while retrieving calendar item " + data.id + " in mailbox " + mId

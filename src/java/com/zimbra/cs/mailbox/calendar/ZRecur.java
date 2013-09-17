@@ -27,6 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.httpclient.util.DateUtil;
+
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
@@ -615,12 +617,16 @@ public class ZRecur implements Cloneable {
         int numInstancesExpanded = 1;  // initially 1 rather than 0 because DTSTART is always included
 
         // Set hard limit of expansion time range.  (bug 21989)
-        Date hardEndDate = getEstimatedEndTime(dtStart);
+        ParsedDateTime earliestDateTime = ParsedDateTime.fromUTCTime(earliestDate.getTime());
+        Date hardEndDate = getEstimatedEndTime(earliestDateTime);
         if (hardEndDate.before(rangeEndDate))
             rangeEndDate = hardEndDate;
 
-        if (rangeEndDate.before(earliestDate))
+        if (rangeEndDate.before(earliestDate)) {
+            ZimbraLog.calendar.debug("Expanding recurrence over range where range end %s is before earliest date %s",
+                    DateUtil.formatDate(rangeEndDate), DateUtil.formatDate(earliestDate));
             return toRet;
+        }
 
         GregorianCalendar cur = dtStart.getCalendarCopy();
         int baseMonthDay = cur.get(Calendar.DAY_OF_MONTH);
