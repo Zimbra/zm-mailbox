@@ -37,12 +37,16 @@ public class GrantRight extends RightDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         GrantRightRequest grReq = JaxbUtil.elementToJaxb(request);
-        RightModifier rightModifier = getRightModifier(grReq.getRight());
+        RightModifierInfo modifierInfo = grReq.getRight();
+        if (modifierInfo == null) {
+            throw ServiceException.INVALID_REQUEST("No information specified on what right to assign", null);
+        }
+        RightModifier rightModifier = getRightModifier(modifierInfo);
 
         // right checking is done in RightCommand
 
         RightCommand.grantRight(Provisioning.getInstance(), getAuthenticatedAccount(zsc), grReq.getTarget(),
-                                grReq.getGrantee(), grReq.getRight().getValue(), rightModifier);
+                                grReq.getGrantee(), modifierInfo.getValue(), rightModifier);
 
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
         return response;
