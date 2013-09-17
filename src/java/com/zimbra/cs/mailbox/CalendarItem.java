@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -91,8 +91,8 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZRecur.Frequency;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
+import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.service.mail.CalendarUtils;
@@ -528,7 +528,8 @@ public abstract class CalendarItem extends MailItem {
         CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
         Invite defInvite = item.getDefaultInviteOrNull();
         if (defInvite != null) {
-            Collection<Instance> instances = item.expandInstances(0, Long.MAX_VALUE, false);
+            Collection<Instance> instances =
+                    item.expandInstances(CalendarUtils.MICROSOFT_EPOC_START_MS_SINCE_EPOC, Long.MAX_VALUE, false);
             if (instances.isEmpty()) {
                 ZimbraLog.calendar.info("CalendarItem has effectively zero instances: id=%d, folderId=%d, subject=\"%s\", UID=%s ",
                         data.id, folder.getId(), firstInvite.isPublic() ? firstInvite.getName() : "(private)", firstInvite.getUid());
