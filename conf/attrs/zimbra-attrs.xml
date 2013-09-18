@@ -7512,4 +7512,23 @@ TODO: delete them permanently from here
   <desc>Value for postconf in_flow_delay</desc>
 </attr>
 
+<attr id="1505" name="zimbraMtaLmtpConnectionCacheDestinations" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf lmtp_connection_cache_destinations</desc>
+</attr>
+
+<attr id="1506" name="zimbraMtaLmtpConnectionCacheTimeLimit" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>4s</globalConfigValue>
+  <desc>Value for postconf lmtp_connection_cache_time_limit</desc>
+</attr>
+
+<attr id="1507" name="zimbraMtaLmtpHostLookup" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>dns</globalConfigValue>
+  <desc>Value for postconf lmtp_host_lookup</desc>
+</attr>
+
+<attr id="1508" name="zimbraMtaMailqPath" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>/opt/zimbra/postfix/sbin/mailq</globalConfigValue>
+  <desc>Value for postconf mailq_path</desc>
+</attr>
+
 </attrs>

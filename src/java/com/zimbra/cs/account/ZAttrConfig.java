@@ -26343,6 +26343,294 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @return zimbraMtaLmtpConnectionCacheDestinations, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public String getMtaLmtpConnectionCacheDestinations() {
+        return getAttr(Provisioning.A_zimbraMtaLmtpConnectionCacheDestinations, null);
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @param zimbraMtaLmtpConnectionCacheDestinations new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public void setMtaLmtpConnectionCacheDestinations(String zimbraMtaLmtpConnectionCacheDestinations) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheDestinations, zimbraMtaLmtpConnectionCacheDestinations);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @param zimbraMtaLmtpConnectionCacheDestinations new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public Map<String,Object> setMtaLmtpConnectionCacheDestinations(String zimbraMtaLmtpConnectionCacheDestinations, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheDestinations, zimbraMtaLmtpConnectionCacheDestinations);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public void unsetMtaLmtpConnectionCacheDestinations() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheDestinations, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public Map<String,Object> unsetMtaLmtpConnectionCacheDestinations(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheDestinations, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @return zimbraMtaLmtpConnectionCacheTimeLimit, or "4s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public String getMtaLmtpConnectionCacheTimeLimit() {
+        return getAttr(Provisioning.A_zimbraMtaLmtpConnectionCacheTimeLimit, "4s");
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @param zimbraMtaLmtpConnectionCacheTimeLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public void setMtaLmtpConnectionCacheTimeLimit(String zimbraMtaLmtpConnectionCacheTimeLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheTimeLimit, zimbraMtaLmtpConnectionCacheTimeLimit);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @param zimbraMtaLmtpConnectionCacheTimeLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public Map<String,Object> setMtaLmtpConnectionCacheTimeLimit(String zimbraMtaLmtpConnectionCacheTimeLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheTimeLimit, zimbraMtaLmtpConnectionCacheTimeLimit);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public void unsetMtaLmtpConnectionCacheTimeLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheTimeLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public Map<String,Object> unsetMtaLmtpConnectionCacheTimeLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpConnectionCacheTimeLimit, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @return zimbraMtaLmtpHostLookup, or "dns" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public String getMtaLmtpHostLookup() {
+        return getAttr(Provisioning.A_zimbraMtaLmtpHostLookup, "dns");
+    }
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @param zimbraMtaLmtpHostLookup new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public void setMtaLmtpHostLookup(String zimbraMtaLmtpHostLookup) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpHostLookup, zimbraMtaLmtpHostLookup);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @param zimbraMtaLmtpHostLookup new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public Map<String,Object> setMtaLmtpHostLookup(String zimbraMtaLmtpHostLookup, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpHostLookup, zimbraMtaLmtpHostLookup);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public void unsetMtaLmtpHostLookup() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpHostLookup, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public Map<String,Object> unsetMtaLmtpHostLookup(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpHostLookup, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @return zimbraMtaMailqPath, or "/opt/zimbra/postfix/sbin/mailq" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public String getMtaMailqPath() {
+        return getAttr(Provisioning.A_zimbraMtaMailqPath, "/opt/zimbra/postfix/sbin/mailq");
+    }
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @param zimbraMtaMailqPath new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public void setMtaMailqPath(String zimbraMtaMailqPath) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMailqPath, zimbraMtaMailqPath);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @param zimbraMtaMailqPath new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public Map<String,Object> setMtaMailqPath(String zimbraMtaMailqPath, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMailqPath, zimbraMtaMailqPath);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public void unsetMtaMailqPath() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMailqPath, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public Map<String,Object> unsetMtaMailqPath(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMailqPath, "");
+        return attrs;
+    }
+
+    /**
      * Maximum total size of a mail message. Enforced in mailbox server and
      * also used as value for postconf message_size_limit. 0 means &quot;no
      * limit&quot;
