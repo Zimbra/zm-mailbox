@@ -114,8 +114,6 @@ SECTION mta DEPENDS amavis
 	fi
 	POSTCONF recipient_delimiter			VAR zimbraMtaRecipientDelimiter
 	POSTCONF smtpd_sasl_auth_enable			VAR zimbraMtaSaslAuthEnable
-	POSTCONF smtpd_tls_auth_only			VAR zimbraMtaTlsAuthOnly
-	POSTCONF smtpd_tls_security_level		VAR zimbraMtaTlsSecurityLevel
 	POSTCONF disable_dns_lookups			VAR !zimbraMtaDnsLookupsEnabled	
 	POSTCONF message_size_limit			VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit			0
@@ -155,10 +153,13 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_helo_required			LOCAL postfix_smtpd_helo_required
 	POSTCONF smtpd_reject_unlisted_recipient	LOCAL postfix_smtpd_reject_unlisted_recipient
 	POSTCONF smtpd_reject_unlisted_sender		LOCAL postfix_smtpd_reject_unlisted_sender
+	POSTCONF smtpd_tls_auth_only			VAR zimbraMtaTlsAuthOnly
 	POSTCONF smtpd_tls_cert_file			LOCAL postfix_smtpd_tls_cert_file
+	POSTCONF smtpd_tls_ciphers			VAR zimbraMtaSmtpdTlsCiphers
 	POSTCONF smtpd_tls_key_file			LOCAL postfix_smtpd_tls_key_file
 	POSTCONF smtpd_tls_loglevel			LOCAL postfix_smtpd_tls_loglevel
-	POSTCONF smtpd_tls_security_level		LOCAL postfix_smtpd_tls_security_level
+	POSTCONF smtpd_tls_mandatory_ciphers		VAR zimbraMtaSmtpdTlsMandatoryCiphers
+	POSTCONF smtpd_tls_security_level		VAR zimbraMtaTlsSecurityLevel
 	POSTCONF smtpd_error_sleep_time			LOCAL postfix_smtpd_error_sleep_time
 	POSTCONF smtpd_hard_error_limit			LOCAL postfix_smtpd_hard_error_limit
 	POSTCONF smtpd_soft_error_limit			LOCAL postfix_smtpd_soft_error_limit
@@ -186,6 +187,8 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtp_sasl_auth_enable			LOCAL postfix_smtp_sasl_auth_enable
 	POSTCONF smtp_sasl_security_options		LOCAL postfix_smtp_sasl_security_options
 	POSTCONF smtp_tls_security_level		LOCAL postfix_smtp_tls_security_level
+	POSTCONF smtp_tls_ciphers			VAR zimbraMtaSmtpTlsCiphers
+	POSTCONF smtp_tls_mandatory_ciphers		VAR zimbraMtaSmtpTlsMandatoryCiphers
 	POSTCONF smtp_sasl_mechanism_filter		LOCAL postfix_smtp_sasl_mechanism_filter
 	POSTCONF smtp_sasl_password_maps		LOCAL postfix_smtp_sasl_password_maps
 	POSTCONF milter_connect_timeout			LOCAL postfix_milter_connect_timeout

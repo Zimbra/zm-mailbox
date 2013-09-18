@@ -7551,4 +7551,24 @@ TODO: delete them permanently from here
   <desc>Value for postconf sendmail_path</desc>
 </attr>
 
+<attr id="1513" name="zimbraMtaSmtpTlsCiphers" type="enum" value="export,low,medium,high,null" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>export</globalConfigValue>
+  <desc>Value for postconf smtp_tls_ciphers</desc>
+</attr>
+
+<attr id="1514" name="zimbraMtaSmtpTlsMandatoryCiphers" type="enum" value="export,low,medium,high,null" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>medium</globalConfigValue>
+  <desc>Value for postconf smtp_tls_mandatory_ciphers</desc>
+</attr>
+
+<attr id="1515" name="zimbraMtaSmtpdTlsCiphers" type="enum" value="export,low,medium,high,null" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>export</globalConfigValue>
+  <desc>Value for postconf smtpd_tls_ciphers</desc>
+</attr>
+
+<attr id="1516" name="zimbraMtaSmtpdTlsMandatoryCiphers" type="enum" value="export,low,medium,high,null" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>medium</globalConfigValue>
+  <desc>Value for postconf smtpd_tls_mandatory_ciphers</desc>
+</attr>
+
 </attrs>
