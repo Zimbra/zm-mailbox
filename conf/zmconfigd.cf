@@ -141,7 +141,7 @@ SECTION mta DEPENDS amavis
 	if VAR zimbraMtaBlockedExtensionWarnRecipient
 		POSTCONF header_checks
 	fi
-	POSTCONF mailq_path				LOCAL postfix_mailq_path
+	POSTCONF mailq_path				VAR zimbraMtaMailqPath
 	POSTCONF manpage_directory			LOCAL postfix_manpage_directory
 	POSTCONF newaliases_path			LOCAL postfix_newaliases_path
 	POSTCONF notify_classes				LOCAL postfix_notify_classes
@@ -167,9 +167,9 @@ SECTION mta DEPENDS amavis
 	POSTCONF queue_run_delay			LOCAL postfix_queue_run_delay
 	POSTCONF minimal_backoff_time			LOCAL postfix_minimal_backoff_time
 	POSTCONF maximal_backoff_time			LOCAL postfix_maximal_backoff_time
-	POSTCONF lmtp_connection_cache_destinations	LOCAL postfix_lmtp_connection_cache_destinations
-	POSTCONF lmtp_connection_cache_time_limit	LOCAL postfix_lmtp_connection_cache_time_limit
-	POSTCONF lmtp_host_lookup			LOCAL postfix_lmtp_host_lookup
+	POSTCONF lmtp_connection_cache_destinations	VAR zimbraMtaLmtpConnectionCacheDestinations
+	POSTCONF lmtp_connection_cache_time_limit	VAR zimbraMtaLmtpConnectionCacheTimeLimit
+	POSTCONF lmtp_host_lookup			VAR zimbraMtaLmtpHostLookup
 	POSTCONF transport_maps				LOCAL postfix_transport_maps
 	POSTCONF propagate_unmatched_extensions		LOCAL postfix_propagate_unmatched_extensions
 	POSTCONF virtual_alias_domains			LOCAL postfix_virtual_alias_domains
