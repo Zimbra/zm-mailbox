@@ -7942,6 +7942,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaFallbackRelayHost = "zimbraMtaFallbackRelayHost";
 
     /**
+     * Value for postconf postfix_header_checks
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public static final String A_zimbraMtaHeaderChecks = "zimbraMtaHeaderChecks";
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public static final String A_zimbraMtaImportEnvironment = "zimbraMtaImportEnvironment";
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public static final String A_zimbraMtaInFlowDelay = "zimbraMtaInFlowDelay";
+
+    /**
      * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB).
      * Databases will not grow beyond this point.
      *
