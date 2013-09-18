@@ -7498,4 +7498,18 @@ TODO: delete them permanently from here
   <desc>Value for postconf default_process_limit</desc>
 </attr>
 
+<attr id="1502" name="zimbraMtaHeaderChecks" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>pcre:/opt/zimbra/conf/postfix_header_checks</globalConfigValue>
+  <desc>Value for postconf postfix_header_checks</desc>
+</attr>
+
+<attr id="1503" name="zimbraMtaImportEnvironment" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf import_environment</desc>
+</attr>
+
+<attr id="1504" name="zimbraMtaInFlowDelay" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>1s</globalConfigValue>
+  <desc>Value for postconf in_flow_delay</desc>
+</attr>
+
 </attrs>

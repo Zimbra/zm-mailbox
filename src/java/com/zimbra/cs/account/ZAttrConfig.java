@@ -26050,6 +26050,222 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf postfix_header_checks
+     *
+     * @return zimbraMtaHeaderChecks, or "pcre:/opt/zimbra/conf/postfix_header_checks" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public String getMtaHeaderChecks() {
+        return getAttr(Provisioning.A_zimbraMtaHeaderChecks, "pcre:/opt/zimbra/conf/postfix_header_checks");
+    }
+
+    /**
+     * Value for postconf postfix_header_checks
+     *
+     * @param zimbraMtaHeaderChecks new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public void setMtaHeaderChecks(String zimbraMtaHeaderChecks) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHeaderChecks, zimbraMtaHeaderChecks);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postfix_header_checks
+     *
+     * @param zimbraMtaHeaderChecks new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public Map<String,Object> setMtaHeaderChecks(String zimbraMtaHeaderChecks, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHeaderChecks, zimbraMtaHeaderChecks);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postfix_header_checks
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public void unsetMtaHeaderChecks() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHeaderChecks, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postfix_header_checks
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public Map<String,Object> unsetMtaHeaderChecks(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHeaderChecks, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @return zimbraMtaImportEnvironment, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public String getMtaImportEnvironment() {
+        return getAttr(Provisioning.A_zimbraMtaImportEnvironment, null);
+    }
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @param zimbraMtaImportEnvironment new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public void setMtaImportEnvironment(String zimbraMtaImportEnvironment) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaImportEnvironment, zimbraMtaImportEnvironment);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @param zimbraMtaImportEnvironment new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public Map<String,Object> setMtaImportEnvironment(String zimbraMtaImportEnvironment, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaImportEnvironment, zimbraMtaImportEnvironment);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public void unsetMtaImportEnvironment() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaImportEnvironment, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public Map<String,Object> unsetMtaImportEnvironment(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaImportEnvironment, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @return zimbraMtaInFlowDelay, or "1s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public String getMtaInFlowDelay() {
+        return getAttr(Provisioning.A_zimbraMtaInFlowDelay, "1s");
+    }
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @param zimbraMtaInFlowDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public void setMtaInFlowDelay(String zimbraMtaInFlowDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaInFlowDelay, zimbraMtaInFlowDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @param zimbraMtaInFlowDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public Map<String,Object> setMtaInFlowDelay(String zimbraMtaInFlowDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaInFlowDelay, zimbraMtaInFlowDelay);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public void unsetMtaInFlowDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaInFlowDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public Map<String,Object> unsetMtaInFlowDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaInFlowDelay, "");
+        return attrs;
+    }
+
+    /**
      * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB).
      * Databases will not grow beyond this point.
      *
