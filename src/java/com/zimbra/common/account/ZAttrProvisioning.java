@@ -7975,6 +7975,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaLmdbMapSize = "zimbraMtaLmdbMapSize";
 
     /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public static final String A_zimbraMtaLmtpConnectionCacheDestinations = "zimbraMtaLmtpConnectionCacheDestinations";
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public static final String A_zimbraMtaLmtpConnectionCacheTimeLimit = "zimbraMtaLmtpConnectionCacheTimeLimit";
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public static final String A_zimbraMtaLmtpHostLookup = "zimbraMtaLmtpHostLookup";
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public static final String A_zimbraMtaMailqPath = "zimbraMtaMailqPath";
+
+    /**
      * Maximum total size of a mail message. Enforced in mailbox server and
      * also used as value for postconf message_size_limit. 0 means &quot;no
      * limit&quot;
