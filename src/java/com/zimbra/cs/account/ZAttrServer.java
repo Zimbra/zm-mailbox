@@ -17627,6 +17627,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf manpage_directory
+     *
+     * @return zimbraMtaManpageDirectory, or "/opt/zimbra/postfix/man" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public String getMtaManpageDirectory() {
+        return getAttr(Provisioning.A_zimbraMtaManpageDirectory, "/opt/zimbra/postfix/man");
+    }
+
+    /**
+     * Value for postconf manpage_directory
+     *
+     * @param zimbraMtaManpageDirectory new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public void setMtaManpageDirectory(String zimbraMtaManpageDirectory) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaManpageDirectory, zimbraMtaManpageDirectory);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf manpage_directory
+     *
+     * @param zimbraMtaManpageDirectory new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public Map<String,Object> setMtaManpageDirectory(String zimbraMtaManpageDirectory, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaManpageDirectory, zimbraMtaManpageDirectory);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf manpage_directory
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public void unsetMtaManpageDirectory() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaManpageDirectory, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf manpage_directory
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public Map<String,Object> unsetMtaManpageDirectory(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaManpageDirectory, "");
+        return attrs;
+    }
+
+    /**
      * value of postfix mydestination
      *
      * @return zimbraMtaMyDestination, or "localhost" if unset
@@ -17929,6 +18001,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf newaliases_path
+     *
+     * @return zimbraMtaNewaliasesPath, or "/opt/zimbra/postfix/sbin/newaliases" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public String getMtaNewaliasesPath() {
+        return getAttr(Provisioning.A_zimbraMtaNewaliasesPath, "/opt/zimbra/postfix/sbin/newaliases");
+    }
+
+    /**
+     * Value for postconf newaliases_path
+     *
+     * @param zimbraMtaNewaliasesPath new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public void setMtaNewaliasesPath(String zimbraMtaNewaliasesPath) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaNewaliasesPath, zimbraMtaNewaliasesPath);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf newaliases_path
+     *
+     * @param zimbraMtaNewaliasesPath new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public Map<String,Object> setMtaNewaliasesPath(String zimbraMtaNewaliasesPath, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaNewaliasesPath, zimbraMtaNewaliasesPath);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf newaliases_path
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public void unsetMtaNewaliasesPath() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaNewaliasesPath, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf newaliases_path
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public Map<String,Object> unsetMtaNewaliasesPath(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaNewaliasesPath, "");
+        return attrs;
+    }
+
+    /**
      * value for postfix non_smtpd_milters
      *
      * @return zimbraMtaNonSmtpdMilters, or null if unset
@@ -17997,6 +18141,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaNonSmtpdMilters(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaNonSmtpdMilters, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @return zimbraMtaQueueDirectory, or "/opt/zimbra/data/postfix/spool" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public String getMtaQueueDirectory() {
+        return getAttr(Provisioning.A_zimbraMtaQueueDirectory, "/opt/zimbra/data/postfix/spool");
+    }
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @param zimbraMtaQueueDirectory new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public void setMtaQueueDirectory(String zimbraMtaQueueDirectory) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueDirectory, zimbraMtaQueueDirectory);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @param zimbraMtaQueueDirectory new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public Map<String,Object> setMtaQueueDirectory(String zimbraMtaQueueDirectory, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueDirectory, zimbraMtaQueueDirectory);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public void unsetMtaQueueDirectory() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueDirectory, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public Map<String,Object> unsetMtaQueueDirectory(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueDirectory, "");
         return attrs;
     }
 
@@ -18369,6 +18585,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSaslAuthEnable(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @return zimbraMtaSendmailPath, or "/opt/zimbra/postfix/sbin/sendmail" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public String getMtaSendmailPath() {
+        return getAttr(Provisioning.A_zimbraMtaSendmailPath, "/opt/zimbra/postfix/sbin/sendmail");
+    }
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @param zimbraMtaSendmailPath new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public void setMtaSendmailPath(String zimbraMtaSendmailPath) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSendmailPath, zimbraMtaSendmailPath);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @param zimbraMtaSendmailPath new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public Map<String,Object> setMtaSendmailPath(String zimbraMtaSendmailPath, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSendmailPath, zimbraMtaSendmailPath);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public void unsetMtaSendmailPath() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSendmailPath, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public Map<String,Object> unsetMtaSendmailPath(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSendmailPath, "");
         return attrs;
     }
 

@@ -7531,4 +7531,24 @@ TODO: delete them permanently from here
   <desc>Value for postconf mailq_path</desc>
 </attr>
 
+<attr id="1509" name="zimbraMtaManpageDirectory" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>/opt/zimbra/postfix/man</globalConfigValue>
+  <desc>Value for postconf manpage_directory</desc>
+</attr>
+
+<attr id="1510" name="zimbraMtaNewaliasesPath" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>/opt/zimbra/postfix/sbin/newaliases</globalConfigValue>
+  <desc>Value for postconf newaliases_path</desc>
+</attr>
+
+<attr id="1511" name="zimbraMtaQueueDirectory" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>/opt/zimbra/data/postfix/spool</globalConfigValue>
+  <desc>Value for postconf queue_directory</desc>
+</attr>
+
+<attr id="1512" name="zimbraMtaSendmailPath" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>/opt/zimbra/postfix/sbin/sendmail</globalConfigValue>
+  <desc>Value for postconf sendmail_path</desc>
+</attr>
+
 </attrs>
