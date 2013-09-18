@@ -8007,6 +8007,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaMailqPath = "zimbraMtaMailqPath";
 
     /**
+     * Value for postconf manpage_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public static final String A_zimbraMtaManpageDirectory = "zimbraMtaManpageDirectory";
+
+    /**
      * Maximum total size of a mail message. Enforced in mailbox server and
      * also used as value for postconf message_size_limit. 0 means &quot;no
      * limit&quot;
@@ -8039,12 +8047,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaMyOrigin = "zimbraMtaMyOrigin";
 
     /**
+     * Value for postconf newaliases_path
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public static final String A_zimbraMtaNewaliasesPath = "zimbraMtaNewaliasesPath";
+
+    /**
      * value for postfix non_smtpd_milters
      *
      * @since ZCS 5.0.7
      */
     @ZAttr(id=673)
     public static final String A_zimbraMtaNonSmtpdMilters = "zimbraMtaNonSmtpdMilters";
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public static final String A_zimbraMtaQueueDirectory = "zimbraMtaQueueDirectory";
 
     /**
      * Value for postconf recipient_delimiter. Also used by ZCS LMTP server
@@ -8073,6 +8097,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=796)
     public static final String A_zimbraMtaSaslAuthEnable = "zimbraMtaSaslAuthEnable";
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public static final String A_zimbraMtaSendmailPath = "zimbraMtaSendmailPath";
 
     /**
      * value for postfix smtpd_milters
