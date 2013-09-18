@@ -704,6 +704,94 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaSmtpdTlsCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpdTlsCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpdTlsMandatoryCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpdTlsMandatoryCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsMandatoryCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsMandatoryCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpTlsCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpTlsCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpTlsCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpTlsCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpTlsMandatoryCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpTlsMandatoryCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpTlsMandatoryCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpTlsMandatoryCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
     public static enum MtaTlsSecurityLevel {
         may("may"),
         none("none");
@@ -8113,6 +8201,38 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=672)
     public static final String A_zimbraMtaSmtpdMilters = "zimbraMtaSmtpdMilters";
+
+    /**
+     * Value for postconf smtpd_tls_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1515)
+    public static final String A_zimbraMtaSmtpdTlsCiphers = "zimbraMtaSmtpdTlsCiphers";
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1516)
+    public static final String A_zimbraMtaSmtpdTlsMandatoryCiphers = "zimbraMtaSmtpdTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf smtp_tls_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1513)
+    public static final String A_zimbraMtaSmtpTlsCiphers = "zimbraMtaSmtpTlsCiphers";
+
+    /**
+     * Value for postconf smtp_tls_mandatory_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1514)
+    public static final String A_zimbraMtaSmtpTlsMandatoryCiphers = "zimbraMtaSmtpTlsMandatoryCiphers";
 
     /**
      * Value for postconf smtpd_tls_auth_only
