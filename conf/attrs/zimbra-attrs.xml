@@ -7601,4 +7601,37 @@ TODO: delete them permanently from here
   <desc>Value for postconf milter_content_timeout</desc>
 </attr>
 
+<attr id="1523" name="zimbraMtaMilterDefaultAction" type="enum" value="accept,reject,tempfail,quarantine" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>tempfail</globalConfigValue>
+  <desc>Value for postconf milter_default_action</desc>
+</attr>
+
+<attr id="1524" name="zimbraMtaSmtpCnameOverridesServername" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtp_cname_overrides_servername</desc>
+</attr>
+
+<attr id="1525" name="zimbraMtaSmtpHeloName" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>$myhostname</globalConfigValue>
+  <desc>Value for postconf smtp_helo_name</desc>
+</attr>
+
+<attr id="1526" name="zimbraMtaSmtpSaslAuthEnable" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtp_sasl_auth_enable</desc>
+</attr>
+
+<attr id="1527" name="zimbraMtaSmtpTlsSecurityLevel" type="enum" value="none,may,encrypt,dane,dane-only,fingerprint,verify,secure" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>may</globalConfigValue>
+  <desc>Value for postconf smtp_tls_security_level</desc>
+</attr>
+
+<attr id="1528" name="zimbraMtaSmtpSaslMechanismFilter" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtp_sasl_mechanism_filter</desc>
+</attr>
+
+<attr id="1529" name="zimbraMtaSmtpSaslPasswordMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtp_sasl_password_maps</desc>
+</attr>
+
 </attrs>
