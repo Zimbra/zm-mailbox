@@ -8103,12 +8103,52 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaManpageDirectory = "zimbraMtaManpageDirectory";
 
     /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public static final String A_zimbraMtaMaximalBackoffTime = "zimbraMtaMaximalBackoffTime";
+
+    /**
      * Maximum total size of a mail message. Enforced in mailbox server and
      * also used as value for postconf message_size_limit. 0 means &quot;no
      * limit&quot;
      */
     @ZAttr(id=198)
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public static final String A_zimbraMtaMilterCommandTimeout = "zimbraMtaMilterCommandTimeout";
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public static final String A_zimbraMtaMilterConnectTimeout = "zimbraMtaMilterConnectTimeout";
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public static final String A_zimbraMtaMilterContentTimeout = "zimbraMtaMilterContentTimeout";
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public static final String A_zimbraMtaMinimalBackoffTime = "zimbraMtaMinimalBackoffTime";
 
     /**
      * value of postfix mydestination
@@ -8157,6 +8197,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1511)
     public static final String A_zimbraMtaQueueDirectory = "zimbraMtaQueueDirectory";
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public static final String A_zimbraMtaQueueRunDelay = "zimbraMtaQueueRunDelay";
 
     /**
      * Value for postconf recipient_delimiter. Also used by ZCS LMTP server

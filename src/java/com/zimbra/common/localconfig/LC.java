@@ -560,17 +560,11 @@ public final class LC {
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
-    public static final KnownKey postfix_maximal_backoff_time = KnownKey.newKey("4000s");
-    public static final KnownKey postfix_minimal_backoff_time = KnownKey.newKey("300s");
     public static final KnownKey postfix_notify_classes = KnownKey.newKey("resource,software");
     public static final KnownKey postfix_policy_time_limit = KnownKey.newKey(3600);
     public static final KnownKey postfix_propagate_unmatched_extensions = KnownKey.newKey("canonical");
-    public static final KnownKey postfix_queue_run_delay = KnownKey.newKey("300s");
     public static final KnownKey postfix_sender_canonical_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-scm.cf");
 
-    public static final KnownKey postfix_milter_connect_timeout = KnownKey.newKey("30s");
-    public static final KnownKey postfix_milter_command_timeout = KnownKey.newKey("30s");
-    public static final KnownKey postfix_milter_content_timeout = KnownKey.newKey("300s");
     public static final KnownKey postfix_milter_default_action = KnownKey.newKey("tempfail");
 
     public static final KnownKey postfix_smtp_cname_overrides_servername = KnownKey.newKey("no");
