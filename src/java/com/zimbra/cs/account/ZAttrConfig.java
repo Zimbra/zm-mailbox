@@ -26775,6 +26775,366 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @return zimbraMtaMaximalBackoffTime, or "4000s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public String getMtaMaximalBackoffTime() {
+        return getAttr(Provisioning.A_zimbraMtaMaximalBackoffTime, "4000s");
+    }
+
+    /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @param zimbraMtaMaximalBackoffTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public void setMtaMaximalBackoffTime(String zimbraMtaMaximalBackoffTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalBackoffTime, zimbraMtaMaximalBackoffTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @param zimbraMtaMaximalBackoffTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public Map<String,Object> setMtaMaximalBackoffTime(String zimbraMtaMaximalBackoffTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalBackoffTime, zimbraMtaMaximalBackoffTime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public void unsetMtaMaximalBackoffTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalBackoffTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public Map<String,Object> unsetMtaMaximalBackoffTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalBackoffTime, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @return zimbraMtaMilterCommandTimeout, or "30s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public String getMtaMilterCommandTimeout() {
+        return getAttr(Provisioning.A_zimbraMtaMilterCommandTimeout, "30s");
+    }
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @param zimbraMtaMilterCommandTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public void setMtaMilterCommandTimeout(String zimbraMtaMilterCommandTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterCommandTimeout, zimbraMtaMilterCommandTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @param zimbraMtaMilterCommandTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public Map<String,Object> setMtaMilterCommandTimeout(String zimbraMtaMilterCommandTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterCommandTimeout, zimbraMtaMilterCommandTimeout);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public void unsetMtaMilterCommandTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterCommandTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public Map<String,Object> unsetMtaMilterCommandTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterCommandTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @return zimbraMtaMilterConnectTimeout, or "30s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public String getMtaMilterConnectTimeout() {
+        return getAttr(Provisioning.A_zimbraMtaMilterConnectTimeout, "30s");
+    }
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @param zimbraMtaMilterConnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public void setMtaMilterConnectTimeout(String zimbraMtaMilterConnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterConnectTimeout, zimbraMtaMilterConnectTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @param zimbraMtaMilterConnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public Map<String,Object> setMtaMilterConnectTimeout(String zimbraMtaMilterConnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterConnectTimeout, zimbraMtaMilterConnectTimeout);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public void unsetMtaMilterConnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterConnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public Map<String,Object> unsetMtaMilterConnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterConnectTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @return zimbraMtaMilterContentTimeout, or "300s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public String getMtaMilterContentTimeout() {
+        return getAttr(Provisioning.A_zimbraMtaMilterContentTimeout, "300s");
+    }
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @param zimbraMtaMilterContentTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public void setMtaMilterContentTimeout(String zimbraMtaMilterContentTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterContentTimeout, zimbraMtaMilterContentTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @param zimbraMtaMilterContentTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public Map<String,Object> setMtaMilterContentTimeout(String zimbraMtaMilterContentTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterContentTimeout, zimbraMtaMilterContentTimeout);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public void unsetMtaMilterContentTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterContentTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public Map<String,Object> unsetMtaMilterContentTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMilterContentTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @return zimbraMtaMinimalBackoffTime, or "300s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public String getMtaMinimalBackoffTime() {
+        return getAttr(Provisioning.A_zimbraMtaMinimalBackoffTime, "300s");
+    }
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @param zimbraMtaMinimalBackoffTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public void setMtaMinimalBackoffTime(String zimbraMtaMinimalBackoffTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMinimalBackoffTime, zimbraMtaMinimalBackoffTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @param zimbraMtaMinimalBackoffTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public Map<String,Object> setMtaMinimalBackoffTime(String zimbraMtaMinimalBackoffTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMinimalBackoffTime, zimbraMtaMinimalBackoffTime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public void unsetMtaMinimalBackoffTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMinimalBackoffTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public Map<String,Object> unsetMtaMinimalBackoffTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMinimalBackoffTime, "");
+        return attrs;
+    }
+
+    /**
      * value of postfix mydestination
      *
      * @return zimbraMtaMyDestination, or "localhost" if unset
@@ -27289,6 +27649,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaQueueDirectory(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaQueueDirectory, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @return zimbraMtaQueueRunDelay, or "300s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public String getMtaQueueRunDelay() {
+        return getAttr(Provisioning.A_zimbraMtaQueueRunDelay, "300s");
+    }
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @param zimbraMtaQueueRunDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public void setMtaQueueRunDelay(String zimbraMtaQueueRunDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueRunDelay, zimbraMtaQueueRunDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @param zimbraMtaQueueRunDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public Map<String,Object> setMtaQueueRunDelay(String zimbraMtaQueueRunDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueRunDelay, zimbraMtaQueueRunDelay);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public void unsetMtaQueueRunDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueRunDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public Map<String,Object> unsetMtaQueueRunDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaQueueRunDelay, "");
         return attrs;
     }
 

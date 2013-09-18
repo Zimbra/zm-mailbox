@@ -7571,4 +7571,34 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_tls_mandatory_ciphers</desc>
 </attr>
 
+<attr id="1517" name="zimbraMtaMaximalBackoffTime" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>4000s</globalConfigValue>
+  <desc>Value for postconf maximal_backoff_time</desc>
+</attr>
+
+<attr id="1518" name="zimbraMtaMinimalBackoffTime" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Value for postconf minimal_backoff_time</desc>
+</attr>
+
+<attr id="1519" name="zimbraMtaQueueRunDelay" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Value for postconf queue_run_delay</desc>
+</attr>
+
+<attr id="1520" name="zimbraMtaMilterConnectTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>30s</globalConfigValue>
+  <desc>Value for postconf milter_connect_timeout</desc>
+</attr>
+
+<attr id="1521" name="zimbraMtaMilterCommandTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>30s</globalConfigValue>
+  <desc>Value for postconf milter_command_timeout</desc>
+</attr>
+
+<attr id="1522" name="zimbraMtaMilterContentTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Value for postconf milter_content_timeout</desc>
+</attr>
+
 </attrs>
