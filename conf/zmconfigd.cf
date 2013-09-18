@@ -137,7 +137,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF delay_warning_time			VAR zimbraMtaDelayWarningTime
 	POSTCONF default_process_limit			VAR zimbraMtaDefaultProcessLimit
 	POSTCONF lmdb_map_size				VAR zimbraMtaLmdbMapSize
-	POSTCONF header_checks				LOCAL postfix_header_checks
+	POSTCONF header_checks				VAR zimbraMtaHeaderChecks
 	if VAR zimbraMtaBlockedExtensionWarnRecipient
 		POSTCONF header_checks
 	fi
@@ -162,8 +162,8 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_error_sleep_time			LOCAL postfix_smtpd_error_sleep_time
 	POSTCONF smtpd_hard_error_limit			LOCAL postfix_smtpd_hard_error_limit
 	POSTCONF smtpd_soft_error_limit			LOCAL postfix_smtpd_soft_error_limit
-	POSTCONF in_flow_delay				LOCAL postfix_in_flow_delay
-	POSTCONF import_environment			LOCAL postfix_import_environment
+	POSTCONF in_flow_delay				VAR zimbraMtaInFlowDelay
+	POSTCONF import_environment			VAR zimbraMtaImportEnvironment
 	POSTCONF queue_run_delay			LOCAL postfix_queue_run_delay
 	POSTCONF minimal_backoff_time			LOCAL postfix_minimal_backoff_time
 	POSTCONF maximal_backoff_time			LOCAL postfix_maximal_backoff_time
