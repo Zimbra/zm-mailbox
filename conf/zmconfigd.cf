@@ -182,19 +182,19 @@ SECTION mta DEPENDS amavis
 	POSTCONF always_add_missing_headers		VAR zimbraMtaAlwaysAddMissingHeaders
 	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
 	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
-	POSTCONF smtp_helo_name				LOCAL postfix_smtp_helo_name
-	POSTCONF smtp_cname_overrides_servername	LOCAL postfix_smtp_cname_overrides_servername
-	POSTCONF smtp_sasl_auth_enable			LOCAL postfix_smtp_sasl_auth_enable
+	POSTCONF smtp_helo_name				VAR zimbraMtaSmtpHeloName
+	POSTCONF smtp_cname_overrides_servername	VAR zimbraMtaSmtpCnameOverridesServername
+	POSTCONF smtp_sasl_auth_enable			VAR zimbraMtaSmtpSaslAuthEnable
 	POSTCONF smtp_sasl_security_options		LOCAL postfix_smtp_sasl_security_options
-	POSTCONF smtp_tls_security_level		LOCAL postfix_smtp_tls_security_level
+	POSTCONF smtp_tls_security_level		VAR zimbraMtaSmtpTlsSecurityLevel
 	POSTCONF smtp_tls_ciphers			VAR zimbraMtaSmtpTlsCiphers
 	POSTCONF smtp_tls_mandatory_ciphers		VAR zimbraMtaSmtpTlsMandatoryCiphers
-	POSTCONF smtp_sasl_mechanism_filter		LOCAL postfix_smtp_sasl_mechanism_filter
-	POSTCONF smtp_sasl_password_maps		LOCAL postfix_smtp_sasl_password_maps
+	POSTCONF smtp_sasl_mechanism_filter		VAR zimbraMtaSmtpSaslMechanismFilter
+	POSTCONF smtp_sasl_password_maps		VAR zimbraMtaSmtpSaslPasswordMaps
 	POSTCONF milter_connect_timeout			VAR zimbraMtaMilterConnectTimeout
 	POSTCONF milter_command_timeout			VAR zimbraMtaMilterCommandTimeout
 	POSTCONF milter_content_timeout			VAR zimbraMtaMilterContentTimeout
-	POSTCONF milter_default_action			LOCAL postfix_milter_default_action
+	POSTCONF milter_default_action			VAR zimbraMtaMilterDefaultAction
 	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
 	RESTART mta
 
