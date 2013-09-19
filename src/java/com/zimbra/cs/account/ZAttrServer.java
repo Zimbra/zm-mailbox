@@ -17046,7 +17046,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postfix_header_checks
+     * Value for postconf header_checks
      *
      * @return zimbraMtaHeaderChecks, or "pcre:/opt/zimbra/conf/postfix_header_checks" if unset
      *
@@ -17058,7 +17058,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postfix_header_checks
+     * Value for postconf header_checks
      *
      * @param zimbraMtaHeaderChecks new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17073,7 +17073,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postfix_header_checks
+     * Value for postconf header_checks
      *
      * @param zimbraMtaHeaderChecks new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17089,7 +17089,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postfix_header_checks
+     * Value for postconf header_checks
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17103,7 +17103,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postfix_header_checks
+     * Value for postconf header_checks
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -18632,6 +18632,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaNonSmtpdMilters(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaNonSmtpdMilters, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @return zimbraMtaPolicyTimeLimit, or 3600 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public int getMtaPolicyTimeLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaPolicyTimeLimit, 3600);
+    }
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @param zimbraMtaPolicyTimeLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public void setMtaPolicyTimeLimit(int zimbraMtaPolicyTimeLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPolicyTimeLimit, Integer.toString(zimbraMtaPolicyTimeLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @param zimbraMtaPolicyTimeLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public Map<String,Object> setMtaPolicyTimeLimit(int zimbraMtaPolicyTimeLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPolicyTimeLimit, Integer.toString(zimbraMtaPolicyTimeLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public void unsetMtaPolicyTimeLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPolicyTimeLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public Map<String,Object> unsetMtaPolicyTimeLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPolicyTimeLimit, "");
         return attrs;
     }
 

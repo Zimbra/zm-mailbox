@@ -7500,7 +7500,7 @@ TODO: delete them permanently from here
 
 <attr id="1502" name="zimbraMtaHeaderChecks" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>pcre:/opt/zimbra/conf/postfix_header_checks</globalConfigValue>
-  <desc>Value for postconf postfix_header_checks</desc>
+  <desc>Value for postconf header_checks</desc>
 </attr>
 
 <attr id="1503" name="zimbraMtaImportEnvironment" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
@@ -7632,6 +7632,11 @@ TODO: delete them permanently from here
 
 <attr id="1529" name="zimbraMtaSmtpSaslPasswordMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <desc>Value for postconf smtp_sasl_password_maps</desc>
+</attr>
+
+<attr id="1530" name="zimbraMtaPolicyTimeLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>3600</globalConfigValue>
+  <desc>Value for postconf policy_time_limit</desc>
 </attr>
 
 </attrs>

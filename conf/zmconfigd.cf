@@ -81,7 +81,7 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
 	if VAR zimbraMtaEnableSmtpdPolicyd
-		POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
+		POSTCONF policy_time_limit				VAR zimbraMtaPolicyTimeLimit
 	fi
 	if VAR !zimbraMtaEnableSmtpdPolicyd
 		POSTCONFD policy_time_limit
