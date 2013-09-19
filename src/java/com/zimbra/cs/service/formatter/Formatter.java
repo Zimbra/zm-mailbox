@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -43,8 +43,8 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
@@ -305,9 +305,8 @@ public abstract class Formatter {
         updateClient(context, e, null);
     }
 
-    protected void updateClient(UserServletContext context, Exception e,
-        List<ServiceException> w) throws UserServletException, IOException,
-        ServletException, ServiceException {
+    protected void updateClient(UserServletContext context, Exception e, List<ServiceException> w)
+    throws UserServletException, IOException, ServletException, ServiceException {
         String callback = context.params.get("callback");
         Throwable exception = null;
         PrintWriter out = null;
@@ -323,18 +322,23 @@ public abstract class Formatter {
 
         if (callback == null || callback.equals("")) {
             if (context.params.get(PROGRESS) == null) {
-                if (exception == null)
+                if (exception == null) {
                     return;
-                else if (exception instanceof UserServletException)
+                } else if (exception instanceof UserServletException) {
                     throw (UserServletException)exception;
-                else if (exception instanceof ServletException)
+                } else if (exception instanceof ServletException) {
                     throw (ServletException)exception;
-                else if (exception instanceof IOException)
+                } else if (exception instanceof IOException) {
                     throw (IOException)exception;
-                else if (exception instanceof NoSuchItemException)
+                } else if (exception instanceof NoSuchItemException) {
                     throw (ServiceException)exception;
-                throw ServiceException.FAILURE(
-                    getType() + " formatter failure", exception);
+                } else if (exception instanceof ServiceException) {
+                    ServiceException se = (ServiceException) exception;
+                    if (se.getCode() == ServiceException.INVALID_REQUEST) {
+                        throw se;
+                    }
+                }
+                throw ServiceException.FAILURE( getType() + " formatter failure", exception);
             }
             try {
                 out = updateClient(context, false);
