@@ -561,7 +561,6 @@ public final class LC {
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
     public static final KnownKey postfix_notify_classes = KnownKey.newKey("resource,software");
-    public static final KnownKey postfix_policy_time_limit = KnownKey.newKey(3600);
     public static final KnownKey postfix_propagate_unmatched_extensions = KnownKey.newKey("canonical");
     public static final KnownKey postfix_sender_canonical_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-scm.cf");
 

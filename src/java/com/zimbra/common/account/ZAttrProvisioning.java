@@ -8110,7 +8110,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaFallbackRelayHost = "zimbraMtaFallbackRelayHost";
 
     /**
-     * Value for postconf postfix_header_checks
+     * Value for postconf header_checks
      *
      * @since ZCS 8.5.0
      */
@@ -8277,6 +8277,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=673)
     public static final String A_zimbraMtaNonSmtpdMilters = "zimbraMtaNonSmtpdMilters";
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public static final String A_zimbraMtaPolicyTimeLimit = "zimbraMtaPolicyTimeLimit";
 
     /**
      * Value for postconf queue_directory
