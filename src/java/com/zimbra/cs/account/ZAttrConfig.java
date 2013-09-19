@@ -26775,6 +26775,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf max_use
+     *
+     * @return zimbraMtaMaxUse, or 100 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public int getMtaMaxUse() {
+        return getIntAttr(Provisioning.A_zimbraMtaMaxUse, 100);
+    }
+
+    /**
+     * Value for postconf max_use
+     *
+     * @param zimbraMtaMaxUse new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public void setMtaMaxUse(int zimbraMtaMaxUse) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaxUse, Integer.toString(zimbraMtaMaxUse));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf max_use
+     *
+     * @param zimbraMtaMaxUse new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public Map<String,Object> setMtaMaxUse(int zimbraMtaMaxUse, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaxUse, Integer.toString(zimbraMtaMaxUse));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf max_use
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public void unsetMtaMaxUse() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaxUse, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf max_use
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public Map<String,Object> unsetMtaMaxUse(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaxUse, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf maximal_backoff_time
      *
      * @return zimbraMtaMaximalBackoffTime, or "4000s" if unset
