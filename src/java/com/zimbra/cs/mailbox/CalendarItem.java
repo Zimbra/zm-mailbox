@@ -423,13 +423,13 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override
-	public String getSortSender() {
+    public String getSortSender() {
         String sender = new ParsedAddress(getSender()).getSortString();
         // remove surrogate characters and trim to DbMailItem.MAX_SENDER_LENGTH
         return DbMailItem.normalize(sender, DbMailItem.MAX_SENDER_LENGTH);
-	}
+    }
 
-	static CalendarItem create(int id, Folder folder, int flags, Tag.NormalizedTags ntags, String uid,
+    static CalendarItem create(int id, Folder folder, int flags, Tag.NormalizedTags ntags, String uid,
             ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom) throws ServiceException {
         firstInvite.sanitize(false);
 
