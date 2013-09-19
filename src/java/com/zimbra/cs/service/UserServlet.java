@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -612,14 +612,26 @@ public class UserServlet extends ZimbraServlet {
 
             context.formatter.save(context, ctype, folder, filename);
         } catch (ServiceException se) {
-            if (se.getCode() == ServiceException.PERM_DENIED ||
-                se instanceof NoSuchItemException)
+            if (se.getCode() == ServiceException.PERM_DENIED || se instanceof NoSuchItemException) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
-            else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE ||
-                     se.getCode() == AccountServiceException.ACCOUNT_INACTIVE)
-               sendError(context, req, resp, se.getMessage());
-            else
+            } else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE ||
+                     se.getCode() == AccountServiceException.ACCOUNT_INACTIVE) {
+                sendError(context, req, resp, se.getMessage());
+            } else if (se.getCode() == ServiceException.INVALID_REQUEST) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Invalid POST Request", se);
+                } else {
+                    log.info("Invalid POST Request - %s", se.getMessage());
+                }
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, se.getMessage());
+            } else {
+                if (log.isDebugEnabled()) {
+                    log.info("Service Exception caught whilst processing POST", se);
+                } else {
+                    log.info("Service Exception caught whilst processing POST - %s", se.getMessage());
+                }
                 throw new ServletException(se);
+            }
         } catch (UserServletException e) {
             // add check for ServiceException root cause?
             resp.sendError(e.getHttpStatusCode(), e.getMessage());

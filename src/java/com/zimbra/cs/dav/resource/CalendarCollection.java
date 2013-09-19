@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -59,6 +59,7 @@ import com.zimbra.cs.dav.service.method.Delete;
 import com.zimbra.cs.dav.service.method.Get;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.mailbox.BadOrganizerException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Folder;
@@ -334,8 +335,10 @@ public class CalendarCollection extends Collection {
                 // by issuing redirect to the URI we want it to be at.
                 StringBuilder url = new StringBuilder();
                 url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(uid).append(CalendarObject.CAL_EXTENSION);
-                ctxt.getResponse().sendRedirect(url.toString());
-                throw new DavException("wrong url", HttpServletResponse.SC_MOVED_PERMANENTLY, null);
+                ctxt.getResponse().sendRedirect(url.toString());  // sets status to SC_MOVED_TEMPORARILY
+                StringBuilder wrongUrlMsg = new StringBuilder();
+                wrongUrlMsg.append("wrong url - redirecting to:\n").append(url.toString());
+                throw new DavException(wrongUrlMsg.toString(), HttpServletResponse.SC_MOVED_TEMPORARILY, null);
             }
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             CalendarItem calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
@@ -443,11 +446,14 @@ public class CalendarCollection extends Collection {
             calItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
                     scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
             return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
+        } catch (BadOrganizerException.DiffOrganizerInComponentsException e) {
+            throw new DavException.NeedSameOrganizerInAllComponents(e.getMessage());
         } catch (ServiceException e) {
-            if (e.getCode().equals(ServiceException.FORBIDDEN))
+            if (e.getCode().equals(ServiceException.FORBIDDEN)) {
                 throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
-            else
+            } else {
                 throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            }
         }
     }
 
