@@ -8199,6 +8199,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
 
     /**
+     * Value for postconf max_use
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public static final String A_zimbraMtaMaxUse = "zimbraMtaMaxUse";
+
+    /**
      * Value for postconf milter_command_timeout
      *
      * @since ZCS 8.5.0
