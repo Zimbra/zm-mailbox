@@ -740,6 +740,54 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaSmtpdRejectUnlistedRecipient {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdRejectUnlistedRecipient(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdRejectUnlistedRecipient fromString(String s) throws ServiceException {
+            for (MtaSmtpdRejectUnlistedRecipient value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdRejectUnlistedSender {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdRejectUnlistedSender(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdRejectUnlistedSender fromString(String s) throws ServiceException {
+            for (MtaSmtpdRejectUnlistedSender value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdSaslAuthenticatedHeader {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdSaslAuthenticatedHeader(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdSaslAuthenticatedHeader fromString(String s) throws ServiceException {
+            for (MtaSmtpdSaslAuthenticatedHeader value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaSmtpdTlsCiphers {
         export("export"),
         high("high"),
@@ -8355,12 +8403,52 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpCnameOverridesServername = "zimbraMtaSmtpCnameOverridesServername";
 
     /**
+     * Value for postconf smtpd_banner
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1532)
+    public static final String A_zimbraMtaSmtpdBanner = "zimbraMtaSmtpdBanner";
+
+    /**
      * value for postfix smtpd_milters
      *
      * @since ZCS 5.0.7
      */
     @ZAttr(id=672)
     public static final String A_zimbraMtaSmtpdMilters = "zimbraMtaSmtpdMilters";
+
+    /**
+     * Value for postconf smtpd_proxy_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1533)
+    public static final String A_zimbraMtaSmtpdProxyTimeout = "zimbraMtaSmtpdProxyTimeout";
+
+    /**
+     * Value for postconf smtpd_reject_unlisted_recipient
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1534)
+    public static final String A_zimbraMtaSmtpdRejectUnlistedRecipient = "zimbraMtaSmtpdRejectUnlistedRecipient";
+
+    /**
+     * Value for postconf smtpd_reject_unlisted_sender
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1535)
+    public static final String A_zimbraMtaSmtpdRejectUnlistedSender = "zimbraMtaSmtpdRejectUnlistedSender";
+
+    /**
+     * Value for postconf smtpd_sasl_authenticated_header
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1536)
+    public static final String A_zimbraMtaSmtpdSaslAuthenticatedHeader = "zimbraMtaSmtpdSaslAuthenticatedHeader";
 
     /**
      * Value for postconf smtpd_tls_ciphers

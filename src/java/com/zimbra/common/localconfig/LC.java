@@ -566,11 +566,6 @@ public final class LC {
 
     public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
 
-    public static final KnownKey postfix_smtpd_banner = KnownKey.newKey("$myhostname ESMTP $mail_name");
-    public static final KnownKey postfix_smtpd_proxy_timeout = KnownKey.newKey("100s");
-    public static final KnownKey postfix_smtpd_reject_unlisted_recipient = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtpd_reject_unlisted_sender = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtpd_sasl_authenticated_header = KnownKey.newKey("no");
     public static final KnownKey postfix_smtpd_sasl_security_options = KnownKey.newKey("noanonymous");
     public static final KnownKey postfix_smtpd_sasl_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
     public static final KnownKey postfix_smtpd_client_restrictions = KnownKey.newKey("reject_unauth_pipelining");
