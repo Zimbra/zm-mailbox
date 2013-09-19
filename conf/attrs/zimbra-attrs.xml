@@ -7644,4 +7644,29 @@ TODO: delete them permanently from here
   <desc>Value for postconf max_use</desc>
 </attr>
 
+<attr id="1532" name="zimbraMtaSmtpdBanner" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>$myhostname ESMTP $mail_name</globalConfigValue>
+  <desc>Value for postconf smtpd_banner</desc>
+</attr>
+
+<attr id="1533" name="zimbraMtaSmtpdProxyTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>100s</globalConfigValue>
+  <desc>Value for postconf smtpd_proxy_timeout</desc>
+</attr>
+
+<attr id="1534" name="zimbraMtaSmtpdRejectUnlistedRecipient" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtpd_reject_unlisted_recipient</desc>
+</attr>
+
+<attr id="1535" name="zimbraMtaSmtpdRejectUnlistedSender" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtpd_reject_unlisted_sender</desc>
+</attr>
+
+<attr id="1536" name="zimbraMtaSmtpdSaslAuthenticatedHeader" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtpd_sasl_authenticated_header</desc>
+</attr>
+
 </attrs>

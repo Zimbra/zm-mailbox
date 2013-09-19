@@ -145,15 +145,16 @@ SECTION mta DEPENDS amavis
 	POSTCONF newaliases_path			VAR zimbraMtaNewaliasesPath
 	POSTCONF notify_classes				LOCAL postfix_notify_classes
 	POSTCONF queue_directory			VAR zimbraMtaQueueDirectory
-	POSTCONF smtpd_sasl_authenticated_header	LOCAL postfix_smtpd_sasl_authenticated_header
+	POSTCONF smtpd_sasl_authenticated_header	VAR zimbraMtaSmtpdSaslAuthenticatedHeader
 	POSTCONF sender_canonical_maps			LOCAL postfix_sender_canonical_maps
 	POSTCONF sendmail_path				VAR zimbraMtaSendmailPath
-	POSTCONF smtpd_banner				LOCAL postfix_smtpd_banner
+	POSTCONF smtpd_banner				VAR zimbraMtaSmtpdBanner
 	POSTCONF smtpd_client_restrictions		LOCAL postfix_smtpd_client_restrictions
 	POSTCONF smtpd_data_restrictions		LOCAL postfix_smtpd_data_restrictions
 	POSTCONF smtpd_helo_required			LOCAL postfix_smtpd_helo_required
-	POSTCONF smtpd_reject_unlisted_recipient	LOCAL postfix_smtpd_reject_unlisted_recipient
-	POSTCONF smtpd_reject_unlisted_sender		LOCAL postfix_smtpd_reject_unlisted_sender
+	POSTCONF smtpd_proxy_timeout			VAR zimbraMtaSmtpdProxyTimeout
+	POSTCONF smtpd_reject_unlisted_recipient	VAR zimbraMtaSmtpdRejectUnlistedRecipient
+	POSTCONF smtpd_reject_unlisted_sender		VAR zimbraMtaSmtpdRejectUnlistedSender
 	POSTCONF smtpd_tls_auth_only			VAR zimbraMtaTlsAuthOnly
 	POSTCONF smtpd_tls_cert_file			LOCAL postfix_smtpd_tls_cert_file
 	POSTCONF smtpd_tls_ciphers			VAR zimbraMtaSmtpdTlsCiphers
