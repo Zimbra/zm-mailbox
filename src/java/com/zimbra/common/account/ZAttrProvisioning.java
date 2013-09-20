@@ -740,6 +740,22 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaSmtpdHeloRequired {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdHeloRequired(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdHeloRequired fromString(String s) throws ServiceException {
+            for (MtaSmtpdHeloRequired value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaSmtpdRejectUnlistedRecipient {
         yes("yes"),
         no("no");
@@ -8411,6 +8427,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdBanner = "zimbraMtaSmtpdBanner";
 
     /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public static final String A_zimbraMtaSmtpdErrorSleepTime = "zimbraMtaSmtpdErrorSleepTime";
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public static final String A_zimbraMtaSmtpdHardErrorLimit = "zimbraMtaSmtpdHardErrorLimit";
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public static final String A_zimbraMtaSmtpdHeloRequired = "zimbraMtaSmtpdHeloRequired";
+
+    /**
      * value for postfix smtpd_milters
      *
      * @since ZCS 5.0.7
@@ -8457,6 +8497,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1515)
     public static final String A_zimbraMtaSmtpdTlsCiphers = "zimbraMtaSmtpdTlsCiphers";
+
+    /**
+     * Value for postconf smtpd_tls_loglevel
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public static final String A_zimbraMtaSmtpdTlsLoglevel = "zimbraMtaSmtpdTlsLoglevel";
 
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
@@ -8521,6 +8569,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1527)
     public static final String A_zimbraMtaSmtpTlsSecurityLevel = "zimbraMtaSmtpTlsSecurityLevel";
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public static final String A_zimbraMtaStpdSoftErrorLimit = "zimbraMtaStpdSoftErrorLimit";
 
     /**
      * Value for postconf smtpd_tls_auth_only
