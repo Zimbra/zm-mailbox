@@ -151,7 +151,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_banner				VAR zimbraMtaSmtpdBanner
 	POSTCONF smtpd_client_restrictions		LOCAL postfix_smtpd_client_restrictions
 	POSTCONF smtpd_data_restrictions		LOCAL postfix_smtpd_data_restrictions
-	POSTCONF smtpd_helo_required			LOCAL postfix_smtpd_helo_required
+	POSTCONF smtpd_helo_required			VAR zimbraMtaSmtpdHeloRequired
 	POSTCONF smtpd_proxy_timeout			VAR zimbraMtaSmtpdProxyTimeout
 	POSTCONF smtpd_reject_unlisted_recipient	VAR zimbraMtaSmtpdRejectUnlistedRecipient
 	POSTCONF smtpd_reject_unlisted_sender		VAR zimbraMtaSmtpdRejectUnlistedSender
@@ -159,12 +159,12 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_cert_file			LOCAL postfix_smtpd_tls_cert_file
 	POSTCONF smtpd_tls_ciphers			VAR zimbraMtaSmtpdTlsCiphers
 	POSTCONF smtpd_tls_key_file			LOCAL postfix_smtpd_tls_key_file
-	POSTCONF smtpd_tls_loglevel			LOCAL postfix_smtpd_tls_loglevel
+	POSTCONF smtpd_tls_loglevel			VAR zimbraMtaSmtpdTlsLoglevel
 	POSTCONF smtpd_tls_mandatory_ciphers		VAR zimbraMtaSmtpdTlsMandatoryCiphers
 	POSTCONF smtpd_tls_security_level		VAR zimbraMtaTlsSecurityLevel
-	POSTCONF smtpd_error_sleep_time			LOCAL postfix_smtpd_error_sleep_time
-	POSTCONF smtpd_hard_error_limit			LOCAL postfix_smtpd_hard_error_limit
-	POSTCONF smtpd_soft_error_limit			LOCAL postfix_smtpd_soft_error_limit
+	POSTCONF smtpd_error_sleep_time			VAR zimbraMtaSmtpdErrorSleepTime
+	POSTCONF smtpd_hard_error_limit			VAR zimbraMtaSmtpdHardErrorLimit
+	POSTCONF smtpd_soft_error_limit			VAR zimbraMtaStpdSoftErrorLimit
 	POSTCONF in_flow_delay				VAR zimbraMtaInFlowDelay
 	POSTCONF import_environment			VAR zimbraMtaImportEnvironment
 	POSTCONF queue_run_delay			VAR zimbraMtaQueueRunDelay

@@ -20311,6 +20311,281 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @return zimbraMtaSmtpdErrorSleepTime, or "1s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public String getMtaSmtpdErrorSleepTime() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdErrorSleepTime, "1s");
+    }
+
+    /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @param zimbraMtaSmtpdErrorSleepTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public void setMtaSmtpdErrorSleepTime(String zimbraMtaSmtpdErrorSleepTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdErrorSleepTime, zimbraMtaSmtpdErrorSleepTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @param zimbraMtaSmtpdErrorSleepTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public Map<String,Object> setMtaSmtpdErrorSleepTime(String zimbraMtaSmtpdErrorSleepTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdErrorSleepTime, zimbraMtaSmtpdErrorSleepTime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public void unsetMtaSmtpdErrorSleepTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdErrorSleepTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public Map<String,Object> unsetMtaSmtpdErrorSleepTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdErrorSleepTime, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @return zimbraMtaSmtpdHardErrorLimit, or 20 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public int getMtaSmtpdHardErrorLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaSmtpdHardErrorLimit, 20);
+    }
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @param zimbraMtaSmtpdHardErrorLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public void setMtaSmtpdHardErrorLimit(int zimbraMtaSmtpdHardErrorLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHardErrorLimit, Integer.toString(zimbraMtaSmtpdHardErrorLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @param zimbraMtaSmtpdHardErrorLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public Map<String,Object> setMtaSmtpdHardErrorLimit(int zimbraMtaSmtpdHardErrorLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHardErrorLimit, Integer.toString(zimbraMtaSmtpdHardErrorLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public void unsetMtaSmtpdHardErrorLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHardErrorLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public Map<String,Object> unsetMtaSmtpdHardErrorLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHardErrorLimit, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSmtpdHeloRequired, or ZAttrProvisioning.MtaSmtpdHeloRequired.yes if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public ZAttrProvisioning.MtaSmtpdHeloRequired getMtaSmtpdHeloRequired() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaSmtpdHeloRequired); return v == null ? ZAttrProvisioning.MtaSmtpdHeloRequired.yes : ZAttrProvisioning.MtaSmtpdHeloRequired.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaSmtpdHeloRequired.yes; }
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSmtpdHeloRequired, or "yes" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public String getMtaSmtpdHeloRequiredAsString() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdHeloRequired, "yes");
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdHeloRequired new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public void setMtaSmtpdHeloRequired(ZAttrProvisioning.MtaSmtpdHeloRequired zimbraMtaSmtpdHeloRequired) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHeloRequired, zimbraMtaSmtpdHeloRequired.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdHeloRequired new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public Map<String,Object> setMtaSmtpdHeloRequired(ZAttrProvisioning.MtaSmtpdHeloRequired zimbraMtaSmtpdHeloRequired, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHeloRequired, zimbraMtaSmtpdHeloRequired.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdHeloRequired new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public void setMtaSmtpdHeloRequiredAsString(String zimbraMtaSmtpdHeloRequired) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHeloRequired, zimbraMtaSmtpdHeloRequired);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdHeloRequired new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public Map<String,Object> setMtaSmtpdHeloRequiredAsString(String zimbraMtaSmtpdHeloRequired, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHeloRequired, zimbraMtaSmtpdHeloRequired);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public void unsetMtaSmtpdHeloRequired() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHeloRequired, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public Map<String,Object> unsetMtaSmtpdHeloRequired(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdHeloRequired, "");
+        return attrs;
+    }
+
+    /**
      * value for postfix smtpd_milters
      *
      * @return zimbraMtaSmtpdMilters, or null if unset
@@ -20979,6 +21254,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtpd_tls_loglevel
+     *
+     * @return zimbraMtaSmtpdTlsLoglevel, or 1 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public int getMtaSmtpdTlsLoglevel() {
+        return getIntAttr(Provisioning.A_zimbraMtaSmtpdTlsLoglevel, 1);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_loglevel
+     *
+     * @param zimbraMtaSmtpdTlsLoglevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public void setMtaSmtpdTlsLoglevel(int zimbraMtaSmtpdTlsLoglevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsLoglevel, Integer.toString(zimbraMtaSmtpdTlsLoglevel));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_loglevel
+     *
+     * @param zimbraMtaSmtpdTlsLoglevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public Map<String,Object> setMtaSmtpdTlsLoglevel(int zimbraMtaSmtpdTlsLoglevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsLoglevel, Integer.toString(zimbraMtaSmtpdTlsLoglevel));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_loglevel
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public void unsetMtaSmtpdTlsLoglevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsLoglevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_loglevel
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public Map<String,Object> unsetMtaSmtpdTlsLoglevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsLoglevel, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
      * <p>Valid values: [export, high, low, null, medium]
@@ -21106,6 +21453,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdTlsMandatoryCiphers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryCiphers, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @return zimbraMtaStpdSoftErrorLimit, or 10 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public int getMtaStpdSoftErrorLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaStpdSoftErrorLimit, 10);
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @param zimbraMtaStpdSoftErrorLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public void setMtaStpdSoftErrorLimit(int zimbraMtaStpdSoftErrorLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaStpdSoftErrorLimit, Integer.toString(zimbraMtaStpdSoftErrorLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @param zimbraMtaStpdSoftErrorLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public Map<String,Object> setMtaStpdSoftErrorLimit(int zimbraMtaStpdSoftErrorLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaStpdSoftErrorLimit, Integer.toString(zimbraMtaStpdSoftErrorLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public void unsetMtaStpdSoftErrorLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaStpdSoftErrorLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public Map<String,Object> unsetMtaStpdSoftErrorLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaStpdSoftErrorLimit, "");
         return attrs;
     }
 

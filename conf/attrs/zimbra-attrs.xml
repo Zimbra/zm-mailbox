@@ -7669,4 +7669,29 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_sasl_authenticated_header</desc>
 </attr>
 
+<attr id="1537" name="zimbraMtaSmtpdHardErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>Value for postconf smtpd_hard_error_limit</desc>
+</attr>
+
+<attr id="1538" name="zimbraMtaStpdSoftErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Value for postconf smtpd_soft_error_limit</desc>
+</attr>
+
+<attr id="1539" name="zimbraMtaSmtpdErrorSleepTime" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>1s</globalConfigValue>
+  <desc>Value for postconf smtpd_error_sleep_time</desc>
+</attr>
+
+<attr id="1540" name="zimbraMtaSmtpdHeloRequired" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>yes</globalConfigValue>
+  <desc>Value for postconf smtpd_helo_required</desc>
+</attr>
+
+<attr id="1541" name="zimbraMtaSmtpdTlsLoglevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Value for postconf smtpd_tls_loglevel</desc>
+</attr>
+
 </attrs>
