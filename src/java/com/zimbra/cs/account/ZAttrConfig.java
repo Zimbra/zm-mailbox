@@ -30324,6 +30324,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf smtpd_tls_cert_file
+     *
+     * @return zimbraMtaSmtpdTlsCertFile, or "/opt/zimbra/conf/smtpd.crt" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public String getMtaSmtpdTlsCertFile() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsCertFile, "/opt/zimbra/conf/smtpd.crt");
+    }
+
+    /**
+     * Value for postconf smtpd_tls_cert_file
+     *
+     * @param zimbraMtaSmtpdTlsCertFile new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public void setMtaSmtpdTlsCertFile(String zimbraMtaSmtpdTlsCertFile) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, zimbraMtaSmtpdTlsCertFile);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_cert_file
+     *
+     * @param zimbraMtaSmtpdTlsCertFile new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public Map<String,Object> setMtaSmtpdTlsCertFile(String zimbraMtaSmtpdTlsCertFile, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, zimbraMtaSmtpdTlsCertFile);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_cert_file
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public void unsetMtaSmtpdTlsCertFile() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_cert_file
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public Map<String,Object> unsetMtaSmtpdTlsCertFile(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_tls_ciphers
      *
      * <p>Valid values: [export, high, low, null, medium]
@@ -30451,6 +30523,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaSmtpdTlsCiphers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCiphers, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_key_file
+     *
+     * @return zimbraMtaSmtpdTlsKeyFile, or "/opt/zimbra/conf/smtpd.key" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public String getMtaSmtpdTlsKeyFile() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, "/opt/zimbra/conf/smtpd.key");
+    }
+
+    /**
+     * Value for postconf smtpd_tls_key_file
+     *
+     * @param zimbraMtaSmtpdTlsKeyFile new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public void setMtaSmtpdTlsKeyFile(String zimbraMtaSmtpdTlsKeyFile) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, zimbraMtaSmtpdTlsKeyFile);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_key_file
+     *
+     * @param zimbraMtaSmtpdTlsKeyFile new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public Map<String,Object> setMtaSmtpdTlsKeyFile(String zimbraMtaSmtpdTlsKeyFile, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, zimbraMtaSmtpdTlsKeyFile);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_key_file
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public void unsetMtaSmtpdTlsKeyFile() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_key_file
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public Map<String,Object> unsetMtaSmtpdTlsKeyFile(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, "");
         return attrs;
     }
 
@@ -30919,6 +31063,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaTlsSecurityLevel(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @return zimbraMtaVirtualAliasExpansionLimit, or 10000 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public int getMtaVirtualAliasExpansionLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaVirtualAliasExpansionLimit, 10000);
+    }
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @param zimbraMtaVirtualAliasExpansionLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public void setMtaVirtualAliasExpansionLimit(int zimbraMtaVirtualAliasExpansionLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaVirtualAliasExpansionLimit, Integer.toString(zimbraMtaVirtualAliasExpansionLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @param zimbraMtaVirtualAliasExpansionLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public Map<String,Object> setMtaVirtualAliasExpansionLimit(int zimbraMtaVirtualAliasExpansionLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaVirtualAliasExpansionLimit, Integer.toString(zimbraMtaVirtualAliasExpansionLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public void unsetMtaVirtualAliasExpansionLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaVirtualAliasExpansionLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public Map<String,Object> unsetMtaVirtualAliasExpansionLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaVirtualAliasExpansionLimit, "");
         return attrs;
     }
 
