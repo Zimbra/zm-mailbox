@@ -7709,4 +7709,15 @@ TODO: delete them permanently from here
   <desc>Value for postconf virtual_alias_expansion_limit</desc>
 </attr>
 
+<attr id="1545" name="zimbraMtaSmtpdVirtualTransport" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>error</globalConfigValue>
+  <desc>Value for postconf virtual_transport</desc>
+</attr>
+
+<attr id="1546" name="zimbraMtaNotifyClasses" type="enum" value="bounce,2bounce,data,delay,policy,protocol,resource,software" cardinality="multi" optionalIn="globalConfig,server" since="8.5.0">
+  <globalConfigValue>resource</globalConfigValue>
+  <globalConfigValue>software</globalConfigValue>
+  <desc>Value for postconf notify_classes</desc>
+</attr>
+
 </attrs>
