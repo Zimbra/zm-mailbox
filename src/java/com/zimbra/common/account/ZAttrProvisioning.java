@@ -688,6 +688,22 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaLmtpHostLookup {
+        native_("native"),
+        dns("dns");
+        private String mValue;
+        private MtaLmtpHostLookup(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaLmtpHostLookup fromString(String s) throws ServiceException {
+            for (MtaLmtpHostLookup value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNative_() { return this == native_;}
+        public boolean isDns() { return this == dns;}
+    }
+
     public static enum MtaMilterDefaultAction {
         reject("reject"),
         accept("accept"),
