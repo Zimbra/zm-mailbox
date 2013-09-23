@@ -8491,12 +8491,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdSaslAuthenticatedHeader = "zimbraMtaSmtpdSaslAuthenticatedHeader";
 
     /**
+     * Value for postconf smtpd_tls_cert_file
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public static final String A_zimbraMtaSmtpdTlsCertFile = "zimbraMtaSmtpdTlsCertFile";
+
+    /**
      * Value for postconf smtpd_tls_ciphers
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1515)
     public static final String A_zimbraMtaSmtpdTlsCiphers = "zimbraMtaSmtpdTlsCiphers";
+
+    /**
+     * Value for postconf smtpd_tls_key_file
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public static final String A_zimbraMtaSmtpdTlsKeyFile = "zimbraMtaSmtpdTlsKeyFile";
 
     /**
      * Value for postconf smtpd_tls_loglevel
@@ -8591,6 +8607,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=795)
     public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public static final String A_zimbraMtaVirtualAliasExpansionLimit = "zimbraMtaVirtualAliasExpansionLimit";
 
     /**
      * certificate to be used for validating the SAML assertions received
