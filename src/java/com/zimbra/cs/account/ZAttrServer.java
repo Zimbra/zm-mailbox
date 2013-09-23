@@ -19190,6 +19190,123 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @return zimbraMtaPropagateUnmatchedExtensions, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public String[] getMtaPropagateUnmatchedExtensionsAsString() {
+        return getMultiAttr(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions);
+    }
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @param zimbraMtaPropagateUnmatchedExtensions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public void setMtaPropagateUnmatchedExtensions(ZAttrProvisioning.MtaPropagateUnmatchedExtensions zimbraMtaPropagateUnmatchedExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions, zimbraMtaPropagateUnmatchedExtensions.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @param zimbraMtaPropagateUnmatchedExtensions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public Map<String,Object> setMtaPropagateUnmatchedExtensions(ZAttrProvisioning.MtaPropagateUnmatchedExtensions zimbraMtaPropagateUnmatchedExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions, zimbraMtaPropagateUnmatchedExtensions.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @param zimbraMtaPropagateUnmatchedExtensions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public void setMtaPropagateUnmatchedExtensionsAsString(String[] zimbraMtaPropagateUnmatchedExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions, zimbraMtaPropagateUnmatchedExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @param zimbraMtaPropagateUnmatchedExtensions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public Map<String,Object> setMtaPropagateUnmatchedExtensionsAsString(String[] zimbraMtaPropagateUnmatchedExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions, zimbraMtaPropagateUnmatchedExtensions);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public void unsetMtaPropagateUnmatchedExtensions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public Map<String,Object> unsetMtaPropagateUnmatchedExtensions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf queue_directory
      *
      * @return zimbraMtaQueueDirectory, or "/opt/zimbra/data/postfix/spool" if unset
@@ -19702,6 +19819,140 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSaslAuthEnable(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @return zimbraMtaSenderCanonicalMaps, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public String[] getMtaSenderCanonicalMaps() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaSenderCanonicalMaps); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-scm.cf"};
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param zimbraMtaSenderCanonicalMaps new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public void setMtaSenderCanonicalMaps(String[] zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param zimbraMtaSenderCanonicalMaps new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public Map<String,Object> setMtaSenderCanonicalMaps(String[] zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param zimbraMtaSenderCanonicalMaps new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public void addMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param zimbraMtaSenderCanonicalMaps new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public Map<String,Object> addMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param zimbraMtaSenderCanonicalMaps existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public void removeMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param zimbraMtaSenderCanonicalMaps existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public Map<String,Object> removeMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public void unsetMtaSenderCanonicalMaps() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderCanonicalMaps, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public Map<String,Object> unsetMtaSenderCanonicalMaps(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderCanonicalMaps, "");
         return attrs;
     }
 
@@ -20376,6 +20627,123 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpSaslPasswordMaps(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @return zimbraMtaSmtpSaslSecurityOptions, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public String[] getMtaSmtpSaslSecurityOptionsAsString() {
+        return getMultiAttr(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions);
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpSaslSecurityOptions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public void setMtaSmtpSaslSecurityOptions(ZAttrProvisioning.MtaSmtpSaslSecurityOptions zimbraMtaSmtpSaslSecurityOptions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions, zimbraMtaSmtpSaslSecurityOptions.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpSaslSecurityOptions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public Map<String,Object> setMtaSmtpSaslSecurityOptions(ZAttrProvisioning.MtaSmtpSaslSecurityOptions zimbraMtaSmtpSaslSecurityOptions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions, zimbraMtaSmtpSaslSecurityOptions.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpSaslSecurityOptions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public void setMtaSmtpSaslSecurityOptionsAsString(String[] zimbraMtaSmtpSaslSecurityOptions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions, zimbraMtaSmtpSaslSecurityOptions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpSaslSecurityOptions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public Map<String,Object> setMtaSmtpSaslSecurityOptionsAsString(String[] zimbraMtaSmtpSaslSecurityOptions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions, zimbraMtaSmtpSaslSecurityOptions);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public void unsetMtaSmtpSaslSecurityOptions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public Map<String,Object> unsetMtaSmtpSaslSecurityOptions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions, "");
         return attrs;
     }
 
@@ -21653,6 +22021,123 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdSaslAuthenticatedHeader(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdSaslAuthenticatedHeader, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @return zimbraMtaSmtpdSaslSecurityOptions, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public String[] getMtaSmtpdSaslSecurityOptionsAsString() {
+        return getMultiAttr(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpdSaslSecurityOptions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public void setMtaSmtpdSaslSecurityOptions(ZAttrProvisioning.MtaSmtpdSaslSecurityOptions zimbraMtaSmtpdSaslSecurityOptions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions, zimbraMtaSmtpdSaslSecurityOptions.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpdSaslSecurityOptions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public Map<String,Object> setMtaSmtpdSaslSecurityOptions(ZAttrProvisioning.MtaSmtpdSaslSecurityOptions zimbraMtaSmtpdSaslSecurityOptions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions, zimbraMtaSmtpdSaslSecurityOptions.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpdSaslSecurityOptions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public void setMtaSmtpdSaslSecurityOptionsAsString(String[] zimbraMtaSmtpdSaslSecurityOptions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions, zimbraMtaSmtpdSaslSecurityOptions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param zimbraMtaSmtpdSaslSecurityOptions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public Map<String,Object> setMtaSmtpdSaslSecurityOptionsAsString(String[] zimbraMtaSmtpdSaslSecurityOptions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions, zimbraMtaSmtpdSaslSecurityOptions);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public void unsetMtaSmtpdSaslSecurityOptions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public Map<String,Object> unsetMtaSmtpdSaslSecurityOptions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions, "");
         return attrs;
     }
 

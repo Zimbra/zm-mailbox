@@ -146,7 +146,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF notify_classes				VAR zimbraMtaNotifyClasses
 	POSTCONF queue_directory			VAR zimbraMtaQueueDirectory
 	POSTCONF smtpd_sasl_authenticated_header	VAR zimbraMtaSmtpdSaslAuthenticatedHeader
-	POSTCONF sender_canonical_maps			LOCAL postfix_sender_canonical_maps
+	POSTCONF sender_canonical_maps			VAR zimbraMtaSenderCanonicalMaps
 	POSTCONF sendmail_path				VAR zimbraMtaSendmailPath
 	POSTCONF smtpd_banner				VAR zimbraMtaSmtpdBanner
 	POSTCONF smtpd_client_restrictions		LOCAL postfix_smtpd_client_restrictions
@@ -174,7 +174,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF lmtp_connection_cache_time_limit	VAR zimbraMtaLmtpConnectionCacheTimeLimit
 	POSTCONF lmtp_host_lookup			VAR zimbraMtaLmtpHostLookup
 	POSTCONF transport_maps				LOCAL postfix_transport_maps
-	POSTCONF propagate_unmatched_extensions		LOCAL postfix_propagate_unmatched_extensions
+	POSTCONF propagate_unmatched_extensions		VAR zimbraMtaPropagateUnmatchedExtensions
 	POSTCONF virtual_alias_domains			LOCAL postfix_virtual_alias_domains
 	POSTCONF virtual_alias_expansion_limit		VAR zimbraMtaVirtualAliasExpansionLimit
 	POSTCONF virtual_alias_maps			LOCAL postfix_virtual_alias_maps
@@ -182,12 +182,12 @@ SECTION mta DEPENDS amavis
 	POSTCONF virtual_mailbox_maps			LOCAL postfix_virtual_mailbox_maps
 	POSTCONF virtual_transport			VAR zimbraMtaSmtpdVirtualTransport
 	POSTCONF always_add_missing_headers		VAR zimbraMtaAlwaysAddMissingHeaders
-	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
+	POSTCONF smtpd_sasl_security_options		VAR zimbraMtaSmtpdSaslSecurityOptions
 	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
 	POSTCONF smtp_helo_name				VAR zimbraMtaSmtpHeloName
 	POSTCONF smtp_cname_overrides_servername	VAR zimbraMtaSmtpCnameOverridesServername
 	POSTCONF smtp_sasl_auth_enable			VAR zimbraMtaSmtpSaslAuthEnable
-	POSTCONF smtp_sasl_security_options		LOCAL postfix_smtp_sasl_security_options
+	POSTCONF smtp_sasl_security_options		VAR zimbraMtaSmtpSaslSecurityOptions
 	POSTCONF smtp_tls_security_level		VAR zimbraMtaSmtpTlsSecurityLevel
 	POSTCONF smtp_tls_ciphers			VAR zimbraMtaSmtpTlsCiphers
 	POSTCONF smtp_tls_mandatory_ciphers		VAR zimbraMtaSmtpTlsMandatoryCiphers
