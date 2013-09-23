@@ -708,6 +708,34 @@ public class ZAttrProvisioning {
         public boolean isQuarantine() { return this == quarantine;}
     }
 
+    public static enum MtaNotifyClasses {
+        protocol("protocol"),
+        software("software"),
+        data("data"),
+        resource("resource"),
+        policy("policy"),
+        delay("delay"),
+        _bounce("2bounce"),
+        bounce("bounce");
+        private String mValue;
+        private MtaNotifyClasses(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaNotifyClasses fromString(String s) throws ServiceException {
+            for (MtaNotifyClasses value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isProtocol() { return this == protocol;}
+        public boolean isSoftware() { return this == software;}
+        public boolean isData() { return this == data;}
+        public boolean isResource() { return this == resource;}
+        public boolean isPolicy() { return this == policy;}
+        public boolean isDelay() { return this == delay;}
+        public boolean is_bounce() { return this == _bounce;}
+        public boolean isBounce() { return this == bounce;}
+    }
+
     public static enum MtaSaslAuthEnable {
         yes("yes"),
         no("no");
@@ -8351,6 +8379,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaNonSmtpdMilters = "zimbraMtaNonSmtpdMilters";
 
     /**
+     * Value for postconf notify_classes
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1546)
+    public static final String A_zimbraMtaNotifyClasses = "zimbraMtaNotifyClasses";
+
+    /**
      * Value for postconf policy_time_limit
      *
      * @since ZCS 8.5.0
@@ -8529,6 +8565,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1516)
     public static final String A_zimbraMtaSmtpdTlsMandatoryCiphers = "zimbraMtaSmtpdTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf virtual_transport
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1545)
+    public static final String A_zimbraMtaSmtpdVirtualTransport = "zimbraMtaSmtpdVirtualTransport";
 
     /**
      * Value for postconf smtp_helo_name
