@@ -143,7 +143,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF mailq_path				VAR zimbraMtaMailqPath
 	POSTCONF manpage_directory			VAR zimbraMtaManpageDirectory
 	POSTCONF newaliases_path			VAR zimbraMtaNewaliasesPath
-	POSTCONF notify_classes				LOCAL postfix_notify_classes
+	POSTCONF notify_classes				VAR zimbraMtaNotifyClasses
 	POSTCONF queue_directory			VAR zimbraMtaQueueDirectory
 	POSTCONF smtpd_sasl_authenticated_header	VAR zimbraMtaSmtpdSaslAuthenticatedHeader
 	POSTCONF sender_canonical_maps			LOCAL postfix_sender_canonical_maps
@@ -180,7 +180,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF virtual_alias_maps			LOCAL postfix_virtual_alias_maps
 	POSTCONF virtual_mailbox_domains		LOCAL postfix_virtual_mailbox_domains
 	POSTCONF virtual_mailbox_maps			LOCAL postfix_virtual_mailbox_maps
-	POSTCONF virtual_transport			LOCAL postfix_virtual_transport
+	POSTCONF virtual_transport			VAR zimbraMtaSmtpdVirtualTransport
 	POSTCONF always_add_missing_headers		VAR zimbraMtaAlwaysAddMissingHeaders
 	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
 	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
