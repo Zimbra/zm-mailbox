@@ -3585,6 +3585,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraComponentAvailable = "zimbraComponentAvailable";
 
     /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public static final String A_zimbraConfiguredServerIDForBlobDirEnabled = "zimbraConfiguredServerIDForBlobDirEnabled";
+
+    /**
      * attribute constraints TODO: fill all the constraints
      *
      * @since ZCS 6.0.0_BETA1
