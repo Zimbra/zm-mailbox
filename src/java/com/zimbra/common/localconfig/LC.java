@@ -560,10 +560,6 @@ public final class LC {
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
-    public static final KnownKey postfix_propagate_unmatched_extensions = KnownKey.newKey("canonical");
-    public static final KnownKey postfix_sender_canonical_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-scm.cf");
-    public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
-    public static final KnownKey postfix_smtpd_sasl_security_options = KnownKey.newKey("noanonymous");
     public static final KnownKey postfix_smtpd_sasl_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
     public static final KnownKey postfix_smtpd_client_restrictions = KnownKey.newKey("reject_unauth_pipelining");
     public static final KnownKey postfix_smtpd_data_restrictions = KnownKey.newKey("reject_unauth_pipelining");

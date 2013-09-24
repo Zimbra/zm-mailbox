@@ -752,6 +752,30 @@ public class ZAttrProvisioning {
         public boolean isBounce() { return this == bounce;}
     }
 
+    public static enum MtaPropagateUnmatchedExtensions {
+        virtual("virtual"),
+        generic("generic"),
+        alias("alias"),
+        forward("forward"),
+        canonical("canonical"),
+        include("include");
+        private String mValue;
+        private MtaPropagateUnmatchedExtensions(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPropagateUnmatchedExtensions fromString(String s) throws ServiceException {
+            for (MtaPropagateUnmatchedExtensions value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVirtual() { return this == virtual;}
+        public boolean isGeneric() { return this == generic;}
+        public boolean isAlias() { return this == alias;}
+        public boolean isForward() { return this == forward;}
+        public boolean isCanonical() { return this == canonical;}
+        public boolean isInclude() { return this == include;}
+    }
+
     public static enum MtaSaslAuthEnable {
         yes("yes"),
         no("no");
@@ -848,6 +872,28 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaSmtpdSaslSecurityOptions {
+        nodictionary("nodictionary"),
+        mutual_auth("mutual_auth"),
+        noactive("noactive"),
+        noanonymous("noanonymous"),
+        noplaintext("noplaintext");
+        private String mValue;
+        private MtaSmtpdSaslSecurityOptions(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdSaslSecurityOptions fromString(String s) throws ServiceException {
+            for (MtaSmtpdSaslSecurityOptions value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNodictionary() { return this == nodictionary;}
+        public boolean isMutual_auth() { return this == mutual_auth;}
+        public boolean isNoactive() { return this == noactive;}
+        public boolean isNoanonymous() { return this == noanonymous;}
+        public boolean isNoplaintext() { return this == noplaintext;}
+    }
+
     public static enum MtaSmtpdTlsCiphers {
         export("export"),
         high("high"),
@@ -906,6 +952,28 @@ public class ZAttrProvisioning {
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpSaslSecurityOptions {
+        nodictionary("nodictionary"),
+        mutual_auth("mutual_auth"),
+        noactive("noactive"),
+        noanonymous("noanonymous"),
+        noplaintext("noplaintext");
+        private String mValue;
+        private MtaSmtpSaslSecurityOptions(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpSaslSecurityOptions fromString(String s) throws ServiceException {
+            for (MtaSmtpSaslSecurityOptions value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNodictionary() { return this == nodictionary;}
+        public boolean isMutual_auth() { return this == mutual_auth;}
+        public boolean isNoactive() { return this == noactive;}
+        public boolean isNoanonymous() { return this == noanonymous;}
+        public boolean isNoplaintext() { return this == noplaintext;}
     }
 
     public static enum MtaSmtpTlsCiphers {
@@ -8411,6 +8479,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaPolicyTimeLimit = "zimbraMtaPolicyTimeLimit";
 
     /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public static final String A_zimbraMtaPropagateUnmatchedExtensions = "zimbraMtaPropagateUnmatchedExtensions";
+
+    /**
      * Value for postconf queue_directory
      *
      * @since ZCS 8.5.0
@@ -8453,6 +8529,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=796)
     public static final String A_zimbraMtaSaslAuthEnable = "zimbraMtaSaslAuthEnable";
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public static final String A_zimbraMtaSenderCanonicalMaps = "zimbraMtaSenderCanonicalMaps";
 
     /**
      * Value for postconf sendmail_path
@@ -8543,6 +8627,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdSaslAuthenticatedHeader = "zimbraMtaSmtpdSaslAuthenticatedHeader";
 
     /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public static final String A_zimbraMtaSmtpdSaslSecurityOptions = "zimbraMtaSmtpdSaslSecurityOptions";
+
+    /**
      * Value for postconf smtpd_tls_cert_file
      *
      * @since ZCS 8.5.0
@@ -8621,6 +8713,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1529)
     public static final String A_zimbraMtaSmtpSaslPasswordMaps = "zimbraMtaSmtpSaslPasswordMaps";
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public static final String A_zimbraMtaSmtpSaslSecurityOptions = "zimbraMtaSmtpSaslSecurityOptions";
 
     /**
      * Value for postconf smtp_tls_ciphers
