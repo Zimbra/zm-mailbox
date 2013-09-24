@@ -8236,6 +8236,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @return zimbraConfiguredServerIDForBlobDirEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public boolean isConfiguredServerIDForBlobDirEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, false);
+    }
+
+    /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @param zimbraConfiguredServerIDForBlobDirEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public void setConfiguredServerIDForBlobDirEnabled(boolean zimbraConfiguredServerIDForBlobDirEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, zimbraConfiguredServerIDForBlobDirEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @param zimbraConfiguredServerIDForBlobDirEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public Map<String,Object> setConfiguredServerIDForBlobDirEnabled(boolean zimbraConfiguredServerIDForBlobDirEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, zimbraConfiguredServerIDForBlobDirEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public void unsetConfiguredServerIDForBlobDirEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public Map<String,Object> unsetConfiguredServerIDForBlobDirEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, "");
+        return attrs;
+    }
+
+    /**
      * attribute constraints TODO: fill all the constraints
      *
      * @return zimbraConstraint, or empty array if unset

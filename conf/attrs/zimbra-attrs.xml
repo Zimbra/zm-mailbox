@@ -7740,4 +7740,9 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_sasl_security_options</desc>
 </attr>
 
+<attr id="1551" name="zimbraConfiguredServerIDForBlobDirEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Enabled using the configured server ID for blob dir</desc>
+</attr>
+
 </attrs>

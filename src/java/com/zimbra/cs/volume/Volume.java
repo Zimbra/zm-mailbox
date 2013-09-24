@@ -322,7 +322,7 @@ public final class Volume {
     	return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
     }
     
-    public static String getConfiguredRootPath(String path) throws ServiceException
+    public static String getConfiguredServerID() throws ServiceException
     {
         StringBuilder finalPath = new StringBuilder();
         if (Zimbra.isAlwaysOn())
@@ -331,41 +331,48 @@ public final class Volume {
         	String localServerId = Provisioning.getInstance().getLocalServer().getId();
         	if (alwaysOnServerClusterId != null)
         	{
-        		finalPath.append(path).append(File.separator).append(alwaysOnServerClusterId);
+        		finalPath.append(alwaysOnServerClusterId);
         	}
         	else
         	{
-        		finalPath.append(path).append(File.separator).append(localServerId);
+        		finalPath.append(localServerId);
         	}
         }
         else
         {
         	String localServerId = Provisioning.getInstance().getLocalServer().getId();
-        	finalPath.append(path).append(File.separator).append(localServerId);
+        	finalPath.append(localServerId);
         }
         return finalPath.toString();
     }
 
-    private StringBuilder getMailboxDir(int mboxId, String subdir) {
+    private StringBuilder getMailboxDir(int mboxId, String subdir) throws ServiceException {
         StringBuilder result = new StringBuilder();
         int dir = (mboxId >> mboxBits) & mboxGroupBitmask;
-        result.append(rootPath).append(File.separator).append(dir).append(File.separator).append(mboxId);
+        
+        result.append(rootPath).append(File.separator);
+
+        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled())
+        	result.append(getConfiguredServerID()).append(File.separator);
+
+        result.append(dir).append(File.separator).append(mboxId);
+        
         if (subdir != null) {
             result.append(File.separator).append(subdir);
         }
         return result;
     }
 
-    public String getMailboxDir(int mboxId, short type) {
+    public String getMailboxDir(int mboxId, short type) throws ServiceException {
         return getMailboxDir(mboxId, type == TYPE_INDEX ? SUBDIR_INDEX : SUBDIR_MESSAGE).toString();
     }
 
-    public String getBlobDir(int mboxId, int itemId) {
+    public String getBlobDir(int mboxId, int itemId) throws ServiceException {
         long dir = (itemId >> fileBits) & fileGroupBitmask;
         return getMailboxDir(mboxId, SUBDIR_MESSAGE).append(File.separator).append(dir).toString();
     }
 
-    public String getMessageRootDir(int mboxId) {
+    public String getMessageRootDir(int mboxId) throws ServiceException {
         return getMailboxDir(mboxId, null).toString();
     }
 
