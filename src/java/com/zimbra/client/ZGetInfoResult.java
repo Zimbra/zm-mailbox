@@ -146,6 +146,10 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getAttachmentSizeLimit();
     }
 
+    public long getDocumentSizeLimit() {
+        return data.getDocumentSizeLimit();
+    }
+
     public String getRecent() {
         return SystemUtil.coalesce(data.getRecentMessageCount(), 0).toString();
     }
