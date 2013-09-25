@@ -149,8 +149,8 @@ SECTION mta DEPENDS amavis
 	POSTCONF sender_canonical_maps			VAR zimbraMtaSenderCanonicalMaps
 	POSTCONF sendmail_path				VAR zimbraMtaSendmailPath
 	POSTCONF smtpd_banner				VAR zimbraMtaSmtpdBanner
-	POSTCONF smtpd_client_restrictions		LOCAL postfix_smtpd_client_restrictions
-	POSTCONF smtpd_data_restrictions		LOCAL postfix_smtpd_data_restrictions
+	POSTCONF smtpd_client_restrictions		VAR zimbraMtaSmtpdClientRestrictions
+	POSTCONF smtpd_data_restrictions		VAR zimbraMtaSmtpdDataRestrictions
 	POSTCONF smtpd_helo_required			VAR zimbraMtaSmtpdHeloRequired
 	POSTCONF smtpd_proxy_timeout			VAR zimbraMtaSmtpdProxyTimeout
 	POSTCONF smtpd_reject_unlisted_recipient	VAR zimbraMtaSmtpdRejectUnlistedRecipient
@@ -173,17 +173,17 @@ SECTION mta DEPENDS amavis
 	POSTCONF lmtp_connection_cache_destinations	VAR zimbraMtaLmtpConnectionCacheDestinations
 	POSTCONF lmtp_connection_cache_time_limit	VAR zimbraMtaLmtpConnectionCacheTimeLimit
 	POSTCONF lmtp_host_lookup			VAR zimbraMtaLmtpHostLookup
-	POSTCONF transport_maps				LOCAL postfix_transport_maps
+	POSTCONF transport_maps				VAR zimbraMtaTransportMaps
 	POSTCONF propagate_unmatched_extensions		VAR zimbraMtaPropagateUnmatchedExtensions
-	POSTCONF virtual_alias_domains			LOCAL postfix_virtual_alias_domains
+	POSTCONF virtual_alias_domains			VAR zimbraMtaVirtualAliasDomains
 	POSTCONF virtual_alias_expansion_limit		VAR zimbraMtaVirtualAliasExpansionLimit
-	POSTCONF virtual_alias_maps			LOCAL postfix_virtual_alias_maps
-	POSTCONF virtual_mailbox_domains		LOCAL postfix_virtual_mailbox_domains
-	POSTCONF virtual_mailbox_maps			LOCAL postfix_virtual_mailbox_maps
+	POSTCONF virtual_alias_maps			VAR zimbraMtaVirtualAliasMaps
+	POSTCONF virtual_mailbox_domains		VAR zimbraMtaVirtualMailboxDomains
+	POSTCONF virtual_mailbox_maps			VAR zimbraMtaVirtualMailboxMaps
 	POSTCONF virtual_transport			VAR zimbraMtaSmtpdVirtualTransport
 	POSTCONF always_add_missing_headers		VAR zimbraMtaAlwaysAddMissingHeaders
 	POSTCONF smtpd_sasl_security_options		VAR zimbraMtaSmtpdSaslSecurityOptions
-	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
+	POSTCONF smtpd_sasl_tls_security_options	VAR zimbraMtaSmtpdSaslTlsSecurityOptions
 	POSTCONF smtp_helo_name				VAR zimbraMtaSmtpHeloName
 	POSTCONF smtp_cname_overrides_servername	VAR zimbraMtaSmtpCnameOverridesServername
 	POSTCONF smtp_sasl_auth_enable			VAR zimbraMtaSmtpSaslAuthEnable

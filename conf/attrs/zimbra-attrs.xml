@@ -7745,4 +7745,44 @@ TODO: delete them permanently from here
   <desc>Enabled using the configured server ID for blob dir</desc>
 </attr>
 
+<attr id="1552" name="zimbraMtaSmtpdSaslTlsSecurityOptions" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>$smtpd_sasl_security_options</globalConfigValue>
+  <desc>Value for postconf smtpd_sasl_tls_security_options</desc>
+</attr>
+
+<attr id="1553" name="zimbraMtaSmtpdClientRestrictions" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>reject_unauth_pipelining</globalConfigValue>
+  <desc>Value for postconf smtpd_client_restrictions</desc>
+</attr>
+
+<attr id="1554" name="zimbraMtaSmtpdDataRestrictions" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>reject_unauth_pipelining</globalConfigValue>
+  <desc>Value for postconf smtpd_data_restrictions</desc>
+</attr>
+
+<attr id="1555" name="zimbraMtaTransportMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-transport.cf</globalConfigValue>
+  <desc>Value for postconf transport_maps</desc>
+</attr>
+
+<attr id="1556" name="zimbraMtaVirtualAliasDomains" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vad.cf</globalConfigValue>
+  <desc>Value for postconf virtual_alias_domains</desc>
+</attr>
+
+<attr id="1557" name="zimbraMtaVirtualAliasMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vam.cf</globalConfigValue>
+  <desc>Value for postconf virtual_alias_maps</desc>
+</attr>
+
+<attr id="1558" name="zimbraMtaVirtualMailboxDomains" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vmd.cf</globalConfigValue>
+  <desc>Value for postconf virtual_mailbox_domains</desc>
+</attr>
+
+<attr id="1559" name="zimbraMtaVirtualMailboxMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vmm.cf</globalConfigValue>
+  <desc>Value for postconf virtual_mailbox_maps</desc>
+</attr>
+
 </attrs>
