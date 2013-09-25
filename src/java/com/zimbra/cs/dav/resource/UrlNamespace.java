@@ -494,8 +494,9 @@ public class UrlNamespace {
                     // force read permissions on mounted calendars even for writable calendars.
                     short rights = ((RemoteCalendarCollection)resource).getRights();
                     // clear the write and delete bits.
-                    rights = (short) (rights & ~(ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT | ACL.RIGHT_ACTION | ACL.RIGHT_ADMIN | ACL.RIGHT_SUBFOLDER));
-                   	resource.addProperty(Acl.getCurrentUserPrivilegeSet(rights));
+                    rights = (short) (rights & ~(ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT |
+                                                    ACL.RIGHT_ACTION | ACL.RIGHT_ADMIN | ACL.RIGHT_SUBFOLDER));
+                    resource.addProperty(Acl.getCurrentUserPrivilegeSet(rights));
                 } else {
                     resource = new RemoteCollection(ctxt, mp);
                 }

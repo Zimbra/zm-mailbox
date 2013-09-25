@@ -62,70 +62,70 @@ import com.zimbra.cs.dav.property.ResourceProperty;
  */
 public abstract class DavResource {
 
-	public static class InvalidResource extends DavResource {
-		public InvalidResource(String uri, String owner) {
-			super(uri, owner);
-		}
-		@Override
+    public static class InvalidResource extends DavResource {
+        public InvalidResource(String uri, String owner) {
+            super(uri, owner);
+        }
+        @Override
         public void delete(DavContext ctxt) { }
-		@Override
+        @Override
         public boolean isCollection() { return false; }
-		@Override
+        @Override
         public boolean isValid() { return false; }
-	}
+    }
 
-	protected String mUri;
-	protected String mOwner;
-	protected Map<QName,ResourceProperty> mProps;
-	protected Collection<Compliance> mDavCompliance;
-	protected boolean mNewlyCreated;
+    protected String mUri;
+    protected String mOwner;
+    protected Map<QName,ResourceProperty> mProps;
+    protected Collection<Compliance> mDavCompliance;
+    protected boolean mNewlyCreated;
 
-	public DavResource(String uri, String owner) {
-		mNewlyCreated = false;
-		mOwner = owner;
-		mProps = new HashMap<QName,ResourceProperty>();
-		mUri = uri;
-		if (isCollection() && !mUri.endsWith("/"))
+    public DavResource(String uri, String owner) {
+        mNewlyCreated = false;
+        mOwner = owner;
+        mProps = new HashMap<QName,ResourceProperty>();
+        mUri = uri;
+        if (isCollection() && !mUri.endsWith("/"))
             mUri = mUri + "/";
-		mDavCompliance = new TreeSet<Compliance>();
-		mDavCompliance.add(Compliance.one);
-		mDavCompliance.add(Compliance.two);
-		mDavCompliance.add(Compliance.three);
-		mDavCompliance.add(Compliance.access_control);
-		mDavCompliance.add(Compliance.calendar_access);
-		mDavCompliance.add(Compliance.version_control);
-		mDavCompliance.add(Compliance.calendar_proxy);
-		mDavCompliance.add(Compliance.calendarserver_principal_property_search);
+        mDavCompliance = new TreeSet<Compliance>();
+        mDavCompliance.add(Compliance.one);
+        mDavCompliance.add(Compliance.two);
+        mDavCompliance.add(Compliance.three);
+        mDavCompliance.add(Compliance.access_control);
+        mDavCompliance.add(Compliance.calendar_access);
+        mDavCompliance.add(Compliance.version_control);
+        mDavCompliance.add(Compliance.calendar_proxy);
+        mDavCompliance.add(Compliance.calendarserver_principal_property_search);
         mDavCompliance.add(Compliance.addressbook);
         mDavCompliance.add(Compliance.extended_mkcol);
         if (isSchedulingEnabled()) {
             mDavCompliance.add(Compliance.calendar_schedule);
         }
 
-		ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
-		rtype.setProtected(true);
-		rtype.setVisible(true);
-		addProperty(rtype);
+        ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
+        rtype.setProtected(true);
+        rtype.setVisible(true);
+        addProperty(rtype);
 
-		ResourceProperty href = new ResourceProperty(DavElements.E_HREF);
-		href.setProtected(true);
-		try {
-			href.setStringValue(UrlNamespace.getResourceUrl(this));
-		} catch (Exception e) {
-			ZimbraLog.dav.error("can't generate href", e);
-		}
-		addProperty(href);
-		if (hasEtag())
-			setProperty(DavElements.E_GETETAG, getEtag(), true);
-		if (isCollection())
-			addResourceType(DavElements.E_COLLECTION);
-		addProperty(Acl.getPrincipalCollectionSet());
-		addProperty(Acl.getCurrentUserPrincipal());
-		QName[] supportedReports = getSupportedReports();
-		if (supportedReports.length > 0) {
-		    ResourceProperty sr = new ResourceProperty(DavElements.E_SUPPORTED_REPORT_SET);
-		    addProperty(sr);
-		    sr.setProtected(true);
+        ResourceProperty href = new ResourceProperty(DavElements.E_HREF);
+        href.setProtected(true);
+        try {
+            href.setStringValue(UrlNamespace.getResourceUrl(this));
+        } catch (Exception e) {
+            ZimbraLog.dav.error("can't generate href", e);
+        }
+        addProperty(href);
+        if (hasEtag())
+            setProperty(DavElements.E_GETETAG, getEtag(), true);
+        if (isCollection())
+            addResourceType(DavElements.E_COLLECTION);
+        addProperty(Acl.getPrincipalCollectionSet());
+        addProperty(Acl.getCurrentUserPrincipal());
+        QName[] supportedReports = getSupportedReports();
+        if (supportedReports.length > 0) {
+            ResourceProperty sr = new ResourceProperty(DavElements.E_SUPPORTED_REPORT_SET);
+            addProperty(sr);
+            sr.setProtected(true);
             sr.setVisible(true);
             Element e = null;
             for (QName n : supportedReports) {
@@ -133,191 +133,191 @@ public abstract class DavResource {
                 e.addElement(DavElements.E_REPORT).addElement(n);
                 sr.getChildren().add(e);
             }
-		}
-	}
+        }
+    }
 
-	public void setHref(String href) {
-		getProperty(DavElements.E_HREF).setStringValue(HttpUtil.urlEscape(href));
-	}
+    public void setHref(String href) {
+        getProperty(DavElements.E_HREF).setStringValue(HttpUtil.urlEscape(href));
+    }
 
-	public boolean isValid() {
-		return true;
-	}
+    public boolean isValid() {
+        return true;
+    }
 
-	public boolean isNewlyCreated() {
-		return mNewlyCreated;
-	}
+    public boolean isNewlyCreated() {
+        return mNewlyCreated;
+    }
 
-	@Override
+    @Override
     public boolean equals(Object another) {
-		if (another instanceof DavResource) {
-			DavResource that = (DavResource) another;
-			return this.mUri.equals(that.mUri) && this.mOwner.equals(that.mOwner);
-		}
-		return false;
-	}
+        if (another instanceof DavResource) {
+            DavResource that = (DavResource) another;
+            return this.mUri.equals(that.mUri) && this.mOwner.equals(that.mOwner);
+        }
+        return false;
+    }
 
-	public Collection<Compliance> getComplianceList() {
-		return mDavCompliance;
-	}
+    public Collection<Compliance> getComplianceList() {
+        return mDavCompliance;
+    }
 
-	public ResourceProperty getProperty(String propName) {
-		return getProperty(QName.get(propName, DavElements.WEBDAV_NS));
-	}
+    public ResourceProperty getProperty(String propName) {
+        return getProperty(QName.get(propName, DavElements.WEBDAV_NS));
+    }
 
-	public ResourceProperty getProperty(QName prop) {
-		return mProps.get(prop);
-	}
+    public ResourceProperty getProperty(QName prop) {
+        return mProps.get(prop);
+    }
 
-	public ResourceProperty getProperty(Element prop) {
-	    if (prop == null)
-	        return null;
-	    return getProperty(prop.getQName());
-	}
+    public ResourceProperty getProperty(Element prop) {
+        if (prop == null)
+            return null;
+        return getProperty(prop.getQName());
+    }
 
-	public ResourceProperty getProperty(QName prop, RequestProp request) {
-	    if (request.getProp(prop) == null)
-	        return getProperty(prop);
-	    return getProperty(request.getProp(prop));
-	}
+    public ResourceProperty getProperty(QName prop, RequestProp request) {
+        if (request.getProp(prop) == null)
+            return getProperty(prop);
+        return getProperty(request.getProp(prop));
+    }
 
-	public Set<QName> getAllPropertyNames() {
-		Set<QName> ret = new HashSet<QName>();
-		for (QName key : mProps.keySet())
-			if (mProps.get(key).isVisible())
-				ret.add(key);
+    public Set<QName> getAllPropertyNames() {
+        Set<QName> ret = new HashSet<QName>();
+        for (QName key : mProps.keySet())
+            if (mProps.get(key).isVisible())
+                ret.add(key);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public String getUri() {
-		return mUri;
-	}
+    public String getUri() {
+        return mUri;
+    }
 
-	public String getOwner() {
-		return mOwner;
-	}
+    public String getOwner() {
+        return mOwner;
+    }
 
-	public boolean hasContent(DavContext ctxt) {
-		try {
-			return (getContentLength() > 0);
-		} catch (NumberFormatException e) {
-		}
-		return false;
-	}
+    public boolean hasContent(DavContext ctxt) {
+        try {
+            return (getContentLength() > 0);
+        } catch (NumberFormatException e) {
+        }
+        return false;
+    }
 
-	public String getContentType(DavContext ctxt) {
-		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTTYPE);
-		if (prop != null)
-			return prop.getStringValue();
-		return null;
-	}
+    public String getContentType(DavContext ctxt) {
+        ResourceProperty prop = getProperty(DavElements.E_GETCONTENTTYPE);
+        if (prop != null)
+            return prop.getStringValue();
+        return null;
+    }
 
-	public int getContentLength() {
-		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTLENGTH);
-		if (prop != null)
-			return Integer.parseInt(prop.getStringValue());
-		return 0;
-	}
+    public int getContentLength() {
+        ResourceProperty prop = getProperty(DavElements.E_GETCONTENTLENGTH);
+        if (prop != null)
+            return Integer.parseInt(prop.getStringValue());
+        return 0;
+    }
 
-	protected void setCreationDate(long ts) {
-		setProperty(DavElements.P_CREATIONDATE, DateUtil.toISO8601(new Date(ts)));
-	}
+    protected void setCreationDate(long ts) {
+        setProperty(DavElements.P_CREATIONDATE, DateUtil.toISO8601(new Date(ts)));
+    }
 
-	protected void setLastModifiedDate(long ts) {
-	    Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-	    cal.setTimeInMillis(ts);
-	    setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC822Date(cal));
-	}
+    protected void setLastModifiedDate(long ts) {
+        Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+        cal.setTimeInMillis(ts);
+        setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC822Date(cal));
+    }
 
-	protected void addProperty(ResourceProperty prop) {
-		mProps.put(prop.getName(), prop);
-	}
+    protected void addProperty(ResourceProperty prop) {
+        mProps.put(prop.getName(), prop);
+    }
 
-	protected void addProperties(Set<ResourceProperty> props) {
-		for (ResourceProperty p : props)
-			mProps.put(p.getName(), p);
-	}
+    protected void addProperties(Set<ResourceProperty> props) {
+        for (ResourceProperty p : props)
+            mProps.put(p.getName(), p);
+    }
 
-	protected void setProperty(String key, String val) {
-		setProperty(QName.get(key, DavElements.WEBDAV_NS), val);
-	}
+    protected void setProperty(String key, String val) {
+        setProperty(QName.get(key, DavElements.WEBDAV_NS), val);
+    }
 
-	protected void setProperty(QName key, String val) {
-		setProperty(key, val, false);
-	}
+    protected void setProperty(QName key, String val) {
+        setProperty(key, val, false);
+    }
 
-	protected void setProperty(QName key, String val, boolean isProtected) {
-		ResourceProperty prop = mProps.get(key);
-		if (prop == null) {
-			prop = new ResourceProperty(key);
-			mProps.put(key, prop);
-		}
-		prop.setProtected(isProtected);
-		prop.setStringValue(val);
-	}
+    protected void setProperty(QName key, String val, boolean isProtected) {
+        ResourceProperty prop = mProps.get(key);
+        if (prop == null) {
+            prop = new ResourceProperty(key);
+            mProps.put(key, prop);
+        }
+        prop.setProtected(isProtected);
+        prop.setStringValue(val);
+    }
 
-	/*
-	 * whether the resource is access controlled as in RFC3744.
-	 */
-	public boolean isAccessControlled() {
-		return true;
-	}
+    /*
+     * whether the resource is access controlled as in RFC3744.
+     */
+    public boolean isAccessControlled() {
+        return true;
+    }
 
     public InputStream getContent(DavContext ctxt) throws IOException, DavException {
         return new ByteArrayInputStream(getTextContent(ctxt).getBytes("UTF-8"));
     }
 
-	public abstract boolean isCollection();
+    public abstract boolean isCollection();
 
-	public abstract void delete(DavContext ctxt) throws DavException;
+    public abstract void delete(DavContext ctxt) throws DavException;
 
-	public String getName() {
-	    return getUri();
-	}
+    public String getName() {
+        return getUri();
+    }
 
-	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
-		return Collections.emptyList();
-	}
+    public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+        return Collections.emptyList();
+    }
 
-	public boolean hasEtag() {
-		return false;
-	}
-	public String getEtag() {
-		return null;
-	}
+    public boolean hasEtag() {
+        return false;
+    }
+    public String getEtag() {
+        return null;
+    }
 
-	public String getLastModifiedDate() {
+    public String getLastModifiedDate() {
         ResourceProperty rp = getProperty(DavElements.P_GETLASTMODIFIED);
         if (rp != null)
             return rp.getStringValue();
-	    return new Date(0).toString();
-	}
+        return new Date(0).toString();
+    }
 
-	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException, IOException {
-		throw new DavException("PROPPATCH not supported on "+getUri(), DavProtocol.STATUS_FAILED_DEPENDENCY, null);
-	}
+    public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException, IOException {
+        throw new DavException("PROPPATCH not supported on "+getUri(), DavProtocol.STATUS_FAILED_DEPENDENCY, null);
+    }
 
-	protected void addResourceType(QName type) {
-		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
-		rtype.addChild(type);
-	}
+    protected void addResourceType(QName type) {
+        ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
+        rtype.addChild(type);
+    }
 
-	public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
-		throw new DavException("the resource does not handle POST", HttpServletResponse.SC_FORBIDDEN);
-	}
+    public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
+        throw new DavException("the resource does not handle POST", HttpServletResponse.SC_FORBIDDEN);
+    }
 
-	public boolean isLocal() {
-		return true;
-	}
+    public boolean isLocal() {
+        return true;
+    }
 
-	@Override
+    @Override
     public String toString() {
-		return mUri;
-	}
-	public DavResource copy(DavContext ctxt, DavResource dest) throws DavException {
-		throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
-	}
+        return mUri;
+    }
+    public DavResource copy(DavContext ctxt, DavResource dest) throws DavException {
+        throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
+    }
 
     protected QName[] getSupportedReports() {
         return new QName[0];
