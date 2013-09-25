@@ -343,10 +343,10 @@ SECTION cbpolicyd
 	LOCAL cbpolicyd_pid_file
 	LOCAL cbpolicyd_log_file
 	LOCAL cbpolicyd_db_file
-	LOCAL cbpolicyd_log_level
+	VAR zimbraCBPolicydLogLevel
 	LOCAL cbpolicyd_log_mail
 	LOCAL cbpolicyd_log_detail
-	LOCAL cbpolicyd_bind_port
+	VAR zimbraCBPolicydBindPort
 	VAR zimbraCBPolicydBypassMode
 	VAR zimbraCBPolicydBypassTimeout
 	VAR zimbraCBPolicydAccessControlEnabled
