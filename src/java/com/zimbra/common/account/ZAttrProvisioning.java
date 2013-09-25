@@ -8571,6 +8571,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdBanner = "zimbraMtaSmtpdBanner";
 
     /**
+     * Value for postconf smtpd_client_restrictions
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1553)
+    public static final String A_zimbraMtaSmtpdClientRestrictions = "zimbraMtaSmtpdClientRestrictions";
+
+    /**
+     * Value for postconf smtpd_data_restrictions
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1554)
+    public static final String A_zimbraMtaSmtpdDataRestrictions = "zimbraMtaSmtpdDataRestrictions";
+
+    /**
      * Value for postconf smtpd_error_sleep_time
      *
      * @since ZCS 8.5.0
@@ -8641,6 +8657,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1550)
     public static final String A_zimbraMtaSmtpdSaslSecurityOptions = "zimbraMtaSmtpdSaslSecurityOptions";
+
+    /**
+     * Value for postconf smtpd_sasl_tls_security_options
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1552)
+    public static final String A_zimbraMtaSmtpdSaslTlsSecurityOptions = "zimbraMtaSmtpdSaslTlsSecurityOptions";
 
     /**
      * Value for postconf smtpd_tls_cert_file
@@ -8777,12 +8801,52 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
 
     /**
+     * Value for postconf transport_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1555)
+    public static final String A_zimbraMtaTransportMaps = "zimbraMtaTransportMaps";
+
+    /**
+     * Value for postconf virtual_alias_domains
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1556)
+    public static final String A_zimbraMtaVirtualAliasDomains = "zimbraMtaVirtualAliasDomains";
+
+    /**
      * Value for postconf virtual_alias_expansion_limit
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1544)
     public static final String A_zimbraMtaVirtualAliasExpansionLimit = "zimbraMtaVirtualAliasExpansionLimit";
+
+    /**
+     * Value for postconf virtual_alias_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1557)
+    public static final String A_zimbraMtaVirtualAliasMaps = "zimbraMtaVirtualAliasMaps";
+
+    /**
+     * Value for postconf virtual_mailbox_domains
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1558)
+    public static final String A_zimbraMtaVirtualMailboxDomains = "zimbraMtaVirtualMailboxDomains";
+
+    /**
+     * Value for postconf virtual_mailbox_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1559)
+    public static final String A_zimbraMtaVirtualMailboxMaps = "zimbraMtaVirtualMailboxMaps";
 
     /**
      * certificate to be used for validating the SAML assertions received

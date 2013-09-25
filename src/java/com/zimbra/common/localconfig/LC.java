@@ -560,15 +560,6 @@ public final class LC {
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
-    public static final KnownKey postfix_smtpd_sasl_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
-    public static final KnownKey postfix_smtpd_client_restrictions = KnownKey.newKey("reject_unauth_pipelining");
-    public static final KnownKey postfix_smtpd_data_restrictions = KnownKey.newKey("reject_unauth_pipelining");
-    public static final KnownKey postfix_transport_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-transport.cf");
-    public static final KnownKey postfix_virtual_alias_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vad.cf");
-    public static final KnownKey postfix_virtual_alias_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vam.cf");
-    public static final KnownKey postfix_virtual_mailbox_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vmd.cf");
-    public static final KnownKey postfix_virtual_mailbox_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vmm.cf");
-
     public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
 
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
