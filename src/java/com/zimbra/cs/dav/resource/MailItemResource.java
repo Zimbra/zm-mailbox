@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,6 +32,9 @@ import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -41,18 +44,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
-import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.dav.property.CalDavProperty.CalComponent;
-import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
@@ -67,7 +66,6 @@ import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZMailbox;
 
 /**
  * Abstraction of DavResource that maps to MailItem in the mailbox.
@@ -137,8 +135,6 @@ public abstract class MailItemResource extends DavResource {
         mColor = item.getRgbColor();
         setProperty(DavElements.E_DISPLAYNAME, item.getName());
         addProperty(Acl.getPrincipalUrl(this));
-        if (ctxt.isSchedulingEnabled())
-            mDavCompliance.add(Compliance.calendar_schedule);
     }
 
     public MailItemResource(String path, String acct) {
@@ -237,7 +233,7 @@ public abstract class MailItemResource extends DavResource {
             throw new DavException("cannot delete item", resCode, se);
         }
     }
-    
+
     private static ZMailbox getZMailbox(DavContext ctxt, Collection col) throws ServiceException {
         AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
         Account acct = Provisioning.getInstance().getAccountById(col.getItemId().getAccountId());
@@ -245,7 +241,7 @@ public abstract class MailItemResource extends DavResource {
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(acct.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);       
+        return ZMailbox.getMailbox(zoptions);
     }
     private void deleteDestinationItem(DavContext ctxt, Collection dest, int id) throws ServiceException, DavException {
         Mailbox mbox = getMailbox(ctxt);
@@ -257,7 +253,7 @@ public abstract class MailItemResource extends DavResource {
             zmbx.deleteItem(itemId.toString(), null);
         }
     }
-    
+
     /* Moves this resource to another Collection. */
     public void move(DavContext ctxt, Collection dest, String newName) throws DavException {
         try {
@@ -266,7 +262,7 @@ public abstract class MailItemResource extends DavResource {
             ids.add(mId);
             if (newName != null)
                 ItemActionHelper.RENAME(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, newName, dest.getItemId());
-            else     
+            else
                 ItemActionHelper.MOVE(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, dest.getItemId());
         } catch (ServiceException se) {
             int resCode = se instanceof MailServiceException.NoSuchItemException ?
@@ -281,7 +277,7 @@ public abstract class MailItemResource extends DavResource {
         try {
             if (deleteOriginal)
                 move(ctxt, dest, newName);
-            else 
+            else
                 copy(ctxt, dest, newName);
         } catch (DavException e) {
             if (e.getStatus() == HttpServletResponse.SC_PRECONDITION_FAILED) {
@@ -298,23 +294,23 @@ public abstract class MailItemResource extends DavResource {
                             String itemIdStr = ((SoapFaultException) se).getArgumentValue("id");
                             ItemId itemId = new ItemId(itemIdStr, dest.getItemId().getAccountId());
                             id = itemId.getId();
-                        } else { // destination belongs to same mailbox.         
+                        } else { // destination belongs to same mailbox.
                             String name = null;
                             for (Argument arg: se.getArgs()) {
                                 if (arg.name != null && arg.value != null && arg.value.length() > 0) {
                                     if (arg.name.equals("name"))
                                         name = arg.value;
                                     /* commented out since the exception is giving wrong itemId for copy.
-                                       If the the item is conflicting with an existing item we want the 
+                                       If the the item is conflicting with an existing item we want the
                                        id of the existing item. But, the exception has the proposed id of
-                                       the new item which does not exist yet. 
+                                       the new item which does not exist yet.
                                      else if (arg.mName.equals("itemId"))
                                         id = Integer.parseInt(arg.mValue);
-                                     */   
+                                     */
                                 }
                             }
-                            if (id <= 0) {                                
-                                if (name == null && !deleteOriginal) { 
+                            if (id <= 0) {
+                                if (name == null && !deleteOriginal) {
                                     // in case of copy get the id from source name since we don't support copy with rename.
                                     name = ctxt.getItem();
                                 }
@@ -324,7 +320,7 @@ public abstract class MailItemResource extends DavResource {
                                     id = item.getId();
                                 } else
                                     throw e;
-                            }    
+                            }
                         }
                     }
                     deleteDestinationItem(ctxt, dest, id);
@@ -333,7 +329,7 @@ public abstract class MailItemResource extends DavResource {
                 }
                 if (deleteOriginal)
                     move(ctxt, dest, newName);
-                else 
+                else
                     copy(ctxt, dest, newName);
             } else {
                 throw e;
@@ -345,7 +341,7 @@ public abstract class MailItemResource extends DavResource {
     public void copy(DavContext ctxt, Collection dest, String newName) throws DavException {
         try {
             Mailbox mbox = getMailbox(ctxt);
-            ArrayList<Integer> ids = new ArrayList<Integer>();            
+            ArrayList<Integer> ids = new ArrayList<Integer>();
             if (newName == null) {
                 ids.add(mId);
                 ItemActionHelper.COPY(ctxt.getOperationContext(), mbox, SoapProtocol.Soap12, ids, type, null, dest.getItemId());
@@ -405,7 +401,7 @@ public abstract class MailItemResource extends DavResource {
         List<QName> reqProps = new ArrayList<QName>();
         for (QName n : remove) {
             mDeadProps.remove(n);
-            reqProps.add(n);    
+            reqProps.add(n);
         }
         for (Element e : set) {
             QName name = e.getQName();
@@ -495,7 +491,7 @@ public abstract class MailItemResource extends DavResource {
                 for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
                     ctxt.getResponseProp().addPropError(entry.getKey(), new DavException("prop length exceeded", DavProtocol.STATUS_INSUFFICIENT_STORAGE));
         }
-        Mailbox mbox = null;            
+        Mailbox mbox = null;
         try {
             mbox = getMailbox(ctxt);
             mbox.lock.lock();
@@ -507,7 +503,7 @@ public abstract class MailItemResource extends DavResource {
             mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
         } catch (ServiceException se) {
             for (QName qname : reqProps)
-                ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));                
+                ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
         } finally {
             if (mbox != null)
                 mbox.lock.release();
@@ -539,7 +535,7 @@ public abstract class MailItemResource extends DavResource {
         for (Ace ace : aceList) {
             if (ace.getRights() > 0)
                 acl.grantAccess(ace.getZimbraId(), ace.getGranteeType(), ace.getRights(), null);
-        }    
+        }
         Mailbox mbox = getMailbox(ctxt);
         mbox.setPermissions(ctxt.getOperationContext(), getId(), acl);
     }

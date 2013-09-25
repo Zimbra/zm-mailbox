@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,8 +23,8 @@ import com.zimbra.common.mime.MimeConstants;
 // HTTP protocol extensions and headers for WebDAV
 public class DavProtocol {
 	public enum Compliance {
-		one, two, three, 
-		update, bind, access_control, 
+		one, two, three,
+		update, bind, access_control,
 		calendar_access, calendar_schedule,
 		version_control,
         addressbook, extended_mkcol,
@@ -32,7 +32,7 @@ public class DavProtocol {
 		calendar_proxy,
 		calendarserver_principal_property_search
 	}
-	
+
 	private static HashMap<Compliance,String> sComplianceStrMap;
 
 	// WEBDAV compliances:
@@ -42,9 +42,10 @@ public class DavProtocol {
 	// class 2* : RFC 2518 - locking
 	// class 3 : draft-ietf-webdav-rfc2518bis
 	// calendar-access* : draft-dusseault-caldav
-	// calendar-schedule* : draft-desruisseux-caldav-sched
+	// calendar-schedule* : http://tools.ietf.org/html/draft-desruisseaux-caldav-sched-04 and earlier
+	//                      Note that 05 and later leading to RFC 6638 do things differently.
 	// version-control* : RFC 3253 - section 3.6 (partial requirement from access-control and caldav)
-	// checkout-in-place, version-history, 
+	// checkout-in-place, version-history,
 	//   workspace, update, label, working-resource,
 	//   merge, baseline, activity, version-controlled-collection : RFC 3253
 	// ordered-collections : RFC 3648
@@ -53,7 +54,7 @@ public class DavProtocol {
 	// bind : draft-ietf-webdav-bind
 	// calendar-proxy, calendarserver-principal-property-search : Apple extension
 	// addressbook-access: draft-daboo-carddav
-	
+
 	static {
 		sComplianceStrMap = new HashMap<Compliance,String>();
 		sComplianceStrMap.put(Compliance.one, "1");
@@ -70,18 +71,18 @@ public class DavProtocol {
         sComplianceStrMap.put(Compliance.addressbook, "addressbook");
         sComplianceStrMap.put(Compliance.extended_mkcol, "extended-mkcol");
 	}
-	
+
 	public static Compliance[] COMPLIANCES = {
-		Compliance.one, Compliance.two, Compliance.three, 
-		Compliance.calendar_access, 
+		Compliance.one, Compliance.two, Compliance.three,
+		Compliance.calendar_access,
 		Compliance.calendar_proxy, Compliance.calendarserver_principal_property_search,
 		Compliance.access_control, Compliance.addressbook
 	};
-	
+
 	public static String getDefaultComplianceString() {
 		return getComplianceString(Arrays.asList(COMPLIANCES));
 	}
-	
+
 	public static String getComplianceString(Collection<Compliance> comp) {
 		if (comp == null)
 			return null;
@@ -93,7 +94,7 @@ public class DavProtocol {
 		}
 		return buf.toString();
 	}
-	
+
     public static final String XML_CONTENT_TYPE = MimeConstants.CT_TEXT_XML;
     public static final String XML_CONTENT_TYPE2 = MimeConstants.CT_TEXT_XML_LEGACY;
     public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
@@ -110,9 +111,9 @@ public class DavProtocol {
 	public static final String HEADER_ETAG = "ETag";
 	public static final String HEADER_USER_AGENT = "User-Agent";
 	public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
-	
+
 	public static final String NO_CACHE = "no-cache";
-	
+
 	// dav extensions
 	public static final String HEADER_DAV = "DAV";
 	public static final String HEADER_DEPTH = "Depth";
@@ -123,17 +124,17 @@ public class DavProtocol {
 	public static final String HEADER_BRIEF = "Brief";
 	public static final String HEADER_STATUS_URI = "Status-URI";
 	public static final String HEADER_TIMEOUT = "Timeout";
-	
+
 	// caldav extensions
 	public static final String HEADER_IF_MATCH = "If-Match";
 	public static final String HEADER_IF_NONE_MATCH = "If-None-Match";
 	public static final String HEADER_ORIGINATOR = "Originator";
 	public static final String HEADER_RECIPIENT = "Recipient";
-	
+
 	// Microsoft WebDAV extension
 	// http://msdn.microsoft.com/en-us/library/cc250215%28v=PROT.10%29.aspx
 	public static final String HEADER_MS_AUTHOR_VIA = "MS-Author-Via";
-	
+
 	public static final int STATUS_PROCESSING = 102;
 	public static final int STATUS_MULTI_STATUS = 207;
 	public static final int STATUS_UNPROCESSABLE_ENTITY = 422;

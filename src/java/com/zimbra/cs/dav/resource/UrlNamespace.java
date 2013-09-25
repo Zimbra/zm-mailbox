@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -503,9 +503,9 @@ public class UrlNamespace {
             case FOLDER :
                 Folder f = (Folder) item;
                 viewType = f.getDefaultView();
-                if (f.getId() == Mailbox.ID_FOLDER_INBOX && ctxt.isSchedulingEnabled()) {
+                if (f.getId() == Mailbox.ID_FOLDER_INBOX && DavResource.isSchedulingEnabled()) {
                     resource = new ScheduleInbox(ctxt, f);
-                } else if (f.getId() == Mailbox.ID_FOLDER_SENT && ctxt.isSchedulingEnabled()) {
+                } else if (f.getId() == Mailbox.ID_FOLDER_SENT && DavResource.isSchedulingEnabled()) {
                     resource = new ScheduleOutbox(ctxt, f);
                 } else if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                     resource = getCalendarCollection(ctxt, f);
