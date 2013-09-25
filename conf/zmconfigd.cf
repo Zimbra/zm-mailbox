@@ -213,7 +213,7 @@ SECTION opendkim DEPENDS mta
 
 SECTION sasl
 	VAR getAllMtaAuthURLs
-	LOCAL sasl_smtpd_mech_list
+	VAR zimbraMtaSaslSmtpdMechList
 	REWRITE conf/saslauthd.conf.in conf/saslauthd.conf
 	REWRITE conf/sasl2/smtpd.conf.in conf/sasl2/smtpd.conf
 	RESTART mta sasl
