@@ -3227,6 +3227,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @return zimbraCBPolicydBindPort, or 10031 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public int getCBPolicydBindPort() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydBindPort, 10031);
+    }
+
+    /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @param zimbraCBPolicydBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public void setCBPolicydBindPort(int zimbraCBPolicydBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBindPort, Integer.toString(zimbraCBPolicydBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @param zimbraCBPolicydBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public Map<String,Object> setCBPolicydBindPort(int zimbraCBPolicydBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBindPort, Integer.toString(zimbraCBPolicydBindPort));
+        return attrs;
+    }
+
+    /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public void unsetCBPolicydBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public Map<String,Object> unsetCBPolicydBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydBindPort, "");
+        return attrs;
+    }
+
+    /**
      * Bypass fail mode. Default is tempfail
      *
      * <p>Valid values: [tempfail, pass]
@@ -3883,6 +3955,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetCBPolicydGreylistingTrainingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCBPolicydGreylistingTrainingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3
+     *
+     * @return zimbraCBPolicydLogLevel, or 3 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public int getCBPolicydLogLevel() {
+        return getIntAttr(Provisioning.A_zimbraCBPolicydLogLevel, 3);
+    }
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3
+     *
+     * @param zimbraCBPolicydLogLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public void setCBPolicydLogLevel(int zimbraCBPolicydLogLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydLogLevel, Integer.toString(zimbraCBPolicydLogLevel));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3
+     *
+     * @param zimbraCBPolicydLogLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public Map<String,Object> setCBPolicydLogLevel(int zimbraCBPolicydLogLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydLogLevel, Integer.toString(zimbraCBPolicydLogLevel));
+        return attrs;
+    }
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public void unsetCBPolicydLogLevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydLogLevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public Map<String,Object> unsetCBPolicydLogLevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCBPolicydLogLevel, "");
         return attrs;
     }
 

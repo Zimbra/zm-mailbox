@@ -7791,4 +7791,14 @@ TODO: delete them permanently from here
   <desc>Supported SASL mechanisms for use with the MTA.  One attribute value per mechanism.</desc>
 </attr>
 
+<attr id="1561" name="zimbraCBPolicydBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>10031</globalConfigValue>
+  <desc>Port for CBPolicyd to bind to. Defaults to 10031</desc>
+</attr>
+
+<attr id="1562" name="zimbraCBPolicydLogLevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>3</globalConfigValue>
+  <desc>Logging level for CBPolicyd. Defaults to 3</desc>
+</attr>
+
 </attrs>
