@@ -19895,6 +19895,149 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @return zimbraMtaSaslSmtpdMechList, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public String[] getMtaSaslSmtpdMechList() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaSaslSmtpdMechList); return value.length > 0 ? value : new String[] {"PLAIN","LOGIN"};
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param zimbraMtaSaslSmtpdMechList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public void setMtaSaslSmtpdMechList(String[] zimbraMtaSaslSmtpdMechList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslSmtpdMechList, zimbraMtaSaslSmtpdMechList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param zimbraMtaSaslSmtpdMechList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public Map<String,Object> setMtaSaslSmtpdMechList(String[] zimbraMtaSaslSmtpdMechList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslSmtpdMechList, zimbraMtaSaslSmtpdMechList);
+        return attrs;
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param zimbraMtaSaslSmtpdMechList new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public void addMtaSaslSmtpdMechList(String zimbraMtaSaslSmtpdMechList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSaslSmtpdMechList, zimbraMtaSaslSmtpdMechList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param zimbraMtaSaslSmtpdMechList new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public Map<String,Object> addMtaSaslSmtpdMechList(String zimbraMtaSaslSmtpdMechList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSaslSmtpdMechList, zimbraMtaSaslSmtpdMechList);
+        return attrs;
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param zimbraMtaSaslSmtpdMechList existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public void removeMtaSaslSmtpdMechList(String zimbraMtaSaslSmtpdMechList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSaslSmtpdMechList, zimbraMtaSaslSmtpdMechList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param zimbraMtaSaslSmtpdMechList existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public Map<String,Object> removeMtaSaslSmtpdMechList(String zimbraMtaSaslSmtpdMechList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSaslSmtpdMechList, zimbraMtaSaslSmtpdMechList);
+        return attrs;
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public void unsetMtaSaslSmtpdMechList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslSmtpdMechList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public Map<String,Object> unsetMtaSaslSmtpdMechList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslSmtpdMechList, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf sender_canonical_maps
      *
      * @return zimbraMtaSenderCanonicalMaps, or empty array if unset

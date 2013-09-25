@@ -7785,4 +7785,10 @@ TODO: delete them permanently from here
   <desc>Value for postconf virtual_mailbox_maps</desc>
 </attr>
 
+<attr id="1560" name="zimbraMtaSaslSmtpdMechList" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>PLAIN</globalConfigValue>
+  <globalConfigValue>LOGIN</globalConfigValue>
+  <desc>Supported SASL mechanisms for use with the MTA.  One attribute value per mechanism.</desc>
+</attr>
+
 </attrs>
