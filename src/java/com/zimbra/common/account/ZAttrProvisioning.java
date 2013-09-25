@@ -3375,6 +3375,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCBPolicydAmavisEnabled = "zimbraCBPolicydAmavisEnabled";
 
     /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public static final String A_zimbraCBPolicydBindPort = "zimbraCBPolicydBindPort";
+
+    /**
      * Bypass fail mode. Default is tempfail
      *
      * @since ZCS 8.5.0
@@ -3442,6 +3450,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1475)
     public static final String A_zimbraCBPolicydGreylistingTrainingEnabled = "zimbraCBPolicydGreylistingTrainingEnabled";
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public static final String A_zimbraCBPolicydLogLevel = "zimbraCBPolicydLogLevel";
 
     /**
      * Maximum number of requests to process per server. Defaults to 1000

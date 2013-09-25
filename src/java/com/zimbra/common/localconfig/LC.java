@@ -564,10 +564,8 @@ public final class LC {
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
     public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cache");
-    public static final KnownKey cbpolicyd_log_level = KnownKey.newKey(3);
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
-    public static final KnownKey cbpolicyd_bind_port = KnownKey.newKey(10031);
 
     public static final KnownKey sqlite_shared_cache_enabled = KnownKey.newKey(false);
     public static final KnownKey sqlite_cache_size = KnownKey.newKey(500);
