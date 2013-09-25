@@ -8539,6 +8539,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSaslAuthEnable = "zimbraMtaSaslAuthEnable";
 
     /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public static final String A_zimbraMtaSaslSmtpdMechList = "zimbraMtaSaslSmtpdMechList";
+
+    /**
      * Value for postconf sender_canonical_maps
      *
      * @since ZCS 8.5.0

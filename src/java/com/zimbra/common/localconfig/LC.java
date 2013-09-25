@@ -560,8 +560,6 @@ public final class LC {
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
-    public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
-
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
