@@ -8692,6 +8692,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdSaslTlsSecurityOptions = "zimbraMtaSmtpdSaslTlsSecurityOptions";
 
     /**
+     * Value for postconf smtpd_tls_CAfile
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1563)
+    public static final String A_zimbraMtaSmtpdTlsCAfile = "zimbraMtaSmtpdTlsCAfile";
+
+    /**
+     * Value for postconf smtpd_tls_CApath
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1564)
+    public static final String A_zimbraMtaSmtpdTlsCApath = "zimbraMtaSmtpdTlsCApath";
+
+    /**
      * Value for postconf smtpd_tls_cert_file
      *
      * @since ZCS 8.5.0
