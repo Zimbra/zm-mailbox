@@ -1226,7 +1226,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @return zimbraAmavisLogLevel, or 1 if unset
      *
@@ -1238,7 +1238,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @param zimbraAmavisLogLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1253,7 +1253,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @param zimbraAmavisLogLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1269,7 +1269,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1283,7 +1283,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3959,7 +3959,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Logging level for CBPolicyd. Defaults to 3
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
      *
      * @return zimbraCBPolicydLogLevel, or 3 if unset
      *
@@ -3971,7 +3971,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Logging level for CBPolicyd. Defaults to 3
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
      *
      * @param zimbraCBPolicydLogLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3986,7 +3986,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Logging level for CBPolicyd. Defaults to 3
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
      *
      * @param zimbraCBPolicydLogLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4002,7 +4002,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Logging level for CBPolicyd. Defaults to 3
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4016,7 +4016,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Logging level for CBPolicyd. Defaults to 3
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -23054,7 +23054,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_tls_loglevel
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
      *
      * @return zimbraMtaSmtpdTlsLoglevel, or 1 if unset
      *
@@ -23066,7 +23067,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_tls_loglevel
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
      *
      * @param zimbraMtaSmtpdTlsLoglevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23081,7 +23083,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_tls_loglevel
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
      *
      * @param zimbraMtaSmtpdTlsLoglevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23097,7 +23100,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_tls_loglevel
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -23111,7 +23115,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_tls_loglevel
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

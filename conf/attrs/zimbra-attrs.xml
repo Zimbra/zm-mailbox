@@ -7427,9 +7427,9 @@ TODO: delete them permanently from here
   <desc>Message to give when client is on blacklist. Default is Greylisting in effect, sending server blacklisted</desc>
 </attr>
 
-<attr id="1488" name="zimbraAmavisLogLevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.0.5">
+<attr id="1488" name="zimbraAmavisLogLevel" type="integer" min="0" max="5" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.0.5">
   <globalConfigValue>1</globalConfigValue>
-  <desc>Loglevel for Amavis. Defaults to 1</desc>
+  <desc>Loglevel for Amavis. Defaults to 1.  Valid range is 0-5</desc>
 </attr>
 
 <attr id="1489" name="zimbraMtaLmdbMapSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
@@ -7689,9 +7689,9 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_helo_required</desc>
 </attr>
 
-<attr id="1541" name="zimbraMtaSmtpdTlsLoglevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1541" name="zimbraMtaSmtpdTlsLoglevel" type="integer" min="1" max="4" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>1</globalConfigValue>
-  <desc>Value for postconf smtpd_tls_loglevel</desc>
+  <desc>Value for postconf smtpd_tls_loglevel.  Default is 1.  Valid range is 1-4.</desc>
 </attr>
 
 <attr id="1542" name="zimbraMtaSmtpdTlsCertFile" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
@@ -7796,9 +7796,9 @@ TODO: delete them permanently from here
   <desc>Port for CBPolicyd to bind to. Defaults to 10031</desc>
 </attr>
 
-<attr id="1562" name="zimbraCBPolicydLogLevel" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1562" name="zimbraCBPolicydLogLevel" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>3</globalConfigValue>
-  <desc>Logging level for CBPolicyd. Defaults to 3</desc>
+  <desc>Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4</desc>
 </attr>
 
 </attrs>
