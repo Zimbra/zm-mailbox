@@ -7801,4 +7801,12 @@ TODO: delete them permanently from here
   <desc>Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4</desc>
 </attr>
 
+<attr id="1563" name="zimbraMtaSmtpdTlsCAfile" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtpd_tls_CAfile</desc>
+</attr>
+
+<attr id="1564" name="zimbraMtaSmtpdTlsCApath" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtpd_tls_CApath</desc>
+</attr>
+
 </attrs>
