@@ -2383,7 +2383,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @since ZCS 8.0.5
      */
@@ -3452,7 +3452,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCBPolicydGreylistingTrainingEnabled = "zimbraCBPolicydGreylistingTrainingEnabled";
 
     /**
-     * Logging level for CBPolicyd. Defaults to 3
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
      *
      * @since ZCS 8.5.0
      */
@@ -8716,7 +8716,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdTlsKeyFile = "zimbraMtaSmtpdTlsKeyFile";
 
     /**
-     * Value for postconf smtpd_tls_loglevel
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
      *
      * @since ZCS 8.5.0
      */
