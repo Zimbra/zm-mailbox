@@ -62,6 +62,9 @@ public class PropPatch extends DavMethod {
         handlePropertyUpdate(ctxt, top, resource, false);
     }
     public static void handlePropertyUpdate(DavContext ctxt, Element top, DavResource resource, boolean isCreate) throws DavException, IOException {
+        if (top == null) {
+            return;
+        }
         HashSet<Element> set = new HashSet<Element>();
         HashSet<QName> remove = new HashSet<QName>();
         RequestProp rp = new RequestProp(true);
