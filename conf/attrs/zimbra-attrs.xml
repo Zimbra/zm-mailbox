@@ -7714,13 +7714,13 @@ TODO: delete them permanently from here
   <desc>Value for postconf virtual_transport</desc>
 </attr>
 
-<attr id="1546" name="zimbraMtaNotifyClasses" type="enum" value="bounce,2bounce,data,delay,policy,protocol,resource,software" cardinality="multi" optionalIn="globalConfig,server" since="8.5.0">
+<attr id="1546" name="zimbraMtaNotifyClasses" type="enum" value="bounce,2bounce,data,delay,policy,protocol,resource,software" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>resource</globalConfigValue>
   <globalConfigValue>software</globalConfigValue>
   <desc>Value for postconf notify_classes</desc>
 </attr>
 
-<attr id="1547" name="zimbraMtaPropagateUnmatchedExtensions" type="enum" value="canonical,virtual,alias,forward,include,generic" cardinality="multi" optionalIn="globalConfig,server" since="8.5.0">
+<attr id="1547" name="zimbraMtaPropagateUnmatchedExtensions" type="enum" value="canonical,virtual,alias,forward,include,generic" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>canonical</globalConfigValue>
   <desc>Value for postconf propagate_unmatched_extensions</desc>
 </attr>
@@ -7730,12 +7730,12 @@ TODO: delete them permanently from here
   <desc>Value for postconf sender_canonical_maps</desc>
 </attr>
 
-<attr id="1549" name="zimbraMtaSmtpSaslSecurityOptions" type="enum" value="noplaintext,noactive,nodictionary,noanonymous,mutual_auth" cardinality="multi" optionalIn="globalConfig,server" since="8.5.0">
+<attr id="1549" name="zimbraMtaSmtpSaslSecurityOptions" type="enum" value="noplaintext,noactive,nodictionary,noanonymous,mutual_auth" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>noplaintext,noanonymous</globalConfigValue>
   <desc>Value for postconf smtp_sasl_security_options</desc>
 </attr>
 
-<attr id="1550" name="zimbraMtaSmtpdSaslSecurityOptions" type="enum" value="noplaintext,noactive,nodictionary,noanonymous,mutual_auth" cardinality="multi" optionalIn="globalConfig,server" since="8.5.0">
+<attr id="1550" name="zimbraMtaSmtpdSaslSecurityOptions" type="enum" value="noplaintext,noactive,nodictionary,noanonymous,mutual_auth" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>noanonymous</globalConfigValue>
   <desc>Value for postconf smtpd_sasl_security_options</desc>
 </attr>

@@ -19227,7 +19227,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1546)
     public String[] getMtaNotifyClassesAsString() {
-        return getMultiAttr(Provisioning.A_zimbraMtaNotifyClasses);
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaNotifyClasses); return value.length > 0 ? value : new String[] {"resource","software"};
     }
 
     /**
@@ -19416,7 +19416,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1547)
     public String[] getMtaPropagateUnmatchedExtensionsAsString() {
-        return getMultiAttr(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions);
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaPropagateUnmatchedExtensions); return value.length > 0 ? value : new String[] {"canonical"};
     }
 
     /**
@@ -21000,7 +21000,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1549)
     public String[] getMtaSmtpSaslSecurityOptionsAsString() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions);
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaSmtpSaslSecurityOptions); return value.length > 0 ? value : new String[] {"noplaintext,noanonymous"};
     }
 
     /**
@@ -22538,7 +22538,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1550)
     public String[] getMtaSmtpdSaslSecurityOptionsAsString() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions);
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaSmtpdSaslSecurityOptions); return value.length > 0 ? value : new String[] {"noanonymous"};
     }
 
     /**
