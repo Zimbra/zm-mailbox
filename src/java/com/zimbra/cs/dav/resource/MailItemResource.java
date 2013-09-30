@@ -53,6 +53,7 @@ import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.dav.property.CalDavProperty.CalComponent;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -549,7 +550,15 @@ public abstract class MailItemResource extends DavResource {
             f = (Folder)item;
         else
             f = mbox.getFolderById(ctxt.getOperationContext(), item.getParentId());
-        for (ACL.Grant g : f.getEffectiveACL().getGrants()) {
+        ACL effectiveAcl = f.getEffectiveACL();
+        if (effectiveAcl == null) {
+            return aces;
+        }
+        List<Grant> grants = effectiveAcl.getGrants();
+        if (grants == null) {
+            return aces;
+        }
+        for (ACL.Grant g : grants) {
             if (!g.hasGrantee())
                 continue;
             aces.add(new Ace(g.getGranteeId(), g.getGrantedRights(), g.getGranteeType()));
