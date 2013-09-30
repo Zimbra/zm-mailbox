@@ -22779,6 +22779,137 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSmtpdTlsAskCcert, or ZAttrProvisioning.MtaSmtpdTlsAskCcert.no if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public ZAttrProvisioning.MtaSmtpdTlsAskCcert getMtaSmtpdTlsAskCcert() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaSmtpdTlsAskCcert); return v == null ? ZAttrProvisioning.MtaSmtpdTlsAskCcert.no : ZAttrProvisioning.MtaSmtpdTlsAskCcert.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaSmtpdTlsAskCcert.no; }
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSmtpdTlsAskCcert, or "no" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public String getMtaSmtpdTlsAskCcertAsString() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, "no");
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsAskCcert new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public void setMtaSmtpdTlsAskCcert(ZAttrProvisioning.MtaSmtpdTlsAskCcert zimbraMtaSmtpdTlsAskCcert) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, zimbraMtaSmtpdTlsAskCcert.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsAskCcert new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public Map<String,Object> setMtaSmtpdTlsAskCcert(ZAttrProvisioning.MtaSmtpdTlsAskCcert zimbraMtaSmtpdTlsAskCcert, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, zimbraMtaSmtpdTlsAskCcert.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsAskCcert new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public void setMtaSmtpdTlsAskCcertAsString(String zimbraMtaSmtpdTlsAskCcert) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, zimbraMtaSmtpdTlsAskCcert);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsAskCcert new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public Map<String,Object> setMtaSmtpdTlsAskCcertAsString(String zimbraMtaSmtpdTlsAskCcert, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, zimbraMtaSmtpdTlsAskCcert);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public void unsetMtaSmtpdTlsAskCcert() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public Map<String,Object> unsetMtaSmtpdTlsAskCcert(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsAskCcert, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_tls_CAfile
      *
      * @return zimbraMtaSmtpdTlsCAfile, or empty array if unset
@@ -23047,74 +23178,74 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_tls_cert_file
+     * Value for postconf smtpd_tls_ccert_verifydepth
      *
-     * @return zimbraMtaSmtpdTlsCertFile, or "/opt/zimbra/conf/smtpd.crt" if unset
+     * @return zimbraMtaSmtpdTlsCcertVerifydepth, or 9 if unset
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1542)
-    public String getMtaSmtpdTlsCertFile() {
-        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsCertFile, "/opt/zimbra/conf/smtpd.crt");
+    @ZAttr(id=1543)
+    public int getMtaSmtpdTlsCcertVerifydepth() {
+        return getIntAttr(Provisioning.A_zimbraMtaSmtpdTlsCcertVerifydepth, 9);
     }
 
     /**
-     * Value for postconf smtpd_tls_cert_file
+     * Value for postconf smtpd_tls_ccert_verifydepth
      *
-     * @param zimbraMtaSmtpdTlsCertFile new value
+     * @param zimbraMtaSmtpdTlsCcertVerifydepth new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1542)
-    public void setMtaSmtpdTlsCertFile(String zimbraMtaSmtpdTlsCertFile) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1543)
+    public void setMtaSmtpdTlsCcertVerifydepth(int zimbraMtaSmtpdTlsCcertVerifydepth) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, zimbraMtaSmtpdTlsCertFile);
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCcertVerifydepth, Integer.toString(zimbraMtaSmtpdTlsCcertVerifydepth));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf smtpd_tls_cert_file
+     * Value for postconf smtpd_tls_ccert_verifydepth
      *
-     * @param zimbraMtaSmtpdTlsCertFile new value
+     * @param zimbraMtaSmtpdTlsCcertVerifydepth new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1542)
-    public Map<String,Object> setMtaSmtpdTlsCertFile(String zimbraMtaSmtpdTlsCertFile, Map<String,Object> attrs) {
+    @ZAttr(id=1543)
+    public Map<String,Object> setMtaSmtpdTlsCcertVerifydepth(int zimbraMtaSmtpdTlsCcertVerifydepth, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, zimbraMtaSmtpdTlsCertFile);
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCcertVerifydepth, Integer.toString(zimbraMtaSmtpdTlsCcertVerifydepth));
         return attrs;
     }
 
     /**
-     * Value for postconf smtpd_tls_cert_file
+     * Value for postconf smtpd_tls_ccert_verifydepth
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1542)
-    public void unsetMtaSmtpdTlsCertFile() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=1543)
+    public void unsetMtaSmtpdTlsCcertVerifydepth() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, "");
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCcertVerifydepth, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf smtpd_tls_cert_file
+     * Value for postconf smtpd_tls_ccert_verifydepth
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1542)
-    public Map<String,Object> unsetMtaSmtpdTlsCertFile(Map<String,Object> attrs) {
+    @ZAttr(id=1543)
+    public Map<String,Object> unsetMtaSmtpdTlsCcertVerifydepth(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCertFile, "");
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCcertVerifydepth, "");
         return attrs;
     }
 
@@ -23246,78 +23377,6 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdTlsCiphers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCiphers, "");
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtpd_tls_key_file
-     *
-     * @return zimbraMtaSmtpdTlsKeyFile, or "/opt/zimbra/conf/smtpd.key" if unset
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1543)
-    public String getMtaSmtpdTlsKeyFile() {
-        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, "/opt/zimbra/conf/smtpd.key");
-    }
-
-    /**
-     * Value for postconf smtpd_tls_key_file
-     *
-     * @param zimbraMtaSmtpdTlsKeyFile new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1543)
-    public void setMtaSmtpdTlsKeyFile(String zimbraMtaSmtpdTlsKeyFile) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, zimbraMtaSmtpdTlsKeyFile);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtpd_tls_key_file
-     *
-     * @param zimbraMtaSmtpdTlsKeyFile new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1543)
-    public Map<String,Object> setMtaSmtpdTlsKeyFile(String zimbraMtaSmtpdTlsKeyFile, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, zimbraMtaSmtpdTlsKeyFile);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtpd_tls_key_file
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1543)
-    public void unsetMtaSmtpdTlsKeyFile() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtpd_tls_key_file
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1543)
-    public Map<String,Object> unsetMtaSmtpdTlsKeyFile(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsKeyFile, "");
         return attrs;
     }
 

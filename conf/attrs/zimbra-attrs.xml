@@ -7694,14 +7694,14 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_tls_loglevel.  Default is 1.  Valid range is 1-4.</desc>
 </attr>
 
-<attr id="1542" name="zimbraMtaSmtpdTlsCertFile" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/conf/smtpd.crt</globalConfigValue>
-  <desc>Value for postconf smtpd_tls_cert_file</desc>
+<attr id="1542" name="zimbraMtaSmtpdTlsAskCcert" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtpd_tls_ask_ccert</desc>
 </attr>
 
-<attr id="1543" name="zimbraMtaSmtpdTlsKeyFile" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/conf/smtpd.key</globalConfigValue>
-  <desc>Value for postconf smtpd_tls_key_file</desc>
+<attr id="1543" name="zimbraMtaSmtpdTlsCcertVerifydepth" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>9</globalConfigValue>
+  <desc>Value for postconf smtpd_tls_ccert_verifydepth</desc>
 </attr>
 
 <attr id="1544" name="zimbraMtaVirtualAliasExpansionLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
