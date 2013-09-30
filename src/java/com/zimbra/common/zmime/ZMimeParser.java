@@ -581,7 +581,7 @@ class ZMimeParser {
         }
         // close all parts up to that matching part (note: size() is 1-based and matchIndex is 0-based)
         while (parts.size() > Math.max(matchIndex + 1, 1)) {
-            pcurrent = endPart(partEnd, matchIndex == parts.size() - 2);
+            pcurrent = endPart(partEnd, matchIndex == parts.size() - 2, lineStart);
         }
         if ("".equals(pcurrent.boundary)) {
             // "" meant that the multipart Content-Type didn't specify a boundary
@@ -628,14 +628,12 @@ class ZMimeParser {
      *  the end of the part as well as the line count of the part body.  If
      *  the part being ended was a multipart preamble and was of nonzero
      *  length, associates the part with its parent appropriately. */
-    private PartInfo endPart(long end, boolean clean) {
+    private PartInfo endPart(long end, boolean clean, long lineStart) {
         PartInfo pinfo = parts.remove(parts.size() - 1);
-
         ZMimePart mp = pinfo.part;
-        long bodyEnd = Math.max(pinfo.bodyStart, end), length = bodyEnd - pinfo.bodyStart;
-        SharedInputStream bodyStream = (SharedInputStream) sis.newStream(pinfo.bodyStart, bodyEnd);
-
         if (pinfo.location == PartLocation.PREAMBLE) {
+            long bodyEnd = Math.max(pinfo.bodyStart, lineStart), length = lineStart - pinfo.bodyStart;
+            SharedInputStream bodyStream = (SharedInputStream) sis.newStream(pinfo.bodyStart, bodyEnd);
             if (!clean && !parts.isEmpty()) {
                 PartInfo pcurrent = currentPart();
                 String enc = pcurrent.part.getEncoding();
@@ -659,6 +657,8 @@ class ZMimeParser {
                 }
             }
         } else {
+            long bodyEnd = Math.max(pinfo.bodyStart, end), length = end - pinfo.bodyStart;
+            SharedInputStream bodyStream = (SharedInputStream) sis.newStream(pinfo.bodyStart, bodyEnd);
             mp.endPart(bodyStream, length, lineNumber - pinfo.firstLine);
         }
 
@@ -787,7 +787,8 @@ class ZMimeParser {
 
         // record the end position and length in lines for all open parts
         while (!parts.isEmpty()) {
-            endPart(position, parts.size() == 1);
+            //third argument long position does not have any significance.
+            endPart(position, parts.size() == 1, position);
         }
 
         // and ignore all subsequent calls to this method
