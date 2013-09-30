@@ -894,6 +894,22 @@ public class ZAttrProvisioning {
         public boolean isNoplaintext() { return this == noplaintext;}
     }
 
+    public static enum MtaSmtpdTlsAskCcert {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdTlsAskCcert(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsAskCcert fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsAskCcert value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaSmtpdTlsCiphers {
         export("export"),
         high("high"),
@@ -8692,6 +8708,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdSaslTlsSecurityOptions = "zimbraMtaSmtpdSaslTlsSecurityOptions";
 
     /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public static final String A_zimbraMtaSmtpdTlsAskCcert = "zimbraMtaSmtpdTlsAskCcert";
+
+    /**
      * Value for postconf smtpd_tls_CAfile
      *
      * @since ZCS 8.5.0
@@ -8708,12 +8732,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdTlsCApath = "zimbraMtaSmtpdTlsCApath";
 
     /**
-     * Value for postconf smtpd_tls_cert_file
+     * Value for postconf smtpd_tls_ccert_verifydepth
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1542)
-    public static final String A_zimbraMtaSmtpdTlsCertFile = "zimbraMtaSmtpdTlsCertFile";
+    @ZAttr(id=1543)
+    public static final String A_zimbraMtaSmtpdTlsCcertVerifydepth = "zimbraMtaSmtpdTlsCcertVerifydepth";
 
     /**
      * Value for postconf smtpd_tls_ciphers
@@ -8722,14 +8746,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1515)
     public static final String A_zimbraMtaSmtpdTlsCiphers = "zimbraMtaSmtpdTlsCiphers";
-
-    /**
-     * Value for postconf smtpd_tls_key_file
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1543)
-    public static final String A_zimbraMtaSmtpdTlsKeyFile = "zimbraMtaSmtpdTlsKeyFile";
 
     /**
      * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
