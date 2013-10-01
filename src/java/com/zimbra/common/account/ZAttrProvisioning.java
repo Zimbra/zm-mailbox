@@ -1064,6 +1064,22 @@ public class ZAttrProvisioning {
         public boolean isNone() { return this == none;}
     }
 
+    public static enum MtaTlsAppendDefaultCA {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaTlsAppendDefaultCA(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaTlsAppendDefaultCA fromString(String s) throws ServiceException {
+            for (MtaTlsAppendDefaultCA value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaTlsSecurityLevel {
         may("may"),
         none("none");
@@ -8813,6 +8829,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpSaslSecurityOptions = "zimbraMtaSmtpSaslSecurityOptions";
 
     /**
+     * Value for postconf smtp_tls_CAfile
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1565)
+    public static final String A_zimbraMtaSmtpTlsCAfile = "zimbraMtaSmtpTlsCAfile";
+
+    /**
+     * Value for postconf smtp_tls_CApath
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1566)
+    public static final String A_zimbraMtaSmtpTlsCApath = "zimbraMtaSmtpTlsCApath";
+
+    /**
      * Value for postconf smtp_tls_ciphers
      *
      * @since ZCS 8.5.0
@@ -8843,6 +8875,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1538)
     public static final String A_zimbraMtaStpdSoftErrorLimit = "zimbraMtaStpdSoftErrorLimit";
+
+    /**
+     * Value for postconf tls_append_default_CA
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1567)
+    public static final String A_zimbraMtaTlsAppendDefaultCA = "zimbraMtaTlsAppendDefaultCA";
 
     /**
      * Value for postconf smtpd_tls_auth_only
