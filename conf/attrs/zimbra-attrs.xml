@@ -7809,4 +7809,17 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_tls_CApath</desc>
 </attr>
 
+<attr id="1565" name="zimbraMtaSmtpTlsCAfile" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtp_tls_CAfile</desc>
+</attr>
+
+<attr id="1566" name="zimbraMtaSmtpTlsCApath" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtp_tls_CApath</desc>
+</attr>
+
+<attr id="1567" name="zimbraMtaTlsAppendDefaultCA" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf tls_append_default_CA</desc>
+</attr>
+
 </attrs>
