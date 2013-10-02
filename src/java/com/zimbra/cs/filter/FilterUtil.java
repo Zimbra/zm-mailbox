@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -489,7 +490,8 @@ public final class FilterUtil {
         return body;
     }
 
-    private static Map<String, String> getVarsMap(Mailbox mailbox, ParsedMessage parsedMessage, MimeMessage mimeMessage)
+    @VisibleForTesting
+    static Map<String, String> getVarsMap(Mailbox mailbox, ParsedMessage parsedMessage, MimeMessage mimeMessage)
             throws MessagingException, ServiceException {
         Map<String, String> vars = new HashMap<String, String>() {
             @Override
@@ -506,11 +508,13 @@ public final class FilterUtil {
         // raw subject could be encoded, so get the parsed subject
         vars.put("subject", parsedMessage.getSubject());
         MPartInfo bodyPart = Mime.getTextBody(parsedMessage.getMessageParts(), false);
-        try {
-            vars.put("body",
-                     Mime.getStringContent(bodyPart.getMimePart(), mailbox.getAccount().getPrefMailDefaultCharset()));
-        } catch (IOException e) {
-            ZimbraLog.filter.warn("Error in reading text body", e);
+        if (bodyPart != null) {
+            try {
+                vars.put("body",
+                         Mime.getStringContent(bodyPart.getMimePart(), mailbox.getAccount().getPrefMailDefaultCharset()));
+            } catch (IOException e) {
+                ZimbraLog.filter.warn("Error in reading text body", e);
+            }
         }
         return vars;
     }
