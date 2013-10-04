@@ -22259,8 +22259,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * maximum length of mail signature, 0 means unlimited. If not set,
-     * default is 1024
+     * maximum length of mail signature, 0 means unlimited.
      *
      * @return zimbraMailSignatureMaxLength, or 10240 if unset
      */
@@ -22270,8 +22269,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * maximum length of mail signature, 0 means unlimited. If not set,
-     * default is 1024
+     * maximum length of mail signature, 0 means unlimited.
      *
      * @param zimbraMailSignatureMaxLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22284,8 +22282,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * maximum length of mail signature, 0 means unlimited. If not set,
-     * default is 1024
+     * maximum length of mail signature, 0 means unlimited.
      *
      * @param zimbraMailSignatureMaxLength new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22299,8 +22296,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * maximum length of mail signature, 0 means unlimited. If not set,
-     * default is 1024
+     * maximum length of mail signature, 0 means unlimited.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -22312,8 +22308,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * maximum length of mail signature, 0 means unlimited. If not set,
-     * default is 1024
+     * maximum length of mail signature, 0 means unlimited.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
