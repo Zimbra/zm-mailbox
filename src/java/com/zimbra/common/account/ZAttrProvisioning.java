@@ -6394,8 +6394,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailSieveScript = "zimbraMailSieveScript";
 
     /**
-     * maximum length of mail signature, 0 means unlimited. If not set,
-     * default is 1024
+     * maximum length of mail signature, 0 means unlimited.
      */
     @ZAttr(id=454)
     public static final String A_zimbraMailSignatureMaxLength = "zimbraMailSignatureMaxLength";
