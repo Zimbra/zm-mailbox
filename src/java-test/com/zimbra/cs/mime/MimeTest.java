@@ -27,10 +27,13 @@ import javax.mail.internet.MimePart;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -176,7 +179,7 @@ public class MimeTest {
     public void multiTextBody() throws Exception {
 
         StringBuilder content = new StringBuilder(baseMpMixedContent);
-        int count = 5;
+        int count = 42;
         for (int i = 0; i < count; i++) {
             content.append( "------------1111971890AC3BB91\r\n")
                 .append("Content-Type: text/html; charset=windows-1250\r\n")
@@ -371,4 +374,46 @@ public class MimeTest {
         Address[] recipients = mm.getAllRecipients();
         Assert.assertEquals(count, recipients.length);
     }
+
+    @Test
+    @Ignore("expensive test")
+    public void bigMime() throws Exception {
+        String content = baseMpMixedContent
+                        + "\r\n";
+        StringBuilder sb = new StringBuilder(content);
+        long total = 0;
+        int count = 10;
+        int partCount = 100;
+        int textcount = 1000000;
+        int lineSize = 200;
+        for (int i = 0; i < partCount; i++) {
+            sb.append( "------------1111971890AC3BB91\r\n")
+                .append("Content-Type: text/plain; charset=windows-1250\r\n")
+                .append("Content-Transfer-Encoding: quoted-printable\r\n\r\n");
+            for (int j = 0; j < textcount; j+=lineSize) {
+                String text = RandomStringUtils.randomAlphabetic(lineSize);
+                sb.append(text).append("\r\n");
+            }
+            sb.append("\r\n");
+        }
+        for (int i = 0; i < count; i++) {
+            long start = System.currentTimeMillis();
+            MimeMessage mm =
+
+                    new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                            sb.toString().getBytes()));
+
+            List<MPartInfo> parts = Mime.getParts(mm);
+            long end = System.currentTimeMillis();
+            total += (end - start);
+            ZimbraLog.test.info("took %dms", end - start);
+            Assert.assertNotNull(parts);
+            Assert.assertEquals(partCount + 1, parts.size());
+            MPartInfo body = Mime.getTextBody(parts, false);
+            Assert.assertNotNull(body);
+        }
+        ZimbraLog.test.info("Avg %dms", total/count);
+
+    }
+
 }
