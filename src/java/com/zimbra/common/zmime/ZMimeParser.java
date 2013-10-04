@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -279,6 +279,9 @@ class ZMimeParser {
      *  we are (LINESTART, after CR, etc.). */
     protected ParserState state = ParserState.HEADER_LINESTART;
 
+    /** whether to check boundaries on this line */
+    private boolean checkBoundary = false;
+
     /** The stack of active message parts, outermost to innermost. */
     private final List<PartInfo> parts = new ArrayList<PartInfo>(5);
 
@@ -424,6 +427,10 @@ class ZMimeParser {
                     break;
                 }
                 state = ParserState.HEADER;
+                if (boundaries != null) {
+                    checkBoundary = checkBoundary(b);
+                }
+
                 //$FALL-THROUGH$
 
             // in a header line, after reading at least one byte
@@ -466,6 +473,9 @@ class ZMimeParser {
                         return handleByte(b);
                     }
                 }
+                if (boundaries != null) {
+                    checkBoundary = checkBoundary(b);
+                }
                 //$FALL-THROUGH$
 
             // somewhere within a body line
@@ -484,7 +494,7 @@ class ZMimeParser {
         }
 
         // if there are active MIME boundaries, check whether this line could match one of them
-        if (boundaries != null) {
+        if (checkBoundary) {
             checkBoundary(b);
         }
 
@@ -508,19 +518,23 @@ class ZMimeParser {
      *  ("<tt>--</tt>"), followed by the "boundary" parameter to an enclosing
      *  "multipart/*" part, optionally followed by two more dashes, optionally
      *  followed by whitespace, followed by a newline. */
-    private void checkBoundary(byte b) {
-        if (boundaries != null && b == '-' && dashes == position - lineStart && dashes < 2) {
+    private boolean checkBoundary(byte b) {
+        if (b == '-' && dashes == position - lineStart && dashes < 2) {
             // 2 leading dashes may mean a MIME boundary
             if (++dashes == 2) {
                 boundaryChecker = new BoundaryChecker(boundaries, lineStart, lastEnding);
             }
+            return true;
         } else if (dashes == 2 && boundaryChecker != null && b != '\r' && b != '\n') {
             int index = (int) (position - lineStart - 2);
             if (!boundaryChecker.checkByte(b, index)) {
                 // no matching boundaries, so no need to check further
                 boundaryChecker = null;
+                return false;
             }
+            return true;
         }
+        return false;
     }
 
     /** Checks whether a boundary was matched and, if so, handles it.  As a
