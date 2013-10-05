@@ -27,6 +27,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.CharsetUtil;
 
 public class LmtpClient {
 
@@ -147,7 +148,7 @@ public class LmtpClient {
     throws IOException, LmtpProtocolException {
         return sendMessage(msgStream, Lists.newArrayList(recipients), sender, logLabel, size);
     }
-    
+
     /**
      * Sends a MIME message.
      * @param msgStream the message body
@@ -211,15 +212,16 @@ public class LmtpClient {
         // But we want to treat it as String for a little while because we want to
         // apply transparency and BufferedReader.getLine() is handy.  This conversion
         // here has a reverse with getBytes(charset) elsewhere in sendLine().
-        BufferedReader br = new BufferedReader(new InputStreamReader(msgStream, "iso-8859-1"));
+        BufferedReader br = new BufferedReader(new InputStreamReader(msgStream, CharsetUtil.ISO_8859_1));
         String line;
         while ((line = br.readLine()) != null) {
+            /**
+             *  http://tools.ietf.org/html/rfc2821#section-4.5.2 Transparency:
+             *      Before sending a line of mail text, the SMTP client checks the first character of the line.  If it
+             *      is a period, one additional period is inserted at the beginning of the line.
+             */
             if (line.length() > 0 && line.charAt(0) == '.') {
-                if (line.length() > 1 && line.charAt(1) == '.') {
-                    // don't have to apply transparency
-                } else {
-                    line = "." + line;
-                }
+                line = "." + line;
             }
             sendLine(line, false);
         }

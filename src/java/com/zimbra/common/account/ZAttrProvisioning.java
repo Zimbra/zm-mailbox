@@ -84,6 +84,26 @@ public class ZAttrProvisioning {
         public boolean isGlobal() { return this == global;}
     }
 
+    public static enum AmavisFinalSpamDestiny {
+        D_REJECT("D_REJECT"),
+        D_BOUNCE("D_BOUNCE"),
+        D_DISCARD("D_DISCARD"),
+        D_PASS("D_PASS");
+        private String mValue;
+        private AmavisFinalSpamDestiny(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AmavisFinalSpamDestiny fromString(String s) throws ServiceException {
+            for (AmavisFinalSpamDestiny value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isD_REJECT() { return this == D_REJECT;}
+        public boolean isD_BOUNCE() { return this == D_BOUNCE;}
+        public boolean isD_DISCARD() { return this == D_DISCARD;}
+        public boolean isD_PASS() { return this == D_PASS;}
+    }
+
     public static enum AutoProvAuthMech {
         KRB5("KRB5"),
         LDAP("LDAP"),
@@ -168,6 +188,22 @@ public class ZAttrProvisioning {
         }
         public boolean isEquipment() { return this == Equipment;}
         public boolean isLocation() { return this == Location;}
+    }
+
+    public static enum CBPolicydBypassMode {
+        tempfail("tempfail"),
+        pass("pass");
+        private String mValue;
+        private CBPolicydBypassMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static CBPolicydBypassMode fromString(String s) throws ServiceException {
+            for (CBPolicydBypassMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isTempfail() { return this == tempfail;}
+        public boolean isPass() { return this == pass;}
     }
 
     public static enum ClusterType {
@@ -620,6 +656,126 @@ public class ZAttrProvisioning {
         public boolean isSubjrefs() { return this == subjrefs;}
     }
 
+    public static enum MtaAlwaysAddMissingHeaders {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaAlwaysAddMissingHeaders(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaAlwaysAddMissingHeaders fromString(String s) throws ServiceException {
+            for (MtaAlwaysAddMissingHeaders value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaBrokenSaslAuthClients {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaBrokenSaslAuthClients(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaBrokenSaslAuthClients fromString(String s) throws ServiceException {
+            for (MtaBrokenSaslAuthClients value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaLmtpHostLookup {
+        native_("native"),
+        dns("dns");
+        private String mValue;
+        private MtaLmtpHostLookup(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaLmtpHostLookup fromString(String s) throws ServiceException {
+            for (MtaLmtpHostLookup value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNative_() { return this == native_;}
+        public boolean isDns() { return this == dns;}
+    }
+
+    public static enum MtaMilterDefaultAction {
+        reject("reject"),
+        accept("accept"),
+        tempfail("tempfail"),
+        quarantine("quarantine");
+        private String mValue;
+        private MtaMilterDefaultAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaMilterDefaultAction fromString(String s) throws ServiceException {
+            for (MtaMilterDefaultAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isReject() { return this == reject;}
+        public boolean isAccept() { return this == accept;}
+        public boolean isTempfail() { return this == tempfail;}
+        public boolean isQuarantine() { return this == quarantine;}
+    }
+
+    public static enum MtaNotifyClasses {
+        protocol("protocol"),
+        software("software"),
+        data("data"),
+        resource("resource"),
+        policy("policy"),
+        delay("delay"),
+        _bounce("2bounce"),
+        bounce("bounce");
+        private String mValue;
+        private MtaNotifyClasses(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaNotifyClasses fromString(String s) throws ServiceException {
+            for (MtaNotifyClasses value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isProtocol() { return this == protocol;}
+        public boolean isSoftware() { return this == software;}
+        public boolean isData() { return this == data;}
+        public boolean isResource() { return this == resource;}
+        public boolean isPolicy() { return this == policy;}
+        public boolean isDelay() { return this == delay;}
+        public boolean is_bounce() { return this == _bounce;}
+        public boolean isBounce() { return this == bounce;}
+    }
+
+    public static enum MtaPropagateUnmatchedExtensions {
+        virtual("virtual"),
+        generic("generic"),
+        alias("alias"),
+        forward("forward"),
+        canonical("canonical"),
+        include("include");
+        private String mValue;
+        private MtaPropagateUnmatchedExtensions(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPropagateUnmatchedExtensions fromString(String s) throws ServiceException {
+            for (MtaPropagateUnmatchedExtensions value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVirtual() { return this == virtual;}
+        public boolean isGeneric() { return this == generic;}
+        public boolean isAlias() { return this == alias;}
+        public boolean isForward() { return this == forward;}
+        public boolean isCanonical() { return this == canonical;}
+        public boolean isInclude() { return this == include;}
+    }
+
     public static enum MtaSaslAuthEnable {
         yes("yes"),
         no("no");
@@ -628,6 +784,294 @@ public class ZAttrProvisioning {
         public String toString() { return mValue; }
         public static MtaSaslAuthEnable fromString(String s) throws ServiceException {
             for (MtaSaslAuthEnable value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpCnameOverridesServername {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpCnameOverridesServername(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpCnameOverridesServername fromString(String s) throws ServiceException {
+            for (MtaSmtpCnameOverridesServername value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdHeloRequired {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdHeloRequired(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdHeloRequired fromString(String s) throws ServiceException {
+            for (MtaSmtpdHeloRequired value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdRejectUnlistedRecipient {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdRejectUnlistedRecipient(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdRejectUnlistedRecipient fromString(String s) throws ServiceException {
+            for (MtaSmtpdRejectUnlistedRecipient value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdRejectUnlistedSender {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdRejectUnlistedSender(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdRejectUnlistedSender fromString(String s) throws ServiceException {
+            for (MtaSmtpdRejectUnlistedSender value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdSaslAuthenticatedHeader {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdSaslAuthenticatedHeader(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdSaslAuthenticatedHeader fromString(String s) throws ServiceException {
+            for (MtaSmtpdSaslAuthenticatedHeader value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdSaslSecurityOptions {
+        nodictionary("nodictionary"),
+        mutual_auth("mutual_auth"),
+        noactive("noactive"),
+        noanonymous("noanonymous"),
+        noplaintext("noplaintext");
+        private String mValue;
+        private MtaSmtpdSaslSecurityOptions(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdSaslSecurityOptions fromString(String s) throws ServiceException {
+            for (MtaSmtpdSaslSecurityOptions value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNodictionary() { return this == nodictionary;}
+        public boolean isMutual_auth() { return this == mutual_auth;}
+        public boolean isNoactive() { return this == noactive;}
+        public boolean isNoanonymous() { return this == noanonymous;}
+        public boolean isNoplaintext() { return this == noplaintext;}
+    }
+
+    public static enum MtaSmtpdTlsAskCcert {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdTlsAskCcert(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsAskCcert fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsAskCcert value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpdTlsCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpdTlsCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpdTlsMandatoryCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpdTlsMandatoryCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsMandatoryCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsMandatoryCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpSaslAuthEnable {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpSaslAuthEnable(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpSaslAuthEnable fromString(String s) throws ServiceException {
+            for (MtaSmtpSaslAuthEnable value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaSmtpSaslSecurityOptions {
+        nodictionary("nodictionary"),
+        mutual_auth("mutual_auth"),
+        noactive("noactive"),
+        noanonymous("noanonymous"),
+        noplaintext("noplaintext");
+        private String mValue;
+        private MtaSmtpSaslSecurityOptions(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpSaslSecurityOptions fromString(String s) throws ServiceException {
+            for (MtaSmtpSaslSecurityOptions value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNodictionary() { return this == nodictionary;}
+        public boolean isMutual_auth() { return this == mutual_auth;}
+        public boolean isNoactive() { return this == noactive;}
+        public boolean isNoanonymous() { return this == noanonymous;}
+        public boolean isNoplaintext() { return this == noplaintext;}
+    }
+
+    public static enum MtaSmtpTlsCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpTlsCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpTlsCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpTlsCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpTlsMandatoryCiphers {
+        export("export"),
+        high("high"),
+        low("low"),
+        medium("medium"),
+        null_("null");
+        private String mValue;
+        private MtaSmtpTlsMandatoryCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpTlsMandatoryCiphers fromString(String s) throws ServiceException {
+            for (MtaSmtpTlsMandatoryCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isExport() { return this == export;}
+        public boolean isHigh() { return this == high;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpTlsSecurityLevel {
+        fingerprint("fingerprint"),
+        dane("dane"),
+        may("may"),
+        dane_only("dane-only"),
+        encrypt("encrypt"),
+        verify("verify"),
+        secure("secure"),
+        none("none");
+        private String mValue;
+        private MtaSmtpTlsSecurityLevel(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpTlsSecurityLevel fromString(String s) throws ServiceException {
+            for (MtaSmtpTlsSecurityLevel value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isFingerprint() { return this == fingerprint;}
+        public boolean isDane() { return this == dane;}
+        public boolean isMay() { return this == may;}
+        public boolean isDane_only() { return this == dane_only;}
+        public boolean isEncrypt() { return this == encrypt;}
+        public boolean isVerify() { return this == verify;}
+        public boolean isSecure() { return this == secure;}
+        public boolean isNone() { return this == none;}
+    }
+
+    public static enum MtaTlsAppendDefaultCA {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaTlsAppendDefaultCA(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaTlsAppendDefaultCA fromString(String s) throws ServiceException {
+            for (MtaTlsAppendDefaultCA value : values()) {
                 if (value.mValue.equals(s)) return value;
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
@@ -1921,12 +2365,79 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAllowNonLDHCharsInDomain = "zimbraAllowNonLDHCharsInDomain";
 
     /**
-     * Loglevel for Amavis. Defaults to 1
+     * AlwaysOn cluster-id to which this server belongs to. If empty,
+     * it&#039;s not part of AlwaysOn and is a stand-alone server.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1446)
+    public static final String A_zimbraAlwaysOnClusterId = "zimbraAlwaysOnClusterId";
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1459)
+    public static final String A_zimbraAmavisDomainDisclaimerHTML = "zimbraAmavisDomainDisclaimerHTML";
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1458)
+    public static final String A_zimbraAmavisDomainDisclaimerText = "zimbraAmavisDomainDisclaimerText";
+
+    /**
+     * Whether or not Amavis should use DSPAM as an additional score factor
+     * for SPAM. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1465)
+    public static final String A_zimbraAmavisDSPAMEnabled = "zimbraAmavisDSPAMEnabled";
+
+    /**
+     * Whether or not Amavis should verify DKIM keys. Defaults to TRUE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1463)
+    public static final String A_zimbraAmavisEnableDKIMVerification = "zimbraAmavisEnableDKIMVerification";
+
+    /**
+     * Amavis final destination for Spam. Default is to discard it
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1460)
+    public static final String A_zimbraAmavisFinalSpamDestiny = "zimbraAmavisFinalSpamDestiny";
+
+    /**
+     * Loglevel for Amavis. Defaults to 1. Valid range is 0-5
      *
      * @since ZCS 8.0.5
      */
     @ZAttr(id=1488)
     public static final String A_zimbraAmavisLogLevel = "zimbraAmavisLogLevel";
+
+    /**
+     * Maximum number of Amavis servers to run. Default is 10
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1461)
+    public static final String A_zimbraAmavisMaxServers = "zimbraAmavisMaxServers";
+
+    /**
+     * Whether or not Amavis should Bypass SpamAsassin for originating email.
+     * Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1464)
+    public static final String A_zimbraAmavisOriginatingBypassSA = "zimbraAmavisOriginatingBypassSA";
 
     /**
      * When a virus is detected quarantine message to this account
@@ -2303,7 +2814,25 @@ public class ZAttrProvisioning {
      * singleton listener instance is invoked after each account is auto
      * created in Zimbra. Listener can be plugged in as a server extension to
      * handle tasks like updating the account auto provision status in the
-     * external LDAP directory.
+     * external LDAP directory. At each eager provision interval, ZCS does an
+     * LDAP search based on the value configured in
+     * zimbraAutoProvLdapSearchFilter. Returned entries from this search are
+     * candidates to be auto provisioned in this batch. The
+     * zimbraAutoProvLdapSearchFilter should include an assertion that will
+     * only hit entries in the external directory that have not yet been
+     * provisioned in ZCS, otherwise it&#039;s likely the same entries will
+     * be repeated pulled in to ZCS. After an account is auto provisioned in
+     * ZCS,
+     * com.zimbra.cs.account.Account.AutoProvisionListener.postCreate(Domain
+     * domain, Account acct, String externalDN) will be called by the auto
+     * provisioning framework. Customer can implement the
+     * AutoProvisionListener interface in a ZCS server extension and get
+     * their AutoProvisionListener.postCreate() get called. The
+     * implementation of customer&#039;s postCreate method can be, for
+     * example, setting an attribute in the external directory on the account
+     * just provisioned in ZCS. The attribute can be included as a condition
+     * in the zimbraAutoProvLdapSearchFilter, so the entry won&#039;t be
+     * returned again by the LDAP search in the next interval.
      *
      * @since ZCS 8.0.0
      */
@@ -2852,6 +3381,184 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalResType = "zimbraCalResType";
 
     /**
+     * Whether or not to enable CBPolicyd Access Control module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1469)
+    public static final String A_zimbraCBPolicydAccessControlEnabled = "zimbraCBPolicydAccessControlEnabled";
+
+    /**
+     * Whether or not to enable CBPolicyd Accounting module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1470)
+    public static final String A_zimbraCBPolicydAccountingEnabled = "zimbraCBPolicydAccountingEnabled";
+
+    /**
+     * Whether or not to enable CBPolicyd Amavis module. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1471)
+    public static final String A_zimbraCBPolicydAmavisEnabled = "zimbraCBPolicydAmavisEnabled";
+
+    /**
+     * Port for CBPolicyd to bind to. Defaults to 10031
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1561)
+    public static final String A_zimbraCBPolicydBindPort = "zimbraCBPolicydBindPort";
+
+    /**
+     * Bypass fail mode. Default is tempfail
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1485)
+    public static final String A_zimbraCBPolicydBypassMode = "zimbraCBPolicydBypassMode";
+
+    /**
+     * Bypass timeout. Defaults to 30 seconds
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1484)
+    public static final String A_zimbraCBPolicydBypassTimeout = "zimbraCBPolicydBypassTimeout";
+
+    /**
+     * Whether or not to enable CBPolicyd Check Helo module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1472)
+    public static final String A_zimbraCBPolicydCheckHeloEnabled = "zimbraCBPolicydCheckHeloEnabled";
+
+    /**
+     * Whether or not to enable CBPolicyd CheckSPF module. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1473)
+    public static final String A_zimbraCBPolicydCheckSPFEnabled = "zimbraCBPolicydCheckSPFEnabled";
+
+    /**
+     * Message to give when client is on blacklist. Default is Greylisting in
+     * effect, sending server blacklisted
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1487)
+    public static final String A_zimbraCBPolicydGreylistingBlacklistMsg = "zimbraCBPolicydGreylistingBlacklistMsg";
+
+    /**
+     * Message to give when deferring email. Default is Greylisting in
+     * effect, please come back later
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1486)
+    public static final String A_zimbraCBPolicydGreylistingDeferMsg = "zimbraCBPolicydGreylistingDeferMsg";
+
+    /**
+     * Whether or not to enable CBPolicyd Greylisting module. Defaults to
+     * FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1474)
+    public static final String A_zimbraCBPolicydGreylistingEnabled = "zimbraCBPolicydGreylistingEnabled";
+
+    /**
+     * Whether or not to put CBPolicyd Greylisting module in training only
+     * mode. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1475)
+    public static final String A_zimbraCBPolicydGreylistingTrainingEnabled = "zimbraCBPolicydGreylistingTrainingEnabled";
+
+    /**
+     * Logging level for CBPolicyd. Defaults to 3. Valid range is 0-4
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1562)
+    public static final String A_zimbraCBPolicydLogLevel = "zimbraCBPolicydLogLevel";
+
+    /**
+     * Maximum number of requests to process per server. Defaults to 1000
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1481)
+    public static final String A_zimbraCBPolicydMaxRequests = "zimbraCBPolicydMaxRequests";
+
+    /**
+     * Maximum number of servers to allow. Defaults to 25
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1480)
+    public static final String A_zimbraCBPolicydMaxServers = "zimbraCBPolicydMaxServers";
+
+    /**
+     * Maximum number of spare servers to have on hand that are idle.
+     * Defaults to 12
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1479)
+    public static final String A_zimbraCBPolicydMaxSpareServers = "zimbraCBPolicydMaxSpareServers";
+
+    /**
+     * Minimum number of CBPolicyd servers to have running. Defaults to 4
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1477)
+    public static final String A_zimbraCBPolicydMinServers = "zimbraCBPolicydMinServers";
+
+    /**
+     * Minimum number of spare servers to have on hand. Defaults to 4
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1478)
+    public static final String A_zimbraCBPolicydMinSpareServers = "zimbraCBPolicydMinSpareServers";
+
+    /**
+     * Whether or not to enable CBPolicyd Quotas module. Defaults to TRUE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1476)
+    public static final String A_zimbraCBPolicydQuotasEnabled = "zimbraCBPolicydQuotasEnabled";
+
+    /**
+     * Timeout when talking to clients and servers are busy. Defaults to 120
+     * seconds
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1483)
+    public static final String A_zimbraCBPolicydTimeoutBusy = "zimbraCBPolicydTimeoutBusy";
+
+    /**
+     * Timeout when talking to clients and servers are idle. Defaults to 1020
+     * seconds
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1482)
+    public static final String A_zimbraCBPolicydTimeoutIdle = "zimbraCBPolicydTimeoutIdle";
+
+    /**
      * When creating self-signed SSL certs during an install, we also create
      * a local Certificate Authority (CA) to sign these SSL certs. This local
      * CA-s own cert is then added to different applications &quot;trusted
@@ -2896,6 +3603,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChildVisibleAccount = "zimbraChildVisibleAccount";
 
     /**
+     * Maximum number of ClamAV servers to run. Default is 10
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1462)
+    public static final String A_zimbraClamAVMaxThreads = "zimbraClamAVMaxThreads";
+
+    /**
      * Regex for identifying client types
      *
      * @since ZCS 8.0.0
@@ -2916,6 +3631,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=242)
     public static final String A_zimbraComponentAvailable = "zimbraComponentAvailable";
+
+    /**
+     * Enabled using the configured server ID for blob dir
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1551)
+    public static final String A_zimbraConfiguredServerIDForBlobDirEnabled = "zimbraConfiguredServerIDForBlobDirEnabled";
 
     /**
      * attribute constraints TODO: fill all the constraints
@@ -3005,6 +3728,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=776)
     public static final String A_zimbraConvertdURL = "zimbraConvertdURL";
+
+    /**
+     * Allows converter hints to be supplied on the COS level. Can be used to
+     * enable or disable some converters
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1441)
+    public static final String A_zimbraConverterHints = "zimbraConverterHints";
 
     /**
      * Object classes to add when creating a zimbra cos object.
@@ -3225,7 +3957,7 @@ public class ZAttrProvisioning {
      * whether to invoke data imports for all data sources owned by an
      * account after successful user login from the login page
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.2.2
      */
     @ZAttr(id=1418)
     public static final String A_zimbraDataSourceImportOnLogin = "zimbraDataSourceImportOnLogin";
@@ -3669,7 +4401,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureEnabled = "zimbraDomainMandatoryMailSignatureEnabled";
 
     /**
-     * domain mandatory mail html signature
+     * Deprecated since: 8.5.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerHTML. Orig desc: domain mandatory mail
+     * html signature
      *
      * @since ZCS 6.0.4
      */
@@ -3677,7 +4411,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainMandatoryMailSignatureHTML = "zimbraDomainMandatoryMailSignatureHTML";
 
     /**
-     * domain mandatory mail plain text signature
+     * Deprecated since: 8.5.0. deprecated in favor of
+     * zimbraAmavisDomainDisclaimerText. Orig desc: domain mandatory mail
+     * plain text signature
      *
      * @since ZCS 6.0.4
      */
@@ -4515,6 +5251,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSocialcastEnabled = "zimbraFeatureSocialcastEnabled";
 
     /**
+     * internal social features
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public static final String A_zimbraFeatureSocialEnabled = "zimbraFeatureSocialEnabled";
+
+    /**
+     * external social features
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public static final String A_zimbraFeatureSocialExternalEnabled = "zimbraFeatureSocialExternalEnabled";
+
+    /**
+     * external social URL
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public static final String A_zimbraFeatureSocialExternalURL = "zimbraFeatureSocialExternalURL";
+
+    /**
      * message social filters enabled in the web client UI
      *
      * @since ZCS 8.0.0
@@ -4676,6 +5436,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileLifetime = "zimbraFileLifetime";
 
     /**
+     * Maximum size in bytes for file preview in web client
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1442)
+    public static final String A_zimbraFilePreviewMaxSize = "zimbraFilePreviewMaxSize";
+
+    /**
      * Maximum allowed lifetime of public file shares. A value of 0 indicates
      * that there&#039;s no limit on a public file share&#039;s lifetime. .
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
@@ -4702,7 +5470,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
 
     /**
-     * Maximum size in bytes for attachments
+     * Maximum size in bytes for file uploads
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
@@ -6866,6 +7634,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
+     * whether mobile sync should zip the skipped item and attach it to the
+     * notification mail
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1423)
+    public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
+
+    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
@@ -6885,6 +7662,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1425)
     public static final String A_zimbraMobileMetadataMaxSizeEnabled = "zimbraMobileMetadataMaxSizeEnabled";
+
+    /**
+     * admin email address used for receiving notifications
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1422)
+    public static final String A_zimbraMobileNotificationAdminAddress = "zimbraMobileNotificationAdminAddress";
+
+    /**
+     * whether mobile sync notification enabled or not
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1421)
+    public static final String A_zimbraMobileNotificationEnabled = "zimbraMobileNotificationEnabled";
 
     /**
      * Whether to permit Outlook to sync via Active Sync
@@ -7136,7 +7929,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyApprovedApplicationList = "zimbraMobilePolicyApprovedApplicationList";
 
     /**
-     * require data encryption on device; ignored if
+     * Deprecated since: 8.5.0. Use
+     * zimbraMobilePolicyRequireStorageCardEncryption. Orig desc: require
+     * data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
@@ -7336,6 +8131,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyRequireSignedSMIMEMessages = "zimbraMobilePolicyRequireSignedSMIMEMessages";
 
     /**
+     * require data encryption on storage card; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1444)
+    public static final String A_zimbraMobilePolicyRequireStorageCardEncryption = "zimbraMobilePolicyRequireStorageCardEncryption";
+
+    /**
      * when set to TRUE, suppresses DeviceEncryptionEnabled to be sent down
      * to the device; Some devices choke when DeviceEncryptionEnabled policy
      * is downloaded irrespective of their value set to 0 or, 1 ignored if
@@ -7375,6 +8179,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1439)
     public static final String A_zimbraMobileSyncKeyFormatConvertedFolders = "zimbraMobileSyncKeyFormatConvertedFolders";
+
+    /**
+     * Value for postconf alias_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1493)
+    public static final String A_zimbraMtaAliasMaps = "zimbraMtaAliasMaps";
+
+    /**
+     * Value for postconf always_add_missing_headers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1494)
+    public static final String A_zimbraMtaAlwaysAddMissingHeaders = "zimbraMtaAlwaysAddMissingHeaders";
 
     /**
      * mta anti spam lock method.
@@ -7437,16 +8257,80 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaBlockedExtensionWarnRecipient = "zimbraMtaBlockedExtensionWarnRecipient";
 
     /**
+     * Value for postconf bounce_notice_recipient
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1496)
+    public static final String A_zimbraMtaBounceNoticeRecipient = "zimbraMtaBounceNoticeRecipient";
+
+    /**
+     * Value for postconf bounce_queue_lifetime
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1497)
+    public static final String A_zimbraMtaBounceQueueLifetime = "zimbraMtaBounceQueueLifetime";
+
+    /**
+     * Value for postconf broken_sasl_auth_clients
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1495)
+    public static final String A_zimbraMtaBrokenSaslAuthClients = "zimbraMtaBrokenSaslAuthClients";
+
+    /**
+     * Value for postconf command_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1498)
+    public static final String A_zimbraMtaCommandDirectory = "zimbraMtaCommandDirectory";
+
+    /**
      * Commonly blocked attachment file extensions
      */
     @ZAttr(id=196)
     public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";
 
     /**
+     * Value for postconf daemon_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1499)
+    public static final String A_zimbraMtaDaemonDirectory = "zimbraMtaDaemonDirectory";
+
+    /**
+     * Value for postconf default_process_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1501)
+    public static final String A_zimbraMtaDefaultProcessLimit = "zimbraMtaDefaultProcessLimit";
+
+    /**
+     * Value for postconf delay_warning_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1500)
+    public static final String A_zimbraMtaDelayWarningTime = "zimbraMtaDelayWarningTime";
+
+    /**
      * Value for postconf disable_dns_lookups (note enable v. disable)
      */
     @ZAttr(id=197)
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
+
+    /**
+     * Whether or not to enable zmpostfixpolicyd with MTA. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1466)
+    public static final String A_zimbraMtaEnableSmtpdPolicyd = "zimbraMtaEnableSmtpdPolicyd";
 
     /**
      * Fallback value for postconf relayhost.
@@ -7457,12 +8341,141 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaFallbackRelayHost = "zimbraMtaFallbackRelayHost";
 
     /**
+     * Value for postconf header_checks
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1502)
+    public static final String A_zimbraMtaHeaderChecks = "zimbraMtaHeaderChecks";
+
+    /**
+     * Value for postconf import_environment
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1503)
+    public static final String A_zimbraMtaImportEnvironment = "zimbraMtaImportEnvironment";
+
+    /**
+     * Value for postconf in_flow_delay
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1504)
+    public static final String A_zimbraMtaInFlowDelay = "zimbraMtaInFlowDelay";
+
+    /**
+     * Maximum Map size for MTA LMDB dbs. Defaults to 16777216 (16MB).
+     * Databases will not grow beyond this point.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1489)
+    public static final String A_zimbraMtaLmdbMapSize = "zimbraMtaLmdbMapSize";
+
+    /**
+     * Value for postconf lmtp_connection_cache_destinations
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1505)
+    public static final String A_zimbraMtaLmtpConnectionCacheDestinations = "zimbraMtaLmtpConnectionCacheDestinations";
+
+    /**
+     * Value for postconf lmtp_connection_cache_time_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1506)
+    public static final String A_zimbraMtaLmtpConnectionCacheTimeLimit = "zimbraMtaLmtpConnectionCacheTimeLimit";
+
+    /**
+     * Value for postconf lmtp_host_lookup
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1507)
+    public static final String A_zimbraMtaLmtpHostLookup = "zimbraMtaLmtpHostLookup";
+
+    /**
+     * Value for postconf mailq_path
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1508)
+    public static final String A_zimbraMtaMailqPath = "zimbraMtaMailqPath";
+
+    /**
+     * Value for postconf manpage_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1509)
+    public static final String A_zimbraMtaManpageDirectory = "zimbraMtaManpageDirectory";
+
+    /**
+     * Value for postconf maximal_backoff_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1517)
+    public static final String A_zimbraMtaMaximalBackoffTime = "zimbraMtaMaximalBackoffTime";
+
+    /**
      * Maximum total size of a mail message. Enforced in mailbox server and
      * also used as value for postconf message_size_limit. 0 means &quot;no
      * limit&quot;
      */
     @ZAttr(id=198)
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
+
+    /**
+     * Value for postconf max_use
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1531)
+    public static final String A_zimbraMtaMaxUse = "zimbraMtaMaxUse";
+
+    /**
+     * Value for postconf milter_command_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1521)
+    public static final String A_zimbraMtaMilterCommandTimeout = "zimbraMtaMilterCommandTimeout";
+
+    /**
+     * Value for postconf milter_connect_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1520)
+    public static final String A_zimbraMtaMilterConnectTimeout = "zimbraMtaMilterConnectTimeout";
+
+    /**
+     * Value for postconf milter_content_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1522)
+    public static final String A_zimbraMtaMilterContentTimeout = "zimbraMtaMilterContentTimeout";
+
+    /**
+     * Value for postconf milter_default_action
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1523)
+    public static final String A_zimbraMtaMilterDefaultAction = "zimbraMtaMilterDefaultAction";
+
+    /**
+     * Value for postconf minimal_backoff_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1518)
+    public static final String A_zimbraMtaMinimalBackoffTime = "zimbraMtaMinimalBackoffTime";
 
     /**
      * value of postfix mydestination
@@ -7489,12 +8502,60 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaMyOrigin = "zimbraMtaMyOrigin";
 
     /**
+     * Value for postconf newaliases_path
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1510)
+    public static final String A_zimbraMtaNewaliasesPath = "zimbraMtaNewaliasesPath";
+
+    /**
      * value for postfix non_smtpd_milters
      *
      * @since ZCS 5.0.7
      */
     @ZAttr(id=673)
     public static final String A_zimbraMtaNonSmtpdMilters = "zimbraMtaNonSmtpdMilters";
+
+    /**
+     * Value for postconf notify_classes
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1546)
+    public static final String A_zimbraMtaNotifyClasses = "zimbraMtaNotifyClasses";
+
+    /**
+     * Value for postconf policy_time_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1530)
+    public static final String A_zimbraMtaPolicyTimeLimit = "zimbraMtaPolicyTimeLimit";
+
+    /**
+     * Value for postconf propagate_unmatched_extensions
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1547)
+    public static final String A_zimbraMtaPropagateUnmatchedExtensions = "zimbraMtaPropagateUnmatchedExtensions";
+
+    /**
+     * Value for postconf queue_directory
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1511)
+    public static final String A_zimbraMtaQueueDirectory = "zimbraMtaQueueDirectory";
+
+    /**
+     * Value for postconf queue_run_delay
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1519)
+    public static final String A_zimbraMtaQueueRunDelay = "zimbraMtaQueueRunDelay";
 
     /**
      * Value for postconf recipient_delimiter. Also used by ZCS LMTP server
@@ -7511,7 +8572,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaRelayHost = "zimbraMtaRelayHost";
 
     /**
-     * restrictions to reject some suspect SMTP clients
+     * smtpd_recipient_restrictions used to reject email in various scenarios
      */
     @ZAttr(id=226)
     public static final String A_zimbraMtaRestriction = "zimbraMtaRestriction";
@@ -7525,12 +8586,302 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSaslAuthEnable = "zimbraMtaSaslAuthEnable";
 
     /**
+     * Supported SASL mechanisms for use with the MTA. One attribute value
+     * per mechanism.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1560)
+    public static final String A_zimbraMtaSaslSmtpdMechList = "zimbraMtaSaslSmtpdMechList";
+
+    /**
+     * Value for postconf sender_canonical_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1548)
+    public static final String A_zimbraMtaSenderCanonicalMaps = "zimbraMtaSenderCanonicalMaps";
+
+    /**
+     * Value for postconf sendmail_path
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1512)
+    public static final String A_zimbraMtaSendmailPath = "zimbraMtaSendmailPath";
+
+    /**
+     * Value for postconf smtp_cname_overrides_servername
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1524)
+    public static final String A_zimbraMtaSmtpCnameOverridesServername = "zimbraMtaSmtpCnameOverridesServername";
+
+    /**
+     * Value for postconf smtpd_banner
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1532)
+    public static final String A_zimbraMtaSmtpdBanner = "zimbraMtaSmtpdBanner";
+
+    /**
+     * Value for postconf smtpd_client_restrictions
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1553)
+    public static final String A_zimbraMtaSmtpdClientRestrictions = "zimbraMtaSmtpdClientRestrictions";
+
+    /**
+     * Value for postconf smtpd_data_restrictions
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1554)
+    public static final String A_zimbraMtaSmtpdDataRestrictions = "zimbraMtaSmtpdDataRestrictions";
+
+    /**
+     * Value for postconf smtpd_error_sleep_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1539)
+    public static final String A_zimbraMtaSmtpdErrorSleepTime = "zimbraMtaSmtpdErrorSleepTime";
+
+    /**
+     * Value for postconf smtpd_hard_error_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1537)
+    public static final String A_zimbraMtaSmtpdHardErrorLimit = "zimbraMtaSmtpdHardErrorLimit";
+
+    /**
+     * Value for postconf smtpd_helo_required
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1540)
+    public static final String A_zimbraMtaSmtpdHeloRequired = "zimbraMtaSmtpdHeloRequired";
+
+    /**
      * value for postfix smtpd_milters
      *
      * @since ZCS 5.0.7
      */
     @ZAttr(id=672)
     public static final String A_zimbraMtaSmtpdMilters = "zimbraMtaSmtpdMilters";
+
+    /**
+     * Value for postconf smtpd_proxy_timeout
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1533)
+    public static final String A_zimbraMtaSmtpdProxyTimeout = "zimbraMtaSmtpdProxyTimeout";
+
+    /**
+     * Value for postconf smtpd_reject_unlisted_recipient
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1534)
+    public static final String A_zimbraMtaSmtpdRejectUnlistedRecipient = "zimbraMtaSmtpdRejectUnlistedRecipient";
+
+    /**
+     * Value for postconf smtpd_reject_unlisted_sender
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1535)
+    public static final String A_zimbraMtaSmtpdRejectUnlistedSender = "zimbraMtaSmtpdRejectUnlistedSender";
+
+    /**
+     * Value for postconf smtpd_sasl_authenticated_header
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1536)
+    public static final String A_zimbraMtaSmtpdSaslAuthenticatedHeader = "zimbraMtaSmtpdSaslAuthenticatedHeader";
+
+    /**
+     * Value for postconf smtpd_sasl_security_options
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1550)
+    public static final String A_zimbraMtaSmtpdSaslSecurityOptions = "zimbraMtaSmtpdSaslSecurityOptions";
+
+    /**
+     * Value for postconf smtpd_sasl_tls_security_options
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1552)
+    public static final String A_zimbraMtaSmtpdSaslTlsSecurityOptions = "zimbraMtaSmtpdSaslTlsSecurityOptions";
+
+    /**
+     * Value for postconf smtpd_tls_ask_ccert
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1542)
+    public static final String A_zimbraMtaSmtpdTlsAskCcert = "zimbraMtaSmtpdTlsAskCcert";
+
+    /**
+     * Value for postconf smtpd_tls_CAfile
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1563)
+    public static final String A_zimbraMtaSmtpdTlsCAfile = "zimbraMtaSmtpdTlsCAfile";
+
+    /**
+     * Value for postconf smtpd_tls_CApath
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1564)
+    public static final String A_zimbraMtaSmtpdTlsCApath = "zimbraMtaSmtpdTlsCApath";
+
+    /**
+     * Value for postconf smtpd_tls_ccert_verifydepth
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1543)
+    public static final String A_zimbraMtaSmtpdTlsCcertVerifydepth = "zimbraMtaSmtpdTlsCcertVerifydepth";
+
+    /**
+     * Value for postconf smtpd_tls_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1515)
+    public static final String A_zimbraMtaSmtpdTlsCiphers = "zimbraMtaSmtpdTlsCiphers";
+
+    /**
+     * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
+     * 1-4.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1541)
+    public static final String A_zimbraMtaSmtpdTlsLoglevel = "zimbraMtaSmtpdTlsLoglevel";
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1516)
+    public static final String A_zimbraMtaSmtpdTlsMandatoryCiphers = "zimbraMtaSmtpdTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf virtual_transport
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1545)
+    public static final String A_zimbraMtaSmtpdVirtualTransport = "zimbraMtaSmtpdVirtualTransport";
+
+    /**
+     * Value for postconf smtp_helo_name
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1525)
+    public static final String A_zimbraMtaSmtpHeloName = "zimbraMtaSmtpHeloName";
+
+    /**
+     * Value for postconf smtp_sasl_auth_enable
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1526)
+    public static final String A_zimbraMtaSmtpSaslAuthEnable = "zimbraMtaSmtpSaslAuthEnable";
+
+    /**
+     * Value for postconf smtp_sasl_mechanism_filter
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1528)
+    public static final String A_zimbraMtaSmtpSaslMechanismFilter = "zimbraMtaSmtpSaslMechanismFilter";
+
+    /**
+     * Value for postconf smtp_sasl_password_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1529)
+    public static final String A_zimbraMtaSmtpSaslPasswordMaps = "zimbraMtaSmtpSaslPasswordMaps";
+
+    /**
+     * Value for postconf smtp_sasl_security_options
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1549)
+    public static final String A_zimbraMtaSmtpSaslSecurityOptions = "zimbraMtaSmtpSaslSecurityOptions";
+
+    /**
+     * Value for postconf smtp_tls_CAfile
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1565)
+    public static final String A_zimbraMtaSmtpTlsCAfile = "zimbraMtaSmtpTlsCAfile";
+
+    /**
+     * Value for postconf smtp_tls_CApath
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1566)
+    public static final String A_zimbraMtaSmtpTlsCApath = "zimbraMtaSmtpTlsCApath";
+
+    /**
+     * Value for postconf smtp_tls_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1513)
+    public static final String A_zimbraMtaSmtpTlsCiphers = "zimbraMtaSmtpTlsCiphers";
+
+    /**
+     * Value for postconf smtp_tls_mandatory_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1514)
+    public static final String A_zimbraMtaSmtpTlsMandatoryCiphers = "zimbraMtaSmtpTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf smtp_tls_security_level
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1527)
+    public static final String A_zimbraMtaSmtpTlsSecurityLevel = "zimbraMtaSmtpTlsSecurityLevel";
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1538)
+    public static final String A_zimbraMtaStpdSoftErrorLimit = "zimbraMtaStpdSoftErrorLimit";
+
+    /**
+     * Value for postconf tls_append_default_CA
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1567)
+    public static final String A_zimbraMtaTlsAppendDefaultCA = "zimbraMtaTlsAppendDefaultCA";
 
     /**
      * Value for postconf smtpd_tls_auth_only
@@ -7545,6 +8896,54 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=795)
     public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
+
+    /**
+     * Value for postconf transport_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1555)
+    public static final String A_zimbraMtaTransportMaps = "zimbraMtaTransportMaps";
+
+    /**
+     * Value for postconf virtual_alias_domains
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1556)
+    public static final String A_zimbraMtaVirtualAliasDomains = "zimbraMtaVirtualAliasDomains";
+
+    /**
+     * Value for postconf virtual_alias_expansion_limit
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1544)
+    public static final String A_zimbraMtaVirtualAliasExpansionLimit = "zimbraMtaVirtualAliasExpansionLimit";
+
+    /**
+     * Value for postconf virtual_alias_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1557)
+    public static final String A_zimbraMtaVirtualAliasMaps = "zimbraMtaVirtualAliasMaps";
+
+    /**
+     * Value for postconf virtual_mailbox_domains
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1558)
+    public static final String A_zimbraMtaVirtualMailboxDomains = "zimbraMtaVirtualMailboxDomains";
+
+    /**
+     * Value for postconf virtual_mailbox_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1559)
+    public static final String A_zimbraMtaVirtualMailboxMaps = "zimbraMtaVirtualMailboxMaps";
 
     /**
      * certificate to be used for validating the SAML assertions received
@@ -8657,6 +10056,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefFont = "zimbraPrefFont";
 
     /**
+     * the font size for the web client
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1448)
+    public static final String A_zimbraPrefFontSize = "zimbraPrefFontSize";
+
+    /**
      * what part of the original message to include during forwards
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
@@ -9623,6 +11030,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=456)
     public static final String A_zimbraPrefWarnOnExit = "zimbraPrefWarnOnExit";
+
+    /**
+     * user preference to enable/disable access to his mailbox data in the
+     * web client when offline
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1443)
+    public static final String A_zimbraPrefWebClientOfflineAccessEnabled = "zimbraPrefWebClientOfflineAccessEnabled";
 
     /**
      * if replying/forwarding a message in this folder, use this identity
@@ -11391,6 +12807,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
+     * whether JavaScript error tracking via third party service is enabled
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1433)
+    public static final String A_zimbraTouchJSErrorTrackingEnabled = "zimbraTouchJSErrorTrackingEnabled";
+
+    /**
+     * Key to be used for JavaScript error tracking via third party service
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1434)
+    public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
+
+    /**
      * call control service URL for the UC service
      *
      * @since ZCS 8.0.0
@@ -11719,12 +13151,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientMaxInputBufferLength = "zimbraWebClientMaxInputBufferLength";
 
     /**
+     * limit for the number of days that the web client would use to sync any
+     * mail folder&#039;s data for offline use
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1452)
+    public static final String A_zimbraWebClientOfflineSyncMaxDays = "zimbraWebClientOfflineSyncMaxDays";
+
+    /**
      * whether or not to show link to offline version in the web UI top bar
      *
      * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1047)
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
+
+    /**
+     * weclient URL to directly connect when making service to JS calls from
+     * mail server in split mode
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1445)
+    public static final String A_zimbraWebClientURL = "zimbraWebClientURL";
 
     /**
      * Whether or not to gzip static web content. Defaults to true.
@@ -11934,6 +13384,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
+
+    /**
+     * list of host:port for zookeeper servers; set to empty value to disable
+     * the use of zookeeper
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1447)
+    public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     ///// END-AUTO-GEN-REPLACE
 }

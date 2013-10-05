@@ -105,6 +105,9 @@ public final class LC {
     public static final KnownKey zimbra_mysql_password = KnownKey.newKey("zimbra").protect();
 
     @Supported
+    public static final KnownKey zimbra_mysql_shutdown_timeout = KnownKey.newKey(60);
+
+    @Supported
     public static final KnownKey zimbra_ldap_userdn = KnownKey.newKey("uid=zimbra,cn=admins,cn=zimbra");
 
     @Supported
@@ -196,6 +199,8 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(60); // seconds
 
+    public static final KnownKey zimbra_mailbox_lock_readwrite = KnownKey.newKey(true);
+
     @Supported
     public static final KnownKey zimbra_index_threads = KnownKey.newKey(10);
 
@@ -218,9 +223,6 @@ public final class LC {
     public static final KnownKey zimbra_index_reader_cache_ttl = KnownKey.newKey(300);
 
     @Supported
-    public static final KnownKey zimbra_index_reader_cache_sweep_frequency = KnownKey.newKey(30);
-
-    @Supported
     public static final KnownKey zimbra_index_deferred_items_failure_delay = KnownKey.newKey(300);
 
     @Supported
@@ -241,9 +243,6 @@ public final class LC {
     public static final KnownKey zimbra_index_lucene_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_avg_doc_per_segment = KnownKey.newKey(10000);
-
-    @Supported
     public static final KnownKey zimbra_index_lucene_merge_factor = KnownKey.newKey(10);
 
     @Supported
@@ -260,6 +259,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lucene_max_terms_per_query = KnownKey.newKey(50000);
+
+    @Supported
+    public static final KnownKey zimbra_index_elasticsearch_url_base = KnownKey.newKey("http://localhost:9200/");
 
     @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
@@ -332,8 +334,6 @@ public final class LC {
     @Supported
     public static final KnownKey servlet_max_concurrent_http_requests_per_account = KnownKey.newKey(10);
 
-    public static final KnownKey index_store = KnownKey.newKey("lucene");
-
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
 
@@ -344,7 +344,7 @@ public final class LC {
     public static final KnownKey ldap_url = KnownKey.newKey("");
 
     @Supported
-    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/openldap/var/run/ldapi");
+    public static final KnownKey ldap_ldapi_socket_file = KnownKey.newKey("${zimbra_home}/data/ldap/state/run/ldapi");
 
     @Supported
     public static final KnownKey ldap_master_url = KnownKey.newKey("");
@@ -427,6 +427,16 @@ public final class LC {
     public static final KnownKey ldap_monitor_critical = KnownKey.newKey(90);
     public static final KnownKey ldap_monitor_growth = KnownKey.newKey(25);
 
+    public static final KnownKey postjournal_enabled = KnownKey.newKey("false");
+    public static final KnownKey postjournal_helo_name = KnownKey.newKey("localhost");
+    public static final KnownKey postjournal_reinject_host = KnownKey.newKey(null);
+    public static final KnownKey postjournal_archive_host = KnownKey.newKey(null);
+    public static final KnownKey postjournal_archive_rcpt_to = KnownKey.newKey("<>");
+    public static final KnownKey postjournal_archive_bounce_to = KnownKey.newKey("<>");
+    public static final KnownKey postjournal_strip_postfix_proxy = KnownKey.newKey(1);
+    public static final KnownKey postjournal_per_user_journaling = KnownKey.newKey(1);
+    public static final KnownKey postjournal_smtp_read_timeout = KnownKey.newKey(60);
+
     public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
 
     @Supported
@@ -467,6 +477,8 @@ public final class LC {
     public static final KnownKey ldap_cache_server_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_ucservice_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_ucservice_maxage = KnownKey.newKey(15);
+    public static final KnownKey ldap_cache_alwaysoncluster_maxsize = KnownKey.newKey(100);
+    public static final KnownKey ldap_cache_alwaysoncluster_maxage = KnownKey.newKey(15);
 
     @Supported
     public static final KnownKey ldap_cache_timezone_maxsize = KnownKey.newKey(100);
@@ -506,7 +518,7 @@ public final class LC {
     // with abundant precaution, re-generate my.cnf and restart MySQL server for
     // the change to take effect.
     @Supported
-    public static final KnownKey mysql_directory = KnownKey.newKey("${zimbra_home}/mysql");
+    public static final KnownKey mysql_directory = KnownKey.newKey("${zimbra_home}/mariadb");
 
     @Supported
     public static final KnownKey mysql_data_directory = KnownKey.newKey("${zimbra_db_directory}/data");
@@ -538,7 +550,6 @@ public final class LC {
     public static final KnownKey mysql_innodb_log_file_size = KnownKey.newKey(null);
     public static final KnownKey mysql_sort_buffer_size = KnownKey.newKey(null);
     public static final KnownKey mysql_read_buffer_size = KnownKey.newKey(null);
-    public static final KnownKey mysql_table_cache = KnownKey.newKey(null);
 
     @Supported
     public static final KnownKey mysql_backup_retention = KnownKey.newKey(0);
@@ -549,102 +560,12 @@ public final class LC {
     public final static KnownKey logger_data_directory = KnownKey.newKey("${zimbra_home}/logger/db/data");
     public final static KnownKey logger_zmrrdfetch_port = KnownKey.newKey(10663);
 
-    public static final KnownKey postfix_alias_maps = KnownKey.newKey("hash:/etc/aliases");
-    public static final KnownKey postfix_always_add_missing_headers = KnownKey.newKey("yes");
-    public static final KnownKey postfix_broken_sasl_auth_clients = KnownKey.newKey("yes");
-    public static final KnownKey postfix_bounce_notice_recipient = KnownKey.newKey("postmaster");
-    public static final KnownKey postfix_bounce_queue_lifetime = KnownKey.newKey("5d");
-    public static final KnownKey postfix_command_directory = KnownKey.newKey("${zimbra_home}/postfix/sbin");
-    public static final KnownKey postfix_daemon_directory = KnownKey.newKey("${zimbra_home}/postfix/libexec");
-    public static final KnownKey postfix_enable_smtpd_policyd = KnownKey.newKey("no");
-    public static final KnownKey postfix_delay_warning_time = KnownKey.newKey("0h");
-    public static final KnownKey postfix_header_checks = KnownKey.newKey("pcre:${zimbra_home}/conf/postfix_header_checks");
-    public static final KnownKey postfix_import_environment = KnownKey.newKey("");
-    public static final KnownKey postfix_in_flow_delay = KnownKey.newKey("1s");
-    public static final KnownKey postfix_lmtp_connection_cache_destinations = KnownKey.newKey("");
-    public static final KnownKey postfix_lmtp_connection_cache_time_limit = KnownKey.newKey("4s");
-    public static final KnownKey postfix_lmtp_host_lookup = KnownKey.newKey("dns");
-    public static final KnownKey postfix_mailq_path = KnownKey.newKey("${zimbra_home}/postfix/sbin/mailq");
-    public static final KnownKey postfix_manpage_directory = KnownKey.newKey("${zimbra_home}/postfix/man");
-    public static final KnownKey postfix_maximal_backoff_time = KnownKey.newKey("4000s");
-    public static final KnownKey postfix_minimal_backoff_time = KnownKey.newKey("300s");
-    public static final KnownKey postfix_newaliases_path = KnownKey.newKey("${zimbra_home}/postfix/sbin/newaliases");
-    public static final KnownKey postfix_notify_classes = KnownKey.newKey("resource,software");
-    public static final KnownKey postfix_policy_time_limit = KnownKey.newKey(3600);
-    public static final KnownKey postfix_propagate_unmatched_extensions = KnownKey.newKey("canonical");
-    public static final KnownKey postfix_queue_directory = KnownKey.newKey("${zimbra_home}/data/postfix/spool");
-    public static final KnownKey postfix_queue_run_delay = KnownKey.newKey("300s");
-    public static final KnownKey postfix_sender_canonical_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-scm.cf");
-    public static final KnownKey postfix_sendmail_path = KnownKey.newKey("${zimbra_home}/postfix/sbin/sendmail");
-
-    public static final KnownKey postfix_milter_connect_timeout = KnownKey.newKey("30s");
-    public static final KnownKey postfix_milter_command_timeout = KnownKey.newKey("30s");
-    public static final KnownKey postfix_milter_content_timeout = KnownKey.newKey("300s");
-    public static final KnownKey postfix_milter_default_action = KnownKey.newKey("tempfail");
-
-    public static final KnownKey postfix_smtp_cname_overrides_servername = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtp_helo_name = KnownKey.newKey("$myhostname");
-    public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
-    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey(null);
-    public static final KnownKey postfix_smtp_sasl_mechanism_filter = KnownKey.newKey(null);
-    public static final KnownKey postfix_smtp_sasl_password_maps = KnownKey.newKey(null);
-
-    public static final KnownKey postfix_smtpd_banner = KnownKey.newKey("$myhostname ESMTP $mail_name");
-    public static final KnownKey postfix_smtpd_proxy_timeout = KnownKey.newKey("100s");
-    public static final KnownKey postfix_smtpd_reject_unlisted_recipient = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtpd_reject_unlisted_sender = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtpd_sasl_authenticated_header = KnownKey.newKey("no");
-    public static final KnownKey postfix_smtpd_sasl_security_options = KnownKey.newKey("noanonymous");
-    public static final KnownKey postfix_smtpd_sasl_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
-    public static final KnownKey postfix_smtpd_client_restrictions = KnownKey.newKey("reject_unauth_pipelining");
-    public static final KnownKey postfix_smtpd_data_restrictions = KnownKey.newKey("reject_unauth_pipelining");
-    public static final KnownKey postfix_smtpd_hard_error_limit = KnownKey.newKey(20);
-    public static final KnownKey postfix_smtpd_soft_error_limit = KnownKey.newKey(10);
-    public static final KnownKey postfix_smtpd_error_sleep_time = KnownKey.newKey("1s");
-    public static final KnownKey postfix_smtpd_helo_required = KnownKey.newKey("yes");
-    public static final KnownKey postfix_smtpd_tls_cert_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.crt");
-    public static final KnownKey postfix_smtpd_tls_key_file = KnownKey.newKey("${zimbra_home}/conf/smtpd.key");
-    public static final KnownKey postfix_smtpd_tls_loglevel = KnownKey.newKey(1);
-    public static final KnownKey postfix_transport_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-transport.cf");
-    public static final KnownKey postfix_virtual_alias_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vad.cf");
-    public static final KnownKey postfix_virtual_alias_expansion_limit = KnownKey.newKey(10000);
-    public static final KnownKey postfix_virtual_alias_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vam.cf");
-    public static final KnownKey postfix_virtual_mailbox_domains = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vmd.cf");
-    public static final KnownKey postfix_virtual_mailbox_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vmm.cf");
-    public static final KnownKey postfix_virtual_transport = KnownKey.newKey("error");
-
-    public static final KnownKey amavis_originating_bypass_sa = KnownKey.newKey(false);
-
-    public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
-
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
     public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cache");
-    public static final KnownKey cbpolicyd_min_servers = KnownKey.newKey(4);
-    public static final KnownKey cbpolicyd_min_spare_servers = KnownKey.newKey(4);
-    public static final KnownKey cbpolicyd_max_servers = KnownKey.newKey(25);
-    public static final KnownKey cbpolicyd_max_spare_servers = KnownKey.newKey(12);
-    public static final KnownKey cbpolicyd_max_requests = KnownKey.newKey(1000);
-    public static final KnownKey cbpolicyd_log_level = KnownKey.newKey(3);
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
-    public static final KnownKey cbpolicyd_bind_port = KnownKey.newKey(10031);
-    public static final KnownKey cbpolicyd_timeout_idle = KnownKey.newKey(1020);
-    public static final KnownKey cbpolicyd_timeout_busy = KnownKey.newKey(120);
-    public static final KnownKey cbpolicyd_bypass_timeout = KnownKey.newKey(30);
-    public static final KnownKey cbpolicyd_bypass_mode = KnownKey.newKey("tempfail");
-    public static final KnownKey cbpolicyd_module_accesscontrol = KnownKey.newKey(0);
-    public static final KnownKey cbpolicyd_module_greylisting = KnownKey.newKey(0);
-    public static final KnownKey cbpolicyd_module_greylisting_training = KnownKey.newKey(0);
-    public static final KnownKey cbpolicyd_module_greylisting_defer_msg = KnownKey.newKey("Greylisting in effect, please come back later");
-    public static final KnownKey cbpolicyd_module_greylisting_blacklist_msg = KnownKey.newKey("Greylisting in effect, sending server blacklisted");
-    public static final KnownKey cbpolicyd_module_checkhelo = KnownKey.newKey(0);
-    public static final KnownKey cbpolicyd_module_checkspf = KnownKey.newKey(0);
-    public static final KnownKey cbpolicyd_module_quotas = KnownKey.newKey(1);
-    public static final KnownKey cbpolicyd_module_amavis = KnownKey.newKey(0);
-    public static final KnownKey cbpolicyd_module_accounting = KnownKey.newKey(0);
 
     public static final KnownKey sqlite_shared_cache_enabled = KnownKey.newKey(false);
     public static final KnownKey sqlite_cache_size = KnownKey.newKey(500);
@@ -831,8 +752,10 @@ public final class LC {
 
     public static final KnownKey zimbra_class_accessmanager = KnownKey.newKey("com.zimbra.cs.account.accesscontrol.ACLAccessManager");
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
-    public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
+    public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MariaDB");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
+    public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
+    // public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.elasticsearch.ElasticSearchIndex$Factory");
     public static final KnownKey zimbra_class_application = KnownKey.newKey("com.zimbra.cs.util.ZimbraApplication");
     public static final KnownKey zimbra_class_rulerewriterfactory = KnownKey.newKey("com.zimbra.cs.filter.RuleRewriterFactory");
     public static final KnownKey zimbra_class_datasourcemanager = KnownKey.newKey("com.zimbra.cs.datasource.DataSourceManager");
@@ -1149,7 +1072,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey antispam_mysql_enabled = KnownKey.newKey(false);
-    public static final KnownKey antispam_mysql_directory = KnownKey.newKey("${zimbra_home}/mta/mysql");
+    public static final KnownKey antispam_mysql_directory = KnownKey.newKey("${zimbra_home}/mta/mariadb");
     public static final KnownKey antispam_mysql_data_directory = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/data");
     public static final KnownKey antispam_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/antispam-mysqld.log");
     public static final KnownKey antispam_mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/antispam-my.cnf");
@@ -1166,6 +1089,12 @@ public final class LC {
 
     @Supported
     public static final KnownKey antispam_backup_retention = KnownKey.newKey(0);
+    public static final KnownKey av_notify_domain = KnownKey.newKey("");
+    
+    @Supported
+    public static final KnownKey av_notify_user = KnownKey.newKey("");
+    public static final KnownKey postfix_mail_owner = KnownKey.newKey("postfix");
+    public static final KnownKey postfix_setgid_group = KnownKey.newKey("postdrop");
 
     // LDAP Custom DIT base DN for LDAP app admin entries
     public static final KnownKey ldap_dit_base_dn_appadmin      = KnownKey.newKey("");
@@ -1183,6 +1112,8 @@ public final class LC {
     public static final KnownKey ldap_dit_base_dn_mime          = KnownKey.newKey("");
     // LDAP Custom DIT base DN for server entries
     public static final KnownKey ldap_dit_base_dn_server        = KnownKey.newKey("");
+    // LDAP Custom DIT base DN for alwaysOnCluster entries
+    public static final KnownKey ldap_dit_base_dn_alwaysoncluster        = KnownKey.newKey("");
     // LDAP Custom DIT base DN for uncservice entries
     public static final KnownKey ldap_dit_base_dn_ucservice     = KnownKey.newKey("");
     // LDAP Custom DIT base DN for share locator entries
@@ -1281,6 +1212,12 @@ public final class LC {
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
     public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
     public static final KnownKey defang_av_javascript = KnownKey.newKey("^\\s*javascript:");
+
+    //EWS web service
+    public static final KnownKey ews_service_wsdl_location =
+        KnownKey.newKey("/opt/zimbra/lib/ext/zimbraews/");
+    public static final KnownKey ews_service_log_file =
+        KnownKey.newKey("/opt/zimbra/log/ews.log");
 
     static {
         // Automatically set the key name with the variable name.
