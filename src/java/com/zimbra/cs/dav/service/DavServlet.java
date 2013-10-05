@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -46,6 +47,7 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -102,7 +104,8 @@ public class DavServlet extends ZimbraServlet {
 
 	private static Map<String, DavMethod> sMethods;
 
-	public void init() throws ServletException {
+	@Override
+    public void init() throws ServletException {
 		super.init();
 		sMethods = new HashMap<String, DavMethod>();
 		addMethod(new Copy());
@@ -161,7 +164,67 @@ public class DavServlet extends ZimbraServlet {
     		return RequestType.authtoken;
     }
 
-	public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void logRequestInfo(HttpServletRequest req) {
+        if (!ZimbraLog.dav.isDebugEnabled()) {
+            return;
+        }
+        StringBuilder hdrs = new StringBuilder();
+        hdrs.append("DAV REQUEST:\n");
+        hdrs.append(req.getMethod()).append(" ").append(req.getRequestURL().toString())
+            .append(" ").append(req.getProtocol());
+        Enumeration paramNames = req.getParameterNames();
+        if (paramNames != null && paramNames.hasMoreElements()) {
+            hdrs.append("\nDAV REQUEST PARAMS:");
+            while (paramNames.hasMoreElements()) {
+                String paramName = (String)paramNames.nextElement();
+                if (paramName.contains("Auth")) {
+                    hdrs.append("\n").append(paramName).append("=*** REPLACED ***");
+                    continue;
+                }
+                String params[] = req.getParameterValues(paramName);
+                if (params != null) {
+                    for (String param : params) {
+                        hdrs.append("\n").append(paramName).append("=").append(param);
+                    }
+                }
+            }
+        }
+        Enumeration namesEn = req.getHeaderNames();
+        if (namesEn != null && namesEn.hasMoreElements()) {
+            hdrs.append("\nDAV HEADERS:");
+            while (namesEn.hasMoreElements()) {
+                String hdrName = (String)namesEn.nextElement();
+                if (hdrName.contains("Auth")) {
+                    hdrs.append("\n").append(hdrName).append(": *** REPLACED ***");
+                    continue;
+                }
+                Enumeration vals = req.getHeaders(hdrName);
+                while (vals.hasMoreElements()) {
+                    hdrs.append("\n").append(hdrName).append(": ").append((String)vals.nextElement());
+                }
+            }
+        }
+        ZimbraLog.dav.debug(hdrs.toString());
+    }
+
+    private void sendError(HttpServletResponse resp, int statusCode, String logMsg, Exception e, Level level)
+    throws IOException {
+        if (ZimbraLog.dav.isEnabledFor(level)) {
+            if (e == null) {
+                ZimbraLog.dav.log(level, logMsg + ".  Sending HTTP Error - StatusCode " + statusCode);
+            } else {
+                ZimbraLog.dav.log(level, logMsg + ".  Sending HTTP Error - StatusCode " + statusCode, e);
+            }
+        }
+        resp.sendError(statusCode);
+    }
+
+    private void sendError(HttpServletResponse resp, int statusCode, String logMsg, Exception e) throws IOException {
+        sendError(resp, statusCode, logMsg, e, Level.error);
+    }
+
+	@Override
+    public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		ZimbraLog.clearContext();
 		addRemoteIpToLoggingContext(req);
 		ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
@@ -169,23 +232,11 @@ public class DavServlet extends ZimbraServlet {
 		RequestType rtype = getAllowedRequestType(req);
 
 		if (rtype == RequestType.none) {
-			resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+			sendError(resp, HttpServletResponse.SC_NOT_ACCEPTABLE, "Not an allowed request type", null, Level.debug);
 			return;
 		}
 
-		/*
-		if (ZimbraLog.dav.isDebugEnabled()) {
-			java.util.Enumeration en = req.getHeaderNames();
-			while (en.hasMoreElements()) {
-				String n = (String)en.nextElement();
-				java.util.Enumeration vals = req.getHeaders(n);
-				while (vals.hasMoreElements()) {
-					String v = (String)vals.nextElement();
-		        	ZimbraLog.dav.debug("HEADER "+n+": "+v);
-				}
-			}
-		}
-		*/
+        logRequestInfo(req);
         Account authUser = null;
 		DavContext ctxt;
 		try {
@@ -198,26 +249,24 @@ public class DavServlet extends ZimbraServlet {
     			authUser = basicAuthRequest(req, resp, true);
 			if (authUser == null) {
 				try {
-					resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+					sendError(resp, HttpServletResponse.SC_NOT_ACCEPTABLE, "Authentication failed", null, Level.debug);
 				} catch (Exception e) {}
 				return;
 			}
 			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
 			ctxt = new DavContext(req, resp, authUser);
 		} catch (AuthTokenException e) {
-			ZimbraLog.dav.error("error getting authenticated user", e);
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error getting authenticated user", e);
 			return;
 		} catch (ServiceException e) {
-			ZimbraLog.dav.error("error getting authenticated user", e);
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error getting authenticated user", e);
 			return;
 		}
 
 		DavMethod method = sMethods.get(req.getMethod());
 		if (method == null) {
 			setAllowHeader(resp);
-			resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+			sendError(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Not an allowed method", null, Level.debug);
 			return;
 		}
 
@@ -229,7 +278,11 @@ public class DavServlet extends ZimbraServlet {
                 try {
                     Upload upload = ctxt.getUpload();
                     if (upload.getSize() > 0 && upload.getContentType().startsWith("text")) {
-                        ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(upload.getInputStream(), -1, 2048), "UTF-8"));
+                        if (ZimbraLog.dav.isDebugEnabled()) {
+                            StringBuilder logMsg = new StringBuilder("REQUEST\n").append(
+                                    new String(ByteUtil.readInput(upload.getInputStream(), -1, 20480), "UTF-8"));
+                            ZimbraLog.dav.debug(logMsg.toString());
+                        }
                     }
                 } catch (DavException de) {
                     throw de;
@@ -259,32 +312,35 @@ public class DavServlet extends ZimbraServlet {
 					resp.setStatus(e.getStatus());
 					if (e.hasErrorMessage())
 						e.writeErrorMsg(resp.getOutputStream());
-	                ZimbraLog.dav.info("sending http error %d because: %s", e.getStatus(), e.getMessage());
+					if (ZimbraLog.dav.isDebugEnabled()) {
+    	                ZimbraLog.dav.info("sending http error %d because: %s", e.getStatus(), e.getMessage(), e);
+					} else {
+    	                ZimbraLog.dav.info("sending http error %d because: %s", e.getStatus(), e.getMessage());
+					}
 	                if (e.getCause() != null)
 	                    ZimbraLog.dav.debug("exception: ", e.getCause());
 				} else {
-					ZimbraLog.dav.error("error handling method "+method.getName(), e);
-					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                                "error handling method "+method.getName(), e);
 				}
 			} catch (IllegalStateException ise) {
                 ZimbraLog.dav.debug("can't write error msg", ise);
 			}
 		} catch (ServiceException e) {
 			if (e instanceof MailServiceException.NoSuchItemException) {
-				ZimbraLog.dav.info(ctxt.getUri()+" not found");
-				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+				sendError(resp, HttpServletResponse.SC_NOT_FOUND, ctxt.getUri()+" not found", null, Level.info);
 				return;
 			}
-			ZimbraLog.dav.error("error handling method "+method.getName(), e);
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error handling method "+method.getName(), e);
 		} catch (Exception e) {
-			ZimbraLog.dav.error("error handling method "+method.getName(), e);
 			try {
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "error handling method "+method.getName(), e);
 			} catch (Exception ex) {}
 		} finally {
             long t1 = System.currentTimeMillis();
-            ZimbraLog.dav.info("DavServlet operation "+method.getName()+" to "+req.getPathInfo()+" (depth: "+ctxt.getDepth().name()+") finished in "+(t1-t0)+"ms");
+            ZimbraLog.dav.info("DavServlet operation "+method.getName()+
+                    " to "+req.getPathInfo()+" (depth: "+ctxt.getDepth().name()+") finished in "+(t1-t0)+"ms");
 			if (cache != null)
 			    cacheCleanUp(ctxt, cache);
 		    ctxt.cleanup();
@@ -412,8 +468,9 @@ public class DavServlet extends ZimbraServlet {
                 		                } else {
                 		                    unzipped = respData;
                 		                }
-                		                if (ZimbraLog.dav.isDebugEnabled())
+                		                if (ZimbraLog.dav.isDebugEnabled()) {
                                             ZimbraLog.dav.debug("RESPONSE:\n" + new String(unzipped, "UTF-8"));
+                		                }
                 		            }
                 		            if (!ctagResponse.isGzipped()) {
                                         response.getOutputStream().write(respData);

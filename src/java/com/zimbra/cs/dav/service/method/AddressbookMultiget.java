@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,6 +33,7 @@ import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 
 public class AddressbookMultiget extends Report {
+    @Override
     public void handle(DavContext ctxt) throws ServiceException, DavException {
         Element query = ctxt.getRequestMessage().getRootElement();
         if (!query.getQName().equals(DavElements.CardDav.E_ADDRESSBOOK_MULTIGET))
@@ -47,13 +48,13 @@ public class AddressbookMultiget extends Report {
             if (obj instanceof Element) {
                 String href = ((Element)obj).getText();
                 URI uri = URI.create(href);
+                String[] fragments = HttpUtil.getPathFragments(uri);
                 if (uri.getPath().toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
                     // double encode the last fragment
-                    String[] fragments = HttpUtil.getPathFragments(uri);
                     fragments[fragments.length - 1] = HttpUtil.urlEscapeIncludingSlash(fragments[fragments.length - 1]);
-                    uri = HttpUtil.getUriFromFragments(fragments, uri.getQuery(), true, false);
-                    href = uri.getPath();
                 }
+                uri = HttpUtil.getUriFromFragments(fragments, uri.getQuery(), true, false);
+                href = uri.getPath();
                 DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href);
                 if (rs != null)
                     resp.addResource(ctxt, rs, reqProp, false);
