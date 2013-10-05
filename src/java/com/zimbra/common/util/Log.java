@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -58,7 +58,7 @@ public class Log {
         error, warn, info, debug, trace;
     };
 
-    private Logger mLogger;
+    private final Logger mLogger;
 
     Log(Logger logger) {
         if (logger == null) {
@@ -367,6 +367,20 @@ public class Log {
         }
     }
 
+    /**
+     * Returns Log4j equivalent of {@code level} or org.apache.log4j.Level.TRACE
+     */
+    private static final org.apache.log4j.Level log4jLevel(Level level) {
+        org.apache.log4j.Level log4jlevel = ZIMBRA_TO_LOG4J.get(level);
+        if (log4jlevel == null) {
+            log4jlevel = org.apache.log4j.Level.TRACE;
+        }
+        return log4jlevel;
+    }
+
+    public boolean isEnabledFor(Level level) {
+        return getLogger().isEnabledFor(log4jLevel(level));
+    }
 
     public void fatal(Object o) {
         getLogger().fatal(o);
@@ -409,6 +423,50 @@ public class Log {
     public void fatal(String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
         if (isFatalEnabled()) {
             getLogger().fatal(String.format(format, o1, o2, o3, o4, o5), t);
+        }
+    }
+
+    public void log(Level level, Object o) {
+        getLogger().log(log4jLevel(level), o);
+    }
+
+    public void log(Level level, Object o, Throwable t) {
+        getLogger().log(log4jLevel(level), o, t);
+    }
+
+    public void log(Level level, String format, Object ... objects) {
+        if (isEnabledFor(level)) {
+            getLogger().log(log4jLevel(level), String.format(format, objects));
+        }
+    }
+
+    public void log(Level level, String format, Object o, Throwable t) {
+        if (isEnabledFor(level)) {
+            getLogger().log(log4jLevel(level), String.format(format, o), t);
+        }
+    }
+
+    public void log(Level level, String format, Object o1, Object o2, Throwable t) {
+        if (isEnabledFor(level)) {
+            getLogger().log(log4jLevel(level), String.format(format, o1, o2), t);
+        }
+    }
+
+    public void log(Level level, String format, Object o1, Object o2, Object o3, Throwable t) {
+        if (isEnabledFor(level)) {
+            getLogger().log(log4jLevel(level), String.format(format, o1, o2, o3), t);
+        }
+    }
+
+    public void log(Level level, String format, Object o1, Object o2, Object o3, Object o4, Throwable t) {
+        if (isEnabledFor(level)) {
+            getLogger().log(log4jLevel(level), String.format(format, o1, o2, o3, o4), t);
+        }
+    }
+
+    public void log(Level level, String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
+        if (isEnabledFor(level)) {
+            getLogger().log(log4jLevel(level), String.format(format, o1, o2, o3, o4, o5), t);
         }
     }
 
