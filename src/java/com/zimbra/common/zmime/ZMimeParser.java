@@ -635,6 +635,7 @@ class ZMimeParser {
         }
         if (boundaries.isEmpty()) {
             boundaries = null;
+            checkBoundary = false;
         }
     }
 
