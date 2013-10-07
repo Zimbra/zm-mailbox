@@ -35,6 +35,7 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.qa.unittest.TestUtil;
 
 /**
  * Unit test for {@link Mime}.
@@ -414,6 +415,33 @@ public class MimeTest {
         }
         ZimbraLog.test.info("Avg %dms", total/count);
 
+    }
+
+    @Test
+    public void strayBoundaryInEpilogue() throws Exception {
+        String content = baseMpMixedContent
+                + "\r\n";
+        StringBuilder sb = new StringBuilder(content);
+        sb.append( "------------1111971890AC3BB91\r\n")
+            .append("Content-Type: text/plain; charset=windows-1250\r\n")
+            .append("Content-Transfer-Encoding: quoted-printable\r\n\r\n");
+        String plainText = RandomStringUtils.randomAlphabetic(10);
+        sb.append(plainText).append("\r\n");
+        sb.append("------------1111971890AC3BB91--").append("\r\n");
+
+        //this is the point of this test; if MIME has a stray boundary it used to cause NPE
+        sb.append("\r\n").append("--bogusBoundary").append("\r\n").append("\r\n");
+
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        sb.toString().getBytes()));
+        List<MPartInfo> parts = Mime.getParts(mm);
+
+        Assert.assertEquals(2, parts.size());
+
+        MPartInfo body = Mime.getTextBody(parts, false);
+        Assert.assertNotNull(body);
+
+        Assert.assertTrue(TestUtil.bytesEqual(plainText.getBytes(), body.getMimePart().getInputStream()));
     }
 
 }
