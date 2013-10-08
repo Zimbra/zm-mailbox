@@ -1090,7 +1090,7 @@ public final class LC {
     @Supported
     public static final KnownKey antispam_backup_retention = KnownKey.newKey(0);
     public static final KnownKey av_notify_domain = KnownKey.newKey("");
-    
+
     @Supported
     public static final KnownKey av_notify_user = KnownKey.newKey("");
     public static final KnownKey postfix_mail_owner = KnownKey.newKey("postfix");
@@ -1218,6 +1218,8 @@ public final class LC {
         KnownKey.newKey("/opt/zimbra/lib/ext/zimbraews/");
     public static final KnownKey ews_service_log_file =
         KnownKey.newKey("/opt/zimbra/log/ews.log");
+
+    public static final KnownKey defang_block_form_same_host_post_req = KnownKey.newKey(true);
 
     static {
         // Automatically set the key name with the variable name.
