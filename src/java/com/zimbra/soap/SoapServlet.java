@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,6 +18,7 @@ package com.zimbra.soap;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,10 +44,13 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.servlet.ZThreadLocal;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -56,7 +60,13 @@ import com.zimbra.cs.util.Zimbra;
 public class SoapServlet extends ZimbraServlet {
     private static final long serialVersionUID = 38710345271877593L;
 
-    private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
+    protected static final String PARAM_ENGINE_HANDLER = "engine.handler.";
+    protected static final String PARAM_CSRF_CHECK = "csrf.req.check";
+    protected static final String PARAM_CSRF_ALLOW_REF_HOSTS = "allowed.referrer.host";
+    // this could be an additional check, when it is better supported across browsers.
+    // Bug 83762
+    // protected static final String PARAM_CSRF_ALLOW_ORIGIN_CHECK = "allow.origin.check";
+
 
     /** context name of auth token extracted from cookie */
     public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";
@@ -70,6 +80,11 @@ public class SoapServlet extends ZimbraServlet {
     public static final String IS_ADMIN_REQUEST = "zimbra.isadminreq";
     /** Flag for requests that want to force invalidation of client cookies */
     public static final String INVALIDATE_COOKIES = "zimbra.invalidateCookies";
+
+    protected boolean checkReqForCsrf = false;
+    protected List<String> allowedRefHost = null;
+    // For future use Bug 83762
+//    protected boolean allowOriginCheck  = false;
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -119,6 +134,10 @@ public class SoapServlet extends ZimbraServlet {
         if (i == 0)
             throw new ServletException("Must specify at least one handler "+PARAM_ENGINE_HANDLER+i);
 
+        // Initialize the parameters related to CSRF check
+        this.allowedRefHost = convertToList(this.getInitParameter(PARAM_CSRF_ALLOW_REF_HOSTS));
+        this.checkReqForCsrf = Boolean.parseBoolean(getInitParameter(PARAM_CSRF_CHECK));
+
         try {
             Zimbra.startup();
         } catch (OutOfMemoryError e) {
@@ -127,6 +146,22 @@ public class SoapServlet extends ZimbraServlet {
             ZimbraLog.soap.fatal("Unable to start servlet", t);
             throw new UnavailableException(t.getMessage());
         }
+    }
+
+    /**
+     * @param initParameter
+     * @return
+     */
+    protected static List<String> convertToList(String hostList) {
+        List<String> hosts = null;
+        if (!StringUtil.isNullOrEmpty(hostList)) {
+            String [] temp = hostList.split(",");
+            for (int i = 0; i < temp.length; ++i) {
+                temp[i] = temp[i].toLowerCase();
+            }
+            hosts = Arrays.asList(temp);
+        }
+        return hosts;
     }
 
     @Override public void destroy() {
@@ -207,8 +242,22 @@ public class SoapServlet extends ZimbraServlet {
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
 
         try {
+            if (CsrfUtil.isCsrfRequest(req, this.checkReqForCsrf, this.allowedRefHost)) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            // We need virtual host information in DefangFilter
+            // Set them in ThreadLocal here
+            RequestContext reqCtxt = new RequestContext();
+            String host = CsrfUtil.getRequestHost(req);
+            reqCtxt.setVirtualHost(host);
+            ZThreadLocal.setContext(reqCtxt);
             doWork(req, resp);
+
         } finally {
+            // Unset the variables set in thread local
+            ZThreadLocal.unset();
             ZimbraLog.clearContext();
             ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
         }
