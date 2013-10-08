@@ -2,12 +2,12 @@
   * ***** BEGIN LICENSE BLOCK *****
   * Zimbra Collaboration Suite Server
   * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
-  * 
+  *
   * The contents of this file are subject to the Zimbra Public License
   * Version 1.4 ("License"); you may not use this file except in
   * compliance with the License.  You may obtain a copy of the License at
   * http://www.zimbra.com/license.
-  * 
+  *
   * Software distributed under the License is distributed on an "AS IS"
   * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
   * ***** END LICENSE BLOCK *****
@@ -17,6 +17,7 @@ package com.zimbra.cs.html;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +30,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.soap.RequestContext;
 
 /**
  * Tired of regressions in the defang filter. Unit test based on fixes I found in bugzilla over the years for different
@@ -781,6 +784,46 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
 
+    }
+
+    @Test
+    public void testBug83999() throws IOException {
+
+        RequestContext reqContext = new RequestContext();
+        reqContext.setVirtualHost("mail.zimbra.com");
+        ZThreadLocal.setContext(reqContext);
+
+        String html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" " +
+        		"action=\"http://mail.zimbra.com:7070/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"http://zimbra.vmware.com:7070/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"http://mail.zimbra.com/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+
+        ZThreadLocal.unset();
     }
 
 }

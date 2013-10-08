@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,8 +15,10 @@
 
 package com.zimbra.cs.html;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
@@ -33,6 +35,8 @@ import org.cyberneko.html.filters.DefaultFilter;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.servlet.ZThreadLocal;
 
 /**
  * very Mutated version of ElementRemover.java filter from cyberneko html.
@@ -73,6 +77,12 @@ public class DefangFilter extends DefaultFilter {
      * enable font style tags (TT, I, B, BIG, SMALL, STRIKE, S, U)
      */
     private static final boolean ENABLE_FONT_STYLE_TAGS = true;
+
+    /** The Host header received in the request. */
+    private String reqVirtualHost = null;
+
+    /** enable same host post request for a form in email */
+    private static boolean sameHostFormPostCheck = LC.defang_block_form_same_host_post_req.booleanValue();
 
     //
     // Constants
@@ -287,6 +297,9 @@ public class DefangFilter extends DefaultFilter {
      */
     public DefangFilter(boolean neuterImages) {
         mNeuterImages = neuterImages;
+        if (ZThreadLocal.getRequestContext() != null) {
+            this.reqVirtualHost = ZThreadLocal.getRequestContext().getVirtualHost();
+        }
     }
 
     /**
@@ -697,7 +710,7 @@ public class DefangFilter extends DefaultFilter {
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
 
         if (aName.equalsIgnoreCase("href")) {
-        	result =  AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED");
+            result = AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED");
         }
         if (aName.equalsIgnoreCase("style")) {
             result = sanitizeStyleValue(value);
@@ -705,6 +718,25 @@ public class DefangFilter extends DefaultFilter {
 
         if (!result.equals(value)) {
             attributes.setValue(i, result);
+        }
+
+        if (aName.equalsIgnoreCase("action") && sameHostFormPostCheck == true && this.reqVirtualHost != null) {
+            try {
+                URL url = new URL(value);
+                 String formActionHost = url.getHost().toLowerCase();
+
+                if (formActionHost.equalsIgnoreCase(reqVirtualHost)) {
+                    value = value.replace(formActionHost, "SAMEHOSTFORMPOST-BLOCKED");
+                    attributes.setValue(i, value);
+                }
+            } catch (MalformedURLException e) {
+                ZimbraLog.soap
+                    .info("Failure while trying to block mailicious code. Check for URL "
+                        + " match between the host and the action URL of a FORM."
+                        + "Error parsing URL, possible relative URL." + e.getMessage());
+                attributes.setValue(i, "SAMEHOSTFORMPOST-BLOCKED");
+            }
+
         }
     }
 
