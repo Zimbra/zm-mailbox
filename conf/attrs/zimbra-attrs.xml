@@ -7822,4 +7822,9 @@ TODO: delete them permanently from here
   <desc>Value for postconf tls_append_default_CA</desc>
 </attr>
 
+<attr id="1568" name="zimbraMtaSmtpTlsLoglevel" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is 0-4</desc>
+</attr>
+
 </attrs>

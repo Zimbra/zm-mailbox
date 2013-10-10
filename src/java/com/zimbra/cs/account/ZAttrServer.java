@@ -21506,6 +21506,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
+     * 0-4
+     *
+     * @return zimbraMtaSmtpTlsLoglevel, or 0 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1568)
+    public int getMtaSmtpTlsLoglevel() {
+        return getIntAttr(Provisioning.A_zimbraMtaSmtpTlsLoglevel, 0);
+    }
+
+    /**
+     * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
+     * 0-4
+     *
+     * @param zimbraMtaSmtpTlsLoglevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1568)
+    public void setMtaSmtpTlsLoglevel(int zimbraMtaSmtpTlsLoglevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsLoglevel, Integer.toString(zimbraMtaSmtpTlsLoglevel));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
+     * 0-4
+     *
+     * @param zimbraMtaSmtpTlsLoglevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1568)
+    public Map<String,Object> setMtaSmtpTlsLoglevel(int zimbraMtaSmtpTlsLoglevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsLoglevel, Integer.toString(zimbraMtaSmtpTlsLoglevel));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
+     * 0-4
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1568)
+    public void unsetMtaSmtpTlsLoglevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsLoglevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
+     * 0-4
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1568)
+    public Map<String,Object> unsetMtaSmtpTlsLoglevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsLoglevel, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
      * <p>Valid values: [export, high, low, null, medium]
