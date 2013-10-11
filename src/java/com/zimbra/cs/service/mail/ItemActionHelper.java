@@ -544,7 +544,7 @@ public class ItemActionHelper {
         }
 
         boolean deleteOriginal = mOperation != Op.COPY;
-        String folderStr = mIidFolder.toString();
+        String folderStr = mIidFolder.toString(mAuthenticatedAccount);
         mCreatedIds = new ArrayList<String>(itemIds.length);
 
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
