@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -1191,7 +1191,6 @@ abstract class ImapHandler {
                     ZimbraLog.imap.error("IMAP ID with %s is allowed only once per session, received different IP: %s, command ignored",
                             IDInfo.X_ORIGINATING_IP, ip);
                 }
-                return;
             }
         }
 
@@ -1207,7 +1206,6 @@ abstract class ImapHandler {
                     ZimbraLog.imap.error("IMAP ID with %s is allowed only once per session, received different value: %s, command ignored",
                             IDInfo.X_VIA, xvia);
                 }
-                return;
             }
         }
         String ua = fields.get(IDInfo.NAME);
@@ -1219,15 +1217,12 @@ abstract class ImapHandler {
             if (userAgent == null) {
                 userAgent = ua;
                 ZimbraLog.addUserAgentToContext(ua);
+            } else if (userAgent.equals(ua)) {
+                ZimbraLog.imap.warn("IMAP ID with %s/%s provided duplicate values, command ignored", IDInfo.NAME, IDInfo.VERSION);
             } else {
-                if (userAgent.equals(ua)) {
-                    ZimbraLog.imap.warn("IMAP ID with %s/%s is allowed only once per session, command ignored",
-                            IDInfo.NAME, IDInfo.VERSION);
-                } else {
-                    ZimbraLog.imap.error("IMAP ID with %s/%s is allowed only once per session, received different name/version: %s, command ignored",
-                            IDInfo.NAME, IDInfo.VERSION, ua);
-                }
-                return;
+                ZimbraLog.imap.debug("IMAP ID with %s/%s superceeds old UA [%s] with new UA [%s]", IDInfo.NAME, IDInfo.VERSION, userAgent, ua);
+                userAgent = ua;
+                ZimbraLog.addUserAgentToContext(ua);
             }
         }
 
