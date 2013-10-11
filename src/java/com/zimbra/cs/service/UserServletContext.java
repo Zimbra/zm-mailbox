@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,7 +34,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -52,7 +51,6 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.formatter.Formatter;
@@ -75,6 +73,7 @@ public class UserServletContext {
     public String extraPath;
     public ItemId itemId;
     public MailItem target;
+    public FakeFolder fakeTarget = null;
     public int[] reqListIds;
     public ArrayList<Item> requestedItems;
     public boolean fromDumpster;
@@ -112,7 +111,7 @@ public class UserServletContext {
 
     private static class ItemIterator implements Iterator<MailItem> {
 
-        private Iterator<Item> items;
+        private final Iterator<Item> items;
 
         public ItemIterator(ArrayList<Item> items) {
             this.items = items.iterator();
@@ -131,6 +130,20 @@ public class UserServletContext {
         @Override
         public void remove() {
         }
+    }
+
+    public static class FakeFolder {
+        private final String account;
+        private final String path;
+        private final String name;
+        public FakeFolder(String targetAccount, String calPath, String calName) {
+            account = targetAccount;
+            path = calPath;
+            name =  calName;
+        }
+        public String getAccount() { return account; }
+        public String getPath() { return path; }
+        public String getName() { return name; }
     }
 
     public UserServletContext(HttpServletRequest request, HttpServletResponse response, UserServlet srvlt)
@@ -491,9 +504,9 @@ public class UserServletContext {
 
     private static final class UploadInputStream extends InputStream {
         private FileItem fi = null;
-        private InputStream is;
+        private final InputStream is;
         private long curSize = 0;
-        private long maxSize;
+        private final long maxSize;
         private long markSize = 0;
 
         UploadInputStream(InputStream is, long maxSize) {
@@ -629,6 +642,13 @@ public class UserServletContext {
             .add("item", itemPath)
             .add("format", format)
             .add("locale", locale)
+            .add("extraPath", extraPath)
+            .add("itemId", itemId)
+            .add("target", target)
+            .add("authAccount", authAccount)
+            .add("targetAccount", targetAccount)
+            .add("targetMailbox", targetMailbox)
+            .add("params", params)
             .toString();
     }
 }
