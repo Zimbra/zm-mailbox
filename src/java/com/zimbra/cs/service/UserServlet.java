@@ -238,6 +238,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String HTTP_STATUS_CODE = "http_code";
 
     public static final String QP_MAX_WIDTH = "max_width";
+    public static final String QP_MAX_HEIGHT = "max_height";
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
 

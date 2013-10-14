@@ -230,9 +230,12 @@ public final class NativeFormatter extends Formatter {
 
                     // If this is an image that exceeds the max size, resize it.  Don't resize
                     // gigantic images because ImageIO reads image content into memory.
-                    if (context.hasMaxWidth() && (Mime.getSize(mp) < LC.max_image_size_to_resize.intValue())) {
+                    if ((context.hasMaxWidth() || context.hasMaxHeight()) &&
+                        (Mime.getSize(mp) < LC.max_image_size_to_resize.intValue())) {
                         try {
-                            data = getResizedImageData(mp, context.getMaxWidth());
+                            data =
+                                getResizedImageData(mp, context.getMaxWidth(),
+                                                    context.getMaxHeight());
                         } catch (Exception e) {
                             log.info("Unable to resize image.  Returning original content.", e);
                         }
@@ -269,11 +272,17 @@ public final class NativeFormatter extends Formatter {
      * image width is smaller than {@code maxWidth} or resizing is not supported,
      * returns {@code null}.
      */
-    private static byte[] getResizedImageData(MimePart mp, int maxWidth)
+    private static byte[] getResizedImageData(MimePart mp, Integer maxWidth, Integer maxHeight)
     throws IOException, MessagingException {
         ImageReader reader = null;
         ImageWriter writer = null;
         InputStream in = null;
+
+        if (maxWidth == null)
+            maxWidth = LC.max_image_size_to_resize.intValue();
+
+        if (maxHeight == null)
+            maxHeight = LC.max_image_size_to_resize.intValue();
 
         try {
             // Get ImageReader for stream content.
@@ -287,8 +296,11 @@ public final class NativeFormatter extends Formatter {
             in = mp.getInputStream();
             reader.setInput(new MemoryCacheImageInputStream(in));
             BufferedImage img = reader.read(0);
-            if (img.getWidth() <= maxWidth) {
-                log.debug("Image width %d is less than max %d.  Not resizing.", img.getWidth(), maxWidth);
+            int width = img.getWidth(), height = img.getHeight();
+
+            if (width <= maxWidth && height <= maxHeight) {
+                log.debug("Image %dx%d is less than max %dx%d.  Not resizing.",
+                          width, height, maxWidth, maxHeight);
                 return null;
             }
 
@@ -298,8 +310,15 @@ public final class NativeFormatter extends Formatter {
                 log.debug("No ImageWriter available.");
                 return null;
             }
-            int height = (int) ((double) maxWidth / (double) img.getWidth() * img.getHeight());
-            BufferedImage small = ImageUtil.resize(img, maxWidth, height);
+
+            double ratio =
+                Math.min((double) maxWidth / width,
+                         (double) maxHeight / height);
+
+            width *= ratio;
+            height *= ratio;
+
+            BufferedImage small = ImageUtil.resize(img, width, height);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             writer.setOutput(new MemoryCacheImageOutputStream(out));
             writer.write(small);

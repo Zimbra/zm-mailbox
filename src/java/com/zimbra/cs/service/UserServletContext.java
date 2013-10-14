@@ -474,6 +474,27 @@ public class UserServletContext {
         }
     }
 
+    public boolean hasMaxHeight() {
+        return getMaxHeight() != null;
+    }
+
+    /**
+     * Returns the maximum height of the image returned by this request, or
+     * {@code null} if the max height is not specified or invalid.
+     */
+    public Integer getMaxHeight() {
+        String s = params.get(UserServlet.QP_MAX_HEIGHT);
+        if (StringUtil.isNullOrEmpty(s)) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            UserServlet.log.warn("Ignoring invalid maxHeight value: " + s);
+            return null;
+        }
+    }
+
     /** Default maximum upload size for PUT/POST write ops: 10MB. */
     private static final long DEFAULT_MAX_POST_SIZE = 10 * 1024 * 1024;
 
