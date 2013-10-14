@@ -757,7 +757,7 @@ public final class MailConstants {
     public static final String A_PART = "part";
     public static final String A_BODY = "body";
     public static final String A_CONTENT_TYPE = "ct";
-    public static final String A_CONTENT_DISPOSTION = "cd";
+    public static final String A_CONTENT_DISPOSITION = "cd";
     public static final String A_CONTENT_DESCRIPTION = "cde";
     public static final String A_CONTENT_ID = "ci";
     public static final String A_CONTENT_LOCATION = "cl";
