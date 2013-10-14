@@ -7639,7 +7639,7 @@ TODO: delete them permanently from here
   <desc>Value for postconf policy_time_limit</desc>
 </attr>
 
-<attr id="1531" name="zimbraMtaMaxUse" type="integer" min="1" cardinality="single" requiredIn="globalConfig" optionalIn="server" flags="serverInherited" since="8.5.0">
+<attr id="1531" name="zimbraMtaMaxUse" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>100</globalConfigValue>
   <desc>Value for postconf max_use</desc>
 </attr>
