@@ -330,7 +330,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
             mPartName = e.getAttribute(MailConstants.A_PART);
             mName = e.getAttribute(MailConstants.A_NAME, null);
             mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE, null);
-            mContentDisposition = e.getAttribute(MailConstants.A_CONTENT_DISPOSTION, null);
+            mContentDisposition = e.getAttribute(MailConstants.A_CONTENT_DISPOSITION, null);
             mFileName = e.getAttribute(MailConstants.A_CONTENT_FILENAME, null);
             mContentId = e.getAttribute(MailConstants.A_CONTENT_ID, null);
             mContentDescription = e.getAttribute(MailConstants.A_CONTENT_DESCRIPTION, null);
@@ -392,7 +392,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         }
 
         /** MIME Content-Disposition */
-        public String getContentDispostion() {
+        public String getContentDisposition() {
             return mContentDisposition;
         }
 
