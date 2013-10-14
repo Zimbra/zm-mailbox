@@ -2389,7 +2389,7 @@ public final class ToXML {
             String disp = mp.getHeader("Content-Disposition", null);
             if (disp != null) {
                 ContentDisposition cdisp = new ContentDisposition(MimeUtility.decodeText(disp));
-                el.addAttribute(MailConstants.A_CONTENT_DISPOSTION, StringUtil.stripControlCharacters(cdisp.getDisposition()));
+                el.addAttribute(MailConstants.A_CONTENT_DISPOSITION, StringUtil.stripControlCharacters(cdisp.getDisposition()));
             }
         } catch (MessagingException e) {
         } catch (UnsupportedEncodingException e) {

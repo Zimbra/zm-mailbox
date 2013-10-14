@@ -378,7 +378,7 @@ public abstract class LmcSoapRequest {
         result.setConvID(mp.attributeValue(MailConstants.A_CONV_ID));
         result.setContentType(mp.attributeValue(MailConstants.A_CONTENT_TYPE));
         result.setContentTypeName(mp.attributeValue(MailConstants.A_CONTENT_NAME));
-        result.setContentDisp(mp.attributeValue(MailConstants.A_CONTENT_DISPOSTION));
+        result.setContentDisp(mp.attributeValue(MailConstants.A_CONTENT_DISPOSITION));
         result.setContentDispFilename(mp.attributeValue(MailConstants.A_CONTENT_FILENAME));
         // XXX assume that content description is an attr of <mp> and not <content>
         result.setContentDesc(mp.attributeValue(MailConstants.A_CONTENT_DESCRIPTION));
@@ -631,7 +631,7 @@ public abstract class LmcSoapRequest {
         addAttrNotNull(mpElem, MailConstants.A_CONV_ID, mp.getConvID());
         addAttrNotNull(mpElem, MailConstants.A_CONTENT_TYPE, mp.getContentType());
         addAttrNotNull(mpElem, MailConstants.A_CONTENT_NAME, mp.getContentTypeName());
-        addAttrNotNull(mpElem, MailConstants.A_CONTENT_DISPOSTION, mp.getContentDisp());
+        addAttrNotNull(mpElem, MailConstants.A_CONTENT_DISPOSITION, mp.getContentDisp());
         addAttrNotNull(mpElem, "filename", mp.getContentDispFilename());  // XXX: need constant
 
         // add the content element if present
