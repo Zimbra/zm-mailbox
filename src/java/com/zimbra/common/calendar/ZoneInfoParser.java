@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,10 +28,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 // tzdata text input file format is described in zic man page.
 
@@ -222,6 +222,7 @@ public class ZoneInfoParser {
         public int getDate() { return mDate; }
         public Weekday getWeekday() { return mWeekday; }
 
+        @Override
         public String toString() {
             if (DayType.ON.equals(mType))
                 return Integer.toString(mDate);
@@ -340,6 +341,7 @@ public class ZoneInfoParser {
         // 2) DayType
         // 3) weekday
         // Ordering for Day has no intrinsic meaning.  We just need something consistent.
+        @Override
         public int compareTo(Day other) {
             if (other == null)
                 throw new NullPointerException();
@@ -473,6 +475,7 @@ public class ZoneInfoParser {
             }
         }
 
+        @Override
         public String toString() {
             String suffix;
             switch (mType) {
@@ -492,6 +495,7 @@ public class ZoneInfoParser {
                 return String.format("%s%d:%02d%s", sign, mHour, mMin, suffix);
         }
 
+        @Override
         public int compareTo(Time other) {
             if (other == null)
                 throw new NullPointerException();
@@ -520,7 +524,7 @@ public class ZoneInfoParser {
             } else
                 tt = 5;
             TimeType otherType = other.getType();
-            if (otherType != null) {                
+            if (otherType != null) {
                 switch (mType) {
                 case WALL_TIME:
                     ttOther = 0;
@@ -541,8 +545,8 @@ public class ZoneInfoParser {
     }
 
     public static class Until implements Comparable<Until> {
-        private int mYear;
-        private int mMonth;
+        private final int mYear;
+        private int mMonth;  // January == 1
         private Day mDay;
         private Time mTime;
 
@@ -565,11 +569,19 @@ public class ZoneInfoParser {
                 mTime = new Time(false, 0, 0, 0, Time.TimeType.WALL_TIME);
         }
 
+        public Until(Calendar cal) {
+            mYear = cal.get(Calendar.YEAR);
+            mMonth = cal.get(Calendar.MONTH) + 1; // Calendar.JANUARY == 0;
+            mDay = new Day(cal.get(Calendar.DAY_OF_MONTH));
+            mTime = new Time(false, 0, 0, 0, Time.TimeType.WALL_TIME);
+        }
+
         public int getYear() { return mYear; }
         public int getMonth() { return mMonth; }
         public Day getDay() { return mDay; }
         public Time getTime() { return mTime; }
 
+        @Override
         public String toString() {
             String mon = Month.toString(mMonth);
             String day = mDay.toString();
@@ -584,6 +596,7 @@ public class ZoneInfoParser {
         // 2) month
         // 3) day
         // 4) time
+        @Override
         public int compareTo(Until other) {
             if (other == null)
                 throw new NullPointerException();
@@ -614,15 +627,15 @@ public class ZoneInfoParser {
     }
 
     public static class RuleLine {
-        private String mName;
-        private int mFromYear;
+        private final String mName;
+        private final int mFromYear;
         private int mToYear;
-        private String mType;
-        private int mIn;
-        private Day mOn;
-        private Time mAt;
-        private Time mSave;
-        private String mLetter;
+        private final String mType;
+        private final int mIn;
+        private final Day mOn;
+        private final Time mAt;
+        private final Time mSave;
+        private final String mLetter;
 
         public RuleLine(List<String> tokens) throws TZDataParseException {
             if (tokens.size() < 9)
@@ -654,6 +667,7 @@ public class ZoneInfoParser {
 
         public boolean isCurrent() { return mToYear == Integer.MAX_VALUE; }
 
+        @Override
         public String toString() {
             String fromYear, toYear;
             if (mFromYear == Integer.MAX_VALUE)
@@ -680,11 +694,11 @@ public class ZoneInfoParser {
         public static enum RuleSaveType { RULE, SAVE };
 
         private String mName;
-        private Time mGmtOff;  // in seconds
+        private final Time mGmtOff;  // in seconds
         private RuleSaveType mRuleSaveType;
         private String mRuleName;
         private Time mSave;
-        private String mAbbrevFormat;
+        private final String mAbbrevFormat;
         private Until mUntil;
         private Rule mRule;
 
@@ -730,6 +744,7 @@ public class ZoneInfoParser {
         public Rule getRule() { return mRule; }
         public Time getSave() { return mSave; }
 
+        @Override
         public String toString() {
             String ruleSave;
             if (RuleSaveType.RULE.equals(mRuleSaveType)) {
@@ -771,6 +786,7 @@ public class ZoneInfoParser {
         // 4) RULES
         // 6) FORMAT
         // GMTOFF/SAVE/RULES/FORMAT ordering is meaningless; done only for consistent ordering.
+        @Override
         public int compareTo(ZoneLine other) {
             if (other == null)
                 throw new NullPointerException();
@@ -818,10 +834,10 @@ public class ZoneInfoParser {
     }
 
     public static class Leap {
-        private int mYear;
-        private int mMonth;             // 1=January, ..., 12=December
+        private final int mYear;
+        private final int mMonth;             // 1=January, ..., 12=December
         private int mDay;
-        private Time mTime;
+        private final Time mTime;
         private boolean mCorrPositive;  // true=+, false=-
         private boolean mRolling;       // true=Rolling, false=Stationary
 
@@ -861,8 +877,8 @@ public class ZoneInfoParser {
     }
 
     public static class Rule {
-        private String mName;
-        private List<RuleLine> mRuleLines;
+        private final String mName;
+        private final List<RuleLine> mRuleLines;
 
         public Rule(String name) {
             mName = name;
@@ -875,9 +891,9 @@ public class ZoneInfoParser {
     }
 
     public static class Zone {
-        private String mName;
-        private Set<ZoneLine> mZoneLines;
-        private Set<String> mAliases;
+        private final String mName;
+        private final Set<ZoneLine> mZoneLines;
+        private final Set<String> mAliases;
 
         public Zone(String name) {
             mName = name;
@@ -895,10 +911,10 @@ public class ZoneInfoParser {
 
 
     private boolean mAnalyzed;
-    private Map<String /* Rule NAME */, Rule> mRules;
-    private Map<String /* Zone NAME */, Zone> mZones;
-    private Map<String /* LINK TO (alias) */, String /* LINK FROM (real TZ) */> mLinks;
-    private List<Leap> mLeaps;
+    private final Map<String /* Rule NAME */, Rule> mRules;
+    private final Map<String /* Zone NAME */, Zone> mZones;
+    private final Map<String /* LINK TO (alias) */, String /* LINK FROM (real TZ) */> mLinks;
+    private final List<Leap> mLeaps;
 
     public ZoneInfoParser() {
         mRules = new HashMap<String, Rule>();

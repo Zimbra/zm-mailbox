@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,9 +25,11 @@ import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.io.Writer;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +47,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
 import com.zimbra.common.calendar.ZoneInfoParser.Day;
+import com.zimbra.common.calendar.ZoneInfoParser.Day.DayType;
 import com.zimbra.common.calendar.ZoneInfoParser.Rule;
 import com.zimbra.common.calendar.ZoneInfoParser.RuleLine;
 import com.zimbra.common.calendar.ZoneInfoParser.Time;
@@ -52,7 +55,6 @@ import com.zimbra.common.calendar.ZoneInfoParser.Until;
 import com.zimbra.common.calendar.ZoneInfoParser.Weekday;
 import com.zimbra.common.calendar.ZoneInfoParser.Zone;
 import com.zimbra.common.calendar.ZoneInfoParser.ZoneLine;
-import com.zimbra.common.calendar.ZoneInfoParser.Day.DayType;
 
 public class ZoneInfo2iCalendar {
 
@@ -401,16 +403,15 @@ public class ZoneInfo2iCalendar {
         return null;
     }
 
-    // TODO: Get zone line(s?) that corresponds to a year.
-    // Do we need to pass in month/date/time as well?  What time zone is the time in?  How to deal with w/s/u clocks?
-    // TODO: Zone lines in a Zone should be sorted by UNTIL. (in ZoneInfoParser)
-    private static ZoneLine getZoneLineForYear(Zone zone, int year) {
+    private static ZoneLine getZoneLineForYear(Zone zone, Calendar referenceDate) {
+        Until referenceUntil = new Until(referenceDate);
         Set<ZoneLine> zlines = zone.getZoneLines();
         for (ZoneLine zline : zlines) {
             Until until = zline.getUntil();
             if (until != null) {
-                if (until.getYear() < year)
+                if (until.compareTo(referenceUntil) < 0) {
                     continue;
+                }
             }
             return zline;
         }
@@ -419,6 +420,7 @@ public class ZoneInfo2iCalendar {
 
     private static class ZoneComparatorByGmtOffset implements Comparator<Zone> {
 
+        @Override
         public int compare(Zone z1, Zone z2) {
             if (z1 == null && z2 == null)
                 return 0;
@@ -553,6 +555,7 @@ public class ZoneInfo2iCalendar {
     private static final String OPT_EXTRA_DATA_FILE = "e";
     private static final String OPT_OUTPUT_FILE = "o";
     private static final String OPT_YEAR = "y";
+    private static final String OPT_DATE = "d";
     private static final String OPT_LAST_MODIFIED = "last-modified";
 
     private static Options sOptions = new Options();
@@ -560,10 +563,14 @@ public class ZoneInfo2iCalendar {
     static {
         sOptions.addOption(OPT_HELP, "help", false, "Show help (this output)");
         sOptions.addOption(OPT_TZDATA_DIR, "tzdata-dir", true, "directory containing tzdata source files");
-        sOptions.addOption(OPT_EXTRA_DATA_FILE, "extra-data-file", true, "file containing list of primary time zones and match scores");
+        sOptions.addOption(OPT_EXTRA_DATA_FILE, "extra-data-file", true,
+                "file containing list of primary time zones and match scores");
         sOptions.addOption(OPT_OUTPUT_FILE, "output-file", true, "output file; data is written to stdout by default");
-        sOptions.addOption(OPT_YEAR, "year", true, "reference year for determining simplified DST rules");
+        sOptions.addOption(OPT_DATE, "date", true,
+                "reference date for determining simplified DST rules.\nUse format yyyy-MM-dd (default is today's date)");
         sOptions.addOption(null, OPT_LAST_MODIFIED, true, "LAST-MODIFIED value; current time by default");
+        sOptions.addOption(OPT_YEAR, "year", true,
+                "4 digit year (DEPRECATED - use date)");
     }
 
     private static void usage(String errmsg) {
@@ -597,11 +604,12 @@ public class ZoneInfo2iCalendar {
         public File[] tzdataFiles;                // tzdata source files
         public File extraDataFile;                // file containing PrimaryZone and ZoneMatchScore lines
         public File outputFile;                   // path to the output iCalendar file
-        public int year;                          // reference year; current year if not specified
+        public Calendar referenceDate;            // reference date; today if not specified
         public String lastModified;               // value for LAST-MODIFIED property; current time if not specified
     }
 
-    private static Params initParams(CommandLine cl) throws IOException, org.apache.commons.cli.ParseException {
+    private static Params initParams(CommandLine cl)
+    throws IOException, org.apache.commons.cli.ParseException, ParseException {
         Params params = new Params();
         if (cl.hasOption(OPT_HELP))
             return params;
@@ -619,16 +627,21 @@ public class ZoneInfo2iCalendar {
             params.outputFile = file;
         }
 
-        if (cl.hasOption(OPT_YEAR)) {
+        if (cl.hasOption(OPT_DATE)) {
+            String dateStr = cl.getOptionValue(OPT_DATE);
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = formatter.parse(dateStr);
+            params.referenceDate = new GregorianCalendar();
+            params.referenceDate.setTime(date);
+        } else if (cl.hasOption(OPT_YEAR)) {
             String yearStr = cl.getOptionValue(OPT_YEAR);
             try {
-                params.year = Integer.parseInt(yearStr);
+                params.referenceDate = new GregorianCalendar(Integer.parseInt(yearStr), 1, 1);
             } catch (NumberFormatException e) {
                 throw new org.apache.commons.cli.ParseException("Invalid year " + yearStr);
             }
         } else {
-            Calendar now = new GregorianCalendar();
-            params.year = now.get(Calendar.YEAR);
+            params.referenceDate = new GregorianCalendar();
         }
 
         if (cl.hasOption(OPT_LAST_MODIFIED)) {
@@ -670,9 +683,13 @@ public class ZoneInfo2iCalendar {
                         continue;
                     // Skip some known non data files: *.tab, *.sh and "factory".
                     String name = file.getName();
-                    if (name.endsWith(".tab") || name.endsWith(".sh") || name.equalsIgnoreCase("factory") ||
-                            name.equalsIgnoreCase("Makefile"))
+                    if (name.endsWith(".tab") || name.endsWith(".sh") || name.endsWith(".awk") ||
+                            (name.startsWith(".") || name.endsWith(".swp")) ||  // ignore editor temporary files
+                            name.equalsIgnoreCase("Makefile") || name.equalsIgnoreCase("README") ||
+                            name.equalsIgnoreCase("factory") ||
+                            name.equalsIgnoreCase("leap-seconds.list")) {
                         continue;
+                    }
                     if (!file.canRead())
                         throw new IOException("Permission denied on file " + file.getAbsolutePath());
                     sourceFiles.add(file);
@@ -761,10 +778,11 @@ public class ZoneInfo2iCalendar {
         }
 
         Writer out;
-        if (params.outputFile != null)
+        if (params.outputFile != null) {
             out = new PrintWriter(params.outputFile, "UTF-8");
-        else
+        } else {
             out = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
+        }
 
         try {
             StringBuilder hdr = new StringBuilder("BEGIN:VCALENDAR");
@@ -787,9 +805,10 @@ public class ZoneInfo2iCalendar {
                         matchScore = new Integer(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
                 }
                 Set<String> aliases = zone.getAliases();
-                ZoneLine zline = getZoneLineForYear(zone, params.year);
+                ZoneLine zline = getZoneLineForYear(zone, params.referenceDate);
                 if (zline != null)
-                    out.write(toVTimezone(params.year, zline, params.lastModified, aliases, isPrimary, matchScore));
+                    out.write(toVTimezone(params.referenceDate.get(Calendar.YEAR),
+                            zline, params.lastModified, aliases, isPrimary, matchScore));
             }
 
             StringBuilder footer = new StringBuilder("END:VCALENDAR");
