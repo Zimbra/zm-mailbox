@@ -86,20 +86,34 @@ public class UBIDLdapContext extends ZLdapContext {
         if (initialized) {
             return;
         }
-        
+
         initialized = true;
-        
-        masterConfig = new ZimbraLdapConfig(LdapServerType.MASTER);
-        masterConnPool = LdapConnectionPool.createConnectionPool(
-                LdapConnectionPool.CP_ZIMBRA_MASTER, masterConfig);
-        
+
+        try {
+            masterConfig = new ZimbraLdapConfig(LdapServerType.MASTER);
+            masterConnPool = LdapConnectionPool.createConnectionPool(
+                    LdapConnectionPool.CP_ZIMBRA_MASTER, masterConfig);
+        } catch (LdapException e) {
+            ZimbraLog.ldap.info("master is down, falling back to replica...");
+            replicaConfig = new ZimbraLdapConfig(LdapServerType.REPLICA);
+            replicaConnPool = LdapConnectionPool.createConnectionPool(
+                    LdapConnectionPool.CP_ZIMBRA_REPLICA, replicaConfig);
+            masterConfig = replicaConfig;
+            masterConnPool = replicaConnPool;
+            ZimbraLog.ldap.info("using replica");
+        }
+
         if (alwaysUseMaster) {
             replicaConfig = masterConfig;
             replicaConnPool = masterConnPool;
         } else {
-            replicaConfig = new ZimbraLdapConfig(LdapServerType.REPLICA);
-            replicaConnPool = LdapConnectionPool.createConnectionPool(
-                    LdapConnectionPool.CP_ZIMBRA_REPLICA, replicaConfig);
+            if (replicaConfig == null) {
+                replicaConfig = new ZimbraLdapConfig(LdapServerType.REPLICA);
+            }
+            if (replicaConnPool == null) {
+                replicaConnPool = LdapConnectionPool.createConnectionPool(
+                        LdapConnectionPool.CP_ZIMBRA_REPLICA, replicaConfig);
+            }
         }
     }
     
