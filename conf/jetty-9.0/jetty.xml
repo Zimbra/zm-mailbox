@@ -541,6 +541,11 @@
 				<Arg type="String">/public/error.jsp</Arg>
 			</Call>
 		</Get>
+        <Get name="sessionHandler">
+            <Get name="sessionManager">
+                <Set name="httpOnly">TRUE</Set>
+            </Get> 
+        </Get> 
 		<Call name="setAttribute">
 			<Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
 			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$
@@ -563,6 +568,11 @@
 		<Set name="tempDirectory"><SystemProperty name="jetty.home" default="." />/work/zimbraAdmin
 		</Set>
 		<Set name="compactPath">true</Set>
+        <Get name="sessionHandler">
+            <Get name="sessionManager">
+                <Set name="httpOnly">TRUE</Set>
+            </Get> 
+        </Get> 
 		<Call name="setAttribute">
 			<Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
 			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$
