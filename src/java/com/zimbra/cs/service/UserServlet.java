@@ -460,6 +460,14 @@ public class UserServlet extends ZimbraServlet {
             }
         }
 
+        if (FormatType.FREE_BUSY.equals(context.format)) {
+            /* Always reference Calendar.  This is the fallback for non-existent paths, thus, could harvest
+             * emails by asking for freebusy against, say the Drafts folder.  Without this change, the returned
+             * HTML would reference Drafts for valid emails and Calendar for invalid ones.
+             */
+            context.fakeTarget = new UserServletContext.FakeFolder(context.accountPath, "/Calendar", "Calendar");
+        }
+
         resolveFormatter(context);
 
         // Prevent harvest attacks.  If mailbox doesn't exist for a request requiring authentication,

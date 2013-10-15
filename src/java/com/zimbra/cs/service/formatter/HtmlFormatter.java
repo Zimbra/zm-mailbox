@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,11 +23,12 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Color;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.UserServletException;
 
@@ -149,18 +150,35 @@ public class HtmlFormatter extends Formatter {
             context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_CALENDAR_FIRST_DAY_OF_WEEK, targetAccount.getAttr(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek));
             context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_CALENDAR_DAY_HOUR_START, targetAccount.getAttr(Provisioning.A_zimbraPrefCalendarDayHourStart));
             context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_CALENDAR_DAY_HOUR_END, targetAccount.getAttr(Provisioning.A_zimbraPrefCalendarDayHourEnd));
+        } else {
+            // Useful when faking results - e.g. FREEBUSY html view for non-existent account
+            if (context.fakeTarget != null) {
+                context.req.setAttribute(ATTR_TARGET_ACCOUNT_NAME, context.fakeTarget.getAccount());
+            }
+            com.zimbra.cs.account.Cos defaultCos = Provisioning.getInstance().get(com.zimbra.cs.account.Provisioning.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+            context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_TIME_ZONE,
+                        defaultCos.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
+            context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_SKIN, defaultCos.getAttr(Provisioning.A_zimbraPrefSkin));
+            context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_LOCALE, defaultCos.getAttr(Provisioning.A_zimbraPrefLocale));
+            context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_CALENDAR_FIRST_DAY_OF_WEEK, defaultCos.getAttr(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek));
+            context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_CALENDAR_DAY_HOUR_START, defaultCos.getAttr(Provisioning.A_zimbraPrefCalendarDayHourStart));
+            context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_CALENDAR_DAY_HOUR_END, defaultCos.getAttr(Provisioning.A_zimbraPrefCalendarDayHourEnd));
         }
         if (targetItem != null) {
             context.req.setAttribute(ATTR_TARGET_ITEM_ID, targetItem.getId());
             context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, MailItem.getNameForType(targetItem));
             context.req.setAttribute(ATTR_TARGET_ITEM_PATH, targetItem.getPath());
             context.req.setAttribute(ATTR_TARGET_ITEM_NAME, targetItem.getName());
-    
             context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, targetItem.getColor());
             if (targetItem instanceof Folder)
                 context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, MailItem.getNameForType(((Folder)targetItem).getDefaultView()));
+        } else {
+            context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, Color.getMappedColor(null));
         }
-
+        if (context.fakeTarget != null) {  // Override to avoid address harvesting
+            context.req.setAttribute(ATTR_TARGET_ITEM_PATH, context.fakeTarget.getPath());
+            context.req.setAttribute(ATTR_TARGET_ITEM_NAME, context.fakeTarget.getName());
+        }
         String mailUrl = PATH_MAIN_CONTEXT;
         try {
             mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
