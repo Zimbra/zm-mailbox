@@ -222,49 +222,11 @@ Copy the user1.p12 file to a location where you can access it from your web brow
   
   
 ----------------
-4. Import the CA certificate that signed the client certificate in ZCS's keystore or truststore.
+4. Import the CA certificate that signed the client certificate in ZCS's keystore.
 ----------------
 
-This can be done by either of the following two ways.
-
-(A) /opt/zimbra/bin/zmcertmgr addcacert <certfile>
-    addcacert appends an otherwise untrusted ssl certificate to the cacerts file. 
-    This is the preferred way.
-    
-    This should add the CA to the trust store.
-    
-    Other related info:
-        - Trust store:
-        zmlocalconfig -x mailboxd_truststore
-        
-        - Trust store password:
-        zmlocalconfig -s mailboxd_truststore_password
-
-    To verify that the CA is added:
-    keytool -list -keystore `zmlocalconfig -x -m nokey mailboxd_truststore` -v -alias {alias-of-the-CA}
-    
-
-[========== Begin For dev env only ==========]
-On mac, example of the equivalent keytool comamnd that would be issued by 
-"zmcertmgr addcacert <certfile>" is:
-$ sudo keytool -import -keystore /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts -alias myca -file ca.crt
-
-To verify that the CA is added:
-$ keytool -list -keystore /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts -v -alias myca
-or 
-$ keytool -list -keystore `zmlocalconfig -x -m nokey mailboxd_truststore` -v -alias myca
-
-
-For dev env on mac, to test providing CA certs from the trust manager, uncomment:
-  <Set name="Truststore">/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts</Set>
-  <Set name="TrustPassword">changeit</Set>
-on the ssl-clientcert SslSelectChannelConnector in /opt/zimbra/jetty/etc/jetty.xml.
-
-[========== End For dev env only ==========]
-
-
-(B) In dev environment, if zmcertmgr is not available, you can use keytool to 
-    import the CA cert to /opt/zimbra/jetty/etc/keystore.
+In dev environment you can use keytool to import the CA cert to /opt/zimbra/jetty/etc/keystore (keystore
+identified by mailboxd_keystore localconfig key).
 
 $ keytool -import -keystore /opt/zimbra/jetty/etc/keystore -alias myca -file ca.crt
 Enter keystore password:  
@@ -633,8 +595,6 @@ ca.crt before saving).
 for dev environment:
 
 keytool -import -keystore /opt/zimbra/jetty/etc/keystore -alias myca -file ca.crt
-
-see section (Import CA certificate) for reference on how to do it in production environment
 
 - create CACert account for testing, go to http://cacert.org and click on 'Join', fill up 
 form and provide your zimbra email address, in my case it's eugene@zimbra.com. 
