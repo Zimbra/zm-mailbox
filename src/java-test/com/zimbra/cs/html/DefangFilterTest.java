@@ -1,22 +1,23 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * ***** END LICENSE BLOCK *****
- */
+ /*
+  * ***** BEGIN LICENSE BLOCK *****
+  * Zimbra Collaboration Suite Server
+  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
+  * 
+  * The contents of this file are subject to the Zimbra Public License
+  * Version 1.4 ("License"); you may not use this file except in
+  * compliance with the License.  You may obtain a copy of the License at
+  * http://www.zimbra.com/license.
+  * 
+  * Software distributed under the License is distributed on an "AS IS"
+  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+  * ***** END LICENSE BLOCK *****
+  */
 package com.zimbra.cs.html;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +30,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.soap.RequestContext;
 
 /**
  * Tired of regressions in the defang filter. Unit test based on fixes I found in bugzilla over the years for different
@@ -413,37 +416,37 @@ public class DefangFilterTest {
 
 
 
-	@Test
-	public void testBug78902() throws Exception {
+    @Test
+    public void testBug78902() throws Exception {
 
-		String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
-		InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(result.contains("<a target=\"_blank\" href=\"Neptune.gif\"></a>"));
 
-		html = "<html><body>My pictures <a href=\"javascript:document.write('%3C%61%20%68%72%65%66%3D%22%6A%61%76%"
-			+ "61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%31%29%22%20%6F%6E%4D%6F%75%73%65%4F%76%65%72%3D%61%6C%65%"
-			+ "72%74%28%5C%22%70%30%77%6E%5C%22%29%3E%4D%6F%75%73%65%20%6F%76%65%72%20%68%65%72%65%3C%2F%61%3E')\">here</a></body></html>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
+        html = "<html><body>My pictures <a href=\"javascript:document.write('%3C%61%20%68%72%65%66%3D%22%6A%61%76%"
+            + "61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%31%29%22%20%6F%6E%4D%6F%75%73%65%4F%76%65%72%3D%61%6C%65%"
+            + "72%74%28%5C%22%70%30%77%6E%5C%22%29%3E%4D%6F%75%73%65%20%6F%76%65%72%20%68%65%72%65%3C%2F%61%3E')\">here</a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
 
-		html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
+        html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("<a target=\"_blank\" href=\"Neptune.txt\"></a>"));
 
-		html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
+        html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("<a target=\"_blank\" href=\"Neptune.pptx\"></a>"));
 
-		html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
-		htmlStream = new ByteArrayInputStream(html.getBytes());
+        html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(!result.contains("<script>"));
-	}
+    }
 
 
     @Test
@@ -477,7 +480,7 @@ public class DefangFilterTest {
                 true);
         Assert.assertTrue(result.equals(html));
     }
-    
+
     @Test
     public void testBug81641() throws Exception {
 
@@ -488,37 +491,37 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(!result.contains("url('http://www.househuntnews.com/marketing/images/keller-header.jpg')"));
-        
+
         html = "<td style= \"@media (max-width: 480px) {.body{font-size: 0.938em;} }\" />";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-width: 480px)"));
-        
+
         html = "<td style= \"@media all and (max-width: 699px) and (min-width: 520px)\" />";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains(" (max-width: 699px) and (min-width: 520px)"));
-        
+
         html ="<td style= \"@media (orientation:portrait)\" />";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(orientation:portrait)"));
-        
+
         html = "<td style= \"@media (min-width: 700px), handheld and (orientation: landscape) { ... }\"/>";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(min-width: 700px), handheld and (orientation: landscape)"));
-        
+
         html = "<td style= \"@media not screen and (color), print and (color)\"/>";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("not screen and (color), print and (color)"));
-        
+
         html = "<td style=  \"@media (max-width 480px) {.body{font-size: 0.938em;} }\"/>";
         htmlStream  = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("(max-width 480px)"));
-        
+
     }
     @Test
     public void testBug82181() throws Exception {
@@ -705,6 +708,46 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
 
+    }
+
+    @Test
+    public void testBug83999() throws IOException {
+
+        RequestContext reqContext = new RequestContext();
+        reqContext.setVirtualHost("mail.zimbra.com");
+        ZThreadLocal.setContext(reqContext);
+
+        String html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" " +
+        		"action=\"http://mail.zimbra.com:7070/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"http://zimbra.vmware.com:7070/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"http://mail.zimbra.com/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+
+        ZThreadLocal.unset();
     }
 
 }

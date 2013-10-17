@@ -22,7 +22,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.net.HttpHeaders;
+import org.eclipse.jetty.http.HttpHeaders;
+
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;

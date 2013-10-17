@@ -25,11 +25,12 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.easymock.EasyMock;
+import org.eclipse.jetty.http.HttpHeaders;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.net.HttpHeaders;
+
 
 /**
  * @author zimbra
