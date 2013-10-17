@@ -217,9 +217,18 @@
       <param-value>com.zimbra.cs.service.account.AccountService</param-value>
     </init-param>
     <init-param>
-      <param-name>engine.handler.1</param-name>
-      <param-value>com.zimbra.cs.service.mail.MailService</param-value>
+		<param-name>engine.handler.1</param-name>
+		<param-value>com.zimbra.cs.service.mail.MailService</param-value>
     </init-param>
+	<init-param>
+		<param-name>csrf.req.check</param-name>
+		<param-value>true</param-value>
+	</init-param>
+	<init-param>
+	<!--  A comma separated list like www.abc.com, www.xyz.com -->
+		<param-name>allowed.referrer.host</param-name>
+		<param-value />
+	</init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
 
