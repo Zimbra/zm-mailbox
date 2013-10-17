@@ -5006,23 +5006,39 @@ public class Mailbox {
         }
     }
 
-    private boolean dedupe(MimeMessage mm) throws ServiceException {
-        Account acct = getAccount();
-        switch (acct.getPrefDedupeMessagesSentToSelf()) {
-            case dedupeAll:
-                return true;
 
+    public boolean dedupeForSelfMsg(ParsedMessage pm) throws ServiceException {
+        if (pm == null)
+            return false;
+        CalendarPartInfo cpi = pm.getCalendarPartInfo();
+        String msgidHeader = pm.getMessageID();
+        boolean dedupe = false;
+
+        if (msgidHeader == null)
+            return false;
+
+        // if the deduping rules say to drop this duplicated incoming message,
+        // .... but only dedupe messages not carrying a calendar part
+        if (mSentMessageIDs.containsKey(msgidHeader)
+            && (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi))) {
+            Account acct = getAccount();
+            switch (acct.getPrefDedupeMessagesSentToSelf()) {
+            case dedupeAll: {
+                dedupe = true;
+                break;
+            }
             case secondCopyifOnToOrCC:
                 try {
-                    return !AccountUtil.isDirectRecipient(acct, mm);
+                    dedupe = !AccountUtil.isDirectRecipient(acct, pm.getMimeMessage());
                 } catch (Exception e) {
-                    return false;
+                    ZimbraLog.mailbox.info(e.getMessage());
                 }
-
+                break;
             case dedupeNone:
             default:
-                return false;
+            }
         }
+        return dedupe;
     }
 
     public int getConversationIdFromReferent(MimeMessage newMsg, int parentID) {
@@ -5346,20 +5362,8 @@ public class Mailbox {
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();
         boolean isSent = ((flags & Flag.BITMASK_FROM_ME) != 0);
-        boolean checkDuplicates = (!isRedo && msgidHeader != null);
-        if (checkDuplicates && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
+        if (!isRedo && msgidHeader != null && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
             Integer sentMsgID = mSentMessageIDs.get(msgidHeader);
-            // if the deduping rules say to drop this duplicated incoming message, return null now...
-            //   ... but only dedupe messages not carrying a calendar part
-            CalendarPartInfo cpi = pm.getCalendarPartInfo();
-            if (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
-                if (dedupe(pm.getMimeMessage())) {
-                    ZimbraLog.mailbox.info("not delivering message with Message-ID %s because it is a duplicate of sent message %d",
-                            msgidHeader, sentMsgID);
-                    return null;
-                }
-            }
-            // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
                 ZimbraLog.mailbox.debug("duplicate detected but not deduped (%s); will try to slot into conversation %d",
@@ -5647,7 +5651,7 @@ public class Mailbox {
         }
 
         // step 8: remember the Message-ID header so that we can avoid receiving duplicates
-        if (isSent && checkDuplicates) {
+        if (isSent && !isRedo && msgidHeader != null) {
             mSentMessageIDs.put(msgidHeader, msg.getId());
         }
 
