@@ -735,8 +735,6 @@ public final class MailConstants {
     public static final String A_MAX_MEMBERS = "maxMembers";
     public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
     public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
-    public static final String A_WEB_OFFLINE_SYNC_DAYS = "webOfflineSyncDays";
-    public static final String A_NUM_DAYS = "numDays";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
@@ -757,7 +755,7 @@ public final class MailConstants {
     public static final String A_PART = "part";
     public static final String A_BODY = "body";
     public static final String A_CONTENT_TYPE = "ct";
-    public static final String A_CONTENT_DISPOSITION = "cd";
+    public static final String A_CONTENT_DISPOSTION = "cd";
     public static final String A_CONTENT_DESCRIPTION = "cde";
     public static final String A_CONTENT_ID = "ci";
     public static final String A_CONTENT_LOCATION = "cl";
