@@ -164,6 +164,7 @@ public class ProvUtil implements HttpDebugListener {
     private boolean outputBinaryToFile;
     private boolean allowMultiValuedAttrReplacement;
     private long sendStart;
+    private boolean forceDisplayAttrValue;
 
     private boolean errorOccursDuringInteraction = false; // bug 58554
 
@@ -209,6 +210,10 @@ public class ProvUtil implements HttpDebugListener {
 
     private boolean outputBinaryToFile() {
         return outputBinaryToFile;
+    }
+
+    private void setForceDisplayAttrValue(boolean value) {
+        this.forceDisplayAttrValue = value;
     }
 
     public void setServer(String value) {
@@ -2793,13 +2798,13 @@ public class ProvUtil implements HttpDebugListener {
                     for (int i = 0; i < sv.length; i++) {
                         String aSv = sv[i];
                         // don't print permission denied attr
-                        if (aSv.length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(aSv))) {
+                        if (this.forceDisplayAttrValue || aSv.length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(aSv))) {
                             printAttr(name, aSv, i, isBinary, timestamp);
                         }
                     }
                 } else if (value instanceof String) {
                     // don't print permission denied attr
-                    if (((String)value).length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(value))) {
+                    if (this.forceDisplayAttrValue || ((String)value).length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(value))) {
                         printAttr(name, (String)value, null, isBinary, timestamp);
                     }
                 }
@@ -3537,6 +3542,7 @@ public class ProvUtil implements HttpDebugListener {
         options.addOption("m", "master", false, "use LDAP master (has to be used with --ldap)");
         options.addOption("t", "temp", false, "write binary values to files in temporary directory specified in localconfig key zmprov_tmp_directory");
         options.addOption("r", "replace", false, "allow replacement of multi-valued attr value");
+        options.addOption("fd", "forcedisplay", false, "force display attr value");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
 
@@ -3626,6 +3632,10 @@ public class ProvUtil implements HttpDebugListener {
 
         if (cl.hasOption('r')) {
             pu.setAllowMultiValuedAttrReplacement(true);
+        }
+
+        if (cl.hasOption("fd")) {
+            pu.setForceDisplayAttrValue(true);
         }
 
         args = cl.getArgs();
