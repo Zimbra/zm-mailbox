@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -48,6 +48,20 @@ public class ZMimeBodyPartTest {
         Assert.assertArrayEquals(content.getBytes(), ByteUtil.getContent(mbp.getInputStream(), -1));
 
         mbp.writeTo(System.out);
+    }
+
+    @Test
+    public void shareContent() throws Exception {
+        String content = "\u30d6\u30ea\u30fc\u30d5\u30b1\u30fc\u30b9";
+        ZMimeBodyPart mbp = new ZMimeBodyPart();
+
+        mbp.setContent(content, "xml/x-zimbra-share;charset=ISO-2022-JP");
+        mbp.setHeader("Content-Transfer-Encoding", "base64");
+        mbp.updateHeaders();
+        mbp.writeTo(System.out);
+        Assert.assertEquals(ZTransferEncoding.BASE64.toString(), mbp.getHeader("Content-Transfer-Encoding", null));
+        Assert.assertArrayEquals(content.getBytes("ISO-2022-JP"), ByteUtil.getContent(mbp.getInputStream(), -1));
+
     }
 
     private void testEncodingSelection(String msg, String content, ZTransferEncoding cteExpected) throws Exception {
