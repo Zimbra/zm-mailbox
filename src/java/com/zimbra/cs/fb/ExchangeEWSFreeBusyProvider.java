@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,28 +17,22 @@ package com.zimbra.cs.fb;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 
 import javax.activation.CommandMap;
 import javax.activation.MailcapCommandMap;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import javax.net.ssl.HostnameVerifier;
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -65,7 +59,53 @@ import com.microsoft.schemas.exchange.services._2006.messages.GetUserAvailabilit
 import com.microsoft.schemas.exchange.services._2006.messages.ResponseMessageType;
 import com.microsoft.schemas.exchange.services._2006.messages.UpdateItemResponseType;
 import com.microsoft.schemas.exchange.services._2006.messages.UpdateItemType;
-import com.microsoft.schemas.exchange.services._2006.types.*;
+import com.microsoft.schemas.exchange.services._2006.types.ArrayOfMailboxData;
+import com.microsoft.schemas.exchange.services._2006.types.BaseFolderType;
+import com.microsoft.schemas.exchange.services._2006.types.ConflictResolutionType;
+import com.microsoft.schemas.exchange.services._2006.types.ConstantValueType;
+import com.microsoft.schemas.exchange.services._2006.types.ContainmentModeType;
+import com.microsoft.schemas.exchange.services._2006.types.ContainsExpressionType;
+import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekType;
+import com.microsoft.schemas.exchange.services._2006.types.DefaultShapeNamesType;
+import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdNameType;
+import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.Duration;
+import com.microsoft.schemas.exchange.services._2006.types.EmailAddress;
+import com.microsoft.schemas.exchange.services._2006.types.ExchangeVersionType;
+import com.microsoft.schemas.exchange.services._2006.types.ExtendedPropertyType;
+import com.microsoft.schemas.exchange.services._2006.types.FieldURIOrConstantType;
+import com.microsoft.schemas.exchange.services._2006.types.FolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.FolderQueryTraversalType;
+import com.microsoft.schemas.exchange.services._2006.types.FolderResponseShapeType;
+import com.microsoft.schemas.exchange.services._2006.types.FolderType;
+import com.microsoft.schemas.exchange.services._2006.types.FreeBusyViewOptionsType;
+import com.microsoft.schemas.exchange.services._2006.types.IsEqualToType;
+import com.microsoft.schemas.exchange.services._2006.types.ItemChangeType;
+import com.microsoft.schemas.exchange.services._2006.types.ItemQueryTraversalType;
+import com.microsoft.schemas.exchange.services._2006.types.ItemResponseShapeType;
+import com.microsoft.schemas.exchange.services._2006.types.ItemType;
+import com.microsoft.schemas.exchange.services._2006.types.MailboxData;
+import com.microsoft.schemas.exchange.services._2006.types.MapiPropertyTypeType;
+import com.microsoft.schemas.exchange.services._2006.types.MeetingAttendeeType;
+import com.microsoft.schemas.exchange.services._2006.types.MessageDispositionType;
+import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAllItemsType;
+import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfBaseFolderIdsType;
+import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfItemChangeDescriptionsType;
+import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfItemChangesType;
+import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfPropertyValuesType;
+import com.microsoft.schemas.exchange.services._2006.types.PathToExtendedFieldType;
+import com.microsoft.schemas.exchange.services._2006.types.PathToUnindexedFieldType;
+import com.microsoft.schemas.exchange.services._2006.types.PostItemType;
+import com.microsoft.schemas.exchange.services._2006.types.RequestServerVersion;
+import com.microsoft.schemas.exchange.services._2006.types.ResponseClassType;
+import com.microsoft.schemas.exchange.services._2006.types.RestrictionType;
+import com.microsoft.schemas.exchange.services._2006.types.SearchExpressionType;
+import com.microsoft.schemas.exchange.services._2006.types.SerializableTimeZone;
+import com.microsoft.schemas.exchange.services._2006.types.SerializableTimeZoneTime;
+import com.microsoft.schemas.exchange.services._2006.types.ServerVersionInfo;
+import com.microsoft.schemas.exchange.services._2006.types.SetItemFieldType;
+import com.microsoft.schemas.exchange.services._2006.types.TargetFolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.UnindexedFieldURIType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -84,16 +124,17 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 	public static final String TYPE_EWS = "ews";
     private ExchangeServicePortType service = null;
     private static ExchangeWebService factory = null;
-    
+
     static {
         ZimbraLog.fb.debug("Setting MailcapCommandMap handlers back to default");
         MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
         mc.addMailcap("application/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
         mc.addMailcap("text/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
         mc.addMailcap("text/plain;;x-java-content-handler=com.sun.mail.handlers.text_plain");
+        mc.addMailcap("xml/x-zimbra-share;;x-java-content-handler=com.sun.mail.handlers.text_plain");
         CommandMap.setDefaultCommandMap(mc);
         ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
-    	
+
         URL wsdlUrl = ExchangeWebService.class.getResource("/Services.wsdl");
         factory = new ExchangeWebService(wsdlUrl,
                 new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
@@ -236,6 +277,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         mRequests = new HashMap<String, ArrayList<Request>>();
     }
 
+    @Override
     public boolean registerForMailboxChanges() {
         if (sRESOLVERS.size() > 1)
             return true;
@@ -339,7 +381,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         rtRestriction.setSearchExpression(new JAXBElement<SearchExpressionType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
             "IsEqualTo"),
             SearchExpressionType.class,
-            (SearchExpressionType)ieq));
+            ieq));
 
         findFolderRequest.setRestriction(rtRestriction);
 
@@ -403,7 +445,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         rtRestriction.setSearchExpression(new JAXBElement<SearchExpressionType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
             "Contains"),
             SearchExpressionType.class,
-            (SearchExpressionType)contains));
+            contains));
 
         findFolderRequest.setRestriction(rtRestriction);
 
@@ -458,7 +500,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         rtRestriction.setSearchExpression(new JAXBElement<SearchExpressionType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
             "IsEqualTo"),
             SearchExpressionType.class,
-            (SearchExpressionType)ieq));
+            ieq));
 
         findItemRequest.setRestriction(rtRestriction);
 
@@ -498,6 +540,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return null;
     }
 
+    @Override
     public boolean handleMailboxChange(String accountId) {
         ZimbraLog.fb.debug("Entering handleMailboxChange() for account : " + accountId);
         String email = getEmailAddress(accountId);
@@ -506,7 +549,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 		    ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
 			return true;  // no retry
 		}
-		
+
         FreeBusy fb;
         try {
             fb = getFreeBusy(accountId, FreeBusyQuery.CALENDAR_FOLDER_ALL);
@@ -732,7 +775,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
                         }
                     } else {
-                        ZimbraLog.fb.error("Could not find the Exchange folder containing '" + serverInfo.org + 
+                        ZimbraLog.fb.error("Could not find the Exchange folder containing '" + serverInfo.org +
                                 "'. Make sure zimbraFreebusyExchangeUserOrg is configured correctly and it exists on Exchange");
                     }
                 } else {
@@ -765,10 +808,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 			ZimbraLog.fb.warn("no exchange server info for user "+r.email);
 			return ret;
 		}
-		
+
 		if (!serverInfo.enabled)
 			return ret;
-		
+
         ArrayOfMailboxData attendees = new ArrayOfMailboxData();
 
         for (Request request : req) {
@@ -835,7 +878,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             ZimbraLog.fb.warn("getFreeBusyForHost failure", e);
             return getEmptyList(req);
         }
-        
+
 		for (Request re : req) {
 			String fb = "";
 			int i = 0;
@@ -859,13 +902,13 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 					fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
 					break;
 				}
-				
+
 				i++;
 			}
 
 			ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
 					re.email, FB_INTERVAL, req.get(0).start, req.get(0).end));
-		}  
+		}
 
         return ret;
     }
@@ -883,10 +926,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return 200;
     }
 
+    @Override
     public ExchangeEWSFreeBusyProvider getInstance() {
         return new ExchangeEWSFreeBusyProvider();
     }
 
+    @Override
     public void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException {
         ServerInfo info = null;
         for (ExchangeUserResolver resolver : sRESOLVERS) {
@@ -927,8 +972,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         register(new ExchangeEWSFreeBusyProvider());
     }
 
-    private HashMap<String, ArrayList<Request>> mRequests;
+    private final HashMap<String, ArrayList<Request>> mRequests;
 
+    @Override
     public List<FreeBusy> getResults() {
         ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
         for (Map.Entry<String, ArrayList<Request>> entry : mRequests.entrySet()) {
@@ -974,7 +1020,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     public int registerForItemTypes() {
         return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT);
     }
-    
+
     private long getTimeInterval(String attr, String accountId, long defaultValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (accountId != null) {
@@ -1024,7 +1070,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         cal.set(Calendar.SECOND, 0);
         return cal.getTimeInMillis();
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime() {
         return cachedFreeBusyStartTime(null);
@@ -1056,7 +1102,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                     break;
                 }
             }
-        }        
+        }
         return ret;
     }
 
