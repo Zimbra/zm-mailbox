@@ -876,13 +876,19 @@ public final class LC {
     public static final KnownKey zmdisklog_warn_threshold = KnownKey.newKey(85);
     public static final KnownKey zmdisklog_critical_threshold = KnownKey.newKey(95);
 
-    // *_disable_tiemout settings are here for bug 56458
+    // *_disable_timeout settings are here for bug 56458
     // This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade
     // we should re-evaluate/remove these settings and the code that uses them
     public static final KnownKey zimbra_archive_formatter_disable_timeout = KnownKey.newKey(true);
     public static final KnownKey zimbra_csv_formatter_disable_timeout = KnownKey.newKey(true);
     public static final KnownKey zimbra_archive_formatter_search_chunk_size = KnownKey.newKey(4096);
     public static final KnownKey zimbra_gal_sync_disable_timeout = KnownKey.newKey(true);
+    // for bug 79865
+    /**
+     * The max idle time for an HTTP DAV Method in milliseconds. Timeout 0 implies an infinite timeout
+     * If not setting to 0, suggest at least 600000 (10 minutes)
+     */
+    public static final KnownKey zimbra_dav_max_idle_time_ms = KnownKey.newKey(0);
 
     public static final KnownKey zimbra_admin_waitset_default_request_timeout = KnownKey.newKey(300);
     public static final KnownKey zimbra_admin_waitset_min_request_timeout = KnownKey.newKey(0);
