@@ -294,13 +294,11 @@ public class ItemAction extends MailDocumentHandler {
             throw MailServiceException.TOO_MANY_HOPS(iidRequested);
         }
 
-        String acctId = session.getAuthenticatedAccountId();
-
         // avoid dereferencing the mountpoint again later on
-        action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString(acctId));
+        action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
 
         // fault in a session to listen in on the target folder's mailbox
-        if (iidFolder.belongsTo(acctId)) {
+        if (iidFolder.belongsTo(session.getAuthenticatedAccountId())) {
             return null;
         } else if (iidFolder.isLocal()) {
             ss.getDelegateSession(iidFolder.getAccountId());
@@ -338,11 +336,8 @@ public class ItemAction extends MailDocumentHandler {
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
         if (folderStr != null) {
             // fully qualify the folder ID (if any) in order for proxying to work
-            ZimbraSoapContext zsc = getZimbraSoapContext(context);
-            ItemId iidFolder = new ItemId(folderStr, zsc);
-            String accountId = zsc.getAuthtokenAccountId();
-            action.addAttribute(MailConstants.A_FOLDER,
-                                iidFolder.toString(accountId));
+            ItemId iidFolder = new ItemId(folderStr, getZimbraSoapContext(context));
+            action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
         }
 
         StringBuilder successes = new StringBuilder();
