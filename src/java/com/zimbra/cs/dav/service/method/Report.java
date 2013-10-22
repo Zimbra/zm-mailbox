@@ -31,6 +31,7 @@ import com.zimbra.cs.dav.service.DavMethod;
 
 public class Report extends DavMethod {
     public static final String REPORT = "REPORT";
+
     @Override
     public String getName() {
         return REPORT;
@@ -54,20 +55,25 @@ public class Report extends DavMethod {
 
     @Override
     public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
-        if (!ctxt.hasRequestMessage())
+        if (!ctxt.hasRequestMessage()) {
             throw new DavException("empty request body", HttpServletResponse.SC_BAD_REQUEST, null);
+        }
 
         Document req = ctxt.getRequestMessage();
         Element top = req.getRootElement();
-        if (top == null)
+        if (top == null) {
             throw new DavException("empty request body", HttpServletResponse.SC_BAD_REQUEST, null);
+        }
         QName topName = top.getQName();
         DavMethod report = sReports.get(topName);
-        if (report == null)
+        if (report == null) {
             throw new DavException.UnsupportedReport(topName);
+        }
 
-        if (ctxt.getDepth() != DavContext.Depth.zero)
+        disableJettyTimeout();
+        if (ctxt.getDepth() != DavContext.Depth.zero) {
             ctxt.getDavResponse().createResponse(ctxt);
+        }
         report.handle(ctxt);
         sendResponse(ctxt);
     }
