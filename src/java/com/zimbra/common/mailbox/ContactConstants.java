@@ -149,13 +149,17 @@ public final class ContactConstants {
     public static final String A_vCardURL    = "vcardURL";
     public static final String A_vCardXProps = "vcardXProps";
 
+
     public static final String TYPE_GROUP = "group";
-    
+
     // move to ZimbraSoap?
     public static final String GROUP_MEMBER_TYPE_CONTACT_REF = "C";
     public static final String GROUP_MEMBER_TYPE_GAL_REF = "G";
     public static final String GROUP_MEMBER_TYPE_INLINE = "I";
-    
+
+    //outlook contact attributes besides the standard zimbra ones
+
+
     /**
      * "well known attrs". keep in sync with ContactConstants.A_* above.
      */
@@ -251,7 +255,9 @@ public final class ContactConstants {
         otherCustom4,
         vCardUID,
         vCardXProps,
-        zimbraId;
+        zimbraId,
+        outlookProps;
+
 
         public static Attr fromString(String s) throws ServiceException {
             try {
