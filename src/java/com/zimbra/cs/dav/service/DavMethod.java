@@ -26,7 +26,11 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.dom4j.io.XMLWriter;
+import org.mortbay.io.EndPoint;
+import org.mortbay.io.nio.SelectChannelEndPoint;
+import org.mortbay.jetty.HttpConnection;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
@@ -117,4 +121,27 @@ public abstract class DavMethod {
             public String getName() { return getMethodName(); }
         };
     }
+
+    /**
+     * Implemented for bug 79865
+     *
+     * Disable the Jetty timeout for for this request.
+     *
+     * By default (and our normal configuration) Jetty has a 30 second idle timeout (10 if the server is busy) for
+     * connection endpoints. There's another task that keeps track of what connections have timeouts and periodically
+     * works over a queue and closes endpoints that have been timed out. This plays havoc with DAV over slow connections
+     * and whenever we have a long pause.
+     *
+     * @throws IOException
+     */
+    protected void disableJettyTimeout() throws IOException {
+        if (LC.zimbra_dav_disable_timeout.booleanValue()) {
+            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                scEndPoint.setIdleExpireEnabled(false);
+            }
+        }
+    }
+
 }
