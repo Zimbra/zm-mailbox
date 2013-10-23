@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,7 +42,6 @@ import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
@@ -57,7 +56,7 @@ import com.zimbra.cs.util.Zimbra;
 public class SoapServlet extends ZimbraServlet {
     private static final long serialVersionUID = 38710345271877593L;
 
-    private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
+    protected static final String PARAM_ENGINE_HANDLER = "engine.handler.";
 
     /** context name of auth token extracted from cookie */
     public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";
@@ -71,6 +70,7 @@ public class SoapServlet extends ZimbraServlet {
     public static final String IS_RESUMED_REQUEST = "zimbra.resumedRequest";
     /** If this is a request sent to the admin port */
     public static final String IS_ADMIN_REQUEST = "zimbra.isadminreq";
+
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {

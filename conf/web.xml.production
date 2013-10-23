@@ -30,7 +30,7 @@
     <filter-name>ThrottlingFilter</filter-name>
     <url-pattern>/zimlet/*</url-pattern>
   </filter-mapping>
-
+  
   <filter>
     <filter-name>SpnegoFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.SpnegoFilter</filter-class>
@@ -118,6 +118,27 @@
     <filter-name>Base64Filter</filter-name>
     <url-pattern>/home/*</url-pattern>
   </filter-mapping>
+  
+  <filter>
+    <filter-name>CsrfFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.CsrfFilter</filter-class>
+    <init-param>
+        <param-name>csrf.req.check</param-name>
+        <param-value>true</param-value>
+    </init-param>
+    <init-param>
+        <!-- A comma separated list like www.abc.com, www.xyz.com -->
+        <param-name>allowed.referrer.host</param-name>
+        <param-value />
+    </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/soap/*</url-pattern>
+        <url-pattern>/user/*</url-pattern>
+        <url-pattern>/home/*</url-pattern>
+        <url-pattern>/upload</url-pattern>
+    </filter-mapping>
 
   <servlet>
     <servlet-name>FirstServlet</servlet-name>
@@ -151,10 +172,10 @@
       <param-name>engine.handler.1</param-name>
       <param-value>com.zimbra.cs.service.mail.MailService</param-value>
     </init-param>
-    <init-param>
-      <param-name>engine.handler.2</param-name>
+    <init-param>    
+           <param-name>engine.handler.2</param-name>
       <param-value>com.zimbra.cs.service.im.IMService</param-value>
-    </init-param>
+    </init-param>   
     <load-on-startup>3</load-on-startup>
   </servlet>
 
@@ -222,7 +243,7 @@
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
-  
+
   <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet>
     <servlet-name>CertAuthServlet</servlet-name>
@@ -298,7 +319,7 @@
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
-
+  
   <servlet>
     <servlet-name>CollectLDAPConfigZimbra</servlet-name>
     <servlet-class>com.zimbra.cs.service.admin.CollectLDAPConfigZimbra</servlet-class>
@@ -465,7 +486,7 @@
     <servlet-name>DavServlet</servlet-name>
     <url-pattern>/dav/*</url-pattern>
   </servlet-mapping>
-
+  
   <servlet-mapping>
     <servlet-name>ZimletResources</servlet-name>
     <url-pattern>/zimlet/*</url-pattern>
