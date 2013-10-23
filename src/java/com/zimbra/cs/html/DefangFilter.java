@@ -15,8 +15,10 @@
 
 package com.zimbra.cs.html;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
@@ -34,6 +36,8 @@ import org.cyberneko.html.filters.DefaultFilter;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.servlet.ZThreadLocal;
 
 /**
  * very Mutated version of ElementRemover.java filter from cyberneko html.
@@ -74,6 +78,12 @@ public class DefangFilter extends DefaultFilter {
      * enable font style tags (TT, I, B, BIG, SMALL, STRIKE, S, U)
      */
     private static final boolean ENABLE_FONT_STYLE_TAGS = true;
+
+    /** The Host header received in the request. */
+    private String reqVirtualHost = null;
+
+    /** enable same host post request for a form in email */
+    private static boolean sameHostFormPostCheck = LC.defang_block_form_same_host_post_req.booleanValue();
 
     //
     // Constants
@@ -282,6 +292,9 @@ public class DefangFilter extends DefaultFilter {
      */
     public DefangFilter(boolean neuterImages) {
         mNeuterImages = neuterImages;
+        if (ZThreadLocal.getRequestContext() != null) {
+            this.reqVirtualHost = ZThreadLocal.getRequestContext().getVirtualHost();
+    }
     }
 
     /**
@@ -683,6 +696,25 @@ public class DefangFilter extends DefaultFilter {
 
         if (!result.equals(value)) {
             attributes.setValue(i, result);
+        }
+
+        if (aName.equalsIgnoreCase("action") && sameHostFormPostCheck == true && this.reqVirtualHost != null) {
+            try {
+                URL url = new URL(value);
+                 String formActionHost = url.getHost().toLowerCase();
+
+                if (formActionHost.equalsIgnoreCase(reqVirtualHost)) {
+                    value = value.replace(formActionHost, "SAMEHOSTFORMPOST-BLOCKED");
+                    attributes.setValue(i, value);
+                }
+            } catch (MalformedURLException e) {
+                ZimbraLog.soap
+                    .info("Failure while trying to block mailicious code. Check for URL "
+                        + " match between the host and the action URL of a FORM."
+                        + "Error parsing URL, possible relative URL." + e.getMessage());
+                attributes.setValue(i, "SAMEHOSTFORMPOST-BLOCKED");
+            }
+
         }
     }
 
