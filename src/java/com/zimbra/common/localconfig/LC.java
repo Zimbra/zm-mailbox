@@ -1118,7 +1118,7 @@ public final class LC {
     public static final KnownKey ldap_dit_naming_rdn_attr_mime         = KnownKey.newKey("");
     // LDAP Custom DIT RDN attr for server entries
     public static final KnownKey ldap_dit_naming_rdn_attr_server       = KnownKey.newKey("");
-    public static final KnownKey ldap_dit_naming_rdn_attr_user         =KnownKey.newKey("");
+    public static final KnownKey ldap_dit_naming_rdn_attr_user         = KnownKey.newKey("");
     // LDAP Custom DIT RDN attr for xmpp component entries
     public static final KnownKey ldap_dit_naming_rdn_attr_xmppcomponent= KnownKey.newKey("");
     // LDAP Custom DIT RDN attr for zimlet entries
@@ -1166,6 +1166,8 @@ public final class LC {
     public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
     public static final KnownKey defang_av_javascript = KnownKey.newKey("javascript");
 
+
+    public static final KnownKey defang_block_form_same_host_post_req = KnownKey.newKey(true);
 
     static {
         // Automatically set the key name with the variable name.
