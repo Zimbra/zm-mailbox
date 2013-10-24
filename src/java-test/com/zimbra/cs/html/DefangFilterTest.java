@@ -826,4 +826,93 @@ public class DefangFilterTest {
         ZThreadLocal.unset();
     }
 
+    //Privacy leak and possible XSS in ZWC with Chrome 30 on Win 7 x64 when viewing a conversation
+
+    @Test
+    public void testBug84337() throws Exception {
+        String html = "<style type=\"text/css=\">@import \"https://emailprivacytester." +
+        		"com/cb/55fa19d5db052ced/\";</style>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("@import 'https://emailprivacytester"));
+
+        html = "<style type=\"text/css=\">@import url(\'newstyles.css\');</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(!result.contains("@import"));
+
+        html = "<style type=\"text/css=\">@import \"style2.css\";</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(!result.contains("@import"));
+
+        html = "<style type=\"text/css=\">@import \"style2.css\"</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(!result.contains("@import"));
+
+        html = "<style type=\"text/css=\">@import \"  style1.css  \";</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(!result.contains("@import"));
+
+        html = "<style> "
+        + "@import url('a.css'); "
+        + "@import url('b.css');"
+        + "@import url('c.css');"
+        + "@import url('d.css');"
+        + "@import url('e.css');"
+        + "@import url('f.css');"
+        + "</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(!result.contains("@import"));
+
+        html = "<style type=\"text/css\">  @import url(\"import3.css\");  p { color : #f00; }"
+            + "</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(result.contains("p { color : #f00; }"));
+
+        html = "<style type=\"text/css\">  @import 'import3.css';  p { color : #f00; }"
+            + "</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(result.contains("p { color : #f00; }"));
+        Assert.assertTrue(!result.contains("import3.css"));
+
+        html = "<style type=\"text/css\">  @import \" import3.css \";  p { color : #f00; }"
+            + "</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(result.contains("p { color : #f00; }"));
+        Assert.assertTrue(!result.contains("import3.css"));
+
+        // adding spaces before the semicolon
+        html = "<style type=\"text/css\">  @import \" import3.css \"   ;  p { color : #f00; }"
+            + "</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(result.contains("p { color : #f00; }"));
+        Assert.assertTrue(!result.contains("import3.css"));
+
+
+        html = "<style type=\"text/css\">  @import \" import3.css \"     p { color : #f00; }"
+            + "</style>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+        true);
+        Assert.assertTrue(result.contains("p { color : #f00; }"));
+        Assert.assertTrue(!result.contains("import3.css"));
+    }
 }

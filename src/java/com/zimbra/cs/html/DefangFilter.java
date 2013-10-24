@@ -434,12 +434,16 @@ public class DefangFilter extends DefaultFilter {
     // matches functions (like url(), expression(), etc), except rgb()
     private static final Pattern STYLE_UNWANTED_FUNC =
             Pattern.compile(LC.defang_style_unwanted_func.value(), Pattern.CASE_INSENSITIVE);
+    private static final Pattern STYLE_UNWANTED_IMPORT = Pattern.compile(LC.defang_style_import.value(), Pattern.CASE_INSENSITIVE);
+
 
     private static String sanitizeStyleValue(String value) {
         // remove comments
         value = COMMENT.matcher(value).replaceAll("");
         // strip off unwanted functions
-        return STYLE_UNWANTED_FUNC.matcher(value).replaceAll("");
+        value = STYLE_UNWANTED_FUNC.matcher(value).replaceAll("");
+       // strip off any @import
+        return STYLE_UNWANTED_IMPORT.matcher(value).replaceAll("");
     }
 
     /** Ignorable whitespace. */
