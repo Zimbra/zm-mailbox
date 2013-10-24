@@ -1218,6 +1218,8 @@ public final class LC {
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
     public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
     public static final KnownKey defang_av_javascript = KnownKey.newKey("^\\s*javascript:");
+    public static final KnownKey defang_style_import =
+        KnownKey.newKey("@import(\\s)*(('|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
 
     //EWS web service
     public static final KnownKey ews_service_wsdl_location =
