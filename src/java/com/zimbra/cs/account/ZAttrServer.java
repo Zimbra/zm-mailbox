@@ -24218,7 +24218,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=792)
     public String[] getStatThreadNamePrefix() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraStatThreadNamePrefix); return value.length > 0 ? value : new String[] {"btpool","pool","LmtpServer","ImapServer","ImapSSLServer","Pop3Server","Pop3SSLServer","ScheduledTask","Timer","AnonymousIoService","CloudRoutingReaderThread","GC","SocketAcceptor","Thread"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraStatThreadNamePrefix); return value.length > 0 ? value : new String[] {"btpool","pool","LmtpServer","ImapServer","ImapSSLServer","Pop3Server","Pop3SSLServer","ScheduledTask","Timer","AnonymousIoService","CloudRoutingReaderThread","GC","SocketAcceptor","Thread","qtp"};
     }
 
     /**
