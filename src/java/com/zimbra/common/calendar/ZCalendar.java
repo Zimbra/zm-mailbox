@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,8 +16,6 @@ package com.zimbra.common.calendar;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -28,22 +26,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
-
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
 
+import com.google.common.collect.ImmutableList;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+
 public class ZCalendar {
-    
+
     public static final String sZimbraProdID = "Zimbra-Calendar-Provider";
     public static final String sIcalVersion = "2.0";
     public static final String sObsoleteVcalVersion = "1.0";
-    
+
     public static enum ICalTok {
         ACTION, ALTREP, ATTACH, ATTENDEE, BINARY, BOOLEAN,
         CAL_ADDRESS, CALSCALE, CATEGORIES, CLASS, CN, COMMENT,
@@ -59,14 +58,14 @@ public class ZCalendar {
         TRANSP, TRIGGER, TZID, TZNAME, TZOFFSETFROM,
         TZOFFSETTO, TZURL, UID, URI, URL, UTC_OFFSET,
         VALARM, VALUE, VERSION, VEVENT, VFREEBUSY, VJOURNAL,
-        VTIMEZONE, VTODO, 
-        
+        VTIMEZONE, VTODO,
+
         // METHOD
         PUBLISH, REQUEST, REPLY, ADD, CANCEL, REFRESH, COUNTER, DECLINECOUNTER,
 
         // CLASS
         PUBLIC, PRIVATE, CONFIDENTIAL,
-        
+
         // ROLE
         CHAIR, REQ_PARTICIPANT, OPT_PARTICIPANT, NON_PARTICIPANT,
 
@@ -76,16 +75,16 @@ public class ZCalendar {
         // STATUS
         TENTATIVE, CONFIRMED, /*CANCELLED,*/ NEEDS_ACTION, /*COMPLETED,*/ IN_PROCESS, CANCELLED,
         DRAFT, FINAL,
-        
+
         // PARTSTAT
         ACCEPTED, /*COMPLETED,*/ DECLINED, DELEGATED, /*IN_PROCESS,*/ /*NEEDS_ACTION,*/ /*TENTATIVE,*/
-        
+
         // TRANSPARENCY
         TRANSPARENT, OPAQUE,
-        
+
         // VTIMEZONE
         STANDARD, DAYLIGHT,
-        
+
         // RECURRENCE-ID
         RANGE, THISANDFUTURE, THISANDPRIOR,
 
@@ -109,7 +108,7 @@ public class ZCalendar {
         // comma-separated list of "time", "location", etc.  (See InviteChanges class for more info.)
         X_ZIMBRA_CHANGES;
 
-        public static ICalTok lookup(String str) 
+        public static ICalTok lookup(String str)
         {
             try {
                 str = str.replace('-', '_');
@@ -118,7 +117,8 @@ public class ZCalendar {
                 return null;
             }
         }
-        
+
+        @Override
         public String toString() {
             return super.toString().replace('_', '-');
         }
@@ -128,7 +128,7 @@ public class ZCalendar {
 
     /**
      * @author tim
-     * 
+     *
      * Calendar has
      *    Components
      *    Properties
@@ -137,8 +137,8 @@ public class ZCalendar {
     {
         List<ZComponent> mComponents = new ArrayList<ZComponent>();
         List<ZProperty> mProperties = new ArrayList<ZProperty>();
-        
-        public ZVCalendar() { 
+
+        public ZVCalendar() {
         }
 
         public void addVersionAndProdId() {
@@ -151,22 +151,26 @@ public class ZCalendar {
 
         public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
         public Iterator<ZComponent> getComponentIterator() { return mComponents.iterator(); }
+        public Iterable<ZComponent> getComponents() {
+            return ImmutableList.copyOf(mComponents);
+        }
         public ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
-            if (prop != null) 
+            if (prop != null)
                 return prop.mValue;
-            
+
             return defaultValue;
         }
         public long getPropLongVal(ICalTok tok, long defaultValue) {
             ZProperty prop = getProperty(tok);
-            if (prop != null) 
+            if (prop != null)
                 return Long.parseLong(prop.mValue);
-            
+
             return defaultValue;
         }
-        
+
+        @Override
         public String toString() {
             StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR");
             toRet.append(LINE_BREAK);
@@ -174,7 +178,7 @@ public class ZCalendar {
             for (ZProperty prop : mProperties) {
                 toRet.append(prop.toString(INDENT));
             }
-            
+
             for (ZComponent comp : mComponents) {
                 toRet.append(comp.toString(INDENT));
             }
@@ -191,7 +195,7 @@ public class ZCalendar {
             w.write(LINE_BREAK);
             for (ZProperty prop : mProperties)
                 prop.toICalendar(w, needAppleICalHacks);
-            
+
             for (ZComponent comp : mComponents)
                 comp.toICalendar(w, needAppleICalHacks);
 
@@ -239,10 +243,10 @@ public class ZCalendar {
             return ret;
         }
     }
-    
+
     /**
      * @author tim
-     * 
+     *
      * Component has
      *     Name
      *     Properties
@@ -254,48 +258,55 @@ public class ZCalendar {
             mName = name.toUpperCase();
             mTok = ICalTok.lookup(mName);
         }
-        
+
         public ZComponent(ICalTok tok) {
             mTok = tok;
             mName = tok.toString();
         }
-        
-        private String mName;
+
+        private final String mName;
         ICalTok mTok;
-        
+
         public String getName() { return mName; }
         public ICalTok getTok() { return mTok; }
 
         List<ZProperty> mProperties = new ArrayList<ZProperty>();
         List<ZComponent> mComponents = new ArrayList<ZComponent>();
-        
+
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
-        
+
         public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
         public Iterator<ZComponent> getComponentIterator() { return mComponents.iterator(); }
         public Iterator<ZProperty> getPropertyIterator() { return mProperties.iterator(); }
+        public Iterable<ZComponent> getComponents() {
+            return ImmutableList.copyOf(mComponents);
+        }
+        public Iterable<ZProperty> getProperties() {
+            return ImmutableList.copyOf(mProperties);
+        }
         public ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
-            if (prop != null) 
+            if (prop != null)
                 return prop.mValue;
-            
+
             return defaultValue;
         }
         long getPropLongVal(ICalTok tok, long defaultValue) {
             ZProperty prop = getProperty(tok);
-            if (prop != null) 
+            if (prop != null)
                 return Long.parseLong(prop.mValue);
-            
+
             return defaultValue;
         }
-        
-        
+
+
+        @Override
         public String toString() {
             return toString("");
         }
-        
+
         public String toString(String INDENT) {
             StringBuffer toRet = new StringBuffer(INDENT).append("COMPONENT:").append(mName).append('(').append(mTok).append(')').append('\n');
             String NEW_INDENT = INDENT+'\t';
@@ -321,7 +332,7 @@ public class ZCalendar {
             w.write("BEGIN:");
             w.write(mName);
             w.write(LINE_BREAK);
-            
+
             for (ZProperty prop : mProperties) {
                 // If we're dealing with Apple iCal, don't generate the X-ALT-DESC property.
                 // iCal can't handle it when the value is too long.  (Exact threshold is unknown,
@@ -337,7 +348,7 @@ public class ZCalendar {
 
             for (ZComponent comp : mComponents)
                 comp.toICalendar(w, needAppleICalHacks);
-            
+
             w.write("END:");
             w.write(mName);
             w.write(LINE_BREAK);
@@ -361,15 +372,15 @@ public class ZCalendar {
     private static final Pattern SIMPLE_ESCAPE = Pattern.compile("([,;\\\\])");
     private static final Pattern NEWLINE_CRLF_ESCAPE = Pattern.compile("\r\n");
     private static final Pattern NEWLINE_BARE_CR_OR_LF_ESCAPE = Pattern.compile("[\r\n]");
-    
+
     /**
-     * ,;"\ and \n must all be escaped.  
+     * ,;"\ and \n must all be escaped.
      */
     public static String escape(String str) {
         if (str!= null && MUST_ESCAPE.matcher(str).find()) {
             // escape ([,;"])'s
             String toRet = SIMPLE_ESCAPE.matcher(str).replaceAll("\\\\$1");
-            
+
             // escape
             toRet = NEWLINE_CRLF_ESCAPE.matcher(toRet).replaceAll("\\\\n");
             toRet = NEWLINE_BARE_CR_OR_LF_ESCAPE.matcher(toRet).replaceAll("\\\\n");
@@ -378,15 +389,15 @@ public class ZCalendar {
 
         return str;
     }
-    
+
     private static final Pattern SIMPLE_ESCAPED = Pattern.compile("\\\\([,;\\\\])");
     private static final Pattern NEWLINE_ESCAPED = Pattern.compile("\\\\[nN]");
 
 
     public static String unescape(String str) {
         if (str != null && str.indexOf('\\') >= 0) {
-            String toRet = SIMPLE_ESCAPED.matcher(str).replaceAll("$1"); 
-            return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\r\n"); 
+            String toRet = SIMPLE_ESCAPED.matcher(str).replaceAll("$1");
+            return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\r\n");
         }
         return str;
     }
@@ -428,13 +439,13 @@ public class ZCalendar {
 
     /**
      * @author tim
-     * 
+     *
      * Property has
      *    Name
      *    Parameters
      *    Value
      */
-    public static class ZProperty 
+    public static class ZProperty
     {
         public ZProperty(String name) {
             setName(name);
@@ -464,7 +475,7 @@ public class ZCalendar {
             mName = tok.toString();
             mValue = Integer.toString(value);
         }
-        
+
         public void setName(String name) {
             mName = name.toUpperCase();
         }
@@ -474,37 +485,38 @@ public class ZCalendar {
         public void setValueList(List<String> valueList) {
             mValueList = valueList;
         }
-        
-        
+
+
         List<ZParameter> mParameters = new ArrayList<ZParameter>();
-        
+
         public void addParameter(ZParameter param) { mParameters.add(param); }
-        
+
         public ZParameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
         public Iterator<ZParameter> parameterIterator() { return mParameters.iterator(); }
         public int getNumParameters() { return mParameters.size(); }
-        
-        public String getParameterVal(ICalTok tok, String defaultValue) { 
-            ZParameter param = findParameter(mParameters, tok); 
+
+        public String getParameterVal(ICalTok tok, String defaultValue) {
+            ZParameter param = findParameter(mParameters, tok);
             if (param != null)
                 return param.getValue();
             else
                 return defaultValue;
         }
-        
-        public String paramVal(ICalTok tok, String defaultValue) { 
+
+        public String paramVal(ICalTok tok, String defaultValue) {
             ZParameter param = getParameter(tok);
             if (param != null) {
                 return param.getValue();
             }
             return defaultValue;
         }
-        
 
+
+        @Override
         public String toString() {
             return toString("");
         }
-        
+
         public String toString(String INDENT) {
             StringBuffer toRet = new StringBuffer(INDENT).append("PROPERTY:").append(mName).append('(').append(mTok).append(')').append('\n');
             String NEW_INDENT = INDENT+'\t';
@@ -515,9 +527,9 @@ public class ZCalendar {
             toRet.append(INDENT).append("END:").append(mName).append('\n');
             return toRet.toString();
         }
-        
+
         private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x08\\x0A-\\x1F\\x7F]");
-        
+
         private String sanitize(String str) {
             // Sanitize control characters
             if (str != null) {
@@ -538,7 +550,7 @@ public class ZCalendar {
         public void toICalendar(Writer w, boolean needAppleICalHacks, boolean escapeHtmlTags) throws IOException {
             StringWriter sw = new StringWriter();
             Pattern htmlPattern = Pattern.compile("<([^>]+)>");
-            
+
             sw.write(mName);
             for (ZParameter param: mParameters)
                 param.toICalendar(sw, needAppleICalHacks);
@@ -598,13 +610,13 @@ public class ZCalendar {
         public long getLongValue() { return Long.parseLong(mValue); };
         public int getIntValue() { return Integer.parseInt(mValue); };
         public boolean getBoolValue() { return mValue.equalsIgnoreCase("TRUE"); }
-        
-        private ICalTok mTok;
+
+        private final ICalTok mTok;
         private String mName;
         private String mValue;
         private List<String> mValueList;  // used only for CATEGORIES and RESOURCES properties
     }
-    
+
     /**
      * @author tim
      *
@@ -627,7 +639,7 @@ public class ZCalendar {
             mName = tok.toString();
             maValue = value ? "TRUE" : "FALSE";
         }
-        
+
         public void setName(String name) {
             mName = name.toUpperCase();
         }
@@ -635,10 +647,11 @@ public class ZCalendar {
             maValue = unquote(value);
         }
 
+        @Override
         public String toString() {
             return toString("");
         }
-        
+
         public String toString(String INDENT) {
             StringBuffer toRet = new StringBuffer(INDENT).append("PARAM:").append(mName).append('(').append(mTok).append(')').append(':').append(maValue).append('\n');
             return toRet.toString();
@@ -671,14 +684,14 @@ public class ZCalendar {
                 w.write(quote(maValue, false));
             }
         }
-        
+
         public ICalTok getToken() { return mTok; }  // may be null
         public String getName() { return mName; }
         public String getValue() { return maValue; }
         long getLongValue() { return Long.parseLong(maValue); };
         int getIntValue() { return Integer.parseInt(maValue); };
-        
-        private ICalTok mTok;
+
+        private final ICalTok mTok;
         private String mName;
         private String maValue;
 
@@ -687,14 +700,14 @@ public class ZCalendar {
          * is changed to a single quote and CTL chars are changed to question
          * marks ('?').  String is quoted if str is already quoted or if it
          * contains ',', ':' or ';'.
-         * 
+         *
          * To workaround a bug in Outlook's MIME parser (see bug 12008), string
          * is quoted if any non-US-ASCII chars are present, e.g. non-English
          * names.  (These characters don't require quoting according to
          * RFC2445.)
-         * 
+         *
          * Empty string is returned if str is null or is an empty string.
-         * 
+         *
          * @param str
          * @return
          */
@@ -772,7 +785,7 @@ public class ZCalendar {
         }
         return null;
     }
-    
+
     static ZParameter findParameter(List <ZParameter> list, ICalTok tok)
     {
         for (ZParameter param: list) {
@@ -782,7 +795,7 @@ public class ZCalendar {
         }
         return null;
     }
-    
+
     static ZComponent findComponent(List <ZComponent> list, ICalTok tok)
     {
         for (ZComponent comp: list) {
@@ -792,7 +805,7 @@ public class ZCalendar {
         }
         return null;
     }
-    
+
     public interface ZICalendarParseHandler extends ContentHandler {
         public boolean inZCalendar();
         public int getNumCals();
@@ -808,38 +821,45 @@ public class ZCalendar {
 
         public List<ZVCalendar> getCals() { return mCals; }
 
-        public void startCalendar() { 
+        @Override
+        public void startCalendar() {
             mInZCalendar = true;
             mCurCal = new ZVCalendar();
             mCals.add(mCurCal);
         }
 
+        @Override
         public void endCalendar() {
             mCurCal = null;
             mInZCalendar = false;
             mNumCals++;
         }
 
+        @Override
         public boolean inZCalendar() { return mInZCalendar; }
+        @Override
         public int getNumCals() { return mNumCals; }
 
+        @Override
         public void startComponent(String name) {
             ZComponent newComponent = new ZComponent(name);
             if (mComponents.size() > 0) {
                 mComponents.get(mComponents.size()-1).mComponents.add(newComponent);
             } else {
-                mCurCal.mComponents.add(newComponent); 
+                mCurCal.mComponents.add(newComponent);
             }
-            mComponents.add(newComponent);  
+            mComponents.add(newComponent);
         }
-        
-        public void endComponent(String name) { 
+
+        @Override
+        public void endComponent(String name) {
             mComponents.remove(mComponents.size()-1);
         }
 
+        @Override
         public void startProperty(String name) {
             mCurProperty = new ZProperty(name);
-            
+
             if (mComponents.size() > 0) {
                 mComponents.get(mComponents.size()-1).mProperties.add(mCurProperty);
             } else {
@@ -847,6 +867,7 @@ public class ZCalendar {
             }
         }
 
+        @Override
         public void propertyValue(String value) throws ParserException {
             ICalTok token = mCurProperty.getToken();
             if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
@@ -863,8 +884,10 @@ public class ZCalendar {
             }
         }
 
+        @Override
         public void endProperty(String name) { mCurProperty = null; }
 
+        @Override
         public void parameter(String name, String value) {
             ZParameter param = new ZParameter(name, value);
             if (mCurProperty != null) {
@@ -912,7 +935,7 @@ public class ZCalendar {
             DefaultContentHandler handler = new DefaultContentHandler();
             parse(is, charset, handler);
             return handler.getCals();
-            
+
         }
 
         private static final byte[] BOM_UTF8 = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
