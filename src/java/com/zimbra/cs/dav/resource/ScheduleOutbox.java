@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
@@ -31,12 +32,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -51,6 +55,8 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.CalDavUtils;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -64,6 +70,8 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 public class ScheduleOutbox extends Collection {
+    private String eventOrganizer;
+
     public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
         super(ctxt, f);
         addResourceType(DavElements.E_SCHEDULE_OUTBOX);
@@ -71,7 +79,7 @@ public class ScheduleOutbox extends Collection {
 
     @Override
     public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
-        String      originator = ctxt.getRequest().getHeader(DavProtocol.HEADER_ORIGINATOR);
+        DelegationInfo delegationInfo = new DelegationInfo(ctxt.getRequest().getHeader(DavProtocol.HEADER_ORIGINATOR));
         Enumeration recipients = ctxt.getRequest().getHeaders(DavProtocol.HEADER_RECIPIENT);
 
         InputStream in = ctxt.getUpload().getInputStream();
@@ -85,9 +93,10 @@ public class ScheduleOutbox extends Collection {
                 break;
             req = null;
         }
-        if (req == null)
+        if (req == null) {
             throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST);
-        ZimbraLog.dav.debug("originator: "+originator);
+        }
+        ZimbraLog.dav.debug("originator: %s", delegationInfo.getOriginator());
 
         boolean isVEventOrVTodo = ICalTok.VEVENT.equals(req.getTok()) || ICalTok.VTODO.equals(req.getTok());
         boolean isOrganizerMethod = false, isCancel = false;
@@ -132,34 +141,34 @@ public class ScheduleOutbox extends Collection {
 
         // Keep originator address consistent with the address used in ORGANIZER/ATTENDEE.
         // Apple iCal is very inconsistent about the user's identity when the account has aliases.
-        if (isVEventOrVTodo && originator != null && ctxt.getAuthAccount() != null) {
+        if (isVEventOrVTodo && delegationInfo.getOriginator() != null && ctxt.getAuthAccount() != null) {
             AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
-            String originatorEmail = CalDavUtils.stripMailto(originator);
-            if (acctMatcher.matches(originatorEmail)) {
+            if (acctMatcher.matches(delegationInfo.getOriginatorEmail())) {
                 boolean changed = false;
                 if (isOrganizerMethod) {
                     if (organizer != null) {
                         String organizerEmail = CalDavUtils.stripMailto(organizer);
-                        if (!organizerEmail.equalsIgnoreCase(originatorEmail) &&
+                        if (!organizerEmail.equalsIgnoreCase(delegationInfo.getOriginatorEmail()) &&
                             acctMatcher.matches(organizerEmail)) {
-                            originator = organizer;
+                            delegationInfo.setOriginator(organizer);
                             changed = true;
                         }
                     }
                 } else {
                     for (String at : attendees) {
                         String atEmail = CalDavUtils.stripMailto(at);
-                        if (originatorEmail.equalsIgnoreCase(atEmail)) {
+                        if (delegationInfo.getOriginatorEmail().equalsIgnoreCase(atEmail)) {
                             break;
                         } else if (acctMatcher.matches(atEmail)) {
-                            originator = at;
+                            delegationInfo.setOriginator(at);
                             changed = true;
                             break;
                         }
                     }
                 }
                 if (changed) {
-                    ZimbraLog.dav.debug("changing originator to " + originator + " to match the address/alias used in ORGANIZER/ATTENDEE");
+                    ZimbraLog.dav.debug("changing originator to %s to match address/alias used in ORGANIZER/ATTENDEE",
+                            delegationInfo.getOriginator());
                 }
             }
         }
@@ -221,10 +230,18 @@ public class ScheduleOutbox extends Collection {
             Element resp = scheduleResponse.addElement(DavElements.E_CALDAV_RESPONSE);
             switch (req.getTok()) {
             case VFREEBUSY:
-                handleFreebusyRequest(ctxt, req, originator, rcpt, resp);
+                handleFreebusyRequest(ctxt, req, delegationInfo.getOriginator(), rcpt, resp);
                 break;
             case VEVENT:
-                handleEventRequest(ctxt, vcalendar, req, originator, rcpt, resp);
+                // adjustOrganizer works around issues where we don't have delegation enabled but clients write
+                // to the shared calendar as if it was the delegate's calendar instead of the owner.
+                // Note assumption that clients won't generate replies on behalf of owner as they won't be aware
+                // that they should be working on behalf of the owner and will only look for their own attendee
+                // records.
+                if (isOrganizerMethod) {
+                    adjustOrganizer(ctxt, vcalendar, req, delegationInfo);
+                }
+                handleEventRequest(ctxt, vcalendar, req, delegationInfo, rcpt, resp);
                 break;
             default:
                 throw new DavException("unrecognized request: "+req.getTok(), HttpServletResponse.SC_BAD_REQUEST);
@@ -274,7 +291,8 @@ public class ScheduleOutbox extends Collection {
         }
     }
 
-    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp)
+    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req,
+            DelegationInfo delegationInfo, String rcpt, Element resp)
     throws ServiceException, DavException {
         if (!DavResource.isSchedulingEnabled()) {
             resp.addElement(DavElements.E_RECIPIENT).addElement(DavElements.E_HREF).setText(rcpt);
@@ -286,8 +304,7 @@ public class ScheduleOutbox extends Collection {
         InternetAddress from, sender, to;
         Account target = null;
         try {
-            originator = CalDavUtils.stripMailto(originator);
-            sender = new JavaMailInternetAddress(originator);
+            sender = new JavaMailInternetAddress(delegationInfo.getOriginatorEmail());
             Provisioning prov = Provisioning.getInstance();
             if (ctxt.getPathInfo() != null) {
                 target = prov.getAccountByName(ctxt.getPathInfo());
@@ -295,13 +312,17 @@ public class ScheduleOutbox extends Collection {
             if (target != null) {
                 from = AccountUtil.getFriendlyEmailAddress(target);
             } else {
-                target = getMailbox(ctxt).getAccount();
-                if (AccountUtil.addressMatchesAccount(target, originator)) {
-                    // Make sure we don't use two different aliases for From and Sender.
-                    // This is a concern with Apple iCal, which picks a random alias as originator.
-                    from = sender;
+                if (delegationInfo.getOwnerEmail() != null) {
+                    from = new JavaMailInternetAddress(delegationInfo.getOwnerEmail());
                 } else {
-                    from = AccountUtil.getFriendlyEmailAddress(target);
+                    target = getMailbox(ctxt).getAccount();
+                    if (AccountUtil.addressMatchesAccount(target, delegationInfo.getOriginatorEmail())) {
+                        // Make sure we don't use two different aliases for From and Sender.
+                        // This is a concern with Apple iCal, which picks a random alias as originator.
+                        from = sender;
+                    } else {
+                        from = AccountUtil.getFriendlyEmailAddress(target);
+                    }
                 }
             }
             if (sender.getAddress() != null && sender.getAddress().equalsIgnoreCase(from.getAddress())) {
@@ -314,11 +335,9 @@ public class ScheduleOutbox extends Collection {
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.7;"+rcpt);
             return;
         }
-        String subject = "", uid, desc, descHtml, status, method;
-
-        status = req.getPropVal(ICalTok.STATUS, "");
-        method = cal.getPropVal(ICalTok.METHOD, "REQUEST");
-
+        String status = req.getPropVal(ICalTok.STATUS, "");
+        String method = cal.getPropVal(ICalTok.METHOD, "REQUEST");
+        String subject = "";
         if (method.equals("REQUEST")) {
             ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
             if (organizerProp != null) {
@@ -345,7 +364,7 @@ public class ScheduleOutbox extends Collection {
         if (status.equals("CANCELLED"))
             subject = "Cancelled: ";
         subject += req.getPropVal(ICalTok.SUMMARY, "");
-        uid = req.getPropVal(ICalTok.UID, null);
+        String uid = req.getPropVal(ICalTok.UID, null);
         if (uid == null) {
             resp.addElement(DavElements.E_RECIPIENT).addElement(DavElements.E_HREF).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.1;UID");
@@ -354,12 +373,13 @@ public class ScheduleOutbox extends Collection {
         try {
             List<Invite> components = Invite.createFromCalendar(ctxt.getAuthAccount(), null, cal, false);
             FriendlyCalendaringDescription friendlyDesc = new FriendlyCalendaringDescription(components, ctxt.getAuthAccount());
-            desc = friendlyDesc.getAsPlainText();
-            descHtml = req.getDescriptionHtml();
+            String desc = friendlyDesc.getAsPlainText();
+            String descHtml = req.getDescriptionHtml();
             if ((descHtml == null) || (descHtml.length() == 0))
                 descHtml = friendlyDesc.getAsHtml();
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(target, from, sender, recipients, subject, desc, descHtml, uid, cal);
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(target, from, sender,
+                    recipients, subject, desc, descHtml, uid, cal);
             mbox.getMailSender().setSendPartial(true).sendMimeMessage(
                     ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, false);
         } catch (ServiceException e) {
@@ -398,4 +418,115 @@ public class ScheduleOutbox extends Collection {
         }
         return url;
     }
+
+    /**
+     * For Vanilla CalDAV access where Apple style delegation has not been enabled, attempts by the delegate
+     * to use a shared calendar acting as themselves are translated to appear as if acting as a delegate,
+     * otherwise the experience can be very poor.
+     * @throws ServiceException
+     */
+    private void adjustOrganizer(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req,
+            DelegationInfo delegationInfo)
+    throws ServiceException {
+        // BusyCal 2.5.3 seems to post with the wrong organizer even if ical delegation is switched on - even though
+        // it uses the right ORGANIZER in the calendar entry.
+        // if (ctxt.useIcalDelegation()) { return; }
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
+        String uid = req.getPropVal(ICalTok.UID, null);
+        CalendarItem matchingCalendarEntry = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
+        if (matchingCalendarEntry == null) {
+            List<com.zimbra.cs.mailbox.Mountpoint> sharedCalendars =
+                    mbox.getCalendarMountpoints(ctxt.getOperationContext(), SortBy.NONE);
+            if (sharedCalendars == null) {
+                return;  // Can't work out anything useful
+            }
+            Set<Account> accts = Sets.newHashSet();
+            for (com.zimbra.cs.mailbox.Mountpoint sharedCalendar : sharedCalendars) {
+                accts.add(Provisioning.getInstance().get(AccountBy.id, sharedCalendar.getOwnerId()));
+            }
+            for (Account acct : accts) {
+                Mailbox sbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+                matchingCalendarEntry = sbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
+                if (matchingCalendarEntry != null) {
+                    break;
+                }
+            }
+        }
+        if (matchingCalendarEntry == null) {
+            return;
+        }
+        Invite[] invites = matchingCalendarEntry.getInvites();
+        if (invites == null) {
+            return;
+        }
+        for (Invite inv : invites) {
+            ZOrganizer org = inv.getOrganizer();
+            if (org != null) {
+                delegationInfo.setOwner(org.getAddress());
+                if (Strings.isNullOrEmpty(org.getCn())) {
+                    Account ownerAcct = Provisioning.getInstance().get(AccountBy.name, org.getAddress());
+                    if (! Strings.isNullOrEmpty(ownerAcct.getDisplayName())) {
+                        delegationInfo.setOwnerCn(ownerAcct.getDisplayName());
+                    }
+                } else {
+                    delegationInfo.setOwnerCn(org.getCn());
+                }
+                break;
+            }
+        }
+        if (delegationInfo.getOwner() == null) {
+            return;
+        }
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
+        boolean originatorIsCalEntryOrganizer = acctMatcher.matches(delegationInfo.getOwnerEmail());
+        if (originatorIsCalEntryOrganizer) {
+            return;
+        }
+        for (ZComponent component : cal.getComponents()) {
+            ZProperty organizerProp = component.getProperty(ICalTok.ORGANIZER);
+            if (organizerProp != null) {
+                organizerProp.setValue(delegationInfo.getOwner());
+                ZParameter cn = organizerProp.getParameter(ICalTok.CN);
+                if (cn == null) {
+                    organizerProp.addParameter(new ZParameter(ICalTok.CN, delegationInfo.getOwnerCn()));
+                } else {
+                    cn.setValue(delegationInfo.getOwnerCn());
+                }
+                ZParameter sentBy = organizerProp.getParameter(ICalTok.SENT_BY);
+                if (sentBy == null) {
+                    organizerProp.addParameter(new ZParameter(ICalTok.SENT_BY, delegationInfo.getOriginator()));
+                } else {
+                    sentBy.setValue(delegationInfo.getOriginator());
+                }
+            }
+        }
+    }
+
+    private class DelegationInfo {
+        private String originator;
+        private String originatorEmail;
+        private String owner;
+        private String ownerEmail;
+        private String ownerCn;
+        DelegationInfo(String originator) {
+            this.setOriginator(originator);
+        }
+        String getOriginator() { return originator; }
+        void setOriginator(String originator) {
+            this.originator = originator;
+            this.originatorEmail = CalDavUtils.stripMailto(originator);
+        }
+        String getOriginatorEmail() { return originatorEmail; }
+        String getOwner() { return owner; }
+        void setOwner(String owner) {
+            this.owner = owner;
+            this.ownerEmail = CalDavUtils.stripMailto(owner);
+        }
+        String getOwnerEmail() {
+            return ownerEmail;
+        }
+        String getOwnerCn() { return Strings.isNullOrEmpty(ownerCn) ? owner : ownerCn; }
+        void setOwnerCn(String ownerCn) { this.ownerCn = ownerCn; }
+    }
+
 }

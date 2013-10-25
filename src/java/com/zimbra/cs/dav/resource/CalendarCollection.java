@@ -273,6 +273,78 @@ public class CalendarCollection extends Collection {
         return uid;
     }
 
+    /**
+     * Check that we have a valid organizer field and if not, make adjustments if appropriate.
+     * For Vanilla CalDAV access where Apple style delegation has not been enabled, attempts by the delegate
+     * to use a shared calendar acting as themselves are translated to appear as if acting as a delegate,
+     * otherwise the experience can be very poor.
+     */
+    private void adjustOrganizer(DavContext ctxt, Invite invite) throws ServiceException {
+        if (!invite.hasOrganizer() && !invite.hasOtherAttendees()) {
+            return;
+        }
+        ZOrganizer org = invite.getOrganizer();
+        String origOrganizerAddr = null;
+        // if ORGANIZER field is unset, set the field value with authUser's email addr.
+        if (org == null) {
+            org = new ZOrganizer(ctxt.getAuthAccount().getName(), null);
+            invite.setOrganizer(org);
+            invite.setIsOrganizer(true);
+        } else {
+            // iCal may use alias for organizer address. Rewrite that to primary address
+            origOrganizerAddr = org.getAddress();
+            Account acct = Provisioning.getInstance().get(AccountBy.name, origOrganizerAddr);
+            if (acct != null) {
+                String newAddr = acct.getName();
+                if (!origOrganizerAddr.equals(newAddr)) {
+                    org.setAddress(newAddr);
+                    invite.setIsOrganizer(acct);
+                }
+            }
+        }
+        if (ctxt.useIcalDelegation()) {
+            return;
+        }
+        String owner = getOwner();
+        if (owner == null) {
+            return;
+        }
+        Account ownerAcct = Provisioning.getInstance().get(AccountBy.name, owner);
+        if (ownerAcct == null) {
+            return;
+        }
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
+        origOrganizerAddr = org.getAddress();
+        if (acctMatcher.matches(origOrganizerAddr) && !owner.equalsIgnoreCase(origOrganizerAddr)) {
+            /**
+             * Client probably doesn't realize user should be acting as a delegate for this calendar.
+             * Adjust ATTENDEE and ORGANIZER if applicable.
+             */
+            org.setAddress(ownerAcct.getName());
+            org.setCn(ownerAcct.getDisplayName());
+            org.setSentBy(origOrganizerAddr);
+            invite.setIsOrganizer(ownerAcct);
+            boolean hasOwnerAttendee = false;
+            for (ZAttendee attendee : invite.getAttendees()) {
+                if (attendee.addressMatches(owner)) {
+                    hasOwnerAttendee = true;
+                }
+            }
+            if (!hasOwnerAttendee) {
+                // If have an ATTENDEE record for who client thought was the ORGANIZER with
+                // PARTSTAT:ACCEPTED - probably meant the real ORGANIZER
+                for (ZAttendee attendee : invite.getAttendees()) {
+                    if (attendee.addressMatches(origOrganizerAddr) &&
+                            (IcalXmlStrMap.PARTSTAT_ACCEPTED.equalsIgnoreCase(attendee.getPartStat()))) {
+                        attendee.setAddress(ownerAcct.getName());
+                        attendee.setCn(ownerAcct.getDisplayName());
+                        attendee.setSentBy(origOrganizerAddr);
+                    }
+                }
+            }
+        }
+    }
+
     /* creates an appointment sent in PUT request in this calendar. */
     @Override
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
@@ -371,25 +443,7 @@ public class CalendarCollection extends Collection {
                 // check for valid uid.
                 if (i.getUid() == null)
                     i.setUid(uid);
-                // check for valid organizer field.
-                if (i.hasOrganizer() || i.hasOtherAttendees()) {
-                    ZOrganizer org = i.getOrganizer();
-                    // if ORGANIZER field is unset, set the field value with authUser's email addr.
-                    if (org == null) {
-                        org = new ZOrganizer(ctxt.getAuthAccount().getName(), null);
-                        i.setOrganizer(org);
-                    } else {
-                        // iCal may use alias for organizer address. Rewrite that to primary address
-                        String addr = i.getOrganizer().getAddress();
-                        Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
-                        if (acct != null) {
-                            String newAddr = acct.getName();
-                            if (!addr.equals(newAddr)) {
-                                org.setAddress(newAddr);
-                            }
-                        }
-                    }
-                }
+                adjustOrganizer(ctxt, i);
                 // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
                 // CalDAV clients don't support attachments, and on edit we have to either
                 // retain existing attachments or drop them.  Retaining is better.
@@ -448,6 +502,10 @@ public class CalendarCollection extends Collection {
             return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
         } catch (BadOrganizerException.DiffOrganizerInComponentsException e) {
             throw new DavException.NeedSameOrganizerInAllComponents(e.getMessage());
+        } catch (BadOrganizerException e) {
+            // Some clients will keep trying with the same data if get INTERNAL_SERVER_ERROR.  Better to use
+            // FORBIDDEN if we aren't going to be able to cope with the data
+            throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.FORBIDDEN)) {
                 throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
