@@ -4150,6 +4150,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>GC</globalConfigValue>
   <globalConfigValue>SocketAcceptor</globalConfigValue>
   <globalConfigValue>Thread</globalConfigValue>
+  <globalConfigValue>qtp</globalConfigValue>
   <desc>
     Prefixes of thread names.  Each value is a column in
     threads.csv that tracks the number of threads whose
