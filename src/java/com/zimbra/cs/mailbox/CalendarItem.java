@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -91,8 +91,8 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZRecur.Frequency;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
+import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.service.mail.CalendarUtils;
@@ -2330,27 +2330,37 @@ public abstract class CalendarItem extends MailItem {
             // Still don't allow changing the organizer field to an arbitrary address.
             if (newInvite.hasOrganizer()) {
                 if (!newInvite.isOrganizer()) {
-                    if (denyChange) {
-                        String newOrgAddr = newInvite.getOrganizer().getAddress();
-                        if (originalOrganizer != null) {
-                            String origOrgAddr = originalOrganizer.getAddress();
-                            if (updatingSameComponent) {
-                                throw BadOrganizerException.CHANGE_ORGANIZER_NOT_ALLOWED(
-                                        origOrgAddr, newOrgAddr, calDesc(newInvite));
+                    String newOrgAddr = newInvite.getOrganizer().getAddress();
+                    String origOrgAddr = (originalOrganizer != null) ? originalOrganizer.getAddress() : null;
+                    if (newOrgAddr.equalsIgnoreCase(origOrgAddr)) {
+                        /* Speculative fix for Bug 83261.  Had gotten to this point with the same address but
+                         * thought that wasn't the organizer for the new invite even though that organizer
+                         * passed the test for originalInvite.  Ideally, should track down why the value was wrong
+                         * but don't have a full repro scenario.
+                         */
+                        newInvite.setIsOrganizer(true);
+                    }
+                    if (!newInvite.isOrganizer()) {
+                        if (denyChange) {
+                            if (originalOrganizer != null) {
+                                if (updatingSameComponent) {
+                                    throw BadOrganizerException.CHANGE_ORGANIZER_NOT_ALLOWED(
+                                            origOrgAddr, newOrgAddr, calDesc(newInvite));
+                                } else {
+                                    throw BadOrganizerException.DIFF_ORGANIZER_IN_COMPONENTS(
+                                            origOrgAddr, newOrgAddr, calDesc(newInvite));
+                                }
                             } else {
-                                throw BadOrganizerException.DIFF_ORGANIZER_IN_COMPONENTS(
-                                        origOrgAddr, newOrgAddr, calDesc(newInvite));
+                                if (updatingSameComponent) {
+                                    throw BadOrganizerException.ADD_ORGANIZER_NOT_ALLOWED(newOrgAddr, calDesc(newInvite));
+                                } else {
+                                    throw BadOrganizerException.ORGANIZER_INTRODUCED_FOR_EXCEPTION(
+                                            newOrgAddr, calDesc(newInvite));
+                                }
                             }
                         } else {
-                            if (updatingSameComponent) {
-                                throw BadOrganizerException.ADD_ORGANIZER_NOT_ALLOWED(newOrgAddr, calDesc(newInvite));
-                            } else {
-                                throw BadOrganizerException.ORGANIZER_INTRODUCED_FOR_EXCEPTION(
-                                        newOrgAddr, calDesc(newInvite));
-                            }
+                            changed = true;
                         }
-                    } else {
-                        changed = true;
                     }
                 }
             }
