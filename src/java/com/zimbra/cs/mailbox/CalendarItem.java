@@ -2359,27 +2359,37 @@ public abstract class CalendarItem extends MailItem {
             // Still don't allow changing the organizer field to an arbitrary address.
             if (newInvite.hasOrganizer()) {
                 if (!newInvite.isOrganizer()) {
-                    if (denyChange) {
-                        String newOrgAddr = newInvite.getOrganizer().getAddress();
-                        if (originalOrganizer != null) {
-                            String origOrgAddr = originalOrganizer.getAddress();
-                            if (updatingSameComponent) {
-                                throw BadOrganizerException.CHANGE_ORGANIZER_NOT_ALLOWED(
-                                        origOrgAddr, newOrgAddr, calDesc(newInvite));
+                    String newOrgAddr = newInvite.getOrganizer().getAddress();
+                    String origOrgAddr = (originalOrganizer != null) ? originalOrganizer.getAddress() : null;
+                    if (newOrgAddr.equalsIgnoreCase(origOrgAddr)) {
+                        /* Speculative fix for Bug 83261.  Had gotten to this point with the same address but
+                         * thought that wasn't the organizer for the new invite even though that organizer
+                         * passed the test for originalInvite.  Ideally, should track down why the value was wrong
+                         * but don't have a full repro scenario.
+                         */
+                        newInvite.setIsOrganizer(true);
+                    }
+                    if (!newInvite.isOrganizer()) {
+                        if (denyChange) {
+                            if (originalOrganizer != null) {
+                                if (updatingSameComponent) {
+                                    throw BadOrganizerException.CHANGE_ORGANIZER_NOT_ALLOWED(
+                                            origOrgAddr, newOrgAddr, calDesc(newInvite));
+                                } else {
+                                    throw BadOrganizerException.DIFF_ORGANIZER_IN_COMPONENTS(
+                                            origOrgAddr, newOrgAddr, calDesc(newInvite));
+                                }
                             } else {
-                                throw BadOrganizerException.DIFF_ORGANIZER_IN_COMPONENTS(
-                                        origOrgAddr, newOrgAddr, calDesc(newInvite));
+                                if (updatingSameComponent) {
+                                    throw BadOrganizerException.ADD_ORGANIZER_NOT_ALLOWED(newOrgAddr, calDesc(newInvite));
+                                } else {
+                                    throw BadOrganizerException.ORGANIZER_INTRODUCED_FOR_EXCEPTION(
+                                            newOrgAddr, calDesc(newInvite));
+                                }
                             }
                         } else {
-                            if (updatingSameComponent) {
-                                throw BadOrganizerException.ADD_ORGANIZER_NOT_ALLOWED(newOrgAddr, calDesc(newInvite));
-                            } else {
-                                throw BadOrganizerException.ORGANIZER_INTRODUCED_FOR_EXCEPTION(
-                                        newOrgAddr, calDesc(newInvite));
-                            }
+                            changed = true;
                         }
-                    } else {
-                        changed = true;
                     }
                 }
             }
