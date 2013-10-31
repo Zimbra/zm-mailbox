@@ -9332,6 +9332,149 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @return zimbraDNSMasterIP, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public String[] getDNSMasterIP() {
+        return getMultiAttr(Provisioning.A_zimbraDNSMasterIP);
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param zimbraDNSMasterIP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public void setDNSMasterIP(String[] zimbraDNSMasterIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSMasterIP, zimbraDNSMasterIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param zimbraDNSMasterIP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public Map<String,Object> setDNSMasterIP(String[] zimbraDNSMasterIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSMasterIP, zimbraDNSMasterIP);
+        return attrs;
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param zimbraDNSMasterIP new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public void addDNSMasterIP(String zimbraDNSMasterIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDNSMasterIP, zimbraDNSMasterIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param zimbraDNSMasterIP new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public Map<String,Object> addDNSMasterIP(String zimbraDNSMasterIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDNSMasterIP, zimbraDNSMasterIP);
+        return attrs;
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param zimbraDNSMasterIP existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public void removeDNSMasterIP(String zimbraDNSMasterIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDNSMasterIP, zimbraDNSMasterIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param zimbraDNSMasterIP existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public Map<String,Object> removeDNSMasterIP(String zimbraDNSMasterIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDNSMasterIP, zimbraDNSMasterIP);
+        return attrs;
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public void unsetDNSMasterIP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSMasterIP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public Map<String,Object> unsetDNSMasterIP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSMasterIP, "");
+        return attrs;
+    }
+
+    /**
      * Connect timeout in seconds for the data source
      *
      * @return zimbraDataSourceConnectTimeout, or 30 if unset

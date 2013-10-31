@@ -7828,4 +7828,8 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is 0-4</desc>
 </attr>
 
+<attr id="1569" name="zimbraDNSMasterIP" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" since="8.5.0">
+  <desc>IP Address(es) of the root DNS servers to be used by the DNS cache service</desc>
+</attr>
+
 </attrs>
