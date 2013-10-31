@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,19 +22,25 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -44,6 +50,8 @@ public class TestTags extends TestCase {
     private DbConnection mConn;
     private Mailbox mMbox;
     private Account mAccount;
+    private String remoteUser;
+    private Mountpoint mountpoint;
 
     private static String TAG_PREFIX = "TestTags";
     private static String MSG_SUBJECT = "Test tags";
@@ -63,6 +71,7 @@ public class TestTags extends TestCase {
         ZimbraLog.test.debug("TestTags.setUp()");
         super.setUp();
 
+        remoteUser = "test.tags.user@" + TestUtil.getDomain();
         mAccount = TestUtil.getAccount("user1");
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         mConn = DbPool.getConnection();
@@ -199,6 +208,61 @@ public class TestTags extends TestCase {
         // tag:TestTags4 -> ()
         ids = search("tag:" + mTags[3].getName(), MailItem.Type.MESSAGE);
         assertEquals("6: search should have returned no results", 0, ids.size());
+    }
+
+    /**
+     * Bug 79576 was seeing extra (wrong) hits from shared folder when click on a tag.
+     */
+    public void testRemoteTagSearch()
+    throws Exception {
+        Account remoteAcct = TestUtil.createAccount(remoteUser);
+        remoteAcct = TestUtil.getAccount(remoteUser);
+        Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(remoteAcct);
+        remoteMbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, mAccount.getId(),
+                ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
+        mountpoint = mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", remoteAcct.getId(),
+                Mailbox.ID_FOLDER_INBOX, null, MailItem.Type.MESSAGE, Flag.ID_CHECKED, (byte) 2, false);
+        Message remoteMsg1 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged with shared TAG");
+        Message remoteMsg2 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged remOnly");
+        Tag[] remoteTags = new Tag[2];
+        remoteTags[0] = remoteMbox.createTag(null, TAG_PREFIX + 1, (byte)0);
+        remoteTags[1] = remoteMbox.createTag(null, TAG_PREFIX + "remOnly", (byte)0);
+        mTags = new Tag[2];
+        for (int i = 0; i < mTags.length; i++) {
+            mTags[i] = mMbox.createTag(null, TAG_PREFIX + (i + 1), (byte)0);
+        }
+        refresh();
+        remoteMbox.alterTag(null, remoteMsg1.getId(), remoteMsg1.getType(), remoteTags[0].getName(), true, null);
+        remoteMbox.alterTag(null, remoteMsg2.getId(), remoteMsg2.getType(), remoteTags[1].getName(), true, null);
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[0].getName(), true, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[1].getName(), true, null);
+        Folder sharedFolder = mMbox.getFolderByName(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox");
+        sharedFolder.getId();
+        List<ZimbraHit> hits = TestUtil.searchForHits(mMbox,
+                String.format("tag:\"%s\" (inid:%d OR is:local)", mTags[0].getName(), sharedFolder.getId()),
+                MailItem.Type.MESSAGE);
+        assertEquals("Search for tag present in both local and remote mboxes.  Number of hits returned", 2, hits.size());
+        boolean gotLocalHit = false;
+        boolean gotRemoteHit = false;
+        ZimbraLog.test.setLevel(Level.trace);
+        for (ZimbraHit hit : hits) {
+            ZimbraLog.test.info("HIT %s", hit.getParsedItemID());
+            ItemId parsedId = hit.getParsedItemID();
+            if (parsedId.belongsTo(mAccount) && hit.getItemId() == mMessage2.getId()) {
+                gotLocalHit = true;
+            }
+            if (parsedId.belongsTo(remoteAcct) && hit.getItemId() == remoteMsg1.getId()) {
+                gotRemoteHit = true;
+            }
+        }
+        assertTrue("1st search should return one local hit", gotLocalHit);
+        assertTrue("1st search should return one remote hit", gotRemoteHit);
+
+        Set<Integer> ids = search(
+                String.format("tag:\"%s\" (inid:%d OR is:local)", mTags[1].getName(), sharedFolder.getId()),
+                MailItem.Type.MESSAGE);
+        assertEquals("Search for tag not present in remote mbox. Number of ids returned", 1, ids.size());
+        assertTrue("2nd search should contain message 3", ids.contains(new Integer(mMessage3.getId())));
     }
 
     public void testFlagSearch() throws Exception {
@@ -344,6 +408,17 @@ public class TestTags extends TestCase {
             if (tag.getName().startsWith(TAG_PREFIX)) {
                 mMbox.delete(null, tag.getId(), tag.getType());
             }
+        }
+        if (mountpoint != null) {
+            try {
+                mMbox.delete(null, mountpoint.getId(), MailItem.Type.MOUNTPOINT);
+            } catch (Exception e) {
+            }
+            mountpoint = null;
+        }
+        try {
+            TestUtil.deleteAccount(remoteUser);
+        } catch (Exception e) {
         }
     }
 

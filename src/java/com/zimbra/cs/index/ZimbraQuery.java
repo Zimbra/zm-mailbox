@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -688,8 +688,7 @@ public final class ZimbraQuery {
                 //          )
                 //
             }
-
-
+            localOps = removeLocalQueriesForPseudoTags(localOps);
         }
 
         UnionQueryOperation union = new UnionQueryOperation();
@@ -761,6 +760,46 @@ public final class ZimbraQuery {
         }
     }
 
+    /**
+     * For the local targets, prune out intersection clauses where one of the ANDed operations is a search
+     * for a non-existent tag.
+     * Scenario:
+     *  1. ZWC user clicks on a tag configured for their mailbox which is NOT configured for the mailbox associated
+     *     with one of their shared.
+     *  2. SOAP query string is "tag:\"Orange\" (inid:257 OR inid:259 OR is:local)"
+     *  3. As part of processing that query, another SOAP query is fired at the remote mailbox similar to:
+     *     "(((((INID:\"7b4c7d75-68e4-4c19-a4c6-e6e891b1d065:257\" ) OR
+     *      (INID:\"7b4c7d75-68e4-4c19-a4c6-e6e891b1d065:259\" ))) AND (TAG:(Orange) )))"
+     *  4. If the TAG "Orange" is not defined, that query should return no results.  Prior to this fix for Bug 79576,
+     *     this query got expanded into a fairly complex query which actually returned some items.  By applying
+     *     this optimization, that no longer happens.
+     * WARNING:  Only use for local targets.
+     */
+    private UnionQueryOperation removeLocalQueriesForPseudoTags(UnionQueryOperation union) {
+        boolean changesMade = false;
+        for (int i = union.operations.size() - 1; i >= 0; i--) {
+            QueryOperation op = union.operations.get(i);
+            boolean replaceOp = false;
+            if (op instanceof IntersectionQueryOperation) {
+                IntersectionQueryOperation intersection = (IntersectionQueryOperation) op;
+                for (QueryOperation andedOp : intersection.operations) {
+                    if (andedOp instanceof DBQueryOperation) {
+                        DBQueryOperation dbqOp = (DBQueryOperation) andedOp;
+                        replaceOp = dbqOp.isSearchForNonexistentLocalTag(mailbox);
+                        if (replaceOp) {
+                            changesMade = true;
+                            union.operations.remove(i);
+                            union.operations.add(i, new NoResultsQueryOperation());
+                        }
+                    }
+                }
+            }
+        }
+        if (changesMade) {
+            ZimbraLog.search.debug("LOCAL_AFTER_PRUNE_NONEXISTENT_TAG_SEARCH:%s", union);
+        }
+        return union;
+    }
     /**
      * For the local targets:
      *   - exclude all the not-visible folders from the query
