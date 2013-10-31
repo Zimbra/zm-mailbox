@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,10 +35,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
@@ -96,7 +97,7 @@ public class DBQueryOperation extends QueryOperation {
      * b/c we need to make sure that we handle unions (don't combine) and intersections (always empty set) correctly.
      */
     private QueryTarget queryTarget = QueryTarget.UNSPECIFIED;
-    private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
+    private final List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
 
     private DbSearch.FetchMode fetch = null;
     private QueryExecuteMode executeMode = null;
@@ -119,12 +120,12 @@ public class DBQueryOperation extends QueryOperation {
     static List<Folder> getTrashFolders(Mailbox mbox) throws ServiceException {
         return mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH).getSubfolderHierarchy();
     }
-    
+
     Set<Folder> getTargetFolders() {
         if (constraints instanceof DbSearchConstraints.Leaf) {
             DbSearchConstraints.Leaf leaf = (DbSearchConstraints.Leaf) constraints;
             return leaf.folders;
-        } 
+        }
         else if (constraints instanceof DbSearchConstraints.Union) {
             DbSearchConstraints.Union node = (DbSearchConstraints.Union) constraints;
             Set<Folder> folders = new HashSet<Folder>();
@@ -137,11 +138,11 @@ public class DBQueryOperation extends QueryOperation {
         }
         else {
             //DbAndNode doesn't make sense (in:folder1 AND in:folder2 always returns empty)
-            //that gets handled elsewhere, just return null 
+            //that gets handled elsewhere, just return null
             return null;
         }
     }
- 
+
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
         if (constraints instanceof DbSearchConstraints.Leaf) {
@@ -568,7 +569,7 @@ public class DBQueryOperation extends QueryOperation {
      * different (since MP is an actual ZimbraHit subclass)....therefore MessageParts are NOT
      * coalesced at this level.  That is done at the top level grouper.
      */
-    private LRUHashMap<ZimbraHit> mSeenHits = new LRUHashMap<ZimbraHit>(2048, 100);
+    private final LRUHashMap<ZimbraHit> mSeenHits = new LRUHashMap<ZimbraHit>(2048, 100);
 
     static final class LRUHashMap<T> extends LinkedHashMap<T, T> {
         private static final long serialVersionUID = -8616556084756995676L;
@@ -1008,6 +1009,37 @@ public class DBQueryOperation extends QueryOperation {
         }
         constraints.toQueryString(out);
         return out.append(')').toString();
+    }
+
+    /**
+     * Part of fix for Bug 79576 - invalid hits in shared folders being returned.
+     * Check whether this is an AND search including a search for a non-existent tag.
+     * WARNING - should only be used for local searches - that tag might exist for a shared folder.
+     */
+    public boolean isSearchForNonexistentLocalTag(Mailbox mbox) {
+        if (allResultsQuery || includeIsRemoteFolders || luceneOp != null) {
+            return false;
+        }
+        if (constraints instanceof DbSearchConstraints.Intersection) {
+            DbSearchConstraints.Intersection intersection = (DbSearchConstraints.Intersection) constraints;
+            for (DbSearchConstraints child : intersection.getChildren()) {
+                if (child instanceof DbSearchConstraints.Leaf) {
+                    DbSearchConstraints.Leaf leaf = (DbSearchConstraints.Leaf) child;
+                    for (Tag tag : leaf.tags) {
+                        try {
+                            mbox.getTagByName(null, tag.getName());
+                        } catch (MailServiceException mse) {
+                            if (MailServiceException.NO_SUCH_TAG.equals(mse.getCode())) {
+                                return true;
+                            }
+                        } catch (ServiceException e) {
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+
     }
 
     @Override
