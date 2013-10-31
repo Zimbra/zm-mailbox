@@ -4279,6 +4279,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSCheckHostname = "zimbraDNSCheckHostname";
 
     /**
+     * IP Address(es) of the root DNS servers to be used by the DNS cache
+     * service
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1569)
+    public static final String A_zimbraDNSMasterIP = "zimbraDNSMasterIP";
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
