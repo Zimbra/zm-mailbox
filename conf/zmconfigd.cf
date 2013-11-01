@@ -381,3 +381,8 @@ SECTION cbpolicyd
 
 SECTION stats
 	REWRITE conf/stats.conf.in conf/stats.conf
+
+SECTION dnscache
+	REWRITE conf/unbound.conf.in conf/unbound.conf
+	VAR zimbraDNSMasterIP
+	RESTART dnscache
