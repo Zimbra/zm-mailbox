@@ -181,6 +181,7 @@
   <filter>
     <filter-name>CsrfFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.CsrfFilter</filter-class>
+    <async-supported>true</async-supported>
     <init-param>
         <param-name>csrf.req.check</param-name>
         <param-value>true</param-value>
