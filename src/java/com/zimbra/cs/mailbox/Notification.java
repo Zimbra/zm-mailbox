@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -137,7 +137,7 @@ public class Notification implements LmtpCallback {
     throws ServiceException, MessagingException {
         outOfOfficeIfNecessary(account, mbox, pm.getMimeMessage(), null, rcpt, envSenderString);
     }
-    
+
     private void outOfOfficeIfNecessary(Account account, Mailbox mbox, Message msg,
             String rcpt, String envSenderString)
     throws ServiceException, MessagingException {
@@ -297,7 +297,9 @@ public class Notification implements LmtpCallback {
             // Subject
             String subject = Mime.getSubject(mm);
             String replySubjectPrefix = L10nUtil.getMessage(L10nUtil.MsgKey.replySubjectPrefix, account.getLocale());
-            if (!subject.toLowerCase().startsWith(replySubjectPrefix.toLowerCase())) {
+            if (subject == null) {
+                subject = replySubjectPrefix;
+            } else if (!subject.toLowerCase().startsWith(replySubjectPrefix.toLowerCase())) {
                 subject = replySubjectPrefix + " " + subject;
             }
             String charset = getCharset(account, subject);
@@ -623,7 +625,7 @@ public class Notification implements LmtpCallback {
     private static void failed(String op, String why, String destAddr, String rcptAddr, Message msg, Exception e) {
         failed(op, why, destAddr, rcptAddr, msg.getId(), e);
     }
-    
+
     private static void failed(String op, String why, String destAddr, String rcptAddr, Integer msgId, Exception e) {
         StringBuffer sb = new StringBuffer(128);
         sb.append(op).append(" not sent (");
