@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,6 +28,7 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
@@ -244,9 +245,10 @@ public final class ZimbraSoapContext {
      * {@link Element} from the SOAP header.
      *
      * @param ctxt {@code <context>} Element (can be null if not present in request)
+     * @param requestName - The SOAP request name - may be null
      * @param context The engine context, which might contain the auth token
      * @param requestProtocol  The SOAP protocol used for the request */
-    public ZimbraSoapContext(Element ctxt, Map<String, Object> context,
+    public ZimbraSoapContext(Element ctxt, QName requestName, Map<String, Object> context,
             SoapProtocol requestProtocol) throws ServiceException {
 
         if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
@@ -318,7 +320,7 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = account.getId();
-                validateDelegatedAccess(account, value);
+                validateDelegatedAccess(account, requestName, value);
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 if (mAuthToken == null) {
                     throw ServiceException.AUTH_REQUIRED();
@@ -333,7 +335,7 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = value;
-                validateDelegatedAccess(account, value);
+                validateDelegatedAccess(account, requestName, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
@@ -434,14 +436,38 @@ public final class ZimbraSoapContext {
     }
 
     /**
+     * Some requests need to always return valid looking output in able to provide consistent behavior between
+     * requests against non-existent accounts and those which don't allow access to the requested data.
+     * For instance FreeBusy requests.
+     * Ideally, this would be a method in DocumentHandler; although would take a bit more plumbing since handler object
+     * isn't available until after soap context is created. Probably OK for now; but something to consider if we have
+     * to do this for other requests
+     * @param requestName - The SOAP request name - may be null
+     */
+    private boolean handlesAccountHarvesting(QName requestName) {
+        if (requestName == null) {
+            return false;
+        }
+        if (requestName.equals(MailConstants.GET_FREE_BUSY_REQUEST)) {
+            return true;
+        }
+        return false;
+    }
+    /**
      * Validate delegation rights. Request for delegated access requires a grant on at least one object in the target account or admin login rights.
      * @param targetAccount - Account which requested is targeted for
      * @param requestedKey - The key sent in request which mapped to target account. Passed in so error only reports back what was requested (i.e. can't harvest accountId if you only know the email or vice-versa)
+     * @param requestName - The SOAP request name - may be null
      * @throws ServiceException
      */
-    private void validateDelegatedAccess(Account targetAccount, String requestedKey) throws ServiceException {
+    private void validateDelegatedAccess(Account targetAccount, QName requestName, String requestedKey)
+    throws ServiceException {
 
         if (!isDelegatedRequest()) {
+            return;
+        }
+
+        if (handlesAccountHarvesting(requestName)) {
             return;
         }
 

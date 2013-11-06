@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,6 +28,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import org.dom4j.QName;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -74,7 +75,8 @@ public final class ParseMimeMessageTest {
     }
 
     static ZimbraSoapContext getMockSoapContext() throws ServiceException {
-        ZimbraSoapContext parent = new ZimbraSoapContext(null, Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS);
+        ZimbraSoapContext parent = new ZimbraSoapContext(null, (QName) null,
+                Collections.<String, Object>emptyMap(), SoapProtocol.SoapJS);
         return new ZimbraSoapContext(parent, MockProvisioning.DEFAULT_ACCOUNT_ID, null);
     }
 
