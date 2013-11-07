@@ -60,25 +60,28 @@ public class CsrfFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse)response;
 
-        ZimbraLog.filter.info("CSRF: " + req.getContextPath());
-        try {
-            if (CsrfUtil.isCsrfRequest(req, checkReqForCsrf, allowedRefHost)) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
+        if (req.getMethod().equalsIgnoreCase("POST")) {
+            ZimbraLog.filter.info("CSRF: " + req.getContextPath());
+            try {
+                if (CsrfUtil.isCsrfRequest(req, checkReqForCsrf, allowedRefHost)) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+                // We need virtual host information in DefangFilter
+                // Set them in ThreadLocal here
+                RequestContext reqCtxt = new RequestContext();
+                String host = CsrfUtil.getRequestHost(req);
+                reqCtxt.setVirtualHost(host);
+                ZThreadLocal.setContext(reqCtxt);
+                chain.doFilter(req, resp);
+
+            } finally {
+                // Unset the variables set in thread local
+                ZThreadLocal.unset();
             }
-            // We need virtual host information in DefangFilter
-            // Set them in ThreadLocal here
-            RequestContext reqCtxt = new RequestContext();
-            String host = CsrfUtil.getRequestHost(req);
-            reqCtxt.setVirtualHost(host);
-            ZThreadLocal.setContext(reqCtxt);
+        } else {
             chain.doFilter(req, resp);
-
-        } finally {
-            // Unset the variables set in thread local
-            ZThreadLocal.unset();
         }
-
     }
 
     /* (non-Javadoc)
