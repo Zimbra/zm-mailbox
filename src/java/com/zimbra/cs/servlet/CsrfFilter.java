@@ -61,7 +61,7 @@ public class CsrfFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse)response;
 
         if (req.getMethod().equalsIgnoreCase("POST")) {
-            ZimbraLog.filter.info("CSRF: " + req.getContextPath());
+            ZimbraLog.filter.debug("CSRF: " + req.getContextPath());
             try {
                 if (CsrfUtil.isCsrfRequest(req, checkReqForCsrf, allowedRefHost)) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN);
