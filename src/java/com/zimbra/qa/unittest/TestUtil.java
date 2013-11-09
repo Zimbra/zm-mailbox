@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,6 +39,7 @@ import junit.framework.Assert;
 
 import org.junit.runner.JUnitCore;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZDataSource;
@@ -361,6 +362,20 @@ extends Assert {
         }
         Closeables.closeQuietly(r);
         return ids;
+    }
+
+    public static List<ZimbraHit> searchForHits(Mailbox mbox, String query, MailItem.Type type) throws Exception {
+        return searchForHits(mbox, query, Collections.singleton(type));
+    }
+
+    public static List<ZimbraHit> searchForHits(Mailbox mbox, String query, Set<MailItem.Type> types) throws Exception {
+        List<ZimbraHit> hits = Lists.newArrayList();
+        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
+        while (r.hasNext()) {
+            hits.add(r.getNext());
+        }
+        Closeables.closeQuietly(r);
+        return hits;
     }
 
 
