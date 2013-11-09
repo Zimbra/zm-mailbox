@@ -142,6 +142,12 @@ public class TestTags extends TestCase {
         assertEquals("0: result size", 0, ids.size());
     }
 
+    public void testNonExistentTagSearch()
+    throws Exception {
+        Set<Integer> ids = search("tag:nonexistent", MailItem.Type.MESSAGE);
+        assertEquals("search for tag:nonexistent result size", 0, ids.size());
+    }
+
     public void testTagSearch()
     throws Exception {
         // Create tags
