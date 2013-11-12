@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -1529,18 +1529,49 @@ public final class ToXML {
      */
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             CalendarItem calItem, int fields, boolean includeInvites, boolean includeContent) throws ServiceException {
-        Element elem;
-        if (calItem instanceof Appointment) {
-            elem = parent.addElement(MailConstants.E_APPOINTMENT);
-        } else {
-            elem = parent.addElement(MailConstants.E_TASK);
-        }
-        setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
+        final int MAX_RETRIES = LC.calendar_item_get_max_retries.intValue();
+        Element elem = null;
+        Mailbox mbox = calItem.getMailbox();
+        int changeId = calItem.getSavedSequence();
+        int numTries = 0;
+        while (numTries < MAX_RETRIES) {
+            numTries++;
+            if (calItem instanceof Appointment) {
+                elem = parent.addElement(MailConstants.E_APPOINTMENT);
+            } else {
+                elem = parent.addElement(MailConstants.E_TASK);
+            }
+            try {
+                setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
 
-        if (needToOutput(fields, Change.METADATA)) {
-            encodeAllCustomMetadata(elem, calItem, fields);
+                if (needToOutput(fields, Change.METADATA)) {
+                    encodeAllCustomMetadata(elem, calItem, fields);
+                }
+                return elem;
+            } catch (ServiceException e) {
+                // Problem writing the structure to the response
+                //   (this case generally means that the blob backing the Calendar item disappeared halfway through)
+                elem.detach();
+                elem = null;
+                try {
+                    calItem = mbox.getCalendarItemById(octxt, calItem.getId());
+                    if (calItem.getSavedSequence() != changeId) {
+                        // just fetch the new item and try again
+                        changeId = calItem.getSavedSequence();
+                        ZimbraLog.soap.info("caught calendar item content change while serializing; will retry");
+                        continue;
+                    }
+                } catch (NoSuchItemException nsie) {
+                    // the message has been deleted, so don't include data in the response
+                    throw nsie;
+                }
+                // Were unable to write calendar item structure & not clear what went wrong. Try again a few times
+                // in case it was related to underlying modifications
+                ZimbraLog.soap.warn("Could not serialize full calendar item structure in response", e);
+            }
         }
-        return elem;
+        // Still failing after several retries...
+        throw NoSuchItemException.NO_SUCH_CALITEM("Problem encoding calendar item.  Maybe corrupt");
     }
 
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt,
