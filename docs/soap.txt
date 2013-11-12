@@ -2518,9 +2518,12 @@ Contacts:
 
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
 
-  to add attachments, specify an {upload-id} instead of providing {attr-data} on the attr
+  To add attachments, specify an {upload-id} instead of providing {attr-data} on the attr
     alternatively, specify an {item-id} to attach, with an optional {subpart-name} for contacts and messages
     when editing an existing contact, can omit the {item-id} and we'll assume it's the contact being edited
+
+  Date related attributes like "birthday" and "anniversary" SHOULD use "yyyy-MM-dd" format or, if the year
+  isn't specified "--MM-dd" format
 
   when contacts are returned, they look like:
 
