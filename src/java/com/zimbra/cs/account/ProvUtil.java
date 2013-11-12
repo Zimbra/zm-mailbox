@@ -370,13 +370,15 @@ public class ProvUtil implements HttpDebugListener {
                     Map<String, AdminRight> allAdminRights = RightManager.getInstance().getAllAdminRights();
                     // print non-combo rights first
                     for (com.zimbra.cs.account.accesscontrol.Right r : allAdminRights.values()) {
-                        if (RightType.combo != r.getRightType())
-                        console.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                        if (RightType.combo != r.getRightType()) {
+                            console.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                        }
                     }
                     // then combo rights
                     for (com.zimbra.cs.account.accesscontrol.Right r : allAdminRights.values()) {
-                        if (RightType.combo == r.getRightType())
+                        if (RightType.combo == r.getRightType()) {
                             console.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                        }
                     }
                 } catch (ServiceException e) {
                     console.println("cannot get RightManager instance: " + e.getMessage());
@@ -440,9 +442,9 @@ public class ProvUtil implements HttpDebugListener {
             console.println("    {grantee-type} = " + gt.toString());
             console.println();
             console.println("    {grantee-id|grantee-name} is required if grantee-type is one of: " +
-                                gtNeedsGranteeIdentity);
+                    gtNeedsGranteeIdentity);
             console.println("    {grantee-id|grantee-name} should not be specified if grantee-type is one of: " +
-                                gtNoGranteeId);
+                    gtNoGranteeId);
             if (secretPossible) {
                 console.println();
                 console.println("    {secret} is required if grantee-type is one of: " + gtNeedsSecret);
@@ -589,8 +591,8 @@ public class ProvUtil implements HttpDebugListener {
         GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]",
                 Category.RIGHT, 1, 5, null, new RightCommandHelp(false, false, false)),
 
-        // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
-        GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
+                        // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
+                        GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
 
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]",
@@ -1613,7 +1615,7 @@ public class ProvUtil implements HttpDebugListener {
                 StringUtil.addToMultiMap(attrs, "displayName", displayName);
                 Account account = prov.createAccount(name, password, attrs);
                 console.println(account.getId());
-           }
+            }
         }
     }
 
@@ -1667,8 +1669,9 @@ public class ProvUtil implements HttpDebugListener {
                 String viaDl = via.get(group.getName());
                 if (viaDl != null) {
                     console.println(group.getName()+" (via "+viaDl+")");
+                } else {
+                    console.println(group.getName());
                 }
-                else console.println(group.getName());
             }
         }
     }
@@ -1676,38 +1679,38 @@ public class ProvUtil implements HttpDebugListener {
     private static class ShareInfoVisitor implements PublishedShareInfoVisitor {
 
         private static final String mFormat =
-            "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
+                "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
 
         private static void printHeadings() {
             console.printf(mFormat,
-                              "owner id",
-                              "owner email",
-                              "owner display",
-                              "id",
-                              "path",
-                              "view",
-                              "type",
-                              "rights",
-                              "mid",
-                              "gt",
-                              "grantee id",
-                              "grantee name",
-                              "grantee display");
+                    "owner id",
+                    "owner email",
+                    "owner display",
+                    "id",
+                    "path",
+                    "view",
+                    "type",
+                    "rights",
+                    "mid",
+                    "gt",
+                    "grantee id",
+                    "grantee name",
+                    "grantee display");
 
             console.printf(mFormat,
-                              "------------------------------------",      // owner id
-                              "---------------",                           // owner email
-                              "---------------",                           // owner display
-                              "-----",                                     // id
-                              "--------------------",                      // path
-                              "----------",                                // default view
-                              "----------",                                // type
-                              "----------",                                // rights
-                              "-----",                                     // mountpoint id if mounted
-                              "-----",                                     // grantee type
-                              "------------------------------------",      // grantee id
-                              "---------------",                           // grantee name
-                              "---------------");                          // grantee display
+                    "------------------------------------",      // owner id
+                    "---------------",                           // owner email
+                    "---------------",                           // owner display
+                    "-----",                                     // id
+                    "--------------------",                      // path
+                    "----------",                                // default view
+                    "----------",                                // type
+                    "----------",                                // rights
+                    "-----",                                     // mountpoint id if mounted
+                    "-----",                                     // grantee type
+                    "------------------------------------",      // grantee id
+                    "---------------",                           // grantee name
+                    "---------------");                          // grantee display
         }
 
         @Override
@@ -1874,7 +1877,7 @@ public class ProvUtil implements HttpDebugListener {
      */
     private void doGetAllAccounts(LdapProv ldapProv, Domain domain, Server server,
             final boolean verbose, final boolean applyDefault, final Set<String> attrNames)
-    throws ServiceException {
+                    throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
@@ -2665,8 +2668,9 @@ public class ProvUtil implements HttpDebugListener {
                 } else {
                     attrName = specificAttr.substring(0, colonAt);
                     attrValue = specificAttr.substring(colonAt+1);
-                    if (attrValue.length() < 1)
+                    if (attrValue.length() < 1) {
                         throw ServiceException.INVALID_REQUEST("missing value for " + specificAttr, null);
+                    }
                 }
 
                 attrName = attrName.toLowerCase();
@@ -2716,6 +2720,19 @@ public class ProvUtil implements HttpDebugListener {
                 }
             }
         }
+
+        //force display empty value attribute
+        if (this.forceDisplayAttrValue) {
+            for (String attr : specificAttrs) {
+                if (!attrs.containsKey(attr)) {
+                    AttributeInfo ai = attrMgr.getAttributeInfo(attr);
+                    if (ai != null) {
+                        printAttr(attr, "", null, false, timestamp);
+                    }
+                }
+            }
+        }
+
     }
 
     private void doCreateDistributionListsBulk(String[] args) throws ServiceException {
@@ -2732,7 +2749,7 @@ public class ProvUtil implements HttpDebugListener {
                 StringUtil.addToMultiMap(attrs, "displayName", displayName);
                 DistributionList dl  = prov.createDistributionList(name, attrs);
                 console.println(dl.getId());
-           }
+            }
         }
     }
 
@@ -2851,7 +2868,7 @@ public class ProvUtil implements HttpDebugListener {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
             public void visit(com.zimbra.cs.account.NamedEntry entry)
-            throws ServiceException {
+                    throws ServiceException {
                 if (verbose) {
                     dumpCalendarResource((CalendarResource) entry, applyDefault, null);
                 } else {
@@ -3213,40 +3230,40 @@ public class ProvUtil implements HttpDebugListener {
         String safeguarded_attrs_prop = LC.get("zmprov_safeguarded_attrs");
         Set<String> safeguarded_attrs = safeguarded_attrs_prop == null ?
                 Sets.<String>newHashSet() : Sets.newHashSet(safeguarded_attrs_prop.toLowerCase().split(","));
-        Multiset<String> multiValAttrsToCheck = HashMultiset.create();
+                Multiset<String> multiValAttrsToCheck = HashMultiset.create();
 
-        for (int i = offset; i < args.length; i += 2) {
-            String n = args[i];
-            if (i + 1 >= args.length) {
-                throw new IllegalArgumentException("not enough arguments");
-            }
-            String v = args[i + 1];
-            String attrName = n;
-            if (n.charAt(0) == '+' || n.charAt(0) == '-') {
-                attrName = attrName.substring(1);
-            } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && isMultiValued(attrMgr, attrName)) {
-                multiValAttrsToCheck.add(attrName.toLowerCase());
-            }
-            if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
-                File file = new File(v);
-                byte[] bytes = ByteUtil.getContent(file);
-                v = ByteUtil.encodeLDAPBase64(bytes);
-            }
-            StringUtil.addToMultiMap(attrs, n, v);
-        }
-
-        if (!allowMultiValuedAttrReplacement && !isCreateCmd) {
-            for (Multiset.Entry<String> entry : multiValAttrsToCheck.entrySet()) {
-                if (entry.getCount() == 1) {
-                    // If multiple values are being assigned to an attr as part of the same command
-                    // then we don't consider it an unsafe replacement
-                    printError("error: cannot replace multi-valued attr value unless -r is specified");
-                    System.exit(2);
+                for (int i = offset; i < args.length; i += 2) {
+                    String n = args[i];
+                    if (i + 1 >= args.length) {
+                        throw new IllegalArgumentException("not enough arguments");
+                    }
+                    String v = args[i + 1];
+                    String attrName = n;
+                    if (n.charAt(0) == '+' || n.charAt(0) == '-') {
+                        attrName = attrName.substring(1);
+                    } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && isMultiValued(attrMgr, attrName)) {
+                        multiValAttrsToCheck.add(attrName.toLowerCase());
+                    }
+                    if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
+                        File file = new File(v);
+                        byte[] bytes = ByteUtil.getContent(file);
+                        v = ByteUtil.encodeLDAPBase64(bytes);
+                    }
+                    StringUtil.addToMultiMap(attrs, n, v);
                 }
-            }
-        }
 
-        return attrs;
+                if (!allowMultiValuedAttrReplacement && !isCreateCmd) {
+                    for (Multiset.Entry<String> entry : multiValAttrsToCheck.entrySet()) {
+                        if (entry.getCount() == 1) {
+                            // If multiple values are being assigned to an attr as part of the same command
+                            // then we don't consider it an unsafe replacement
+                            printError("error: cannot replace multi-valued attr value unless -r is specified");
+                            System.exit(2);
+                        }
+                    }
+                }
+
+                return attrs;
     }
 
     private static boolean isMultiValued(AttributeManager attrMgr, String attrName) {
@@ -3297,8 +3314,9 @@ public class ProvUtil implements HttpDebugListener {
                 console.println(line);
             }
             String args[] = StringUtil.parseLine(line);
-            if (args.length == 0)
+            if (args.length == 0) {
                 continue;
+            }
             try {
                 if (!execute(args)) {
                     console.println("Unknown command. Type: 'help commands' for a list");
@@ -3357,7 +3375,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void printAttr(String attrName, String value, Integer idx, boolean isBinary, String timestamp)
-    throws ServiceException {
+            throws ServiceException {
         if (isBinary) {
             byte[] binary = ByteUtil.decodeLDAPBase64(value);
             if (outputBinaryToFile()) {
@@ -3772,8 +3790,9 @@ public class ProvUtil implements HttpDebugListener {
     private String formatAllEntryTypes() {
         StringBuilder sb = new StringBuilder();
         for (AttributeClass ac : AttributeClass.values()) {
-            if (ac.isProvisionable())
+            if (ac.isProvisionable()) {
                 sb.append(ac.name() + ",");
+            }
         }
         return sb.substring(0, sb.length()-1); // trim the ending ,
     }
@@ -3810,7 +3829,7 @@ public class ProvUtil implements HttpDebugListener {
          *
         console.println("zmprov desc -only globalConfig");
         console.println("    print attribute name of all attributes that are on global config only" + "\n");
-        */
+         */
 
         console.println("zmprov desc -a zimbraId");
         console.println("    print attribute name, description, and all properties of attribute zimbraId\n");
@@ -4128,8 +4147,8 @@ public class ProvUtil implements HttpDebugListener {
             MailMode mailMode = Provisioning.MailMode.fromString(mode);
 
             boolean isPlain = (mailMode == Provisioning.MailMode.http ||
-                               mailMode == Provisioning.MailMode.mixed ||
-                               mailMode == Provisioning.MailMode.both);
+                    mailMode == Provisioning.MailMode.mixed ||
+                    mailMode == Provisioning.MailMode.both);
 
             int backendPort;
             if (isPlain) {
@@ -4157,7 +4176,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null &&
                         entry.getAttr(Provisioning.A_zimbraSSLPrivateKey) != null &&
                         entry.getAttr(Provisioning.A_zimbraSSLCertificate) != null) {
-                        StringBuilder virtualHosts = new StringBuilder();
+                    StringBuilder virtualHosts = new StringBuilder();
                     for (String vh : entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname)) {
                         virtualHosts.append(vh + " ");
                     }
@@ -4285,8 +4304,8 @@ public class ProvUtil implements HttpDebugListener {
                 String serverList = config.serverList != null ? config.serverList : "none";
                 if (verboseMode) {
                     console.printf(hostnameFormat + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n",
-                                      hostname, serverList, config.hashAlgorithm,
-                                      config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
+                            hostname, serverList, config.hashAlgorithm,
+                            config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
                 } else if (config.serverList != null) {
                     if (HashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
                         // Don't print the default hash algorithm to keep the output clutter-free.
@@ -4383,10 +4402,11 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         String getNextArg() throws ServiceException {
-            if (hasNext())
+            if (hasNext()) {
                 return mArgs[mCurPos++];
-            else
+            } else {
                 throw ServiceException.INVALID_REQUEST("not enough arguments", null);
+            }
         }
 
         boolean hasNext() {
@@ -4447,8 +4467,9 @@ public class ProvUtil implements HttpDebugListener {
 
         ra.mRight = ra.mArgs[ra.mCurPos++];
         ra.mRightModifier = RightModifier.fromChar(ra.mRight.charAt(0));
-        if (ra.mRightModifier != null)
+        if (ra.mRightModifier != null) {
             ra.mRight = ra.mRight.substring(1);
+        }
     }
 
     private void getRightArgs(RightArgs ra, boolean needGranteeType, boolean needSecret) throws ServiceException, ArgException {
@@ -4519,7 +4540,7 @@ public class ProvUtil implements HttpDebugListener {
                 " has the following rights:");
 
         for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType :
-                allEffRights.rightsByTargetType().entrySet()) {
+            allEffRights.rightsByTargetType().entrySet()) {
             RightCommand.RightsByTargetType rbtt = rightsByTargetType.getValue();
             if (!rbtt.hasNoRight()) {
                 dumpRightsByTargetType(rightsByTargetType.getKey(), rbtt, expandSetAttrs, expandGetAttrs);
@@ -4614,8 +4635,9 @@ public class ProvUtil implements HttpDebugListener {
             console.println("================");
             console.println("Preset rights");
             console.println("================");
-            for (String r : presetRights)
+            for (String r : presetRights) {
                 console.println("    " + r);
+            }
         }
 
         displayAttrs("set", expandSetAttrs, effRights.canSetAllAttrs(), effRights.canSetAttrs());
@@ -4746,13 +4768,13 @@ public class ProvUtil implements HttpDebugListener {
             RightModifier rightModifier = ace.rightModifier();
             String rm = (rightModifier==null)?"":String.valueOf(rightModifier.getModifier());
             console.printf(format,
-                              ace.targetType(),
-                              ace.targetId(),
-                              ace.targetName(),
-                              ace.granteeType(),
-                              ace.granteeId(),
-                              ace.granteeName(),
-                              rm + ace.right());
+                    ace.targetType(),
+                    ace.targetId(),
+                    ace.targetName(),
+                    ace.granteeType(),
+                    ace.granteeId(),
+                    ace.granteeName(),
+                    rm + ace.right());
         }
         console.println();
     }
@@ -4794,8 +4816,9 @@ public class ProvUtil implements HttpDebugListener {
                 if ("exp".equals(key)) {
                     long exp = Long.parseLong(value);
                     console.format("%s: %s (%s)\n", key, value, DateUtil.toRFC822Date(new Date(exp)));
-                } else
+                } else {
                     console.format("%s: %s\n", key, value);
+                }
             }
         } catch (AuthTokenException e) {
             console.println("Unable to parse auth token: " + e.getMessage());
