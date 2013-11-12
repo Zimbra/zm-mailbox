@@ -67,9 +67,9 @@ workURL
 --------------------------------------------------------------------------------
 other details (may-or-may-not-implement all or some)
 --------------------------------------------------------------------------------
-anniversary
+anniversary ("yyyy-MM-dd" format or, if year isn't specified "--MM-dd" format)
 assistantName
-birthday
+birthday ("yyyy-MM-dd" format or, if year isn't specified "--MM-dd" format)
 children
 customerId
 department
