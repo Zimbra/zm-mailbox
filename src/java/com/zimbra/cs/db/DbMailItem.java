@@ -1691,7 +1691,6 @@ public class DbMailItem {
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : tombstones) {
             MailItem.Type type = entry.getKey();
             switch (type) {
-                case CONVERSATION:
                 case VIRTUAL_CONVERSATION:
                     continue;
             }
@@ -1867,6 +1866,13 @@ public class DbMailItem {
         MailItem.Type.MOUNTPOINT.toByte() + ',' +
         MailItem.Type.TAG.toByte() + ',' +
         MailItem.Type.CONVERSATION.toByte() + ')';
+
+    public static final String NON_SYNCABLE_TYPES = "(" +
+            MailItem.Type.FOLDER.toByte() + ',' +
+            MailItem.Type.SEARCHFOLDER.toByte() + ',' +
+            MailItem.Type.MOUNTPOINT.toByte() + ',' +
+            MailItem.Type.TAG.toByte() + ')';
+
 
     private static String typeIn(MailItem.Type type) {
         switch (type) {
@@ -2460,7 +2466,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : typeIn(type);
+            String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type);
             stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +

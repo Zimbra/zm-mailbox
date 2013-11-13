@@ -8,7 +8,9 @@
 
 <SyncResponse token="403" md="1077924283" s="78624627">
   <folder id="11">
-    <folder id="9" name="Conversations" l="11"/>
+    <folder id="9" name="Conversations" l="11">
+      <c ids="912,914,990,1920"/>
+    </folder>
     <folder id="8" name="Tags" l="11">
       <tag id="64" name="zimbra" color="7"/>
     </folder>
@@ -47,6 +49,7 @@
   <tag id="68" name="bob" color="6" md="1078025983" ms="442"/>
   <cn id="664" l="7" f="" t="" md="1078026283" ms="496"/>
   <cn id="662" l="7" md="1078026270" ms="499"/>
+  <c id="1457" md="1384204523" ms="1231"/>
 </SyncResponse>
 
 <-- sync on other mailbox is done via specifying target account in SOAP header -->
@@ -91,8 +94,10 @@
 
 <SyncResponse token="521" md="1078054298" more="1">
   <-- handle deletes first -->
-  <deleted ids="903">
+  <deleted ids="903,904,905">
     <folder ids="903"/>
+    <m ids="904"/>
+    <c ids="905"/>
   </deleted>
   <-- modified/created folders -->
   <folder id="663" name="new name" l="1" md="1078054291" ms="520"/>

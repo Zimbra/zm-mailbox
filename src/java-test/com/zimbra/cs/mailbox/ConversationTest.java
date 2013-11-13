@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,6 +27,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.util.TypedIdList;
 
 public class ConversationTest {
     @BeforeClass
@@ -43,7 +45,7 @@ public class ConversationTest {
     @Test
     public void delete() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
+        mbox.beginTrackingSync();
         // root message in Inbox
         int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
 
@@ -51,6 +53,8 @@ public class ConversationTest {
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_TRASH).setConversationId(-msgId);
         mbox.addMessage(null, MailboxTestUtil.generateMessage("Re: test subject"), dopt, null);
         Message msg3 = mbox.addMessage(null, MailboxTestUtil.generateMessage("Fwd: test subject"), dopt, null);
+
+        int modSeq = msg3.getModifiedSequence();
 
         // make sure they're all grouped in a single conversation
         int convId = msg3.getConversationId();
@@ -63,6 +67,18 @@ public class ConversationTest {
         // clear the cache and make sure the counts are correct in the DB as well
         mbox.purge(MailItem.Type.CONVERSATION);
         Assert.assertEquals("1 message remaining in conv (DB)", 1, mbox.getConversationById(null, convId).getSize());
+
+        TypedIdList list = mbox.getTombstones(modSeq);
+        List<Integer> tombstoneConvs = list.getIds(MailItem.Type.CONVERSATION);
+        Assert.assertNull("No conv tombstone yet", tombstoneConvs);
+
+        mbox.move(null, msgId, MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_TRASH);
+        mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, true);
+        list = mbox.getTombstones(modSeq);
+        tombstoneConvs = list.getIds(MailItem.Type.CONVERSATION);
+        Assert.assertNotNull("conv tombstone exist", tombstoneConvs);
+        Assert.assertEquals("conv tombstone size", 1, tombstoneConvs.size());
+        Assert.assertEquals("conv tombstone id", (Integer) convId, tombstoneConvs.get(0));
     }
 
     @Test

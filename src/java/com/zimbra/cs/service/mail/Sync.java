@@ -165,6 +165,7 @@ public class Sync extends MailDocumentHandler {
                 initialCalendarSync(f, idlist, octxt, mbox, folder, calendarStart);
                 initialItemSync(f, MailConstants.E_DOC, idlist.getIds(MailItem.Type.DOCUMENT));
                 initialItemSync(f, MailConstants.E_WIKIWORD, idlist.getIds(MailItem.Type.WIKI));
+                initialItemSync(f, MailConstants.E_CONV, idlist.getIds(MailItem.Type.CONVERSATION));
             }
         }
 
