@@ -1287,10 +1287,7 @@ public final class LC {
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
     public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
     public static final KnownKey defang_av_javascript = KnownKey.newKey("^\\s*javascript:");
-    public static final KnownKey defang_style_import =
-        KnownKey.newKey("@import(\\s)*(('|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
-
-    public static final KnownKey defang_block_form_same_host_post_req = KnownKey.newKey(true);
+       public static final KnownKey defang_block_form_same_host_post_req = KnownKey.newKey(true);
 
     static {
         // Automatically set the key name with the variable name.
